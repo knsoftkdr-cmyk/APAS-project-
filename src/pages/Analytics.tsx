@@ -828,7 +828,97 @@ const Analytics = () => {
               </CardContent>
             </Card>
 
-            {/* Per-assignment bar chart */}
+            {/* AI Class Improvement Suggestions */}
+            <Card className="shadow-sm border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Suggestions for the Class
+                  </CardTitle>
+                  <Button
+                    size="sm"
+                    onClick={generateClassSuggestions}
+                    disabled={classLoading || classAnalytics.totalStudents === 0}
+                    className="gap-1.5"
+                  >
+                    {classLoading ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Analyzing…</>
+                    ) : (
+                      <><Sparkles className="h-3.5 w-3.5" /> {classSuggestions ? "Regenerate" : "Generate"}</>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {!classSuggestions && !classLoading && (
+                  <p className="text-xs text-muted-foreground">
+                    Generate AI-powered teaching strategies based on class scores, per-assignment averages, and teacher feedback.
+                  </p>
+                )}
+                {classSuggestions && (
+                  <div className="space-y-3">
+                    <p className="text-sm">{classSuggestions.summary}</p>
+
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {classSuggestions.class_strengths?.length > 0 && (
+                        <div className="rounded-lg border bg-background p-3">
+                          <p className="text-xs font-semibold text-emerald-700 mb-1.5">✓ Class Strengths</p>
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                            {classSuggestions.class_strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {classSuggestions.class_weak_areas?.length > 0 && (
+                        <div className="rounded-lg border bg-background p-3">
+                          <p className="text-xs font-semibold text-amber-700 mb-1.5">⚠ Areas to Re-teach</p>
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                            {classSuggestions.class_weak_areas.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {classSuggestions.teaching_strategies?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-primary mb-1.5">💡 Teaching Strategies</p>
+                        <div className="grid md:grid-cols-2 gap-2">
+                          {classSuggestions.teaching_strategies.map((s: any, i: number) => (
+                            <div key={i} className="rounded border bg-background p-2.5">
+                              <p className="text-xs font-semibold">{s.title}</p>
+                              <p className="text-xs text-muted-foreground">{s.action}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {classSuggestions.focus_students?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-rose-700 mb-1.5">🎯 Focus Students</p>
+                        <div className="space-y-1.5">
+                          {classSuggestions.focus_students.map((s: any, i: number) => (
+                            <div key={i} className="rounded border bg-background p-2.5">
+                              <p className="text-xs font-semibold">{s.name}</p>
+                              <p className="text-[11px] text-muted-foreground">Why: {s.why}</p>
+                              <p className="text-[11px] text-foreground/80">Next step: {s.intervention}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {classSuggestions.next_lesson_recommendation && (
+                      <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-2.5">
+                        <p className="text-[10px] font-semibold uppercase text-primary">Next Lesson Recommendation</p>
+                        <p className="text-xs">{classSuggestions.next_lesson_recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {classAnalytics.perAssignment.length > 0 && (
               <Card className="shadow-sm">
                 <CardHeader className="pb-2">
