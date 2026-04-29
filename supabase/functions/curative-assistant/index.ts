@@ -41,14 +41,23 @@ const buildSseStream = (text: string) =>
   });
 
 // Pipe Gemini's native SSE (streamGenerateContent?alt=sse) into OpenAI-style
-// SSE chunks so the client receives true token-by-token streaming.
-const pipeGeminiSseToOpenAi = (geminiBody: ReadableStream<Uint8Array>) => {
+// SSE chunks. If Gemini stops with finishReason=MAX_TOKENS (or stream ends
+// without a STOP signal), automatically request a continuation so the lesson
+// plan completes fully instead of being cut off mid-generation.
+const pipeGeminiSseToOpenAi = (
+  initialBody: ReadableStream<Uint8Array>,
+  continueRequest: (accumulated: string) => Promise<ReadableStream<Uint8Array> | null>,
+) => {
   const decoder = new TextDecoder();
   return new ReadableStream({
     async start(controller) {
-      const reader = geminiBody.getReader();
-      let buffer = "";
-      try {
+      let accumulated = "";
+      let lastFinishReason: string | null = null;
+
+      const consume = async (body: ReadableStream<Uint8Array>) => {
+        const reader = body.getReader();
+        let buffer = "";
+        let finishReason: string | null = null;
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -62,22 +71,46 @@ const pipeGeminiSseToOpenAi = (geminiBody: ReadableStream<Uint8Array>) => {
             if (!payload || payload === "[DONE]") continue;
             try {
               const parsed = JSON.parse(payload);
-              const parts = parsed?.candidates?.[0]?.content?.parts ?? [];
+              const candidate = parsed?.candidates?.[0];
+              const parts = candidate?.content?.parts ?? [];
               const text = parts
                 .map((p: any) => (typeof p?.text === "string" ? p.text : ""))
                 .join("");
               if (text) {
+                accumulated += text;
                 controller.enqueue(
                   encoder.encode(
                     `data: ${JSON.stringify({ choices: [{ delta: { content: text } }] })}\n\n`,
                   ),
                 );
               }
+              if (candidate?.finishReason) finishReason = candidate.finishReason;
             } catch {
               // ignore malformed chunk
             }
           }
         }
+        return finishReason;
+      };
+
+      try {
+        lastFinishReason = await consume(initialBody);
+
+        // Continue up to 3 times if the model was cut off mid-generation.
+        let continuations = 0;
+        while (
+          continuations < 3 &&
+          (lastFinishReason === "MAX_TOKENS" || lastFinishReason === null) &&
+          accumulated.length > 0 &&
+          !/Word Decoder/i.test(accumulated.slice(-1500))
+        ) {
+          continuations++;
+          console.log(`Continuing lesson plan (reason=${lastFinishReason}, attempt ${continuations})`);
+          const nextBody = await continueRequest(accumulated);
+          if (!nextBody) break;
+          lastFinishReason = await consume(nextBody);
+        }
+
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch (err) {
         console.error("Gemini stream pipe error:", err);
@@ -410,7 +443,38 @@ For chat questions (mode != generate): respond with structured markdown using em
 
         if (response.ok && response.body) {
           console.log(`Gemini stream connected (${model})`);
-          return new Response(pipeGeminiSseToOpenAi(response.body), {
+
+          const continueRequest = async (accumulated: string): Promise<ReadableStream<Uint8Array> | null> => {
+            const tail = accumulated.slice(-2000);
+            const continuationMessages: OpenAIMessage[] = [
+              ...openaiMessages,
+              { role: "assistant", content: accumulated },
+              {
+                role: "user",
+                content:
+                  `CONTINUE the lesson plan EXACTLY where you stopped. Do NOT repeat any prior text, do NOT restart sections, do NOT add a preamble. Resume mid-sentence if needed and finish ALL remaining mandatory sections through the final "Word Decoder" section.\n\nLast 2000 characters of what you wrote:\n"""${tail}"""`,
+              },
+            ];
+            const contBody = JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents: toGeminiContents(continuationMessages),
+              generationConfig: { temperature: 0.7, maxOutputTokens: 65536 },
+            });
+            try {
+              const contRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GOOGLE_GEMINI_API_KEY}`,
+                { method: "POST", headers: { "Content-Type": "application/json" }, body: contBody },
+              );
+              if (contRes.ok && contRes.body) return contRes.body;
+              console.error("Continuation request failed:", contRes.status, await contRes.text());
+              return null;
+            } catch (e) {
+              console.error("Continuation fetch error:", e);
+              return null;
+            }
+          };
+
+          return new Response(pipeGeminiSseToOpenAi(response.body, continueRequest), {
             headers: {
               ...corsHeaders,
               "Content-Type": "text/event-stream",
