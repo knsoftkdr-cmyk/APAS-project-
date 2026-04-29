@@ -36,8 +36,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY") || Deno.env.get("GEMINI_ADVANCED_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPEN_AI_KEY");
+    if (!OPENROUTER_API_KEY && !GROK_API_KEY && !GEMINI_API_KEY && !OPENAI_API_KEY) {
+      throw new Error("No AI provider API key configured");
+    }
 
     const payload = (await req.json()) as IndividualPayload | ClassPayload;
 
