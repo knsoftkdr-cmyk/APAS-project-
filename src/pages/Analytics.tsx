@@ -43,6 +43,10 @@ const Analytics = () => {
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "not_submitted">("all");
   const [assignmentFilter, setAssignmentFilter] = useState<string | null>(null);
   const [showPendingList, setShowPendingList] = useState(false);
+  const [individualSuggestions, setIndividualSuggestions] = useState<any | null>(null);
+  const [individualLoading, setIndividualLoading] = useState(false);
+  const [classSuggestions, setClassSuggestions] = useState<any | null>(null);
+  const [classLoading, setClassLoading] = useState(false);
 
   const isAuthorized =
     profile?.role === "teacher" || profile?.role === "admin" || profile?.role === "school_admin";
