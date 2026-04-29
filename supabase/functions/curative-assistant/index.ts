@@ -353,7 +353,7 @@ ADDITIONALLY: Inline within Main Teaching chunks (Section 3) and the Hook (Secti
 
 Rules:
 - Only include videos you are confident actually exist on YouTube. Prefer widely-known canonical educational videos for the topic.
-- NEVER fabricate fake video IDs. If unsure of an exact video, use the channel's search page: `https://www.youtube.com/@khanacademy/search?query=TOPIC` or `https://www.youtube.com/results?search_query=TOPIC+for+CLASS`.
+- NEVER fabricate fake video IDs. If unsure of an exact video, use the channel's search page: \`https://www.youtube.com/@khanacademy/search?query=TOPIC\` or \`https://www.youtube.com/results?search_query=TOPIC+for+CLASS\`.
 - Match language and grade level to the class.
 - Skip any video that requires login, is age-restricted, or is a paid course.
 
