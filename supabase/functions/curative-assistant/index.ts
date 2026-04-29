@@ -340,23 +340,6 @@ Confirm Primacy ✅, Recency ✅, 10-2-10 ✅, MI ≥3 ✅, ZPD 3-tier ✅, Grou
 ## 🎓 Learning Outcomes
 List measurable outcomes.
 
-## 🎥 9. Recommended YouTube Videos (🚨 MANDATORY — NEVER SKIP THIS SECTION)
-You MUST include this section in EVERY lesson plan. Provide 3-5 RELEVANT, REAL YouTube video links that explain the lesson topic visually or in greater depth. Pick videos from well-known, trusted educational channels (e.g., Khan Academy, CrashCourse, TED-Ed, NCERT Official, BYJU'S, Amoeba Sisters, SciShow Kids, Numberphile, MinutePhysics, National Geographic Kids, Peekaboo Kidz) appropriate to the student's age/class.
-
-For EACH video, output exactly this format:
-- 🎬 **[Video Title](https://www.youtube.com/watch?v=VIDEO_ID)** — Channel: _Channel Name_ · ⏱️ ~X min
-  - **Why watch:** 1 short sentence linking the video to a specific concept/chunk in this lesson.
-  - **When to use:** Hook / Main Teaching Chunk N / Reinforcement / Homework.
-  - **Best for:** 🟩 Basic / 🟨 Core / 🟥 Extension learners.
-
-ADDITIONALLY: Inline within Main Teaching chunks (Section 3) and the Hook (Section 2), embed at least 1-2 direct YouTube links wherever a video would help students understand a concept better. Format inline: 🎥 _Watch:_ [Short Title](https://www.youtube.com/watch?v=ID) (Channel · ~X min).
-
-Rules:
-- Only include videos you are confident actually exist on YouTube. Prefer widely-known canonical educational videos for the topic.
-- NEVER fabricate fake video IDs. If unsure of an exact video, use the channel's search page: \`https://www.youtube.com/@khanacademy/search?query=TOPIC\` or \`https://www.youtube.com/results?search_query=TOPIC+for+CLASS\`.
-- Match language and grade level to the class.
-- Skip any video that requires login, is age-restricted, or is a paid course.
-
 ## 📖 Word Decoder (MANDATORY — END OF PLAN)
 Define EVERY advanced/technical term used anywhere in the plan in simple, kid-friendly language. Format:
 → **Term Name** = Simple 1-2 sentence explanation a parent or student can understand.
@@ -371,7 +354,8 @@ LANGUAGE & FORMATTING RULES
 - Decode every advanced/technical/subject word inline on FIRST use using: **Term** _(what this means: simple explanation with everyday comparison)_.
 - Use markdown tables for data, --- horizontal rules between sections, emoji indicators (🟢🔵🟡🔴 ⚠️ ✅ 📊).
 - Bold all labels. Cite specific scores/student counts.
-- Recommend named educational resources (Khan Academy, NCERT, etc.). YouTube links are ONLY allowed inside the dedicated "Recommended YouTube Videos" section (see structure above) — do not scatter raw YouTube search links elsewhere.
+- Recommend named educational resources (Khan Academy, NCERT, etc.).
+- YOUTUBE LINK RULE (STRICT): You may embed at most 1-2 inline YouTube links inside Hook (Section 2) or Main Teaching chunks (Section 3) ONLY when a video genuinely aids understanding. Because specific video IDs cannot be verified, you MUST use ONLY YouTube SEARCH URLs in this exact format: \`https://www.youtube.com/results?search_query=TOPIC+KEYWORDS+for+CLASS+LEVEL\` (URL-encode spaces as \`+\`). NEVER output \`watch?v=...\` style links — they may be broken/fake. NEVER create a separate "Recommended YouTube Videos" section. Inline format: 🎥 _Search & watch:_ [Short descriptive title](https://www.youtube.com/results?search_query=...).
 
 You MUST complete the ENTIRE lesson plan. Do NOT truncate. End with the Word Decoder section.
 
@@ -388,7 +372,7 @@ For chat questions (mode != generate): respond with structured markdown using em
       openaiMessages.push({
         role: "user",
         content: (prompt || `Generate a LESSON PLAN for ${selectedClass} Section ${section}. Focus ONLY on the lesson plan with the full mandatory structure.`) +
-          `\n\n🚨 REMINDER: The plan MUST include Section 9 "Recommended YouTube Videos" with 3-5 real links from trusted educational channels, AND embed inline 🎥 YouTube links within the Hook and Main Teaching chunks wherever a video would aid understanding. Do NOT skip the YouTube section.`,
+          `\n\n🚨 REMINDER: Do NOT include a "Recommended YouTube Videos" section. You may embed at most 1-2 inline YouTube SEARCH links (https://www.youtube.com/results?search_query=...) within Hook or Main Teaching chunks where a video helps understanding. NEVER use watch?v= style links — only search URLs that are guaranteed to work.`,
       });
     } else {
       openaiMessages.push({ role: "user", content: prompt });

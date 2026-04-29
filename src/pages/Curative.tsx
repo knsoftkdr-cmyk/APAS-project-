@@ -121,7 +121,12 @@ const MarkdownComponents = {
     </em>
   ),
   a: ({ node, ...props }: any) => (
-    <a className="text-primary hover:text-primary/80 underline" {...props}>
+    <a
+      className="text-primary hover:text-primary/80 underline"
+      target="_blank"
+      rel="noopener noreferrer"
+      {...props}
+    >
       {props.children}
     </a>
   ),
