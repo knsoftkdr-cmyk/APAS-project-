@@ -198,7 +198,7 @@ Generate class-level improvement strategies.`;
     }
     if (GROK_API_KEY) {
       providers.push(() =>
-        callOpenAICompatible("https://api.x.ai/v1/chat/completions", GROK_API_KEY, "grok-2-latest")
+        callOpenAICompatible("https://api.x.ai/v1/chat/completions", GROK_API_KEY, "grok-beta")
       );
     }
 
