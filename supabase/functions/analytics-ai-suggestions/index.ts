@@ -173,14 +173,22 @@ Generate class-level improvement strategies.`;
 
     const providers: Array<() => Promise<string>> = [];
     if (OPENROUTER_API_KEY) {
-      providers.push(() =>
-        callOpenAICompatible(
-          "https://openrouter.ai/api/v1/chat/completions",
-          OPENROUTER_API_KEY,
-          "google/gemini-2.0-flash-exp:free",
-          { "HTTP-Referer": "https://lovable.dev", "X-Title": "APAS Analytics" }
-        )
-      );
+      // Try multiple OpenRouter models in order (free tier first, then paid fallbacks)
+      const orModels = [
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "google/gemini-flash-1.5",
+        "openai/gpt-4o-mini",
+      ];
+      for (const m of orModels) {
+        providers.push(() =>
+          callOpenAICompatible(
+            "https://openrouter.ai/api/v1/chat/completions",
+            OPENROUTER_API_KEY,
+            m,
+            { "HTTP-Referer": "https://lovable.dev", "X-Title": "APAS Analytics" }
+          )
+        );
+      }
     }
     if (GEMINI_API_KEY) providers.push(() => callGemini(GEMINI_API_KEY));
     if (OPENAI_API_KEY) {
