@@ -833,7 +833,7 @@ const Curative = () => {
 
       let dupQuery = supabase
         .from("lessons")
-        .select("id, title")
+        .select("id, title, lesson_content, created_at")
         .eq("class_level", selectedClass)
         .eq("section", selectedSection)
         .eq("subject", subjectName)
@@ -846,13 +846,33 @@ const Curative = () => {
 
       if (user?.id) dupQuery = dupQuery.eq("teacher_id", user.id);
 
-      const { data: existing, error: dupErr } = await dupQuery.limit(1);
+      const { data: existing, error: dupErr } = await dupQuery
+        .order("created_at", { ascending: false })
+        .limit(1);
       if (!dupErr && existing && existing.length > 0) {
-        toast.error(
-          `Lesson plan already generated for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""} • ${curriculumLabel || "this curriculum"} • ${periods} period(s). Change topic, periods, or curriculum to generate a new one.`,
-          { duration: 6000 }
-        );
-        return;
+        const existingLesson = existing[0] as any;
+        const hasContent = typeof existingLesson.lesson_content === "string" && existingLesson.lesson_content.trim().length > 0;
+
+        if (hasContent) {
+          // Load the previously generated plan into the chat so the teacher can see it
+          const userPrompt = `Generate a lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""} • ${curriculumLabel || "this curriculum"} • ${periods} period(s).`;
+          setChatMessages([
+            { role: "user", content: userPrompt },
+            { role: "assistant", content: existingLesson.lesson_content },
+          ]);
+          setHasGeneratedContent(true);
+          toast.success(
+            `Loaded existing lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""}. Change topic, periods, or curriculum to generate a new one.`,
+            { duration: 6000 }
+          );
+        } else {
+          // Stale empty row — delete it so the teacher can regenerate
+          await supabase.from("lessons").delete().eq("id", existingLesson.id);
+          toast.info("Found an incomplete previous attempt — regenerating now.");
+          // Fall through to sendMessage below
+        }
+
+        if (hasContent) return;
       }
     } catch (err) {
       console.error("Duplicate lesson check failed:", err);
