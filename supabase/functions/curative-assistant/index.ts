@@ -443,7 +443,38 @@ For chat questions (mode != generate): respond with structured markdown using em
 
         if (response.ok && response.body) {
           console.log(`Gemini stream connected (${model})`);
-          return new Response(pipeGeminiSseToOpenAi(response.body), {
+
+          const continueRequest = async (accumulated: string): Promise<ReadableStream<Uint8Array> | null> => {
+            const tail = accumulated.slice(-2000);
+            const continuationMessages: OpenAIMessage[] = [
+              ...openaiMessages,
+              { role: "assistant", content: accumulated },
+              {
+                role: "user",
+                content:
+                  `CONTINUE the lesson plan EXACTLY where you stopped. Do NOT repeat any prior text, do NOT restart sections, do NOT add a preamble. Resume mid-sentence if needed and finish ALL remaining mandatory sections through the final "Word Decoder" section.\n\nLast 2000 characters of what you wrote:\n"""${tail}"""`,
+              },
+            ];
+            const contBody = JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents: toGeminiContents(continuationMessages),
+              generationConfig: { temperature: 0.7, maxOutputTokens: 65536 },
+            });
+            try {
+              const contRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GOOGLE_GEMINI_API_KEY}`,
+                { method: "POST", headers: { "Content-Type": "application/json" }, body: contBody },
+              );
+              if (contRes.ok && contRes.body) return contRes.body;
+              console.error("Continuation request failed:", contRes.status, await contRes.text());
+              return null;
+            } catch (e) {
+              console.error("Continuation fetch error:", e);
+              return null;
+            }
+          };
+
+          return new Response(pipeGeminiSseToOpenAi(response.body, continueRequest), {
             headers: {
               ...corsHeaders,
               "Content-Type": "text/event-stream",
