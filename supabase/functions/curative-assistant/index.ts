@@ -387,7 +387,8 @@ For chat questions (mode != generate): respond with structured markdown using em
     if (mode === "generate") {
       openaiMessages.push({
         role: "user",
-        content: prompt || `Generate a LESSON PLAN for ${selectedClass} Section ${section}. Focus ONLY on the lesson plan with the full mandatory structure.`,
+        content: (prompt || `Generate a LESSON PLAN for ${selectedClass} Section ${section}. Focus ONLY on the lesson plan with the full mandatory structure.`) +
+          `\n\n🚨 REMINDER: The plan MUST include Section 9 "Recommended YouTube Videos" with 3-5 real links from trusted educational channels, AND embed inline 🎥 YouTube links within the Hook and Main Teaching chunks wherever a video would aid understanding. Do NOT skip the YouTube section.`,
       });
     } else {
       openaiMessages.push({ role: "user", content: prompt });
