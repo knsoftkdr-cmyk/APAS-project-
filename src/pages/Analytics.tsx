@@ -237,6 +237,80 @@ const Analytics = () => {
     setReviewing(null);
   };
 
+  const generateIndividualSuggestions = async () => {
+    if (!reviewing) return;
+    const score = parseInt(scoreInput, 10);
+    if (isNaN(score)) {
+      toast.error("Enter a score first to generate suggestions");
+      return;
+    }
+    setIndividualLoading(true);
+    setIndividualSuggestions(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("analytics-ai-suggestions", {
+        body: {
+          mode: "individual",
+          studentName: reviewing.student_name,
+          className: getClassLabel(selectedClass),
+          section: selectedSection,
+          topic: reviewing.assignment?.topic || reviewing.assignment?.period_title,
+          score,
+          teacherFeedback: feedbackInput,
+          answers: reviewingAnswers,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setIndividualSuggestions(data.suggestions);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate suggestions");
+    } finally {
+      setIndividualLoading(false);
+    }
+  };
+
+  const generateClassSuggestions = async () => {
+    setClassLoading(true);
+    setClassSuggestions(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("analytics-ai-suggestions", {
+        body: {
+          mode: "class",
+          className: getClassLabel(selectedClass),
+          section: selectedSection,
+          avgScore: Math.round(classAnalytics.avgScore),
+          submissionRate: classAnalytics.submissionRate,
+          totalStudents: classAnalytics.totalStudents,
+          pendingEval: classAnalytics.pendingEval,
+          perAssignment: classAnalytics.perAssignment.map((a: any) => ({
+            name: a.fullName || a.name,
+            avgScore: a.avgScore,
+            submissions: a.submitted,
+          })),
+          topPerformers: classAnalytics.top.map((s: any) => ({
+            name: s.student_name,
+            avgScore: s.avgScore || 0,
+          })),
+          bottomPerformers: classAnalytics.bottom.map((s: any) => ({
+            name: s.student_name,
+            avgScore: s.avgScore || 0,
+          })),
+          commonFeedback: submissions
+            .filter((s: any) => s.teacher_feedback)
+            .slice(0, 10)
+            .map((s: any) => s.teacher_feedback),
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setClassSuggestions(data.suggestions);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate suggestions");
+    } finally {
+      setClassLoading(false);
+    }
+  };
+
   if (!isAuthorized) {
     return (
       <AppLayout>
