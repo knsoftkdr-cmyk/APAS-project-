@@ -582,7 +582,7 @@ const Analytics = () => {
       )}
 
       {/* Review Answers Dialog */}
-      <Dialog open={!!reviewing} onOpenChange={(o) => !o && setReviewing(null)}>
+      <Dialog open={!!reviewing} onOpenChange={(o) => { if (!o) { setReviewing(null); setIndividualSuggestions(null); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -627,6 +627,80 @@ const Analytics = () => {
                 rows={3}
               />
             </div>
+          </div>
+
+          {/* AI Suggestions Panel */}
+          <div className="pt-3 border-t space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">AI Improvement Suggestions</span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={generateIndividualSuggestions}
+                disabled={individualLoading || !scoreInput}
+                className="gap-1.5"
+              >
+                {individualLoading ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" /> {individualSuggestions ? "Regenerate" : "Generate"}</>
+                )}
+              </Button>
+            </div>
+
+            {!individualSuggestions && !individualLoading && (
+              <p className="text-xs text-muted-foreground">
+                Enter a score and (optionally) feedback, then generate personalized suggestions for this student.
+              </p>
+            )}
+
+            {individualSuggestions && (
+              <div className="rounded-lg border bg-primary/5 p-4 space-y-3">
+                <p className="text-sm text-foreground/90">{individualSuggestions.summary}</p>
+
+                {individualSuggestions.strengths?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-700 mb-1">✓ Strengths</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                      {individualSuggestions.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {individualSuggestions.weak_areas?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-amber-700 mb-1">⚠ Areas to Improve</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                      {individualSuggestions.weak_areas.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {individualSuggestions.suggestions?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-primary mb-1">💡 Suggested Actions</p>
+                    <div className="space-y-1.5">
+                      {individualSuggestions.suggestions.map((s: any, i: number) => (
+                        <div key={i} className="rounded border bg-background p-2">
+                          <p className="text-xs font-semibold">{s.title}</p>
+                          <p className="text-xs text-muted-foreground">{s.action}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {individualSuggestions.parent_tip && (
+                  <div className="rounded bg-background border p-2">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground">Parent tip</p>
+                    <p className="text-xs">{individualSuggestions.parent_tip}</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <DialogFooter>
