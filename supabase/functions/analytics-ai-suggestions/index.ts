@@ -36,8 +36,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+    const GROK_API_KEY = Deno.env.get("GROK_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GOOGLE_GEMINI_API_KEY") || Deno.env.get("GEMINI_ADVANCED_API_KEY");
+    const OPENAI_API_KEY = Deno.env.get("OPEN_AI_KEY");
+    if (!OPENROUTER_API_KEY && !GROK_API_KEY && !GEMINI_API_KEY && !OPENAI_API_KEY) {
+      throw new Error("No AI provider API key configured");
+    }
 
     const payload = (await req.json()) as IndividualPayload | ClassPayload;
 
@@ -120,39 +125,93 @@ ${payload.commonFeedback?.length ? `Recurring teacher feedback themes:\n${payloa
 Generate class-level improvement strategies.`;
     }
 
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
+    const messages = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ];
 
-    if (!resp.ok) {
-      if (resp.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+    async function callOpenAICompatible(url: string, key: string, model: string, extraHeaders: Record<string, string> = {}) {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+          ...extraHeaders,
+        },
+        body: JSON.stringify({ model, messages, temperature: 0.7 }),
+      });
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`${url} ${r.status}: ${t.slice(0, 300)}`);
       }
-      if (resp.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds to your Lovable AI workspace." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await resp.text();
-      console.error("AI gateway error:", resp.status, t);
-      throw new Error("AI gateway error");
+      const j = await r.json();
+      return j.choices?.[0]?.message?.content || "";
     }
 
-    const data = await resp.json();
-    let content = data.choices?.[0]?.message?.content || "";
+    async function callGemini(key: string) {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+            generationConfig: { temperature: 0.7, responseMimeType: "application/json" },
+          }),
+        }
+      );
+      if (!r.ok) {
+        const t = await r.text();
+        throw new Error(`gemini ${r.status}: ${t.slice(0, 300)}`);
+      }
+      const j = await r.json();
+      return j.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    }
+
+    let content = "";
+    const errors: string[] = [];
+
+    const providers: Array<() => Promise<string>> = [];
+    if (OPENROUTER_API_KEY) {
+      providers.push(() =>
+        callOpenAICompatible(
+          "https://openrouter.ai/api/v1/chat/completions",
+          OPENROUTER_API_KEY,
+          "google/gemini-2.0-flash-exp:free",
+          { "HTTP-Referer": "https://lovable.dev", "X-Title": "APAS Analytics" }
+        )
+      );
+    }
+    if (GEMINI_API_KEY) providers.push(() => callGemini(GEMINI_API_KEY));
+    if (OPENAI_API_KEY) {
+      providers.push(() =>
+        callOpenAICompatible("https://api.openai.com/v1/chat/completions", OPENAI_API_KEY, "gpt-4o-mini")
+      );
+    }
+    if (GROK_API_KEY) {
+      providers.push(() =>
+        callOpenAICompatible("https://api.x.ai/v1/chat/completions", GROK_API_KEY, "grok-2-latest")
+      );
+    }
+
+    for (const p of providers) {
+      try {
+        content = await p();
+        if (content) break;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error("Provider failed:", msg);
+        errors.push(msg);
+      }
+    }
+
+    if (!content) {
+      return new Response(
+        JSON.stringify({ error: "All AI providers failed", details: errors }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
 
     let suggestions;
