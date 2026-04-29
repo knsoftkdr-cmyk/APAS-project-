@@ -713,7 +713,7 @@ const Analytics = () => {
       </Dialog>
 
       {/* Class Analytics Dialog — Dashboard layout */}
-      <Dialog open={classAnalyticsOpen} onOpenChange={setClassAnalyticsOpen}>
+      <Dialog open={classAnalyticsOpen} onOpenChange={(o) => { setClassAnalyticsOpen(o); if (!o) setClassSuggestions(null); }}>
         <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-0 gap-0">
           {/* Header strip */}
           <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-5 rounded-t-lg">
