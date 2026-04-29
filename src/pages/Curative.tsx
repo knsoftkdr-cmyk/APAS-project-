@@ -120,16 +120,31 @@ const MarkdownComponents = {
       {props.children}
     </em>
   ),
-  a: ({ node, ...props }: any) => (
-    <a
-      className="text-primary hover:text-primary/80 underline"
-      target="_blank"
-      rel="noopener noreferrer"
-      {...props}
-    >
-      {props.children}
-    </a>
-  ),
+  a: ({ node, href, children, ...props }: any) => {
+    const url: string = href || "";
+    const isYT = /youtube\.com|youtu\.be/i.test(url);
+    let label: React.ReactNode = children;
+    if (isYT) {
+      let topic = "";
+      try {
+        const u = new URL(url);
+        const q = u.searchParams.get("search_query") || u.searchParams.get("q") || "";
+        topic = decodeURIComponent(q.replace(/\+/g, " ")).trim();
+      } catch { /* ignore */ }
+      label = topic ? `▶ Watch on YouTube: ${topic}` : "▶ Watch on YouTube";
+    }
+    return (
+      <a
+        href={url}
+        className="text-primary hover:text-primary/80 underline font-medium"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      >
+        {label}
+      </a>
+    );
+  },
   hr: ({ node, ...props }: any) => (
     <hr className="my-4 border-border" {...props} />
   ),
