@@ -1020,7 +1020,33 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
     
     // Convert markdown to structured HTML
     let html = messageContent;
-    
+
+    // Helper: friendly label for a YouTube link
+    const makeYoutubeLabel = (url: string, fallback?: string): string => {
+      try {
+        const u = new URL(url);
+        const q = u.searchParams.get('search_query') || u.searchParams.get('q');
+        if (q) {
+          const topic = decodeURIComponent(q.replace(/\+/g, ' ')).trim();
+          return `▶ Watch on YouTube: ${topic}`;
+        }
+      } catch { /* ignore */ }
+      if (fallback && !/^https?:/i.test(fallback)) return `▶ ${fallback}`;
+      return '▶ Watch on YouTube';
+    };
+
+    // 1) Markdown links [text](url) — replace YouTube ones with friendly labels, all open in new tab
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, text: string, url: string) => {
+      const isYT = /youtube\.com|youtu\.be/i.test(url);
+      const label = isYT ? makeYoutubeLabel(url, text) : text;
+      return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    });
+
+    // 2) Bare YouTube URLs → friendly anchor
+    html = html.replace(/(^|[\s(])(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s)]+)/g, (_m, pre: string, url: string) => {
+      return `${pre}<a href="${url}" target="_blank" rel="noopener noreferrer">${makeYoutubeLabel(url)}</a>`;
+    });
+
     // Tables
     html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)*)/gm, (match, header, sep, body) => {
       const headerCells = header.split('|').filter((c: string) => c.trim()).map((c: string) => `<th>${c.trim()}</th>`).join('');
@@ -1030,27 +1056,27 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       }).join('');
       return `<table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
     });
-    
+
     // Headings
     html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
     html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
     html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
     html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
-    
+
     // Bold and italic
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    
+    html = html.replace(/(^|[\s(])\*([^\*\n]+)\*(?=[\s.,;:!?)]|$)/g, '$1<em>$2</em>');
+
     // Blockquotes
     html = html.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
-    
+
     // Horizontal rules
     html = html.replace(/^---$/gm, '<hr>');
-    
-    // Lists
-    html = html.replace(/^- (.*?)$/gm, '<li>$1</li>');
+
+    // Lists — support both "- " and "* " bullets
+    html = html.replace(/^[ \t]*[-*][ \t]+(.*?)$/gm, '<li>$1</li>');
     html = html.replace(/^(\d+)\. (.*?)$/gm, '<li>$1. $2</li>');
-    
+
     // Wrap consecutive <li> in <ul>
     html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
     
