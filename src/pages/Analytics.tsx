@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar, Bell, MessageSquare, GraduationCap, Inbox } from "lucide-react";
+import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar, Bell, MessageSquare, GraduationCap, Inbox, Sparkles, Loader2 } from "lucide-react";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
