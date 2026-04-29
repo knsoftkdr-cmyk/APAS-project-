@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar, Bell, MessageSquare, GraduationCap, Inbox } from "lucide-react";
+import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar, Bell, MessageSquare, GraduationCap, Inbox, Sparkles, Loader2 } from "lucide-react";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -43,6 +43,10 @@ const Analytics = () => {
   const [submissionFilter, setSubmissionFilter] = useState<"all" | "submitted" | "not_submitted">("all");
   const [assignmentFilter, setAssignmentFilter] = useState<string | null>(null);
   const [showPendingList, setShowPendingList] = useState(false);
+  const [individualSuggestions, setIndividualSuggestions] = useState<any | null>(null);
+  const [individualLoading, setIndividualLoading] = useState(false);
+  const [classSuggestions, setClassSuggestions] = useState<any | null>(null);
+  const [classLoading, setClassLoading] = useState(false);
 
   const isAuthorized =
     profile?.role === "teacher" || profile?.role === "admin" || profile?.role === "school_admin";
@@ -231,6 +235,80 @@ const Analytics = () => {
     toast.success("Score saved");
     queryClient.invalidateQueries({ queryKey: ["analytics-athome-submissions", assignmentIds] });
     setReviewing(null);
+  };
+
+  const generateIndividualSuggestions = async () => {
+    if (!reviewing) return;
+    const score = parseInt(scoreInput, 10);
+    if (isNaN(score)) {
+      toast.error("Enter a score first to generate suggestions");
+      return;
+    }
+    setIndividualLoading(true);
+    setIndividualSuggestions(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("analytics-ai-suggestions", {
+        body: {
+          mode: "individual",
+          studentName: reviewing.student_name,
+          className: getClassLabel(selectedClass),
+          section: selectedSection,
+          topic: reviewing.assignment?.topic || reviewing.assignment?.period_title,
+          score,
+          teacherFeedback: feedbackInput,
+          answers: reviewingAnswers,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setIndividualSuggestions(data.suggestions);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate suggestions");
+    } finally {
+      setIndividualLoading(false);
+    }
+  };
+
+  const generateClassSuggestions = async () => {
+    setClassLoading(true);
+    setClassSuggestions(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("analytics-ai-suggestions", {
+        body: {
+          mode: "class",
+          className: getClassLabel(selectedClass),
+          section: selectedSection,
+          avgScore: Math.round(classAnalytics.avgScore),
+          submissionRate: classAnalytics.submissionRate,
+          totalStudents: classAnalytics.totalStudents,
+          pendingEval: classAnalytics.pendingEval,
+          perAssignment: classAnalytics.perAssignment.map((a: any) => ({
+            name: a.fullName || a.name,
+            avgScore: a.avgScore,
+            submissions: a.submitted,
+          })),
+          topPerformers: classAnalytics.top.map((s: any) => ({
+            name: s.student_name,
+            avgScore: s.avgScore || 0,
+          })),
+          bottomPerformers: classAnalytics.bottom.map((s: any) => ({
+            name: s.student_name,
+            avgScore: s.avgScore || 0,
+          })),
+          commonFeedback: submissions
+            .filter((s: any) => s.teacher_feedback)
+            .slice(0, 10)
+            .map((s: any) => s.teacher_feedback),
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setClassSuggestions(data.suggestions);
+    } catch (e: any) {
+      toast.error(e.message || "Failed to generate suggestions");
+    } finally {
+      setClassLoading(false);
+    }
   };
 
   if (!isAuthorized) {
@@ -504,7 +582,7 @@ const Analytics = () => {
       )}
 
       {/* Review Answers Dialog */}
-      <Dialog open={!!reviewing} onOpenChange={(o) => !o && setReviewing(null)}>
+      <Dialog open={!!reviewing} onOpenChange={(o) => { if (!o) { setReviewing(null); setIndividualSuggestions(null); } }}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
@@ -551,6 +629,80 @@ const Analytics = () => {
             </div>
           </div>
 
+          {/* AI Suggestions Panel */}
+          <div className="pt-3 border-t space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">AI Improvement Suggestions</span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={generateIndividualSuggestions}
+                disabled={individualLoading || !scoreInput}
+                className="gap-1.5"
+              >
+                {individualLoading ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" /> {individualSuggestions ? "Regenerate" : "Generate"}</>
+                )}
+              </Button>
+            </div>
+
+            {!individualSuggestions && !individualLoading && (
+              <p className="text-xs text-muted-foreground">
+                Enter a score and (optionally) feedback, then generate personalized suggestions for this student.
+              </p>
+            )}
+
+            {individualSuggestions && (
+              <div className="rounded-lg border bg-primary/5 p-4 space-y-3">
+                <p className="text-sm text-foreground/90">{individualSuggestions.summary}</p>
+
+                {individualSuggestions.strengths?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-emerald-700 mb-1">✓ Strengths</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                      {individualSuggestions.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {individualSuggestions.weak_areas?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-amber-700 mb-1">⚠ Areas to Improve</p>
+                    <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                      {individualSuggestions.weak_areas.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {individualSuggestions.suggestions?.length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-primary mb-1">💡 Suggested Actions</p>
+                    <div className="space-y-1.5">
+                      {individualSuggestions.suggestions.map((s: any, i: number) => (
+                        <div key={i} className="rounded border bg-background p-2">
+                          <p className="text-xs font-semibold">{s.title}</p>
+                          <p className="text-xs text-muted-foreground">{s.action}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {individualSuggestions.parent_tip && (
+                  <div className="rounded bg-background border p-2">
+                    <p className="text-[10px] font-semibold uppercase text-muted-foreground">Parent tip</p>
+                    <p className="text-xs">{individualSuggestions.parent_tip}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewing(null)}>Cancel</Button>
             <Button onClick={saveScore} disabled={saving}>
@@ -561,7 +713,7 @@ const Analytics = () => {
       </Dialog>
 
       {/* Class Analytics Dialog — Dashboard layout */}
-      <Dialog open={classAnalyticsOpen} onOpenChange={setClassAnalyticsOpen}>
+      <Dialog open={classAnalyticsOpen} onOpenChange={(o) => { setClassAnalyticsOpen(o); if (!o) setClassSuggestions(null); }}>
         <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto p-0 gap-0">
           {/* Header strip */}
           <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground p-5 rounded-t-lg">
@@ -676,7 +828,97 @@ const Analytics = () => {
               </CardContent>
             </Card>
 
-            {/* Per-assignment bar chart */}
+            {/* AI Class Improvement Suggestions */}
+            <Card className="shadow-sm border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    AI Suggestions for the Class
+                  </CardTitle>
+                  <Button
+                    size="sm"
+                    onClick={generateClassSuggestions}
+                    disabled={classLoading || classAnalytics.totalStudents === 0}
+                    className="gap-1.5"
+                  >
+                    {classLoading ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Analyzing…</>
+                    ) : (
+                      <><Sparkles className="h-3.5 w-3.5" /> {classSuggestions ? "Regenerate" : "Generate"}</>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {!classSuggestions && !classLoading && (
+                  <p className="text-xs text-muted-foreground">
+                    Generate AI-powered teaching strategies based on class scores, per-assignment averages, and teacher feedback.
+                  </p>
+                )}
+                {classSuggestions && (
+                  <div className="space-y-3">
+                    <p className="text-sm">{classSuggestions.summary}</p>
+
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {classSuggestions.class_strengths?.length > 0 && (
+                        <div className="rounded-lg border bg-background p-3">
+                          <p className="text-xs font-semibold text-emerald-700 mb-1.5">✓ Class Strengths</p>
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                            {classSuggestions.class_strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {classSuggestions.class_weak_areas?.length > 0 && (
+                        <div className="rounded-lg border bg-background p-3">
+                          <p className="text-xs font-semibold text-amber-700 mb-1.5">⚠ Areas to Re-teach</p>
+                          <ul className="list-disc list-inside text-xs space-y-0.5 text-foreground/85">
+                            {classSuggestions.class_weak_areas.map((s: string, i: number) => <li key={i}>{s}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {classSuggestions.teaching_strategies?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-primary mb-1.5">💡 Teaching Strategies</p>
+                        <div className="grid md:grid-cols-2 gap-2">
+                          {classSuggestions.teaching_strategies.map((s: any, i: number) => (
+                            <div key={i} className="rounded border bg-background p-2.5">
+                              <p className="text-xs font-semibold">{s.title}</p>
+                              <p className="text-xs text-muted-foreground">{s.action}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {classSuggestions.focus_students?.length > 0 && (
+                      <div>
+                        <p className="text-xs font-semibold text-rose-700 mb-1.5">🎯 Focus Students</p>
+                        <div className="space-y-1.5">
+                          {classSuggestions.focus_students.map((s: any, i: number) => (
+                            <div key={i} className="rounded border bg-background p-2.5">
+                              <p className="text-xs font-semibold">{s.name}</p>
+                              <p className="text-[11px] text-muted-foreground">Why: {s.why}</p>
+                              <p className="text-[11px] text-foreground/80">Next step: {s.intervention}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {classSuggestions.next_lesson_recommendation && (
+                      <div className="rounded-lg border-2 border-primary/30 bg-primary/5 p-2.5">
+                        <p className="text-[10px] font-semibold uppercase text-primary">Next Lesson Recommendation</p>
+                        <p className="text-xs">{classSuggestions.next_lesson_recommendation}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {classAnalytics.perAssignment.length > 0 && (
               <Card className="shadow-sm">
                 <CardHeader className="pb-2">
