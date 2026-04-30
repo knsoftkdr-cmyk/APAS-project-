@@ -174,15 +174,7 @@ const AuthBackground = () => (
       </svg>
     </div>
 
-    {/* Excellencia Infinitum logo — top left corner */}
-    <div className="absolute top-4 left-4 z-[5] pointer-events-none flex items-center gap-2">
-      <img
-        src={excellenciaLogoFull}
-        alt="Excellencia Infinitum"
-        className="h-28 sm:h-32 md:h-40 w-auto drop-shadow-lg select-none"
-      />
-    </div>
-
+    {/* Top-left logo removed */}
     {/* Knsoft Technologies branding — bottom right */}
     <div className="absolute bottom-4 right-4 z-[5] pointer-events-none flex flex-col items-end gap-1">
       <img
