@@ -142,11 +142,6 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {isStudentLogin ? (
-                <p className="text-xs text-muted-foreground">
-                  Enter either the student&apos;s own password or the imported DOB password in DDMMYYYY format.
-                </p>
-              ) : null}
             </div>
             <Button
               type="submit"
