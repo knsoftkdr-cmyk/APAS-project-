@@ -1,6 +1,4 @@
 import { useEffect, useRef } from "react";
-import excellenciaLogo from "@/assets/excellencia-logo.png";
-import excellenciaLogoFull from "@/assets/excellencia-logo-full.png";
 import knsoftLogo from "@/assets/knsoft-logo.png";
 
 /* ── Floating particles canvas (purple / blue / pink theme) ── */
