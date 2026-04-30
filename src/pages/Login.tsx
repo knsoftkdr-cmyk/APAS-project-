@@ -105,27 +105,6 @@ const Login = () => {
               <span className="text-sm font-medium text-foreground">I am a Student</span>
             </label>
 
-            {isStudentLogin ? (
-              <div className="space-y-3 rounded-xl border border-border bg-background/60 px-4 py-4 text-sm text-muted-foreground">
-                <div>
-                  <p className="font-medium text-foreground">Student login</p>
-                  <p className="mt-1">Use your Student ID as the login ID.</p>
-                </div>
-
-                <div className="space-y-2">
-                  {studentPasswordOptions.map((option) => (
-                    <div key={option.title} className="rounded-lg border border-border bg-background px-3 py-2">
-                      <p className="font-medium text-foreground">{option.title}</p>
-                      <p className="mt-1 text-muted-foreground">{option.description}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <p>
-                  If the account was imported from Excel, the DOB password works only when the Date of Birth was uploaded for that student.
-                </p>
-              </div>
-            ) : null}
 
             <div className="space-y-2">
               <Label htmlFor="identifier" className="text-foreground font-medium">
