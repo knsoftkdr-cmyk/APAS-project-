@@ -17,16 +17,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const studentPasswordOptions = [
-    {
-      title: "Registration password",
-      description: "Use the password the student created during registration.",
-    },
-    {
-      title: "Excel import DOB password",
-      description: "Use the uploaded Date of Birth in DDMMYYYY format, for example 8/7/2016 → 08072016.",
-    },
-  ];
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,27 +105,6 @@ const Login = () => {
               <span className="text-sm font-medium text-foreground">I am a Student</span>
             </label>
 
-            {isStudentLogin ? (
-              <div className="space-y-3 rounded-xl border border-border bg-background/60 px-4 py-4 text-sm text-muted-foreground">
-                <div>
-                  <p className="font-medium text-foreground">Student login</p>
-                  <p className="mt-1">Use your Student ID as the login ID.</p>
-                </div>
-
-                <div className="space-y-2">
-                  {studentPasswordOptions.map((option) => (
-                    <div key={option.title} className="rounded-lg border border-border bg-background px-3 py-2">
-                      <p className="font-medium text-foreground">{option.title}</p>
-                      <p className="mt-1 text-muted-foreground">{option.description}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <p>
-                  If the account was imported from Excel, the DOB password works only when the Date of Birth was uploaded for that student.
-                </p>
-              </div>
-            ) : null}
 
             <div className="space-y-2">
               <Label htmlFor="identifier" className="text-foreground font-medium">
@@ -173,11 +142,6 @@ const Login = () => {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {isStudentLogin ? (
-                <p className="text-xs text-muted-foreground">
-                  Enter either the student&apos;s own password or the imported DOB password in DDMMYYYY format.
-                </p>
-              ) : null}
             </div>
             <Button
               type="submit"

@@ -1,6 +1,4 @@
 import { useEffect, useRef } from "react";
-import excellenciaLogo from "@/assets/excellencia-logo.png";
-import excellenciaLogoFull from "@/assets/excellencia-logo-full.png";
 import knsoftLogo from "@/assets/knsoft-logo.png";
 
 /* ── Floating particles canvas (purple / blue / pink theme) ── */
@@ -134,17 +132,7 @@ const AuthBackground = () => (
       }}
     />
 
-    {/* Excellencia Infinitum subtle repeating watermark */}
-    <div
-      className="absolute inset-0 z-[2] pointer-events-none opacity-[0.12]"
-      style={{
-        backgroundImage: `url(${excellenciaLogo})`,
-        backgroundRepeat: "repeat",
-        backgroundSize: "240px auto",
-      }}
-      aria-hidden="true"
-    />
-
+    {/* Watermark removed */}
     {/* Flowing pink / purple / blue gradient blobs */}
     <div className="absolute -left-32 top-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-pink-400/40 to-purple-500/30 blur-3xl auth-float-slow" />
     <div className="absolute -right-32 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-bl from-fuchsia-400/35 to-purple-400/25 blur-3xl auth-float-slow-reverse" />
@@ -186,15 +174,7 @@ const AuthBackground = () => (
       </svg>
     </div>
 
-    {/* Excellencia Infinitum logo — top left corner */}
-    <div className="absolute top-4 left-4 z-[5] pointer-events-none flex items-center gap-2">
-      <img
-        src={excellenciaLogoFull}
-        alt="Excellencia Infinitum"
-        className="h-28 sm:h-32 md:h-40 w-auto drop-shadow-lg select-none"
-      />
-    </div>
-
+    {/* Top-left logo removed */}
     {/* Knsoft Technologies branding — bottom right */}
     <div className="absolute bottom-4 right-4 z-[5] pointer-events-none flex flex-col items-end gap-1">
       <img
