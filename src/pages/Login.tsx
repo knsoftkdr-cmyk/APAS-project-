@@ -17,16 +17,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const studentPasswordOptions = [
-    {
-      title: "Registration password",
-      description: "Use the password the student created during registration.",
-    },
-    {
-      title: "Excel import DOB password",
-      description: "Use the uploaded Date of Birth in DDMMYYYY format, for example 8/7/2016 → 08072016.",
-    },
-  ];
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
