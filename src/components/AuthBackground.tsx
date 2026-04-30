@@ -132,17 +132,7 @@ const AuthBackground = () => (
       }}
     />
 
-    {/* Excellencia Infinitum subtle repeating watermark */}
-    <div
-      className="absolute inset-0 z-[2] pointer-events-none opacity-[0.12]"
-      style={{
-        backgroundImage: `url(${excellenciaLogo})`,
-        backgroundRepeat: "repeat",
-        backgroundSize: "240px auto",
-      }}
-      aria-hidden="true"
-    />
-
+    {/* Watermark removed */}
     {/* Flowing pink / purple / blue gradient blobs */}
     <div className="absolute -left-32 top-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-pink-400/40 to-purple-500/30 blur-3xl auth-float-slow" />
     <div className="absolute -right-32 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-bl from-fuchsia-400/35 to-purple-400/25 blur-3xl auth-float-slow-reverse" />
