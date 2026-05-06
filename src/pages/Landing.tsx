@@ -101,8 +101,9 @@ const Landing = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
             <a href="#home" className="hover:text-indigo-600 transition-colors">Home</a>
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
-            <a href="#analytics" className="hover:text-indigo-600 transition-colors">Analytics</a>
-            <a href="#about" className="hover:text-indigo-600 transition-colors">About</a>
+            <a href="#students" className="hover:text-indigo-600 transition-colors">Students</a>
+            <a href="#faculty" className="hover:text-indigo-600 transition-colors">Faculty</a>
+            <a href="#how" className="hover:text-indigo-600 transition-colors">How it works</a>
             <a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a>
           </div>
 
