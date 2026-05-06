@@ -13,6 +13,19 @@ import {
   Zap,
   Target,
   TrendingUp,
+  Trophy,
+  MessageCircle,
+  Award,
+  Flame,
+  Star,
+  BookOpen,
+  Users,
+  LineChart,
+  FileText,
+  Activity,
+  UserPlus,
+  Lightbulb,
+  Rocket,
 } from "lucide-react";
 
 const features = [
@@ -88,8 +101,9 @@ const Landing = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
             <a href="#home" className="hover:text-indigo-600 transition-colors">Home</a>
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
-            <a href="#analytics" className="hover:text-indigo-600 transition-colors">Analytics</a>
-            <a href="#about" className="hover:text-indigo-600 transition-colors">About</a>
+            <a href="#students" className="hover:text-indigo-600 transition-colors">Students</a>
+            <a href="#faculty" className="hover:text-indigo-600 transition-colors">Faculty</a>
+            <a href="#how" className="hover:text-indigo-600 transition-colors">How it works</a>
             <a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a>
           </div>
 
@@ -405,6 +419,302 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* SECTION 3 — Student Experience */}
+      <section id="students" className="relative py-24 px-6 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-xs font-semibold text-purple-700 mb-4">
+              Student Experience
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Built for{" "}
+              <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                modern students
+              </span>{" "}
+              who want smarter learning experiences
+            </h2>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Dashboard mockup */}
+            <div data-reveal className="reveal relative h-[560px]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl shadow-purple-500/40 floaty">
+                <div className="w-full h-full rounded-3xl bg-white p-6 flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs text-slate-500">Welcome back</div>
+                      <div className="font-bold text-lg">Hi, Aarav 👋</div>
+                    </div>
+                    <div className="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold flex items-center gap-1">
+                      <Flame className="w-3 h-3" /> 12 day streak
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Math", val: 86, color: "#6366F1" },
+                      { label: "Science", val: 72, color: "#A855F7" },
+                      { label: "English", val: 94, color: "#EC4899" },
+                    ].map((s) => {
+                      const c = 2 * Math.PI * 26;
+                      const off = c - (s.val / 100) * c;
+                      return (
+                        <div key={s.label} className="rounded-xl bg-slate-50 p-3 flex flex-col items-center">
+                          <div className="relative w-16 h-16">
+                            <svg className="w-16 h-16 -rotate-90">
+                              <circle cx="32" cy="32" r="26" stroke="#E2E8F0" strokeWidth="6" fill="none" />
+                              <circle cx="32" cy="32" r="26" stroke={s.color} strokeWidth="6" fill="none" strokeDasharray={c} strokeDashoffset={off} strokeLinecap="round" />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold">{s.val}%</div>
+                          </div>
+                          <div className="mt-1 text-xs text-slate-600">{s.label}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4 border border-indigo-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-slate-700">Weekly Performance</span>
+                      <span className="text-xs text-emerald-600 font-semibold">+18%</span>
+                    </div>
+                    <div className="flex items-end gap-1.5 h-20">
+                      {[35, 55, 48, 70, 62, 85, 90].map((h, i) => (
+                        <div key={i} className="flex-1 rounded-t-md bg-gradient-to-t from-indigo-500 to-pink-500 chart-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }} />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-100 p-3 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-600 mt-0.5" />
+                    <div className="text-xs text-slate-700">
+                      <b>AI Mentor:</b> Try 5 quick algebra problems to boost your score by 8%.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -top-5 -right-3 rounded-2xl bg-white shadow-2xl shadow-purple-200 p-3 flex items-center gap-3 floaty floaty-2 z-10">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                  <Trophy className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-500">Achievement</div>
+                  <div className="font-bold text-xs text-slate-800">Quiz Master</div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white shadow-2xl shadow-indigo-200 p-3 max-w-[220px] floaty floaty-3 z-10">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                    <MessageCircle className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  <span className="text-xs font-semibold">AI Tutor</span>
+                  <span className="ml-auto w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                </div>
+                <div className="text-[11px] text-slate-600 bg-slate-50 rounded-lg p-2">
+                  Need help with photosynthesis? I can explain step by step ✨
+                </div>
+              </div>
+
+              <div className="absolute top-1/2 -left-6 -translate-y-1/2 rounded-2xl bg-white shadow-xl p-2 flex gap-1.5 floaty z-10">
+                {[Award, Star, Trophy].map((Ic, i) => (
+                  <div key={i} className={`w-9 h-9 rounded-lg flex items-center justify-center ${["bg-gradient-to-br from-pink-400 to-rose-500","bg-gradient-to-br from-amber-400 to-orange-500","bg-gradient-to-br from-indigo-400 to-purple-500"][i]}`}>
+                    <Ic className="w-4 h-4 text-white" />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Feature list */}
+            <div data-reveal className="reveal space-y-4">
+              {[
+                { icon: BarChart3, title: "Personal Analytics", desc: "Live charts of your strengths, gaps, and progress trajectory.", color: "from-indigo-500 to-purple-500" },
+                { icon: Target, title: "Progress Tracking", desc: "See how you grow week over week across every subject.", color: "from-purple-500 to-pink-500" },
+                { icon: Award, title: "Achievement Badges", desc: "Earn streaks, trophies and milestones as you learn.", color: "from-amber-500 to-orange-500" },
+                { icon: Sparkles, title: "Personalized Recommendations", desc: "AI suggests the right next lesson, exactly when you need it.", color: "from-pink-500 to-rose-500" },
+                { icon: MessageCircle, title: "24/7 AI Mentor", desc: "Ask anything. Your personal tutor is always one tap away.", color: "from-indigo-500 to-blue-500" },
+              ].map((f) => (
+                <div key={f.title} className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100 transition-all hover:-translate-y-1">
+                  <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                    <f.icon className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-bold">{f.title}</div>
+                    <p className="text-sm text-slate-600 mt-1">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4 — Faculty & Analytics */}
+      <section id="faculty" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/40 to-white">
+        <div className="max-w-7xl mx-auto">
+          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 mb-4">
+              For Educators
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Powerful Insights for{" "}
+              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                Educators
+              </span>
+            </h2>
+            <p className="mt-4 text-slate-600">
+              Track student engagement, identify weak areas, and improve outcomes using AI-powered analytics.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            <div data-reveal className="reveal grid sm:grid-cols-2 gap-4">
+              {[
+                { icon: LineChart, title: "Class Performance", desc: "Monitor every class & section in real time.", color: "from-indigo-500 to-purple-500" },
+                { icon: Activity, title: "Engagement Heatmaps", desc: "See where students light up — or fall off.", color: "from-purple-500 to-pink-500" },
+                { icon: FileText, title: "AI-Generated Reports", desc: "Auto-built insights, ready to share with parents.", color: "from-pink-500 to-rose-500" },
+                { icon: Users, title: "Student Insights", desc: "Drill into each learner's profile and growth.", color: "from-indigo-500 to-blue-500" },
+              ].map((f) => (
+                <div key={f.title} className="rounded-2xl bg-white border border-slate-100 p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-100 transition-all">
+                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-md`}>
+                    <f.icon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="mt-4 font-bold">{f.title}</div>
+                  <p className="text-sm text-slate-600 mt-1">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div data-reveal className="reveal relative h-[520px]">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6 shadow-xl floaty">
+                <div className="bg-white rounded-2xl h-full p-5 flex flex-col gap-4 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-bold">Class 8-A Overview</div>
+                      <div className="text-xs text-slate-500">42 students · Last 30 days</div>
+                    </div>
+                    <div className="px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-semibold">+14% growth</div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { l: "Engagement", v: "92%", c: "text-indigo-600" },
+                      { l: "Avg Score", v: "78", c: "text-purple-600" },
+                      { l: "At Risk", v: "4", c: "text-rose-600" },
+                    ].map((k) => (
+                      <div key={k.l} className="rounded-lg bg-slate-50 p-2 text-center">
+                        <div className="text-[10px] text-slate-500">{k.l}</div>
+                        <div className={`text-lg font-extrabold ${k.c}`}>{k.v}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <div className="text-xs font-semibold text-slate-700 mb-2">Engagement Heatmap</div>
+                    <div className="grid grid-cols-12 gap-1">
+                      {Array.from({ length: 84 }).map((_, i) => {
+                        const intensity = Math.abs(Math.sin(i * 0.7)) * 0.85 + 0.12;
+                        return (
+                          <div key={i} className="aspect-square rounded-sm" style={{ background: `rgba(99, 102, 241, ${intensity.toFixed(2)})` }} />
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mt-auto rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-3 flex items-start gap-2">
+                    <FileText className="w-4 h-4 text-indigo-600 mt-0.5" />
+                    <div className="text-xs text-slate-700">
+                      <b>AI Report:</b> 3 students need extra support in <i>fractions</i>. Recommended: targeted practice set.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -top-4 -right-3 rounded-2xl bg-white shadow-xl p-3 flex items-center gap-2 floaty floaty-2 z-10">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <div className="text-[10px] text-slate-500">Outcomes</div>
+                  <div className="font-bold text-xs text-emerald-600">Improving</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 5 — How It Works */}
+      <section id="how" className="relative py-24 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100 text-xs font-semibold text-pink-700 mb-4">
+              How it works
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              From sign-up to{" "}
+              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+                smarter learning
+              </span>{" "}
+              in 4 steps
+            </h2>
+          </div>
+
+          {/* Desktop timeline */}
+          <div className="hidden md:block relative">
+            <div className="absolute top-10 left-[10%] right-[10%] h-1 rounded-full bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 overflow-hidden">
+              <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 connector-fill origin-left" />
+            </div>
+
+            <div className="grid grid-cols-4 gap-6 relative">
+              {[
+                { icon: UserPlus, title: "Register", desc: "Create your free account in seconds.", color: "from-indigo-500 to-purple-500" },
+                { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you.", color: "from-purple-500 to-pink-500" },
+                { icon: BarChart3, title: "Analyze Performance", desc: "AI tracks your strengths and gaps.", color: "from-pink-500 to-rose-500" },
+                { icon: Rocket, title: "Improve with AI", desc: "Get smart suggestions to grow faster.", color: "from-amber-500 to-orange-500" },
+              ].map((s, i) => (
+                <div key={s.title} data-reveal className="reveal text-center" style={{ transitionDelay: `${i * 120}ms` }}>
+                  <div className="relative mx-auto w-20 h-20">
+                    <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${s.color} blur-xl opacity-50`} />
+                    <div className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${s.color} flex items-center justify-center shadow-2xl shadow-purple-300/40 step-pulse`}>
+                      <s.icon className="w-8 h-8 text-white" />
+                    </div>
+                    <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center text-xs font-bold text-purple-600">
+                      {i + 1}
+                    </div>
+                  </div>
+                  <h3 className="mt-5 font-bold text-lg">{s.title}</h3>
+                  <p className="mt-2 text-sm text-slate-600">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Mobile vertical timeline */}
+          <div className="md:hidden relative pl-10">
+            <div className="absolute left-4 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500" />
+            {[
+              { icon: UserPlus, title: "Register", desc: "Create your free account in seconds." },
+              { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you." },
+              { icon: BarChart3, title: "Analyze Performance", desc: "AI tracks your strengths and gaps." },
+              { icon: Rocket, title: "Improve with AI", desc: "Get smart suggestions to grow faster." },
+            ].map((s, i) => (
+              <div key={s.title} data-reveal className="reveal relative mb-8">
+                <div className="absolute -left-[34px] top-0 w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                  <s.icon className="w-4 h-4 text-white" />
+                </div>
+                <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-md">
+                  <div className="text-xs text-purple-600 font-semibold">Step {i + 1}</div>
+                  <div className="font-bold mt-1">{s.title}</div>
+                  <p className="text-sm text-slate-600 mt-1">{s.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* About / CTA */}
       <section id="about" className="relative py-24 px-6">
         <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-12 text-center text-white shadow-2xl shadow-purple-500/40 relative overflow-hidden">
@@ -519,6 +829,12 @@ const Landing = () => {
 
         @keyframes growBar { from { transform: scaleY(.3); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
         .chart-bar { animation: growBar 1.2s cubic-bezier(.2,.8,.2,1) both; }
+
+        @keyframes connectorFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        .connector-fill { animation: connectorFill 2.5s ease-out forwards; }
+
+        @keyframes stepPulse { 0%,100% { box-shadow: 0 10px 30px -5px rgba(168,85,247,.4); } 50% { box-shadow: 0 10px 40px 0 rgba(236,72,153,.6); } }
+        .step-pulse { animation: stepPulse 3s ease-in-out infinite; }
       `}</style>
     </div>
   );
