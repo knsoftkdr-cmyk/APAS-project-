@@ -13,6 +13,19 @@ import {
   Zap,
   Target,
   TrendingUp,
+  Trophy,
+  MessageCircle,
+  Award,
+  Flame,
+  Star,
+  BookOpen,
+  Users,
+  LineChart,
+  FileText,
+  Activity,
+  UserPlus,
+  Lightbulb,
+  Rocket,
 } from "lucide-react";
 
 const features = [
