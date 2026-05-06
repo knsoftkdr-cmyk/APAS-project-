@@ -829,6 +829,12 @@ const Landing = () => {
 
         @keyframes growBar { from { transform: scaleY(.3); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
         .chart-bar { animation: growBar 1.2s cubic-bezier(.2,.8,.2,1) both; }
+
+        @keyframes connectorFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        .connector-fill { animation: connectorFill 2.5s ease-out forwards; }
+
+        @keyframes stepPulse { 0%,100% { box-shadow: 0 10px 30px -5px rgba(168,85,247,.4); } 50% { box-shadow: 0 10px 40px 0 rgba(236,72,153,.6); } }
+        .step-pulse { animation: stepPulse 3s ease-in-out infinite; }
       `}</style>
     </div>
   );
