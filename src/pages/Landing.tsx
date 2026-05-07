@@ -634,14 +634,14 @@ const Landing = () => {
               </div>
             </div>
 
-            {/* Feature list */}
+            {/* Feature list — student-only experiences (no overlap with main Features) */}
             <div data-reveal className="reveal space-y-4">
               {[
-                { icon: BarChart3, title: "Personal Analytics", desc: "Live charts of your strengths, gaps, and progress trajectory.", color: "from-indigo-500 to-purple-500" },
-                { icon: Target, title: "Progress Tracking", desc: "See how you grow week over week across every subject.", color: "from-purple-500 to-pink-500" },
-                { icon: Award, title: "Achievement Badges", desc: "Earn streaks, trophies and milestones as you learn.", color: "from-amber-500 to-orange-500" },
-                { icon: Sparkles, title: "Personalized Recommendations", desc: "AI suggests the right next lesson, exactly when you need it.", color: "from-pink-500 to-rose-500" },
+                { icon: Flame, title: "Daily Streaks & Habits", desc: "Build a consistent learning habit with streaks, reminders, and rewards.", color: "from-orange-500 to-rose-500" },
+                { icon: Trophy, title: "Achievement Badges", desc: "Earn trophies and milestones as you master each topic.", color: "from-amber-500 to-orange-500" },
                 { icon: MessageCircle, title: "24/7 AI Mentor", desc: "Ask anything. Your personal tutor is always one tap away.", color: "from-indigo-500 to-blue-500" },
+                { icon: Zap, title: "Gamified Practice", desc: "Quick games turn revision into something you actually want to do.", color: "from-purple-500 to-pink-500" },
+                { icon: Target, title: "Daily Goals", desc: "Small, achievable targets that keep you moving forward every day.", color: "from-pink-500 to-rose-500" },
               ].map((f) => (
                 <div key={f.title} className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100 transition-all hover:-translate-y-1">
                   <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
