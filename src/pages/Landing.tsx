@@ -769,6 +769,54 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-pink-50/30 to-white overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100 text-xs font-semibold text-pink-700 mb-4">
+              Loved by learners
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              What students &{" "}
+              <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                teachers
+              </span>{" "}
+              are saying
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { name: "Aarav S.", role: "Class 8 Student", quote: "APAS feels like having a personal tutor 24/7. My math scores jumped 22% in two months!", color: "from-indigo-500 to-purple-500" },
+              { name: "Ms. Priya R.", role: "Math Teacher", quote: "The heatmaps show me exactly which students need help. I save hours every week.", color: "from-purple-500 to-pink-500" },
+              { name: "Dr. Mehta", role: "Principal", quote: "School-wide growth of 31% in one term. APAS truly delivers measurable outcomes.", color: "from-pink-500 to-rose-500" },
+            ].map((t, i) => (
+              <div
+                key={t.name}
+                data-reveal
+                className="reveal group rounded-2xl bg-white border border-slate-100 p-7 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-200 transition-all relative overflow-hidden"
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${t.color} opacity-10 blur-2xl group-hover:opacity-30 transition-opacity`} />
+                <div className="flex gap-1 text-amber-400 mb-3">
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-current" />)}
+                </div>
+                <p className="text-slate-700 leading-relaxed">"{t.quote}"</p>
+                <div className="mt-6 flex items-center gap-3">
+                  <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-white font-bold`}>
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">{t.name}</div>
+                    <div className="text-xs text-slate-500">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* About / CTA */}
       <section id="about" className="relative py-24 px-6">
         <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-12 text-center text-white shadow-2xl shadow-purple-500/40 relative overflow-hidden">
