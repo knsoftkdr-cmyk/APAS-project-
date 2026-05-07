@@ -937,6 +937,9 @@ const Landing = () => {
 
         @keyframes stepPulse { 0%,100% { box-shadow: 0 10px 30px -5px rgba(168,85,247,.4); } 50% { box-shadow: 0 10px 40px 0 rgba(236,72,153,.6); } }
         .step-pulse { animation: stepPulse 3s ease-in-out infinite; }
+
+        @keyframes spinVerySlow { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
+        .animate-spin-very-slow { animation: spinVerySlow 60s linear infinite; }
       `}</style>
     </div>
   );
