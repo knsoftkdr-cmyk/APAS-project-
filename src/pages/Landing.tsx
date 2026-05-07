@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import heroStudent from "@/assets/landing-hero-student.png";
+import studentsPhoto from "@/assets/landing-students.jpg";
+import teacherPhoto from "@/assets/landing-teacher.jpg";
+import aiBrain from "@/assets/landing-ai-brain.png";
 import {
   Brain,
   BarChart3,
@@ -301,13 +305,27 @@ const Landing = () => {
             <div className="absolute top-1/3 -right-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 p-4 shadow-2xl shadow-purple-500/40 floaty floaty-2 z-10">
               <Zap className="w-6 h-6 text-white" />
             </div>
+
+            {/* Hero student illustration */}
+            <img
+              src={heroStudent}
+              alt="Student learning with AI"
+              className="absolute -bottom-10 -left-16 w-44 lg:w-56 drop-shadow-2xl floaty floaty-3 pointer-events-none select-none z-20"
+            />
           </div>
         </div>
       </section>
 
       {/* Why APAS */}
-      <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white overflow-hidden">
+        <img
+          src={aiBrain}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="absolute right-[-120px] top-1/2 -translate-y-1/2 w-[640px] opacity-[0.10] pointer-events-none select-none animate-spin-very-slow"
+        />
+        <div className="max-w-7xl mx-auto relative">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 mb-4">
               Why APAS
@@ -433,6 +451,24 @@ const Landing = () => {
               </span>{" "}
               who want smarter learning experiences
             </h2>
+          </div>
+
+          {/* Real student photo banner */}
+          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-purple-200">
+            <img
+              src={studentsPhoto}
+              alt="Students learning together with APAS"
+              loading="lazy"
+              className="w-full h-64 md:h-80 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/75 via-purple-800/40 to-transparent flex items-center">
+              <div className="px-8 md:px-14 max-w-xl text-white">
+                <div className="text-xs font-semibold uppercase tracking-widest text-pink-200">Real Classrooms</div>
+                <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
+                  50,000+ students already learning smarter with APAS
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -566,6 +602,24 @@ const Landing = () => {
             <p className="mt-4 text-slate-600">
               Track student engagement, identify weak areas, and improve outcomes using AI-powered analytics.
             </p>
+          </div>
+
+          {/* Real teacher photo banner */}
+          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200">
+            <img
+              src={teacherPhoto}
+              alt="Educator using APAS analytics"
+              loading="lazy"
+              className="w-full h-64 md:h-80 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-indigo-900/75 via-purple-800/40 to-transparent flex items-center justify-end">
+              <div className="px-8 md:px-14 max-w-xl text-right text-white">
+                <div className="text-xs font-semibold uppercase tracking-widest text-indigo-200">For Educators</div>
+                <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
+                  Teach smarter with real-time AI analytics
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-2 gap-10 items-center">
@@ -715,6 +769,54 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-pink-50/30 to-white overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-14">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100 text-xs font-semibold text-pink-700 mb-4">
+              Loved by learners
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              What students &{" "}
+              <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+                teachers
+              </span>{" "}
+              are saying
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { name: "Aarav S.", role: "Class 8 Student", quote: "APAS feels like having a personal tutor 24/7. My math scores jumped 22% in two months!", color: "from-indigo-500 to-purple-500" },
+              { name: "Ms. Priya R.", role: "Math Teacher", quote: "The heatmaps show me exactly which students need help. I save hours every week.", color: "from-purple-500 to-pink-500" },
+              { name: "Dr. Mehta", role: "Principal", quote: "School-wide growth of 31% in one term. APAS truly delivers measurable outcomes.", color: "from-pink-500 to-rose-500" },
+            ].map((t, i) => (
+              <div
+                key={t.name}
+                data-reveal
+                className="reveal group rounded-2xl bg-white border border-slate-100 p-7 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-200 transition-all relative overflow-hidden"
+                style={{ transitionDelay: `${i * 100}ms` }}
+              >
+                <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${t.color} opacity-10 blur-2xl group-hover:opacity-30 transition-opacity`} />
+                <div className="flex gap-1 text-amber-400 mb-3">
+                  {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-current" />)}
+                </div>
+                <p className="text-slate-700 leading-relaxed">"{t.quote}"</p>
+                <div className="mt-6 flex items-center gap-3">
+                  <div className={`w-11 h-11 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-white font-bold`}>
+                    {t.name[0]}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm">{t.name}</div>
+                    <div className="text-xs text-slate-500">{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* About / CTA */}
       <section id="about" className="relative py-24 px-6">
         <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-12 text-center text-white shadow-2xl shadow-purple-500/40 relative overflow-hidden">
@@ -835,6 +937,9 @@ const Landing = () => {
 
         @keyframes stepPulse { 0%,100% { box-shadow: 0 10px 30px -5px rgba(168,85,247,.4); } 50% { box-shadow: 0 10px 40px 0 rgba(236,72,153,.6); } }
         .step-pulse { animation: stepPulse 3s ease-in-out infinite; }
+
+        @keyframes spinVerySlow { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
+        .animate-spin-very-slow { animation: spinVerySlow 60s linear infinite; }
       `}</style>
     </div>
   );
