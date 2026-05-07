@@ -1040,6 +1040,10 @@ const Landing = () => {
 
         @keyframes spinVerySlow { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
         .animate-spin-very-slow { animation: spinVerySlow 60s linear infinite; }
+
+        #home, #about, #features, #analytics, #students, #faculty, #how, #get-started, #contact {
+          scroll-margin-top: 92px;
+        }
       `}</style>
     </div>
   );
