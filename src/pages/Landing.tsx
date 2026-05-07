@@ -604,7 +604,24 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
+          {/* Real teacher photo banner */}
+          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200">
+            <img
+              src={teacherPhoto}
+              alt="Educator using APAS analytics"
+              loading="lazy"
+              className="w-full h-64 md:h-80 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-l from-indigo-900/75 via-purple-800/40 to-transparent flex items-center justify-end">
+              <div className="px-8 md:px-14 max-w-xl text-right text-white">
+                <div className="text-xs font-semibold uppercase tracking-widest text-indigo-200">For Educators</div>
+                <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
+                  Teach smarter with real-time AI analytics
+                </div>
+              </div>
+            </div>
+          </div>
+
             <div data-reveal className="reveal grid sm:grid-cols-2 gap-4">
               {[
                 { icon: LineChart, title: "Class Performance", desc: "Monitor every class & section in real time.", color: "from-indigo-500 to-purple-500" },
