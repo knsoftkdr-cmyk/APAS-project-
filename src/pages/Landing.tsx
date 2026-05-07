@@ -453,6 +453,24 @@ const Landing = () => {
             </h2>
           </div>
 
+          {/* Real student photo banner */}
+          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-purple-200">
+            <img
+              src={studentsPhoto}
+              alt="Students learning together with APAS"
+              loading="lazy"
+              className="w-full h-64 md:h-80 object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/75 via-purple-800/40 to-transparent flex items-center">
+              <div className="px-8 md:px-14 max-w-xl text-white">
+                <div className="text-xs font-semibold uppercase tracking-widest text-pink-200">Real Classrooms</div>
+                <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
+                  50,000+ students already learning smarter with APAS
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Dashboard mockup */}
             <div data-reveal className="reveal relative h-[560px]">
