@@ -622,6 +622,7 @@ const Landing = () => {
             </div>
           </div>
 
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div data-reveal className="reveal grid sm:grid-cols-2 gap-4">
               {[
                 { icon: LineChart, title: "Class Performance", desc: "Monitor every class & section in real time.", color: "from-indigo-500 to-purple-500" },
