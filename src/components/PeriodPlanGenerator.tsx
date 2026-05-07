@@ -19,7 +19,6 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import ReactMarkdown from "react-markdown";
-import html2pdf from "html2pdf.js";
 
 // ─── Custom Markdown Components (same as Lesson Plan tab) ─────────────
 const LessonMarkdownComponents = {
@@ -508,7 +507,7 @@ const PeriodPlanGenerator = () => {
     return `${cls}-${sec} ${sub}${topic}`.replace(/\s+/g, ' ').trim();
   };
 
-  const handleDownloadLesson = () => {
+  const handleDownloadLesson = async () => {
     if (!selectedLesson?.lesson_content) return;
     const label = getLessonLabel(selectedLesson);
     const timestamp = new Date().toLocaleString('en-US', {
@@ -616,6 +615,7 @@ const PeriodPlanGenerator = () => {
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
 
+    const html2pdf = (await import("html2pdf.js")).default;
     html2pdf().set(opt).from(tempDiv).save();
     toast.success("PDF downloaded successfully!");
   };

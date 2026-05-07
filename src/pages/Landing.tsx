@@ -40,24 +40,28 @@ const features = [
     title: "Adaptive Learning",
     desc: "AI customizes learning paths based on each student's performance and pace.",
     gradient: "from-indigo-500 to-purple-500",
+    href: "#students",
   },
   {
     icon: BarChart3,
     title: "Smart Analytics",
     desc: "Real-time dashboards and academic performance insights at your fingertips.",
     gradient: "from-purple-500 to-pink-500",
+    href: "#analytics",
   },
   {
     icon: Sparkles,
     title: "Personalized Recommendations",
     desc: "Smart suggestions of learning materials based on strengths and weaknesses.",
     gradient: "from-pink-500 to-rose-500",
+    href: "#students",
   },
   {
     icon: ClipboardCheck,
     title: "Intelligent Assessments",
     desc: "AI-driven tests with continuous progress tracking and feedback.",
     gradient: "from-indigo-500 to-blue-500",
+    href: "#how",
   },
 ];
 
@@ -95,7 +99,7 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900">
+      <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900 scroll-smooth">
       {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -116,6 +120,7 @@ const Landing = () => {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
             <a href="#home" className="hover:text-indigo-600 transition-colors">Home</a>
+            <a href="#about" className="hover:text-indigo-600 transition-colors">About</a>
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
             <a href="#students" className="hover:text-indigo-600 transition-colors">Students</a>
             <a href="#faculty" className="hover:text-indigo-600 transition-colors">Faculty</a>
@@ -138,11 +143,13 @@ const Landing = () => {
 
         {menuOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-100 px-6 py-4 space-y-3 text-sm font-medium">
-            <a href="#home" className="block">Home</a>
-            <a href="#features" className="block">Features</a>
-            <a href="#analytics" className="block">Analytics</a>
-            <a href="#about" className="block">About</a>
-            <a href="#contact" className="block">Contact</a>
+            <a href="#home" onClick={() => setMenuOpen(false)} className="block">Home</a>
+            <a href="#about" onClick={() => setMenuOpen(false)} className="block">About</a>
+            <a href="#features" onClick={() => setMenuOpen(false)} className="block">Features</a>
+            <a href="#students" onClick={() => setMenuOpen(false)} className="block">Students</a>
+            <a href="#faculty" onClick={() => setMenuOpen(false)} className="block">Faculty</a>
+            <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
+            <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
             <Link to="/login" className="block">
               <Button className="w-full bg-gradient-to-r from-indigo-600 to-pink-500 text-white rounded-full">
                 Get Started
@@ -155,10 +162,10 @@ const Landing = () => {
       {/* Hero */}
       <section
         id="home"
-        className="relative pt-32 pb-24 px-6 overflow-hidden"
+        className="relative pt-32 pb-24 px-6 overflow-hidden bg-white"
       >
         {/* animated mesh background */}
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <div className="absolute top-0 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-400/30 blur-3xl mesh-blob" />
           <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-purple-400/30 blur-3xl mesh-blob mesh-blob-2" />
           <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] rounded-full bg-pink-400/20 blur-3xl mesh-blob mesh-blob-3" />
@@ -177,7 +184,7 @@ const Landing = () => {
           ))}
         </div>
 
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           {/* Left */}
           <div data-reveal className="reveal">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur border border-indigo-100 text-xs font-semibold text-indigo-700 shadow-sm mb-6">
@@ -329,8 +336,8 @@ const Landing = () => {
       </section>
 
       {/* About APAS */}
-      <section id="about" className="relative py-28 px-6 overflow-hidden">
-        <div className="absolute inset-0 -z-10">
+      <section id="about" className="relative py-28 px-6 overflow-hidden bg-slate-950">
+        <div className="absolute inset-0 z-0">
           <img
             src={aboutBg}
             alt=""
@@ -343,7 +350,7 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-indigo-950/80 to-slate-950/90" />
         </div>
 
-        <div className="max-w-6xl mx-auto text-white">
+        <div className="relative z-10 max-w-6xl mx-auto text-white">
           <div data-reveal className="reveal text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-pink-200 mb-5">
               <Sparkles className="w-3.5 h-3.5" />
@@ -426,10 +433,11 @@ const Landing = () => {
 
           <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f, i) => (
-              <div
+              <a
+                href={f.href}
                 key={f.title}
                 data-reveal
-                className="reveal group relative rounded-2xl p-[1.5px] bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-300/50"
+                className="reveal group relative rounded-2xl p-[1.5px] bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 <div className="rounded-2xl bg-white h-full p-6">
@@ -444,7 +452,7 @@ const Landing = () => {
                     Learn more <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -1032,6 +1040,10 @@ const Landing = () => {
 
         @keyframes spinVerySlow { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
         .animate-spin-very-slow { animation: spinVerySlow 60s linear infinite; }
+
+        #home, #about, #features, #analytics, #students, #faculty, #how, #get-started, #contact {
+          scroll-margin-top: 92px;
+        }
       `}</style>
     </div>
   );
