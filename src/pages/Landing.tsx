@@ -889,32 +889,42 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* About / CTA */}
-      <section id="about" className="relative py-24 px-6">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-12 text-center text-white shadow-2xl shadow-purple-500/40 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <span
-                key={i}
-                className="particle"
-                style={{
-                  left: `${(i * 47) % 100}%`,
-                  top: `${(i * 31) % 100}%`,
-                  animationDelay: `${i * 0.3}s`,
-                  background: "white",
-                }}
-              />
-            ))}
-          </div>
-          <div className="relative">
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+      {/* CTA */}
+      <section id="get-started" className="relative py-24 px-6">
+        <div className="max-w-5xl mx-auto rounded-3xl relative overflow-hidden shadow-2xl shadow-purple-500/40">
+          <img
+            src={ctaBg}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            width={1920}
+            height={1080}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/90 via-purple-700/85 to-pink-600/90" />
+          <div className="relative p-12 text-center text-white">
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="particle"
+                  style={{
+                    left: `${(i * 47) % 100}%`,
+                    top: `${(i * 31) % 100}%`,
+                    animationDelay: `${i * 0.3}s`,
+                    background: "white",
+                  }}
+                />
+              ))}
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight relative">
               Ready to learn smarter?
             </h2>
-            <p className="mt-4 text-white/90 max-w-xl mx-auto">
+            <p className="mt-4 text-white/90 max-w-xl mx-auto relative">
               Join the growing community of students and educators using APAS to
               unlock potential through adaptive, AI-powered learning.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4 justify-center">
+            <div className="mt-8 flex flex-wrap gap-4 justify-center relative">
               <Link to="/login">
                 <Button size="lg" className="rounded-full px-8 h-12 bg-white text-indigo-700 hover:bg-white/90 font-semibold shadow-xl">
                   Get Started Free <ArrowRight className="ml-1" />
