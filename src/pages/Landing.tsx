@@ -95,7 +95,7 @@ const Landing = () => {
   }, []);
 
   return (
-    <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900">
+      <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900 scroll-smooth">
       {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -158,7 +158,7 @@ const Landing = () => {
       {/* Hero */}
       <section
         id="home"
-        className="relative pt-32 pb-24 px-6 overflow-hidden"
+        className="relative pt-32 pb-24 px-6 overflow-hidden bg-white"
       >
         {/* animated mesh background */}
         <div className="absolute inset-0 z-0">
@@ -332,7 +332,7 @@ const Landing = () => {
       </section>
 
       {/* About APAS */}
-      <section id="about" className="relative py-28 px-6 overflow-hidden">
+      <section id="about" className="relative py-28 px-6 overflow-hidden bg-slate-950">
         <div className="absolute inset-0 z-0">
           <img
             src={aboutBg}
