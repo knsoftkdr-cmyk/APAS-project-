@@ -305,6 +305,13 @@ const Landing = () => {
             <div className="absolute top-1/3 -right-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 p-4 shadow-2xl shadow-purple-500/40 floaty floaty-2 z-10">
               <Zap className="w-6 h-6 text-white" />
             </div>
+
+            {/* Hero student illustration */}
+            <img
+              src={heroStudent}
+              alt="Student learning with AI"
+              className="absolute -bottom-10 -left-16 w-44 lg:w-56 drop-shadow-2xl floaty floaty-3 pointer-events-none select-none z-20"
+            />
           </div>
         </div>
       </section>
