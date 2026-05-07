@@ -5,6 +5,8 @@ import heroStudent from "@/assets/landing-hero-student.png";
 import studentsPhoto from "@/assets/landing-students.jpg";
 import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
+import aboutBg from "@/assets/landing-about-bg.jpg";
+import ctaBg from "@/assets/landing-cta-bg.jpg";
 import {
   Brain,
   BarChart3,
