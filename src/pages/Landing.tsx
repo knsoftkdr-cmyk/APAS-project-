@@ -158,7 +158,7 @@ const Landing = () => {
         className="relative pt-32 pb-24 px-6 overflow-hidden"
       >
         {/* animated mesh background */}
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <div className="absolute top-0 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-400/30 blur-3xl mesh-blob" />
           <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-purple-400/30 blur-3xl mesh-blob mesh-blob-2" />
           <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] rounded-full bg-pink-400/20 blur-3xl mesh-blob mesh-blob-3" />
@@ -177,7 +177,7 @@ const Landing = () => {
           ))}
         </div>
 
-        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+        <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           {/* Left */}
           <div data-reveal className="reveal">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur border border-indigo-100 text-xs font-semibold text-indigo-700 shadow-sm mb-6">
@@ -330,7 +330,7 @@ const Landing = () => {
 
       {/* About APAS */}
       <section id="about" className="relative py-28 px-6 overflow-hidden">
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <img
             src={aboutBg}
             alt=""
@@ -343,7 +343,7 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-indigo-950/80 to-slate-950/90" />
         </div>
 
-        <div className="max-w-6xl mx-auto text-white">
+        <div className="relative z-10 max-w-6xl mx-auto text-white">
           <div data-reveal className="reveal text-center max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-pink-200 mb-5">
               <Sparkles className="w-3.5 h-3.5" />
