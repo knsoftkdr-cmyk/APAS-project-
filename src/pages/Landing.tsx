@@ -72,16 +72,26 @@ const Landing = () => {
   }, []);
 
   useEffect(() => {
+    const els = document.querySelectorAll("[data-reveal]");
+    if (!("IntersectionObserver" in window)) {
+      els.forEach((el) => el.classList.add("in-view"));
+      return;
+    }
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) e.target.classList.add("in-view");
+          if (e.isIntersecting) {
+            e.target.classList.add("in-view");
+            observer.unobserve(e.target);
+          }
         });
       },
-      { threshold: 0.15 },
+      { threshold: 0.01, rootMargin: "0px 0px -10% 0px" },
     );
-    document.querySelectorAll("[data-reveal]").forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
+    els.forEach((el) => observer.observe(el));
+    // Safety: ensure everything becomes visible even if observer misses
+    const t = setTimeout(() => els.forEach((el) => el.classList.add("in-view")), 1500);
+    return () => { observer.disconnect(); clearTimeout(t); };
   }, []);
 
   return (
