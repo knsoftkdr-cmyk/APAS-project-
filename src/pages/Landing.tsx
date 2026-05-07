@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroStudent from "@/assets/landing-hero-student.png";
+import heroDashboard from "@/assets/landing-hero-dashboard.jpg";
 import studentsPhoto from "@/assets/landing-students.jpg";
 import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
@@ -238,63 +239,17 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Right – futuristic illustration */}
+          {/* Right – hero illustration */}
           <div data-reveal className="reveal relative h-[500px] lg:h-[560px]">
-            {/* main dashboard card */}
             <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl shadow-purple-500/40 floaty">
-              <div className="w-full h-full rounded-3xl bg-white/95 backdrop-blur p-6 flex flex-col">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
-                      <Brain className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="font-semibold">AI Learning Hub</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 rounded-full bg-red-400" />
-                    <span className="w-2 h-2 rounded-full bg-yellow-400" />
-                    <span className="w-2 h-2 rounded-full bg-green-400" />
-                  </div>
-                </div>
-
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-3 border border-indigo-100">
-                    <div className="text-xs text-slate-500">Progress</div>
-                    <div className="text-2xl font-bold text-indigo-700">87%</div>
-                    <div className="mt-2 h-1.5 rounded-full bg-indigo-100 overflow-hidden">
-                      <div className="h-full w-[87%] bg-gradient-to-r from-indigo-500 to-purple-500" />
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-gradient-to-br from-pink-50 to-rose-50 p-3 border border-pink-100">
-                    <div className="text-xs text-slate-500">Mastery</div>
-                    <div className="text-2xl font-bold text-pink-600">A+</div>
-                    <div className="mt-2 flex gap-1">
-                      {[1, 2, 3, 4, 5].map((i) => (
-                        <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= 4 ? "bg-pink-500" : "bg-pink-100"}`} />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* chart */}
-                <div className="mt-5 flex-1 rounded-xl bg-gradient-to-br from-slate-50 to-indigo-50/40 border border-slate-100 p-4 flex items-end gap-2">
-                  {[40, 65, 50, 80, 70, 95, 85].map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                      <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-indigo-500 via-purple-500 to-pink-500 chart-bar"
-                        style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }}
-                      />
-                      <span className="text-[10px] text-slate-400">D{i + 1}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 flex items-center gap-2 p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-100">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span className="text-xs text-slate-700">
-                    AI suggests: Practice <b>fractions</b> for 15 min today
-                  </span>
-                </div>
+              <div className="w-full h-full rounded-3xl overflow-hidden bg-white">
+                <img
+                  src={heroDashboard}
+                  alt="Students learning with AI-powered education platform"
+                  width={1024}
+                  height={1024}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
 
@@ -324,13 +279,6 @@ const Landing = () => {
             <div className="absolute top-1/3 -right-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 p-4 shadow-2xl shadow-purple-500/40 floaty floaty-2 z-10">
               <Zap className="w-6 h-6 text-white" />
             </div>
-
-            {/* Hero student illustration */}
-            <img
-              src={heroStudent}
-              alt="Student learning with AI"
-              className="absolute -bottom-10 -left-16 w-44 lg:w-56 drop-shadow-2xl floaty floaty-3 pointer-events-none select-none z-20"
-            />
           </div>
         </div>
       </section>
