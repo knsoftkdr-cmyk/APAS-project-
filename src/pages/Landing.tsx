@@ -116,6 +116,7 @@ const Landing = () => {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
             <a href="#home" className="hover:text-indigo-600 transition-colors">Home</a>
+            <a href="#about" className="hover:text-indigo-600 transition-colors">About</a>
             <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
             <a href="#students" className="hover:text-indigo-600 transition-colors">Students</a>
             <a href="#faculty" className="hover:text-indigo-600 transition-colors">Faculty</a>
@@ -138,11 +139,13 @@ const Landing = () => {
 
         {menuOpen && (
           <div className="md:hidden bg-white/95 backdrop-blur-xl border-t border-slate-100 px-6 py-4 space-y-3 text-sm font-medium">
-            <a href="#home" className="block">Home</a>
-            <a href="#features" className="block">Features</a>
-            <a href="#analytics" className="block">Analytics</a>
-            <a href="#about" className="block">About</a>
-            <a href="#contact" className="block">Contact</a>
+            <a href="#home" onClick={() => setMenuOpen(false)} className="block">Home</a>
+            <a href="#about" onClick={() => setMenuOpen(false)} className="block">About</a>
+            <a href="#features" onClick={() => setMenuOpen(false)} className="block">Features</a>
+            <a href="#students" onClick={() => setMenuOpen(false)} className="block">Students</a>
+            <a href="#faculty" onClick={() => setMenuOpen(false)} className="block">Faculty</a>
+            <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
+            <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
             <Link to="/login" className="block">
               <Button className="w-full bg-gradient-to-r from-indigo-600 to-pink-500 text-white rounded-full">
                 Get Started
