@@ -20,7 +20,6 @@ import { supabase } from "@/integrations/supabase/client";
 import teacherAiAvatar from "@/assets/teacher-ai-avatar.png";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import html2pdf from "html2pdf.js";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -1025,7 +1024,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
     );
   };
 
-  const handleDownloadPDF = (messageContent: string, messageIndex: number) => {
+  const handleDownloadPDF = async (messageContent: string, messageIndex: number) => {
     const timestamp = new Date().toLocaleString('en-US', { 
       year: 'numeric', month: '2-digit', day: '2-digit', 
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
@@ -1201,6 +1200,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
     
+    const html2pdf = (await import("html2pdf.js")).default;
     html2pdf().set(opt).from(tempDiv).save();
     toast.success('PDF downloaded successfully!');
   };
@@ -2042,7 +2042,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!selectedLesson) return;
     const timestamp = new Date().toLocaleString('en-US', { 
       year: 'numeric', month: '2-digit', day: '2-digit', 
@@ -2192,6 +2192,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
     
+    const html2pdf = (await import("html2pdf.js")).default;
     html2pdf().set(opt).from(tempDiv).save();
     toast.success('PDF downloaded successfully!');
   };
