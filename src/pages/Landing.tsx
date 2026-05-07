@@ -40,24 +40,28 @@ const features = [
     title: "Adaptive Learning",
     desc: "AI customizes learning paths based on each student's performance and pace.",
     gradient: "from-indigo-500 to-purple-500",
+    href: "#students",
   },
   {
     icon: BarChart3,
     title: "Smart Analytics",
     desc: "Real-time dashboards and academic performance insights at your fingertips.",
     gradient: "from-purple-500 to-pink-500",
+    href: "#analytics",
   },
   {
     icon: Sparkles,
     title: "Personalized Recommendations",
     desc: "Smart suggestions of learning materials based on strengths and weaknesses.",
     gradient: "from-pink-500 to-rose-500",
+    href: "#students",
   },
   {
     icon: ClipboardCheck,
     title: "Intelligent Assessments",
     desc: "AI-driven tests with continuous progress tracking and feedback.",
     gradient: "from-indigo-500 to-blue-500",
+    href: "#how",
   },
 ];
 
@@ -429,10 +433,11 @@ const Landing = () => {
 
           <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f, i) => (
-              <div
+              <a
+                href={f.href}
                 key={f.title}
                 data-reveal
-                className="reveal group relative rounded-2xl p-[1.5px] bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-300/50"
+                className="reveal group relative rounded-2xl p-[1.5px] bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 <div className="rounded-2xl bg-white h-full p-6">
@@ -447,7 +452,7 @@ const Landing = () => {
                     Learn more <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>
