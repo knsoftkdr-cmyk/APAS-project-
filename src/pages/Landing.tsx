@@ -318,6 +318,76 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* About APAS */}
+      <section id="about" className="relative py-28 px-6 overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <img
+            src={aboutBg}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            width={1920}
+            height={1080}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-indigo-950/80 to-slate-950/90" />
+        </div>
+
+        <div className="max-w-6xl mx-auto text-white">
+          <div data-reveal className="reveal text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-pink-200 mb-5">
+              <Sparkles className="w-3.5 h-3.5" />
+              About APAS
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              An{" "}
+              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                Adaptive Pedagogy & Analytics System
+              </span>{" "}
+              for modern schools
+            </h2>
+            <p className="mt-6 text-lg text-white/80 leading-relaxed">
+              APAS is an AI-powered learning platform that adapts to every student.
+              It blends adaptive lessons, diagnostic tests, gamified practice, and
+              real-time analytics into one seamless experience — helping students
+              learn smarter and giving teachers the insights they need to teach better.
+            </p>
+          </div>
+
+          <div className="mt-14 grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Brain,
+                title: "What APAS does",
+                desc: "Diagnoses each learner's strengths and gaps, then auto-generates personalized lesson plans, practice tests, and homework aligned to the curriculum.",
+              },
+              {
+                icon: Users,
+                title: "Who it's for",
+                desc: "Students get a 24/7 AI tutor and gamified learning. Teachers get auto-graded insights. Schools and admins get full visibility across classes.",
+              },
+              {
+                icon: LineChart,
+                title: "How it helps",
+                desc: "Tracks growth with normalized gain scores, predicts at-risk students early, and recommends targeted interventions — all backed by brain-based pedagogy.",
+              },
+            ].map((c) => (
+              <div
+                key={c.title}
+                data-reveal
+                className="reveal rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-7 hover:bg-white/10 hover:border-pink-300/40 hover:-translate-y-1 transition-all"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-900/50">
+                  <c.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="mt-5 font-bold text-lg">{c.title}</h3>
+                <p className="mt-2 text-sm text-white/75 leading-relaxed">{c.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Why APAS */}
       <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white overflow-hidden">
         <img
