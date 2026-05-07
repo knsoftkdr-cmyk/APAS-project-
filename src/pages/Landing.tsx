@@ -317,8 +317,15 @@ const Landing = () => {
       </section>
 
       {/* Why APAS */}
-      <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white">
-        <div className="max-w-7xl mx-auto">
+      <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white overflow-hidden">
+        <img
+          src={aiBrain}
+          alt=""
+          aria-hidden="true"
+          loading="lazy"
+          className="absolute right-[-120px] top-1/2 -translate-y-1/2 w-[640px] opacity-[0.10] pointer-events-none select-none animate-spin-very-slow"
+        />
+        <div className="max-w-7xl mx-auto relative">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 mb-4">
               Why APAS
