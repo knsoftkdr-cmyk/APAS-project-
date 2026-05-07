@@ -5,6 +5,8 @@ import heroStudent from "@/assets/landing-hero-student.png";
 import studentsPhoto from "@/assets/landing-students.jpg";
 import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
+import aboutBg from "@/assets/landing-about-bg.jpg";
+import ctaBg from "@/assets/landing-cta-bg.jpg";
 import {
   Brain,
   BarChart3,
@@ -316,6 +318,76 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* About APAS */}
+      <section id="about" className="relative py-28 px-6 overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <img
+            src={aboutBg}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            width={1920}
+            height={1080}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-indigo-950/80 to-slate-950/90" />
+        </div>
+
+        <div className="max-w-6xl mx-auto text-white">
+          <div data-reveal className="reveal text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-pink-200 mb-5">
+              <Sparkles className="w-3.5 h-3.5" />
+              About APAS
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              An{" "}
+              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+                Adaptive Pedagogy & Analytics System
+              </span>{" "}
+              for modern schools
+            </h2>
+            <p className="mt-6 text-lg text-white/80 leading-relaxed">
+              APAS is an AI-powered learning platform that adapts to every student.
+              It blends adaptive lessons, diagnostic tests, gamified practice, and
+              real-time analytics into one seamless experience — helping students
+              learn smarter and giving teachers the insights they need to teach better.
+            </p>
+          </div>
+
+          <div className="mt-14 grid md:grid-cols-3 gap-6">
+            {[
+              {
+                icon: Brain,
+                title: "What APAS does",
+                desc: "Diagnoses each learner's strengths and gaps, then auto-generates personalized lesson plans, practice tests, and homework aligned to the curriculum.",
+              },
+              {
+                icon: Users,
+                title: "Who it's for",
+                desc: "Students get a 24/7 AI tutor and gamified learning. Teachers get auto-graded insights. Schools and admins get full visibility across classes.",
+              },
+              {
+                icon: LineChart,
+                title: "How it helps",
+                desc: "Tracks growth with normalized gain scores, predicts at-risk students early, and recommends targeted interventions — all backed by brain-based pedagogy.",
+              },
+            ].map((c) => (
+              <div
+                key={c.title}
+                data-reveal
+                className="reveal rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-7 hover:bg-white/10 hover:border-pink-300/40 hover:-translate-y-1 transition-all"
+              >
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-900/50">
+                  <c.icon className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="mt-5 font-bold text-lg">{c.title}</h3>
+                <p className="mt-2 text-sm text-white/75 leading-relaxed">{c.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Why APAS */}
       <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white overflow-hidden">
         <img
@@ -562,14 +634,14 @@ const Landing = () => {
               </div>
             </div>
 
-            {/* Feature list */}
+            {/* Feature list — student-only experiences (no overlap with main Features) */}
             <div data-reveal className="reveal space-y-4">
               {[
-                { icon: BarChart3, title: "Personal Analytics", desc: "Live charts of your strengths, gaps, and progress trajectory.", color: "from-indigo-500 to-purple-500" },
-                { icon: Target, title: "Progress Tracking", desc: "See how you grow week over week across every subject.", color: "from-purple-500 to-pink-500" },
-                { icon: Award, title: "Achievement Badges", desc: "Earn streaks, trophies and milestones as you learn.", color: "from-amber-500 to-orange-500" },
-                { icon: Sparkles, title: "Personalized Recommendations", desc: "AI suggests the right next lesson, exactly when you need it.", color: "from-pink-500 to-rose-500" },
+                { icon: Flame, title: "Daily Streaks & Habits", desc: "Build a consistent learning habit with streaks, reminders, and rewards.", color: "from-orange-500 to-rose-500" },
+                { icon: Trophy, title: "Achievement Badges", desc: "Earn trophies and milestones as you master each topic.", color: "from-amber-500 to-orange-500" },
                 { icon: MessageCircle, title: "24/7 AI Mentor", desc: "Ask anything. Your personal tutor is always one tap away.", color: "from-indigo-500 to-blue-500" },
+                { icon: Zap, title: "Gamified Practice", desc: "Quick games turn revision into something you actually want to do.", color: "from-purple-500 to-pink-500" },
+                { icon: Target, title: "Daily Goals", desc: "Small, achievable targets that keep you moving forward every day.", color: "from-pink-500 to-rose-500" },
               ].map((f) => (
                 <div key={f.title} className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100 transition-all hover:-translate-y-1">
                   <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
@@ -817,32 +889,42 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* About / CTA */}
-      <section id="about" className="relative py-24 px-6">
-        <div className="max-w-5xl mx-auto rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-12 text-center text-white shadow-2xl shadow-purple-500/40 relative overflow-hidden">
-          <div className="absolute inset-0 opacity-20">
-            {Array.from({ length: 20 }).map((_, i) => (
-              <span
-                key={i}
-                className="particle"
-                style={{
-                  left: `${(i * 47) % 100}%`,
-                  top: `${(i * 31) % 100}%`,
-                  animationDelay: `${i * 0.3}s`,
-                  background: "white",
-                }}
-              />
-            ))}
-          </div>
-          <div className="relative">
-            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+      {/* CTA */}
+      <section id="get-started" className="relative py-24 px-6">
+        <div className="max-w-5xl mx-auto rounded-3xl relative overflow-hidden shadow-2xl shadow-purple-500/40">
+          <img
+            src={ctaBg}
+            alt=""
+            aria-hidden="true"
+            loading="lazy"
+            width={1920}
+            height={1080}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/90 via-purple-700/85 to-pink-600/90" />
+          <div className="relative p-12 text-center text-white">
+            <div className="absolute inset-0 opacity-20 pointer-events-none">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <span
+                  key={i}
+                  className="particle"
+                  style={{
+                    left: `${(i * 47) % 100}%`,
+                    top: `${(i * 31) % 100}%`,
+                    animationDelay: `${i * 0.3}s`,
+                    background: "white",
+                  }}
+                />
+              ))}
+            </div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight relative">
               Ready to learn smarter?
             </h2>
-            <p className="mt-4 text-white/90 max-w-xl mx-auto">
+            <p className="mt-4 text-white/90 max-w-xl mx-auto relative">
               Join the growing community of students and educators using APAS to
               unlock potential through adaptive, AI-powered learning.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4 justify-center">
+            <div className="mt-8 flex flex-wrap gap-4 justify-center relative">
               <Link to="/login">
                 <Button size="lg" className="rounded-full px-8 h-12 bg-white text-indigo-700 hover:bg-white/90 font-semibold shadow-xl">
                   Get Started Free <ArrowRight className="ml-1" />
