@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroStudent from "@/assets/landing-hero-student.png";
-import heroBoy from "@/assets/landing-hero-boy.jpg";
+import heroBoy from "@/assets/landing-hero-boy.png";
 import studentsPhoto from "@/assets/landing-students.jpg";
 import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
@@ -239,14 +239,27 @@ const Landing = () => {
             </div>
           </div>
 
-          {/* Right – hero illustration */}
+          {/* Right – hero illustration (transparent boy on shared bg) */}
           <div data-reveal className="reveal relative h-[500px] lg:h-[560px] flex items-center justify-center">
+            {/* Circular purple outline */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-[380px] h-[380px] lg:w-[440px] lg:h-[440px] rounded-full border-2 border-purple-300/60" />
+            </div>
+            {/* Soft radial glow to blend with page bg */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-[420px] h-[420px] lg:w-[480px] lg:h-[480px] rounded-full bg-[radial-gradient(circle,rgba(216,180,254,0.35),rgba(251,207,232,0.15)_55%,transparent_75%)] blur-2xl" />
+            </div>
+            {/* Floating bubbles */}
+            <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-purple-300/50 floaty pointer-events-none" />
+            <div className="absolute bottom-12 right-8 w-8 h-8 rounded-full bg-pink-300/50 floaty pointer-events-none" style={{ animationDelay: "1.2s" }} />
+            <div className="absolute top-20 right-16 w-3 h-3 rounded-full bg-fuchsia-300/60 floaty pointer-events-none" style={{ animationDelay: "0.6s" }} />
+            <div className="absolute bottom-24 left-16 w-4 h-4 rounded-full bg-indigo-300/50 floaty pointer-events-none" style={{ animationDelay: "1.8s" }} />
             <img
               src={heroBoy}
               alt="Student reading a book"
-              width={1280}
+              width={1024}
               height={1024}
-              className="w-full h-full object-contain floaty"
+              className="relative z-10 max-h-full w-auto object-contain floaty drop-shadow-[0_20px_40px_rgba(139,92,246,0.25)]"
             />
           </div>
         </div>
