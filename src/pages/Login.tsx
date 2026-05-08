@@ -68,8 +68,18 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-6 py-10">
       <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
-        {/* Left: Form */}
-        <div className="max-w-md w-full mx-auto md:mx-0">
+        {/* Left: Illustration */}
+        <div className="hidden md:flex items-center justify-center relative order-1">
+          <div className="absolute inset-0 bg-[#F5F8FC] rounded-[40%_60%_55%_45%/55%_45%_55%_45%]" />
+          <img
+            src={loginIllustration}
+            alt="Students learning illustration"
+            className="relative w-full max-w-lg h-auto"
+          />
+        </div>
+
+        {/* Right: Form */}
+        <div className="max-w-md w-full mx-auto md:mx-0 order-2">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-16">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
