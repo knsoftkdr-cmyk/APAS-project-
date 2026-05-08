@@ -4,6 +4,7 @@ import { GraduationCap, Eye, EyeOff, User, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import loginIllustration from "@/assets/login-illustration.png";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
