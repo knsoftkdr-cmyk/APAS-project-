@@ -91,7 +91,7 @@ const Login = () => {
               />
             </svg>
             <img
-              src="/src/assets/login-illustration.png"
+              src={loginIllustration}
               alt="Students learning illustration"
               className="relative z-10 w-full max-w-md h-auto p-8"
             />
