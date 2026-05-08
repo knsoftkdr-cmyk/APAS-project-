@@ -258,6 +258,7 @@ const Register = () => {
             </Link>
           </p>
         </div>
+        </div>
       </div>
     </div>
   );
