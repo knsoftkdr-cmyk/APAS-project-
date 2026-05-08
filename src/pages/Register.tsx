@@ -84,20 +84,38 @@ const Register = () => {
     "w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0";
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-6 py-10">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
-        {/* Left: Illustration */}
-        <div className="hidden md:flex items-center justify-center relative">
-          <div className="absolute inset-0 bg-[#F5F8FC] rounded-[40%_60%_55%_45%/55%_45%_55%_45%]" />
-          <img
-            src={loginIllustration}
-            alt="Students learning illustration"
-            className="relative w-full max-w-lg h-auto"
-          />
+    <div className="min-h-screen bg-[#EAF1FB] flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden relative">
+        <div className="absolute top-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
+          ))}
+        </div>
+        <div className="absolute bottom-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
+          ))}
         </div>
 
-        {/* Right: Form */}
-        <div className="max-w-md w-full mx-auto md:mx-0">
+        <div className="grid md:grid-cols-2">
+          {/* Left: Illustration */}
+          <div className="hidden md:flex items-center justify-center relative bg-gradient-to-br from-[#EAF1FB] via-[#F5F8FC] to-white overflow-hidden min-h-[700px]">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 700" preserveAspectRatio="none">
+              <path
+                d="M 0,0 L 480,0 Q 560,180 500,360 Q 440,540 520,700 L 0,700 Z"
+                fill="#DCE8F7"
+                opacity="0.55"
+              />
+            </svg>
+            <img
+              src={loginIllustration}
+              alt="Students learning illustration"
+              className="relative z-10 w-full max-w-md h-auto p-8"
+            />
+          </div>
+
+          {/* Right: Form */}
+          <div className="px-8 sm:px-14 py-12 flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-10">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
               <GraduationCap className="h-6 w-6 text-white" />
