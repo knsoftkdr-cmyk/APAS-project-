@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroStudent from "@/assets/landing-hero-student.png";
-import heroDashboard from "@/assets/landing-hero-dashboard.jpg";
+import heroBoy from "@/assets/landing-hero-boy.jpg";
 import studentsPhoto from "@/assets/landing-students.jpg";
 import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
@@ -240,45 +240,14 @@ const Landing = () => {
           </div>
 
           {/* Right – hero illustration */}
-          <div data-reveal className="reveal relative h-[500px] lg:h-[560px]">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl shadow-purple-500/40 floaty">
-              <div className="w-full h-full rounded-3xl overflow-hidden bg-white">
-                <img
-                  src={heroDashboard}
-                  alt="Students learning with AI-powered education platform"
-                  width={1024}
-                  height={1024}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-
-            {/* floating chip 1 */}
-            <div className="absolute -top-4 -left-4 rounded-2xl bg-white shadow-xl shadow-indigo-200 p-3 flex items-center gap-3 floaty floaty-2 z-10">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <div className="text-xs text-slate-500">Improvement</div>
-                <div className="font-bold text-sm text-emerald-600">+24%</div>
-              </div>
-            </div>
-
-            {/* floating chip 2 */}
-            <div className="absolute -bottom-4 -right-2 rounded-2xl bg-white shadow-xl shadow-pink-200 p-3 flex items-center gap-3 floaty floaty-3 z-10">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center">
-                <Target className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <div className="text-xs text-slate-500">Goal Met</div>
-                <div className="font-bold text-sm text-pink-600">12/15</div>
-              </div>
-            </div>
-
-            {/* AI assistant blob */}
-            <div className="absolute top-1/3 -right-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 p-4 shadow-2xl shadow-purple-500/40 floaty floaty-2 z-10">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
+          <div data-reveal className="reveal relative h-[500px] lg:h-[560px] flex items-center justify-center">
+            <img
+              src={heroBoy}
+              alt="Student reading a book"
+              width={1280}
+              height={1024}
+              className="w-full h-full object-contain floaty"
+            />
           </div>
         </div>
       </section>
