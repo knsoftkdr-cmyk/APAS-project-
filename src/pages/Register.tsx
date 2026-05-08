@@ -1,18 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, Eye, EyeOff, Check, X } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, Check, X, User, Lock, Mail, IdCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import AuthBackground from "@/components/AuthBackground";
+import loginIllustration from "@/assets/login-illustration.png";
 
 const roles = [
-  { value: "student", label: "Student", desc: "Track your learning" },
-  { value: "teacher", label: "Teacher", desc: "Manage courses" },
-  { value: "school_admin", label: "Admin / Principal", desc: "School management & full admin access" },
+  { value: "student", label: "Student" },
+  { value: "teacher", label: "Teacher" },
+  { value: "school_admin", label: "Admin" },
 ] as const;
 
 const hasUpperCase = (str: string) => /[A-Z]/.test(str);
@@ -22,7 +20,7 @@ const isPasswordValid = (pwd: string) =>
   pwd.length >= 6 && hasUpperCase(pwd) && hasSpecialChar(pwd) && hasDigit(pwd);
 
 const ValidationItem = ({ met, text }: { met: boolean; text: string }) => (
-  <div className={cn("flex items-center gap-2 text-xs", met ? "text-emerald-600" : "text-muted-foreground")}>
+  <div className={cn("flex items-center gap-2 text-xs", met ? "text-emerald-600" : "text-[#2C3E50]/50")}>
     {met ? <Check className="h-3.5 w-3.5" /> : <X className="h-3.5 w-3.5" />}
     <span>{text}</span>
   </div>
@@ -54,11 +52,9 @@ const Register = () => {
     const email = isStudent ? `${identifier.trim().toLowerCase()}@student.apas.local` : identifier;
 
     if (isStudent) {
-      // Students use generated emails — register via edge function (auto-confirmed)
       const { data, error } = await supabase.functions.invoke("register-student", {
         body: { email, password, full_name: fullName.trim(), role },
       });
-
       if (error || data?.error) {
         toast({ title: "Registration failed", description: data?.error || error?.message, variant: "destructive" });
       } else {
@@ -66,7 +62,6 @@ const Register = () => {
         navigate("/login");
       }
     } else {
-      // Teachers & Admins — normal signup, requires email verification
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -75,162 +70,176 @@ const Register = () => {
           emailRedirectTo: `${window.location.origin}/verify-email`,
         },
       });
-
       if (error) {
         toast({ title: "Registration failed", description: error.message, variant: "destructive" });
       } else {
-        toast({
-          title: "Verification email sent!",
-          description: "Please check your inbox and verify your email before signing in.",
-        });
+        toast({ title: "Verification email sent!", description: "Please check your inbox." });
         navigate("/login");
       }
     }
     setLoading(false);
   };
 
-  return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
-      <AuthBackground />
+  const inputBase =
+    "w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0";
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-sm">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-indigo-500/25">
-            <GraduationCap className="h-7 w-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">APAS</h1>
-          <p className="text-sm text-muted-foreground">Adaptive Pedagogy & Analytics System</p>
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center px-6 py-10">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+        {/* Left: Illustration */}
+        <div className="hidden md:flex items-center justify-center relative">
+          <div className="absolute inset-0 bg-[#F5F8FC] rounded-[40%_60%_55%_45%/55%_45%_55%_45%]" />
+          <img
+            src={loginIllustration}
+            alt="Students learning illustration"
+            className="relative w-full max-w-lg h-auto"
+          />
         </div>
 
-        {/* Card – glassmorphism */}
-        <div className="rounded-2xl bg-white/60 backdrop-blur-xl p-8 shadow-2xl shadow-indigo-500/10 border border-white/50 ring-1 ring-black/[0.03]">
-          <h2 className="mb-1 text-lg font-semibold text-foreground">Create account</h2>
-          <p className="mb-6 text-sm text-muted-foreground">Join as a student or teacher</p>
+        {/* Right: Form */}
+        <div className="max-w-md w-full mx-auto md:mx-0">
+          <div className="flex items-center gap-3 mb-10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
+              <GraduationCap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-[#2C3E50] leading-none" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                APAS
+              </h1>
+              <p className="text-[10px] tracking-[0.15em] text-[#2C3E50]/70 uppercase mt-1">
+                Adaptive Pedagogy & Analytics System
+              </p>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-semibold text-[#2C3E50] mb-6" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Create your account
+          </h2>
 
           <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-foreground font-medium">Full name</Label>
-              <Input
-                id="fullName"
-                placeholder="Jane Doe"
+            {/* Role selector */}
+            <div className="grid grid-cols-3 gap-2">
+              {roles.map((r) => (
+                <button
+                  key={r.value}
+                  type="button"
+                  onClick={() => { setRole(r.value); setIdentifier(""); }}
+                  className={cn(
+                    "rounded-md py-2 text-xs font-semibold transition-all",
+                    role === r.value
+                      ? "bg-[#2C3E50] text-white shadow"
+                      : "bg-[#F5F8FC] text-[#2C3E50]/70 hover:bg-[#E8EEF7]"
+                  )}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <User className="h-4 w-4 text-[#2C3E50]/60" />
+              </div>
+              <input
+                type="text"
+                placeholder="Full name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
+                className={inputBase}
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="regIdentifier" className="text-foreground font-medium">
-                {isStudent ? "Student ID" : "Email"}
-              </Label>
-              <Input
-                id="regIdentifier"
+
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                {usesEmail ? <Mail className="h-4 w-4 text-[#2C3E50]/60" /> : <IdCard className="h-4 w-4 text-[#2C3E50]/60" />}
+              </div>
+              <input
                 type={usesEmail ? "email" : "text"}
-                placeholder={isStudent ? "e.g. STU2024001" : "you@example.com"}
+                placeholder={isStudent ? "Student ID (e.g. STU2024001)" : "Email"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
+                className={inputBase}
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="regPassword" className="text-foreground font-medium">Password</Label>
-              <div className="relative">
-                <Input
-                  id="regPassword"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 pr-10 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <Lock className="h-4 w-4 text-[#2C3E50]/60" />
               </div>
-              {password && (
-                <div className="mt-2 space-y-1.5 rounded-xl bg-indigo-50/80 border border-indigo-100 p-2.5">
-                  <p className="text-xs font-medium text-muted-foreground">Password requirements:</p>
-                  <ValidationItem met={password.length >= 6} text="At least 6 characters" />
-                  <ValidationItem met={hasUpperCase(password)} text="One uppercase letter (A-Z)" />
-                  <ValidationItem met={hasSpecialChar(password)} text="One special character (!@#$%...)" />
-                  <ValidationItem met={hasDigit(password)} text="One digit (0-9)" />
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-foreground font-medium">Confirm password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 pr-10 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              {confirmPassword && (
-                <div className={cn("mt-1.5 text-xs font-medium", passwordsMatch ? "text-emerald-600" : "text-destructive")}>
-                  {passwordsMatch ? "✓ Passwords match" : "✗ Passwords don't match"}
-                </div>
-              )}
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={cn(inputBase, "pr-11")}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
 
-            {/* Role selector */}
-            <div className="space-y-2">
-              <Label className="text-foreground font-medium">Role</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {roles.map((r) => (
-                  <button
-                    key={r.value}
-                    type="button"
-                    onClick={() => { setRole(r.value); setIdentifier(""); }}
-                    className={cn(
-                      "flex flex-col items-center rounded-xl border-2 p-3 text-center transition-all duration-200",
-                      role === r.value
-                        ? "border-indigo-500 bg-indigo-50 text-indigo-700 shadow-md shadow-indigo-500/10"
-                        : "border-border bg-white/70 text-muted-foreground hover:border-indigo-300 hover:bg-indigo-50/30"
-                    )}
-                  >
-                    <span className="text-xs font-semibold">{r.label}</span>
-                    <span className="mt-0.5 text-[10px] text-muted-foreground">{r.desc}</span>
-                  </button>
-                ))}
+            {password && (
+              <div className="space-y-1.5 rounded-md bg-[#F5F8FC] border border-[#E8EEF7] p-3">
+                <ValidationItem met={password.length >= 6} text="At least 6 characters" />
+                <ValidationItem met={hasUpperCase(password)} text="One uppercase letter (A-Z)" />
+                <ValidationItem met={hasSpecialChar(password)} text="One special character" />
+                <ValidationItem met={hasDigit(password)} text="One digit (0-9)" />
               </div>
-            </div>
+            )}
 
-            <Button
-              type="submit"
-              disabled={loading || !canSubmit}
-              className="w-full rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 text-white font-medium py-2.5 hover:from-blue-600 hover:via-indigo-600 hover:to-indigo-700 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? "Creating…" : "Create Account"}
-            </Button>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <Lock className="h-4 w-4 text-[#2C3E50]/60" />
+              </div>
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className={cn(inputBase, "pr-11")}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
+            {confirmPassword && (
+              <div className={cn("text-xs font-medium", passwordsMatch ? "text-emerald-600" : "text-destructive")}>
+                {passwordsMatch ? "✓ Passwords match" : "✗ Passwords don't match"}
+              </div>
+            )}
+
+            <div className="pt-2">
+              <Button
+                type="submit"
+                disabled={loading || !canSubmit}
+                className="px-10 h-11 rounded-md bg-[#2C3E50] text-white font-medium hover:bg-[#1f2d3d] transition-colors disabled:opacity-70"
+              >
+                {loading ? "Creating…" : "Create Account"}
+              </Button>
+            </div>
           </form>
-        </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
-          <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
-            Sign in
-          </Link>
-        </p>
+          <p className="mt-8 text-sm text-[#2C3E50]/70">
+            Already have an account?{" "}
+            <Link to="/login" className="font-semibold text-[#2563EB] hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
