@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import heroStudent from "@/assets/landing-hero-student.png";
-import heroBoy from "@/assets/landing-hero-boy.jpg";
+import heroBoy from "@/assets/landing-hero-boy.png";
 import studentsPhoto from "@/assets/landing-students.jpg";
 import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
