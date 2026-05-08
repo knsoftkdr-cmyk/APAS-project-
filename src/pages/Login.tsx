@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, Eye, EyeOff } from "lucide-react";
+import { GraduationCap, Eye, EyeOff, User, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import AuthBackground from "@/components/AuthBackground";
+import loginIllustration from "@/assets/login-illustration.png";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
@@ -17,7 +15,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -27,10 +24,10 @@ const Login = () => {
         body: { studentId: identifier, password },
       });
 
-        if (error || !data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
+      if (error || !data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
         toast({
           title: "Login failed",
-            description: data?.error || "Invalid login. Use your Student ID and either your existing password or your Date of Birth in DDMMYYYY format. Example: 8/7/2016 → 08072016.",
+          description: data?.error || "Invalid login. Use your Student ID and either your existing password or your Date of Birth in DDMMYYYY format.",
           variant: "destructive",
         });
         setLoading(false);
@@ -53,18 +50,12 @@ const Login = () => {
       return;
     }
 
-    const email = isStudentLogin
-      ? `${identifier.trim().toLowerCase()}@student.apas.local`
-      : identifier;
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: identifier, password });
 
     if (error) {
       const msg = error.message === "Email not confirmed"
-        ? "Please verify your email before signing in. Check your inbox for the verification link."
-        : isStudentLogin
-          ? "Invalid login. Use your Student ID and either your existing password or your Date of Birth in DDMMYYYY format. Example: 8/7/2016 → 08072016."
-          : error.message;
+        ? "Please verify your email before signing in."
+        : error.message;
       toast({ title: "Login failed", description: msg, variant: "destructive" });
       setLoading(false);
       return;
@@ -75,90 +66,112 @@ const Login = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4">
-      <AuthBackground />
-
-      <div className="relative z-10 w-full max-w-sm">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center gap-2">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-indigo-500/25">
-            <GraduationCap className="h-7 w-7 text-white" />
+    <div className="min-h-screen bg-white flex items-center justify-center px-6 py-10">
+      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
+        {/* Left: Form */}
+        <div className="max-w-md w-full mx-auto md:mx-0">
+          {/* Logo */}
+          <div className="flex items-center gap-3 mb-16">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
+              <GraduationCap className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-[#2C3E50] leading-none" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                APAS
+              </h1>
+              <p className="text-[10px] tracking-[0.15em] text-[#2C3E50]/70 uppercase mt-1">
+                Adaptive Pedagogy & Analytics System
+              </p>
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-foreground">APAS</h1>
-          <p className="text-sm text-muted-foreground">Adaptive Pedagogy & Analytics System</p>
-        </div>
 
-        {/* Card */}
-        <div className="rounded-2xl bg-white/60 backdrop-blur-xl p-8 shadow-2xl shadow-indigo-500/10 border border-white/50 ring-1 ring-black/[0.03]">
-          <h2 className="mb-1 text-lg font-semibold text-foreground">Sign in</h2>
-          <p className="mb-6 text-sm text-muted-foreground">Enter your credentials to continue</p>
+          <h2 className="text-2xl font-semibold text-[#2C3E50] mb-8" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Login to your account
+          </h2>
 
-          <form onSubmit={handleLogin} className="space-y-5">
-            {/* Student toggle */}
-            <label className="flex items-center gap-2 cursor-pointer select-none">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <label className="flex items-center gap-2 cursor-pointer select-none mb-2">
               <input
                 type="checkbox"
                 checked={isStudentLogin}
                 onChange={(e) => { setIsStudentLogin(e.target.checked); setIdentifier(""); }}
-                className="rounded border-border accent-indigo-600"
+                className="rounded border-border accent-[#2563EB]"
               />
-              <span className="text-sm font-medium text-foreground">I am a Student</span>
+              <span className="text-sm font-medium text-[#2C3E50]">I am a Student</span>
             </label>
 
-
-            <div className="space-y-2">
-              <Label htmlFor="identifier" className="text-foreground font-medium">
-                {isStudentLogin ? "Student ID" : "Email"}
-              </Label>
-              <Input
-                id="identifier"
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <User className="h-4 w-4 text-[#2C3E50]/60" />
+              </div>
+              <input
                 type={isStudentLogin ? "text" : "email"}
-                placeholder={isStudentLogin ? "e.g. STU2024001" : "you@example.com"}
+                placeholder={isStudentLogin ? "Student ID" : "Username or Email"}
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
+                className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-foreground font-medium">Password</Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder={isStudentLogin ? "e.g. 08072016" : "••••••••"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="rounded-xl border-2 border-border bg-white/80 px-4 py-2.5 pr-11 text-foreground placeholder:text-muted-foreground focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-all"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  tabIndex={-1}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <Lock className="h-4 w-4 text-[#2C3E50]/60" />
               </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full h-12 pl-14 pr-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-indigo-600 text-white font-medium py-2.5 hover:from-blue-600 hover:via-indigo-600 hover:to-indigo-700 shadow-lg shadow-indigo-500/25 hover:shadow-xl hover:shadow-indigo-500/30 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {loading ? "Signing in…" : "Sign in"}
-            </Button>
+
+            <div className="pt-1">
+              <Link to="/register" className="text-sm font-semibold text-[#2C3E50] hover:text-[#2563EB] transition-colors">
+                Forgot password?
+              </Link>
+            </div>
+
+            <div className="pt-4">
+              <Button
+                type="submit"
+                disabled={loading}
+                className="px-10 h-11 rounded-md bg-[#2C3E50] text-white font-medium hover:bg-[#1f2d3d] transition-colors disabled:opacity-70"
+              >
+                {loading ? "Signing in…" : "Login"}
+              </Button>
+            </div>
           </form>
+
+          <p className="mt-10 text-sm text-[#2C3E50]/70">
+            Don't have an account?{" "}
+            <Link to="/register" className="font-semibold text-[#2563EB] hover:underline">
+              Create one
+            </Link>
+          </p>
         </div>
 
-        <p className="mt-6 text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
-          <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
-            Create one
-          </Link>
-        </p>
+        {/* Right: Illustration */}
+        <div className="hidden md:flex items-center justify-center relative">
+          <div className="absolute inset-0 bg-[#F5F8FC] rounded-[40%_60%_55%_45%/55%_45%_55%_45%]" />
+          <img
+            src={loginIllustration}
+            alt="Students learning illustration"
+            width={1024}
+            height={1024}
+            className="relative w-full max-w-lg h-auto"
+          />
+        </div>
       </div>
     </div>
   );
