@@ -93,7 +93,7 @@ const Login = () => {
             <img
               src={loginIllustration}
               alt="Students learning illustration"
-              className="relative z-10 w-full max-w-md h-auto p-8"
+              className="relative z-10 w-full max-w-xl h-auto p-4"
             />
           </div>
 
