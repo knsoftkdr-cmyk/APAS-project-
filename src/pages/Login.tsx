@@ -171,17 +171,12 @@ const Login = () => {
           </p>
         </div>
 
-        {/* Right: Illustration */}
-        <div className="hidden md:flex items-center justify-center relative">
-          <div className="absolute inset-0 bg-[#F5F8FC] rounded-[40%_60%_55%_45%/55%_45%_55%_45%]" />
-          <img
-            src={loginIllustration}
-            alt="Students learning illustration"
-            width={1024}
-            height={1024}
-            className="relative w-full max-w-lg h-auto"
-          />
-        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
       </div>
     </div>
   );
