@@ -244,7 +244,7 @@ const Register = () => {
               <Button
                 type="submit"
                 disabled={loading || !canSubmit}
-                className="px-10 h-11 rounded-md bg-[#2C3E50] text-white font-medium hover:bg-[#1f2d3d] transition-colors disabled:opacity-70"
+                className="w-full h-12 rounded-md bg-[#2563EB] text-white font-semibold hover:bg-[#1d4fd8] transition-colors disabled:opacity-70"
               >
                 {loading ? "Creating…" : "Create Account"}
               </Button>
