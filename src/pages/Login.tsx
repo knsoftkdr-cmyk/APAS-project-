@@ -66,111 +66,130 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-6 py-10">
-      <div className="w-full max-w-6xl grid md:grid-cols-2 gap-8 items-center">
-        {/* Left: Illustration */}
-        <div className="hidden md:flex items-center justify-center relative order-1">
-          <div className="absolute inset-0 bg-[#F5F8FC] rounded-[40%_60%_55%_45%/55%_45%_55%_45%]" />
-          <img
-            src={loginIllustration}
-            alt="Students learning illustration"
-            className="relative w-full max-w-lg h-auto"
-          />
+    <div className="min-h-screen bg-[#EAF1FB] flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden relative">
+        {/* Decorative dots */}
+        <div className="absolute top-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
+          ))}
+        </div>
+        <div className="absolute bottom-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+          {Array.from({ length: 25 }).map((_, i) => (
+            <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
+          ))}
         </div>
 
-        {/* Right: Form */}
-        <div className="max-w-md w-full mx-auto md:mx-0 order-2">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-16">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
-              <GraduationCap className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#2C3E50] leading-none" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                APAS
-              </h1>
-              <p className="text-[10px] tracking-[0.15em] text-[#2C3E50]/70 uppercase mt-1">
-                Adaptive Pedagogy & Analytics System
-              </p>
-            </div>
+        <div className="grid md:grid-cols-2">
+          {/* Left: Illustration on blue blob */}
+          <div className="hidden md:flex items-center justify-center relative bg-gradient-to-br from-[#EAF1FB] via-[#F5F8FC] to-white overflow-hidden min-h-[600px]">
+            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 700" preserveAspectRatio="none">
+              <path
+                d="M 0,0 L 480,0 Q 560,180 500,360 Q 440,540 520,700 L 0,700 Z"
+                fill="#DCE8F7"
+                opacity="0.55"
+              />
+            </svg>
+            <img
+              src={loginIllustration}
+              alt="Students learning illustration"
+              className="relative z-10 w-full max-w-md h-auto p-8"
+            />
           </div>
 
-          <h2 className="text-2xl font-semibold text-[#2C3E50] mb-8" style={{ fontFamily: "'DM Serif Display', serif" }}>
-            Login to your account
-          </h2>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <label className="flex items-center gap-2 cursor-pointer select-none mb-2">
-              <input
-                type="checkbox"
-                checked={isStudentLogin}
-                onChange={(e) => { setIsStudentLogin(e.target.checked); setIdentifier(""); }}
-                className="rounded border-border accent-[#2563EB]"
-              />
-              <span className="text-sm font-medium text-[#2C3E50]">I am a Student</span>
-            </label>
-
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
-                <User className="h-4 w-4 text-[#2C3E50]/60" />
+          {/* Right: Form */}
+          <div className="px-8 sm:px-14 py-12 flex flex-col justify-center">
+            {/* Logo */}
+            <div className="flex items-center gap-3 mb-12">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
+                <GraduationCap className="h-6 w-6 text-white" />
               </div>
-              <input
-                type={isStudentLogin ? "text" : "email"}
-                placeholder={isStudentLogin ? "Student ID" : "Username or Email"}
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
-                required
-              />
+              <div>
+                <h1 className="text-2xl font-bold tracking-tight text-[#2C3E50] leading-none" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                  APAS
+                </h1>
+                <p className="text-[10px] tracking-[0.15em] text-[#2C3E50]/70 uppercase mt-1">
+                  Adaptive Pedagogy & Analytics System
+                </p>
+              </div>
             </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
-                <Lock className="h-4 w-4 text-[#2C3E50]/60" />
-              </div>
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full h-12 pl-14 pr-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+            <h2 className="text-3xl font-semibold text-[#2C3E50] mb-8" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              Login to your account
+            </h2>
 
-            <div className="pt-1">
-              <Link to="/register" className="text-sm font-semibold text-[#2C3E50] hover:text-[#2563EB] transition-colors">
-                Forgot password?
+            <form onSubmit={handleLogin} className="space-y-4">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isStudentLogin}
+                  onChange={(e) => { setIsStudentLogin(e.target.checked); setIdentifier(""); }}
+                  className="rounded border-border accent-[#2563EB]"
+                />
+                <span className="text-sm font-medium text-[#2C3E50]">I am a Student</span>
+              </label>
+
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                  <User className="h-4 w-4 text-[#2C3E50]/60" />
+                </div>
+                <input
+                  type={isStudentLogin ? "text" : "email"}
+                  placeholder={isStudentLogin ? "Student ID" : "Username or Email"}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  required
+                />
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                  <Lock className="h-4 w-4 text-[#2C3E50]/60" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full h-12 pl-14 pr-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+                  tabIndex={-1}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              <div className="pt-1">
+                <Link to="/register" className="text-sm font-semibold text-[#2C3E50] hover:text-[#2563EB] transition-colors">
+                  Forgot password?
+                </Link>
+              </div>
+
+              <div className="pt-4">
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-12 rounded-md bg-[#2563EB] text-white font-semibold hover:bg-[#1d4fd8] transition-colors disabled:opacity-70"
+                >
+                  {loading ? "Signing in…" : "Login"}
+                </Button>
+              </div>
+            </form>
+
+            <p className="mt-8 text-sm text-[#2C3E50]/70">
+              Don't have an account?{" "}
+              <Link to="/register" className="font-semibold text-[#2563EB] hover:underline">
+                Create one
               </Link>
-            </div>
-
-            <div className="pt-4">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="px-10 h-11 rounded-md bg-[#2C3E50] text-white font-medium hover:bg-[#1f2d3d] transition-colors disabled:opacity-70"
-              >
-                {loading ? "Signing in…" : "Login"}
-              </Button>
-            </div>
-          </form>
-
-          <p className="mt-10 text-sm text-[#2C3E50]/70">
-            Don't have an account?{" "}
-            <Link to="/register" className="font-semibold text-[#2563EB] hover:underline">
-              Create one
-            </Link>
-          </p>
+            </p>
+          </div>
         </div>
-
       </div>
     </div>
   );
