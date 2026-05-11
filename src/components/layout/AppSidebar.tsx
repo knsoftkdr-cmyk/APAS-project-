@@ -23,25 +23,32 @@ import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
-const navItems = [
-  { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
-  { title: "Dashboard", icon: LineChart, path: "/student-dashboard", roles: ["student"] },
+const navItems: Array<{
+  title: string;
+  icon: any;
+  path: string;
+  roles?: string[];
+  studentTitle?: string;
+  tourId?: string;
+}> = [
+  { title: "Home", icon: LayoutDashboard, path: "/dashboard", tourId: "nav-home" },
+  { title: "Dashboard", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard" },
   { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin", "school_admin"] },
-  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"] },
+  { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments" },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher", "school_admin"] },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher"] },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "school_admin"] },
-  { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"] },
-  { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"] },
+  { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"], tourId: "nav-academic-tests" },
+  { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification" },
   { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["admin"] },
   { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin"] },
   { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "school_admin"] },
   { title: "Automation", icon: Zap, path: "/automation", roles: ["admin", "school_admin"] },
   { title: "Security Center", icon: Lock, path: "/security", roles: ["admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "school_admin"] },
-  { title: "Settings", icon: Settings, path: "/settings" },
+  { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
 // Bottom nav items for mobile (max 5) — built dynamically based on role
@@ -115,6 +122,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               <NavLink
                 key={item.path}
                 to={item.path}
+                data-tour-id={item.tourId}
                 className={cn(
                   "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                   isActive

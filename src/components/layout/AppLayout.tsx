@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard — APAS",
@@ -46,6 +47,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           {children}
         </main>
       </div>
+      <OnboardingFlow />
     </div>
   );
 }
