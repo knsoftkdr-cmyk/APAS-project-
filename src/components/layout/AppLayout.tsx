@@ -48,7 +48,6 @@ export function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
       <OnboardingFlow />
-      </div>
     </div>
   );
 }
