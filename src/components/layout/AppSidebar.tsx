@@ -122,6 +122,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               <NavLink
                 key={item.path}
                 to={item.path}
+                data-tour-id={item.tourId}
                 className={cn(
                   "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                   isActive
