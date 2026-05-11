@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard — APAS",
@@ -45,6 +46,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         <main className="flex-1 overflow-auto p-4 pb-20 md:p-6 md:pb-6 animate-fade-in" key={location.pathname}>
           {children}
         </main>
+      </div>
+      <OnboardingFlow />
       </div>
     </div>
   );
