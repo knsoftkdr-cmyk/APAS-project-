@@ -47,7 +47,7 @@ export function AvatarStep({ open, gender, userId, onSave, onSkip }: Props) {
   };
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
         className="sm:max-w-lg [&>button]:hidden animate-in fade-in zoom-in-95 duration-300"
         onPointerDownOutside={(e) => e.preventDefault()}

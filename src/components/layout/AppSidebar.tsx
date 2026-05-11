@@ -146,9 +146,13 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         <div className="border-t border-sidebar-border p-3 space-y-2">
           {profile && (
             <div className="flex items-center gap-3 px-2 py-1">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
-                {(profile.full_name || "U").charAt(0).toUpperCase()}
-              </div>
+              {profile.avatar_url ? (
+                <img src={profile.avatar_url} alt={profile.full_name || "User"} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+              ) : (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+                  {(profile.full_name || "U").charAt(0).toUpperCase()}
+                </div>
+              )}
               {!collapsed && (
                 <div className="overflow-hidden">
                   <p className="truncate text-sm font-medium text-sidebar-accent-foreground">

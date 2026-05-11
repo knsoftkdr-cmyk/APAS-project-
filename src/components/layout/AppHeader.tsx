@@ -180,9 +180,13 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
             onClick={() => setMenuOpen(!menuOpen)}
             className="flex items-center gap-2 rounded-button px-2 py-1.5 text-sm transition-colors hover:bg-secondary"
           >
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
-              {(profile?.full_name || "U").charAt(0).toUpperCase()}
-            </div>
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile?.full_name || "User"} className="h-7 w-7 rounded-full object-cover" />
+            ) : (
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-xs font-bold text-accent-foreground">
+                {(profile?.full_name || "U").charAt(0).toUpperCase()}
+              </div>
+            )}
             <span className="hidden font-medium text-foreground sm:inline">
               {profile?.full_name || "User"}
             </span>
