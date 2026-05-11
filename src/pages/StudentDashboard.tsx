@@ -39,6 +39,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { ProfileCompletionBar } from "@/components/onboarding/ProfileCompletionBar";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
 const COMPLETION_COLORS = {
   completed: "hsl(142, 71%, 45%)",
@@ -48,6 +51,7 @@ const COMPLETION_COLORS = {
 
 export default function StudentDashboard() {
   const { user, profile } = useAuth();
+  const { percent: profilePct, missing: profileMissing } = useProfileCompletion();
 
   // ── Homework assignments + own submissions
   const { data: hwData, isLoading: hwLoading } = useQuery({
@@ -192,10 +196,13 @@ export default function StudentDashboard() {
 
   return (
     <AppLayout>
+      <OnboardingFlow />
       <PageHeader
         title={`Hi ${firstName} 👋`}
         subtitle="Your personal learning dashboard — track homework, scores and weekly progress"
       />
+
+      <ProfileCompletionBar percent={profilePct} missing={profileMissing} />
 
       {/* Top row: KPI strip */}
       <div className="grid gap-4 md:grid-cols-4 mb-6">
