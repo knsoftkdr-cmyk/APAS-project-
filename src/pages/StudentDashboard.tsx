@@ -39,7 +39,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
-import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { ProfileCompletionBar } from "@/components/onboarding/ProfileCompletionBar";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 
@@ -196,7 +195,6 @@ export default function StudentDashboard() {
 
   return (
     <AppLayout>
-      <OnboardingFlow />
       <PageHeader
         title={`Hi ${firstName} 👋`}
         subtitle="Your personal learning dashboard — track homework, scores and weekly progress"
