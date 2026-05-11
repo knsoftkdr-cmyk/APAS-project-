@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import loginIllustration from "@/assets/login-illustration.png";
+// Add import at top:
+import apasLogo from "@/assets/APAS-logo.png";
 
 const roles = [
   { value: "student", label: "Student" },
@@ -117,18 +119,8 @@ const Register = () => {
           {/* Right: Form */}
           <div className="px-8 sm:px-14 py-12 flex flex-col justify-center">
           <div className="flex items-center gap-3 mb-10">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
-              <GraduationCap className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-[#2C3E50] leading-none" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                APAS
-              </h1>
-              <p className="text-[10px] tracking-[0.15em] text-[#2C3E50]/70 uppercase mt-1">
-                Adaptive Pedagogy & Analytics System
-              </p>
-            </div>
-          </div>
+  <img src={apasLogo} alt="APAS Logo" className="h-16 w-auto object-contain" />
+</div>
 
           <h2 className="text-2xl font-semibold text-[#2C3E50] mb-6" style={{ fontFamily: "'DM Serif Display', serif" }}>
             Create your account

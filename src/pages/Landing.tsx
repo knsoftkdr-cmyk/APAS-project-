@@ -8,6 +8,9 @@ import teacherPhoto from "@/assets/landing-teacher.jpg";
 import aiBrain from "@/assets/landing-ai-brain.png";
 import aboutBg from "@/assets/landing-about-bg.jpg";
 import ctaBg from "@/assets/landing-cta-bg.jpg";
+// Add import at top:
+import apasLogo from "@/assets/APAS-logo.png";
+
 import {
   Brain,
   BarChart3,
@@ -110,14 +113,9 @@ const Landing = () => {
         }`}
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              APAS
-            </span>
-          </Link>
+          <Link to="/" className="flex items-center">
+  <img src={apasLogo} alt="APAS Logo" className="h-10 w-auto object-contain" />
+</Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
             <a href="#home" className="hover:text-indigo-600 transition-colors">Home</a>
@@ -892,12 +890,9 @@ const Landing = () => {
       <footer id="contact" className="border-t border-slate-100 bg-slate-50/50 px-6 py-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8 text-sm">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold">APAS</span>
-            </div>
+            <div className="flex items-center">
+  <img src={apasLogo} alt="APAS Logo" className="h-10 w-auto object-contain" />
+</div>
             <p className="mt-3 text-slate-500">
               Adaptive Pedagogy & Analytics System — helping students learn smarter.
             </p>

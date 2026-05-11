@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import loginIllustration from "@/assets/login-illustration.png";
+// Add import at top:
+import apasLogo from "@/assets/APAS-logo.png";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
@@ -101,18 +103,8 @@ const Login = () => {
           <div className="px-8 sm:px-14 py-12 flex flex-col justify-center">
             {/* Logo */}
             <div className="flex items-center gap-3 mb-12">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#2C3E50] to-[#2563EB] shadow-lg">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold tracking-tight text-[#2C3E50] leading-none" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                  APAS
-                </h1>
-                <p className="text-[10px] tracking-[0.15em] text-[#2C3E50]/70 uppercase mt-1">
-                  Adaptive Pedagogy & Analytics System
-                </p>
-              </div>
-            </div>
+  <img src={apasLogo} alt="APAS Logo" className="h-16 w-auto object-contain" />
+</div>
 
             <h2 className="text-3xl font-semibold text-[#2C3E50] mb-8" style={{ fontFamily: "'DM Serif Display', serif" }}>
               Login to your account

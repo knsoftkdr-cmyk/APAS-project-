@@ -22,6 +22,8 @@ import {
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+// Add this import at the top with other imports
+import apasLogo from "@/assets/APAS-logo.png";
 
 const navItems: Array<{
   title: string;
@@ -104,15 +106,13 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           collapsed ? "w-[var(--sidebar-collapsed)]" : "w-[var(--sidebar-width)]"
         )}
       >
-        {/* Logo */}
-        <div className="flex h-[var(--header-height)] items-center gap-3 border-b border-sidebar-border px-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-button bg-sidebar-primary">
-            <GraduationCap className="h-5 w-5 text-sidebar-primary-foreground" />
-          </div>
-          {!collapsed && (
-            <span className="truncate text-base font-bold text-sidebar-primary-foreground">APAS</span>
-          )}
-        </div>
+        <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
+  {collapsed ? (
+    <img src={apasLogo} alt="APAS" className="h-8 w-8 object-contain" />
+  ) : (
+    <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
+  )}
+</div>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
@@ -190,12 +190,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-[var(--header-height)] items-center gap-3 border-b border-sidebar-border px-4">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-button bg-sidebar-primary">
-            <GraduationCap className="h-5 w-5 text-sidebar-primary-foreground" />
-          </div>
-          <span className="truncate text-base font-bold text-sidebar-primary-foreground">APAS</span>
-        </div>
+        <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
+  <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
+</div>
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
