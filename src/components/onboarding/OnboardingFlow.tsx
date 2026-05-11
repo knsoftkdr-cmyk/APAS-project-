@@ -15,30 +15,25 @@ export function OnboardingFlow() {
   const qc = useQueryClient();
   const [tourOpen, setTourOpen] = useState(false);
 
-  // Only run for students
-  if (profile?.role !== "student") return null;
-  if (isLoading || !extProfile || !user) return null;
+  const isStudent = profile?.role === "student";
+  const needsGender = !!extProfile && !extProfile.gender;
+  const needsAvatar = !!extProfile && !needsGender && !extProfile.avatar_url && !extProfile.onboarding_completed;
+  const needsTour = !!extProfile && !needsGender && !needsAvatar && !extProfile.tour_completed && extProfile.onboarding_completed;
 
-  const needsGender = !extProfile.gender;
-  const needsAvatar = !needsGender && !extProfile.avatar_url && !extProfile.onboarding_completed;
-  const needsTour = !needsGender && !needsAvatar && !extProfile.tour_completed && extProfile.onboarding_completed;
-
-  // Auto-open tour once onboarding is done
   useEffect(() => {
-    if (needsTour) {
-      const t = setTimeout(() => setTourOpen(true), 400);
+    if (isStudent && needsTour) {
+      const t = setTimeout(() => setTourOpen(true), 500);
       return () => clearTimeout(t);
     }
-  }, [needsTour]);
+  }, [isStudent, needsTour]);
+
+  if (!isStudent || isLoading || !extProfile || !user) return null;
 
   const refresh = () => qc.invalidateQueries({ queryKey: ["student-profile-extended", user.id] });
 
   const saveGender = async (gender: Gender) => {
     const { error } = await supabase.from("profiles").update({ gender }).eq("id", user.id);
-    if (error) {
-      toast.error("Failed to save");
-      return;
-    }
+    if (error) return toast.error("Failed to save");
     toast.success("Saved");
     await refresh();
   };
@@ -48,10 +43,7 @@ export function OnboardingFlow() {
       .from("profiles")
       .update({ avatar_url, onboarding_completed: true })
       .eq("id", user.id);
-    if (error) {
-      toast.error("Failed to save avatar");
-      return;
-    }
+    if (error) return toast.error("Failed to save avatar");
     toast.success("Profile picture saved");
     await refresh();
   };
