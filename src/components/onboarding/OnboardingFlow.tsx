@@ -33,7 +33,10 @@ export function OnboardingFlow() {
 
   const saveGender = async (gender: Gender) => {
     const { error } = await supabase.from("profiles").update({ gender }).eq("id", user.id);
-    if (error) return toast.error("Failed to save");
+    if (error) {
+      toast.error("Failed to save");
+      return;
+    }
     toast.success("Saved");
     await refresh();
   };
@@ -43,7 +46,10 @@ export function OnboardingFlow() {
       .from("profiles")
       .update({ avatar_url, onboarding_completed: true })
       .eq("id", user.id);
-    if (error) return toast.error("Failed to save avatar");
+    if (error) {
+      toast.error("Failed to save avatar");
+      return;
+    }
     toast.success("Profile picture saved");
     await refresh();
   };
