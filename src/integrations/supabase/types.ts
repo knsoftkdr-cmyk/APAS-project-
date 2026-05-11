@@ -1382,25 +1382,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          class_grade: string | null
           created_at: string
           full_name: string | null
+          gender: string | null
           id: string
+          onboarding_completed: boolean
           preferred_language: string
           role: string
+          school_name: string | null
+          tour_completed: boolean
         }
         Insert: {
+          avatar_url?: string | null
+          class_grade?: string | null
           created_at?: string
           full_name?: string | null
+          gender?: string | null
           id: string
+          onboarding_completed?: boolean
           preferred_language?: string
           role?: string
+          school_name?: string | null
+          tour_completed?: boolean
         }
         Update: {
+          avatar_url?: string | null
+          class_grade?: string | null
           created_at?: string
           full_name?: string | null
+          gender?: string | null
           id?: string
+          onboarding_completed?: boolean
           preferred_language?: string
           role?: string
+          school_name?: string | null
+          tour_completed?: boolean
         }
         Relationships: []
       }
