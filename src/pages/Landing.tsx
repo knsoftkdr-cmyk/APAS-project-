@@ -112,7 +112,7 @@ const Landing = () => {
             : "bg-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <Link to="/" className="flex items-center">
   <img src={apasLogo} alt="APAS Logo" className="h-16 md:h-20 w-auto object-contain" />
 </Link>
