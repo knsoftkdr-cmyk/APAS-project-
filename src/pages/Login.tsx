@@ -92,11 +92,13 @@ const Login = () => {
                 opacity="0.55"
               />
             </svg>
-            <img
-              src={loginIllustration}
-              alt="Students learning illustration"
-              className="relative z-10 w-full max-w-sm h-auto p-4"
-            />
+            <div className="relative z-10 bg-[#EAF1FB]/80 rounded-3xl p-8 backdrop-blur-sm">
+              <img
+                src={loginIllustration}
+                alt="Students learning illustration"
+                className="w-full max-w-md h-auto"
+              />
+            </div>
           </div>
 
           {/* Right: Form */}
