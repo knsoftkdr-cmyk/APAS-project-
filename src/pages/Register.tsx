@@ -112,17 +112,17 @@ const Register = () => {
             <img
               src={loginIllustration}
               alt="Students learning illustration"
-              className="relative z-10 w-full max-w-xl h-auto p-4"
+              className="relative z-10 w-full max-w-sm h-auto p-4"
             />
           </div>
 
           {/* Right: Form */}
           <div className="px-8 sm:px-14 py-12 flex flex-col justify-center">
-          <div className="flex items-center gap-3 mb-10">
-  <img src={apasLogo} alt="APAS Logo" className="h-16 w-auto object-contain" />
-</div>
+          <div className="flex justify-center mb-6">
+            <img src={apasLogo} alt="APAS Logo" className="h-24 w-auto object-contain" />
+          </div>
 
-          <h2 className="text-2xl font-semibold text-[#2C3E50] mb-6" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          <h2 className="text-2xl font-semibold text-[#2C3E50] mb-6 text-center" style={{ fontFamily: "'DM Serif Display', serif" }}>
             Create your account
           </h2>
 
