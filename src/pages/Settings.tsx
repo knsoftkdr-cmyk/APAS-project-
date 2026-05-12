@@ -159,6 +159,67 @@ const SettingsPage = () => {
           </CardContent>
         </Card>
 
+        {/* Profile picture for teachers / admins */}
+        {!isStudent && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <ImageIcon className="h-5 w-5" /> Profile picture
+              </CardTitle>
+              <CardDescription>Upload a photo to personalize your profile.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-5">
+                <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-border bg-muted flex items-center justify-center">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-bold text-muted-foreground">
+                      {(profile?.full_name || "U").charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                    {avatarUrl ? "Change photo" : "Upload photo"}
+                  </Button>
+                  {avatarUrl && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setAvatarUrl("")}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleUpload(f);
+                  e.target.value = "";
+                }}
+              />
+              <Button onClick={handleProfileSave} disabled={profileSaving}>
+                {profileSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save photo
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Student profile completion */}
         {isStudent && (
           <Card>
