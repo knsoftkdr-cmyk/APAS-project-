@@ -887,7 +887,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="border-t border-slate-100 bg-slate-50/50 px-6 py-12">
+      <footer id="contact" className="border-t border-blue-100 bg-[#EAF1FB] px-6 py-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8 text-sm">
           <div>
             <div className="flex items-center">
