@@ -43,28 +43,28 @@ const features = [
     icon: Brain,
     title: "Adaptive Learning",
     desc: "AI customizes learning paths based on each student's performance and pace.",
-    gradient: "from-indigo-500 to-purple-500",
+    gradient: "from-blue-500 to-blue-500",
     href: "#students",
   },
   {
     icon: BarChart3,
     title: "Smart Analytics",
     desc: "Real-time dashboards and academic performance insights at your fingertips.",
-    gradient: "from-purple-500 to-pink-500",
+    gradient: "from-blue-500 to-green-500",
     href: "#analytics",
   },
   {
     icon: Sparkles,
     title: "Personalized Recommendations",
     desc: "Smart suggestions of learning materials based on strengths and weaknesses.",
-    gradient: "from-pink-500 to-rose-500",
+    gradient: "from-green-500 to-green-500",
     href: "#students",
   },
   {
     icon: ClipboardCheck,
     title: "Intelligent Assessments",
     desc: "AI-driven tests with continuous progress tracking and feedback.",
-    gradient: "from-indigo-500 to-blue-500",
+    gradient: "from-blue-500 to-blue-500",
     href: "#how",
   },
 ];
@@ -112,24 +112,24 @@ const Landing = () => {
             : "bg-transparent"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <Link to="/" className="flex items-center">
-  <img src={apasLogo} alt="APAS Logo" className="h-10 w-auto object-contain" />
+  <img src={apasLogo} alt="APAS Logo" className="h-16 md:h-20 w-auto object-contain" />
 </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
-            <a href="#home" className="hover:text-indigo-600 transition-colors">Home</a>
-            <a href="#about" className="hover:text-indigo-600 transition-colors">About</a>
-            <a href="#features" className="hover:text-indigo-600 transition-colors">Features</a>
-            <a href="#students" className="hover:text-indigo-600 transition-colors">Students</a>
-            <a href="#faculty" className="hover:text-indigo-600 transition-colors">Faculty</a>
-            <a href="#how" className="hover:text-indigo-600 transition-colors">How it works</a>
-            <a href="#contact" className="hover:text-indigo-600 transition-colors">Contact</a>
+            <a href="#home" className="hover:text-blue-600 transition-colors">Home</a>
+            <a href="#about" className="hover:text-blue-600 transition-colors">About</a>
+            <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
+            <a href="#students" className="hover:text-blue-600 transition-colors">Students</a>
+            <a href="#faculty" className="hover:text-blue-600 transition-colors">Faculty</a>
+            <a href="#how" className="hover:text-blue-600 transition-colors">How it works</a>
+            <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
 
           <div className="hidden md:block">
             <Link to="/login">
-              <Button className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 hover:opacity-90 text-white shadow-lg shadow-indigo-500/30 rounded-full px-5">
+              <Button className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white shadow-lg shadow-blue-500/30 rounded-full px-5">
                 Get Started
               </Button>
             </Link>
@@ -150,7 +150,7 @@ const Landing = () => {
             <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
             <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
             <Link to="/login" className="block">
-              <Button className="w-full bg-gradient-to-r from-indigo-600 to-pink-500 text-white rounded-full">
+              <Button className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-full">
                 Get Started
               </Button>
             </Link>
@@ -165,9 +165,9 @@ const Landing = () => {
       >
         {/* animated mesh background */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-0 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-400/30 blur-3xl mesh-blob" />
-          <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-purple-400/30 blur-3xl mesh-blob mesh-blob-2" />
-          <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] rounded-full bg-pink-400/20 blur-3xl mesh-blob mesh-blob-3" />
+          <div className="absolute top-0 -left-40 w-[600px] h-[600px] rounded-full bg-blue-400/30 blur-3xl mesh-blob" />
+          <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-blue-700/30 blur-3xl mesh-blob mesh-blob-2" />
+          <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] rounded-full bg-green-400/20 blur-3xl mesh-blob mesh-blob-3" />
           {/* particles */}
           {Array.from({ length: 18 }).map((_, i) => (
             <span
@@ -186,13 +186,13 @@ const Landing = () => {
         <div className="relative z-10 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           {/* Left */}
           <div data-reveal className="reveal">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur border border-indigo-100 text-xs font-semibold text-indigo-700 shadow-sm mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 backdrop-blur border border-blue-100 text-xs font-semibold text-blue-700 shadow-sm mb-6">
               <Sparkles className="w-3.5 h-3.5" />
               AI-Powered Education Platform
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
               Adaptive Learning{" "}
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 bg-clip-text text-transparent">
                 Powered by AI
               </span>
             </h1>
@@ -205,7 +205,7 @@ const Landing = () => {
               <Link to="/login">
                 <Button
                   size="lg"
-                  className="rounded-full px-7 h-12 text-base bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white shadow-xl shadow-indigo-500/30 hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-105 transition-all"
+                  className="rounded-full px-7 h-12 text-base bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 text-white shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 hover:scale-105 transition-all"
                 >
                   Get Started <ArrowRight className="ml-1" />
                 </Button>
@@ -214,7 +214,7 @@ const Landing = () => {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="rounded-full px-7 h-12 text-base border-2 border-indigo-200 text-indigo-700 hover:bg-indigo-50 backdrop-blur"
+                  className="rounded-full px-7 h-12 text-base border-2 border-blue-200 text-blue-700 hover:bg-blue-50 backdrop-blur"
                 >
                   Explore Features
                 </Button>
@@ -241,17 +241,17 @@ const Landing = () => {
           <div data-reveal className="reveal relative h-[500px] lg:h-[560px] flex items-center justify-center">
             {/* Circular purple outline */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-[380px] h-[380px] lg:w-[440px] lg:h-[440px] rounded-full border-2 border-purple-300/60" />
+              <div className="w-[380px] h-[380px] lg:w-[440px] lg:h-[440px] rounded-full border-2 border-blue-300/60" />
             </div>
             {/* Soft radial glow to blend with page bg */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="w-[420px] h-[420px] lg:w-[480px] lg:h-[480px] rounded-full bg-[radial-gradient(circle,rgba(216,180,254,0.35),rgba(251,207,232,0.15)_55%,transparent_75%)] blur-2xl" />
             </div>
             {/* Floating bubbles */}
-            <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-purple-300/50 floaty pointer-events-none" />
-            <div className="absolute bottom-12 right-8 w-8 h-8 rounded-full bg-pink-300/50 floaty pointer-events-none" style={{ animationDelay: "1.2s" }} />
-            <div className="absolute top-20 right-16 w-3 h-3 rounded-full bg-fuchsia-300/60 floaty pointer-events-none" style={{ animationDelay: "0.6s" }} />
-            <div className="absolute bottom-24 left-16 w-4 h-4 rounded-full bg-indigo-300/50 floaty pointer-events-none" style={{ animationDelay: "1.8s" }} />
+            <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-blue-300/50 floaty pointer-events-none" />
+            <div className="absolute bottom-12 right-8 w-8 h-8 rounded-full bg-green-300/50 floaty pointer-events-none" style={{ animationDelay: "1.2s" }} />
+            <div className="absolute top-20 right-16 w-3 h-3 rounded-full bg-green-300/60 floaty pointer-events-none" style={{ animationDelay: "0.6s" }} />
+            <div className="absolute bottom-24 left-16 w-4 h-4 rounded-full bg-blue-300/50 floaty pointer-events-none" style={{ animationDelay: "1.8s" }} />
             <img
               src={heroBoy}
               alt="Student reading a book"
@@ -275,18 +275,18 @@ const Landing = () => {
             height={1080}
             className="w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-indigo-950/80 to-slate-950/90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/80 to-slate-950/90" />
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto text-white">
           <div data-reveal className="reveal text-center max-w-3xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-pink-200 mb-5">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-green-200 mb-5">
               <Sparkles className="w-3.5 h-3.5" />
               About APAS
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               An{" "}
-              <span className="bg-gradient-to-r from-indigo-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-300 via-blue-300 to-green-300 bg-clip-text text-transparent">
                 Adaptive Pedagogy & Analytics System
               </span>{" "}
               for modern schools
@@ -320,9 +320,9 @@ const Landing = () => {
               <div
                 key={c.title}
                 data-reveal
-                className="reveal rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-7 hover:bg-white/10 hover:border-pink-300/40 hover:-translate-y-1 transition-all"
+                className="reveal rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 p-7 hover:bg-white/10 hover:border-green-300/40 hover:-translate-y-1 transition-all"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-900/50">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 via-blue-500 to-green-500 flex items-center justify-center shadow-lg shadow-slate-900/50">
                   <c.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="mt-5 font-bold text-lg">{c.title}</h3>
@@ -334,7 +334,7 @@ const Landing = () => {
       </section>
 
       {/* Why APAS */}
-      <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/30 to-white overflow-hidden">
+      <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/30 to-white overflow-hidden">
         <img
           src={aiBrain}
           alt=""
@@ -344,12 +344,12 @@ const Landing = () => {
         />
         <div className="max-w-7xl mx-auto relative">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 mb-4">
               Why APAS
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               Built for the{" "}
-              <span className="bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
                 future of learning
               </span>
             </h2>
@@ -365,7 +365,7 @@ const Landing = () => {
                 href={f.href}
                 key={f.title}
                 data-reveal
-                className="reveal group relative rounded-2xl p-[1.5px] bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                className="reveal group relative rounded-2xl p-[1.5px] bg-gradient-to-br from-blue-200 via-blue-200 to-green-200 hover:from-blue-500 hover:via-blue-500 hover:to-green-500 transition-all hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 style={{ transitionDelay: `${i * 80}ms` }}
               >
                 <div className="rounded-2xl bg-white h-full p-6">
@@ -376,7 +376,7 @@ const Landing = () => {
                   </div>
                   <h3 className="mt-5 font-bold text-lg">{f.title}</h3>
                   <p className="mt-2 text-sm text-slate-600 leading-relaxed">{f.desc}</p>
-                  <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
                     Learn more <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -390,12 +390,12 @@ const Landing = () => {
       <section id="analytics" className="relative py-24 px-6">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div data-reveal className="reveal">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-xs font-semibold text-purple-700 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-900 mb-4">
               Smart Analytics
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               Insights that turn data into{" "}
-              <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-800 to-green-500 bg-clip-text text-transparent">
                 outcomes
               </span>
             </h2>
@@ -412,7 +412,7 @@ const Landing = () => {
                 "Curriculum-aligned reports",
               ].map((t) => (
                 <li key={t} className="flex items-center gap-3">
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white text-[10px]">✓</span>
+                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white text-[10px]">✓</span>
                   {t}
                 </li>
               ))}
@@ -420,12 +420,12 @@ const Landing = () => {
           </div>
 
           <div data-reveal className="reveal relative h-[420px]">
-            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6 shadow-xl">
+            <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-100 to-green-100 p-6 shadow-xl">
               <div className="grid grid-cols-3 gap-4 h-full">
                 {[
-                  { label: "Engagement", val: "92%", color: "from-indigo-500 to-purple-500" },
-                  { label: "Mastery", val: "78%", color: "from-purple-500 to-pink-500" },
-                  { label: "Growth", val: "+31%", color: "from-pink-500 to-rose-500" },
+                  { label: "Engagement", val: "92%", color: "from-blue-500 to-blue-500" },
+                  { label: "Mastery", val: "78%", color: "from-blue-500 to-green-500" },
+                  { label: "Growth", val: "+31%", color: "from-green-500 to-green-500" },
                 ].map((s) => (
                   <div key={s.label} className="rounded-2xl bg-white/90 backdrop-blur p-4 flex flex-col justify-between shadow-md">
                     <div className="text-xs text-slate-500">{s.label}</div>
@@ -443,7 +443,7 @@ const Landing = () => {
                     {[50, 70, 60, 85, 75, 95, 88].map((h, i) => (
                       <div
                         key={i}
-                        className="flex-1 rounded-t-lg bg-gradient-to-t from-indigo-500 via-purple-500 to-pink-500 chart-bar"
+                        className="flex-1 rounded-t-lg bg-gradient-to-t from-blue-500 via-blue-500 to-green-500 chart-bar"
                         style={{ height: `${h}%`, animationDelay: `${i * 0.08}s` }}
                       />
                     ))}
@@ -456,15 +456,15 @@ const Landing = () => {
       </section>
 
       {/* SECTION 3 — Student Experience */}
-      <section id="students" className="relative py-24 px-6 bg-gradient-to-b from-white via-purple-50/40 to-white overflow-hidden">
+      <section id="students" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-100 text-xs font-semibold text-purple-700 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-900 mb-4">
               Student Experience
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               Built for{" "}
-              <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-800 to-green-500 bg-clip-text text-transparent">
                 modern students
               </span>{" "}
               who want smarter learning experiences
@@ -472,16 +472,16 @@ const Landing = () => {
           </div>
 
           {/* Real student photo banner */}
-          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-purple-200">
+          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-blue-200">
             <img
               src={studentsPhoto}
               alt="Students learning together with APAS"
               loading="lazy"
               className="w-full h-64 md:h-80 object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-900/75 via-purple-800/40 to-transparent flex items-center">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/75 via-slate-800/40 to-transparent flex items-center">
               <div className="px-8 md:px-14 max-w-xl text-white">
-                <div className="text-xs font-semibold uppercase tracking-widest text-pink-200">Real Classrooms</div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-green-200">Real Classrooms</div>
                 <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
                   50,000+ students already learning smarter with APAS
                 </div>
@@ -492,7 +492,7 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Dashboard mockup */}
             <div data-reveal className="reveal relative h-[560px]">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 p-1 shadow-2xl shadow-purple-500/40 floaty">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-600 via-blue-800 to-green-500 p-1 shadow-2xl shadow-blue-500/40 floaty">
                 <div className="w-full h-full rounded-3xl bg-white p-6 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <div>
@@ -527,20 +527,20 @@ const Landing = () => {
                     })}
                   </div>
 
-                  <div className="rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 p-4 border border-indigo-100">
+                  <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-50 p-4 border border-blue-100">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold text-slate-700">Weekly Performance</span>
                       <span className="text-xs text-emerald-600 font-semibold">+18%</span>
                     </div>
                     <div className="flex items-end gap-1.5 h-20">
                       {[35, 55, 48, 70, 62, 85, 90].map((h, i) => (
-                        <div key={i} className="flex-1 rounded-t-md bg-gradient-to-t from-indigo-500 to-pink-500 chart-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }} />
+                        <div key={i} className="flex-1 rounded-t-md bg-gradient-to-t from-blue-500 to-green-500 chart-bar" style={{ height: `${h}%`, animationDelay: `${i * 0.1}s` }} />
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-100 p-3 flex items-start gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-600 mt-0.5" />
+                  <div className="rounded-xl bg-gradient-to-r from-blue-500/10 to-green-500/10 border border-blue-100 p-3 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-blue-800 mt-0.5" />
                     <div className="text-xs text-slate-700">
                       <b>AI Mentor:</b> Try 5 quick algebra problems to boost your score by 8%.
                     </div>
@@ -548,7 +548,7 @@ const Landing = () => {
                 </div>
               </div>
 
-              <div className="absolute -top-5 -right-3 rounded-2xl bg-white shadow-2xl shadow-purple-200 p-3 flex items-center gap-3 floaty floaty-2 z-10">
+              <div className="absolute -top-5 -right-3 rounded-2xl bg-white shadow-2xl shadow-blue-200 p-3 flex items-center gap-3 floaty floaty-2 z-10">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
                   <Trophy className="w-5 h-5 text-white" />
                 </div>
@@ -558,9 +558,9 @@ const Landing = () => {
                 </div>
               </div>
 
-              <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white shadow-2xl shadow-indigo-200 p-3 max-w-[220px] floaty floaty-3 z-10">
+              <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white shadow-2xl shadow-blue-200 p-3 max-w-[220px] floaty floaty-3 z-10">
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-500 flex items-center justify-center">
                     <MessageCircle className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-xs font-semibold">AI Tutor</span>
@@ -573,7 +573,7 @@ const Landing = () => {
 
               <div className="absolute top-1/2 -left-6 -translate-y-1/2 rounded-2xl bg-white shadow-xl p-2 flex gap-1.5 floaty z-10">
                 {[Award, Star, Trophy].map((Ic, i) => (
-                  <div key={i} className={`w-9 h-9 rounded-lg flex items-center justify-center ${["bg-gradient-to-br from-pink-400 to-rose-500","bg-gradient-to-br from-amber-400 to-orange-500","bg-gradient-to-br from-indigo-400 to-purple-500"][i]}`}>
+                  <div key={i} className={`w-9 h-9 rounded-lg flex items-center justify-center ${["bg-gradient-to-br from-green-400 to-green-500","bg-gradient-to-br from-amber-400 to-orange-500","bg-gradient-to-br from-blue-400 to-blue-500"][i]}`}>
                     <Ic className="w-4 h-4 text-white" />
                   </div>
                 ))}
@@ -583,13 +583,13 @@ const Landing = () => {
             {/* Feature list — student-only experiences (no overlap with main Features) */}
             <div data-reveal className="reveal space-y-4">
               {[
-                { icon: Flame, title: "Daily Streaks & Habits", desc: "Build a consistent learning habit with streaks, reminders, and rewards.", color: "from-orange-500 to-rose-500" },
+                { icon: Flame, title: "Daily Streaks & Habits", desc: "Build a consistent learning habit with streaks, reminders, and rewards.", color: "from-orange-500 to-green-500" },
                 { icon: Trophy, title: "Achievement Badges", desc: "Earn trophies and milestones as you master each topic.", color: "from-amber-500 to-orange-500" },
-                { icon: MessageCircle, title: "24/7 AI Mentor", desc: "Ask anything. Your personal tutor is always one tap away.", color: "from-indigo-500 to-blue-500" },
-                { icon: Zap, title: "Gamified Practice", desc: "Quick games turn revision into something you actually want to do.", color: "from-purple-500 to-pink-500" },
-                { icon: Target, title: "Daily Goals", desc: "Small, achievable targets that keep you moving forward every day.", color: "from-pink-500 to-rose-500" },
+                { icon: MessageCircle, title: "24/7 AI Mentor", desc: "Ask anything. Your personal tutor is always one tap away.", color: "from-blue-500 to-blue-500" },
+                { icon: Zap, title: "Gamified Practice", desc: "Quick games turn revision into something you actually want to do.", color: "from-blue-500 to-green-500" },
+                { icon: Target, title: "Daily Goals", desc: "Small, achievable targets that keep you moving forward every day.", color: "from-green-500 to-green-500" },
               ].map((f) => (
-                <div key={f.title} className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 hover:border-purple-200 hover:shadow-xl hover:shadow-purple-100 transition-all hover:-translate-y-1">
+                <div key={f.title} className="group flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-5 hover:border-blue-200 hover:shadow-xl hover:shadow-blue-100 transition-all hover:-translate-y-1">
                   <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
                     <f.icon className="w-6 h-6 text-white" />
                   </div>
@@ -605,15 +605,15 @@ const Landing = () => {
       </section>
 
       {/* SECTION 4 — Faculty & Analytics */}
-      <section id="faculty" className="relative py-24 px-6 bg-gradient-to-b from-white via-indigo-50/40 to-white">
+      <section id="faculty" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-100 text-xs font-semibold text-indigo-700 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 mb-4">
               For Educators
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               Powerful Insights for{" "}
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
                 Educators
               </span>
             </h2>
@@ -623,16 +623,16 @@ const Landing = () => {
           </div>
 
           {/* Real teacher photo banner */}
-          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-indigo-200">
+          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-blue-200">
             <img
               src={teacherPhoto}
               alt="Educator using APAS analytics"
               loading="lazy"
               className="w-full h-64 md:h-80 object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-l from-indigo-900/75 via-purple-800/40 to-transparent flex items-center justify-end">
+            <div className="absolute inset-0 bg-gradient-to-l from-blue-900/75 via-slate-800/40 to-transparent flex items-center justify-end">
               <div className="px-8 md:px-14 max-w-xl text-right text-white">
-                <div className="text-xs font-semibold uppercase tracking-widest text-indigo-200">For Educators</div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-blue-200">For Educators</div>
                 <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
                   Teach smarter with real-time AI analytics
                 </div>
@@ -643,12 +643,12 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div data-reveal className="reveal grid sm:grid-cols-2 gap-4">
               {[
-                { icon: LineChart, title: "Class Performance", desc: "Monitor every class & section in real time.", color: "from-indigo-500 to-purple-500" },
-                { icon: Activity, title: "Engagement Heatmaps", desc: "See where students light up — or fall off.", color: "from-purple-500 to-pink-500" },
-                { icon: FileText, title: "AI-Generated Reports", desc: "Auto-built insights, ready to share with parents.", color: "from-pink-500 to-rose-500" },
-                { icon: Users, title: "Student Insights", desc: "Drill into each learner's profile and growth.", color: "from-indigo-500 to-blue-500" },
+                { icon: LineChart, title: "Class Performance", desc: "Monitor every class & section in real time.", color: "from-blue-500 to-blue-500" },
+                { icon: Activity, title: "Engagement Heatmaps", desc: "See where students light up — or fall off.", color: "from-blue-500 to-green-500" },
+                { icon: FileText, title: "AI-Generated Reports", desc: "Auto-built insights, ready to share with parents.", color: "from-green-500 to-green-500" },
+                { icon: Users, title: "Student Insights", desc: "Drill into each learner's profile and growth.", color: "from-blue-500 to-blue-500" },
               ].map((f) => (
-                <div key={f.title} className="rounded-2xl bg-white border border-slate-100 p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-100 transition-all">
+                <div key={f.title} className="rounded-2xl bg-white border border-slate-100 p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100 transition-all">
                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-md`}>
                     <f.icon className="w-5 h-5 text-white" />
                   </div>
@@ -659,7 +659,7 @@ const Landing = () => {
             </div>
 
             <div data-reveal className="reveal relative h-[520px]">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 p-6 shadow-xl floaty">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-100 to-green-100 p-6 shadow-xl floaty">
                 <div className="bg-white rounded-2xl h-full p-5 flex flex-col gap-4 shadow-inner">
                   <div className="flex items-center justify-between">
                     <div>
@@ -671,9 +671,9 @@ const Landing = () => {
 
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { l: "Engagement", v: "92%", c: "text-indigo-600" },
-                      { l: "Avg Score", v: "78", c: "text-purple-600" },
-                      { l: "At Risk", v: "4", c: "text-rose-600" },
+                      { l: "Engagement", v: "92%", c: "text-blue-600" },
+                      { l: "Avg Score", v: "78", c: "text-blue-800" },
+                      { l: "At Risk", v: "4", c: "text-green-600" },
                     ].map((k) => (
                       <div key={k.l} className="rounded-lg bg-slate-50 p-2 text-center">
                         <div className="text-[10px] text-slate-500">{k.l}</div>
@@ -694,8 +694,8 @@ const Landing = () => {
                     </div>
                   </div>
 
-                  <div className="mt-auto rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 to-purple-50 p-3 flex items-start gap-2">
-                    <FileText className="w-4 h-4 text-indigo-600 mt-0.5" />
+                  <div className="mt-auto rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-blue-50 p-3 flex items-start gap-2">
+                    <FileText className="w-4 h-4 text-blue-600 mt-0.5" />
                     <div className="text-xs text-slate-700">
                       <b>AI Report:</b> 3 students need extra support in <i>fractions</i>. Recommended: targeted practice set.
                     </div>
@@ -721,12 +721,12 @@ const Landing = () => {
       <section id="how" className="relative py-24 px-6">
         <div className="max-w-6xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100 text-xs font-semibold text-pink-700 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-xs font-semibold text-green-700 mb-4">
               How it works
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               From sign-up to{" "}
-              <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 bg-clip-text text-transparent">
                 smarter learning
               </span>{" "}
               in 4 steps
@@ -735,24 +735,24 @@ const Landing = () => {
 
           {/* Desktop timeline */}
           <div className="hidden md:block relative">
-            <div className="absolute top-10 left-[10%] right-[10%] h-1 rounded-full bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 overflow-hidden">
-              <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 connector-fill origin-left" />
+            <div className="absolute top-10 left-[10%] right-[10%] h-1 rounded-full bg-gradient-to-r from-blue-100 via-blue-100 to-green-100 overflow-hidden">
+              <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-blue-500 via-blue-500 to-green-500 connector-fill origin-left" />
             </div>
 
             <div className="grid grid-cols-4 gap-6 relative">
               {[
-                { icon: UserPlus, title: "Register", desc: "Create your free account in seconds.", color: "from-indigo-500 to-purple-500" },
-                { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you.", color: "from-purple-500 to-pink-500" },
-                { icon: BarChart3, title: "Analyze Performance", desc: "AI tracks your strengths and gaps.", color: "from-pink-500 to-rose-500" },
+                { icon: UserPlus, title: "Register", desc: "Create your free account in seconds.", color: "from-blue-500 to-blue-500" },
+                { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you.", color: "from-blue-500 to-green-500" },
+                { icon: BarChart3, title: "Analyze Performance", desc: "AI tracks your strengths and gaps.", color: "from-green-500 to-green-500" },
                 { icon: Rocket, title: "Improve with AI", desc: "Get smart suggestions to grow faster.", color: "from-amber-500 to-orange-500" },
               ].map((s, i) => (
                 <div key={s.title} data-reveal className="reveal text-center" style={{ transitionDelay: `${i * 120}ms` }}>
                   <div className="relative mx-auto w-20 h-20">
                     <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${s.color} blur-xl opacity-50`} />
-                    <div className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${s.color} flex items-center justify-center shadow-2xl shadow-purple-300/40 step-pulse`}>
+                    <div className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${s.color} flex items-center justify-center shadow-2xl shadow-blue-300/40 step-pulse`}>
                       <s.icon className="w-8 h-8 text-white" />
                     </div>
-                    <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-purple-200 flex items-center justify-center text-xs font-bold text-purple-600">
+                    <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-blue-200 flex items-center justify-center text-xs font-bold text-blue-800">
                       {i + 1}
                     </div>
                   </div>
@@ -765,7 +765,7 @@ const Landing = () => {
 
           {/* Mobile vertical timeline */}
           <div className="md:hidden relative pl-10">
-            <div className="absolute left-4 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-indigo-500 via-purple-500 to-pink-500" />
+            <div className="absolute left-4 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-blue-500 via-blue-500 to-green-500" />
             {[
               { icon: UserPlus, title: "Register", desc: "Create your free account in seconds." },
               { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you." },
@@ -773,11 +773,11 @@ const Landing = () => {
               { icon: Rocket, title: "Improve with AI", desc: "Get smart suggestions to grow faster." },
             ].map((s, i) => (
               <div key={s.title} data-reveal className="reveal relative mb-8">
-                <div className="absolute -left-[34px] top-0 w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                <div className="absolute -left-[34px] top-0 w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 via-blue-500 to-green-500 flex items-center justify-center shadow-lg">
                   <s.icon className="w-4 h-4 text-white" />
                 </div>
                 <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-md">
-                  <div className="text-xs text-purple-600 font-semibold">Step {i + 1}</div>
+                  <div className="text-xs text-blue-800 font-semibold">Step {i + 1}</div>
                   <div className="font-bold mt-1">{s.title}</div>
                   <p className="text-sm text-slate-600 mt-1">{s.desc}</p>
                 </div>
@@ -788,15 +788,15 @@ const Landing = () => {
       </section>
 
       {/* Testimonials */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-pink-50/30 to-white overflow-hidden">
+      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-green-50/30 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-14">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pink-100 text-xs font-semibold text-pink-700 mb-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-xs font-semibold text-green-700 mb-4">
               Loved by learners
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               What students &{" "}
-              <span className="bg-gradient-to-r from-purple-600 to-pink-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-800 to-green-500 bg-clip-text text-transparent">
                 teachers
               </span>{" "}
               are saying
@@ -805,14 +805,14 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-3 gap-6">
             {[
-              { name: "Aarav S.", role: "Class 8 Student", quote: "APAS feels like having a personal tutor 24/7. My math scores jumped 22% in two months!", color: "from-indigo-500 to-purple-500" },
-              { name: "Ms. Priya R.", role: "Math Teacher", quote: "The heatmaps show me exactly which students need help. I save hours every week.", color: "from-purple-500 to-pink-500" },
-              { name: "Dr. Mehta", role: "Principal", quote: "School-wide growth of 31% in one term. APAS truly delivers measurable outcomes.", color: "from-pink-500 to-rose-500" },
+              { name: "Aarav S.", role: "Class 8 Student", quote: "APAS feels like having a personal tutor 24/7. My math scores jumped 22% in two months!", color: "from-blue-500 to-blue-500" },
+              { name: "Ms. Priya R.", role: "Math Teacher", quote: "The heatmaps show me exactly which students need help. I save hours every week.", color: "from-blue-500 to-green-500" },
+              { name: "Dr. Mehta", role: "Principal", quote: "School-wide growth of 31% in one term. APAS truly delivers measurable outcomes.", color: "from-green-500 to-green-500" },
             ].map((t, i) => (
               <div
                 key={t.name}
                 data-reveal
-                className="reveal group rounded-2xl bg-white border border-slate-100 p-7 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-200 transition-all relative overflow-hidden"
+                className="reveal group rounded-2xl bg-white border border-slate-100 p-7 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200 transition-all relative overflow-hidden"
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
                 <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${t.color} opacity-10 blur-2xl group-hover:opacity-30 transition-opacity`} />
@@ -837,7 +837,7 @@ const Landing = () => {
 
       {/* CTA */}
       <section id="get-started" className="relative py-24 px-6">
-        <div className="max-w-5xl mx-auto rounded-3xl relative overflow-hidden shadow-2xl shadow-purple-500/40">
+        <div className="max-w-5xl mx-auto rounded-3xl relative overflow-hidden shadow-2xl shadow-blue-500/40">
           <img
             src={ctaBg}
             alt=""
@@ -847,7 +847,7 @@ const Landing = () => {
             height={1080}
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-indigo-700/90 via-purple-700/85 to-pink-600/90" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-700/90 via-blue-900/85 to-green-600/90" />
           <div className="relative p-12 text-center text-white">
             <div className="absolute inset-0 opacity-20 pointer-events-none">
               {Array.from({ length: 20 }).map((_, i) => (
@@ -872,7 +872,7 @@ const Landing = () => {
             </p>
             <div className="mt-8 flex flex-wrap gap-4 justify-center relative">
               <Link to="/login">
-                <Button size="lg" className="rounded-full px-8 h-12 bg-white text-indigo-700 hover:bg-white/90 font-semibold shadow-xl">
+                <Button size="lg" className="rounded-full px-8 h-12 bg-white text-blue-700 hover:bg-white/90 font-semibold shadow-xl">
                   Get Started Free <ArrowRight className="ml-1" />
                 </Button>
               </Link>
@@ -887,7 +887,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="border-t border-slate-100 bg-slate-50/50 px-6 py-12">
+      <footer id="contact" className="border-t border-blue-100 bg-[#EAF1FB] px-6 py-12">
         <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8 text-sm">
           <div>
             <div className="flex items-center">
@@ -900,16 +900,16 @@ const Landing = () => {
           <div>
             <div className="font-semibold mb-3">Product</div>
             <ul className="space-y-2 text-slate-500">
-              <li><a href="#features" className="hover:text-indigo-600">Features</a></li>
-              <li><a href="#analytics" className="hover:text-indigo-600">Analytics</a></li>
-              <li><Link to="/login" className="hover:text-indigo-600">Sign In</Link></li>
+              <li><a href="#features" className="hover:text-blue-600">Features</a></li>
+              <li><a href="#analytics" className="hover:text-blue-600">Analytics</a></li>
+              <li><Link to="/login" className="hover:text-blue-600">Sign In</Link></li>
             </ul>
           </div>
           <div>
             <div className="font-semibold mb-3">Company</div>
             <ul className="space-y-2 text-slate-500">
-              <li><a href="#about" className="hover:text-indigo-600">About</a></li>
-              <li><a href="#contact" className="hover:text-indigo-600">Contact</a></li>
+              <li><a href="#about" className="hover:text-blue-600">About</a></li>
+              <li><a href="#contact" className="hover:text-blue-600">Contact</a></li>
             </ul>
           </div>
           <div>
