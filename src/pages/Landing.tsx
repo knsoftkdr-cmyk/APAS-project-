@@ -114,7 +114,7 @@ const Landing = () => {
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center">
-  <img src={apasLogo} alt="APAS Logo" className="h-10 w-auto object-contain" />
+  <img src={apasLogo} alt="APAS Logo" className="h-16 md:h-20 w-auto object-contain" />
 </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
