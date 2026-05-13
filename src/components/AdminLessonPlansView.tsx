@@ -210,7 +210,7 @@ export const AdminLessonPlansView = () => {
               {openLesson?.periods_count && <Badge variant="outline">{openLesson.periods_count} periods</Badge>}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 pr-4 -mr-4">
+          <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
             <div className="space-y-4 pb-4">
               <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
                 <span className="font-medium">By:</span> {teacherName}
@@ -243,7 +243,7 @@ export const AdminLessonPlansView = () => {
               {openLesson?.content && (
                 <section>
                   <h4 className="mb-2 text-sm font-semibold text-foreground">Structured Content</h4>
-                  <pre className="overflow-x-auto rounded-md bg-muted/50 p-3 text-xs">{JSON.stringify(openLesson.content, null, 2)}</pre>
+                  <pre className="overflow-x-auto whitespace-pre-wrap rounded-md bg-muted/50 p-3 text-xs">{JSON.stringify(openLesson.content, null, 2)}</pre>
                 </section>
               )}
 
@@ -252,8 +252,17 @@ export const AdminLessonPlansView = () => {
               )}
             </div>
           </ScrollArea>
-          <div className="flex justify-end pt-2">
-            <Button variant="outline" onClick={() => setOpenLesson(null)}>Close</Button>
+          <div className="flex flex-wrap justify-end gap-2 pt-3 border-t">
+            <Button variant="outline" size="sm" onClick={() => openLesson && downloadMarkdown(openLesson, teacherName)}>
+              <FileText className="mr-1.5 h-4 w-4" /> Markdown
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => openLesson && downloadHtml(openLesson, teacherName)}>
+              <Download className="mr-1.5 h-4 w-4" /> HTML
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => openLesson && printLesson(openLesson, teacherName)}>
+              <Printer className="mr-1.5 h-4 w-4" /> Print / PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setOpenLesson(null)}>Close</Button>
           </div>
         </DialogContent>
       </Dialog>
