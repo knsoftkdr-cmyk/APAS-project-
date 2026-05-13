@@ -17,6 +17,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Plus, Trash2, Users, GraduationCap, BookOpen, Settings2, School, FileSpreadsheet, ClipboardCheck, Bell, Pencil } from "lucide-react";
 import { ExcelImportModal } from "@/components/ExcelImportModal";
 import { DiagnosticApprovalPanel } from "@/components/DiagnosticApprovalPanel";
+import { AdminLessonPlansView } from "@/components/AdminLessonPlansView";
 
 interface ClassRecord {
   id: string;
