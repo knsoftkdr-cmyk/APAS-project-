@@ -745,6 +745,13 @@ const AdminPanel = () => {
             </TabsContent>
           )}
 
+          {/* ===== LESSON PLANS TAB (School Admin + Master Admin) ===== */}
+          {(isMasterAdmin || isSchoolAdmin) && (
+            <TabsContent value="lesson-plans">
+              <AdminLessonPlansView />
+            </TabsContent>
+          )}
+
           {/* ===== STUDENT ALLOTMENT TAB (Master Admin only) ===== */}
           {isMasterAdmin && <TabsContent value="students">
             <Card>
