@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { BookOpen, Calendar, Clock, GraduationCap, Search, User } from "lucide-react";
+import { BookOpen, Calendar, Clock, Download, FileText, GraduationCap, Printer, Search, User } from "lucide-react";
 import { format } from "date-fns";
 
 interface TeacherOpt {
