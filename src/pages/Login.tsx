@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { GraduationCap, Eye, EyeOff, User, Lock } from "lucide-react";
+import { Eye, EyeOff, User, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import loginIllustration from "@/assets/login-illustration.png";
-// Add import at top:
 import apasLogo from "@/assets/APAS-logo.png";
 
 const Login = () => {
@@ -159,11 +158,17 @@ const Login = () => {
                 </button>
               </div>
 
-              <div className="pt-1">
-                <Link to="/register" className="text-sm font-semibold text-[#2C3E50] hover:text-[#2563EB] transition-colors">
-                  Forgot password?
-                </Link>
-              </div>
+              {/* ✅ Fixed: now points to /forgot-password instead of /register */}
+              {!isStudentLogin && (
+                <div className="pt-1">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-semibold text-[#2C3E50] hover:text-[#2563EB] transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
+              )}
 
               <div className="pt-4">
                 <Button

@@ -31,6 +31,8 @@ import AutomationWorkflows from "./pages/AutomationWorkflows";
 import SecurityCenter from "./pages/SecurityCenter";
 import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
+import ForgotPassword from "@/pages/ForgotPassword";
+
 
 const queryClient = new QueryClient();
 
@@ -68,6 +70,7 @@ export default function App() {
                     <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><Billing /></RoleGuard></ProtectedRoute>} />
                     <Route path="/register" element={<Register />} />
                     <Route path="*" element={<NotFound />} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
                   </Routes>
                 </NotificationProvider>
               </LanguageProvider>
