@@ -4,6 +4,7 @@ import { DiagnosticAssignPanel } from "@/components/DiagnosticAssignPanel";
 import { StudentDiagnosticTest } from "@/components/StudentDiagnosticTest";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useGamification } from "@/hooks/useGamification";
+import { useTimerValidation } from "@/hooks/useTimerValidation";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -124,6 +125,7 @@ function build25QuestionConfig(cfg: AgeGroupConfig): AgeGroupConfig {
 
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
   const { awardXp } = useGamification();
+  const { validateTimer } = useTimerValidation();
   const [phase, setPhase] = useState<"form" | "quiz" | "done">("form");
   const name = studentName;
   const [age, setAge] = useState("");
@@ -138,6 +140,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -172,6 +175,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
       setConfig(limited);
       setAnswers({});
       setCurrentQ(0);
+      setQuizStartTime(Date.now());
       setPhase("quiz");
       toast.info(`Loaded ${limited.totalQuestions} diagnostic questions`);
       return;
@@ -250,6 +254,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
           setConfig(filteredConfig);
           setAnswers({});
           setCurrentQ(0);
+          setQuizStartTime(Date.now());
           setPhase("quiz");
           toast.info(`Loaded ${filteredQuestions.length} teacher-assigned questions`);
           return;
@@ -274,6 +279,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     setConfig(fallbackConfig);
     setAnswers({});
     setCurrentQ(0);
+    setQuizStartTime(Date.now());
     setPhase("quiz");
   };
 
@@ -285,6 +291,30 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     if (!userId || !config) return;
     setSubmitting(true);
     try {
+      // Validate timer before submission
+      if (quizStartTime) {
+        const clientElapsedTime = Date.now() - quizStartTime;
+        const expectedDuration = config.totalQuestions * 60 * 1000; // Estimate: 1 min per question
+        
+        const validationResult = await validateTimer({
+          test_id: "diagnostic-" + userId,
+          student_id: userId,
+          client_elapsed_time: clientElapsedTime,
+          submission_time: new Date().toISOString(),
+          expected_duration: expectedDuration,
+        });
+
+        if (validationResult.severity === "violation" && validationResult.action === "reject") {
+          toast.error("Test submission flagged: Possible tampering detected. Please contact your teacher.");
+          setSubmitting(false);
+          return;
+        }
+
+        if (validationResult.action === "flag" || validationResult.severity === "warning") {
+          toast.warning("Your submission was completed very quickly and has been flagged for review.");
+        }
+      }
+
       const { error } = await supabase.from("student_assessments" as any).insert({
         student_name: name.trim(),
         student_age: parseInt(age),
@@ -293,7 +323,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         responses: finalAnswers,
         submitted_by: userId,
         student_class: studentClass,
-        section: (section || "").toUpperCase().trim(), // Normalize section for consistency with homework assignments
+        section: (section || "").toUpperCase().trim(),
         curriculum: curriculum,
       } as any);
       if (error) throw error;

@@ -51,13 +51,21 @@ const Login = () => {
       return;
     }
 
-    const { error } = await supabase.auth.signInWithPassword({ email: identifier, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password });
 
     if (error) {
-      const msg = error.message === "Email not confirmed"
-        ? "Please verify your email before signing in."
-        : error.message;
-      toast({ title: "Login failed", description: msg, variant: "destructive" });
+      toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+
+    // Blocks user if email is not verified yet
+    if (data?.user && !data.user.email_confirmed_at) {
+      toast({ 
+        title: "Email not verified", 
+        description: "Please check your inbox and confirm your email before signing in.", 
+        variant: "destructive" 
+      });
       setLoading(false);
       return;
     }
@@ -158,7 +166,6 @@ const Login = () => {
                 </button>
               </div>
 
-              {/* ✅ Fixed: now points to /forgot-password instead of /register */}
               {!isStudentLogin && (
                 <div className="pt-1">
                   <Link

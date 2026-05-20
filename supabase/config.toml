@@ -12,9 +12,6 @@ verify_jwt = false
 [functions.search-context]
 verify_jwt = false
 
-[functions.predict-performance]
-verify_jwt = false
-
 [functions.student-tutor-chat]
 verify_jwt = false
 
@@ -40,4 +37,19 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.analyze-test-results]
+verify_jwt = false
+
+[functions.register-teacher]
+verify_jwt = false
+
+[functions.reset-student-passwords]
+verify_jwt = false
+
+[functions.send-otp]
+verify_jwt = false
+
+[functions.student-login]
+verify_jwt = false
+
+[functions.verify-otp]
 verify_jwt = false

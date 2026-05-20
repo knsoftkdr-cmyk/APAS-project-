@@ -7,188 +7,157 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+interface PredictionResponse {
+  predicted_score_pct: number;
+  confidence_level: number;
+  risk_level: "low" | "medium" | "high";
+  recommended_interventions: string[];
+  subject_predictions: Record<string, { predicted_pct: number; trend: string }>;
+  weekly_forecast: Array<{ week: number; predicted_score: number }>;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const GROK_KEY = Deno.env.get("GROK_API_KEY");
-    if (!GROK_KEY) throw new Error("GROK_API_KEY not configured");
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { student_ids } = await req.json();
+    const { student_id } = await req.json();
 
-    // Fetch all students if none specified
-    let studentsQuery = supabase.from("students").select("id, profile_id, grade, age, vark_type, zpd_score, curriculum");
-    if (student_ids?.length) studentsQuery = studentsQuery.in("id", student_ids);
-    const { data: students, error: studentsErr } = await studentsQuery;
-    if (studentsErr) throw studentsErr;
-    if (!students?.length) {
-      return new Response(JSON.stringify({ predictions: [], summary: {} }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!student_id) {
+      return new Response(
+        JSON.stringify({ error: "student_id is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    const predictions = [];
+    // Fetch student's academic test scores
+    const { data: testScores, error: testError } = await supabase
+      .from("academic_tests")
+      .select("subject, score, total_questions, completed_at")
+      .eq("student_id", student_id)
+      .order("completed_at", { ascending: false })
+      .limit(50);
 
-    for (const student of students) {
-      // Get performance records
-      const { data: perf } = await supabase
-        .from("performance_records")
-        .select("pretest_score, posttest_score, normalized_gain, mastery_score, effort_score, recorded_at")
-        .eq("student_id", student.id)
-        .order("recorded_at", { ascending: false })
-        .limit(10);
+    if (testError) throw testError;
 
-      // Get homework submissions
-      const { data: homework } = await supabase
-        .from("homework_submissions")
-        .select("score, submitted_at")
-        .eq("student_id", student.profile_id)
-        .order("submitted_at", { ascending: false })
-        .limit(10);
-
-      // Get academic test scores
-      const { data: tests } = await supabase
-        .from("academic_tests")
-        .select("score, total_questions, subject, completed_at")
-        .eq("student_id", student.profile_id)
-        .order("completed_at", { ascending: false })
-        .limit(10);
-
-      // Get profile name
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", student.profile_id)
-        .single();
-
-      // Build context for AI
-      const perfSummary = (perf || []).map(p => ({
-        pre: p.pretest_score, post: p.posttest_score,
-        gain: p.normalized_gain, mastery: p.mastery_score, effort: p.effort_score,
-      }));
-      const hwScores = (homework || []).map(h => h.score).filter(Boolean);
-      const testScores = (tests || []).map(t => ({
-        subject: t.subject,
-        pct: Math.round((t.score / t.total_questions) * 100),
-      }));
-
-      const prompt = `Analyze this student's data and predict performance. Return ONLY valid JSON.
-
-Student: ${profile?.full_name || "Unknown"}, Grade: ${student.grade || "N/A"}, Age: ${student.age || "N/A"}
-VARK Type: ${student.vark_type || "Unknown"}, ZPD Score: ${student.zpd_score || "N/A"}
-
-Recent Performance (newest first): ${JSON.stringify(perfSummary)}
-Homework Scores: ${JSON.stringify(hwScores)}
-Test Scores: ${JSON.stringify(testScores)}
-
-Attendance: ~85% (estimated)
-
-Return JSON with this exact structure:
-{
-  "subjects": [
-    {
-      "subject": "subject_name",
-      "predicted_score": 0-100,
-      "risk_level": "low|medium|high",
-      "dropout_risk_pct": 0-100,
-      "confidence": 0-1,
-      "factors": ["factor1", "factor2"]
-    }
-  ],
-  "overall_risk": "low|medium|high",
-  "recommendations": ["rec1", "rec2"]
-}
-
-Rules:
-- If performance is declining, risk_level should be "high"
-- If homework completion is low (<50%), increase dropout risk
-- If normalized gain is consistently <0.3, flag as medium risk
-- Consider VARK type alignment with teaching methods`;
-
-      const aiResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${GROK_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.3-70b-versatile",
-          messages: [
-            { role: "system", content: "You are an educational data analyst. Analyze student data and predict performance. Return ONLY valid JSON, no markdown." },
-            { role: "user", content: prompt },
+    if (!testScores || testScores.length === 0) {
+      // No historical data - return neutral prediction
+      return new Response(
+        JSON.stringify({
+          predicted_score_pct: 50,
+          confidence_level: 30,
+          risk_level: "medium",
+          recommended_interventions: [
+            "Complete more practice tests to establish a baseline",
+            "Review fundamental concepts",
+            "Start with easier difficulty levels",
           ],
-        }),
-      });
-
-      if (!aiResp.ok) {
-        const status = aiResp.status;
-        if (status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-            status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (status === 402) {
-          return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-            status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        console.error("AI error:", status, await aiResp.text());
-        continue;
-      }
-
-      const aiData = await aiResp.json();
-      let content = aiData.choices?.[0]?.message?.content || "";
-      content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
-      try {
-        const prediction = JSON.parse(content);
-
-        // Store predictions per subject
-        for (const subj of (prediction.subjects || [])) {
-          const { error: insertErr } = await supabase.from("student_predictions").upsert({
-            student_id: student.id,
-            subject: subj.subject,
-            predicted_score_next_test: subj.predicted_score,
-            risk_level: subj.risk_level,
-            dropout_risk_percentage: subj.dropout_risk_pct,
-            confidence_score: subj.confidence,
-            contributing_factors: subj.factors,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: "student_id,subject", ignoreDuplicates: false });
-
-          if (insertErr) console.error("Insert prediction error:", insertErr);
-        }
-
-        predictions.push({
-          student_id: student.id,
-          student_name: profile?.full_name,
-          grade: student.grade,
-          ...prediction,
-        });
-      } catch (parseErr) {
-        console.error("Parse error for student:", student.id, parseErr);
-      }
-
-      // Small delay between students
-      await new Promise(r => setTimeout(r, 300));
+          subject_predictions: {},
+          weekly_forecast: Array.from({ length: 8 }, (_, i) => ({
+            week: i + 1,
+            predicted_score: 50,
+          })),
+        } as PredictionResponse),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Summary
-    const highRisk = predictions.filter(p => p.overall_risk === "high").length;
-    const medRisk = predictions.filter(p => p.overall_risk === "medium").length;
+    // Calculate metrics by subject
+    const bySubject: Record<string, { scores: number[]; latest: number; oldest: number }> = {};
 
-    return new Response(JSON.stringify({
-      predictions,
-      summary: {
-        total_analyzed: predictions.length,
-        high_risk: highRisk,
-        medium_risk: medRisk,
-        low_risk: predictions.length - highRisk - medRisk,
-      },
-    }), {
+    testScores.forEach((test: any) => {
+      const pct = test.total_questions > 0 ? (test.score / test.total_questions) * 100 : 0;
+      if (!bySubject[test.subject]) {
+        bySubject[test.subject] = { scores: [], latest: pct, oldest: pct };
+      }
+      bySubject[test.subject].scores.push(pct);
+      bySubject[test.subject].oldest = pct;
+    });
+
+    // Calculate predictions and trends
+    const subjectPredictions: Record<string, { predicted_pct: number; trend: string }> = {};
+    let totalPredicted = 0;
+    let subjectCount = 0;
+
+    for (const [subject, data] of Object.entries(bySubject)) {
+      const scores = data.scores;
+      const latestScore = data.latest;
+      const avgScore = scores.reduce((a: number, b: number) => a + b, 0) / scores.length;
+
+      // Simple linear trend prediction
+      const trend = latestScore - data.oldest;
+      const predictedScore = Math.min(100, Math.max(0, avgScore + trend * 0.3));
+
+      // Determine trend direction
+      const trendDirection =
+        trend > 5 ? "📈 Improving" : trend < -5 ? "📉 Declining" : "➡️ Stable";
+
+      subjectPredictions[subject] = {
+        predicted_pct: Math.round(predictedScore),
+        trend: trendDirection,
+      };
+
+      totalPredicted += predictedScore;
+      subjectCount++;
+    }
+
+    // Calculate overall prediction
+    const overallPredicted = subjectCount > 0 ? totalPredicted / subjectCount : 50;
+    const recentScores = testScores
+      .slice(0, 10)
+      .map((t: any) => (t.total_questions > 0 ? (t.score / t.total_questions) * 100 : 0));
+    const recentAvg = recentScores.reduce((a: number, b: number) => a + b, 0) / (recentScores.length || 1);
+    const volatility = Math.sqrt(
+      recentScores.reduce((sum: number, score: number) => sum + Math.pow(score - recentAvg, 2), 0) /
+        (recentScores.length || 1)
+    );
+
+    // Calculate confidence (inverse of volatility)
+    const confidence = Math.max(20, Math.round((1 - volatility / 100) * 100));
+
+    // Determine risk level
+    const riskLevel: "low" | "medium" | "high" =
+      overallPredicted > 75 ? "low" : overallPredicted > 50 ? "medium" : "high";
+
+    // Generate interventions
+    const interventions: string[] = [];
+    if (riskLevel === "high") {
+      interventions.push("Increase study time by 30 minutes daily");
+      interventions.push("Review previous weak topics from homework");
+      interventions.push("Schedule a study session with your teacher");
+    } else if (riskLevel === "medium") {
+      interventions.push("Practice 2-3 sample tests weekly");
+      interventions.push("Focus on areas with declining scores");
+      interventions.push("Track your progress regularly");
+    } else {
+      interventions.push("Maintain current study habits");
+      interventions.push("Challenge yourself with advanced problems");
+      interventions.push("Help peers by explaining concepts");
+    }
+
+    // Generate 8-week forecast
+    const weeklyForecast = Array.from({ length: 8 }, (_, i) => {
+      const weekTrend = (trend * 0.1) / 8; // Distribute trend across 8 weeks
+      const weekPredicted = Math.min(100, Math.max(0, overallPredicted + weekTrend * (i + 1)));
+      return {
+        week: i + 1,
+        predicted_score: Math.round(weekPredicted),
+      };
+    });
+
+    const response: PredictionResponse = {
+      predicted_score_pct: Math.round(overallPredicted),
+      confidence_level: confidence,
+      risk_level: riskLevel,
+      recommended_interventions: interventions,
+      subject_predictions: subjectPredictions,
+      weekly_forecast: weeklyForecast,
+    };
+
+    return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

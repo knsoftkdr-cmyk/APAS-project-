@@ -44,6 +44,8 @@ const navItems: Array<{
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "school_admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"], tourId: "nav-academic-tests" },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification" },
+  { title: "Leaderboard", icon: Trophy, path: "/leaderboard", roles: ["student"] },
+  { title: "Predictions", icon: Brain, path: "/predictions", roles: ["student"], tourId: "nav-predictions" },
   { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["admin"] },
   { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin"] },
   { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "school_admin"] },
