@@ -1,0 +1,1 @@
+CREATE POLICY "Admins can read all profiles" ON public.profiles FOR SELECT TO authenticated USING (get_user_role(auth.uid()) = 'admin');

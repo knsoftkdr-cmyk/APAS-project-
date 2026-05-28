@@ -1,0 +1,1 @@
+ALTER TABLE public.homework_assignments ADD COLUMN IF NOT EXISTS due_date timestamp with time zone;
