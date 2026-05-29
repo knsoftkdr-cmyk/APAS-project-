@@ -15,10 +15,12 @@ import {
   Shield,
   Send,
   Bot,
+  Database,
+  FileText,
   LineChart,
   Zap,
   Lock,
-  CreditCard,
+  CreditCard
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -61,6 +63,11 @@ const navItems: Array<{
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["principal", "hod"] },
 
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
+  { title: "Billing", icon: CreditCard, path: "/billing-dashboard", roles: ["knsoft_admin"] },
+  { title: "Security", icon: Lock, path: "/security-dashboard", roles: ["knsoft_admin"] },
+  { title: "AI Cost Monitor", icon: Bot, path: "/ai-cost-monitoring", roles: ["knsoft_admin"] },
+  { title: "Cache Management", icon: Database, path: "/cache-management", roles: ["knsoft_admin"] },
+  { title: "OCR Processing", icon: FileText, path: "/ocr-processing", roles: ["knsoft_admin"] },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
