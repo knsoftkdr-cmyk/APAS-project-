@@ -132,6 +132,8 @@ const PeriodPlanGenerator = () => {
 
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedChapter, setSelectedChapter] = useState("");
 
   const [periodsPerWeek, setPeriodsPerWeek] = useState("5");
   const [periodDuration, setPeriodDuration] = useState("40");
@@ -168,6 +170,39 @@ const PeriodPlanGenerator = () => {
       return (data || []).map((d: any) => ({ ...d, topic: d.topic || null }));
     },
     enabled: !!selectedClass,
+  });
+
+  // Fetch unique subjects for the selected class from chapters table
+  const { data: subjectsList = [] } = useQuery({
+    queryKey: ["subjects-by-class", selectedClass],
+    queryFn: async () => {
+      if (!selectedClass) return [];
+      const { data } = await supabase
+        .from("chapters")
+        .select("subject")
+        .eq("class_level", selectedClass)
+        .order("subject", { ascending: true });
+      // Get unique subjects
+      const uniqueSubjects = Array.from(new Set((data || []).map(d => d.subject).filter(Boolean)));
+      return uniqueSubjects as string[];
+    },
+    enabled: !!selectedClass,
+  });
+
+  // Fetch chapters for the selected class and subject
+  const { data: chaptersList = [] } = useQuery({
+    queryKey: ["chapters-by-class-subject", selectedClass, selectedSubject],
+    queryFn: async () => {
+      if (!selectedClass || !selectedSubject) return [];
+      const { data } = await supabase
+        .from("chapters")
+        .select("id, unit_number, unit_name, subject, class_level")
+        .eq("class_level", selectedClass)
+        .eq("subject", selectedSubject)
+        .order("unit_number", { ascending: true });
+      return data || [];
+    },
+    enabled: !!selectedClass && !!selectedSubject,
   });
 
   // Check if homework already assigned for selected lesson
@@ -208,9 +243,11 @@ const PeriodPlanGenerator = () => {
     enabled: !!selectedLessonId,
   });
 
-  // When class changes, reset lesson selection
+  // When class changes, reset lesson selection and dependent fields
   useEffect(() => {
     setSelectedLessonId("");
+    setSelectedSubject("");
+    setSelectedChapter("");
     setPeriodPlans([]);
     setSavedPlanId(null);
     setIsLocked(false);
@@ -644,8 +681,8 @@ const PeriodPlanGenerator = () => {
         </div>
       </CardHeader>
       <CardContent className="p-5 space-y-5">
-        {/* Class & Section Selectors */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Class & Section & Subject & Chapter Selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="group">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Class</label>
             <Select value={selectedClass} onValueChange={(v) => { setSelectedClass(v); setSelectedSection(""); setSelectedLessonId(""); }}>
@@ -671,6 +708,36 @@ const PeriodPlanGenerator = () => {
                 {DEFAULT_SECTIONS.map((s) => (
                   <SelectItem key={s} value={s}>
                     <span className="flex items-center gap-2"><Users className="h-3.5 w-3.5" />Section {s}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="group">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Subject</label>
+            <Select value={selectedSubject} onValueChange={(v) => { setSelectedSubject(v); setSelectedChapter(""); }} disabled={!selectedClass}>
+              <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                <SelectValue placeholder={!selectedClass ? "Select a class first..." : subjectsList.length === 0 ? "No subjects found" : "Choose a subject..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {subjectsList.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" />{s}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="group">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Chapter</label>
+            <Select value={selectedChapter} onValueChange={setSelectedChapter} disabled={!selectedSubject}>
+              <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                <SelectValue placeholder={!selectedSubject ? "Select a subject first..." : chaptersList.length === 0 ? "No chapters found" : "Choose a chapter..."} />
+              </SelectTrigger>
+              <SelectContent>
+                {chaptersList.map((c: any) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    <span className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" />Unit {c.unit_number} - {c.unit_name}</span>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -517,7 +517,6 @@ const Curative = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [historyVersion, setHistoryVersion] = useState(0);
   const [extractedChapters, setExtractedChapters] = useState<string[]>([]);
-  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -660,33 +659,22 @@ const Curative = () => {
     queryKey: ["curative-textbooks", selectedClass],
     queryFn: async () => {
       if (!selectedClass) return [];
-      const folder = getClassFolder(selectedClass);
-
-      // 🔍 DEBUG - remove after fixing
-      console.log("=== TEXTBOOK DEBUG ===");
-      console.log("selectedClass:", selectedClass);
-      console.log("folder:", folder);
-
-      const { data: files, error } = await supabase.storage.from("TextBooks").list(folder);
-
-      console.log("files:", files);
-      console.log("error:", error);
-      console.log("=== END DEBUG ===");
-
-      if (error || !files) return [];
-      return files
-        .filter((f) => f.name.endsWith(".pdf"))
-        .map<TextbookFile>((f) => {
-          const nameWithoutExt = f.name.replace(/\.pdf$/i, "");
-          const subject = nameWithoutExt.split(/[\s_]/)[0];
-          const chapter = nameWithoutExt.replace(/^[^\s_]+[\s_]?/, "").replace(/_/g, " ") || "Full Textbook";
-          return {
-            fileName: f.name,
-            subject: subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase(),
-            chapter,
-          };
-        })
-        .sort((a, b) => a.subject.localeCompare(b.subject) || a.chapter.localeCompare(b.chapter));
+      // Fetch subjects from database chapters table instead of from storage
+      const { data: chapters } = await supabase
+        .from("chapters")
+        .select("subject")
+        .eq("class_level", selectedClass)
+        .order("subject", { ascending: true });
+      
+      if (!chapters) return [];
+      
+      // Convert database chapters to TextbookFile format for compatibility
+      const uniqueSubjects = Array.from(new Set(chapters.map(c => c.subject)));
+      return uniqueSubjects.map(subject => ({
+        fileName: subject,
+        subject: subject || "General",
+        chapter: "Database",
+      }));
     },
     enabled: !!selectedClass,
   });
@@ -747,64 +735,32 @@ const Curative = () => {
     }
   }, [chatMessages]);
 
+  // Fetch chapters from database table
+  const { data: chaptersList = [] } = useQuery({
+    queryKey: ["chapters-by-class-subject", selectedClass, selectedSubject],
+    queryFn: async () => {
+      if (!selectedClass || !selectedSubject) return [];
+      const { data } = await supabase
+        .from("chapters")
+        .select("id, unit_number, unit_name, subject, class_level")
+        .eq("class_level", selectedClass)
+        .eq("subject", selectedSubject)
+        .order("unit_number", { ascending: true });
+      return data || [];
+    },
+    enabled: !!selectedClass && !!selectedSubject,
+  });
+
+  // Update extracted chapters whenever the query data changes
   useEffect(() => {
-    if (!selectedSubject || !selectedClass) {
+    if (chaptersList.length > 0) {
+      setExtractedChapters(chaptersList);
+      setSelectedChapter("");
+    } else {
       setExtractedChapters([]);
       setSelectedChapter("");
-      return;
     }
-
-    // Find ALL files for this subject (handles Sem 1, Sem 2, etc.)
-    const matchedFiles = textbookFiles.filter(
-      (f) => f.subject.toLowerCase() === selectedSubject.toLowerCase()
-    );
-
-    if (matchedFiles.length === 0) return;
-
-    // Fetch chapters from all files and combine
-    const fetchAllChapters = async () => {
-      setIsLoadingChapters(true);
-      setExtractedChapters([]);
-      setSelectedChapter("");
-
-      const allChapters: string[] = [];
-      for (const file of matchedFiles) {
-        try {
-          const resp = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-chapters`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-              },
-              body: JSON.stringify({
-                fileName: file.fileName,
-                classLevel: selectedClass,
-                subject: selectedSubject,
-              }),
-            }
-          );
-          const data = await resp.json();
-          if (data.chapters && data.chapters.length > 0) {
-            // Add chapters not already in list (avoid duplicates across semesters)
-            for (const ch of data.chapters) {
-              if (!allChapters.includes(ch)) {
-                allChapters.push(ch);
-              }
-            }
-          }
-        } catch (e) {
-          console.error("fetchChapters error for", file.fileName, e);
-        }
-      }
-
-      setExtractedChapters(allChapters);
-      setIsLoadingChapters(false);
-    };
-
-    fetchAllChapters();
-  }, [selectedSubject, selectedClass, textbookFiles]);
+  }, [chaptersList]);
 
   // Track previous class so we only clear chat on a USER-initiated class change,
   // not when restoring from history (which programmatically sets the class).
@@ -1376,27 +1332,25 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                   <Select
                     value={selectedChapter}
                     onValueChange={setSelectedChapter}
-                    disabled={!selectedSubject || isLoadingChapters}
+                    disabled={!selectedSubject || chaptersList.length === 0}
                   >
                     <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
                       <SelectValue
                         placeholder={
                           !selectedSubject
                             ? "Select a subject first..."
-                            : isLoadingChapters
-                            ? "Loading chapters..."
-                            : extractedChapters.length === 0
+                            : chaptersList.length === 0
                             ? "No chapters found"
                             : "Choose a chapter..."
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {extractedChapters.map((ch, i) => (
-                        <SelectItem key={i} value={ch}>
+                      {extractedChapters.map((ch: any) => (
+                        <SelectItem key={ch.id} value={ch.unit_name}>
                           <span className="flex items-center gap-2">
                             <BookOpen className="h-3.5 w-3.5 shrink-0" />
-                            <span className="truncate max-w-[280px]" title={ch}>{ch}</span>
+                            <span>{ch.unit_name}</span>
                           </span>
                         </SelectItem>
                       ))}
@@ -1806,8 +1760,8 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
   const [assignmentConfirmationData, setAssignmentConfirmationData] = useState<any>(null);
   const queryClient = useQueryClient();
   const [chapters, setChapters] = useState<string[]>([]);
-  const [isLoadingChapters, setIsLoadingChapters] = useState(false);
   const [selectedChapter, setSelectedChapter] = useState<string>("");
+  const [extractedChapters, setExtractedChapters] = useState<string[]>([]);
 
   const { data: homeworkSections = [] } = useQuery({
     queryKey: ["homework-sections", homeworkClass, user?.id],
