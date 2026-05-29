@@ -751,8 +751,8 @@ const Curative = () => {
       if (!selectedClass || !selectedSubject) return [];
       const { data } = await supabase
         .from("chapters")
-        .select("id, unit_number, unit_name, subject, class_level")
-        .eq("class_level", selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
+        .select("id, unit_number, chapter_name, full_chapter_name, class, subject")
+        .eq("class", selectedClass.match(/^\d+$/) ? `Class${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
         .eq("subject", selectedSubject)
         .order("unit_number", { ascending: true });
       return data || [];
@@ -1356,10 +1356,10 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                     </SelectTrigger>
                     <SelectContent>
                       {extractedChapters.map((ch: any) => (
-                        <SelectItem key={ch.id} value={ch.unit_name}>
+                        <SelectItem key={ch.id} value={ch.chapter_name}>
                           <span className="flex items-center gap-2">
                             <BookOpen className="h-3.5 w-3.5 shrink-0" />
-                            <span>{ch.unit_name}</span>
+                            <span>{ch.full_chapter_name || ch.chapter_name}</span>
                           </span>
                         </SelectItem>
                       ))}
