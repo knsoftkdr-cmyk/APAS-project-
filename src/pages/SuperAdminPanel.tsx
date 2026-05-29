@@ -122,10 +122,29 @@ const SuperAdminPanel = () => {
   const [newPassword, setNewPassword] = useState("");
   const [newFullName, setNewFullName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [linkParentId, setLinkParentId] = useState<string | null>(null);
+  const [linkStudentId, setLinkStudentId] = useState("");
+  const [linking, setLinking] = useState(false);
+  const [parentLinks, setParentLinks] = useState<Record<string, {id: string, name: string}[]>>({});
 
   // ── School edit ────────────────────────────────────────────────────────────
   const [editSchool, setEditSchool] = useState<SchoolInfo | null>(null);
   const [savingSchool, setSavingSchool] = useState(false);
+
+  // ── Fetch parent-student links ─────────────────────────────────────────────
+  const fetchParentLinks = useCallback(async (schoolId: string) => {
+    const { data } = await supabase
+      .from("parent_students")
+      .select("id, parent_id, student_id, profiles:student_id(full_name)")
+      .in("parent_id", (await supabase.from("profiles").select("id").eq("school_id", schoolId).eq("role", "parent")).data?.map((p: any) => p.id) ?? []);
+    
+    const links: Record<string, {id: string, name: string}[]> = {};
+    for (const row of (data ?? []) as any[]) {
+      if (!links[row.parent_id]) links[row.parent_id] = [];
+      links[row.parent_id].push({ id: row.id, name: row.profiles?.full_name ?? "Unknown" });
+    }
+    setParentLinks(links);
+  }, []);
 
   // ── Fetch school id ────────────────────────────────────────────────────────
   const fetchSchoolId = useCallback(async () => {
@@ -179,7 +198,7 @@ const SuperAdminPanel = () => {
         .select("id, full_name, role, school_id")
         .eq("school_id", sid);
       setUsers(profilesData ?? []);
-
+      await fetchParentLinks(sid);
       await fetchPermissions(sid);
 
       // Student performance
@@ -289,15 +308,23 @@ const SuperAdminPanel = () => {
     if (!schoolId) return;
     setCreating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-admin-user", {
-        body: {
-          email: newEmail.trim().toLowerCase(),
-          password: newPassword,
-          full_name: newFullName.trim(),
-          role: newRole,
-          school_id: schoolId,
-        },
-      });
+      // Students use register-student (Student ID → fake email), others use create-admin-user
+      const isStudent = newRole === "student";
+      const emailOrId = newEmail.trim().toLowerCase();
+      const fakeEmail = isStudent ? `${emailOrId}@student.apas.local` : emailOrId;
+
+      const { data, error } = await supabase.functions.invoke(
+        "create-admin-user",
+        {
+          body: {
+            email: fakeEmail,
+            password: newPassword,
+            full_name: newFullName.trim(),
+            role: newRole,
+            school_id: schoolId,
+          },
+        }
+      );
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       toast({ title: `${newRole} account created`, description: newEmail });
@@ -311,12 +338,41 @@ const SuperAdminPanel = () => {
     }
   };
 
-  // ── Delete user ────────────────────────────────────────────────────────────
-  const handleDeleteUser = async (profileId: string) => {
-    if (!confirm("Remove this user from the school?")) return;
-    const { error } = await supabase.from("profiles").update({ school_id: null }).eq("id", profileId);
+  // ── Unlink student from parent ──────────────────────────────────────────────
+  const handleUnlinkChild = async (linkId: string) => {
+    if (!confirm("Remove this child link?")) return;
+    const { error } = await supabase.from("parent_students").delete().eq("id", linkId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "User removed" }); fetchAll(); }
+    else { toast({ title: "Child unlinked" }); if (schoolId) fetchParentLinks(schoolId); }
+  };
+
+  // ── Link student to parent ──────────────────────────────────────────────────
+  const handleLinkChild = async () => {
+    if (!linkParentId || !linkStudentId) {
+      toast({ title: "Please select a student", variant: "destructive" });
+      return;
+    }
+    setLinking(true);
+    const { error } = await supabase.from("parent_students").insert({
+      parent_id: linkParentId,
+      student_id: linkStudentId,
+    });
+    setLinking(false);
+    if (error) {
+      toast({ title: "Error linking child", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Child linked to parent ✅" });
+      setLinkParentId(null);
+      setLinkStudentId("");
+    }
+  };
+
+  // ── Delete user permanently ─────────────────────────────────────────────────
+  const handleDeleteUser = async (profileId: string) => {
+    if (!confirm("Permanently delete this user from the school and app? This cannot be undone.")) return;
+    const { error } = await supabase.rpc("delete_user_permanently", { p_user_id: profileId });
+    if (error) toast({ title: "Error deleting user", description: error.message, variant: "destructive" });
+    else { toast({ title: "User permanently deleted ✅" }); fetchAll(); }
   };
 
   // ── Save school info ───────────────────────────────────────────────────────
@@ -465,10 +521,17 @@ const SuperAdminPanel = () => {
                       <Label>Full Name</Label>
                       <Input placeholder="e.g. Jane Smith" value={newFullName} onChange={(e) => setNewFullName(e.target.value)} />
                     </div>
-                    <div className="space-y-1.5">
-                      <Label>Email</Label>
-                      <Input type="email" placeholder="jane@school.edu" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
-                    </div>
+                    {newRole === "student" ? (
+                      <div className="space-y-1.5">
+                        <Label>Student ID</Label>
+                        <Input placeholder="e.g. STU2024001" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <Label>Email</Label>
+                        <Input type="email" placeholder="jane@school.edu" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       <Label>Password</Label>
                       <Input type="password" placeholder="Min 8 characters" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
@@ -509,6 +572,22 @@ const SuperAdminPanel = () => {
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground font-mono">{u.id.slice(0, 8)}…</TableCell>
                             <TableCell>
+                              {role === "parent" && (
+                                <div className="flex flex-col gap-1">
+                                  {(parentLinks[u.id] ?? []).map(link => (
+                                    <div key={link.id} className="flex items-center gap-1">
+                                      <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">{link.name}</span>
+                                      <button onClick={() => handleUnlinkChild(link.id)} className="text-red-400 hover:text-red-600 text-xs">✕</button>
+                                    </div>
+                                  ))}
+                                  <Button variant="outline" size="sm" className="mt-1 w-fit" onClick={() => { setLinkParentId(u.id); setLinkStudentId(""); }}>
+                                    + Link Child
+                                  </Button>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell className="flex items-center gap-1">
+                              {role === "parent" && (<span></span>)}
                               <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u.id)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -524,6 +603,29 @@ const SuperAdminPanel = () => {
             {users.length === 0 && (
               <Card><CardContent className="py-12 text-center text-muted-foreground">No accounts yet.</CardContent></Card>
             )}
+
+            {/* Link Child Dialog */}
+            <Dialog open={!!linkParentId} onOpenChange={(o) => { if (!o) { setLinkParentId(null); setLinkStudentId(""); } }}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader><DialogTitle>Link Child to Parent</DialogTitle></DialogHeader>
+                <div className="space-y-4 pt-2">
+                  <div className="space-y-1.5">
+                    <Label>Select Student</Label>
+                    <Select value={linkStudentId} onValueChange={setLinkStudentId}>
+                      <SelectTrigger><SelectValue placeholder="Choose a student" /></SelectTrigger>
+                      <SelectContent>
+                        {users.filter(u => u.role === "student").map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.full_name ?? "Unnamed"}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button className="w-full" onClick={handleLinkChild} disabled={linking}>
+                    {linking ? <LoadingSpinner size="sm" /> : "Link Child"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
           </TabsContent>
 
           {/* ══════════════════════════════════════════ PERFORMANCE */}

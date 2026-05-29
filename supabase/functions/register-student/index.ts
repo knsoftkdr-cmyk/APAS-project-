@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, password, full_name, role } = await req.json();
+    const { email, password, full_name, role, school_id } = await req.json();
 
     if (role !== "student") {
       return new Response(
@@ -45,6 +45,14 @@ serve(async (req) => {
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Update profile with school_id
+    if (school_id && data.user) {
+      await supabaseAdmin
+        .from("profiles")
+        .update({ full_name, role, school_id })
+        .eq("id", data.user.id);
     }
 
     return new Response(
