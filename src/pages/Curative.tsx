@@ -659,21 +659,30 @@ const Curative = () => {
     queryKey: ["curative-textbooks", selectedClass],
     queryFn: async () => {
       if (!selectedClass) return [];
-      // Fetch subjects from database chapters table instead of from storage
-      const { data: chapters } = await supabase
-        .from("chapters")
-        .select("subject")
-        .eq("class_level", selectedClass)
-        .order("subject", { ascending: true });
-      
-      if (!chapters) return [];
-      
-      // Convert database chapters to TextbookFile format for compatibility
-      const uniqueSubjects = Array.from(new Set(chapters.map(c => c.subject)));
-      return uniqueSubjects.map(subject => ({
+      // Fetch subjects dynamically from Storage bucket
+      const folderName = selectedClass.match(/^\d+$/) ? `class ${selectedClass}` : selectedClass;
+      const { data: files, error } = await supabase.storage
+        .from("TextBooks")
+        .list(folderName, { limit: 100 });
+      if (error || !files) return [];
+      const subjectMap: Record<string, string> = {
+        "math": "Mathematics",
+        "english": "English",
+        "science": "Science",
+        "social": "Social",
+      };
+      const subjectSet = new Set<string>();
+      files.forEach(f => {
+        const match = f.name.match(/^([A-Za-z]+)/);
+        if (match) {
+          const key = match[1].toLowerCase();
+          subjectSet.add(subjectMap[key] || match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase());
+        }
+      });
+      return Array.from(subjectSet).map(subject => ({
         fileName: subject,
-        subject: subject || "General",
-        chapter: "Database",
+        subject,
+        chapter: "Storage",
       }));
     },
     enabled: !!selectedClass,
@@ -743,7 +752,7 @@ const Curative = () => {
       const { data } = await supabase
         .from("chapters")
         .select("id, unit_number, unit_name, subject, class_level")
-        .eq("class_level", selectedClass)
+        .eq("class_level", selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
         .eq("subject", selectedSubject)
         .order("unit_number", { ascending: true });
       return data || [];
@@ -834,7 +843,7 @@ const Curative = () => {
                 title,
                 subject: currentSubject,
                 curriculum: selectedCurriculum || "",
-                class_level: selectedClass,
+                class_level: selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1),
                 section: selectedSection,
                 lesson_content: assistantSoFar,
                 ai_generated: true,
@@ -882,7 +891,7 @@ const Curative = () => {
       let dupQuery = supabase
         .from("lessons")
         .select("id, title, lesson_content, created_at")
-        .eq("class_level", selectedClass)
+        .eq("class_level", selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
         .eq("section", selectedSection)
         .eq("subject", subjectName)
         .eq("curriculum", selectedCurriculum || "")
