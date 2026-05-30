@@ -98,9 +98,12 @@ const pipeGeminiSseToOpenAi = (
 
         // Continue up to 3 times if the model was cut off mid-generation.
         let continuations = 0;
+        const isPlanIncomplete = () =>
+          !/Word Decoder/i.test(accumulated) &&
+          accumulated.length > 500;
         while (
-          continuations < 3 &&
-          (lastFinishReason === "MAX_TOKENS" || lastFinishReason === null) &&
+          continuations < 5 &&
+          (lastFinishReason === "MAX_TOKENS" || lastFinishReason === null || (lastFinishReason === "STOP" && isPlanIncomplete())) &&
           accumulated.length > 0 &&
           !/Word Decoder/i.test(accumulated.slice(-1500))
         ) {
@@ -453,14 +456,14 @@ For chat questions (mode != generate): respond with structured markdown using em
           console.log(`Gemini stream connected (${model})`);
 
           const continueRequest = async (accumulated: string): Promise<ReadableStream<Uint8Array> | null> => {
-            const tail = accumulated.slice(-2000);
+            const tail = accumulated.slice(-3000);
             const continuationMessages: OpenAIMessage[] = [
               ...openaiMessages,
               { role: "assistant", content: accumulated },
               {
                 role: "user",
                 content:
-                  `CONTINUE the lesson plan EXACTLY where you stopped. Do NOT repeat any prior text, do NOT restart sections, do NOT add a preamble. Resume mid-sentence if needed and finish ALL remaining mandatory sections through the final "Word Decoder" section.\n\nLast 2000 characters of what you wrote:\n"""${tail}"""`,
+                  `CONTINUE the lesson plan EXACTLY where you stopped. STRICT RULES:\n1. Do NOT repeat ANY text already written\n2. Do NOT restart or re-introduce any section\n3. Do NOT add preamble or summary of what was written\n4. Resume MID-SENTENCE if needed\n5. Finish ALL remaining sections through "Word Decoder"\n\nThe plan cut off here (last 3000 chars):\n"""${tail}"""\n\nContinue from exactly after the last character above:`,
               },
             ];
             const contBody = JSON.stringify({
