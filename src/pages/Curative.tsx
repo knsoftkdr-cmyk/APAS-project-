@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
+import { TopicSelector } from "@/components/TopicSelector";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -157,6 +158,12 @@ const CURRICULUM_OPTIONS = [
   { value: "cambridge", label: "Project-Based Learning (Cambridge)" },
   { value: "ai", label: "AI (Auto-detect)" },
 ];
+
+// Converts CLASS_OPTIONS value ("1", "2") to chapter_subtopics format ("Class1", "Class2")
+const toSubtopicClass = (val: string): string => {
+  if (!val || isNaN(Number(val))) return val; // nursery, lkg, ukg pass through as-is
+  return `Class${val}`;
+};
 
 // AFTER
 const getClassFolder = (classValue: string): string => {
@@ -771,6 +778,16 @@ const Curative = () => {
     }
   }, [chaptersList]);
 
+  // Derive the full chapter name for TopicSelector
+  // Look it up from extractedChapters to get full_chapter_name (e.g., "Unit 9: Time")
+  const selectedChapterName = useMemo(() => {
+    if (!selectedChapter || !extractedChapters.length) return "";
+    const chapter = (extractedChapters as any[]).find(
+      (c) => (c.full_chapter_name || c.chapter_name) === selectedChapter
+    );
+    return chapter?.full_chapter_name || chapter?.chapter_name || "";
+  }, [selectedChapter, extractedChapters]);
+
   // Track previous class so we only clear chat on a USER-initiated class change,
   // not when restoring from history (which programmatically sets the class).
   useEffect(() => {
@@ -1356,7 +1373,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                     </SelectTrigger>
                     <SelectContent>
                       {extractedChapters.map((ch: any) => (
-                        <SelectItem key={ch.id} value={ch.chapter_name}>
+                        <SelectItem key={ch.id} value={ch.full_chapter_name || ch.chapter_name}>
                           <span className="flex items-center gap-2">
                             <BookOpen className="h-3.5 w-3.5 shrink-0" />
                             <span>{ch.full_chapter_name || ch.chapter_name}</span>
@@ -1385,14 +1402,12 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
               {/* Topic & Duration row */}
               <div className="mt-5 flex flex-wrap gap-4">
                 <div className="flex-1 min-w-[200px] group">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
-                    <BookOpen className="h-3 w-3" /> Topic (Optional)
-                  </label>
-                  <Input
+                  <TopicSelector
+                    selectedClass={toSubtopicClass(selectedClass)}
+                    selectedSubject={selectedSubject}
+                    selectedChapterName={selectedChapterName}
                     value={topicValue}
-                    onChange={(e) => setTopicValue(e.target.value)}
-                    placeholder="e.g. Photosynthesis, Fractions, The Water Cycle..."
-                    className="w-full transition-all duration-300 hover:border-primary/50 focus:ring-primary/30"
+                    onChange={setTopicValue}
                   />
                 </div>
                 <div className="w-[170px] group">
