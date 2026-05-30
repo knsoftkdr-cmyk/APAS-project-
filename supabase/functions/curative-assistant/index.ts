@@ -131,15 +131,16 @@ serve(async (req) => {
 
     // Rotate through multiple API keys to distribute rate limits
     const allKeys = [
-      Deno.env.get("GEMINI_ADVANCED_API_KEY"),
+      Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
       Deno.env.get("GEMINI_KEY_2"),
-      Deno.env.get("GOOGLE_GEMINI_API_KEY"),
+      Deno.env.get("GEMINI_KEY_3"),
+      Deno.env.get("GEMINI_KEY_4"),
     ].filter(Boolean) as string[];
     
     if (allKeys.length === 0) throw new Error("No Gemini API keys configured");
     
     // Rotate keys based on current minute to distribute requests
-    const GOOGLE_GEMINI_API_KEY = allKeys[Math.floor(Date.now() / 60000) % allKeys.length];
+    const GOOGLE_GEMINI_API_KEY = allKeys[Math.floor(Math.random() * allKeys.length)];
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

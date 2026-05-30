@@ -758,7 +758,7 @@ const Curative = () => {
       if (!selectedClass || !selectedSubject) return [];
       const { data } = await supabase
         .from("chapters")
-        .select("id, unit_number, chapter_name, full_chapter_name, class, subject")
+        .select("id, unit_number, chapter_name, full_chapter_name, class, subject, page_numbers")
         .eq("class", selectedClass.match(/^\d+$/) ? `Class${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
         .eq("subject", selectedSubject)
         .order("unit_number", { ascending: true });
@@ -891,8 +891,12 @@ const Curative = () => {
     const subjectLabel = selectedSubject ? selectedSubject : "";
     // selectedChapter is now the full chapter name directly from extractedChapters
     const chapterLabel = selectedChapter || "";
+    const selectedChapterData = extractedChapters.find(
+      (c) => (c.full_chapter_name || c.chapter_name) === selectedChapter
+    );
+    const pageNumbers = selectedChapterData?.page_numbers || "";
     const subjectText = subjectLabel ? ` for subject: ${subjectLabel}` : "";
-    const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"` : "";
+    const chapterText = chapterLabel ? `, Chapter/Unit: "${chapterLabel}"${pageNumbers ? `, Pages: ${pageNumbers}` : ""}` : "";
     const topicText = topicValue.trim() ? `, Topic: "${topicValue.trim()}"` : "";
     const curriculumLabel = CURRICULUM_OPTIONS.find(c => c.value === selectedCurriculum)?.label || "";
     const curriculumText = curriculumLabel ? ` using ${curriculumLabel} pedagogical framework` : "";
