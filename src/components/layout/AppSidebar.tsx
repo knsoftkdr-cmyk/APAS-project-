@@ -4,6 +4,7 @@ import {
   Brain,
   BookOpen,
   BarChart3,
+  Building2,
   Users,
   Settings,
   LogOut,
@@ -74,6 +75,9 @@ const navItems: Array<{
   { title: "Notifications", icon: Bell, path: "/notification-dashboard", roles: ["knsoft_admin"] },
   { title: "Risk Predictions", icon: AlertTriangle, path: "/risk-prediction", roles: ["knsoft_admin"] },
   { title: "Knowledge Graph", icon: Network, path: "/knowledge-graph", roles: ["knsoft_admin"] },
+  { title: "School Intelligence", icon: BarChart3, path: "/school-intelligence", roles: ["knsoft_admin"] },
+  { title: "Automations", icon: Zap, path: "/automation-dashboard", roles: ["knsoft_admin"] },
+  { title: "Multi-Tenant", icon: Building2, path: "/multi-tenant", roles: ["knsoft_admin"] },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 

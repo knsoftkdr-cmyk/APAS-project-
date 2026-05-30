@@ -48,6 +48,9 @@ const OCRProcessingDashboard = lazy(() => import("./pages/OCRProcessingDashboard
 const NotificationDashboard = lazy(() => import("./pages/NotificationDashboard"));
 const RiskPredictionDashboard = lazy(() => import("./pages/RiskPredictionDashboard"));
 const KnowledgeGraphDashboard = lazy(() => import("./pages/KnowledgeGraphDashboard"));
+const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenceDashboard"));
+const AutomationDashboard = lazy(() => import("./pages/AutomationDashboard"));
+const MultiTenantDashboard = lazy(() => import("./pages/MultiTenantDashboard"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
@@ -104,6 +107,9 @@ export default function App() {
                       <Route path="/notification-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><NotificationDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/risk-prediction" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><RiskPredictionDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/knowledge-graph" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><KnowledgeGraphDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/school-intelligence" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><SchoolIntelligenceDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/automation-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><AutomationDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/multi-tenant" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><MultiTenantDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/hod-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["hod"]}><HODDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/academic-tests" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AcademicTests /></RoleGuard></ProtectedRoute>} />
