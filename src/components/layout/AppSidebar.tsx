@@ -17,6 +17,9 @@ import {
   Bot,
   Database,
   FileText,
+  Bell,
+  AlertTriangle,
+  Network,
   LineChart,
   Zap,
   Lock,
@@ -68,6 +71,9 @@ const navItems: Array<{
   { title: "AI Cost Monitor", icon: Bot, path: "/ai-cost-monitoring", roles: ["knsoft_admin"] },
   { title: "Cache Management", icon: Database, path: "/cache-management", roles: ["knsoft_admin"] },
   { title: "OCR Processing", icon: FileText, path: "/ocr-processing", roles: ["knsoft_admin"] },
+  { title: "Notifications", icon: Bell, path: "/notification-dashboard", roles: ["knsoft_admin"] },
+  { title: "Risk Predictions", icon: AlertTriangle, path: "/risk-prediction", roles: ["knsoft_admin"] },
+  { title: "Knowledge Graph", icon: Network, path: "/knowledge-graph", roles: ["knsoft_admin"] },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
