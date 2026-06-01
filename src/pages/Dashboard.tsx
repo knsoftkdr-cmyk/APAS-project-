@@ -28,6 +28,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentHomework from "@/components/StudentHomework";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
+import studentBanner from "@/assets/student-home-banner.png";
 
 interface LessonContent {
   lesson_objectives?: string[];
@@ -138,10 +139,28 @@ const StudentDashboard = () => {
 
   return (
     <AppLayout>
-      <PageHeader
-        title={`Welcome back, ${profile?.full_name || "Student"}`}
-        subtitle={today}
-      />
+<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#D8B4FE] via-[#C4B5FD] to-[#A5B4FC] p-8 text-slate-800 relative min-h-[320px]">
+
+  <div className="absolute top-10 right-10 w-24 h-24 rounded-full border border-white/20"></div>
+  <div className="absolute bottom-10 right-40 w-12 h-12 rounded-full border border-white/20"></div>
+    
+  <h1 className="text-4xl font-bold">
+    Welcome Back, {profile?.full_name}
+  </h1>
+
+  <p className="mt-2 text-black/80">
+    {today}
+  </p>
+
+  <p className="mt-6 text-lg text-black/90">
+    Continue your learning journey and complete today's homework.
+  </p>
+   <img
+    src={studentBanner}
+    alt="Student Learning"
+    className="absolute right-10 bottom-[-15px] h-[350px] object-contain"
+  />
+</div>
 
       {assessmentLoading ? (
         <LoadingSpinner className="mb-6" />
