@@ -185,14 +185,15 @@ const AdminPanel = () => {
   };
 
   const openEditStudent = (member: ClassStudent) => {
-    if (!member.students) return;
+    const stu = (students as any[]).find(s => s.id === member.student_id);
+    if (!stu) return;
     setEditStudent({
-      id: member.students.id,
+      id: stu.id,
       profile_id: "",
-      full_name: member.students.profiles?.full_name || "",
-      roll_number: member.students.roll_number || "",
-      date_of_birth: member.students.date_of_birth || "",
-      parent_phone: member.students.parent_phone || "",
+      full_name: (students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || "",
+      roll_number: stu.roll_number || "",
+      date_of_birth: stu.date_of_birth || "",
+      parent_phone: stu.parent_phone || "",
     });
     setEditStudentOpen(true);
   };
@@ -250,9 +251,9 @@ const AdminPanel = () => {
     setLoading(true);
     const [classesRes, studentsRes, teachersRes, csRes, ctRes, qaRes] = await Promise.all([
       supabase.from("classes").select("*").order("name"),
-      supabase.from("students").select("id, profile_id, grade, age, profiles!inner(full_name, role)").eq("profiles.role", "student"),
+      supabase.from("students").select("id, profile_id, grade, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("profiles.school_id", profile?.school_id || ""),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
-      supabase.from("class_students").select("id, class_id, student_id, students(id, grade, age, roll_number, parent_phone, parent_email, date_of_birth, profiles(full_name))"),
+      supabase.from("class_students").select("id, class_id, student_id"),
       supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
       supabase.from("teacher_question_assignments").select("*"),
     ]);
@@ -663,11 +664,11 @@ const AdminPanel = () => {
                           <TableBody>
                             {selectedClassMembers.map((member) => (
                               <TableRow key={member.id}>
-                                <TableCell className="font-medium">{member.students?.profiles?.full_name || "Unnamed"}</TableCell>
-                                <TableCell>{member.students?.grade || "—"}</TableCell>
-                                <TableCell>{member.students?.roll_number || "—"}</TableCell>
-                                <TableCell>{member.students?.date_of_birth ? new Date(member.students.date_of_birth).toLocaleDateString() : "—"}</TableCell>
-                                <TableCell>{member.students?.parent_phone || "—"}</TableCell>
+                                <TableCell className="font-medium">{(students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || "Unnamed"}</TableCell>
+                                <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.grade || "—"}</TableCell>
+                                <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.roll_number || "—"}</TableCell>
+                                <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.date_of_birth ? new Date((students as any[]).find(s => s.id === member.student_id).date_of_birth).toLocaleDateString() : "—"}</TableCell>
+                                <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.parent_phone || "—"}</TableCell>
                                 <TableCell className="text-right">
                                   <Button
                                     variant="ghost"
@@ -806,8 +807,8 @@ const AdminPanel = () => {
                       <TableBody>
                         {classStudents.filter(cs => cs.class_id === selectedClassForStudent).map(cs => (
                           <TableRow key={cs.id}>
-                            <TableCell>{(cs.students as any)?.profiles?.full_name || "Unnamed"}</TableCell>
-                            <TableCell>{(cs.students as any)?.grade || "—"}</TableCell>
+                            <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.profiles?.full_name || "Unnamed"}</TableCell>
+                            <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.grade || "—"}</TableCell>
                             <TableCell>
                               <Button variant="ghost" size="icon" onClick={() => handleRemoveStudent(cs.id)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
