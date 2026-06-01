@@ -21,6 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import assessmentbanner from "@/assets/assessment-banner.png";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -353,8 +354,29 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   // ─── Form Phase ───
   if (phase === "form") {
     return (
-      <AppLayout>
-        <PageHeader title="My Assessments" subtitle="View and complete your assigned tests" />
+    <AppLayout>
+      <div className="space-y-6">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+
+          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+
+          <div className="max-w-xl">
+            <h1 className="text-5xl font-bold text-slate-900">
+              My Assessments
+            </h1>
+
+            <p className="mt-3 text-slate-700 text-lg">
+              View and complete your assigned tests
+            </p>
+          </div>
+
+          <img
+            src={assessmentbanner}
+            alt="Assessment Banner"
+            className="absolute right-10 bottom-5 h-[150px]"
+          />
+        </div>
         <div className="space-y-8">
           {/* Learning Profile Assessment */}
           <Card className="max-w-lg mx-auto">
@@ -443,6 +465,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
               </Button>
             </CardContent>
           </Card>
+        </div>
         </div>
       </AppLayout>
     );
