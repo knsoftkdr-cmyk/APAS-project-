@@ -509,6 +509,7 @@ const Curative = () => {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const [selectedClass, setSelectedClass] = useState(searchParams.get("class") || "");
+  const [academicYear, setAcademicYear] = useState(searchParams.get("academicYear") || "2025-26");
   const [selectedSection, setSelectedSection] = useState(searchParams.get("section") || "");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
@@ -1397,6 +1398,20 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                         <SelectItem key={c.value} value={c.value}>
                           <span className="flex items-center gap-2"><Globe className="h-3.5 w-3.5" />{c.label}</span>
                         </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Academic Year</label>
+                  <Select value={academicYear} onValueChange={setAcademicYear}>
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                      <SelectValue placeholder="Select year..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["2025-26","2026-27","2027-28","2028-29","2029-30"].map(y => (
+                        <SelectItem key={y} value={y}>{y}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

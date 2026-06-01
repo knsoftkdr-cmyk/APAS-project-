@@ -127,14 +127,14 @@ export default function RiskPredictionDashboard() {
           <TabsContent value="heatmap" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card>
-                <CardHeader><CardTitle>Risk Distribution by Subject</CardTitle></CardHeader>
-                <CardContent>
+                <CardHeader className="pb-2"><CardTitle>Risk Distribution by Subject</CardTitle></CardHeader>
+                <CardContent className="px-2 pb-4 pt-0">
                   {subjectChart.length === 0 ? <p className="text-center text-muted-foreground py-8">No data.</p> : (
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={subjectChart}>
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="subject" tick={{ fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} />
+                        <XAxis dataKey="subject" tick={{ fontSize: 13, fontWeight: 600 }} interval={0} />
+                        <YAxis tick={{ fontSize: 13, fontWeight: 600 }} />
                         <Tooltip />
                         <Bar dataKey="high" stackId="a" fill="#ef4444" name="High" />
                         <Bar dataKey="medium" stackId="a" fill="#f59e0b" name="Medium" />
@@ -148,11 +148,12 @@ export default function RiskPredictionDashboard() {
                 <CardHeader><CardTitle>Overall Risk Breakdown</CardTitle></CardHeader>
                 <CardContent className="flex justify-center">
                   {pieData.length === 0 ? <p className="text-center text-muted-foreground py-8">No data.</p> : (
-                    <PieChart width={220} height={220}>
-                      <Pie data={pieData} cx={110} cy={110} outerRadius={80} dataKey="value" label={({ name, percent }) => `${name} ${(percent*100).toFixed(0)}%`} labelLine={false}>
+                    <PieChart width={300} height={260}>
+                      <Pie data={pieData} cx={150} cy={110} outerRadius={80} dataKey="value">
                         {pieData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(v, n) => [v, n]} />
+                      <Legend />
                     </PieChart>
                   )}
                 </CardContent>
