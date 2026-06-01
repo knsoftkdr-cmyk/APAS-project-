@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Home, Lock, FileText, CheckCircle2, Clock, BarChart3, TrendingUp, ChevronDown, Award, AlertTriangle, Calendar, Bell, MessageSquare, GraduationCap, Inbox, Sparkles, Loader2 } from "lucide-react";
+import analyticsBanner from "@/assets/analytics-banner.png";
 
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
@@ -327,10 +328,45 @@ const Analytics = () => {
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Learning Analytics & Insights"
-        subtitle="Review at-home homework answers and assign scores"
-      />
+      <div className="space-y-6">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+
+          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+
+                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+          
+          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+
+          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+
+          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+
+
+          <div className="max-w-xl">
+            <h1 className="text-4xl font-bold text-slate-900">
+              Learning Analytics & Insights
+            </h1>
+
+            <p className="mt-3 text-slate-700 text-lg">
+              Review at-home homework answers and assign scores
+            </p>
+          </div>
+
+          <img
+            src={analyticsBanner}
+            alt="Analytics Banner"
+            className="absolute right-10 bottom-6 h-[160px]"
+          />
+        </div>
 
       <Card className="mb-6">
         <CardHeader className="pb-3">
@@ -1383,6 +1419,7 @@ const Analytics = () => {
           })()}
         </DialogContent>
       </Dialog>
+      </div>
     </AppLayout>
   );
 };

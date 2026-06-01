@@ -29,6 +29,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentHomework from "@/components/StudentHomework";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 import studentBanner from "@/assets/student-home-banner.png";
+import teacherhomebanner from "@/assets/teacherhome-banner.png";
 
 interface LessonContent {
   lesson_objectives?: string[];
@@ -361,22 +362,50 @@ const TeacherHome = () => {
         <div
           className="relative px-8 py-12 md:py-16"
           style={{
-            backgroundImage: `url(${teacherHeroBg})`,
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-[hsl(var(--sidebar-primary))]/90 to-[hsl(var(--sidebar-primary))]/70" />
+          <div
+  className="absolute inset-0 bg-gradient-to-r
+  from-[#EDE9FE]/100
+  via-[#DDD6FE]/90
+  to-[#C4B5FD]/85"
+/>
+<div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+
+                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+          
+          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+
+          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+
+          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+
+             <img
+    src={teacherhomebanner}
+    alt="Teacher Home Dashboard"
+    className="absolute right-8 -bottom-14 h-[405px] object-contain"
+  />
           <div className="relative z-10 max-w-2xl">
             <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="h-6 w-6 text-white/80" />
-              <span className="text-sm font-medium text-white/70 uppercase tracking-wider">{profile?.role === "school_admin" ? "APAS School Admin Portal" : profile?.role === "knsoft_admin" ? "APAS Platform Admin" : "APAS Teacher Portal"}</span>
+              <GraduationCap className="h-6 w-6 text-black/80" />
+              <span className="text-sm font-medium text-black/70 uppercase tracking-wider">{profile?.role === "school_admin" ? "APAS School Admin Portal" : profile?.role === "knsoft_admin" ? "APAS Platform Admin" : "APAS Teacher Portal"}</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
               Welcome back, {profile?.full_name || (profile?.role === "school_admin" ? "School Admin" : profile?.role === "knsoft_admin" ? "KNSoft Admin" : "Teacher")}
             </h1>
-            <p className="text-base text-white/70 mb-1">{today}</p>
-            <p className="text-sm text-white/60 max-w-lg mt-3 leading-relaxed">
+            <p className="text-base text-black/90 mb-1">{today}</p>
+            <p className="text-sm text-black/80 max-w-lg mt-3 leading-relaxed">
               {profile?.role === "school_admin" ? "Manage your school — create accounts, monitor student and teacher performance, and oversee school-wide operations." : profile?.role === "knsoft_admin" ? "KNSOFT Platform Admin — manage all schools, assign school admins, monitor platform-wide usage and billing." : "Adaptive Personalised Assessment System — empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."}
             </p>
           </div>
