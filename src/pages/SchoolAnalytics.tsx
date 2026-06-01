@@ -242,7 +242,7 @@ const SchoolAnalytics = () => {
                           Predicted: {Number(p.predicted_score_next_test).toFixed(0)}% | Dropout Risk: {Number(p.dropout_risk_percentage).toFixed(0)}%
                         </p>
                         <div className="flex gap-1 mt-1 flex-wrap">
-                          {(p.contributing_factors as string[] || []).slice(0, 3).map((f, j) => (
+                          {(Array.isArray(p.contributing_factors) ? p.contributing_factors : typeof p.contributing_factors === "string" ? JSON.parse(p.contributing_factors || "[]") : []).slice(0, 3).map((f, j) => (
                             <Badge key={j} variant="outline" className="text-xs">{f}</Badge>
                           ))}
                         </div>

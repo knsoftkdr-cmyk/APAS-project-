@@ -32,7 +32,17 @@ import {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PERMISSION_MODULES = [
-  "View School Dashboard",
+  "Home",
+  "Reports",
+  "Alerts",
+  "Admin Panel",
+  "AI Tutor",
+  "AI Knowledge Hub",
+  "School Intelligence",
+  "Automation",
+  "Security Center",
+  "Billing",
+  "Settings",
   "User Creation",
   "Student Profile",
   "Teacher Profile",
@@ -40,21 +50,18 @@ const PERMISSION_MODULES = [
   "Homework",
   "Lesson Plans",
   "Assessments",
-  "AI Tutor",
   "Analytics",
-  "Reports",
   "Gamification",
   "Parent Communication",
   "Risk Prediction",
-  "ERP Integration",
-  "Billing",
-  "Settings",
 ];
 
-const PERMISSION_ROLES = ["principal", "hod", "teacher", "student", "parent"];
+const PERMISSION_ROLES = ["admin", "hod", "teacher", "student", "parent"];
 
 const ROLE_LABELS: Record<string, string> = {
   principal: "Principal",
+  admin: "Admin / Principal",
+  school_admin: "School Admin",
   hod: "HOD",
   teacher: "Teacher",
   student: "Student",
@@ -548,7 +555,7 @@ const SuperAdminPanel = () => {
               </Dialog>
             </div>
 
-            {(["principal", "hod", "teacher", "student", "parent"] as const).map((role) => {
+            {(["admin", "principal", "hod", "teacher", "student", "parent"] as const).map((role) => {
               const roleUsers = users.filter((u) => u.role === role);
               if (!roleUsers.length) return null;
               return (

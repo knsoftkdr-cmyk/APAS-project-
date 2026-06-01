@@ -602,7 +602,7 @@ const AdminHome = () => {
                     Dropout Risk: {Number(s.dropout_risk_percentage).toFixed(0)}%
                   </p>
                   <div className="flex gap-1 mt-2 flex-wrap">
-                    {(s.contributing_factors as string[] || []).slice(0, 2).map((f, j) => (
+                    {(Array.isArray(s.contributing_factors) ? s.contributing_factors : typeof s.contributing_factors === "string" ? JSON.parse(s.contributing_factors || "[]") : []).slice(0, 2).map((f, j) => (
                       <Badge key={j} variant="outline" className="text-xs">{f}</Badge>
                     ))}
                   </div>
