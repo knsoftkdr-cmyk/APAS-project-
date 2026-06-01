@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { AlertCircle, TrendingUp, Brain, Target, Zap } from "lucide-react";
+import statisticsBanner from "@/assets/statistics-banner.png";
 
 interface PredictionData {
   predicted_score_pct: number;
@@ -141,10 +142,27 @@ export default function PredictionDashboard() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <PageHeader
-          title="📊 Performance Predictions"
-          subtitle="AI-powered forecast of your academic performance"
-        />
+<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+
+  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+  <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+
+  <div className="max-w-xl">
+    <h1 className="text-5xl font-bold text-slate-900">
+      📊 Performance Predictions
+    </h1>
+
+    <p className="mt-3 text-slate-700 text-lg">
+      AI-powered forecast of your academic performance
+    </p>
+  </div>
+
+  <img
+    src={statisticsBanner}
+    alt="Statistics Banner"
+    className="absolute right-10 bottom-0 h-[160px]"
+  />
+</div>
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

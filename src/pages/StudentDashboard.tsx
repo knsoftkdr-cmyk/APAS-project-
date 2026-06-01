@@ -10,6 +10,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import studentBanner from "@/assets/student-dashboard-banner.png";
 import {
   ChartContainer,
   ChartTooltip,
@@ -195,10 +196,29 @@ export default function StudentDashboard() {
 
   return (
     <AppLayout>
-      <PageHeader
-        title={`Hi ${firstName} 👋`}
-        subtitle="Your personal learning dashboard — track homework, scores and weekly progress"
-      />
+<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#D8B4FE] via-[#C4B5FD] to-[#A5B4FC] p-8 text-slate-800 relative min-h-[320px]">
+
+  {/* Decorative circles */}
+  <div className="absolute top-8 right-20 w-16 h-16 rounded-full border border-white/40"></div>
+  <div className="absolute bottom-10 right-40 w-10 h-10 rounded-full border border-white/40"></div>
+  <div className="absolute top-20 left-[45%] w-8 h-8 rounded-full border border-white/30"></div>
+
+  <div className="max-w-xl">
+    <h1 className="text-5xl font-bold">
+      Welcome Back, {firstName} 👋
+    </h1>
+
+    <p className="mt-5 text-slate-650">
+      Your personal learning dashboard - track homework, scores and weekly progress
+    </p>
+  </div>
+
+  <img
+    src={studentBanner}
+    alt="Student Learning"
+    className="absolute right-10 bottom-[-15px] h-[340px] object-contain"
+  />
+</div>
 
       <ProfileCompletionBar percent={profilePct} missing={profileMissing} />
 

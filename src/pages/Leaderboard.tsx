@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Trophy, Medal, Zap, Award } from "lucide-react";
+import leaderBanner from "@/assets/leaderboard-banner.png";
 
 interface LeaderboardEntry {
   user_id: string;
@@ -183,11 +184,27 @@ export default function Leaderboard() {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <PageHeader
-          title="🏆 Leaderboard"
-          subtitle="Compete with peers and track your ranking"
-        />
+<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
 
+  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+  <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+
+  <div className="max-w-xl">
+    <h1 className="text-5xl font-bold text-slate-900">
+      🏆 Leaderboard
+    </h1>
+
+    <p className="mt-3 text-slate-700 text-lg">
+      Compete with friends, earn XP and climb the rankings.
+    </p>
+  </div>
+
+  <img
+    src={leaderBanner}
+    alt="Leaderboard Banner"
+    className="absolute right-10 bottom-0 h-[220px]"
+  />
+</div>
         {/* Your Ranking Card */}
         {userRank >= 0 && (
           <Card className="border-primary/50 bg-gradient-to-r from-primary/5 to-transparent">

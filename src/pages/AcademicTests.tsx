@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import academictests from "@/assets/academictests-banner.png";
 import {
   BookOpen, CheckCircle2, XCircle, ChevronRight, Trophy, Clock, RotateCcw,
   GraduationCap, Sparkles, ArrowRight, Loader2, History, Target, Award,
@@ -273,7 +274,28 @@ export default function AcademicTests() {
 
   return (
     <AppLayout>
-      <PageHeader title="Academic Tests" subtitle="Test your knowledge with AI-generated questions" />
+      <div className="space-y-6">
+<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+
+  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+  <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+
+  <div className="max-w-xl">
+    <h1 className="text-5xl font-bold text-slate-900">
+      Academic Tests
+    </h1>
+
+    <p className="mt-3 text-slate-700 text-lg">
+      Test your knowledge with AI-generated questions
+    </p>
+  </div>
+
+  <img
+    src={academictests}
+    alt="Academic tests Banner"
+    className="absolute right-10 bottom-5 h-[150px]"
+  />
+</div>
 
       {/* ─── SELECT PHASE ─── */}
       {phase === "select" && (
@@ -769,6 +791,7 @@ export default function AcademicTests() {
           />
         </div>
       )}
+      </div>
     </AppLayout>
   );
 }
