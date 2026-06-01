@@ -8,7 +8,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Dashboard — APAS",
   "/diagnostic": "Assessments — APAS",
   "/curative": "Curative Phase — APAS",
-  "/analytics": "Analytics Phase — APAS",
+  "/analytics": "Learning Analytics & Insights — APAS",
   "/teacher": "Teacher Panel — APAS",
   "/settings": "Settings — APAS",
   "/alerts": "Alerts — APAS",

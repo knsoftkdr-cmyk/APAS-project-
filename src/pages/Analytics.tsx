@@ -328,7 +328,7 @@ const Analytics = () => {
   return (
     <AppLayout>
       <PageHeader
-        title="Analytics Phase"
+        title="Learning Analytics & Insights"
         subtitle="Review at-home homework answers and assign scores"
       />
 

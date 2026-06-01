@@ -11,7 +11,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard": "Home",
   "/diagnostic": "Diagnostic Phase",
   "/curative": "Curative Phase",
-  "/analytics": "Analytics Phase",
+  "/analytics": "Learning Analytics & Insights",
   "/teacher": "Teacher Panel",
   "/settings": "Settings",
   "/alerts": "Alerts",
