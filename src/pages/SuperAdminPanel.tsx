@@ -71,6 +71,8 @@ interface SchoolInfo {
   email: string | null;
   curriculum: string | null;
   subscription_plan: string | null;
+  academic_year: string | null;
+  branch_sections: string | null;
 }
 
 interface ProfileRow {
@@ -187,7 +189,7 @@ const SuperAdminPanel = () => {
 
       const { data: schoolData } = await supabase
         .from("schools")
-        .select("id, name, address, phone, email, curriculum, subscription_plan")
+        .select("id, name, address, phone, email, curriculum, subscription_plan, academic_year, branch_sections")
         .eq("id", sid)
         .single();
       setSchool(schoolData);
@@ -386,6 +388,8 @@ const SuperAdminPanel = () => {
       email: editSchool.email,
       curriculum: editSchool.curriculum,
       subscription_plan: editSchool.subscription_plan,
+      academic_year: editSchool.academic_year,
+      branch_sections: editSchool.branch_sections,
     }).eq("id", schoolId);
     setSavingSchool(false);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -775,7 +779,6 @@ const SuperAdminPanel = () => {
                       { label: "Address", key: "address", type: "text" },
                       { label: "Phone", key: "phone", type: "text" },
                       { label: "Email", key: "email", type: "email" },
-                      { label: "Curriculum", key: "curriculum", type: "text" },
                     ].map(({ label, key, type }) => (
                       <div key={key} className="space-y-1.5">
                         <Label>{label}</Label>
@@ -786,6 +789,51 @@ const SuperAdminPanel = () => {
                         />
                       </div>
                     ))}
+                    <div className="space-y-1.5">
+                      <Label>Curriculum</Label>
+                      <Select
+                        value={editSchool.curriculum ?? ""}
+                        onValueChange={(v) => setEditSchool({ ...editSchool, curriculum: v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Select curriculum" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cbse">CBSE</SelectItem>
+                          <SelectItem value="ib">IB</SelectItem>
+                          <SelectItem value="cambridge">Cambridge</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Academic Year</Label>
+                      <Select
+                        value={editSchool.academic_year ?? ""}
+                        onValueChange={(v) => setEditSchool({ ...editSchool, academic_year: v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Select academic year" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2023-24">2023-24</SelectItem>
+                          <SelectItem value="2024-25">2024-25</SelectItem>
+                          <SelectItem value="2025-26">2025-26</SelectItem>
+                          <SelectItem value="2026-27">2026-27</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Branch / Sections</Label>
+                      <Select
+                        value={editSchool.branch_sections ?? ""}
+                        onValueChange={(v) => setEditSchool({ ...editSchool, branch_sections: v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Main Campus">Main Campus</SelectItem>
+                          <SelectItem value="North Branch">North Branch</SelectItem>
+                          <SelectItem value="South Branch">South Branch</SelectItem>
+                          <SelectItem value="East Branch">East Branch</SelectItem>
+                          <SelectItem value="West Branch">West Branch</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                     <div className="space-y-1.5">
                       <Label>Subscription Plan</Label>
                       <Select

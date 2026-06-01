@@ -42,15 +42,38 @@ const MultiTenantDashboard = () => {
         .select("id, name, subscription_plan, is_active, created_at")
         .order("created_at", { ascending: false });
 
-      const { data: metrics } = await supabase
-        .from("storage_metrics")
-        .select("school_id, storage_used_mb, files_count, ai_calls_count, active_users");
+            // Fetch real storage stats via edge function (uses service role key)
+      let totalFiles = 0;
+      let realStorageMb = 0;
+      try {
+        const statsRes = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/hyper-api`,
+          { headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` } }
+        );
+        if (statsRes.ok) {
+          const stats = await statsRes.json();
+          totalFiles = stats.totalFiles ?? stats.totalfiles ?? 0;
+          realStorageMb = stats.totalMb ?? stats.totalmb ?? 0;
+        }
+      } catch {}
+      // Fetch real AI calls count from ai_usage_logs
+      const { count: aiCallsCount } = await supabase
+        .from("ai_usage_logs")
+        .select("*", { count: "exact", head: true });
+
+      const metrics = (schools ?? []).map((s: any) => ({
+        school_id: s.id,
+        storage_used_mb: realStorageMb,
+        files_count: totalFiles,
+        ai_calls_count: aiCallsCount ?? 0,
+        active_users: 0,
+      }));
 
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, school_id");
 
-      const metricsMap = new Map((metrics ?? []).map((m: any) => [m.school_id, m]));
+      const metricsMap = new Map(metrics.map((m: any) => [m.school_id, m]));
       const userCountMap = new Map<string, number>();
       for (const p of (profiles ?? []) as any[]) {
         if (p.school_id) userCountMap.set(p.school_id, (userCountMap.get(p.school_id) ?? 0) + 1);
