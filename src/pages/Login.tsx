@@ -47,6 +47,13 @@ const Login = () => {
         return;
       }
 
+      // ✅ Record student login history
+      await supabase.from("login_history").insert({
+        user_id: data.session.user.id,
+        email: data.session.user.email,
+        role: "student",
+      });
+
       navigate("/student-dashboard");
       setLoading(false);
       return;
@@ -73,6 +80,14 @@ const Login = () => {
 
     const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
     const role = profileData?.role;
+
+    // ✅ Record staff login history with role
+    await supabase.from("login_history").insert({
+      user_id: data.session.user.id,
+      email: data.session.user.email,
+      role: role ?? "unknown",
+    });
+
     if (role === "knsoft_admin") {
       navigate("/knsoft-admin");
     } else if (role === "school_admin") {
