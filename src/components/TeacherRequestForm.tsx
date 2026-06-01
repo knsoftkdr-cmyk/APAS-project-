@@ -23,13 +23,13 @@ const CLASS_OPTIONS = [
 ];
 
 const MI_CATEGORIES = [
-  "Linguistic Intelligence",
-  "Logical-Mathematical Intelligence",
-  "Spatial Intelligence",
+  "Language Skills",
+  "Logical Thinking",
+  "Visual Learning",
   "Musical Intelligence",
-  "Bodily-Kinaesthetic Intelligence",
-  "Interpersonal Intelligence",
-  "Intrapersonal Intelligence",
+  "Physical Learning",
+  "Social Skills",
+  "Self Awareness",
   "Naturalist Intelligence",
   "VARK Learning Style",
   "Self-Regulation & School Readiness",
