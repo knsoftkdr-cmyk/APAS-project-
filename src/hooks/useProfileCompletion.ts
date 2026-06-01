@@ -12,6 +12,13 @@ export interface ProfileExtended {
   school_name: string | null;
   onboarding_completed: boolean;
   tour_completed: boolean;
+  // Teacher professional fields
+  mobile_number: string | null;
+  employee_id: string | null;
+  designation: string | null;
+  department: string | null;
+  qualification: string | null;
+  experience: string | null;
 }
 
 export function useStudentProfile() {
@@ -22,7 +29,9 @@ export function useStudentProfile() {
     queryFn: async (): Promise<ProfileExtended | null> => {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, role, gender, avatar_url, class_grade, school_name, onboarding_completed, tour_completed")
+        .select(
+          "id, full_name, role, gender, avatar_url, class_grade, school_name, onboarding_completed, tour_completed, mobile_number, employee_id, designation, department, qualification, experience"
+        )
         .eq("id", user!.id)
         .maybeSingle();
       return data as ProfileExtended | null;
