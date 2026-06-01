@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { GraduationCap, BookOpen, BarChart3, Users, FileText } from "lucide-react";
+import parentBanner from "@/assets/parent-banner.png";
 
 interface Child { id: string; full_name: string | null; class_grade: string | null; }
 interface HomeworkRow { id: string; title: string; due_date: string | null; status: string; }
@@ -117,29 +118,58 @@ export default function ParentDashboard() {
 
   return (
     <AppLayout>
-      {/* Welcome Banner */}
-      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-2xl">
-        <div
-          className="relative px-8 py-12 md:py-16"
-          style={{
-            background: "linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)",
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 to-blue-600/70" />
-          <div className="relative z-10 max-w-2xl">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-sm font-medium text-white/70 uppercase tracking-wider">APAS Parent Portal</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
-              Welcome, {profile?.full_name || "Parent"}
-            </h1>
-            <p className="text-base text-white/70 mb-1">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-            <p className="text-sm text-white/60 max-w-lg mt-3 leading-relaxed">
-              Monitor your child's academic progress, homework, assessments, and performance — all in one place.
-            </p>
-          </div>
-        </div>
-      </div>
+{/* Hero Banner */}
+<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+
+  {/* Decorative Circles */}
+  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+  <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+  <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+
+  {/* Stars */}
+  <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+  <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+  <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+  <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+  <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
+  <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+  <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+
+  {/* Triangles */}
+  <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+  <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+
+  <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+
+  {/* Text */}
+  <div className="max-w-xl relative z-10">
+    <h1 className="text-5xl font-bold text-slate-900">
+      Welcome, {profile?.full_name || "Parent"}
+    </h1>
+
+    <p className="mt-3 text-slate-850 text-lg">
+      {new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })}
+    </p>
+
+    <p className="mt-4 text-slate-700">
+      Monitor your child's academic progress, homework,
+      assessments and performance — all in one place.
+    </p>
+  </div>
+
+  {/* Parent Banner Image */}
+  <img
+    src={parentBanner}
+    alt="Parent Dashboard"
+    className="absolute right-10 bottom-5 h-[150px] object-contain"
+  />
+</div>
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
