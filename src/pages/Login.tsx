@@ -4,8 +4,9 @@ import { Eye, EyeOff, User, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import loginIllustration from "@/assets/login-illustration.png";
 import apasLogo from "@/assets/APAS-logo.png";
+import knsoftLogo from "@/assets/knsoft-logo.png";
+
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
@@ -89,49 +90,48 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#EAF1FB] flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden relative">
-        {/* Decorative dots */}
-        <div className="absolute top-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
-          {Array.from({ length: 25 }).map((_, i) => (
-            <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
-          ))}
+<div
+      className="min-h-screen flex items-center justify-end pr-20"
+      style={{
+        backgroundImage: "url('/classroom-bg.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* 2. ADD THIS LOGO CODE HERE */}
+    <div className="absolute top-8 left-8 z-50">
+      <img 
+        src={knsoftLogo} 
+        alt="KNSOFT Logo" 
+        className="h-20 w-auto object-contain" 
+      />
+    </div>
+      <div
+        className="
+          relative
+          w-[470px]
+         bg-violet-50/70
+          backdrop-blur-xl
+          rounded-[32px]
+          p-10
+          border border-white/50
+          shadow-[0_30px_100px_rgba(0,0,0,0.15)]
+        "
+      >
+        
+        <div className="text-center mb-8">
+          <img src={apasLogo} alt="APAS Logo" className="h-24 mx-auto mb-5" />
+          <h2
+            className="text-5xl font-bold text-slate-800"
+            style={{ fontFamily: "'DM Serif Display', serif" }}
+          >
+            Welcome Back 👋
+          </h2>
+          <p className="mt-3 text-slate-500">
+            Sign in to continue your learning journey
+          </p>
         </div>
-        <div className="absolute bottom-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
-          {Array.from({ length: 25 }).map((_, i) => (
-            <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-2">
-          {/* Left: Illustration on blue blob */}
-          <div className="hidden md:flex items-center justify-center relative bg-gradient-to-br from-[#EAF1FB] via-[#F5F8FC] to-white overflow-hidden min-h-[600px]">
-            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 600 700" preserveAspectRatio="none">
-              <path
-                d="M 0,0 L 480,0 Q 560,180 500,360 Q 440,540 520,700 L 0,700 Z"
-                fill="#DCE8F7"
-                opacity="0.55"
-              />
-            </svg>
-            <div className="relative z-10 bg-[#EAF1FB]/80 rounded-3xl p-8 backdrop-blur-sm">
-              <img
-                src={loginIllustration}
-                alt="Students learning illustration"
-                className="w-full max-w-md h-auto"
-              />
-            </div>
-          </div>
-
-          {/* Right: Form */}
-          <div className="px-8 sm:px-14 py-12 flex flex-col justify-center">
-            {/* Logo */}
-            <div className="flex justify-center mb-8">
-              <img src={apasLogo} alt="APAS Logo" className="h-24 w-auto object-contain" />
-            </div>
-
-            <h2 className="text-3xl font-semibold text-[#2C3E50] mb-8 text-center" style={{ fontFamily: "'DM Serif Display', serif" }}>
-              Login to your account
-            </h2>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -210,8 +210,6 @@ const Login = () => {
             </p>
           </div>
         </div>
-      </div>
-    </div>
   );
 };
 
