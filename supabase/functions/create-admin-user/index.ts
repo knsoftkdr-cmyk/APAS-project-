@@ -11,6 +11,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
+
     const { data, error } = await admin.auth.admin.createUser({
       email,
       password,
@@ -23,7 +24,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    await admin.from("profiles").update({ full_name, role, ...(school_id ? { school_id } : {}) }).eq("id", data.user.id);
+    await admin.from("profiles").update({
+      full_name,
+      role,
+      ...(school_id ? { school_id } : {}),
+    }).eq("id", data.user.id);
 
     if (role === "student") {
       const { error: studentError } = await admin.from("students").insert({
@@ -37,9 +42,48 @@ Deno.serve(async (req) => {
         parent_phone: parent_phone || null,
       });
       if (studentError) {
-        return new Response(JSON.stringify({ error: "User created but failed to save student details: " + studentError.message }), {
+        return new Response(JSON.stringify({ error: "Failed to save student details: " + studentError.message }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
+      }
+
+      const { data: studentRow } = await admin
+        .from("students")
+        .select("id")
+        .eq("profile_id", data.user.id)
+        .single();
+
+      console.log("studentClass:", studentClass, "section:", section);
+
+      // List all classes to debug
+      const { data: allClasses } = await admin.from("classes").select("id, name, section");
+      console.log("all classes:", JSON.stringify(allClasses));
+
+      const classRow = allClasses?.find(
+        (c: any) => c.name.toLowerCase().includes(String(studentClass).toLowerCase()) && c.section === section
+      );
+
+      console.log("matched classRow:", JSON.stringify(classRow));
+
+      if (studentRow && classRow) {
+        const { error: csError } = await admin.from("class_students").insert({
+          class_id: classRow.id,
+          student_id: studentRow.id,
+        });
+        console.log("class_students insert error:", csError?.message);
+
+        const { data: teacherRow } = await admin
+          .from("class_teachers")
+          .select("teacher_id, profiles:teacher_id(full_name)")
+          .eq("class_id", classRow.id)
+          .limit(1)
+          .maybeSingle();
+
+        await admin.from("students")
+          .update({ assigned_teacher: (teacherRow as any)?.profiles?.full_name ?? null })
+          .eq("id", studentRow.id);
+      } else {
+        console.log("No class match found for studentClass:", studentClass, "section:", section);
       }
     }
 
@@ -47,6 +91,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
+    console.log("CATCH ERROR:", (e as Error).message);
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

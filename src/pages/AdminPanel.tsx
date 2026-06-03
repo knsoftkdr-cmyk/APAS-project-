@@ -251,7 +251,7 @@ const AdminPanel = () => {
     setLoading(true);
     const [classesRes, studentsRes, teachersRes, csRes, ctRes, qaRes] = await Promise.all([
       supabase.from("classes").select("*").order("name"),
-      supabase.from("students").select("id, profile_id, grade, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("profiles.school_id", profile?.school_id || ""),
+      supabase.from("students").select("id, profile_id, grade, class, section, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("profiles.school_id", profile?.school_id || ""),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
       supabase.from("class_students").select("id, class_id, student_id"),
       supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
@@ -699,7 +699,7 @@ const AdminPanel = () => {
                             {selectedClassMembers.map((member) => (
                               <TableRow key={member.id}>
                                 <TableCell className="font-medium">{(students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || "Unnamed"}</TableCell>
-                                <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.grade || "—"}</TableCell>
+                                <TableCell>{(() => { const s = (students as any[]).find(s => s.id === member.student_id); const cls = s?.class || s?.grade; if (!cls) return "—"; return /^\d+$/.test(cls) ? `Class ${cls}` : cls; })()}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.roll_number || "—"}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.date_of_birth ? new Date((students as any[]).find(s => s.id === member.student_id).date_of_birth).toLocaleDateString() : "—"}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.parent_phone || "—"}</TableCell>
