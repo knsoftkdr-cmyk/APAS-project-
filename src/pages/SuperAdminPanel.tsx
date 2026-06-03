@@ -130,6 +130,11 @@ const SuperAdminPanel = () => {
   const [newEmail, setNewEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newFullName, setNewFullName] = useState("");
+  const [newStudentClass, setNewStudentClass] = useState("");
+  const [newStudentSection, setNewStudentSection] = useState("");
+  const [newStudentRollNo, setNewStudentRollNo] = useState("");
+  const [newStudentDOB, setNewStudentDOB] = useState("");
+  const [newStudentParentPhone, setNewStudentParentPhone] = useState("");
   const [creating, setCreating] = useState(false);
   const [linkParentId, setLinkParentId] = useState<string | null>(null);
   const [linkStudentId, setLinkStudentId] = useState("");
@@ -310,7 +315,8 @@ const SuperAdminPanel = () => {
 
   // ── Create account ─────────────────────────────────────────────────────────
   const handleCreateAccount = async () => {
-    if (!newEmail.trim() || !newPassword.trim() || !newFullName.trim()) {
+    const studentFieldsMissing = newRole === 'student' && (!newStudentRollNo.trim() || !newStudentClass.trim());
+    if ((!newEmail.trim() && newRole !== 'student') || !newPassword.trim() || !newFullName.trim() || studentFieldsMissing) {
       toast({ title: "All fields are required", variant: "destructive" });
       return;
     }
@@ -319,7 +325,7 @@ const SuperAdminPanel = () => {
     try {
       // Students use register-student (Student ID → fake email), others use create-admin-user
       const isStudent = newRole === "student";
-      const emailOrId = newEmail.trim().toLowerCase();
+      const emailOrId = (newRole === 'student' ? newStudentRollNo : newEmail).trim().toLowerCase();
       const fakeEmail = isStudent ? `${emailOrId}@student.apas.local` : emailOrId;
 
       const { data, error } = await supabase.functions.invoke(
@@ -331,6 +337,13 @@ const SuperAdminPanel = () => {
             full_name: newFullName.trim(),
             role: newRole,
             school_id: schoolId,
+            ...(newRole === 'student' && {
+              class: newStudentClass,
+              section: newStudentSection,
+              roll_number: newStudentRollNo,
+              date_of_birth: newStudentDOB,
+              parent_phone: newStudentParentPhone,
+            }),
           },
         }
       );
@@ -339,6 +352,7 @@ const SuperAdminPanel = () => {
       toast({ title: `${newRole} account created`, description: newEmail });
       setCreateOpen(false);
       setNewEmail(""); setNewPassword(""); setNewFullName(""); setNewRole("teacher");
+      setNewStudentClass(""); setNewStudentSection(""); setNewStudentRollNo(""); setNewStudentDOB(""); setNewStudentParentPhone("");
       fetchAll();
     } catch (e: any) {
       toast({ title: "Error creating account", description: e.message, variant: "destructive" });
@@ -533,9 +547,29 @@ const SuperAdminPanel = () => {
                       <Input placeholder="e.g. Jane Smith" value={newFullName} onChange={(e) => setNewFullName(e.target.value)} />
                     </div>
                     {newRole === "student" ? (
-                      <div className="space-y-1.5">
-                        <Label>Student ID</Label>
-                        <Input placeholder="e.g. STU2024001" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} />
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label>Class</Label>
+                            <Input placeholder="e.g. 10" value={newStudentClass} onChange={(e) => setNewStudentClass(e.target.value)} />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>Section</Label>
+                            <Input placeholder="e.g. A" value={newStudentSection} onChange={(e) => setNewStudentSection(e.target.value)} />
+                          </div>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>Roll Number / Student ID</Label>
+                          <Input placeholder="e.g. STU2024001" value={newStudentRollNo} onChange={(e) => setNewStudentRollNo(e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>Date of Birth</Label>
+                          <Input type="date" value={newStudentDOB} onChange={(e) => setNewStudentDOB(e.target.value)} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label>Parent Phone Number</Label>
+                          <Input placeholder="e.g. 9876543210" value={newStudentParentPhone} onChange={(e) => setNewStudentParentPhone(e.target.value)} />
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
