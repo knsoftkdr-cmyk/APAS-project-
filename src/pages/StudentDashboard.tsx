@@ -282,7 +282,7 @@ export default function StudentDashboard() {
               Pending Homework
             </CardTitle>
             <Button variant="ghost" size="sm" asChild>
-              <Link to="/diagnostic">
+              <Link to="/dashboard">
                 View All <ArrowRight className="ml-1 h-4 w-4" />
               </Link>
             </Button>

@@ -199,6 +199,9 @@ const SettingsPage = () => {
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
   const [personalSaving, setPersonalSaving] = useState(false);
+  const [rollNumber, setRollNumber] = useState("");
+  const [section, setSection] = useState("");
+  const [classGrade, setClassGrade] = useState("");
 
   // Professional info state
   const [mobileNumber, setMobileNumber] = useState("");
@@ -231,6 +234,9 @@ const SettingsPage = () => {
       setExperience((ext as any).experience ?? "");
     }
     if (profile?.full_name) setFullName(profile.full_name);
+    if ((profile as any)?.roll_number) setRollNumber((profile as any).roll_number ?? "");
+    if ((profile as any)?.section) setSection((profile as any).section ?? "");
+    if ((profile as any)?.class_grade) setClassGrade((profile as any).class_grade ?? "");
   }, [ext, profile]);
 
   const invalidate = () =>
@@ -260,7 +266,7 @@ const SettingsPage = () => {
     setPersonalSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName.trim(), avatar_url: avatarUrl || null } as any)
+      .update({ full_name: fullName.trim(), avatar_url: avatarUrl || null, ...(isStudent ? { roll_number: rollNumber.trim() || null, section: section.trim() || null, class_grade: classGrade.trim() || null } : {}) } as any)
       .eq("id", user!.id);
     setPersonalSaving(false);
     if (error) toast.error("Failed to save");
@@ -431,6 +437,24 @@ const SettingsPage = () => {
                   {mobileNumber}
                 </span>
               )}
+              {isStudent && classGrade && (
+                <span className="flex items-center gap-1.5">
+                  <GraduationCap className="h-4 w-4 text-gray-400" />
+                  Class {classGrade}
+                </span>
+              )}
+              {isStudent && section && (
+                <span className="flex items-center gap-1.5">
+                  <Hash className="h-4 w-4 text-gray-400" />
+                  Section {section}
+                </span>
+              )}
+              {isStudent && rollNumber && (
+                <span className="flex items-center gap-1.5">
+                  <BadgeCheck className="h-4 w-4 text-gray-400" />
+                  Roll No: {rollNumber}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -521,7 +545,12 @@ const SettingsPage = () => {
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
             </button>
           </div>
-          <p className="text-xs text-gray-400">Click the icon to upload a photo</p>
+          <div className="flex gap-2">
+            <p className="text-xs text-gray-400">Click the icon to upload a photo</p>
+            {avatarUrl && (
+              <button onClick={() => setAvatarUrl("")} className="text-xs text-red-500 hover:text-red-700 font-medium">Remove photo</button>
+            )}
+          </div>
           <input
             ref={fileRef}
             type="file"
@@ -551,6 +580,35 @@ const SettingsPage = () => {
         <Field label="Role">
           <Input value={profile?.role ?? ""} disabled className="rounded-xl bg-gray-50 text-gray-400 capitalize" />
         </Field>
+
+        {isStudent && (
+          <>
+            <Field label="Roll Number">
+              <Input
+                value={rollNumber}
+                onChange={(e) => setRollNumber(e.target.value)}
+                placeholder="e.g. 2024001"
+                className="rounded-xl border-gray-200 focus:border-blue-900 focus:ring-blue-900"
+              />
+            </Field>
+            <Field label="Class">
+              <Input
+                value={classGrade}
+                onChange={(e) => setClassGrade(e.target.value)}
+                placeholder="e.g. 10"
+                className="rounded-xl border-gray-200 focus:border-blue-900 focus:ring-blue-900"
+              />
+            </Field>
+            <Field label="Section">
+              <Input
+                value={section}
+                onChange={(e) => setSection(e.target.value)}
+                placeholder="e.g. A"
+                className="rounded-xl border-gray-200 focus:border-blue-900 focus:ring-blue-900"
+              />
+            </Field>
+          </>
+        )}
       </EditDrawer>
 
       {/* Professional Information Drawer */}
