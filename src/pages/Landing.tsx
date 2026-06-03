@@ -10,7 +10,8 @@ import aboutBg from "@/assets/landing-about-bg.jpg";
 import ctaBg from "@/assets/landing-cta-bg.jpg";
 // Add import at top:
 import apasLogo from "@/assets/APAS-logo.png";
-
+import airobot from "@/assets/landing-ai-robot.png";
+import schoolbg from "@/assets/school-bg.png";
 import {
   Brain,
   BarChart3,
@@ -130,7 +131,7 @@ const Landing = () => {
           <div className="hidden md:block">
             <Link to="/login">
               <Button className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white shadow-lg shadow-blue-500/30 rounded-full px-5">
-                Get Started
+                Request Demo
               </Button>
             </Link>
           </div>
@@ -151,7 +152,7 @@ const Landing = () => {
             <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
             <Link to="/login" className="block">
               <Button className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-full">
-                Get Started
+                Request Demo
               </Button>
             </Link>
           </div>
@@ -190,15 +191,14 @@ const Landing = () => {
               <Sparkles className="w-3.5 h-3.5" />
               AI-Powered Education Platform
             </div>
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight">
-              Adaptive Learning{" "}
+            <h1 className="text-5xl md:text-6xl lg:text-5xl font-extrabold leading-[1.05] tracking-tight">
+              Transforming Education through{" "}
               <span className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 bg-clip-text text-transparent">
-                Powered by AI
+                AI-Powered Personalized Learning
               </span>
             </h1>
             <p className="mt-6 text-lg text-slate-600 max-w-xl leading-relaxed">
-              Personalized education experiences, intelligent analytics, and smart
-              pedagogy designed for the next generation of learners.
+              One intelligent platform for personalized lesson planning, student analytics, AI tutoring, and academic success.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-4">
@@ -221,22 +221,30 @@ const Landing = () => {
               </a>
             </div>
 
-            <div className="mt-10 flex items-center gap-8 text-sm text-slate-500">
-              <div>
-                <div className="text-2xl font-bold text-slate-900">50K+</div>
-                Students
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-slate-900">200+</div>
-                Schools
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-slate-900">98%</div>
-                Satisfaction
-              </div>
-            </div>
-          </div>
+{/*             <div className="flex flex-wrap gap-4 mt-8">
 
+              <div className="flex flex-wrap gap-8 mt-10 text-lg font-medium">
+
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🤖</span>
+                  <span className="text-blue-700">AI Powered</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🚀</span>
+                  <span className="text-green-600">Pilot Ready</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">📚</span>
+                  <span className="text-blue-700">Curriculum Aligned</span>
+                </div>
+              <div className="flex items-center gap-2 text-green-600">
+                🔒Secure Platform
+              </div>
+              </div>
+            </div> */}
+       </div>
           {/* Right – hero illustration (transparent boy on shared bg) */}
           <div data-reveal className="reveal relative h-[500px] lg:h-[560px] flex items-center justify-center">
             {/* Circular purple outline */}
@@ -262,6 +270,47 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+
+{/* Trust Bar */}
+<section className="py-6 border-y border-slate-200 bg-white">
+  <div className="max-w-7xl mx-auto px-6">
+
+    <div className="text-center text-sm font-semibold text-slate-500 mb-4">
+      Trusted Across Diverse Learning Environments
+    </div>
+
+    <div className="flex flex-wrap justify-center gap-4 md:gap-8">
+
+      <span className="px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-medium">
+        CBSE Schools
+      </span>
+
+      <span className="px-4 py-2 rounded-full bg-green-50 text-green-700 font-medium">
+        Cambridge Schools
+      </span>
+
+      <span className="px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-medium">
+        IB Schools
+      </span>
+
+      <span className="px-4 py-2 rounded-full bg-green-50 text-green-700 font-medium">
+        International Schools
+      </span>
+
+      <span className="px-4 py-2 rounded-full bg-blue-50 text-blue-700 font-medium">
+        Education Groups
+      </span>
+
+    </div>
+
+    <div className="text-center mt-4 text-xs text-slate-500">
+      🚀 Pilot Programs Available
+    </div>
+
+  </div>
+</section>
+
 
       {/* About APAS */}
       <section id="about" className="relative py-28 px-6 overflow-hidden bg-slate-950">
@@ -333,7 +382,231 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Why APAS */}
+{/* Who Uses APAS */}
+<section id="features" className="py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50">
+  <div className="max-w-7xl mx-auto">
+
+    <div className="text-center mb-14">
+      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-xs font-semibold text-blue-700 shadow-sm mb-4">
+        Who Uses APAS?
+      </div>
+
+      <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+        Built for the entire{" "}
+        <span className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+          learning ecosystem
+        </span>
+      </h2>
+
+      <p className="mt-4 text-slate-600 max-w-2xl mx-auto">
+        APAS empowers students, teachers, schools, and parents with intelligent tools and actionable insights.
+      </p>
+    </div>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="text-4xl mb-4">👨‍🎓</div>
+        <h3 className="font-bold text-xl mb-2">Students</h3>
+        <p className="text-slate-600">
+          Personalized learning pathways and adaptive assessments.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="text-4xl mb-4">👩‍🏫</div>
+        <h3 className="font-bold text-xl mb-2">Teachers</h3>
+        <p className="text-slate-600">
+          AI lesson planning and classroom insights.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="text-4xl mb-4">📋</div>
+        <h3 className="font-bold text-xl mb-2">HODs</h3>
+        <p className="text-slate-600">
+          Department analytics and performance monitoring.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="text-4xl mb-4">🏫</div>
+        <h3 className="font-bold text-xl mb-2">Principals</h3>
+        <p className="text-slate-600">
+          School-wide intelligence and academic oversight.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="text-4xl mb-4">👨‍👩‍👧</div>
+        <h3 className="font-bold text-xl mb-2">Parents</h3>
+        <p className="text-slate-600">
+          Track child progress, growth, and achievements.
+        </p>
+      </div>
+
+      <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="text-4xl mb-4">📊</div>
+        <h3 className="font-bold text-xl mb-2">Management</h3>
+        <p className="text-slate-600">
+          Strategic dashboards and data-driven decisions.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{/* APAS AI Suite */}
+<section className="relative py-20 px-6 bg-white overflow-hidden">
+  <div className="max-w-7xl mx-auto">
+    {/* Background AI Robot */}
+    <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
+<div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none">
+  <img
+    src={airobot}
+    alt="AI Robot"
+    className="w-[900px] animate-float"
+  />
+  <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-gradient-to-r from-blue-200/20 to-green-200/20 rounded-full blur-3xl"></div>
+</div>
+
+    <div className="text-center mb-14">
+      <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-4">
+        APAS AI Suite
+      </div>
+
+      <h2 className="text-4xl md:text-5xl font-extrabold">
+        The APAS AI Suite
+      </h2>
+
+      <p className="mt-4 text-slate-600 max-w-2xl mx-auto">
+        A powerful collection of AI-driven tools designed to enhance teaching,
+        learning, assessment, and academic decision-making.
+      </p>
+    </div>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+        <div className="text-4xl mb-3">🤖</div>
+<h3 className="font-bold text-lg">AI Tutor</h3>
+<p className="text-slate-600 mt-2">
+  Personalized AI tutoring support for every learner.
+</p>
+      </div>
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+<div className="text-4xl mb-3">📚</div>
+<h3 className="font-bold text-lg">AI Lesson Planner</h3>
+<p className="text-slate-600 mt-2">
+  Generate curriculum-aligned lesson plans instantly.
+</p>
+      </div>
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+<div className="text-4xl mb-3">📝</div>
+<h3 className="font-bold text-lg">AI Worksheet Generator</h3>
+<p className="text-slate-600 mt-2">
+  Create customized worksheets for any topic and grade.
+</p>
+      </div>
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+<div className="text-4xl mb-3">❓</div>
+<h3 className="font-bold text-lg">AI Question Generator</h3>
+<p className="text-slate-600 mt-2">
+  Generate assessments, quizzes, and practice questions automatically.
+</p>
+      </div>
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+<div className="text-4xl mb-3">🏠</div>
+<h3 className="font-bold text-lg">AI Homework Creator</h3>
+<p className="text-slate-600 mt-2">
+  Build personalized homework assignments in seconds.
+</p>
+      </div>
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+<div className="text-4xl mb-3">⚠️</div>
+<h3 className="font-bold text-lg">AI Risk Prediction</h3>
+<p className="text-slate-600 mt-2">
+  Identify students who may need additional support early.
+</p>
+      </div>
+
+      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+  <div className="text-4xl mb-3">📊</div>
+  <h3 className="font-bold text-lg">AI Learning Analytics</h3>
+  <p className="text-slate-600 mt-2">
+    Monitor student performance and learning trends in real time.
+  </p>
+</div>
+
+<div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+  <div className="text-4xl mb-3">📖</div>
+  <h3 className="font-bold text-lg">AI Knowledge Hub</h3>
+  <p className="text-slate-600 mt-2">
+    Centralized access to learning resources, notes, and study materials.
+  </p>
+</div>
+
+    </div>
+  </div>
+</section>
+
+
+{/* Supports Multiple Curricula */}
+<section className="py-16 px-6 bg-gradient-to-br from-blue-50 via-white to-green-50">
+  <div className="max-w-7xl mx-auto text-center">
+    <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-4">
+      Curriculum Support
+    </div>
+
+    <h2 className="text-4xl md:text-5xl font-extrabold mb-4">
+      Supports Multiple Curricula
+    </h2>
+
+    <p className="text-slate-600 max-w-2xl mx-auto mb-10">
+      APAS is designed to adapt seamlessly across different educational frameworks and standards.
+    </p>
+
+    <div className="flex flex-wrap justify-center gap-4">
+
+      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+        CBSE
+      </span>
+
+      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+        ICSE
+      </span>
+
+      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+        State Board
+      </span>
+
+      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+        IB
+      </span>
+
+      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+        Cambridge
+      </span>
+
+      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+        American Curriculum
+      </span>
+
+    </div>
+
+  </div>
+</section>
+
+
+
+{/* 
+      ---------------------------------Why APAS-------------------------------------
       <section id="features" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/30 to-white overflow-hidden">
         <img
           src={aiBrain}
@@ -386,7 +659,7 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Analytics highlight */}
+      -------------------- Analytics highlight ----------------------------
       <section id="analytics" className="relative py-24 px-6">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div data-reveal className="reveal">
@@ -454,13 +727,13 @@ const Landing = () => {
           </div>
         </div>
       </section>
-
+*/}
       {/* SECTION 3 — Student Experience */}
       <section id="students" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-900 mb-4">
-              Student Experience
+              Personalized Learning Experience
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
               Built for{" "}
@@ -481,9 +754,10 @@ const Landing = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-blue-900/75 via-slate-800/40 to-transparent flex items-center">
               <div className="px-8 md:px-14 max-w-xl text-white">
-                <div className="text-xs font-semibold uppercase tracking-widest text-green-200">Real Classrooms</div>
-                <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
-                  50,000+ students already learning smarter with APAS
+                <div className="text-xs font-semibold uppercase tracking-widest text-green-200">AI-POWERED EDUCATION</div>
+                <div className="mt-2 text-2xl md:text-2xl font-extrabold leading-tight drop-shadow-lg">
+                  Empowering schools with AI-driven assessments,
+                  personalized learning pathways, and actionable insights.
                 </div>
               </div>
             </div>
@@ -612,9 +886,9 @@ const Landing = () => {
               For Educators
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Powerful Insights for{" "}
+              Teacher {" "}
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                Educators
+                Intelligence
               </span>
             </h2>
             <p className="mt-4 text-slate-600">
@@ -647,6 +921,7 @@ const Landing = () => {
                 { icon: Activity, title: "Engagement Heatmaps", desc: "See where students light up — or fall off.", color: "from-blue-500 to-green-500" },
                 { icon: FileText, title: "AI-Generated Reports", desc: "Auto-built insights, ready to share with parents.", color: "from-green-500 to-green-500" },
                 { icon: Users, title: "Student Insights", desc: "Drill into each learner's profile and growth.", color: "from-blue-500 to-blue-500" },
+                { icon: BookOpen,title: "AI Lesson Plans",desc: "Generate curriculum-aligned lesson plans instantly with AI assistance.", color: "from-blue-500 to-green-500"},
               ].map((f) => (
                 <div key={f.title} className="rounded-2xl bg-white border border-slate-100 p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100 transition-all">
                   <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-md`}>
@@ -717,78 +992,570 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* SECTION 5 — How It Works */}
-      <section id="how" className="relative py-24 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-xs font-semibold text-green-700 mb-4">
-              How it works
-            </div>
+
+{/* School Intelligence Dashboard */}
+<section className="relative py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50 overflow-hidden">
+  <div className="max-w-7xl mx-auto">
+    {/* Background School */}
+    <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
+<div className="absolute right-0 top-[35%] -translate-y-1/2 opacity-40 pointer-events-none">
+  <img
+    src={schoolbg}
+    alt="School"
+    className="w-[700px] opacity-30 animate-float"
+  />
+</div>
+<div className="relative z-10">
+    <div className="text-center mb-14">
+      <div className="inline-flex items-center px-4 py-2 rounded-full bg-white text-blue-700 text-sm font-semibold shadow-sm mb-4">
+        School Intelligence
+      </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              From sign-up to{" "}
-              <span className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 bg-clip-text text-transparent">
-                smarter learning
+              School{" "}
+              <span className="bg-gradient-to-r from-blue-800 to-green-500 bg-clip-text text-transparent">
+                Intelligence
               </span>{" "}
-              in 4 steps
+              Dashboard
             </h2>
-          </div>
 
-          {/* Desktop timeline */}
-          <div className="hidden md:block relative">
-            <div className="absolute top-10 left-[10%] right-[10%] h-1 rounded-full bg-gradient-to-r from-blue-100 via-blue-100 to-green-100 overflow-hidden">
-              <div className="absolute inset-y-0 left-0 w-full bg-gradient-to-r from-blue-500 via-blue-500 to-green-500 connector-fill origin-left" />
+      <p className="text-slate-600 max-w-2xl mx-auto">
+        Gain a complete view of institutional performance through AI-powered analytics and forecasting.
+      </p>
+    </div>
+
+<div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+
+  {/* School Performance */}
+  <div className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+    <div className="text-4xl mb-4">📊</div>
+    <h3 className="font-bold text-xl mb-3">
+      School Performance
+    </h3>
+    <p className="text-slate-600">
+      Monitor academic performance and growth trends across the entire institution.
+    </p>
+  </div>
+
+  {/* Teacher Performance */}
+  <div className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+    <div className="text-4xl mb-4">👩‍🏫</div>
+    <h3 className="font-bold text-xl mb-3">
+      Teacher Performance
+    </h3>
+    <p className="text-slate-600">
+      Track classroom effectiveness, engagement, and teaching outcomes.
+    </p>
+  </div>
+
+  {/* Curriculum Coverage */}
+  <div className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+    <div className="text-4xl mb-4">📚</div>
+    <h3 className="font-bold text-xl mb-3">
+      Curriculum Coverage
+    </h3>
+    <p className="text-slate-600">
+      Measure syllabus completion and curriculum progress across grades.
+    </p>
+  </div>
+
+  {/* Risk Alerts */}
+  <div className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+    <div className="text-4xl mb-4">⚠️</div>
+    <h3 className="font-bold text-xl mb-3">
+      Risk Alerts
+    </h3>
+    <p className="text-slate-600">
+      Identify students who may require intervention before performance declines.
+    </p>
+  </div>
+
+  {/* Attendance Trends */}
+  <div className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+    <div className="text-4xl mb-4">📅</div>
+    <h3 className="font-bold text-xl mb-3">
+      Attendance Trends
+    </h3>
+    <p className="text-slate-600">
+      Analyze attendance patterns and uncover engagement concerns early.
+    </p>
+  </div>
+
+  {/* AI Predictions */}
+  <div className="bg-white rounded-3xl p-6 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+    <div className="text-4xl mb-4">🎯</div>
+    <h3 className="font-bold text-xl mb-3">
+      AI Predictions
+    </h3>
+    <p className="text-slate-600">
+      Forecast future academic outcomes using intelligent predictive analytics.
+    </p>
+  </div>
+
+</div>
+  </div>
+  </div>
+</section>
+
+
+
+
+{/* APAS Workflow */}
+<section id="how" className="py-24 px-6 bg-white">
+  <div className="max-w-7xl mx-auto">
+
+    {/* Heading */}
+    <div className="text-center mb-20">
+      <div className="inline-flex items-center px-5 py-2 rounded-full bg-green-100 text-green-700 text-sm font-semibold mb-6">
+        APAS Workflow
+      </div>
+
+      <h2 className="text-5xl md:text-6xl font-extrabold tracking-tight">
+        How APAS Transforms
+        <span className="block bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+          Learning Outcomes
+        </span>
+      </h2>
+
+      <p className="mt-6 text-lg text-slate-600 max-w-3xl mx-auto">
+        From assessment to intervention, APAS continuously analyzes learning data
+        and supports teachers with intelligent recommendations.
+      </p>
+    </div>
+
+    {/* Timeline */}
+    <div className="relative">
+
+      {/* Desktop connecting line */}
+      <div className="hidden xl:block absolute top-10 left-[8%] right-[8%] h-1 bg-gradient-to-r from-blue-500 via-blue-500 to-green-500 rounded-full"></div>
+
+      <div className="grid md:grid-cols-2 xl:grid-cols-6 gap-10 relative">
+
+        {/* Step 1 */}
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 flex items-center justify-center text-4xl shadow-xl">
+              📝
             </div>
 
-            <div className="grid grid-cols-4 gap-6 relative">
-              {[
-                { icon: UserPlus, title: "Register", desc: "Create your free account in seconds.", color: "from-blue-500 to-blue-500" },
-                { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you.", color: "from-blue-500 to-green-500" },
-                { icon: BarChart3, title: "Analyze Performance", desc: "AI tracks your strengths and gaps.", color: "from-green-500 to-green-500" },
-                { icon: Rocket, title: "Improve with AI", desc: "Get smart suggestions to grow faster.", color: "from-amber-500 to-orange-500" },
-              ].map((s, i) => (
-                <div key={s.title} data-reveal className="reveal text-center" style={{ transitionDelay: `${i * 120}ms` }}>
-                  <div className="relative mx-auto w-20 h-20">
-                    <div className={`absolute inset-0 rounded-full bg-gradient-to-br ${s.color} blur-xl opacity-50`} />
-                    <div className={`relative w-20 h-20 rounded-full bg-gradient-to-br ${s.color} flex items-center justify-center shadow-2xl shadow-blue-300/40 step-pulse`}>
-                      <s.icon className="w-8 h-8 text-white" />
-                    </div>
-                    <div className="absolute -top-1 -right-1 w-7 h-7 rounded-full bg-white border-2 border-blue-200 flex items-center justify-center text-xs font-bold text-blue-800">
-                      {i + 1}
-                    </div>
-                  </div>
-                  <h3 className="mt-5 font-bold text-lg">{s.title}</h3>
-                  <p className="mt-2 text-sm text-slate-600">{s.desc}</p>
-                </div>
-              ))}
+            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+              1
             </div>
           </div>
 
-          {/* Mobile vertical timeline */}
-          <div className="md:hidden relative pl-10">
-            <div className="absolute left-4 top-2 bottom-2 w-1 rounded-full bg-gradient-to-b from-blue-500 via-blue-500 to-green-500" />
-            {[
-              { icon: UserPlus, title: "Register", desc: "Create your free account in seconds." },
-              { icon: BookOpen, title: "Learn", desc: "Personalized lessons tailored to you." },
-              { icon: BarChart3, title: "Analyze Performance", desc: "AI tracks your strengths and gaps." },
-              { icon: Rocket, title: "Improve with AI", desc: "Get smart suggestions to grow faster." },
-            ].map((s, i) => (
-              <div key={s.title} data-reveal className="reveal relative mb-8">
-                <div className="absolute -left-[34px] top-0 w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 via-blue-500 to-green-500 flex items-center justify-center shadow-lg">
-                  <s.icon className="w-4 h-4 text-white" />
-                </div>
-                <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-md">
-                  <div className="text-xs text-blue-800 font-semibold">Step {i + 1}</div>
-                  <div className="font-bold mt-1">{s.title}</div>
-                  <p className="text-sm text-slate-600 mt-1">{s.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <h3 className="mt-6 font-bold text-xl">
+            Student Assessment
+          </h3>
+
+          <p className="mt-3 text-slate-600">
+            Adaptive assessments evaluate student understanding.
+          </p>
         </div>
-      </section>
+
+        {/* Step 2 */}
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-4xl shadow-xl">
+              🧠
+            </div>
+
+            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+              2
+            </div>
+          </div>
+
+          <h3 className="mt-6 font-bold text-xl">
+            AI Diagnostics
+          </h3>
+
+          <p className="mt-3 text-slate-600">
+            Identify strengths, weaknesses, and learning gaps.
+          </p>
+        </div>
+
+        {/* Step 3 */}
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-4xl shadow-xl">
+              👤
+            </div>
+
+            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+              3
+            </div>
+          </div>
+
+          <h3 className="mt-6 font-bold text-xl">
+            Learning Profile
+          </h3>
+
+          <p className="mt-3 text-slate-600">
+            Build a personalized learner profile using analytics.
+          </p>
+        </div>
+
+        {/* Step 4 */}
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center text-4xl shadow-xl">
+              📚
+            </div>
+
+            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+              4
+            </div>
+          </div>
+
+          <h3 className="mt-6 font-bold text-xl">
+            Lesson Plan Generation
+          </h3>
+
+          <p className="mt-3 text-slate-600">
+            AI creates targeted lesson plans and learning activities.
+          </p>
+        </div>
+
+        {/* Step 5 */}
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-pink-500 to-red-500 flex items-center justify-center text-4xl shadow-xl">
+              🎯
+            </div>
+
+            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+              5
+            </div>
+          </div>
+
+          <h3 className="mt-6 font-bold text-xl">
+            Teaching Intervention
+          </h3>
+
+          <p className="mt-3 text-slate-600">
+            Teachers receive actionable recommendations and support plans.
+          </p>
+        </div>
+
+        {/* Step 6 */}
+        <div className="text-center">
+          <div className="relative inline-flex">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-r from-green-500 to-blue-500 flex items-center justify-center text-4xl shadow-xl">
+              📈
+            </div>
+
+            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+              6
+            </div>
+          </div>
+
+          <h3 className="mt-6 font-bold text-xl">
+            Progress Tracking
+          </h3>
+
+          <p className="mt-3 text-slate-600">
+            Monitor growth and continuously improve learning outcomes.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+{/* Platform Modules */}
+<section className="py-20 px-6 bg-gradient-to-br from-blue-50 via-white to-green-50">
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+  <div className="absolute top-20 left-20 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
+  <div className="absolute bottom-20 right-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl"></div>
+</div>
+  <div className="max-w-7xl mx-auto">
+
+    <div className="text-center mb-14">
+      <div className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-4">
+        Platform Modules
+      </div>
+
+      <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+              Everything in{" "}
+              <span className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 bg-clip-text text-transparent">
+                One Platform
+              </span>
+            </h2>
+
+      <p className="text-slate-600 max-w-3xl mx-auto">
+        APAS combines assessment, learning, analytics, reporting, and engagement
+        tools into a single intelligent education platform.
+      </p>
+    </div>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
+
+{[
+  { icon: "📝", title: "Adaptive Assessment" },
+  { icon: "🏠", title: "Homework Generator" },
+  { icon: "📚", title: "Lesson Planner" },
+  { icon: "🤖", title: "AI Tutor" },
+  { icon: "👨‍👩‍👧", title: "Parent Portal" },
+  { icon: "👩‍🏫", title: "Knowledge Hub" },
+  { icon: "📊", title: "Analytics" },
+  { icon: "📈", title: "Reports" },
+  { icon: "🎯", title: "Risk Predictions" },
+  { icon: "🏆", title: "Gamification" },
+].map((module) => (
+  <div
+    key={module.title}
+    className="group bg-white/90 backdrop-blur-sm border border-blue-100 rounded-3xl p-6 text-center
+               hover:border-green-300 hover:shadow-2xl hover:-translate-y-2
+               transition-all duration-300"
+  >
+    <div
+      className="w-16 h-16 mx-auto mb-4 rounded-2xl
+                 bg-gradient-to-r
+                 flex items-center justify-center text-3xl
+                 shadow-lg group-hover:scale-110 transition-transform"
+    >
+      {module.icon}
+    </div>
+
+    <h3 className="font-bold text-lg text-slate-900 mb-2">
+      {module.title}
+    </h3>
+
+    <div className="w-12 h-1 mx-auto rounded-full bg-gradient-to-r from-blue-500 to-green-500 opacity-70"></div>
+  </div>
+))}
+
+    </div>
+
+  </div>
+</section>
+
+
+
+{/* Expected School Outcomes */}
+<section className="py-24 px-6 bg-gradient-to-br from-blue-50 via-white to-green-50">
+  <div className="max-w-7xl mx-auto">
+
+    <div className="text-center mb-16">
+      <div className="inline-flex items-center px-5 py-2 rounded-full bg-green-100 text-green-700 text-sm font-semibold mb-6">
+        ROI & Outcomes
+      </div>
+
+      <h2 className="text-5xl md:text-5xl font-extrabold tracking-tight">
+        Expected School
+        <span className="block bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+          Outcomes
+        </span>
+      </h2>
+
+      <p className="mt-6 text-lg text-slate-600 max-w-3xl mx-auto">
+        APAS helps schools improve learning effectiveness, reduce teacher workload,
+        and make better academic decisions through actionable intelligence.
+      </p>
+    </div>
+
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+      {/* Learning Gains */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+        <div className="text-5xl mb-4">📈</div>
+        <h3 className="text-xl font-bold mb-3">
+          Improved Learning Gains
+        </h3>
+        <p className="text-slate-600">
+          Identify learning gaps early and support continuous student growth.
+        </p>
+      </div>
+
+      {/* Teacher Productivity */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+        <div className="text-5xl mb-4">👩‍🏫</div>
+        <h3 className="text-xl font-bold mb-3">
+          Better Teacher Productivity
+        </h3>
+        <p className="text-slate-600">
+          Reduce administrative burden and focus more time on teaching.
+        </p>
+      </div>
+
+      {/* Manual Planning */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+        <div className="text-5xl mb-4">📚</div>
+        <h3 className="text-xl font-bold mb-3">
+          Reduced Manual Planning
+        </h3>
+        <p className="text-slate-600">
+          Generate lesson plans, assessments, and learning resources using AI.
+        </p>
+      </div>
+
+      {/* Risk Detection */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h3 className="text-xl font-bold mb-3">
+          Early Risk Detection
+        </h3>
+        <p className="text-slate-600">
+          Detect at-risk learners before academic performance declines.
+        </p>
+      </div>
+
+      {/* Parent Engagement */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+        <div className="text-5xl mb-4">👨‍👩‍👧</div>
+        <h3 className="text-xl font-bold mb-3">
+          Stronger Parent Engagement
+        </h3>
+        <p className="text-slate-600">
+          Improve communication and visibility into student progress.
+        </p>
+      </div>
+
+      {/* Curriculum Coverage */}
+      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
+        <div className="text-5xl mb-4">✅</div>
+        <h3 className="text-xl font-bold mb-3">
+          Better Curriculum Coverage
+        </h3>
+        <p className="text-slate-600">
+          Monitor syllabus completion and ensure curriculum goals are achieved.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+
+{/* Security & Compliance */}
+{/* Enterprise Security */}
+<section className="py-24 px-6 bg-slate-50 relative overflow-hidden">
+  <div className="max-w-7xl mx-auto">
+
+    {/* Header */}
+    <div className="text-center mb-16">
+      <div className="inline-flex items-center px-5 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-semibold mb-6">
+        Enterprise Security
+      </div>
+
+      <h2 className="text-5xl md:text-5xl font-extrabold tracking-tight">
+        Built Securely for
+        <span className="block bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+          Modern Schools
+        </span>
+      </h2>
+
+      <p className="mt-6 text-lg text-slate-600 max-w-3xl mx-auto">
+        APAS is designed with enterprise-grade security, privacy,
+        and access controls to support schools, educators,
+        students, and administrators.
+      </p>
+    </div>
+
+    {/* Security Features */}
+    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+      {/* RBAC */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+        <div className="text-5xl mb-4">🔐</div>
+        <h3 className="text-xl font-bold mb-3">
+          Role-Based Access Control
+        </h3>
+        <p className="text-slate-600">
+          Different permissions for students, teachers,
+          parents, school leaders, and administrators.
+        </p>
+      </div>
+
+      {/* Multi Tenant */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+        <div className="text-5xl mb-4">🏫</div>
+        <h3 className="text-xl font-bold mb-3">
+          Multi-Tenant Architecture
+        </h3>
+        <p className="text-slate-600">
+          Secure separation of school data across multiple
+          institutions and campuses.
+        </p>
+      </div>
+
+      {/* Encryption */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+        <div className="text-5xl mb-4">🛡️</div>
+        <h3 className="text-xl font-bold mb-3">
+          Data Encryption
+        </h3>
+        <p className="text-slate-600">
+          Sensitive information is protected using modern
+          encryption standards.
+        </p>
+      </div>
+
+      {/* Audit Logs */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+        <div className="text-5xl mb-4">📋</div>
+        <h3 className="text-xl font-bold mb-3">
+          Audit Logs
+        </h3>
+        <p className="text-slate-600">
+          Track important actions and maintain accountability
+          across the platform.
+        </p>
+      </div>
+
+      {/* Cloud Hosting */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+        <div className="text-5xl mb-4">☁️</div>
+        <h3 className="text-xl font-bold mb-3">
+          Secure Cloud Hosting
+        </h3>
+        <p className="text-slate-600">
+          Reliable cloud infrastructure designed for scalability,
+          availability, and performance.
+        </p>
+      </div>
+
+      {/* GDPR */}
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+        <div className="text-5xl mb-4">✅</div>
+        <h3 className="text-xl font-bold mb-3">
+          GDPR Ready
+        </h3>
+        <p className="text-slate-600">
+          Privacy-first design aligned with modern data
+          protection principles.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
 
       {/* Testimonials */}
-      <section className="relative py-24 px-6 bg-gradient-to-b from-white via-green-50/30 to-white overflow-hidden">
+{/* <section className="py-24 bg-slate-50">
+  <div className="max-w-5xl mx-auto px-6 text-center">
+
+    <span className="inline-block px-4 py-2 rounded-full bg-green-100 text-green-700 font-semibold text-sm mb-4">
+      🚀 Pilot Ready
+    </span>
+
+    <h2 className="text-4xl font-bold text-slate-900 mb-4">
+      Partnering With Forward-Thinking Schools
+    </h2>
+
+    <p className="text-lg text-slate-600 max-w-3xl mx-auto">
+      APAS is currently working with pilot schools to validate and refine
+      AI-powered assessments, personalized learning pathways, and school-wide analytics.
+    </p>
+
+  </div>
+</section> */}
+     <section className="relative py-24 px-6 bg-gradient-to-b from-white via-green-50/30 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-14">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-100 text-xs font-semibold text-green-700 mb-4">
@@ -833,7 +1600,7 @@ const Landing = () => {
             ))}
           </div>
         </div>
-      </section>
+      </section> 
 
       {/* CTA */}
       <section id="get-started" className="relative py-24 px-6">
