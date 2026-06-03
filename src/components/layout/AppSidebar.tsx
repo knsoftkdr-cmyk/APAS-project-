@@ -41,8 +41,7 @@ const navItems: Array<{
   studentTitle?: string;
   tourId?: string;
 }> = [
-  { title: "Home", icon: LayoutDashboard, path: "/dashboard", tourId: "nav-home" },
-  { title: "Dashboard", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard" },
+  { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard" },
   { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"], module: "Reports" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"], module: "Lesson Plans" },
@@ -51,6 +50,7 @@ const navItems: Array<{
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"], tourId: "nav-academic-tests" },
+  { title: "Homework", icon: LayoutDashboard, path: "/dashboard", tourId: "nav-home" },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification", module: "Gamification" },
   { title: "Leaderboard", icon: Trophy, path: "/leaderboard", roles: ["student"] },
   { title: "Predictions", icon: Brain, path: "/predictions", roles: ["student"], tourId: "nav-predictions", module: "Risk Prediction" },
@@ -85,7 +85,7 @@ const navItems: Array<{
 const getMobileNavItems = (role?: string) => {
   const isStudent = role === "student";
   const items = [
-    { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
+    { title: "Home", icon: LineChart, path: "/student-dashboard" },
     { title: isStudent ? "Assessments" : "Diagnostic", icon: Brain, path: "/diagnostic" },
     ...(!isStudent ? [{ title: "Lesson Plan", icon: BookOpen, path: "/curative" }] : []),
     ...(!isStudent ? [{ title: "Analytics", icon: BarChart3, path: "/analytics" }] : []),

@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -144,12 +145,15 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [submitting, setSubmitting] = useState(false);
   const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
 
-  // Auto-populate student's class from profile on component mount
+  // Auto-populate student's class and section from profile on component mount
   useEffect(() => {
     if (profile?.class_grade && !studentClass) {
       setStudentClass(profile.class_grade);
     }
-  }, [profile?.class_grade, studentClass]);
+    if (profile?.section && !section) {
+      setSection(profile.section);
+    }
+  }, [profile?.class_grade, profile?.section]);
 
   useEffect(() => {
     const fetchTeachers = async () => {
@@ -411,8 +415,8 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
               <div className="space-y-2">
                 <Label>Class</Label>
-                <Select value={studentClass} onValueChange={setStudentClass}>
-                  <SelectTrigger><SelectValue placeholder="Select your class" /></SelectTrigger>
+                <Select value={studentClass} onValueChange={setStudentClass} disabled={!!profile?.class_grade}>
+                  <SelectTrigger className={!!profile?.class_grade ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select your class" /></SelectTrigger>
                   <SelectContent>
                     {CLASS_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
@@ -427,6 +431,9 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                   placeholder="Enter your section (e.g., A, B, C)"
                   value={section}
                   onChange={(e) => setSection(e.target.value)}
+                  readOnly={!!profile?.section}
+                  disabled={!!profile?.section}
+                  className={!!profile?.section ? "bg-muted cursor-not-allowed" : ""}
                 />
               </div>
 

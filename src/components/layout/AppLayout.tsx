@@ -5,7 +5,8 @@ import { AppHeader } from "./AppHeader";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Dashboard — APAS",
+  "/dashboard": "Homework — APAS",
+  "/student-dashboard": "Home — APAS",
   "/diagnostic": "Assessments — APAS",
   "/curative": "Curative Phase — APAS",
   "/analytics": "Learning Analytics & Insights — APAS",

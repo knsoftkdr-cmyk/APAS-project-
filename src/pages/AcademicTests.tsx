@@ -102,12 +102,15 @@ export default function AcademicTests() {
   const [timerActive, setTimerActive] = useState(false);
   const [reviewTest, setReviewTest] = useState<any>(null);
 
-  // Auto-populate student's class from profile on component mount
+  // Auto-populate student's class and section from profile on component mount
   useEffect(() => {
     if (profile?.class_grade && !studentClass) {
       setStudentClass(profile.class_grade);
     }
-  }, [profile?.class_grade, studentClass]);
+    if (profile?.section && !section) {
+      setSection(profile.section);
+    }
+  }, [profile?.class_grade, profile?.section]);
 
   // Live timer
   useEffect(() => {
@@ -312,8 +315,8 @@ export default function AcademicTests() {
               {/* Class */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Class <span className="text-red-500">*</span></label>
-                <Select value={studentClass} onValueChange={handleClassChange}>
-                  <SelectTrigger><SelectValue placeholder="Select Class" /></SelectTrigger>
+                <Select value={studentClass} onValueChange={handleClassChange} disabled={!!profile?.class_grade}>
+                  <SelectTrigger className={!!profile?.class_grade ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Class" /></SelectTrigger>
                   <SelectContent>
                     {CLASS_OPTIONS.map((c) => (
                       <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
@@ -325,8 +328,8 @@ export default function AcademicTests() {
               {/* Section */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Section</label>
-                <Select value={section} onValueChange={setSection}>
-                  <SelectTrigger><SelectValue placeholder="Select Section (Optional)" /></SelectTrigger>
+                <Select value={section} onValueChange={setSection} disabled={!!profile?.section}>
+                  <SelectTrigger className={!!profile?.section ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Section (Optional)" /></SelectTrigger>
                   <SelectContent>
                     {SECTION_OPTIONS.map((s) => (
                       <SelectItem key={s} value={s}>Section {s}</SelectItem>
