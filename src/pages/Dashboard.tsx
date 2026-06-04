@@ -795,9 +795,7 @@ const AdminHome = () => {
 const Dashboard = () => {
   const { profile } = useAuth();
 
-  if (profile?.role === "hod") {
-    return <Navigate to="/hod-dashboard" replace />;
-  }
+
   if (profile?.role === "parent") {
     return <Navigate to="/parent-dashboard" replace />;
   }

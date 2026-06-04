@@ -50,7 +50,7 @@ const Analytics = () => {
   const [classLoading, setClassLoading] = useState(false);
 
   const isAuthorized =
-    profile?.role === "teacher" || profile?.role === "admin" || profile?.role === "school_admin";
+    profile?.role === "teacher" || profile?.role === "admin" || profile?.role === "school_admin" || profile?.role === "hod" || profile?.role === "principal";
 
   const getClassLabel = (val: string) =>
     CLASS_OPTIONS.find((c) => c.value === val)?.label || val;

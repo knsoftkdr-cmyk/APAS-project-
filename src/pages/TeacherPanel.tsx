@@ -60,7 +60,7 @@ const TeacherPanel = () => {
         .select("id, student_name, student_age, age_group, responses, created_at, student_class, section");
 
       // Admins and School Admins/Principals see all assessments; teachers see only their own
-      if (profile?.role !== "admin" && profile?.role !== "school_admin") {
+      if (!["admin", "school_admin", "hod", "principal"].includes(profile?.role || "")) {
         query = query.eq("teacher_id", user!.id);
       }
 
@@ -69,7 +69,7 @@ const TeacherPanel = () => {
       if (error) throw error;
       return (data as any[]) as StudentAssessment[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!profile?.role,
   });
 
   // Derive unique sections from data for the selected class
@@ -234,7 +234,7 @@ const TeacherPanel = () => {
                   <p className="text-muted-foreground max-w-md">
                     {assessments && assessments.length > 0
                       ? "No students match the selected filters. Try changing the class or section."
-                      : "Student assessment data will appear here once students complete their assessments and select you as their teacher."}
+                      : "No assessments found for the selected filters."}
                   </p>
                 </div>
               ) : (

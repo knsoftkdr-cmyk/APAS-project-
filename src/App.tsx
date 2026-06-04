@@ -88,11 +88,11 @@ export default function App() {
                       <Route path="/" element={<Landing />} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                      <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/teacher" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin"]}><TeacherPanel /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
-                      <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin"]}><Analytics /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin"]}><Curative /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Curative /></RoleGuard></ProtectedRoute>} />
                       <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                       <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin"]}><Alerts /></RoleGuard></ProtectedRoute>} />
