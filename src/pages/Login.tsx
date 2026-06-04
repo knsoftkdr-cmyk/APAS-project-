@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, User, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,9 +14,19 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [isStudentLogin, setIsStudentLogin] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  useEffect(() => {
+  const savedIdentifier = localStorage.getItem("rememberedIdentifier");
+
+  if (savedIdentifier) {
+    setIdentifier(savedIdentifier);
+    setRememberMe(true);
+  }
+}, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +64,11 @@ const Login = () => {
         email: data.session.user.email,
         role: "student",
       });
-
+if (rememberMe) {
+  localStorage.setItem("rememberedIdentifier", identifier);
+} else {
+  localStorage.removeItem("rememberedIdentifier");
+}
       navigate("/student-dashboard");
       setLoading(false);
       return;
@@ -106,47 +121,47 @@ const Login = () => {
 
   return (
 <div
-      className="min-h-screen flex items-center justify-end pr-20"
-      style={{
-        backgroundImage: "url('/classroom-bg.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* 2. ADD THIS LOGO CODE HERE */}
-    <div className="absolute top-8 left-8 z-50">
-      <img 
-        src={knsoftLogo} 
-        alt="KNSOFT Logo" 
-        className="h-20 w-auto object-contain" 
-      />
-    </div>
-      <div
-        className="
-          relative
-          w-[470px]
-         bg-violet-50/70
-          backdrop-blur-xl
-          rounded-[32px]
-          p-10
-          border border-white/50
-          shadow-[0_30px_100px_rgba(0,0,0,0.15)]
-        "
-      >
-        
-        <div className="text-center mb-8">
-          <img src={apasLogo} alt="APAS Logo" className="h-24 mx-auto mb-5" />
-          <h2
-            className="text-5xl font-bold text-slate-800"
-            style={{ fontFamily: "'DM Serif Display', serif" }}
-          >
-            Welcome Back 👋
-          </h2>
-          <p className="mt-3 text-slate-500">
-            Sign in to continue your learning journey
-          </p>
-        </div>
+              className="min-h-screen flex items-center justify-end pr-20"
+              style={{
+                backgroundImage: "url('/classroom-bg.jpg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+                backgroundRepeat: "no-repeat",
+              }}
+            >
+            {/* 2. ADD THIS LOGO CODE HERE */}
+           <div className="absolute top-8 left-8 z-50">
+            <img 
+              src={knsoftLogo} 
+              alt="KNSOFT Logo" 
+              className="h-12 w-auto object-contain" 
+            />
+           </div>
+            <div
+              className="
+                relative
+                w-[470px]
+              bg-violet-50/70
+                backdrop-blur-xl
+                rounded-[32px]
+                p-10
+                border border-white/50
+                shadow-[0_30px_100px_rgba(0,0,0,0.15)]
+              "
+            >
+              
+              <div className="text-center mb-8">
+                <img src={apasLogo} alt="APAS Logo" className="h-24 mx-auto mb-5" />
+                <h2
+                  className="text-5xl font-bold text-slate-800"
+                  style={{ fontFamily: "'DM Serif Display', serif" }}
+                >
+                  Welcome Back 👋
+                </h2>
+                <p className="mt-3 text-slate-500">
+                  Sign in to continue your learning journey
+                </p>
+              </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -195,6 +210,21 @@ const Login = () => {
                 </button>
               </div>
 
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="accent-[#2563EB]"
+                    />
+                    <span className="text-sm text-slate-600">
+                      Remember Me
+                    </span>
+                  </label>
+                </div>
+
+
               {!isStudentLogin && (
                 <div className="pt-1">
                   <Link
@@ -220,11 +250,11 @@ const Login = () => {
             <p className="mt-8 text-sm text-[#2C3E50]/70">
               Don't have an account?{" "}
               <Link to="/register" className="font-semibold text-[#2563EB] hover:underline">
-                Create one
+                Create Account
               </Link>
             </p>
           </div>
-        </div>
+</div>      
   );
 };
 

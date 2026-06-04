@@ -121,10 +121,11 @@ const Landing = () => {
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
             <a href="#home" className="hover:text-blue-600 transition-colors">Home</a>
             <a href="#about" className="hover:text-blue-600 transition-colors">About</a>
-            <a href="#features" className="hover:text-blue-600 transition-colors">Features</a>
-            <a href="#students" className="hover:text-blue-600 transition-colors">Students</a>
-            <a href="#faculty" className="hover:text-blue-600 transition-colors">Faculty</a>
-            <a href="#how" className="hover:text-blue-600 transition-colors">How it works</a>
+            <a href="#platform" className="hover:text-blue-600 transition-colors">Platform</a>
+            <a href="#solutions" className="hover:text-blue-600 transition-colors">Solutions</a>
+            <a href="#aifeatures" className="hover:text-blue-600 transition-colors">AI Features</a>
+            <a href="#schools" className="hover:text-blue-600 transition-colors">Schools</a>
+            <a href="#resources" className="hover:text-blue-600 transition-colors">Resources</a>
             <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
 
@@ -149,6 +150,7 @@ const Landing = () => {
             <a href="#students" onClick={() => setMenuOpen(false)} className="block">Students</a>
             <a href="#faculty" onClick={() => setMenuOpen(false)} className="block">Faculty</a>
             <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
+            <a href="#analytics" onClick={() => setMenuOpen(false)} className="block">Analytics</a>
             <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
             <Link to="/login" className="block">
               <Button className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-full">
@@ -383,7 +385,7 @@ const Landing = () => {
       </section>
 
 {/* Who Uses APAS */}
-<section id="features" className="py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50">
+<section id="platform" className="py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50">
   <div className="max-w-7xl mx-auto">
 
     <div className="text-center mb-14">
@@ -458,7 +460,7 @@ const Landing = () => {
 
 
 {/* APAS AI Suite */}
-<section className="relative py-20 px-6 bg-white overflow-hidden">
+<section id = "aifeatures" className="relative py-20 px-6 bg-white overflow-hidden">
   <div className="max-w-7xl mx-auto">
     {/* Background AI Robot */}
     <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
@@ -729,7 +731,7 @@ const Landing = () => {
       </section>
 */}
       {/* SECTION 3 — Student Experience */}
-      <section id="students" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white overflow-hidden">
+      <section id="solutions" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-900 mb-4">
@@ -879,7 +881,7 @@ const Landing = () => {
       </section>
 
       {/* SECTION 4 — Faculty & Analytics */}
-      <section id="faculty" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white">
+      <section id="schools" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white">
         <div className="max-w-7xl mx-auto">
           <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 mb-4">
@@ -994,7 +996,7 @@ const Landing = () => {
 
 
 {/* School Intelligence Dashboard */}
-<section className="relative py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50 overflow-hidden">
+<section id="analytics" className="relative py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50 overflow-hidden">
   <div className="max-w-7xl mx-auto">
     {/* Background School */}
     <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
@@ -1100,7 +1102,7 @@ const Landing = () => {
 
 
 {/* APAS Workflow */}
-<section id="how" className="py-24 px-6 bg-white">
+<section id="resources" className="py-24 px-6 bg-white">
   <div className="max-w-7xl mx-auto">
 
     {/* Heading */}
@@ -1263,7 +1265,7 @@ const Landing = () => {
 
 
 {/* Platform Modules */}
-<section className="py-20 px-6 bg-gradient-to-br from-blue-50 via-white to-green-50">
+<section className="py-20 px-6 bg-gradient-to-br from-blue-100 via-white to-green-100">
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
   <div className="absolute top-20 left-20 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
   <div className="absolute bottom-20 right-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl"></div>
@@ -1655,7 +1657,7 @@ const Landing = () => {
 
       {/* Footer */}
       <footer id="contact" className="border-t border-blue-100 bg-[#EAF1FB] px-6 py-12">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-8 text-sm">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-6 gap-8 text-sm">
           <div>
             <div className="flex items-center">
   <img src={apasLogo} alt="APAS Logo" className="h-10 w-auto object-contain" />
@@ -1667,8 +1669,12 @@ const Landing = () => {
           <div>
             <div className="font-semibold mb-3">Product</div>
             <ul className="space-y-2 text-slate-500">
-              <li><a href="#features" className="hover:text-blue-600">Features</a></li>
+              <li><a href="#platform" className="hover:text-blue-600">Features</a></li>
+              <li><a href="#aifeatures" className="hover:text-blue-600">Diagnostics</a></li>
               <li><a href="#analytics" className="hover:text-blue-600">Analytics</a></li>
+              <li><a href="#resources" className="hover:text-blue-600">Lesson Planning</a></li>
+              <li>AI Tutor</li>
+              <li>Knowledge Hub</li>
               <li><Link to="/login" className="hover:text-blue-600">Sign In</Link></li>
             </ul>
           </div>
@@ -1679,9 +1685,37 @@ const Landing = () => {
               <li><a href="#contact" className="hover:text-blue-600">Contact</a></li>
             </ul>
           </div>
+          
+          <div>
+            <div className="font-semibold mb-3">Solutions</div>
+            <ul className="space-y-2 text-slate-500">
+              <li>Schools</li>
+              <li>School Groups</li>
+              <li>International Schools</li>
+              <li>Coaching Institues</li>
+            </ul>
+          </div>
+
+          <div>
+            <div className="font-semibold mb-3">Resources</div>
+            <ul className="space-y-2 text-slate-500">
+              <li>Documentaion</li>
+              <li>Case Studies</li>
+              <li>Support</li>
+              <li>Blogs</li>
+            </ul>
+          </div>
+
           <div>
             <div className="font-semibold mb-3">Contact</div>
-            <p className="text-slate-500">hello@apas.ai</p>
+<a
+  href="https://mail.google.com/mail/?view=cm&fs=1&to=info@apaslearning.com"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="text-slate-500 hover:text-white transition"
+>
+  info@apaslearning.com
+</a>
           </div>
         </div>
         <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-slate-200 text-xs text-slate-400 text-center">
