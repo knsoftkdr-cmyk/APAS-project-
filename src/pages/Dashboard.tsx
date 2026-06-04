@@ -5,7 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { GettingStartedBanner } from "@/components/GettingStartedBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
-import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText, BarChart3, ArrowRight, Sparkles, GraduationCap, Lightbulb, LineChart, PenLine } from "lucide-react";
+import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText, BarChart3, ArrowRight, Sparkles, GraduationCap, Lightbulb, LineChart, PenLine, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentReport } from "@/components/StudentReport";
@@ -162,87 +162,6 @@ const StudentDashboard = () => {
     className="absolute right-10 bottom-[-15px] h-[350px] object-contain"
   />
 </div>
-
-      {assessmentLoading ? (
-        <LoadingSpinner className="mb-6" />
-      ) : myAssessment && reportConfig && scores ? (
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-foreground">Your Assessment Results</h2>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => setReportOpen(true)} className="gap-1.5">
-                <FileText className="h-4 w-4" /> View Full Report
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setShowReport(!showReport)}>
-                {showReport ? "Hide Details" : "Show Details"}
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <Card className="bg-emerald-50 border-emerald-200">
-              <CardContent className="p-3 text-center">
-                <TrendingUp className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                <div className="text-2xl font-bold text-emerald-700">
-                  {scores.filter(s => s.level === "High").length}
-                </div>
-                <div className="text-xs text-emerald-600">Strong Areas</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-amber-50 border-amber-200">
-              <CardContent className="p-3 text-center">
-                <Brain className="h-5 w-5 text-amber-600 mx-auto mb-1" />
-                <div className="text-2xl font-bold text-amber-700">
-                  {scores.filter(s => s.level === "Moderate").length}
-                </div>
-                <div className="text-xs text-amber-600">Moderate Areas</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-3 text-center">
-                <AlertTriangle className="h-5 w-5 text-red-500 mx-auto mb-1" />
-                <div className="text-2xl font-bold text-red-600">
-                  {scores.filter(s => s.level === "Developing").length}
-                </div>
-                <div className="text-xs text-red-500">Needs Attention</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {showReport && (
-            <div className="space-y-3 animate-fade-in">
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {reportConfig.theories.map((theory) => (
-                  <Badge key={theory} className="bg-primary/10 text-primary border-primary/20 text-xs">
-                    {theory}
-                  </Badge>
-                ))}
-              </div>
-              {scores.map((score, index) => (
-                <Card key={index}>
-                  <CardHeader className="pb-2 pt-4 px-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <CardTitle className="text-sm font-semibold">{score.dimension}</CardTitle>
-                        <p className="text-xs text-muted-foreground mt-0.5">{score.theory}</p>
-                      </div>
-                      <Badge className={`${getLevelColor(score.level)} text-xs`}>{score.level}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="px-4 pb-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Progress value={score.percentage} className={`h-2 flex-1 ${getProgressColor(score.percentage)}`} />
-                      <span className="text-sm font-semibold text-foreground w-12 text-right">{score.percentage}%</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-1">{score.description}</p>
-                    <p className="text-xs text-foreground/80 leading-relaxed">{score.interpretation}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      ) : null}
 
       <div className="mb-6">
         <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
