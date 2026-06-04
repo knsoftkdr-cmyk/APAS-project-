@@ -1709,10 +1709,8 @@ const Landing = () => {
           <div>
             <div className="font-semibold mb-3">Contact</div>
 <a
-  href="https://mail.google.com/mail/?view=cm&fs=1&to=info@apaslearning.com"
-  target="_blank"
-  rel="noopener noreferrer"
-  className="text-slate-500 hover:text-white transition"
+  href="mailto:info@apaslearning.com"
+  className="text-blue-600 hover:text-green-600"
 >
   info@apaslearning.com
 </a>
