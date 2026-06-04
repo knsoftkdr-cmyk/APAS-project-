@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +38,7 @@ import {
   ArrowRight,
   Target,
   Sparkles,
+  Lightbulb,
 } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { ProfileCompletionBar } from "@/components/onboarding/ProfileCompletionBar";
@@ -51,6 +52,7 @@ const COMPLETION_COLORS = {
 
 export default function StudentDashboard() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const { percent: profilePct, missing: profileMissing } = useProfileCompletion();
 
   // ── Homework assignments + own submissions
@@ -221,6 +223,31 @@ export default function StudentDashboard() {
 </div>
 
       <ProfileCompletionBar percent={profilePct} missing={profileMissing} />
+
+      {/* Diagnostic Assessment CTA */}
+      <Card className="mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent hover:border-primary/40 transition-all">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="rounded-lg bg-primary/10 p-3">
+                <Lightbulb className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Write Your Diagnostic Assessment</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Take the diagnostic test to help us understand your learning needs better
+                </p>
+              </div>
+            </div>
+            <Button 
+              onClick={() => navigate("/diagnostic")}
+              className="flex-shrink-0"
+            >
+              Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Top row: KPI strip */}
       <div className="grid gap-4 md:grid-cols-4 mb-6">
