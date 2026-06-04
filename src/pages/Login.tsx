@@ -12,7 +12,7 @@ import knsoftLogo from "@/assets/knsoft-logo.png";
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
-  const [isStudentLogin, setIsStudentLogin] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("Student");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -32,7 +32,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (isStudentLogin) {
+    if (selectedRole === "Student") {
       const { data, error } = await supabase.functions.invoke("student-login", {
         body: { studentId: identifier, password },
       });
@@ -95,6 +95,27 @@ if (rememberMe) {
 
     const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
     const role = profileData?.role;
+    const roleMap: Record<string, string> = {
+          Student: "student",
+          Parent: "parent",
+          Teacher: "teacher",
+          Admin: "admin",
+          Principal: "principal",
+          "School Admin": "school_admin",
+          "KNSOFT Admin": "knsoft_admin",
+        };
+
+if (role !== roleMap[selectedRole]) {
+  toast({
+    title: "Role mismatch",
+    description: `This account is not registered as ${selectedRole}.`,
+    variant: "destructive",
+  });
+
+  await supabase.auth.signOut();
+  setLoading(false);
+  return;
+}
 
     // ✅ Record staff login history with role
     await supabase.from("login_history").insert({
@@ -119,16 +140,17 @@ if (rememberMe) {
     setLoading(false);
   };
 
-  return (
-<div
-              className="min-h-screen flex items-center justify-end pr-20"
-              style={{
-                backgroundImage: "url('/classroom-bg.jpg')",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-                backgroundRepeat: "no-repeat",
-              }}
-            >
+return (
+<>
+<section
+  className="min-h-screen flex items-center justify-end pr-20"
+  style={{
+    backgroundImage: "url('/classroom-bg.jpg')",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+>
             {/* 2. ADD THIS LOGO CODE HERE */}
            <div className="absolute top-8 left-8 z-50">
             <img 
@@ -164,23 +186,36 @@ if (rememberMe) {
               </div>
 
             <form onSubmit={handleLogin} className="space-y-4">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isStudentLogin}
-                  onChange={(e) => { setIsStudentLogin(e.target.checked); setIdentifier(""); }}
-                  className="rounded border-border accent-[#2563EB]"
-                />
-                <span className="text-sm font-medium text-[#2C3E50]">I am a Student</span>
-              </label>
+<div>
+  <label className="block mb-2 text-sm font-medium text-[#2C3E50]">
+    Select Role
+  </label>
+
+  <select
+    value={selectedRole}
+    onChange={(e) => {
+      setSelectedRole(e.target.value);
+      setIdentifier("");
+    }}
+    className="w-full h-12 px-4 rounded-md bg-[#F5F8FC] border border-gray-200 text-[#2C3E50]"
+  >
+    <option>Student</option>
+    <option>Parent</option>
+    <option>Teacher</option>
+    <option>Admin</option>
+    <option>Master User</option>
+    <option>Super Admin</option>
+    <option>KNSOFT Admin</option>
+  </select>
+</div>
 
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
                   <User className="h-4 w-4 text-[#2C3E50]/60" />
                 </div>
                 <input
-                  type={isStudentLogin ? "text" : "email"}
-                  placeholder={isStudentLogin ? "Student ID" : "Username or Email"}
+                  type={selectedRole === "Student" ? "text" : "email"}
+                  placeholder={selectedRole === "Student" ? "Student ID" : "Username or Email"}
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
@@ -225,7 +260,7 @@ if (rememberMe) {
                 </div>
 
 
-              {!isStudentLogin && (
+              {selectedRole !== "Student" && (
                 <div className="pt-1">
                   <Link
                     to="/forgot-password"
@@ -254,7 +289,46 @@ if (rememberMe) {
               </Link>
             </p>
           </div>
-</div>      
+</section>
+
+<section className="bg-gradient-to-br from-blue-100 via-white to-green-70 py-24">
+  <div className="max-w-6xl mx-auto px-6 text-center">
+
+    <h2 className="text-3xl font-bold text-slate-800">
+      © 2026 APAS
+    </h2>
+
+    <p className="mt-3 text-lg text-slate-700">
+      Adaptive Pedagogy & Analytics System
+    </p>
+
+    <p className="mt-2 text-slate-600">
+      Powered by KNSOFT Technologies
+    </p>
+
+    <div className="mt-8 flex justify-center gap-6">
+
+      <a href="#" className="text-blue-700 hover:underline">
+        Privacy Policy
+      </a>
+
+      <a href="#" className="text-blue-700 hover:underline">
+        Terms
+      </a>
+
+      <a
+        href="mailto:info@apaslearning.com"
+        className="text-blue-700 hover:underline"
+      >
+        Support
+      </a>
+
+    </div>
+
+  </div>
+</section>
+
+</>  
   );
 };
 
