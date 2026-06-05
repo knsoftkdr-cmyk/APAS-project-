@@ -122,8 +122,9 @@ const handleLogin = async (e: React.FormEvent) => {
           {/* LEFT SIDE */}
           <div className="hidden md:flex relative min-h-[900px] overflow-hidden">
 
-            {/* Purple Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600" />
+            {/* blue Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700" />
+
 {/* Decorative Circles */}
 
 <div className="absolute top-12 left-24 w-14 h-14 rounded-full border border-white/20" />
