@@ -519,18 +519,16 @@ const AdminHome = () => {
   <div className="relative px-8 py-12 md:py-16 min-h-[300px]">
 
     {/* Background Gradient */}
-    <div
-      className="absolute inset-0 bg-gradient-to-r
-      from-[#EDE9FE]
-      via-[#DDD6FE]
-      to-[#C4B5FD]"
-    />
-
+<div
+  className="absolute inset-0 bg-gradient-to-r
+  from-[#2563EB]/80
+  to-[#60A5FA]/100"
+/>
     {/* Decorative Circles */}
     <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
     <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
     <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
-
+<div className="hidden md:block">
     {/* Stars */}
     <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
     <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
@@ -547,12 +545,13 @@ const AdminHome = () => {
     <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
 
     <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-
+</div>
     {/* Banner Image */}
     <img
       src={teacherhomebanner}
       alt="Teacher Home Dashboard"
-      className="absolute right-8 bottom-0 h-[320px] object-contain z-10"
+      /* className="absolute right-8 bottom-0 h-[320px] object-contain z-10" */
+      className="hidden md:block absolute right-0 bottom-0 w-[500px] z-10"
     />
 
     {/* Content */}
@@ -561,11 +560,11 @@ const AdminHome = () => {
         Welcome, {profile?.full_name || "Master User"}
       </h1>
 
-      <p className="text-base text-slate-1000 mb-2">
+      <p className="text-bold text-slate-900 mb-2">
         {today}
       </p>
 
-      <p className="text-lg text-slate-600 leading-relaxed max-w-xl">
+      <p className="text-lg text-slate-800 leading-relaxed max-w-xl">
         APAS (Adaptive Pedagogy & Analytics System) is a futuristic AI
         Operating System designed to personalise learning at scale. As an
         admin, you oversee classes, teachers, students, diagnostics, and
