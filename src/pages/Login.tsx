@@ -157,7 +157,7 @@ return (
             <img 
               src={knsoftLogo} 
               alt="KNSOFT Logo" 
-              className="h-12 w-auto object-contain" 
+              className="h-10 w-auto object-contain" 
             />
            </div>
             <div
@@ -176,7 +176,13 @@ return (
               <div className="text-center mb-8">
                 <img src={apasLogo} alt="APAS Logo" className="h-24 mx-auto mb-5" />
                 <h2
-                  className="text-5xl font-bold text-slate-800"
+                  className="text-1xl font-light text-slate-800"
+                  style={{ fontFamily: "'DM Serif Display', serif" }}
+                >
+                  Adaptive Pedagogy & Analytics System
+                </h2>
+                <h2
+                  className="text-2xl font-light text-slate-700"
                   style={{ fontFamily: "'DM Serif Display', serif" }}
                 >
                   Welcome Back 👋
@@ -206,7 +212,6 @@ return (
     <option>Admin</option>
     <option>HOD</option>
     <option>School Admin</option>
-    <option>KNSOFT Admin</option>
   </select>
 </div>
 
@@ -283,13 +288,27 @@ return (
               </div>
             </form>
 
-            <p className="mt-8 text-sm text-[#2C3E50]/70">
-              Don't have an account?{" "}
-              <Link to="/register" className="font-semibold text-[#2563EB] hover:underline">
-                Create Account
-              </Link>
-            </p>
-          </div>
+<div className="mt-8 text-center">
+  <p className="text-sm text-[#2C3E50]/70">
+    Need access?{" "}
+    <a
+      href="mailto:info@apaslearning.com"
+      className="font-semibold text-[#2563EB] hover:underline"
+    >
+      Contact your administrator
+    </a>
+  </p>
+</div>
+
+<div className="mt-4 text-center border-t pt-4">
+  <Link
+    to="/register"
+    className="text-sm font-semibold text-blue-600 hover:text-blue-700 hover:underline"
+  >
+    KNSOFT Administrator? Access Portal →
+  </Link>
+</div>
+</div>
 </section>
 
 <section className="bg-gradient-to-br from-blue-100 via-white to-green-70 py-24">
@@ -304,7 +323,7 @@ return (
     </p>
 
     <p className="mt-2 text-slate-600">
-      Powered by KNSOFT Technologies
+      Powered by KNSOFT TECHNOLOGIES
     </p>
 
     <div className="mt-8 flex justify-center gap-6">

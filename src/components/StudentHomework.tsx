@@ -511,7 +511,7 @@ const StudentHomework = () => {
                     {/* Start Button */}
                     <Button
                       onClick={() => handleStartHomework(assignment.id)}
-                      className="w-full gap-2 bg-primary hover:bg-primary/90"
+                      className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
                     >
                       <Play className="h-4 w-4" /> Start Homework
                     </Button>
@@ -602,14 +602,14 @@ const StudentHomework = () => {
         <Button
           variant={!showAllQuestions ? "default" : "outline"}
           onClick={() => setShowAllQuestions(false)}
-          className="flex-1"
+          className="flex-1 bg-blue-500 hover:bg-blue-700 text-white"
         >
           One at a Time
         </Button>
         <Button
           variant={showAllQuestions ? "default" : "outline"}
           onClick={() => setShowAllQuestions(true)}
-          className="flex-1"
+          className="flex-1 bg-blue-500 hover:bg-blue-700 text-white"
         >
           All Questions
         </Button>
@@ -669,7 +669,7 @@ const StudentHomework = () => {
               <Button
                 onClick={() => setCurrentQuestionIndex((q) => Math.min(questionsArray.length - 1, q + 1))}
                 disabled={currentQuestionIndex === questionsArray.length - 1}
-                className="gap-2"
+                className="gap-2 flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
               >
                 Next <ChevronRight className="h-4 w-4" />
               </Button>

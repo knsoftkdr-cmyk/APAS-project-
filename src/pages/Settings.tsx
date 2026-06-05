@@ -338,7 +338,7 @@ const SettingsPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-300 p-8 relative min-h-[220px]">
 
           <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
@@ -373,7 +373,7 @@ const SettingsPage = () => {
           <img
             src={settingsBanner}
             alt="Settings Banner"
-            className="absolute right-10 bottom-5 h-[120px]"
+            className="hidden md:block absolute right-10 bottom-6 w-32"
           />
         </div>
 

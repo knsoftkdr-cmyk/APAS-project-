@@ -239,15 +239,30 @@ export default function StudentDashboard() {
 
   return (
     <AppLayout>
-<div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#D8B4FE] via-[#C4B5FD] to-[#A5B4FC] p-8 text-slate-800 relative min-h-[320px]">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
 
   {/* Decorative circles */}
   <div className="absolute top-8 right-20 w-16 h-16 rounded-full border border-white/40"></div>
-  <div className="absolute bottom-10 right-40 w-10 h-10 rounded-full border border-white/40"></div>
-  <div className="absolute top-20 left-[45%] w-8 h-8 rounded-full border border-white/30"></div>
+  <div className="absolute bottom-10 right-40 w-10 h-10 rounded-full border border-white/60"></div>
+  <div className="absolute top-20 left-[45%] w-8 h-8 rounded-full border border-white/60"></div>
+
+          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+
+<div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+
+          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+
+          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
 
   <div className="max-w-xl">
-    <h1 className="text-5xl font-bold">
+    <h1 className="text-4xl font-bold">
       Welcome Back, {firstName} 👋
     </h1>
 
@@ -259,7 +274,8 @@ export default function StudentDashboard() {
   <img
     src={studentBanner}
     alt="Student Learning"
-    className="absolute right-10 bottom-[-15px] h-[340px] object-contain"
+    /* className="absolute right-10 bottom-[-15px] h-[340px] object-contain" */
+    className="hidden md:block absolute right-10 bottom-3 w-80"
   />
 </div>
 
@@ -270,9 +286,11 @@ export default function StudentDashboard() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <Lightbulb className="h-6 w-6 text-primary" />
-              </div>
+              
+                <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                  <Lightbulb className="h-6 w-6" />
+                </div>
+              
               <div>
                 <h3 className="font-semibold text-foreground">Write Your Diagnostic Assessment</h3>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -282,7 +300,7 @@ export default function StudentDashboard() {
             </div>
             <Button 
               onClick={() => navigate("/diagnostic")}
-              className="flex-shrink-0"
+              className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
             >
               Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

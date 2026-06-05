@@ -15,7 +15,9 @@ export function ProfileCompletionBar({ percent, missing }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3 min-w-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Sparkles className="h-4 w-4" />
+            <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
+              <Sparkles className="h-5 w-5" />
+            </div>
           </div>
           <div className="min-w-0">
             <p className="text-sm font-medium text-foreground">
@@ -29,7 +31,7 @@ export function ProfileCompletionBar({ percent, missing }: Props) {
         </div>
         <div className="flex items-center gap-3 sm:w-72">
           <Progress value={percent} className="h-2 flex-1" />
-          <Button size="sm" asChild>
+          <Button size="sm" className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white" asChild>
             <Link to="/settings">
               Complete <ArrowRight className="ml-1 h-3 w-3" />
             </Link>
