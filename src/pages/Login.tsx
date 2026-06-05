@@ -102,6 +102,7 @@ if (rememberMe) {
           Admin: "admin",
           Principal: "principal",
           "School Admin": "school_admin",
+          HOD: "hod",
           "KNSOFT Admin": "knsoft_admin",
         };
 
@@ -203,8 +204,8 @@ return (
     <option>Parent</option>
     <option>Teacher</option>
     <option>Admin</option>
-    <option>Master User</option>
-    <option>Super Admin</option>
+    <option>HOD</option>
+    <option>School Admin</option>
     <option>KNSOFT Admin</option>
   </select>
 </div>

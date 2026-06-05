@@ -62,6 +62,7 @@ const navItems: Array<{
   { title: "Security Center", icon: Lock, path: "/security", roles: ["admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin"] },
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
+  { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"] },
   { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"] },
   { title: "Reports", icon: Users, path: "/teacher", roles: ["principal", "hod"] },
   { title: "Assessments", icon: Brain, path: "/diagnostic", roles: ["principal", "hod"] },
