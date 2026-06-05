@@ -329,13 +329,14 @@ const Analytics = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-[#EDE9FE] via-[#DDD6FE] to-[#C4B5FD] p-8 relative min-h-[220px]">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
 
           <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+<div className="hidden md:block">
+          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
           <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
           <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
           
@@ -349,7 +350,7 @@ const Analytics = () => {
           <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
 
           <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-
+</div>
 
           <div className="max-w-xl">
             <h1 className="text-4xl font-bold text-slate-900">
@@ -364,7 +365,8 @@ const Analytics = () => {
           <img
             src={analyticsBanner}
             alt="Analytics Banner"
-            className="absolute right-10 bottom-6 h-[160px]"
+            /* className="absolute right-10 bottom-6 h-[160px]" */
+            className="hidden md:block absolute right-5 bottom-3 w-[180px]"
           />
         </div>
 
