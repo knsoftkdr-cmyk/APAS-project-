@@ -63,6 +63,7 @@ const Analytics = () => {
         .from("homework_assignments")
         .select("*")
         .eq("assignment_type", "at-home")
+        .eq("assigned_by", user!.id)
         .eq("class_level", selectedClass)
         .eq("section", selectedSection.toUpperCase())
         .order("assigned_at", { ascending: false });
@@ -73,31 +74,20 @@ const Analytics = () => {
   const assignmentIds = useMemo(() => assignments.map((a: any) => a.id), [assignments]);
 
   const { data: roster = [] } = useQuery({
-    queryKey: ["analytics-roster", selectedClass, selectedSection, assignmentIds.join(",")],
-    enabled: !!selectedClass && !!selectedSection && isAuthorized,
+    queryKey: ["analytics-roster", selectedClass, selectedSection, profile?.school_id],
+    enabled: !!selectedClass && !!selectedSection && isAuthorized && !!profile?.school_id,
     queryFn: async () => {
-      const map = new Map<string, { student_id: string | null; student_name: string }>();
-      const { data: assessRows } = await supabase
-        .from("student_assessments")
-        .select("student_name, submitted_by, student_class, section")
-        .eq("student_class", selectedClass)
+      const { data: profileStudents } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("role", "student")
+        .eq("school_id", profile!.school_id)
+        .eq("class_grade", selectedClass)
         .eq("section", selectedSection.toUpperCase());
-      for (const r of assessRows || []) {
-        const key = (r.submitted_by || r.student_name).toLowerCase();
-        if (!map.has(key)) map.set(key, { student_id: r.submitted_by, student_name: r.student_name });
-      }
-      if (assignmentIds.length > 0) {
-        const { data: subRows } = await supabase
-          .from("homework_submissions")
-          .select("student_id, student_name")
-          .in("assignment_id", assignmentIds);
-        for (const r of subRows || []) {
-          const key = (r.student_id || r.student_name || "").toLowerCase();
-          if (!key) continue;
-          if (!map.has(key)) map.set(key, { student_id: r.student_id, student_name: r.student_name || "Unknown" });
-        }
-      }
-      return Array.from(map.values());
+      return (profileStudents || []).map(s => ({
+        student_id: s.id,
+        student_name: s.full_name,
+      }));
     },
   });
 
@@ -1427,3 +1417,11 @@ const Analytics = () => {
 };
 
 export default Analytics;
+
+
+
+
+
+
+
+
