@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Bell, CheckCircle, AlertCircle, RefreshCw, Mail, MessageSquare } from "lucide-react";
-
+import notificationbanner from "@/assets/notification-banner.png";
 interface Notification {
   id: string;
   title: string;
@@ -93,7 +93,44 @@ export default function NotificationDashboard() {
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center justify-between">
+<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 p-8 text-white mb-6">
+
+  {/* Decorations */}
+  <div className="hidden md:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/60"></div>
+
+  <div className="hidden md:block absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+  <div className="hidden md:block absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+  <div className="hidden md:block absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+
+  <div className="hidden md:block absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+  <div className="relative z-10 flex items-center gap-4">
+          <div className="h-14 w-14 rounded-xl bg-white/20 flex items-center justify-center">
+            <Bell className="h-5 w-5" />
+          </div>
+    <div>
+      <h1 className="text-3xl text-black/80 md:text-4xl font-bold">
+        Notification Dashboard
+      </h1>
+
+      <p className="text-black/80 mt-1">
+        Alerts, announcements, unread messages
+      </p>
+
+    </div>
+
+  </div>
+          <img
+            src={notificationbanner}
+            alt="Notification Banner"
+            /* className="absolute right-10 bottom-6 h-[160px]" */
+            className="hidden md:block absolute right-5 bottom-3 w-[90px] z-10"
+          />
+</div>
+
+        {/* <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Bell className="h-5 w-5" />
@@ -102,7 +139,7 @@ export default function NotificationDashboard() {
               <h1 className="text-2xl font-bold">Notification Dashboard</h1>
               <p className="text-sm text-muted-foreground">Alerts, announcements, unread messages</p>
             </div>
-          </div>
+          </div> */}
           <div className="flex gap-2">
             <Button variant="outline" onClick={fetchAll} className="gap-1.5"><RefreshCw className="h-4 w-4" /> Refresh</Button>
             {unreadCount > 0 && (
@@ -235,7 +272,6 @@ export default function NotificationDashboard() {
             </div>
           </TabsContent>
         </Tabs>
-      </div>
     </AppLayout>
   );
 }
