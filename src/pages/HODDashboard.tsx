@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Users, BookOpen, BarChart3, GraduationCap, TrendingUp, UserCheck } from "lucide-react";
-
+import hodbanner from "@/assets/hod-banner.png";
 interface TeacherRow { id: string; full_name: string | null; class_grade: string | null; avg_score?: number | null; class_teachers?: any[]; }
 interface StudentPerf { id: string; full_name: string | null; avg_score: number | null; tests: number; }
 interface LessonRow { id: string; title: string; subject?: string; class_level?: string; section?: string; created_at: string; teacher_name: string | null; }
@@ -137,14 +137,40 @@ export default function HODDashboard() {
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <UserCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">HOD Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Welcome, {profile?.full_name} — Head of Department</p>
-          </div>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-300 p-8 text-white mb-6">
+          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
+          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+
+<div className="hidden md:block">
+          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+          
+          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+
+          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+
+          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+</div>
+      <h1 className="text-3xl font-bold">
+        HOD Dashboard
+      </h1>
+    <p className="text-sm text-white">Welcome, {profile?.full_name} — Head of Department</p>
+<img
+              src={hodbanner}
+              alt="HOD Dashboard Banner"
+              className="hidden md:block absolute right-10 bottom-5 w-20"
+            />
+</div>
+      <div className="flex items-center gap-3">
+
+
         </div>
 
         {/* Stats */}
@@ -152,7 +178,7 @@ export default function HODDashboard() {
           {[
             { label: "Teachers", value: teachers.length, icon: Users, color: "text-blue-600" },
             { label: "Students", value: students.length, icon: GraduationCap, color: "text-green-600" },
-            { label: "Avg Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: TrendingUp, color: "text-purple-600" },
+            { label: "Avg Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: TrendingUp, color: "text-blue-600" },
             { label: "Lessons", value: lessons.length, icon: BookOpen, color: "text-orange-600" },
           ].map(({ label, value, icon: Icon, color }) => (
             <Card key={label}>
