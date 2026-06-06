@@ -116,6 +116,7 @@ const StudentHomework = () => {
         .from("homework_assignments")
         .select("*")
         .eq("class_level", studentClassInfo.student_class)
+        .eq("school_id", profile!.school_id)
         .order("created_at", { ascending: false });
       
       if (error) {
@@ -780,3 +781,8 @@ const StudentHomework = () => {
 };
 
 export default StudentHomework;
+
+
+
+
+

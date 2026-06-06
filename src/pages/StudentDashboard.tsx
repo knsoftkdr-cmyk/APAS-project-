@@ -89,6 +89,8 @@ export default function StudentDashboard() {
             .order("assigned_at", { ascending: false })
             .limit(50);
           if (profile?.school_id) q = q.eq("school_id", profile.school_id);
+          if (profile?.class_grade) q = q.eq("class_level", profile.class_grade);
+          if (profile?.section)    q = q.eq("section", profile.section);
           return q;
         })(),
         supabase
@@ -675,3 +677,4 @@ export default function StudentDashboard() {
     </AppLayout>
   );
 }
+
