@@ -53,6 +53,7 @@ const TeacherPanel = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [activeTab, setActiveTab] = useState<string>("student-reports");
+  const [filterSubmission, setFilterSubmission] = useState<string>("all");
 
   const { data: assessments, isLoading } = useQuery({
     queryKey: ["teacher-student-assessments", user?.id, profile?.role, profile?.school_id],
@@ -112,7 +113,9 @@ const TeacherPanel = () => {
     if (!assessments) return [];
     return assessments.filter(a => {
       if (filterClass !== "all" && a.student_class !== filterClass) return false;
-      if (filterSection !== "all" && (a.section || "").toUpperCase() !== filterSection.toUpperCase()) return false;
+      if (filterSection !== "all" && filterSubmission !== "not_submitted" && (a.section || "").toUpperCase() !== filterSection.toUpperCase()) return false;
+      if (filterSubmission === "submitted" && !a.hasAssessment) return false;
+      if (filterSubmission === "not_submitted" && !!a.hasAssessment) return false;
       return true;
     });
   }, [assessments, filterClass, filterSection]);
@@ -213,6 +216,19 @@ const TeacherPanel = () => {
                     {availableSections.map(sec => (
                       <SelectItem key={sec} value={sec}>{sec}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Submission</label>
+                <Select value={filterSubmission} onValueChange={(val) => { setFilterSubmission(val); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="All Students" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Students</SelectItem>
+                    <SelectItem value="submitted">Submitted</SelectItem>
+                    <SelectItem value="not_submitted">Not Submitted</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1066,6 +1082,11 @@ body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-print
 }
 
 export default TeacherPanel;
+
+
+
+
+
 
 
 

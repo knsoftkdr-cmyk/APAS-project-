@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
       .update({
         full_name,
         role,
+        ...(role === "student" && studentClass ? { class_grade: studentClass, section } : {}),
       })
       .eq("id", data.user.id);
     
