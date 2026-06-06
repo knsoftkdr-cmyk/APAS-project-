@@ -23,7 +23,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import assessmentbanner from "@/assets/assessment-banner.png";
-
+import teacherassessmentbanner from "@/assets/teacher-assessment-banner.png";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -785,7 +785,35 @@ const DiagnosticTeacher = () => {
   if (phase === "form") {
     return (
       <AppLayout>
-        <PageHeader title="Teacher Assessment" subtitle="Assess a student's developmental profile" />
+        
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-300 p-8 text-white mb-6">
+
+  {/* Decorative Shapes */}
+  <div className="hidden md:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+
+  <div className="hidden md:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/60"></div>
+
+  <div className="hidden md:block absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/60"></div>
+
+  <div className="hidden md:block absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+
+  <div className="hidden md:block absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+
+  <div className="hidden md:block absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+
+  <h1 className="text-3xl md:text-4xl font-bold">
+    Teacher Assessment
+  </h1>
+
+  <p className="text-blue-100 mt-2">
+    Assess a student's developmental profile
+  </p>
+
+<img
+  src={teacherassessmentbanner}  alt="Teacher Assessment Banner"
+  className="hidden md:block absolute right-10 bottom-6 w-20"
+/>
+</div>
         <div className="space-y-6">
           <Card className="max-w-lg mx-auto">
             <CardContent className="p-6 space-y-5">
