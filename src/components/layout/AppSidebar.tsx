@@ -147,9 +147,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       >
         <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
   {collapsed ? (
-    <img src={apasLogo} alt="APAS" className="h-8 w-8 object-contain" />
+    <img src={apasLogo} alt="APAS" className="h-12 w-12 object-contain" />
   ) : (
-    <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
+    <img src={apasLogo} alt="APAS" className="h-20 w-auto object-contain" />
   )}
 </div>
 
