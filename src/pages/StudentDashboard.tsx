@@ -248,6 +248,7 @@ export default function StudentDashboard() {
         <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
 
   {/* Decorative circles */}
+<div className="hidden md:block">
   <div className="absolute top-8 right-20 w-16 h-16 rounded-full border border-white/40"></div>
   <div className="absolute bottom-10 right-40 w-10 h-10 rounded-full border border-white/60"></div>
   <div className="absolute top-20 left-[45%] w-8 h-8 rounded-full border border-white/60"></div>
@@ -256,7 +257,7 @@ export default function StudentDashboard() {
           <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
           <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
 
-<div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
           <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
           <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
           <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
@@ -266,7 +267,7 @@ export default function StudentDashboard() {
           <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
 
           <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-
+</div>
   <div className="max-w-xl">
     <h1 className="text-4xl font-bold">
       Welcome Back, {firstName} 👋
