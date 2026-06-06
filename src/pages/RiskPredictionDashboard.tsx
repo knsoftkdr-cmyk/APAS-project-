@@ -120,7 +120,7 @@ export default function RiskPredictionDashboard() {
                     src={alertsbanner}
                     alt="Alerts Banner"
                     /* className="absolute right-10 bottom-6 h-[160px]" */
-                    className="hidden md:block absolute right-5 bottom-3 w-[90px] z-10"
+                    className="hidden md:block absolute right-5 bottom-5 w-[70px] z-10"
                   />
         </div>
           {/*         <div className="flex items-center gap-3">
