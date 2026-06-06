@@ -113,12 +113,12 @@ const TeacherPanel = () => {
     if (!assessments) return [];
     return assessments.filter(a => {
       if (filterClass !== "all" && a.student_class !== filterClass) return false;
-      if (filterSection !== "all" && filterSubmission !== "not_submitted" && (a.section || "").toUpperCase() !== filterSection.toUpperCase()) return false;
+      if (filterSection !== "all" && (a.section || "").toUpperCase() !== filterSection.toUpperCase()) return false;
       if (filterSubmission === "submitted" && !a.hasAssessment) return false;
-      if (filterSubmission === "not_submitted" && !!a.hasAssessment) return false;
+      if (filterSubmission === "not_submitted" && a.hasAssessment) return false;
       return true;
     });
-  }, [assessments, filterClass, filterSection]);
+  }, [assessments, filterClass, filterSection, filterSubmission]);
 
   // Reset section filter when class changes
   // Paginated assessments
@@ -1082,6 +1082,9 @@ body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-print
 }
 
 export default TeacherPanel;
+
+
+
 
 
 

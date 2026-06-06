@@ -342,6 +342,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
         student_class: studentClass,
         section: (section || "").toUpperCase().trim(),
         curriculum: curriculum,
+        school_id: profile?.school_id ?? null,
       } as any);
       if (error) throw error;
       setPhase("done");
@@ -1056,3 +1057,4 @@ const DiagnosticTeacher = () => {
 };
 
 export default Diagnostic;
+
