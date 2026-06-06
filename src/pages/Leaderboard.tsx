@@ -31,6 +31,7 @@ export default function Leaderboard() {
       const { data, error } = await supabase.rpc("get_leaderboard", {
         time_period: period,
         limit_count: 100,
+        school_id: profile?.school_id ?? null,
       });
       if (error) {
         console.error("Leaderboard fetch error:", error);

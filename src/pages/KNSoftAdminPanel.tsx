@@ -159,20 +159,24 @@ const KNSoftAdminPanel = () => {
     setAssigningAdmin(true);
     try {
       // Create auth user via edge function
-      const { data, error } = await supabase.functions.invoke("create-admin-user", {
-        body: {
-          email: adminEmail.trim().toLowerCase(),
-          password: adminPassword,
-          full_name: adminName.trim(),
-          role: "school_admin",
-          school_id: assignSchoolId,
-        },
+      // Store current session
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const { data: signUpData, error } = await supabase.auth.signUp({
+        email: adminEmail.trim().toLowerCase(),
+        password: adminPassword,
+        options: { data: { full_name: adminName.trim() } },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-
-      const userId = (data as any)?.user?.id;
+      const userId = signUpData?.user?.id;
       if (!userId) throw new Error("User creation failed");
+      await supabase.from("profiles").upsert({
+        id: userId, full_name: adminName.trim(),
+        role: "school_admin", school_id: assignSchoolId,
+      });
+      // Restore knsoft admin session
+      if (currentSession) {
+        await supabase.auth.setSession({ access_token: currentSession.access_token, refresh_token: currentSession.refresh_token });
+      }
 
       // Link to school_admin_schools
       const { error: linkError } = await supabase.from("school_admin_schools").insert({
@@ -199,6 +203,17 @@ const KNSoftAdminPanel = () => {
   };
 
   // ── Toggle school active ───────────────────────────────────────────────────
+  const deleteSchool = async (schoolId: string, schoolName: string) => {
+    if (!window.confirm(`DELETE "${schoolName}"? This will permanently delete all users and data for this school. This cannot be undone.`)) return;
+    try {
+      await supabase.rpc("delete_school_cascade", { p_school_id: schoolId });
+      toast({ title: "School deleted successfully" });
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: "Error deleting school", description: e.message, variant: "destructive" });
+    }
+  };
+
   const toggleSchoolActive = async (schoolId: string, current: boolean) => {
     const { error } = await supabase
       .from("schools")
@@ -372,6 +387,9 @@ const KNSoftAdminPanel = () => {
                                 onClick={() => toggleSchoolActive(s.id, s.is_active !== false)}
                               >
                                 {s.is_active !== false ? "Deactivate" : "Activate"}
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700" onClick={() => deleteSchool(s.id, s.name)}>
+                                Delete
                               </Button>
                             </TableCell>
                           </TableRow>

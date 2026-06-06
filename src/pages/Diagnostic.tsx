@@ -157,15 +157,19 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
   useEffect(() => {
     const fetchTeachers = async () => {
-      const { data } = await supabase
+      let query = supabase
         .from("profiles")
         .select("id, full_name")
         .eq("role", "teacher");
+      if (profile?.school_id) {
+        query = query.eq("school_id", profile.school_id);
+      }
+      const { data } = await query;
       setTeachers((data as Teacher[]) || []);
       setLoadingTeachers(false);
     };
     fetchTeachers();
-  }, []);
+  }, [profile?.school_id]);
 
   const canStartQuiz = name.trim() && age && studentClass && section.trim() && curriculum && teacherId;
 

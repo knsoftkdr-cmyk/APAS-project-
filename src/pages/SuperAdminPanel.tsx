@@ -168,7 +168,14 @@ const SuperAdminPanel = () => {
       .select("school_id")
       .eq("school_admin_id", user.id)
       .single();
-    return data?.school_id ?? null;
+    if (data?.school_id) return data.school_id;
+    // Fallback: use school_id from profile directly
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("school_id")
+      .eq("id", user.id)
+      .single();
+    return profileData?.school_id ?? null;
   }, [user]);
 
   // ── Fetch permissions ──────────────────────────────────────────────────────
@@ -192,6 +199,7 @@ const SuperAdminPanel = () => {
     setLoading(true);
     try {
       const sid = await fetchSchoolId();
+      console.log("School ID fetched:", sid, "user:", user?.id);
       if (!sid) {
         toast({ title: "No school linked to this account", variant: "destructive" });
         setLoading(false);

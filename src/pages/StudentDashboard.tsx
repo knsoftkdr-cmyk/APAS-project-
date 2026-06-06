@@ -82,11 +82,15 @@ export default function StudentDashboard() {
     enabled: !!user?.id,
     queryFn: async () => {
       const [{ data: assignments }, { data: submissions }] = await Promise.all([
-        supabase
-          .from("homework_assignments")
-          .select("id, period_title, topic, subject, class_level, section, assigned_at, due_date, exit_ticket_content")
-          .order("assigned_at", { ascending: false })
-          .limit(50),
+(() => {
+          let q = supabase
+            .from("homework_assignments")
+            .select("id, period_title, topic, subject, class_level, section, assigned_at, due_date, exit_ticket_content")
+            .order("assigned_at", { ascending: false })
+            .limit(50);
+          if (profile?.school_id) q = q.eq("school_id", profile.school_id);
+          return q;
+        })(),
         supabase
           .from("homework_submissions")
           .select("id, assignment_id, completed, submitted_at, teacher_score, submission_percentage")

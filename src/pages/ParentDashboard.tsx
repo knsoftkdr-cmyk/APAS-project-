@@ -55,7 +55,7 @@ export default function ParentDashboard() {
     try {
       const { data: hwData } = await supabase
         .from("homework_assignments")
-        .select("id, title, due_date")
+        .select("id, title, due_date, school_id")
         .order("due_date", { ascending: false })
         .limit(20);
       const { data: subData } = await supabase
