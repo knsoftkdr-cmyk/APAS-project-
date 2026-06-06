@@ -190,6 +190,7 @@ const KNSoftAdminPanel = () => {
         p_school_id: assignSchoolId,
       });
       if (seedError) console.warn("Seeding permissions failed:", seedError.message);
+      else console.log("Default permissions seeded successfully");
 
       toast({ title: "School Admin assigned successfully ✅" });
       setAssignOpen(false);
