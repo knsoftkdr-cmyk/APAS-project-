@@ -3,23 +3,17 @@
 -- Run AFTER the permissions_matrix migration
 -- ============================================================
 
--- 1. Add new roles to constraint
-ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
-ALTER TABLE profiles
-  ADD CONSTRAINT profiles_role_check
-  CHECK (role IN (
-    'student', 'teacher', 'admin', 'school_admin',
-    'principal', 'hod', 'parent', 'knsoft_admin', 'super_admin'
-  ));
+-- Note: Role constraint is already defined in 20260528000000_super_admin_role.sql
+-- This migration adds additional functionality
 
--- 2. Add extra fields to schools table
+-- 1. Add extra fields to schools table
 ALTER TABLE schools
   ADD COLUMN IF NOT EXISTS curriculum VARCHAR(100),
   ADD COLUMN IF NOT EXISTS subscription_plan VARCHAR(50) DEFAULT 'basic',
   ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
   ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT now();
 
--- 3. knsoft_admin_schools table (knsoft can manage ALL schools)
+-- 2. knsoft_admin_logs table (audit log for knsoft actions)
 CREATE TABLE IF NOT EXISTS knsoft_admin_logs (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -30,7 +24,7 @@ CREATE TABLE IF NOT EXISTS knsoft_admin_logs (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 4. RLS for knsoft_admin — can see ALL schools
+-- 3. RLS for knsoft_admin — can see ALL schools
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "knsoft_admin_all_schools" ON schools;
@@ -54,7 +48,7 @@ CREATE POLICY "knsoft_admin_all_profiles"
     )
   );
 
--- 5. HOW TO CREATE KNSOFT ADMIN (one time):
+-- 4. HOW TO CREATE KNSOFT ADMIN (one time):
 -- Step 1: Create user in Supabase Auth dashboard
 -- Step 2: Run:
 --   UPDATE profiles SET role = 'knsoft_admin' WHERE id = '<user_uuid>';

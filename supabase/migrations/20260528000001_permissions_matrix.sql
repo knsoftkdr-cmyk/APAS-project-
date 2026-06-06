@@ -48,6 +48,7 @@ ALTER TABLE role_permissions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE permission_modules ENABLE ROW LEVEL SECURITY;
 
 -- School admin can manage permissions for their school
+DROP POLICY IF EXISTS "school_admin_manage_permissions" ON role_permissions;
 CREATE POLICY "school_admin_manage_permissions"
   ON role_permissions FOR ALL
   USING (
@@ -58,6 +59,7 @@ CREATE POLICY "school_admin_manage_permissions"
   );
 
 -- All authenticated users can read permissions for their school
+DROP POLICY IF EXISTS "users_read_own_school_permissions" ON role_permissions;
 CREATE POLICY "users_read_own_school_permissions"
   ON role_permissions FOR SELECT
   USING (
@@ -67,6 +69,7 @@ CREATE POLICY "users_read_own_school_permissions"
   );
 
 -- Everyone can read modules
+DROP POLICY IF EXISTS "anyone_read_modules" ON permission_modules;
 CREATE POLICY "anyone_read_modules"
   ON permission_modules FOR SELECT
   USING (true);

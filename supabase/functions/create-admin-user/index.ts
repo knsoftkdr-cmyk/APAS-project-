@@ -24,11 +24,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    await admin.from("profiles").update({
-      full_name,
-      role,
-      ...(school_id ? { school_id } : {}),
-    }).eq("id", data.user.id);
+    // Wait a bit for trigger to create profile
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const { error: profileError } = await admin
+      .from("profiles")
+      .update({
+        full_name,
+        role,
+      })
+      .eq("id", data.user.id);
+    
+    if (profileError) {
+      console.error("Profile update error:", profileError);
+      return new Response(JSON.stringify({ error: "Failed to update profile: " + profileError.message }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
+    // Try to update school_id if provided
+    if (school_id) {
+      const { error: schoolError } = await admin
+        .from("profiles")
+        .update({ school_id })
+        .eq("id", data.user.id);
+      
+      if (schoolError) {
+        console.warn("Warning: Failed to set school_id:", schoolError.message);
+        // Don't fail here as school_id column might not exist yet
+      }
+    }
 
     if (role === "student") {
       const { error: studentError } = await admin.from("students").insert({
@@ -79,9 +104,13 @@ Deno.serve(async (req) => {
           .limit(1)
           .maybeSingle();
 
-        await admin.from("students")
+        const { error: assignTeacherError } = await admin.from("students")
           .update({ assigned_teacher: (teacherRow as any)?.profiles?.full_name ?? null })
           .eq("id", studentRow.id);
+        
+        if (assignTeacherError) {
+          console.warn("Failed to assign teacher:", assignTeacherError.message);
+        }
       } else {
         console.log("No class match found for studentClass:", studentClass, "section:", section);
       }

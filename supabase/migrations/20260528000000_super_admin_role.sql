@@ -9,7 +9,7 @@ ALTER TABLE profiles DROP CONSTRAINT IF EXISTS profiles_role_check;
 
 ALTER TABLE profiles
   ADD CONSTRAINT profiles_role_check
-  CHECK (role IN ('student', 'teacher', 'admin', 'school_admin', 'principal', 'super_admin'));
+  CHECK (role IN ('student', 'teacher', 'admin', 'school_admin', 'principal', 'super_admin', 'knsoft_admin', 'hod', 'parent'));
 
 -- 2. Create schools table (multi-tenant: each super_admin owns one school)
 CREATE TABLE IF NOT EXISTS schools (
@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS super_admin_schools (
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
 -- Allow super_admin to SELECT all profiles in their school
+DROP POLICY IF EXISTS "super_admin_select_school_profiles" ON profiles;
 CREATE POLICY "super_admin_select_school_profiles"
   ON profiles FOR SELECT
   USING (
@@ -53,6 +54,7 @@ CREATE POLICY "super_admin_select_school_profiles"
   );
 
 -- Allow super_admin to INSERT profiles (create accounts) in their school
+DROP POLICY IF EXISTS "super_admin_insert_school_profiles" ON profiles;
 CREATE POLICY "super_admin_insert_school_profiles"
   ON profiles FOR INSERT
   WITH CHECK (
@@ -65,6 +67,7 @@ CREATE POLICY "super_admin_insert_school_profiles"
   );
 
 -- Allow super_admin to UPDATE profiles in their school
+DROP POLICY IF EXISTS "super_admin_update_school_profiles" ON profiles;
 CREATE POLICY "super_admin_update_school_profiles"
   ON profiles FOR UPDATE
   USING (
@@ -79,6 +82,7 @@ CREATE POLICY "super_admin_update_school_profiles"
 -- 6. Schools table RLS
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "super_admin_manage_own_school" ON schools;
 CREATE POLICY "super_admin_manage_own_school"
   ON schools FOR ALL
   USING (
