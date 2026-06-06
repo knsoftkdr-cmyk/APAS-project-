@@ -283,8 +283,9 @@ const TeacherHome = () => {
     queryKey: ["teacher-lesson-count", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("lessons")
-        .select("id");
+        .from("lesson_assignments")
+        .select("lesson_id")
+        .eq("assigned_by", user!.id);
       if (error) throw error;
       return data?.length || 0;
     },
@@ -753,3 +754,4 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
