@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CreditCard, TrendingUp, Building2, DollarSign, CheckCircle, XCircle, Clock } from "lucide-react";
-
+import billBanner from "@/assets/bill-banner.png";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface SchoolBilling {
@@ -155,7 +155,43 @@ const BillingDashboard = () => {
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-3">
+<div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 p-8 text-white mb-6">
+
+  {/* Decorations */}
+  <div className="hidden md:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/60"></div>
+
+  <div className="hidden md:block absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+  <div className="hidden md:block absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+  <div className="hidden md:block absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+
+  <div className="hidden md:block absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+
+  <div className="relative z-10 flex items-center gap-4">
+          <div className="h-14 w-14 rounded-xl bg-white/20 flex items-center justify-center">
+            <CreditCard className="h-5 w-5" />
+          </div>
+      <div>
+      <h1 className="text-3xl text-black/80 md:text-4xl font-bold">
+        Billing Dashboard
+      </h1>
+
+      <p className="text-black/80 mt-1">
+        Manage subscriptions, invoices and revenue across all schools
+      </p>
+
+    </div>
+
+  </div>
+          <img
+            src={billBanner}
+            alt="Billing Banner"
+            /* className="absolute right-10 bottom-6 h-[160px]" */
+            className="hidden md:block absolute right-10 bottom-0 w-[130px] z-10"
+          />
+</div>
+{/*         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <CreditCard className="h-5 w-5" />
           </div>
@@ -163,7 +199,7 @@ const BillingDashboard = () => {
             <h1 className="text-2xl font-bold">Billing Dashboard</h1>
             <p className="text-sm text-muted-foreground">Manage subscriptions, invoices and revenue across all schools</p>
           </div>
-        </div>
+        </div> */}
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
