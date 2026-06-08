@@ -95,8 +95,8 @@ export default function App() {
                       <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Curative /></RoleGuard></ProtectedRoute>} />
                       <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                      <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin"]}><Alerts /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/admin" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><AdminPanel /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal"]}><Alerts /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><AdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/super-admin" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><SuperAdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/knsoft-admin" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><KNSoftAdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/billing-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><BillingDashboard /></RoleGuard></ProtectedRoute>} />
@@ -116,12 +116,12 @@ export default function App() {
                       <Route path="/gamification" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Gamification /></RoleGuard></ProtectedRoute>} />
                       <Route path="/leaderboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Leaderboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/predictions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><PredictionDashboard /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/ai-tutor" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin"]}><AITutor /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/ai-knowledge" element={<ProtectedRoute><RoleGuard allowedRoles={["admin"]}><AIKnowledgeHub /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/school-analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><SchoolAnalytics /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/automation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><AutomationWorkflows /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><Billing /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/ai-tutor" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "principal"]}><AITutor /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/ai-knowledge" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal"]}><AIKnowledgeHub /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/school-analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><SchoolAnalytics /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/automation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><AutomationWorkflows /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><Billing /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="*" element={<NotFound />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />

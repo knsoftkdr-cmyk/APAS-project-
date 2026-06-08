@@ -67,7 +67,7 @@ interface ClassTeacher {
 const AdminPanel = () => {
   const { user, profile } = useAuth();
   const { toast } = useToast();
-  const isMasterAdmin = profile?.role === "admin";
+  const isMasterAdmin = profile?.role === "admin" || profile?.role === "principal";
   const isSchoolAdmin = profile?.role === "school_admin";
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
@@ -249,14 +249,30 @@ const AdminPanel = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [classesRes, studentsRes, teachersRes, csRes, ctRes, qaRes] = await Promise.all([
-      supabase.from("classes").select("*").order("name"),
-      supabase.from("students").select("id, profile_id, grade, class, section, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("profiles.school_id", profile?.school_id || ""),
-      supabase.from("profiles").select("id, full_name").eq("role", "teacher"),
-      supabase.from("class_students").select("id, class_id, student_id"),
-      supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)"),
-      supabase.from("teacher_question_assignments").select("*"),
+    const schoolId = profile?.school_id;
+
+    const [classesRes, studentsRes, teachersRes] = await Promise.all([
+      supabase.from("classes").select("*").eq("school_id", schoolId!).order("name"),
+      supabase.from("students").select("id, profile_id, grade, class, section, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("school_id", schoolId!),
+      supabase.from("profiles").select("id, full_name").eq("role", "teacher").eq("school_id", schoolId!),
     ]);
+
+    const classIds = classesRes.data?.map(c => c.id) ?? [];
+    const teacherIds = teachersRes.data?.map(t => t.id) ?? [];
+
+    const [csRes, ctRes, qaRes] = await Promise.all([
+      classIds.length > 0
+        ? supabase.from("class_students").select("id, class_id, student_id").in("class_id", classIds)
+        : Promise.resolve({ data: [] }),
+      classIds.length > 0
+        ? supabase.from("class_teachers").select("id, class_id, teacher_id, teacher_role, subject, profiles:teacher_id(full_name)").in("class_id", classIds)
+        : Promise.resolve({ data: [] }),
+      teacherIds.length > 0
+        ? supabase.from("teacher_question_assignments").select("*").in("teacher_id", teacherIds)
+        : Promise.resolve({ data: [] }),
+    ]);
+
+    console.log('csRes:', csRes, 'ctRes:', ctRes);
     if (classesRes.data) setClasses(classesRes.data);
     if (studentsRes.data) setStudents(studentsRes.data as any);
     if (teachersRes.data) setTeachers(teachersRes.data);
@@ -266,7 +282,7 @@ const AdminPanel = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { if (profile?.school_id) fetchAll(); }, [profile?.school_id]);
 
   const handleCreateClass = async () => {
     if (!newClassName.trim()) return;
@@ -274,6 +290,7 @@ const AdminPanel = () => {
       name: newClassName.trim(),
       section: newClassSection.trim() || "A",
       created_by: user?.id,
+      school_id: profile?.school_id,
     });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
