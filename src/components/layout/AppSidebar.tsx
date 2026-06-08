@@ -1,4 +1,4 @@
-import {
+﻿import {
   UserCheck,
   LayoutDashboard,
   Brain,
@@ -56,9 +56,9 @@ const navItems: Array<{
   { title: "Leaderboard", icon: Trophy, path: "/leaderboard", roles: ["student"] },
   { title: "Predictions", icon: Brain, path: "/predictions", roles: ["student"], tourId: "nav-predictions", module: "Risk Prediction" },
   { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student", "admin", "principal"], tourId: "nav-ai-tutor", module: "AI Tutor" },
-  { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin", "principal"] },
+  { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["knsoft_admin"] },
   { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "principal"] },
-  { title: "Automation", icon: Zap, path: "/automation", roles: ["admin", "principal"] },
+  { title: "Automation", icon: Zap, path: "/automation", roles: ["knsoft_admin"] },
   { title: "Security Center", icon: Lock, path: "/security", roles: ["admin", "principal"] },
   { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "principal"] },
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
@@ -198,7 +198,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     {profile.full_name || "User"}
                   </p>
                   <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-                    {profile.role === "admin" || profile.role === "principal" ? "Master Admin" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
+                    {profile.role === "admin" || profile.role === "principal" ? "Principal" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
                   </p>
                 </div>
               )}

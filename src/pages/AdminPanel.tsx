@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -66,8 +66,9 @@ interface ClassTeacher {
 
 const AdminPanel = () => {
   const { user, profile } = useAuth();
+  const isPrincipalRole = ['admin', 'school_admin', 'principal'].includes(profile?.role?.toLowerCase() ?? '');
   const { toast } = useToast();
-  const isMasterAdmin = profile?.role === "admin" || profile?.role === "principal";
+  const isMasterAdmin = profile?.role === "knsoft_admin" || profile?.role === "superadmin";
   const isSchoolAdmin = profile?.role === "school_admin";
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
@@ -499,13 +500,13 @@ const AdminPanel = () => {
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-8" : isSchoolAdmin ? "grid-cols-3" : "grid-cols-1")}>
+          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-8" : isPrincipalRole ? "grid-cols-6" : isSchoolAdmin ? "grid-cols-3" : "grid-cols-1")}>
             <TabsTrigger value="classes">Classes</TabsTrigger>
-            {(isMasterAdmin || isSchoolAdmin) && <TabsTrigger value="notifications" className="gap-1"><Bell className="h-3.5 w-3.5" /> Notifications</TabsTrigger>}
-            {(isMasterAdmin || isSchoolAdmin) && <TabsTrigger value="lesson-plans" className="gap-1"><BookOpen className="h-3.5 w-3.5" /> Lesson Plans</TabsTrigger>}
-            {isMasterAdmin && <TabsTrigger value="students">Students</TabsTrigger>}
-            {isMasterAdmin && <TabsTrigger value="teachers">Teachers</TabsTrigger>}
-            {isMasterAdmin && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
+            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="notifications" className="gap-1"><Bell className="h-3.5 w-3.5" /> Notifications</TabsTrigger>}
+            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="lesson-plans" className="gap-1"><BookOpen className="h-3.5 w-3.5" /> Lesson Plans</TabsTrigger>}
+            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="students">Students</TabsTrigger>}
+            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="teachers">Teachers</TabsTrigger>}
+            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="questions">Questions</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="config">Config</TabsTrigger>}
           </TabsList>
@@ -791,21 +792,19 @@ const AdminPanel = () => {
           </TabsContent>
 
           {/* ===== NOTIFICATIONS TAB (School Admin + Master Admin) ===== */}
-          {(isMasterAdmin || isSchoolAdmin) && (
-            <TabsContent value="notifications">
+          {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && (<TabsContent value="notifications">
               <DiagnosticApprovalPanel />
             </TabsContent>
           )}
 
           {/* ===== LESSON PLANS TAB (School Admin + Master Admin) ===== */}
-          {(isMasterAdmin || isSchoolAdmin) && (
-            <TabsContent value="lesson-plans">
+          {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && (<TabsContent value="lesson-plans">
               <AdminLessonPlansView />
             </TabsContent>
           )}
 
           {/* ===== STUDENT ALLOTMENT TAB (Master Admin only) ===== */}
-          {isMasterAdmin && <TabsContent value="students">
+          {(isMasterAdmin || isPrincipalRole) && <TabsContent value="students">
             <Card>
               <CardHeader>
                 <CardTitle>Student Allotment</CardTitle>
@@ -879,7 +878,7 @@ const AdminPanel = () => {
           </TabsContent>}
 
           {/* ===== TEACHER ALLOTMENT TAB (Master Admin only) ===== */}
-          {isMasterAdmin && <TabsContent value="teachers">
+          {(isMasterAdmin || isPrincipalRole) && <TabsContent value="teachers">
             <Card>
               <CardHeader>
                 <CardTitle>Teacher-to-Class Assignment</CardTitle>
@@ -890,8 +889,8 @@ const AdminPanel = () => {
                 <div className="flex gap-2 border-b border-border pb-3">
                   {[
                     { key: "assign" as const, label: "Assign Teacher" },
-                    { key: "by-class" as const, label: "Class → Teachers" },
-                    { key: "by-teacher" as const, label: "Teacher → Classes" },
+                    ...(!isPrincipalRole ? [{ key: "by-class" as const, label: "Class → Teachers" }, { key: "by-teacher" as const, label: "Teacher → Classes" }] : []),
+                    
                   ].map(tab => (
                     <Button
                       key={tab.key}

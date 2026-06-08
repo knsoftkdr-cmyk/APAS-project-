@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -114,6 +115,7 @@ function printLesson(l: Lesson, teacherName: string) {
 }
 
 export const AdminLessonPlansView = () => {
+  const { profile } = useAuth();
   const [teachers, setTeachers] = useState<TeacherOpt[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<string>("");
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -125,11 +127,15 @@ export const AdminLessonPlansView = () => {
   useEffect(() => {
     (async () => {
       setLoadingTeachers(true);
-      const { data: profs } = await supabase
+      let teacherQuery = supabase
         .from("profiles")
         .select("id, full_name")
         .eq("role", "teacher")
         .order("full_name");
+      if (profile?.school_id) {
+        teacherQuery = teacherQuery.eq("school_id", profile.school_id);
+      }
+      const { data: profs } = await teacherQuery;
       const { data: counts } = await supabase
         .from("lessons")
         .select("teacher_id");
@@ -146,7 +152,7 @@ export const AdminLessonPlansView = () => {
       setTeachers(list);
       setLoadingTeachers(false);
     })();
-  }, []);
+  }, [profile?.school_id]);
 
   useEffect(() => {
     if (!selectedTeacher) {
