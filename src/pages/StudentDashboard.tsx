@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import studentBanner from "@/assets/student-dashboard-banner.png";
+import { BarChart3 } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/chart";
 import {
   PieChart,
+  BarChart,
   Pie,
   Cell,
   LineChart,
@@ -320,7 +322,7 @@ export default function StudentDashboard() {
         <LoadingSpinner className="mb-6" />
       ) : myAssessment && reportConfig && scores ? (
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+{/*           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-foreground">Your Assessment Results</h2>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => setReportOpen(true)} className="gap-1.5">
@@ -330,37 +332,197 @@ export default function StudentDashboard() {
                 {showReport ? "Hide Details" : "Show Details"}
               </Button>
             </div>
-          </div>
+          </div> */}
 
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <Card className="bg-emerald-50 border-emerald-200">
-              <CardContent className="p-3 text-center">
-                <TrendingUp className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                <div className="text-2xl font-bold text-emerald-700">
-                  {scores.filter(s => s.level === "High").length}
-                </div>
-                <div className="text-xs text-emerald-600">Strong Areas</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-amber-50 border-amber-200">
-              <CardContent className="p-3 text-center">
-                <Brain className="h-5 w-5 text-amber-600 mx-auto mb-1" />
-                <div className="text-2xl font-bold text-amber-700">
-                  {scores.filter(s => s.level === "Moderate").length}
-                </div>
-                <div className="text-xs text-amber-600">Moderate Areas</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-red-50 border-red-200">
-              <CardContent className="p-3 text-center">
-                <AlertCircle className="h-5 w-5 text-red-500 mx-auto mb-1" />
-                <div className="text-2xl font-bold text-red-600">
-                  {scores.filter(s => s.level === "Developing").length}
-                </div>
-                <div className="text-xs text-red-500">Needs Attention</div>
-              </CardContent>
-            </Card>
-          </div>
+<div className="grid lg:grid-cols-2 gap-6 mb-6">
+
+  {/* Assessment Results */}
+  <Card>
+    <CardHeader>
+      <div className="flex items-center gap-3">
+  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+    <BarChart3 className="h-5 w-5 text-emerald-600" />
+  </div>
+
+  <div>
+    <h3 className="text-xl font-bold text-slate-800">
+      Assessment Results
+    </h3>
+  </div>
+</div>
+        <div className="flex gap-2">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setReportOpen(true)}
+      className="gap-1.5"
+    >
+      <FileText className="h-4 w-4" />
+      Report
+    </Button>
+
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setShowReport(!showReport)}
+    >
+      {showReport ? "Hide" : "Details"}
+    </Button>
+  </div>
+    </CardHeader>
+
+    <CardContent className="space-y-3">
+<div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+  <div className="flex items-center gap-3">
+    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+      <TrendingUp className="h-7 w-7 text-emerald-600" />
+    </div>
+    <div>
+      <p className="font-semibold text-emerald-700">
+        Strong Areas
+      </p>
+    </div>
+  </div>
+        <span className="text-2xl font-bold text-emerald-600">
+          {scores.filter(s => s.level === "High").length}
+        </span>
+      </div>
+
+<div className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100">
+  <div className="flex items-center gap-3">
+
+    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+      <Brain className="h-5 w-5 text-amber-600" />
+    </div>
+    <div>
+      <p className="font-semibold text-amber-700">
+        Moderate Areas
+      </p>
+    </div>
+  </div>
+        <span className="text-2xl font-bold text-amber-600">
+          {scores.filter(s => s.level === "Moderate").length}
+        </span>
+</div>
+
+<div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
+  <div className="flex items-center gap-3">
+
+    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+      <AlertCircle className="h-5 w-5 text-red-600" />
+    </div>
+
+    <div>
+      <p className="font-semibold text-red-700">
+        Needs Attention
+      </p>
+    </div>
+  </div>
+        <span className="text-2xl font-bold text-red-600">
+          {scores.filter(s => s.level === "Developing").length}
+        </span>
+</div>
+    </CardContent>
+  </Card>
+
+  {/* Homework Overview */}
+  <Card>
+    <CardHeader>
+      <div className="flex items-center gap-3">
+  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+    <ClipboardList className="h-7 w-7 text-blue-600" />
+  </div>
+
+  <div>
+    <h3 className="text-xl font-bold text-slate-800">
+      Homework Overview
+    </h3>
+  </div>
+</div>
+    </CardHeader>
+
+    <CardContent className="space-y-3">
+<div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 border border-blue-100">
+  <div className="flex items-center gap-3">
+
+    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+      <ClipboardList className="h-5 w-5 text-blue-600" />
+    </div>
+
+    <div>
+      <p className="font-semibold text-blue-700">
+        Pending Homework
+      </p>
+    </div>
+
+  </div>
+
+  <span className="text-3xl font-bold text-blue-600">
+    {breakdown.pending + breakdown.overdue}
+  </span>
+</div>
+
+<div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+  <div className="flex items-center gap-3">
+
+    <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
+      <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+    </div>
+
+    <div>
+      <p className="font-semibold text-emerald-700">
+        Completed
+      </p>
+    </div>
+
+  </div>
+
+  <span className="text-3xl font-bold text-emerald-600">
+    {breakdown.completed}
+  </span>
+</div>
+
+<div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
+  <div className="flex items-center gap-3">
+
+    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+      <AlertCircle className="h-5 w-5 text-red-600" />
+    </div>
+
+    <div>
+      <p className="font-semibold text-red-700">
+        Overdue
+      </p>
+    </div>
+
+  </div>
+
+  <span className="text-3xl font-bold text-red-600">
+    {breakdown.overdue}
+  </span>
+</div>
+
+<div className="flex items-center justify-between p-4 rounded-xl bg-purple-50 border border-purple-100">
+  <div className="flex items-center gap-3">
+
+    <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+      <Target className="h-5 w-5 text-purple-600" />
+    </div>
+
+    <div>
+      <p className="font-semibold text-purple-700">
+        Today's Score
+      </p>
+    </div>
+  </div>
+  <span className="text-3xl font-bold text-purple-600">
+    {todayScore !== null ? `${todayScore}%` : "--"}
+  </span>
+</div>
+    </CardContent>
+  </Card>
+
+</div>
 
           {showReport && (
             <div className="space-y-3 animate-fade-in">
@@ -397,55 +559,6 @@ export default function StudentDashboard() {
         </div>
       ) : null}
 
-      {/* Top row: KPI strip */}
-      <div className="grid gap-4 md:grid-cols-4 mb-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Pending Homework</p>
-                <p className="text-3xl font-bold text-foreground">{breakdown.pending + breakdown.overdue}</p>
-              </div>
-              <ClipboardList className="h-8 w-8 text-amber-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Completed</p>
-                <p className="text-3xl font-bold text-emerald-600">{breakdown.completed}</p>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-emerald-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Overdue</p>
-                <p className="text-3xl font-bold text-red-600">{breakdown.overdue}</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground">Today's Score</p>
-                <p className="text-3xl font-bold text-foreground">
-                  {todayScore !== null ? `${todayScore}%` : "—"}
-                </p>
-              </div>
-              <Target className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -453,7 +566,9 @@ export default function StudentDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
+              <ClipboardList className="h-7 w-7 text-red-600" />
+            </div>
               Pending Homework
             </CardTitle>
             <Button variant="ghost" size="sm" asChild>
@@ -520,7 +635,9 @@ export default function StudentDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Target className="h-7 w-7 text-blue-600" />
+            </div>
               Daily Performance Score
             </CardTitle>
           </CardHeader>
@@ -530,13 +647,13 @@ export default function StudentDashboard() {
                 Complete academic tests to see your daily scores.
               </p>
             ) : (
-              <ChartContainer config={{ score: { label: "Score %", color: "hsl(var(--primary))" } }} className="h-56">
+              <ChartContainer config={{ score: { label: "Score %", color: "#2563EB" } }} className="h-56">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={last7Days}>
                     <defs>
                       <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        <stop offset="0%" stopColor="#2563EB" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#2563EB" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -546,8 +663,8 @@ export default function StudentDashboard() {
                     <Area
                       type="monotone"
                       dataKey="score"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
+                      stroke="#2563EB"
+                      strokeWidth={3}
                       fill="url(#scoreGrad)"
                     />
                   </AreaChart>
@@ -561,7 +678,9 @@ export default function StudentDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="h-7 w-7 text-green-600" />
+            </div>
               Homework Completion
             </CardTitle>
           </CardHeader>
@@ -627,7 +746,9 @@ export default function StudentDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <TrendingUp className="h-7 w-7 text-amber-600" />
+            </div>
               Weekly Improvement
             </CardTitle>
           </CardHeader>
