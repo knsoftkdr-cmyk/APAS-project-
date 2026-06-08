@@ -21,79 +21,79 @@ interface LeaderboardEntry {
 }
 
 export default function Leaderboard() {
-  const { user } = useAuth();
-  const [period, setPeriod] = useState<"all-time" | "monthly" | "weekly">("all-time");
+  const { user, profile } = useAuth();
+  const [period, setPeriod] = useState<"all-time">("all-time");
 
   // Fetch global leaderboard
   const { data: globalLeaderboard, isLoading: globalLoading } = useQuery({
     queryKey: ["leaderboard-global", period],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_leaderboard", {
-        time_period: period,
-        limit_count: 100,
-        school_id: profile?.school_id ?? null,
-      });
-      if (error) {
-        console.error("Leaderboard fetch error:", error);
-        throw error;
-      }
-      return data as LeaderboardEntry[];
+      if (!profile?.school_id) return [];
+      const { data, error } = await supabase
+        .from("user_gamification")
+        .select("user_id, total_xp, level, profiles!inner(full_name, avatar_url, school_id)")
+        .eq("profiles.school_id", profile.school_id)
+        .order("total_xp", { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return (data ?? []).map((entry: any) => ({
+        user_id: entry.user_id,
+        total_xp: entry.total_xp,
+        level: entry.level,
+        full_name: entry.profiles?.full_name || "Unknown",
+        avatar_url: entry.profiles?.avatar_url ?? null,
+      }));
     },
+    enabled: !!profile?.school_id,
   });
 
   // Fetch class leaderboard (if student)
   const { data: classLeaderboard, isLoading: classLoading } = useQuery({
     queryKey: ["leaderboard-class", period, user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
-      
-      // Get user's class first
-      const { data: studentData } = await supabase
+      if (!user?.id || !profile?.school_id) return [];
+      const { data: studentRec } = await supabase
         .from("students")
-        .select("id, grade")
+        .select("id")
         .eq("profile_id", user.id)
         .single();
-
-      if (!studentData?.grade) return [];
-
-      // Get all students in same class
-      const { data: classStudents } = await supabase
+      if (!studentRec?.id) return [];
+      const { data: classRec } = await supabase
+        .from("class_students")
+        .select("class_id")
+        .eq("student_id", studentRec.id)
+        .single();
+      if (!classRec?.class_id) return [];
+      const { data: classmates } = await supabase
+        .from("class_students")
+        .select("student_id")
+        .eq("class_id", classRec.class_id);
+      const studentIds = (classmates ?? []).map((c: any) => c.student_id);
+      if (!studentIds.length) return [];
+      const { data: profileRecs } = await supabase
         .from("students")
         .select("profile_id")
-        .eq("grade", studentData.grade);
-
-      const classProfileIds = classStudents?.map(s => s.profile_id) || [];
-      if (!classProfileIds.length) return [];
-
-      // Get leaderboard for class (only students with student record)
+        .in("id", studentIds);
+      const profileIds = (profileRecs ?? []).map((s: any) => s.profile_id).filter(Boolean);
+      if (!profileIds.length) return [];
       const { data, error } = await supabase
         .from("user_gamification")
         .select("user_id, total_xp, level, profiles(full_name, avatar_url)")
-        .in("user_id", classProfileIds)
+        .in("user_id", profileIds)
         .order("total_xp", { ascending: false })
         .limit(50);
-
       if (error) throw error;
-
-      // Filter to only include users who have a student record
-      const { data: studentIds } = await supabase
-        .from("students")
-        .select("profile_id")
-        .in("profile_id", classProfileIds);
-      
-      const validStudentIds = new Set(studentIds?.map(s => s.profile_id) || []);
-
-      return (data?.map((entry: any) => ({
+      return (data ?? []).map((entry: any) => ({
         user_id: entry.user_id,
         total_xp: entry.total_xp,
         level: entry.level,
         full_name: entry.profiles?.full_name || "Unknown",
-        avatar_url: entry.profiles?.avatar_url,
-      })) || []).filter(entry => validStudentIds.has(entry.user_id));
+        avatar_url: entry.profiles?.avatar_url ?? null,
+      }));
     },
-    enabled: !!user?.id,
-  });
+    enabled: !!user?.id && !!profile?.school_id,
 
+  });
   // Find user's rank
   const userRank = globalLeaderboard?.findIndex(u => u.user_id === user?.id) ?? -1;
   const userXp = globalLeaderboard?.find(u => u.user_id === user?.id)?.total_xp ?? 0;
@@ -244,7 +244,7 @@ export default function Leaderboard() {
                   <div className="text-sm text-muted-foreground">XP to Next Rank</div>
                   <div className="text-3xl font-bold text-emerald-600">
                     {globalLeaderboard && userRank < globalLeaderboard.length - 1
-                      ? (globalLeaderboard[userRank - 1]?.total_xp - userXp).toLocaleString()
+                      ? (globalLeaderboard[userRank + 1] ? (userXp - globalLeaderboard[userRank + 1].total_xp).toLocaleString() : "—")
                       : "—"}
                   </div>
                 </div>
@@ -265,13 +265,6 @@ export default function Leaderboard() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Rankings</h2>
-            <Tabs value={period} onValueChange={(val) => setPeriod(val as any)}>
-              <TabsList>
-                <TabsTrigger value="weekly">Weekly</TabsTrigger>
-                <TabsTrigger value="monthly">Monthly</TabsTrigger>
-                <TabsTrigger value="all-time">All Time</TabsTrigger>
-              </TabsList>
-            </Tabs>
           </div>
 
           <Tabs defaultValue="global" className="space-y-4 ">

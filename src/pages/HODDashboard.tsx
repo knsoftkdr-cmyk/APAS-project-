@@ -42,7 +42,7 @@ export default function HODDashboard() {
         const { data: ctData } = await supabase
           .from("class_teachers")
           .select("teacher_id, class_id")
-          .in("teacher_id", teacherIds);
+        .in("teacher_id", teacherIds);
         if (ctData && ctData.length > 0) {
           const classIds = ctData.map((ct: any) => ct.class_id).filter(Boolean);
           const { data: classData } = await supabase
@@ -108,6 +108,7 @@ export default function HODDashboard() {
       const { data: lData } = await supabase
         .from("lessons")
         .select("id, title, subject, class_level, section, created_at, profiles:teacher_id(full_name)")
+        .in("teacher_id", teacherIds.length > 0 ? teacherIds : [""])
         .order("created_at", { ascending: false })
         .limit(20);
       setLessons((lData ?? []).map((l: any) => ({
