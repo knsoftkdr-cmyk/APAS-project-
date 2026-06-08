@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -111,7 +111,7 @@ interface DiagnosticRequest {
 }
 
 export const DiagnosticApprovalPanel = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [reviewRequest, setReviewRequest] = useState<DiagnosticRequest | null>(null);
   const [approvedCount, setApprovedCount] = useState("");
@@ -119,21 +119,39 @@ export const DiagnosticApprovalPanel = () => {
   const [processing, setProcessing] = useState(false);
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ["admin-diagnostic-requests"],
+    queryKey: ["admin-diagnostic-requests", profile?.school_id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Get teachers for this school only
+      let teacherIdsForSchool: string[] = [];
+      if (profile?.school_id) {
+        const { data: schoolTeachers } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("role", "teacher")
+          .eq("school_id", profile.school_id);
+        teacherIdsForSchool = (schoolTeachers || []).map((t: any) => t.id);
+        if (teacherIdsForSchool.length === 0) return [];
+      }
+
+      let query = supabase
         .from("diagnostic_requests")
         .select("*")
         .order("created_at", { ascending: false });
+
+      if (profile?.school_id && teacherIdsForSchool.length > 0) {
+        query = query.in("teacher_id", teacherIdsForSchool);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
-      // Fetch teacher names separately
-      const teacherIds = [...new Set((data || []).map(r => r.teacher_id))];
-      const { data: profiles } = await supabase
+
+      const teacherIds = [...new Set((data || []).map((r: any) => r.teacher_id))];
+      const { data: teacherProfiles } = await supabase
         .from("profiles")
         .select("id, full_name")
-        .in("id", teacherIds);
-      const nameMap = new Map((profiles || []).map(p => [p.id, p.full_name]));
-      return (data || []).map(r => ({
+        .in("id", teacherIds as string[]);
+      const nameMap = new Map((teacherProfiles || []).map((p: any) => [p.id, p.full_name]));
+      return (data || []).map((r: any) => ({
         ...r,
         profiles: { full_name: nameMap.get(r.teacher_id) || null },
       })) as DiagnosticRequest[];
