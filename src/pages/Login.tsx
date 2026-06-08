@@ -95,18 +95,17 @@ if (rememberMe) {
 
     const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
     const role = profileData?.role;
-    const roleMap: Record<string, string> = {
-          Student: "student",
-          Parent: "parent",
-          Teacher: "teacher",
-          Admin: "admin",
-          Principal: "principal",
-          "School Admin": "school_admin",
-          HOD: "hod",
-          "KNSOFT Admin": "knsoft_admin",
+    const roleMap: Record<string, string[]> = {
+          Student: ["student"],
+          Parent: ["parent"],
+          Teacher: ["teacher"],
+          Admin: ["admin", "principal"],
+          "School Admin": ["school_admin"],
+          HOD: ["hod"],
+          "KNSOFT Admin": ["knsoft_admin"],
         };
 
-if (role !== roleMap[selectedRole]) {
+if (!role || !roleMap[selectedRole]?.includes(role)) {
   toast({
     title: "Role mismatch",
     description: `This account is not registered as ${selectedRole}.`,
@@ -135,6 +134,8 @@ if (role !== roleMap[selectedRole]) {
       navigate("/parent-dashboard");
     } else if (role === "student") {
       navigate("/student-dashboard");
+    } else if (role === "admin" || role === "principal") {
+      navigate("/dashboard");
     } else {
       navigate("/dashboard");
     }

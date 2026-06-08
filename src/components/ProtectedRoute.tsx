@@ -74,7 +74,8 @@ export function RoleRoute({
 
   if (!session) return <Navigate to="/login" replace />;
 
-  if (!profile || !roles.includes(profile.role)) {
+  const effectiveRole = profile?.role === "principal" ? "admin" : profile?.role;
+  if (!profile || !roles.includes(effectiveRole ?? "")) {
     return <Navigate to={redirectTo} replace />;
   }
 

@@ -43,30 +43,30 @@ const navItems: Array<{
 }> = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home" },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard" },
-  { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin"], module: "Reports" },
+  { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin", "principal"], module: "Reports" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher"] },
-  { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin"] },
-  { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin"] },
+  { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin", "principal"] },
+  { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "principal"] },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student"], tourId: "nav-academic-tests" },
   { title: "Homework", icon: LayoutDashboard, path: "/dashboard", roles: ["student"], tourId: "nav-home" },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification", module: "Gamification" },
   { title: "Leaderboard", icon: Trophy, path: "/leaderboard", roles: ["student"] },
   { title: "Predictions", icon: Brain, path: "/predictions", roles: ["student"], tourId: "nav-predictions", module: "Risk Prediction" },
-  { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student", "admin"], tourId: "nav-ai-tutor", module: "AI Tutor" },
-  { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin"] },
-  { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin"] },
-  { title: "Automation", icon: Zap, path: "/automation", roles: ["admin"] },
-  { title: "Security Center", icon: Lock, path: "/security", roles: ["admin"] },
-  { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin"] },
+  { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student", "admin", "principal"], tourId: "nav-ai-tutor", module: "AI Tutor" },
+  { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["admin", "principal"] },
+  { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "principal"] },
+  { title: "Automation", icon: Zap, path: "/automation", roles: ["admin", "principal"] },
+  { title: "Security Center", icon: Lock, path: "/security", roles: ["admin", "principal"] },
+  { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "principal"] },
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"] },
   { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"] },
-  { title: "Reports", icon: Users, path: "/teacher", roles: ["principal", "hod"] },
-  { title: "Assessments", icon: Brain, path: "/diagnostic", roles: ["principal", "hod"] },
-  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["principal", "hod"] },
+  { title: "Reports", icon: Users, path: "/teacher", roles: ["hod"] },
+  { title: "Assessments", icon: Brain, path: "/diagnostic", roles: ["hod"] },
+  { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["hod"] },
 
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing-dashboard", roles: ["knsoft_admin"] },
@@ -112,7 +112,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const isStudent = profile?.role === "student";
   const mobileNavItems = getMobileNavItems(profile?.role);
 
-  const BYPASS_ROLES = ["knsoft_admin", "admin", "school_admin"];
+  const BYPASS_ROLES = ["knsoft_admin", "admin", "principal", "school_admin"];
   const needsPermCheck = profile?.role && !BYPASS_ROLES.includes(profile.role);
 
   const visibleItems = navItems
@@ -198,7 +198,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     {profile.full_name || "User"}
                   </p>
                   <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-                    {profile.role === "admin" ? "Master Admin" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
+                    {profile.role === "admin" || profile.role === "principal" ? "Master Admin" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
                   </p>
                 </div>
               )}

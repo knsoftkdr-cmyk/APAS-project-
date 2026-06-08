@@ -475,19 +475,20 @@ const adminFeatureCards = [
 
 const AdminHome = () => {
   const { profile } = useAuth();
+  const schoolId = profile?.school_id;
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ["admin-dashboard-stats"],
+    queryKey: ["admin-dashboard-stats", schoolId],
     queryFn: async () => {
       const [classesRes, studentsRes, teachersRes, assessmentsRes, alertsRes] = await Promise.all([
-        supabase.from("classes").select("id", { count: "exact", head: true }),
-        supabase.from("students").select("id", { count: "exact", head: true }),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "teacher"),
-        supabase.from("student_assessments").select("id", { count: "exact", head: true }),
-        supabase.from("mismatch_alerts").select("id", { count: "exact", head: true }).eq("status", "flagged"),
+        supabase.from("classes").select("id", { count: "exact", head: true }).eq("school_id", schoolId!),
+        supabase.from("students").select("id", { count: "exact", head: true }).eq("school_id", schoolId!),
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "teacher").eq("school_id", schoolId!),
+        supabase.from("student_assessments").select("id", { count: "exact", head: true }).eq("school_id", schoolId!),
+        supabase.from("mismatch_alerts").select("id", { count: "exact", head: true }).eq("status", "flagged").eq("school_id", schoolId!),
       ]);
       return {
         classes: classesRes.count ?? 0,
@@ -497,20 +498,23 @@ const AdminHome = () => {
         activeAlerts: alertsRes.count ?? 0,
       };
     },
+    enabled: !!schoolId,
   });
 
   const { data: atRiskStudents } = useQuery({
-    queryKey: ["at-risk-students-dashboard"],
+    queryKey: ["at-risk-students-dashboard", schoolId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_predictions")
         .select("student_id, subject, predicted_score_next_test, risk_level, dropout_risk_percentage, contributing_factors")
         .eq("risk_level", "high")
+        .eq("school_id", schoolId!)
         .order("dropout_risk_percentage", { ascending: false })
         .limit(5);
       if (error) throw error;
       return data || [];
     },
+    enabled: !!schoolId,
   });
 
   return (
@@ -746,7 +750,7 @@ const Dashboard = () => {
     return <StudentDashboard />;
   }
 
-  if (profile?.role === "admin") {
+  if (profile?.role === "admin" || profile?.role === "principal") {
     return <AdminHome />;
   }
 

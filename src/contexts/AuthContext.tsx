@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const isSchoolAdmin  = profile?.role === "school_admin";
-  const isAdmin        = profile?.role === "admin";
+  const isAdmin        = profile?.role === "admin" || profile?.role === "principal";
   const isTeacher      = profile?.role === "teacher";
   const isPrincipal    = profile?.role === "principal";
   const isStudent      = profile?.role === "student";
