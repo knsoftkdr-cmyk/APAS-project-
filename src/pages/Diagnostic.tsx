@@ -24,6 +24,13 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import assessmentbanner from "@/assets/assessment-banner.png";
 import teacherassessmentbanner from "@/assets/teacher-assessment-banner.png";
+import {
+  User,
+  Calendar,
+  GraduationCap,
+  BookOpen,
+  Users
+} from "lucide-react";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -414,30 +421,46 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                 <p className="text-sm text-muted-foreground">Fill in your details to begin the assessment</p>
               </div>
 
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input
-                  value={name}
-                  readOnly
-                  disabled
-                  className="bg-muted cursor-not-allowed"
-                />
-              </div>
+<div className="flex items-center gap-3">
+  <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
+    <User className="h-5 w-5 text-purple-600" />
+  </div>
 
-              <div className="space-y-2">
-                <Label>Age</Label>
-                <Input
-                  type="number"
-                  min="3"
-                  max="18"
-                  placeholder="Enter your age"
-                  value={age}
-                  onChange={(e) => setAge(e.target.value)}
-                />
-              </div>
+  <div className="flex-1 space-y-2">
+    <Label>Full Name</Label>
+    <Input
+      value={name}
+      readOnly
+      disabled
+      className="bg-muted cursor-not-allowed"
+    />
+  </div>
+</div>
 
-              <div className="space-y-2">
-                <Label>Class</Label>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+            <Calendar className="h-5 w-5 text-green-600" />
+          </div>
+
+          <div className="flex-1 space-y-2">
+            <Label>Age</Label>
+            <Input
+              type="number"
+              min="3"
+              max="18"
+              placeholder="Enter your age"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+            />
+          </div>
+        </div>
+
+              <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <GraduationCap className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="flex-1 space-y-2">
+              <Label>Class</Label>
                 <Select value={studentClass} onValueChange={setStudentClass} disabled={!!profile?.class_grade}>
                   <SelectTrigger className={!!profile?.class_grade ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select your class" /></SelectTrigger>
                   <SelectContent>
@@ -447,9 +470,14 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label>Section</Label>
+<div className="flex items-center gap-3">
+  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+    <Users className="h-5 w-5 text-orange-600" />
+  </div>
+
+  <div className="flex-1 space-y-2">
                 <Input
                   placeholder="Enter your section (e.g., A, B, C)"
                   value={section}
@@ -459,6 +487,8 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                   className={!!profile?.section ? "bg-muted cursor-not-allowed" : ""}
                 />
               </div>
+</div>
+
 
               <div className="space-y-2">
                 <Label>Curriculum</Label>

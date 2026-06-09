@@ -12,6 +12,8 @@ import ctaBg from "@/assets/landing-cta-bg.jpg";
 import apasLogo from "@/assets/APAS-logo.png";
 import airobot from "@/assets/landing-ai-robot.png";
 import schoolbg from "@/assets/school-bg.png";
+import AOS from "aos";
+import "aos/dist/aos.css";
 import {
   Brain,
   BarChart3,
@@ -80,6 +82,13 @@ const Landing = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+  AOS.init({
+    duration: 1200,
+    once: true,
+    easing: "ease-out-cubic",
+  });
+}, []);
   useEffect(() => {
     const els = document.querySelectorAll("[data-reveal]");
     if (!("IntersectionObserver" in window)) {
@@ -407,7 +416,7 @@ const Landing = () => {
 
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm" data-aos="fade-right" data-aos-delay="100">
         <div className="text-4xl mb-4">👨‍🎓</div>
         <h3 className="font-bold text-xl mb-2">Students</h3>
         <p className="text-slate-600">
@@ -415,7 +424,7 @@ const Landing = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm" data-aos="zoom-in" data-aos-delay="200">
         <div className="text-4xl mb-4">👩‍🏫</div>
         <h3 className="font-bold text-xl mb-2">Teachers</h3>
         <p className="text-slate-600">
@@ -423,7 +432,7 @@ const Landing = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm" data-aos="fade-left" data-aos-delay="300">
         <div className="text-4xl mb-4">📋</div>
         <h3 className="font-bold text-xl mb-2">HODs</h3>
         <p className="text-slate-600">
@@ -431,7 +440,7 @@ const Landing = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm" data-aos="fade-right" data-aos-delay="400">
         <div className="text-4xl mb-4">🏫</div>
         <h3 className="font-bold text-xl mb-2">Principals</h3>
         <p className="text-slate-600">
@@ -439,7 +448,7 @@ const Landing = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm" data-aos="zoom-in" data-aos-delay="500">
         <div className="text-4xl mb-4">👨‍👩‍👧</div>
         <h3 className="font-bold text-xl mb-2">Parents</h3>
         <p className="text-slate-600">
@@ -447,7 +456,7 @@ const Landing = () => {
         </p>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm" data-aos="fade-left" data-aos-delay="600">
         <div className="text-4xl mb-4">📊</div>
         <h3 className="font-bold text-xl mb-2">Management</h3>
         <p className="text-slate-600">
@@ -464,7 +473,7 @@ const Landing = () => {
   <div className="max-w-7xl mx-auto">
     {/* Background AI Robot */}
     <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
-<div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-40 pointer-events-none">
+<div className="absolute right-0 top-[25%] -translate-y-1/2 opacity-60 pointer-events-none">
   <img
     src={airobot}
     alt="AI Robot"
@@ -489,70 +498,127 @@ const Landing = () => {
     </div>
 
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
+      <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
         <div className="text-4xl mb-3">🤖</div>
-<h3 className="font-bold text-lg">AI Tutor</h3>
-<p className="text-slate-600 mt-2">
-  Personalized AI tutoring support for every learner.
-</p>
+          <h3 className="font-bold text-lg mb-2">
+            AI Tutor
+          </h3>
+          <p className="text-slate-600">
+            Personalized AI tutoring support for every learner.
+          </p>
+          <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+            <ul className="text-sm text-slate-600 space-y-2">
+              <li>✓ 24/7 Learning Support</li>
+              <li>✓ Step-by-Step Explanations</li>
+              <li>✓ Adaptive Learning Support</li>
+              <li>✓ Real-Time Doubt Solving</li>
+            </ul>
+          </div>
       </div>
 
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-<div className="text-4xl mb-3">📚</div>
-<h3 className="font-bold text-lg">AI Lesson Planner</h3>
-<p className="text-slate-600 mt-2">
-  Generate curriculum-aligned lesson plans instantly.
-</p>
+    <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+      <div className="text-4xl mb-3">📚</div>
+          <h3 className="font-bold text-lg">AI Lesson Planner</h3>
+          <p className="text-slate-600 mt-2">
+            Generate curriculum-aligned lesson plans instantly.
+          </p>
+          <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+            <ul className="text-sm text-slate-600 space-y-2">
+              <li>✓ Curriculum-Aligned Plans</li>
+              <li>✓ Learning Outcomes Mapping</li>
+              <li>✓ Activity Suggestions</li>
+            </ul>
+          </div>
+    </div>
+
+      <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+
+          <div className="text-4xl mb-3">📝</div>
+          <h3 className="font-bold text-lg">AI Worksheet Generator</h3>
+          <p className="text-slate-600 mt-2">
+            Create customized worksheets for any topic and grade.
+          </p>
+          <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+            <ul className="text-sm text-slate-600 space-y-2">
+              <li>✓ Topic-Based Worksheets</li>
+              <li>✓ Difficulty Customization</li>
+            </ul>
+          </div>
       </div>
 
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-<div className="text-4xl mb-3">📝</div>
-<h3 className="font-bold text-lg">AI Worksheet Generator</h3>
-<p className="text-slate-600 mt-2">
-  Create customized worksheets for any topic and grade.
-</p>
+      <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+        <div className="text-4xl mb-3">❓</div>
+        <h3 className="font-bold text-lg">AI Question Generator</h3>
+        <p className="text-slate-600 mt-2">
+          Generate assessments, quizzes, and practice questions automatically.
+        </p>
+        <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+          <ul className="text-sm text-slate-600 space-y-2">
+            <li>✓ MCQ Generation</li>
+            <li>✓ Subject-Wise Questions</li>
+            <li>✓ Assessment Ready Sets</li>
+          </ul>
+        </div>
       </div>
 
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-<div className="text-4xl mb-3">❓</div>
-<h3 className="font-bold text-lg">AI Question Generator</h3>
-<p className="text-slate-600 mt-2">
-  Generate assessments, quizzes, and practice questions automatically.
-</p>
+      <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+          <div className="text-4xl mb-3">🏠</div>
+          <h3 className="font-bold text-lg">AI Homework Creator</h3>
+          <p className="text-slate-600 mt-2">
+            Build personalized homework assignments in seconds.
+          </p>
+          <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+            <ul className="text-sm text-slate-600 space-y-2">
+              <li>✓ Auto Homework Generation</li>
+              <li>✓ Skill-Based Assignments</li>
+            </ul>
+          </div>
       </div>
 
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-<div className="text-4xl mb-3">🏠</div>
-<h3 className="font-bold text-lg">AI Homework Creator</h3>
-<p className="text-slate-600 mt-2">
-  Build personalized homework assignments in seconds.
-</p>
+        <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+          <div className="text-4xl mb-3">⚠️</div>
+          <h3 className="font-bold text-lg">AI Risk Prediction</h3>
+          <p className="text-slate-600 mt-2">
+            Identify students who may need additional support early.
+          </p>
+          <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+              <ul className="text-sm text-slate-600 space-y-2">
+                <li>✓ At-Risk Student Detection</li>
+                <li>✓ Performance Forecasting</li>
+                <li>✓ Actionable Recommendations</li>
+              </ul>
+            </div>
+        </div>
+
+      <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+        <div className="text-4xl mb-3">📊</div>
+        <h3 className="font-bold text-lg">AI Learning Analytics</h3>
+        <p className="text-slate-600 mt-2">
+          Monitor student performance and learning trends in real time.
+        </p>
+        <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+          <ul className="text-sm text-slate-600 space-y-2">
+            <li>✓ Performance Analysis</li>
+            <li>✓ Learning Gap Analysis</li>
+            <li>✓ Progress Tracking</li>
+          </ul>
+        </div>
       </div>
 
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-<div className="text-4xl mb-3">⚠️</div>
-<h3 className="font-bold text-lg">AI Risk Prediction</h3>
-<p className="text-slate-600 mt-2">
-  Identify students who may need additional support early.
-</p>
+      <div className="group backdrop-blur-xl bg-white/60 border border-white/30 rounded-3xl p-6 shadow-lg hover:shadow-2xl hover:-translate-y-3 hover:scale-105 transition-all duration-500 overflow-hidden">
+        <div className="text-4xl mb-3">📖</div>
+          <h3 className="font-bold text-lg">AI Knowledge Hub</h3>
+          <p className="text-slate-600 mt-2">
+            Centralized access to learning resources, notes, and study materials.
+          </p>
+          <div className="max-h-0 overflow-hidden opacity-0 group-hover:max-h-40 group-hover:opacity-100 transition-all duration-500 mt-3">
+          <ul className="text-sm text-slate-600 space-y-2">
+            <li>✓ Centralized Learning Resources</li>
+            <li>✓ Smart Content Search</li>
+            <li>✓ Notes & Study Materials</li>
+          </ul>
+        </div>
       </div>
-
-      <div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-  <div className="text-4xl mb-3">📊</div>
-  <h3 className="font-bold text-lg">AI Learning Analytics</h3>
-  <p className="text-slate-600 mt-2">
-    Monitor student performance and learning trends in real time.
-  </p>
-</div>
-
-<div className="bg-white border border-blue-100 rounded-2xl p-6 hover:border-green-300 hover:shadow-lg transition-all">
-  <div className="text-4xl mb-3">📖</div>
-  <h3 className="font-bold text-lg">AI Knowledge Hub</h3>
-  <p className="text-slate-600 mt-2">
-    Centralized access to learning resources, notes, and study materials.
-  </p>
-</div>
 
     </div>
   </div>
@@ -576,27 +642,33 @@ const Landing = () => {
 
     <div className="flex flex-wrap justify-center gap-4">
 
-      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+      <span className="px-6 py-3 rounded-full bg-white/80 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 backdrop-blur-md border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-105 hover:border-green-400 transition-all duration-300 cursor-pointer"
+        data-aos="fade-up" data-aos-delay="100">
         CBSE
       </span>
 
-      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+      <span className="px-6 py-3 rounded-full bg-white/80 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 backdrop-blur-md border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-105 hover:border-green-400 transition-all duration-300 cursor-pointer"
+      data-aos="fade-up" data-aos-delay="200">
         ICSE
       </span>
 
-      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+      <span className="px-6 py-3 rounded-full bg-white/80 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 backdrop-blur-md border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-105 hover:border-green-400 transition-all duration-300 cursor-pointer"
+      data-aos="fade-up" data-aos-delay="300">
         State Board
       </span>
 
-      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+      <span className="px-6 py-3 rounded-full bg-white/80 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 backdrop-blur-md border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-105 hover:border-green-400 transition-all duration-300 cursor-pointer"
+      data-aos="fade-up" data-aos-delay="400">
         IB
       </span>
 
-      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+      <span className="px-6 py-3 rounded-full bg-white/80 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 backdrop-blur-md border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-105 hover:border-green-400 transition-all duration-300 cursor-pointer"
+      data-aos="fade-up" data-aos-delay="500">
         Cambridge
       </span>
 
-      <span className="px-6 py-3 rounded-full bg-white border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-md transition-all">
+      <span className="px-6 py-3 rounded-full bg-white/80 hover:bg-gradient-to-r hover:from-blue-50 hover:to-green-50 backdrop-blur-md border border-blue-200 text-blue-700 font-semibold shadow-sm hover:shadow-xl hover:-translate-y-2 hover:scale-105 hover:border-green-400 transition-all duration-300 cursor-pointer"
+      data-aos="fade-up" data-aos-delay="600">
         American Curriculum
       </span>
 
@@ -1293,22 +1365,35 @@ const Landing = () => {
     <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
 
 {[
-  { icon: "📝", title: "Adaptive Assessment" },
-  { icon: "🏠", title: "Homework Generator" },
-  { icon: "📚", title: "Lesson Planner" },
-  { icon: "🤖", title: "AI Tutor" },
-  { icon: "👨‍👩‍👧", title: "Parent Portal" },
-  { icon: "👩‍🏫", title: "Knowledge Hub" },
-  { icon: "📊", title: "Analytics" },
-  { icon: "📈", title: "Reports" },
-  { icon: "🎯", title: "Risk Predictions" },
-  { icon: "🏆", title: "Gamification" },
+  { icon: "📝", title: "Adaptive Assessment", bg: "from-blue-50 to-white" },
+  { icon: "🏠", title: "Homework Generator", bg: "from-emerald-50 to-white"},
+  { icon: "📚", title: "Lesson Planner", bg: "from-amber-50 to-white" },
+  { icon: "🤖", title: "AI Tutor", bg: "from-indigo-50 to-white" },
+  { icon: "👨‍👩‍👧", title: "Parent Portal", bg: "from-pink-50 to-white" },
+  { icon: "👩‍🏫", title: "Knowledge Hub", bg: "from-orange-50 to-white" },
+  { icon: "📊", title: "Analytics",bg: "from-cyan-50 to-white" },
+  { icon: "📈", title: "Reports",bg: "from-sky-50 to-white" },
+  { icon: "🎯", title: "Risk Predictions",bg: "from-violet-50 to-white" },
+  { icon: "🏆", title: "Gamification",bg: "from-yellow-50 to-white", },
 ].map((module) => (
   <div
     key={module.title}
-    className="group bg-white/90 backdrop-blur-sm border border-blue-100 rounded-3xl p-6 text-center
-               hover:border-green-300 hover:shadow-2xl hover:-translate-y-2
-               transition-all duration-300"
+    className={`
+group
+bg-gradient-to-br ${module.bg}
+backdrop-blur-sm
+border border-blue-100
+rounded-3xl
+p-6
+text-center
+hover:border-green-300
+hover:shadow-2xl
+hover:shadow-blue-200/50
+hover:-translate-y-2
+hover:scale-105
+transition-all
+duration-300
+`}
   >
     <div
       className="w-16 h-16 mx-auto mb-4 rounded-2xl
@@ -1359,70 +1444,189 @@ const Landing = () => {
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 
       {/* Learning Gains */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
-        <div className="text-5xl mb-4">📈</div>
-        <h3 className="text-xl font-bold mb-3">
-          Improved Learning Gains
-        </h3>
-        <p className="text-slate-600">
-          Identify learning gaps early and support continuous student growth.
-        </p>
+<div className="flip-card h-[280px]">
+
+  <div className="flip-card-inner">
+
+    {/* Front Side */}
+
+    <div className="flip-card-front bg-white shadow-lg p-8 border border-blue-100">
+
+      <div className="text-5xl mb-4">
+        📈
       </div>
 
-      {/* Teacher Productivity */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
-        <div className="text-5xl mb-4">👩‍🏫</div>
-        <h3 className="text-xl font-bold mb-3">
-          Better Teacher Productivity
-        </h3>
-        <p className="text-slate-600">
-          Reduce administrative burden and focus more time on teaching.
-        </p>
-      </div>
+      <h3 className="text-xl font-bold mb-3">
+        Improved Learning Gains
+      </h3>
+
+      <p className="text-slate-600">
+        Identify learning gaps early and support continuous student growth.
+      </p>
+
+    </div>
+
+    {/* Back Side */}
+
+    <div className="flip-card-back bg-gradient-to-br from-blue-500 to-green-500 text-white p-8">
+
+      <h3 className="text-2xl font-bold mb-5">
+        Expected Impact
+      </h3>
+
+      <ul className="space-y-3">
+        <li>✓ Higher Student Achievement</li>
+        <li>✓ Personalized Learning</li>
+        <li>✓ Faster Skill Development</li>
+        <li>✓ Continuous Progress Tracking</li>
+      </ul>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<div className="flip-card h-[280px]">
+  <div className="flip-card-inner">
+    {/* Front Side */}
+    <div className="flip-card-front bg-white shadow-lg p-8 border border-blue-100">
+      <div className="text-5xl mb-4">👩‍🏫</div>
+      <h3 className="text-xl font-bold mb-3">
+        Better Teacher Productivity
+      </h3>
+      <p className="text-slate-600">
+        Reduce administrative burden and focus more time on teaching.
+      </p>
+    </div>
+    {/* Back Side */}
+    <div className="flip-card-back bg-gradient-to-br from-blue-500 to-green-500 text-white p-8">
+      <h3 className="text-2xl font-bold mb-5">
+        Expected Impact
+      </h3>
+      <ul className="space-y-3">
+          <li>✓ Reduced Workload</li>
+          <li>✓ Automated Planning</li>
+          <li>✓ Faster Assessment</li>
+          <li>✓ More Teaching Time</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
       {/* Manual Planning */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
-        <div className="text-5xl mb-4">📚</div>
-        <h3 className="text-xl font-bold mb-3">
-          Reduced Manual Planning
-        </h3>
-        <p className="text-slate-600">
-          Generate lesson plans, assessments, and learning resources using AI.
-        </p>
-      </div>
+<div className="flip-card h-[280px]">
+  <div className="flip-card-inner">
+    {/* Front Side */}
+    <div className="flip-card-front bg-white shadow-lg p-8 border border-blue-100">
+      <div className="text-5xl mb-4">📚</div>
+      <h3 className="text-xl font-bold mb-3">
+        Reduced Manual Planning
+      </h3>
+      <p className="text-slate-600">
+        Generate lesson plans, assessments, and learning resources using AI.
+      </p>
+    </div>
+    {/* Back Side */}
+    <div className="flip-card-back bg-gradient-to-br from-blue-500 to-green-500 text-white p-8">
+      <h3 className="text-2xl font-bold mb-5">
+        Expected Impact
+      </h3>
+      <ul className="space-y-3">
+          <li>✓ AI Lesson Plans</li>
+          <li>✓ Auto Worksheets</li>
+          <li>✓ Smart Homework Creation</li>
+          <li>✓ Curriculum Alignment</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
 
       {/* Risk Detection */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
-        <div className="text-5xl mb-4">⚠️</div>
-        <h3 className="text-xl font-bold mb-3">
-          Early Risk Detection
-        </h3>
-        <p className="text-slate-600">
-          Detect at-risk learners before academic performance declines.
-        </p>
-      </div>
+<div className="flip-card h-[280px]">
+  <div className="flip-card-inner">
+    {/* Front Side */}
+    <div className="flip-card-front bg-white shadow-lg p-8 border border-blue-100">
+      <div className="text-5xl mb-4">⚠️</div>
+      <h3 className="text-xl font-bold mb-3">
+        Early Risk Detection
+      </h3>
+      <p className="text-slate-600">
+        Detect at-risk learners before academic performance declines.
+      </p>
+    </div>
+    {/* Back Side */}
+    <div className="flip-card-back bg-gradient-to-br from-blue-500 to-green-500 text-white p-8">
+      <h3 className="text-2xl font-bold mb-5">
+        Expected Impact
+      </h3>
+      <ul className="space-y-3">
+        <li>✓ Early Alerts</li>
+        <li>✓ Learning Gap Detection</li>
+        <li>✓ Intervention Planning</li>
+        <li>✓ Improved Retention</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
       {/* Parent Engagement */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
-        <div className="text-5xl mb-4">👨‍👩‍👧</div>
-        <h3 className="text-xl font-bold mb-3">
-          Stronger Parent Engagement
-        </h3>
-        <p className="text-slate-600">
-          Improve communication and visibility into student progress.
-        </p>
-      </div>
+<div className="flip-card h-[280px]">
+  <div className="flip-card-inner">
+    {/* Front Side */}
+    <div className="flip-card-front bg-white shadow-lg p-8 border border-blue-100">
+      <div className="text-5xl mb-4">👨‍👩‍👧</div>
+      <h3 className="text-xl font-bold mb-3">
+        Stronger Parent Engagement
+      </h3>
+      <p className="text-slate-600">
+        Improve communication and visibility into student progress.
+      </p>
+    </div>
+    {/* Back Side */}
+    <div className="flip-card-back bg-gradient-to-br from-blue-500 to-green-500 text-white p-8">
+      <h3 className="text-2xl font-bold mb-5">
+        Expected Impact
+      </h3>
+      <ul className="space-y-3">
+        <li>✓ Real-Time Updates</li>
+        <li>✓ Progress Visibility</li>
+        <li>✓ Better Communication</li>
+        <li>✓ Increased Involvement</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
       {/* Curriculum Coverage */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all hover:-translate-y-2">
-        <div className="text-5xl mb-4">✅</div>
-        <h3 className="text-xl font-bold mb-3">
-          Better Curriculum Coverage
-        </h3>
-        <p className="text-slate-600">
-          Monitor syllabus completion and ensure curriculum goals are achieved.
-        </p>
-      </div>
+<div className="flip-card h-[280px]">
+  <div className="flip-card-inner">
+    {/* Front Side */}
+    <div className="flip-card-front bg-white shadow-lg p-8 border border-blue-100">
+      <div className="text-5xl mb-4">✅</div>
+      <h3 className="text-xl font-bold mb-3">
+        Better Curriculum Coverage
+      </h3>
+      <p className="text-slate-600">
+        Monitor syllabus completion and ensure curriculum goals are achieved.
+      </p>
+    </div>
+    {/* Back Side */}
+    <div className="flip-card-back bg-gradient-to-br from-blue-500 to-green-500 text-white p-8">
+      <h3 className="text-2xl font-bold mb-5">
+        Expected Impact
+      </h3>
+      <ul className="space-y-3">
+        <li>✓ Syllabus Tracking</li>
+        <li>✓ Completion Monitoring</li>
+        <li>✓ Curriculum Insights</li>
+        <li>✓ Academic Consistency</li>
+      </ul>
+    </div>
+  </div>
+</div>
 
     </div>
 
@@ -1460,7 +1664,7 @@ const Landing = () => {
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
 
       {/* RBAC */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-300/30 hover:-translate-y-3 hover:scale-[1.02] transition-all">
         <div className="text-5xl mb-4">🔐</div>
         <h3 className="text-xl font-bold mb-3">
           Role-Based Access Control
@@ -1472,7 +1676,7 @@ const Landing = () => {
       </div>
 
       {/* Multi Tenant */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-300/30 hover:-translate-y-3 hover:scale-[1.02] transition-all">
         <div className="text-5xl mb-4">🏫</div>
         <h3 className="text-xl font-bold mb-3">
           Multi-Tenant Architecture
@@ -1484,7 +1688,7 @@ const Landing = () => {
       </div>
 
       {/* Encryption */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-300/30 hover:-translate-y-3 hover:scale-[1.02] transition-all">
         <div className="text-5xl mb-4">🛡️</div>
         <h3 className="text-xl font-bold mb-3">
           Data Encryption
@@ -1496,7 +1700,7 @@ const Landing = () => {
       </div>
 
       {/* Audit Logs */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-300/30 hover:-translate-y-3 hover:scale-[1.02] transition-all">
         <div className="text-5xl mb-4">📋</div>
         <h3 className="text-xl font-bold mb-3">
           Audit Logs
@@ -1508,7 +1712,7 @@ const Landing = () => {
       </div>
 
       {/* Cloud Hosting */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-300/30 hover:-translate-y-3 hover:scale-[1.02] transition-all">
         <div className="text-5xl mb-4">☁️</div>
         <h3 className="text-xl font-bold mb-3">
           Secure Cloud Hosting
@@ -1520,7 +1724,7 @@ const Landing = () => {
       </div>
 
       {/* GDPR */}
-      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-xl transition-all">
+      <div className="bg-white rounded-3xl p-8 border border-slate-200 hover:border-blue-300 hover:shadow-2xl hover:shadow-blue-300/30 hover:-translate-y-3 hover:scale-[1.02] transition-all">
         <div className="text-5xl mb-4">✅</div>
         <h3 className="text-xl font-bold mb-3">
           GDPR Ready
