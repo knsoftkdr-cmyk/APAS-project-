@@ -162,7 +162,7 @@ return (
             />
            </div>
             <div
-              className="
+              className=" login-card
                 relative
                 w-[470px]
               bg-violet-50/70
@@ -205,7 +205,7 @@ return (
       setSelectedRole(e.target.value);
       setIdentifier("");
     }}
-    className="w-full h-12 px-4 rounded-md bg-[#F5F8FC] border border-gray-200 text-[#2C3E50]"
+      className="w-full h-14 px-5 rounded-xl bg-white/80 backdrop-blur-md border-2 border-blue-100 text-[#2C3E50] font-medium shadow-sm hover:border-blue-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-200/40 transition-all duration-300 cursor-pointer"
   >
     <option>Student</option>
     <option>Parent</option>
@@ -282,7 +282,7 @@ return (
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-md bg-[#2563EB] text-white font-semibold hover:bg-[#1d4fd8] transition-colors disabled:opacity-70"
+                  className="w-full h-12 rounded-md bg-gradient-to-r from-blue-600 to-blue-500 text-white font-semibold hover:scale-105 hover:shadow-xl hover:shadow-blue-400/30 transition-all duration-300 " 
                 >
                   {loading ? "Signing in…" : "Login"}
                 </Button>

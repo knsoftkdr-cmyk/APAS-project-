@@ -246,3 +246,15 @@
 .flip-card-back {
   transform: rotateY(180deg);
 }
+
+
+
+@keyframes floatCard {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0px); }
+}
+
+.login-card {
+  animation: floatCard 6s ease-in-out infinite;
+}
