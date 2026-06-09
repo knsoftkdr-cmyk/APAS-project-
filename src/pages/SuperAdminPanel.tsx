@@ -38,13 +38,10 @@ const PERMISSION_MODULES = [
   "Alerts",
   "Admin Panel",
   "AI Tutor",
-  "AI Knowledge Hub",
   "School Intelligence",
-  "Automation",
   "Security Center",
   "Billing",
   "Settings",
-  "User Creation",
   "Student Profile",
   "Teacher Profile",
   "Attendance",
@@ -53,9 +50,20 @@ const PERMISSION_MODULES = [
   "Assessments",
   "Analytics",
   "Gamification",
+  "Leaderboard",
+  "Predictions",
   "Parent Communication",
   "Risk Prediction",
+  "Academic Tests",
+  "Requests",
 ];
+const DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  admin:   ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing"],
+  hod:     ["Home", "Reports", "Assessments", "Analytics"],
+  teacher: ["Home", "Reports", "Lesson Plans", "Analytics", "Requests"],
+  student: ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor"],
+  parent:  ["Home"],
+};
 
 const PERMISSION_ROLES = ["admin", "hod", "teacher", "student", "parent"];
 
@@ -186,16 +194,30 @@ const SuperAdminPanel = () => {
       .from("role_permissions")
       .select("role, module_name, allowed")
       .eq("school_id", sid);
-
     const matrix: PermMatrix = {};
-    for (const row of (data ?? []) as any[]) {
-      matrix[`${row.role}-${row.module_name}`] = row.allowed;
+    const saved = data ?? [];
+    const expectedCount = PERMISSION_ROLES.length * PERMISSION_MODULES.length;
+    if (saved.length >= expectedCount) {
+      for (const role of PERMISSION_ROLES) {
+        for (const module of PERMISSION_MODULES) {
+          const row = saved.find((r: any) => r.role === role && r.module_name === module);
+          matrix[`${role}-${module}`] = row ? row.allowed : (DEFAULT_PERMISSIONS[role] ?? []).includes(module);
+        }
+      }
+    } else {
+      const upserts: any[] = [];
+      for (const role of PERMISSION_ROLES) {
+        for (const module of PERMISSION_MODULES) {
+          const def = (DEFAULT_PERMISSIONS[role] ?? []).includes(module);
+          matrix[`${role}-${module}`] = def;
+          upserts.push({ school_id: sid, role, module_name: module, allowed: def, updated_at: new Date().toISOString() });
+        }
+      }
+      await supabase.from("role_permissions").upsert(upserts, { onConflict: "school_id,role,module_name" });
     }
     setPermMatrix(matrix);
     setPermLoading(false);
   }, []);
-
-  // ── Fetch all data ─────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     setLoading(true);
     try {
@@ -308,11 +330,8 @@ const SuperAdminPanel = () => {
           updated_at: new Date().toISOString(),
         }))
       );
-
-      const { error } = await supabase
-        .from("role_permissions")
-        .upsert(upserts, { onConflict: "school_id,role,module_name" });
-
+      await supabase.from("role_permissions").delete().eq("school_id", schoolId);
+      const { error } = await supabase.from("role_permissions").insert(upserts);
       if (error) throw error;
       toast({ title: "Permissions saved successfully ✅" });
     } catch (e: any) {

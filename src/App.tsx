@@ -93,10 +93,10 @@ export default function App() {
                       <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
                       <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />
                       <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Curative /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><Requests /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "student", "parent"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-                      <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal"]}><Alerts /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/admin" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><AdminPanel /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><Alerts /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher", "student", "parent"]}><AdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/super-admin" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><SuperAdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/knsoft-admin" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><KNSoftAdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/billing-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><BillingDashboard /></RoleGuard></ProtectedRoute>} />
@@ -118,10 +118,10 @@ export default function App() {
                       <Route path="/predictions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><PredictionDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ai-tutor" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "principal"]}><AITutor /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ai-knowledge" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal"]}><AIKnowledgeHub /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/school-analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><SchoolAnalytics /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/school-analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher", "student", "parent"]}><SchoolAnalytics /></RoleGuard></ProtectedRoute>} />
                       <Route path="/automation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><AutomationWorkflows /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><Billing /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher", "student", "parent"]}><Billing /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="*" element={<NotFound />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />

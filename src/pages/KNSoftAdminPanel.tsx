@@ -131,14 +131,27 @@ const KNSoftAdminPanel = () => {
     }
     setCreatingSchool(true);
     try {
-      const { error } = await supabase.from("schools").insert({
+      const { data: newSchool, error } = await supabase.from("schools").insert({
         name: newSchoolName.trim(),
         email: newSchoolEmail.trim() || null,
         curriculum: newSchoolCurriculum.trim() || null,
         subscription_plan: newSchoolPlan,
         is_active: true,
-      });
+      }).select("id").single();
       if (error) throw error;
+      if (newSchool?.id) {
+        const ROLES = ["admin", "hod", "teacher", "student", "parent"];
+        const MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests"];
+        const DEFAULTS: Record<string,string[]> = {
+          admin:   ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing"],
+          hod:     ["Home","Reports","Assessments","Analytics"],
+          teacher: ["Home","Reports","Lesson Plans","Analytics","Requests"],
+          student: ["Home","Assessments","Academic Tests","Homework","Gamification","Leaderboard","Predictions","AI Tutor"],
+          parent:  ["Home"],
+        };
+        const perms = ROLES.flatMap(role => MODULES.map(module => ({ school_id: newSchool.id, role, module_name: module, allowed: (DEFAULTS[role]??[]).includes(module), updated_at: new Date().toISOString() })));
+        await supabase.from("role_permissions").upsert(perms, { onConflict: "school_id,role,module_name" });
+      }
       toast({ title: "School created successfully ✅" });
       setSchoolOpen(false);
       setNewSchoolName(""); setNewSchoolEmail("");

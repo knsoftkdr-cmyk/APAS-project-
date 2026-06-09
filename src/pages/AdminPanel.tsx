@@ -66,7 +66,7 @@ interface ClassTeacher {
 
 const AdminPanel = () => {
   const { user, profile } = useAuth();
-  const isPrincipalRole = ['admin', 'school_admin', 'principal'].includes(profile?.role?.toLowerCase() ?? '');
+  const isPrincipalRole = ['admin', 'school_admin', 'principal', 'hod'].includes(profile?.role?.toLowerCase() ?? '');
   const { toast } = useToast();
   const isMasterAdmin = profile?.role === "knsoft_admin" || profile?.role === "superadmin";
   const isSchoolAdmin = profile?.role === "school_admin";

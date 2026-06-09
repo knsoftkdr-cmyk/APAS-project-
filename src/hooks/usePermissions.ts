@@ -54,15 +54,8 @@ export function usePermissions(): UsePermissionsReturn {
         .eq("school_id", profile.school_id)
         .eq("role", profile.role)
         .eq("allowed", true);
-
-      const modules = (data ?? []).map((r) => r.module_name);
-      // If no permissions set for this school yet, default to show everything
-      if (modules.length === 0) {
-        setAllowedModules(["*"]);
-      } else {
-        setAllowedModules(modules);
-        console.log("usePermissions: allowed modules=", modules);
-      }
+      const modules = (data ?? []).map((r: any) => r.module_name);
+      setAllowedModules(modules);
       setLoading(false);
     };
 
