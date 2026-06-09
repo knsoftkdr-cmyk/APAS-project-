@@ -13,6 +13,13 @@ import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import academictests from "@/assets/academictests-banner.png";
 import {
+  School,
+  Users,
+  FileText,
+  HelpCircle,
+  Flame
+} from "lucide-react";
+import {
   BookOpen, CheckCircle2, XCircle, ChevronRight, Trophy, Clock, RotateCcw,
   GraduationCap, Sparkles, ArrowRight, Loader2, History, Target, Award,
   Timer, Eye, ChevronDown, ChevronUp,
@@ -274,7 +281,18 @@ export default function AcademicTests() {
   };
 
   const progressPercent = questions.length > 0 ? ((currentQ + (showAnswer ? 1 : 0)) / questions.length) * 100 : 0;
-
+const subjectColors: Record<string, string> = {
+  Math: "bg-blue-500 text-white",
+  Science: "bg-green-500 text-white",
+  English: "bg-purple-500 text-white",
+  Social: "bg-orange-500 text-white",
+  Telugu: "bg-pink-500 text-white",
+  Hindi: "bg-red-500 text-white",
+  Computer: "bg-cyan-500 text-white",
+  Physics: "bg-indigo-500 text-white",
+  Chemistry: "bg-emerald-500 text-white",
+  Biology: "bg-lime-500 text-white",
+};
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -332,8 +350,17 @@ export default function AcademicTests() {
             </CardHeader>
             <CardContent className="space-y-4 max-w-md mx-auto">
               {/* Class */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Class <span className="text-red-500">*</span></label>
+            <div className="flex gap-3 items-start">
+
+              <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 mt-7">
+                <School className="w-6 h-6 text-blue-600" />
+              </div>
+
+              <div className="flex-1 space-y-2">
+
+                <label className="text-sm font-medium">
+                  Class <span className="text-red-500">*</span>
+                </label>
                 <Select value={studentClass} onValueChange={handleClassChange} disabled={!!profile?.class_grade}>
                   <SelectTrigger className={!!profile?.class_grade ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Class" /></SelectTrigger>
                   <SelectContent>
@@ -343,10 +370,19 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
               {/* Section */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Section</label>
+<div className="flex gap-3 items-start">
+
+  <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center shrink-0 mt-7">
+    <Users className="w-6 h-6 text-orange-600" />
+  </div>
+
+  <div className="flex-1 space-y-2">
+    <label className="text-sm font-medium">
+      Section
+    </label>
                 <Select value={section} onValueChange={setSection} disabled={!!profile?.section}>
                   <SelectTrigger className={!!profile?.section ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Section (Optional)" /></SelectTrigger>
                   <SelectContent>
@@ -356,10 +392,19 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
               {/* Subject */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Subject <span className="text-red-500">*</span></label>
+            <div className="flex gap-3 items-start">
+
+              <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center shrink-0 mt-7">
+                <BookOpen className="w-6 h-6 text-green-600" />
+              </div>
+
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium">
+                  Subject <span className="text-red-500">*</span>
+                </label>
                 <Select value={subject} onValueChange={setSubject} disabled={!studentClass || loadingSubjects}>
                   <SelectTrigger>
                     <SelectValue placeholder={
@@ -378,20 +423,36 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
               {/* Topic */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Topic</label>
+            <div className="flex gap-3 items-start">
+
+              <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center shrink-0 mt-7">
+                <FileText className="w-6 h-6 text-purple-600" />
+              </div>
+
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium">
+                  Topic
+                </label>
                 <Input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g. Photosynthesis, Fractions (Optional)"
                 />
               </div>
+              </div>
 
               {/* Number of Questions */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Number of Questions</label>
+            <div className="flex gap-3 items-start">
+              <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center shrink-0 mt-7">
+                <HelpCircle className="w-6 h-6 text-pink-600" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium">
+                  Number of Questions
+                </label>
                 <Select value={String(numQuestions)} onValueChange={(v) => setNumQuestions(Number(v))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -401,10 +462,16 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
-
+            </div>
               {/* Type of Questions */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Type of Questions</label>
+            <div className="flex gap-3 items-start">
+              <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center shrink-0 mt-7">
+                <Target className="w-6 h-6 text-cyan-600" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium">
+                  Type of Questions
+                </label>
                 <Select value={questionType} onValueChange={setQuestionType}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -414,10 +481,16 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
-
+            </div>
               {/* Difficulty */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Level of Difficulty</label>
+            <div className="flex gap-3 items-start">
+              <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center shrink-0 mt-7">
+                <Flame className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="flex-1 space-y-2">
+                <label className="text-sm font-medium">
+                  Level of Difficulty
+                </label>
                 <Select value={difficulty} onValueChange={setDifficulty}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -427,7 +500,7 @@ export default function AcademicTests() {
                   </SelectContent>
                 </Select>
               </div>
-
+            </div>
               <Button onClick={handleStartTest} className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white" size="lg" disabled={!studentClass || !subject}>
                 <Sparkles className="h-4 w-4" /> Generate & Start Test
               </Button>
@@ -442,35 +515,35 @@ export default function AcademicTests() {
               </h3>
               <div className="grid gap-3 sm:grid-cols-2">
                 {pastTests.map((test: any) => (
-                  <Card
-                    key={test.id}
-                    className="hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => handleOpenReview(test)}
-                  >
+<Card
+  key={test.id}
+  className={`cursor-pointer border-0 bg-gradient-to-br ${subjectColors[test.subject] || "from-blue-50 to-green-50"} hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+  onClick={() => handleOpenReview(test)}
+>
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <Badge variant="secondary" className="text-xs">{test.subject}</Badge>
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-s text-white text-muted-foreground">
                           {new Date(test.completed_at).toLocaleDateString()}
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-white text-muted-foreground">
                           {CLASS_OPTIONS.find(c => c.value === test.student_class)?.label || test.student_class}
                           {test.section ? ` - ${test.section}` : ""}
                         </span>
                         <div className="flex items-center gap-1">
-                          <Target className="h-3.5 w-3.5 text-primary" />
+                          <Target className="h-3.5 w-3.5 text-white text-primary" />
                           <span className={cn("text-sm font-bold",
-                            test.score >= 7 ? "text-emerald-600" : test.score >= 4 ? "text-amber-600" : "text-red-500"
+                            test.score >= 7 ? "text-emerald-400" : test.score >= 4 ? "text-amber-400" : "text-red-400"
                           )}>
                             {test.score}/{test.total_questions}
                           </span>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 mt-2">
-                        <Eye className="h-3 w-3 text-muted-foreground" />
-                        <span className="text-xs text-muted-foreground">Click to review answers</span>
+                        <Eye className="h-4 w-4 text-white text-muted-foreground" />
+                        <span className="text-xs text-muted-foreground text-white">Click to review answers</span>
                       </div>
                     </CardContent>
                   </Card>

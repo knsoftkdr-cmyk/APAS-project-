@@ -244,7 +244,18 @@ export default function StudentDashboard() {
   }
 
   const firstName = profile?.full_name?.split(" ")[0] || "Student";
-
+const subjectColors: Record<string, string> = {
+  Math: "bg-blue-500 text-white",
+  Science: "bg-green-500 text-white",
+  English: "bg-purple-500 text-white",
+  Social: "bg-orange-500 text-white",
+  Telugu: "bg-pink-500 text-white",
+  Hindi: "bg-red-500 text-white",
+  Computer: "bg-cyan-500 text-white",
+  Physics: "bg-indigo-500 text-white",
+  Chemistry: "bg-emerald-500 text-white",
+  Biology: "bg-lime-500 text-white",
+};
   return (
     <AppLayout>
         <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
@@ -372,7 +383,7 @@ export default function StudentDashboard() {
     </CardHeader>
 
     <CardContent className="space-y-3">
-<div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
       <TrendingUp className="h-7 w-7 text-emerald-600" />
@@ -388,10 +399,10 @@ export default function StudentDashboard() {
         </span>
       </div>
 
-<div className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-amber-50 border border-amber-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
 
-    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center ">
       <Brain className="h-5 w-5 text-amber-600" />
     </div>
     <div>
@@ -405,7 +416,7 @@ export default function StudentDashboard() {
         </span>
 </div>
 
-<div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
 
     <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -428,21 +439,20 @@ export default function StudentDashboard() {
   {/* Homework Overview */}
   <Card>
     <CardHeader>
-      <div className="flex items-center gap-3">
-  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-    <ClipboardList className="h-7 w-7 text-blue-600" />
-  </div>
-
-  <div>
-    <h3 className="text-xl font-bold text-slate-800">
-      Homework Overview
-    </h3>
-  </div>
-</div>
+      <div className="flex items-center gap-3 ">
+        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+          <ClipboardList className="h-7 w-7 text-blue-600" />
+        </div>
+        <div>
+          <h3 className="text-xl font-bold text-slate-800">
+            Homework Overview
+          </h3>
+        </div>
+      </div>
     </CardHeader>
 
     <CardContent className="space-y-3">
-<div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 border border-blue-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-blue-50 border border-blue-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
 
     <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
@@ -462,7 +472,7 @@ export default function StudentDashboard() {
   </span>
 </div>
 
-<div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50 border border-emerald-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
 
     <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center">
@@ -482,7 +492,7 @@ export default function StudentDashboard() {
   </span>
 </div>
 
-<div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-red-50 border border-red-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
 
     <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
@@ -502,7 +512,7 @@ export default function StudentDashboard() {
   </span>
 </div>
 
-<div className="flex items-center justify-between p-4 rounded-xl bg-purple-50 border border-purple-100">
+<div className="flex items-center justify-between p-4 rounded-xl bg-purple-50 border border-purple-100 hover:-translate-y-1 hover:shadow-xl transition-all duration-300 cursor-pointer">
   <div className="flex items-center gap-3">
 
     <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
@@ -515,7 +525,7 @@ export default function StudentDashboard() {
       </p>
     </div>
   </div>
-  <span className="text-3xl font-bold text-purple-600">
+  <span className="text-2xl font-bold text-purple-600">
     {todayScore !== null ? `${todayScore}%` : "--"}
   </span>
 </div>
@@ -589,13 +599,28 @@ export default function StudentDashboard() {
                 {breakdown.pendingList.map((hw) => (
                   <div
                     key={hw.id}
-                    className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-muted/40 transition-colors"
+                      className={`
+    flex
+    items-center
+    justify-between
+    rounded-xl
+    p-4
+    text-white
+    bg-gradient-to-r
+    ${subjectColors[hw.subject] || "from-slate-600 to-slate-700"}
+    hover:shadow-xl
+    hover:-translate-y-1
+    hover:scale-[1.02]
+    transition-all
+    duration-300
+    cursor-pointer
+  `}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">
                         {hw.period_title || hw.topic || "Homework"}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs text-muted-foreground truncate text-white">
                         {hw.subject || "—"} · Class {hw.class_level}
                         {hw.section ? `-${hw.section}` : ""}
                         {hw.due_date && (

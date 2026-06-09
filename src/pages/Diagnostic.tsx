@@ -24,11 +24,12 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import assessmentbanner from "@/assets/assessment-banner.png";
 import teacherassessmentbanner from "@/assets/teacher-assessment-banner.png";
+import teacherGuide from "@/assets/teacher-guide.png";
 import {
   User,
   Calendar,
+  Book,
   GraduationCap,
-  BookOpen,
   Users
 } from "lucide-react";
 const CLASS_OPTIONS = [
@@ -411,7 +412,17 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
             className="hidden md:block absolute right-10 bottom-6 w-40"
           />
         </div>
-        <div className="space-y-8">
+
+<div className="relative min-h-[700px]">
+
+  {/* Teacher PNG */}
+  <div className="hidden lg:flex absolute left-10 top-1/2 -translate-y-1/2">
+    <img
+      src={teacherGuide}
+      alt="Teacher Guide"
+      className="w-[600px] object-contain"
+    />
+  </div>
           {/* Learning Profile Assessment */}
           <Card className="max-w-lg mx-auto">
             <CardContent className="p-6 space-y-5">
@@ -423,7 +434,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
 <div className="flex items-center gap-3">
   <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-    <User className="h-5 w-5 text-purple-600" />
+    <User className="h-7 w-7 text-purple-600" />
   </div>
 
   <div className="flex-1 space-y-2">
@@ -439,7 +450,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-            <Calendar className="h-5 w-5 text-green-600" />
+            <Calendar className="h-7 w-7 text-green-600" />
           </div>
 
           <div className="flex-1 space-y-2">
@@ -457,7 +468,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
               <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-              <GraduationCap className="h-5 w-5 text-blue-600" />
+              <GraduationCap className="h-7 w-7 text-blue-600" />
             </div>
             <div className="flex-1 space-y-2">
               <Label>Class</Label>
@@ -474,10 +485,11 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
 
 <div className="flex items-center gap-3">
   <div className="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-    <Users className="h-5 w-5 text-orange-600" />
+    <Users className="h-7 w-7 text-orange-600" />
   </div>
 
-  <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2">
+              <Label>Section</Label>
                 <Input
                   placeholder="Enter your section (e.g., A, B, C)"
                   value={section}
@@ -489,8 +501,12 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
               </div>
 </div>
 
+<div className="flex items-center gap-3">
+  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+    <Book className="h-7 w-7 text-pink-600" />
+  </div>
 
-              <div className="space-y-2">
+  <div className="flex-1 space-y-2">
                 <Label>Curriculum</Label>
                 <Select value={curriculum} onValueChange={setCurriculum}>
                   <SelectTrigger><SelectValue placeholder="Select your curriculum" /></SelectTrigger>
@@ -501,7 +517,14 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
+          </div>
+
+<div className="flex items-center gap-3">
+  <div className="w-12 h-12 rounded-xl bg-pink-100 flex items-center justify-center">
+    <User className="h-7 w-7 text-pink-600" />
+  </div>
+
+  <div className="flex-1 space-y-2">
                 <Label>Class Teacher</Label>
                 <Select value={teacherId} onValueChange={setTeacherId}>
                   <SelectTrigger>
@@ -519,8 +542,9 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
                   </SelectContent>
                 </Select>
               </div>
+            </div>
 
-              <Button className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white" size="lg" onClick={startQuiz} disabled={!canStartQuiz}>
+              <Button className="w-full h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-300/40 hover:scale-105 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-400/50 transition-all duration-300 " onClick={startQuiz} disabled={!canStartQuiz}>
                 Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </CardContent>
