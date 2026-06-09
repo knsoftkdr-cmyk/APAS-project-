@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGamification } from "@/hooks/useGamification";
-import { fetchClassWiseContent } from "@/components/gamification/engine/classWiseContentPool";
 import {
   GamePhase, GameResult, TIER_BADGES,
 } from "@/components/gamification/types";
@@ -68,6 +67,7 @@ function AnimatedBackground() {
     </div>
   );
 }
+
 function FloatingParticles() {
   const particles = useMemo(() => Array.from({ length: 30 }, (_, i) => ({
     id: i, size: 2 + Math.random() * 3, x: Math.random() * 100,
@@ -231,9 +231,6 @@ const Gamification = () => {
   const timerActive = useRef(false);
   const startTimeRef = useRef<number>(0);
 
-  // NEW CENTRALIZED REPETITION TRACKER
-  const [playedHistory, setPlayedHistory] = useState<Record<string, string[]>>({});
-
   useEffect(() => {
     if (!timerActive.current) return;
     const t = setInterval(() => {
@@ -276,16 +273,7 @@ const Gamification = () => {
 
   const startCountdown = () => { setCountdown(3); setPhase("COUNTDOWN"); };
 
-  const handleGameComplete = (result: GameResult, loggedUniqueKeys: string[] = []) => {
-    const activeGameConfig = selectedGames[currentGame];
-    if (activeGameConfig) {
-      const historyCompositeKey = `${studentClass}_${subject}_${activeGameConfig.id}`.toLowerCase();
-      setPlayedHistory(prev => ({
-        ...prev,
-        [historyCompositeKey]: [...(prev[historyCompositeKey] || []), ...loggedUniqueKeys]
-      }));
-    }
-
+  const handleGameComplete = (result: GameResult) => {
     setResults(prev => [...prev, result]);
     setPhase("POST_GAME");
   };
@@ -328,10 +316,6 @@ const Gamification = () => {
   const renderGame = () => {
     if (!currentGameConfig || !ageGroup) return null;
 
-    const classWiseContent = fetchClassWiseContent(studentClass, subject);
-    const historyCompositeKey = `${studentClass}_${subject}_${currentGameConfig.id}`.toLowerCase();
-    const alreadyPlayedItems = playedHistory[historyCompositeKey] || [];
-
     const commonProps = {
       studentName,
       ageGroup: ageGroup.id,
@@ -341,134 +325,61 @@ const Gamification = () => {
     };
 
     switch (currentGameConfig.id) {
-      case 'quick-quiz': {
-        const rawPool = classWiseContent.quizzes || [];
-        const freshPool = rawPool.filter(q => !alreadyPlayedItems.includes(q.question));
-        
-        const finalPool = freshPool.length > 0 ? freshPool : rawPool;
-        if (freshPool.length === 0 && alreadyPlayedItems.length > 0) {
-          setTimeout(() => setPlayedHistory(p => ({ ...p, [historyCompositeKey]: [] })), 0);
-        }
-
+      case 'quick-quiz':
         return (
-          <QuickQuiz 
-            {...commonProps} 
-            customQuizzes={finalPool} 
-            onComplete={(res) => handleGameComplete(res, finalPool.map(q => q.question))} 
+          <QuickQuiz
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
           />
         );
-      }
-        
-      case 'word-scramble': {
-        const rawPool = classWiseContent.scrambles || [];
-        const freshPool = rawPool.filter(s => !alreadyPlayedItems.includes(s.word));
-        
-        const finalPool = freshPool.length > 0 ? freshPool : rawPool;
-        if (freshPool.length === 0 && alreadyPlayedItems.length > 0) {
-          setTimeout(() => setPlayedHistory(p => ({ ...p, [historyCompositeKey]: [] })), 0);
-        }
 
+      case 'word-scramble':
         return (
-          <WordScramble 
-            {...commonProps} 
-            customScrambles={finalPool} 
-            onComplete={(res) => handleGameComplete(res, finalPool.map(s => s.word))} 
+          <WordScramble
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
           />
         );
-      }
-        
-      case 'match-pairs': {
-        const rawPool = classWiseContent.pairs || [];
-        const freshPool = rawPool.filter(p => !alreadyPlayedItems.includes(p.item1));
-        
-        const finalPool = freshPool.length > 0 ? freshPool : rawPool;
-        if (freshPool.length === 0 && alreadyPlayedItems.length > 0) {
-          setTimeout(() => setPlayedHistory(p => ({ ...p, [historyCompositeKey]: [] })), 0);
-        }
 
+      case 'match-pairs':
         return (
-          <MatchPairs 
-            {...commonProps} 
-            customPairs={finalPool} 
-            onComplete={(res) => handleGameComplete(res, finalPool.map(p => p.item1))} 
+          <MatchPairs
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
           />
         );
-      }
-        
-      case 'category-sort': {
-        const rawPool = classWiseContent.categories || [];
-        const freshPool = rawPool.filter(c => !alreadyPlayedItems.includes(c.name || ""));
-        
-        const finalPool = freshPool.length > 0 ? freshPool : rawPool;
-        if (freshPool.length === 0 && alreadyPlayedItems.length > 0) {
-          setTimeout(() => setPlayedHistory(p => ({ ...p, [historyCompositeKey]: [] })), 0);
-        }
 
+      case 'category-sort':
         return (
-          <CategorySort 
-            {...commonProps} 
-            customCategories={finalPool} 
-            onComplete={(res) => handleGameComplete(res, finalPool.map(c => c.name || ""))} 
+          <CategorySort
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
           />
         );
-      }
-        
-      case 'speed-tap': {
-        const rawPool = classWiseContent.quizzes || [];
-        const freshPool = rawPool.filter(q => !alreadyPlayedItems.includes(q.question || ""));
-        
-        const finalPool = freshPool.length > 0 ? freshPool : rawPool;
-        if (freshPool.length === 0 && alreadyPlayedItems.length > 0) {
-          setTimeout(() => setPlayedHistory(p => ({ ...p, [historyCompositeKey]: [] })), 0);
-        }
 
-        const speedTapElements = finalPool.map((item, idx) => ({
-          id: `speed_${idx}_${item.answer}`,
-          question: item.question,
-          options: item.options,
-          answer: item.answer
-        }));
-
+      case 'speed-tap':
         return (
-          <SpeedTap 
-            {...commonProps} 
-            customSpeedElements={speedTapElements}
-            onComplete={(res) => handleGameComplete(res, speedTapElements.map(st => st.id))} 
+          <SpeedTap
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
           />
         );
-      }
-        
-      case 'visual-memory': {
-        const rawPool = classWiseContent.scrambles || [];
-        const freshPool = rawPool.filter(s => !alreadyPlayedItems.includes(s.word || ""));
-        
-        const finalPool = freshPool.length > 0 ? freshPool : rawPool;
-        if (freshPool.length === 0 && alreadyPlayedItems.length > 0) {
-          setTimeout(() => setPlayedHistory(p => ({ ...p, [historyCompositeKey]: [] })), 0);
-        }
 
-        const parsedVisualMemorySets = finalPool.map((v) => ({
-          items: [v.word, "STUDY", "LEARN", "BRAIN"],
-          questions: [
-            {
-              question: `Which word matched the hint: "${v.hint}"?`,
-              options: [v.word, "STUDY", "LEARN", "BRAIN"],
-              answer: v.word
-            }
-          ]
-        }));
-
+      case 'visual-memory':
         return (
-          <VisualMemory 
-            {...commonProps} 
-            customVisuals={parsedVisualMemorySets}
-            onComplete={(res) => handleGameComplete(res, finalPool.map(v => v.word))} 
+          <VisualMemory
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
           />
         );
-      }
-        
+
       default:
-        return <QuickQuiz {...commonProps} onComplete={(res) => handleGameComplete(res, [])} />;
+        return (
+          <QuickQuiz
+            {...commonProps}
+            onComplete={(res) => handleGameComplete(res)}
+          />
+        );
     }
   };
 
@@ -557,7 +468,7 @@ const Gamification = () => {
             <div className="flex justify-center gap-5">
               {[
                 { icon: <Timer className="h-7 w-7" />, color: "#38BDF8", label: "TIMED", value: "Per Game" },
-                { icon: <Gamepad2 className="h-7 w-7" />, color: "#A855F7", label: "GAMES", value: "6" }, // Updated display count to 6
+                { icon: <Gamepad2 className="h-7 w-7" />, color: "#A855F7", label: "GAMES", value: "6" },
                 { icon: <Brain className="h-7 w-7" />, color: "#F59E0B", label: "ADAPTIVE", value: ageGroup.label.split(' ')[0] },
               ].map((s, i) => (
                 <div key={i} className="stat-card group relative px-7 py-5 rounded-2xl cursor-default transition-all duration-500 hover:scale-110"
@@ -576,8 +487,7 @@ const Gamification = () => {
               <Accordion type="single" collapsible>
                 <AccordionItem value="games" className="border-none">
                   <AccordionTrigger className="text-sm font-bold py-2 hover:no-underline" style={{ color: "#F1F5F9" }}>
-                    {/* Updated header label to 6 Games */}
-                    <span className="flex items-center gap-2"><Target className="h-4 w-4" style={{ color: "#38BDF8" }} /> Your 6 Games</span>
+                    <span className="flex items-center gap-2"><Target className="h-4 w-4" style={{ color: "#38BDF8" }} /> Your {selectedGames.length} Games</span>
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-2.5 pt-2">

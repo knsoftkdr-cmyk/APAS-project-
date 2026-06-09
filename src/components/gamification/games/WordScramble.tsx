@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { playCorrectSound, playWrongSound, playNextSound } from "../sounds";
-
-interface CustomScrambleItem {
-  word: string;
-  hint: string;
-}
+import { getWordEntries, WordEntry } from "../engine/contentPools";
+import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
 
 interface Props {
   onComplete: (result: GameResult) => void;
@@ -15,239 +11,181 @@ interface Props {
   subject: string;
   gameIndex: number;
   timeLimit: number;
-  customScrambles?: CustomScrambleItem[];
 }
 
-export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLimit, customScrambles }: Props) {
-  const [wordPool, setWordPool] = useState<CustomScrambleItem[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [activeItem, setActiveItem] = useState<CustomScrambleItem | null>(null);
-  const [scrambledWord, setScrambledWord] = useState("");
-  const [userInput, setUserInput] = useState("");
+function shuffleWord(word: string): string[] {
+  const letters = word.split('');
+  for (let i = letters.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [letters[i], letters[j]] = [letters[j], letters[i]];
+  }
+  // Ensure it's not the same as original
+  if (letters.join('') === word && letters.length > 1) {
+    [letters[0], letters[1]] = [letters[1], letters[0]];
+  }
+  return letters;
+}
+
+export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
+  const words = useRef<WordEntry[]>([]);
+  const [wordIndex, setWordIndex] = useState(0);
+  const [scrambled, setScrambled] = useState<string[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
+  const MAX_QUESTIONS = 10;
   const [score, setScore] = useState(0);
-  const [correctCount, setCorrectCount] = useState(0);
+  const [correct, setCorrect] = useState(0);
   const [timeLeft, setTimeLeft] = useState(timeLimit);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [isReady, setIsReady] = useState(false);
-  
+  const [showHint, setShowHint] = useState(false);
   const startTime = useRef(Date.now());
-  const scrambleStart = useRef(Date.now());
   const responseTimes = useRef<number[]>([]);
-  
-  // CHANGED: Lowered the round cap to exactly 5 unique questions
-  const MAX_WORDS = 5; 
-
-  const scrambleString = (word: string) => {
-    const letters = word.split("");
-    for (let i = letters.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [letters[i], letters[j]] = [letters[j], letters[letters[i] ? i : j]];
-    }
-    const finalScramble = letters.join("");
-    return finalScramble === word ? scrambleString(word) : finalScramble;
-  };
+  const wordStart = useRef(Date.now());
 
   useEffect(() => {
-    let initialPool: CustomScrambleItem[] = [];
-
-    if (customScrambles && customScrambles.length > 0) {
-      initialPool = [...customScrambles];
-    }
-
-    // Baseline fallback vocabulary deck to pad short lists
-    const basicBackupDeck = [
-      { word: "BRAIN", hint: "The center organ controlling your cognitive thoughts" },
-      { word: "GAME", hint: "An interactive challenge built for fun or education" },
-      { word: "STUDY", hint: "Devoting time and attention to acquiring knowledge" },
-      { word: "LOGIC", hint: "Reasoning conducted according to strict principles" },
-      { word: "ROBOT", hint: "A machine capable of carrying out complex actions automatically" }
-    ];
-
-    // Filter out backup items that might conflict with custom items, then pad the pool to ensure length >= 5
-    const uniqueBackupItems = basicBackupDeck.filter(
-      bItem => !initialPool.some(pItem => pItem.word.toUpperCase() === bItem.word.toUpperCase())
-    );
-
-    // Combine arrays safely until we hit at least 5 words total
-    let finalPool = [...initialPool];
-    while (finalPool.length < MAX_WORDS && uniqueBackupItems.length > 0) {
-      finalPool.push(uniqueBackupItems.shift()!);
-    }
-
-    // Shuffle the final pool completely using Fisher-Yates shuffle
-    for (let i = finalPool.length - 1; i > 0; i--) {
+    const w = getWordEntries(subject, ageGroup);
+    for (let i = w.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [finalPool[i], finalPool[j]] = [finalPool[j], finalPool[i]];
+      [w[i], w[j]] = [w[j], w[i]];
     }
-
-    // Slice down to exactly 5 items so the pool size matches MAX_WORDS perfectly
-    const finalFivePool = finalPool.slice(0, MAX_WORDS);
-
-    setWordPool(finalFivePool);
-    if (finalFivePool.length > 0) {
-      setActiveItem(finalFivePool[0]);
-      setScrambledWord(scrambleString(finalFivePool[0].word.toUpperCase()));
-    }
-    
-    setIsReady(true); 
+    words.current = w;
+    if (w.length > 0) setScrambled(shuffleWord(w[0].word));
     startTime.current = Date.now();
-    scrambleStart.current = Date.now();
-  }, [customScrambles, subject, ageGroup]);
+    wordStart.current = Date.now();
+  }, [subject, ageGroup]);
 
   useEffect(() => {
-    if (!isReady || wordPool.length === 0) return; 
-
-    if (timeLeft <= 0 || currentIndex >= Math.min(MAX_WORDS, wordPool.length)) {
-      finishGame();
-      return;
-    }
+    if (timeLeft <= 0 || wordIndex >= MAX_QUESTIONS) { finishGame(); return; }
     const t = setTimeout(() => setTimeLeft(p => p - 1), 1000);
     return () => clearTimeout(t);
-  }, [timeLeft, currentIndex, wordPool, isReady]);
+  }, [timeLeft, wordIndex]);
+
+  const currentWord = wordIndex < words.current.length ? words.current[wordIndex] : null;
 
   const finishGame = () => {
     const timeUsed = Math.round((Date.now() - startTime.current) / 1000);
     const avgResp = responseTimes.current.length > 0
       ? Math.round(responseTimes.current.reduce((a, b) => a + b, 0) / responseTimes.current.length)
       : 0;
-
     onComplete({
       gameIndex,
       gameName: "Word Scramble",
       rawScore: Math.max(0, score),
-      maxScore: Math.min(MAX_WORDS, wordPool.length) * 20, 
-      accuracy: currentIndex > 0 ? Math.round((correctCount / currentIndex) * 100) : 0,
+      maxScore: wordIndex * 15,
+      accuracy: wordIndex > 0 ? Math.round((correct / wordIndex) * 100) : 0,
       avgResponseTime: avgResp,
-      questionsAttempted: currentIndex,
-      questionsCorrect: correctCount,
+      questionsAttempted: wordIndex,
+      questionsCorrect: correct,
       timeUsed,
       timeLimit,
     });
   };
 
-  const checkAnswer = () => {
-    if (!activeItem) return;
+  const handleLetterClick = (idx: number) => {
+    if (feedback || selected.includes(idx)) return;
+    const newSelected = [...selected, idx];
+    setSelected(newSelected);
 
-    const targetWord = activeItem.word.toUpperCase().trim();
-    const cleanGuess = userInput.toUpperCase().trim();
+    const builtWord = newSelected.map(i => scrambled[i]).join('');
     
-    responseTimes.current.push(Date.now() - scrambleStart.current);
-    const isCorrect = cleanGuess === targetWord;
+    if (builtWord.length === currentWord!.word.length) {
+      responseTimes.current.push(Date.now() - wordStart.current);
+      
+      if (builtWord === currentWord!.word) {
+        const bonus = showHint ? 0 : 5;
+        setScore(p => p + 15 + bonus);
+        setCorrect(p => p + 1);
+        setFeedback("✅ Correct!");
+        playCorrectSound();
+      } else {
+        setFeedback("❌ Wrong order!");
+        playWrongSound();
+      }
 
-    const updatedCorrectCount = isCorrect ? correctCount + 1 : correctCount;
-    const updatedScore = isCorrect ? score + 20 : score;
-
-    if (isCorrect) {
-      setScore(p => p + 20);
-      setCorrectCount(p => p + 1);
-      setFeedback("✅ Brilliant!");
-      playCorrectSound();
-    } else {
-      setFeedback(`❌ Incorrect! It was ${targetWord}`);
-      playWrongSound();
+      setTimeout(() => {
+        setFeedback(null);
+        setSelected([]);
+        setShowHint(false);
+        const nextIdx = wordIndex + 1;
+        if (nextIdx >= MAX_QUESTIONS) {
+          finishGame();
+          return;
+        }
+        setWordIndex(nextIdx);
+        if (nextIdx < words.current.length && words.current[nextIdx]) {
+          setScrambled(shuffleWord(words.current[nextIdx].word));
+        }
+        wordStart.current = Date.now();
+        playNextSound();
+      }, 1000);
     }
-
-    setTimeout(() => {
-      setFeedback(null);
-      setUserInput("");
-      const nextIndex = currentIndex + 1;
-      
-      if (nextIndex >= MAX_WORDS || nextIndex >= wordPool.length) {
-        const timeUsed = Math.round((Date.now() - startTime.current) / 1000);
-        const avgResp = responseTimes.current.length > 0
-          ? Math.round(responseTimes.current.reduce((a, b) => a + b, 0) / responseTimes.current.length)
-          : 0;
-
-        onComplete({
-          gameIndex,
-          gameName: "Word Scramble",
-          rawScore: Math.max(0, updatedScore),
-          maxScore: Math.min(MAX_WORDS, wordPool.length) * 20,
-          accuracy: nextIndex > 0 ? Math.round((updatedCorrectCount / nextIndex) * 100) : 0,
-          avgResponseTime: avgResp,
-          questionsAttempted: nextIndex,
-          questionsCorrect: updatedCorrectCount,
-          timeUsed,
-          timeLimit,
-        });
-        return;
-      }
-
-      setCurrentIndex(nextIndex);
-      
-      // Pull the next pre-shuffled unique word linearly without repeating indices
-      const nextItem = wordPool[nextIndex];
-      if (nextItem) {
-        setActiveItem(nextItem);
-        setScrambledWord(scrambleString(nextItem.word.toUpperCase()));
-      }
-      
-      scrambleStart.current = Date.now();
-      playNextSound();
-    }, 1500);
   };
 
-  const timerColor = timeLeft > timeLimit * 0.5 ? "#22C55E" : timeLeft > timeLimit * 0.2 ? "#F59E0B" : "#EF4444";
+  const handleReset = () => setSelected([]);
+  const handleHint = () => { setShowHint(true); setScore(p => p - 3); };
 
-  if (!isReady || !activeItem) {
-    return <div className="text-center text-white font-bold">Loading puzzle elements...</div>;
-  }
+  if (!currentWord) return <div style={{ color: "#F1F5F9" }}>Loading...</div>;
+
+  const builtWord = selected.map(i => scrambled[i]).join('');
+  const timerColor = timeLeft > timeLimit * 0.5 ? "#22C55E" : timeLeft > timeLimit * 0.2 ? "#F59E0B" : "#EF4444";
 
   return (
     <div className="flex flex-col items-center gap-5 w-full max-w-lg mx-auto">
       <div className="flex items-center justify-between w-full">
-        <span className="text-sm font-medium text-pink-400">
-          Word {currentIndex + 1}/{Math.min(MAX_WORDS, wordPool.length)}
-        </span>
+        <span className="text-sm font-medium" style={{ color: "#EC4899" }}>Word {wordIndex + 1}/{MAX_QUESTIONS}</span>
         <div className="flex items-center gap-3">
-          <span className="text-lg font-bold text-white">Score: {score}</span>
+          <span className="text-lg font-bold" style={{ color: "#F1F5F9" }}>Score: {score}</span>
           <span className="text-sm font-mono px-2 py-1 rounded" style={{ backgroundColor: "rgba(255,255,255,0.1)", color: timerColor }}>
             {timeLeft}s
           </span>
         </div>
       </div>
 
-      <div className="w-full min-h-[160px] p-6 rounded-2xl flex flex-col items-center justify-center gap-4 border"
-        style={{ background: "rgba(244,114,182,0.05)", borderColor: "rgba(244,114,182,0.25)" }}>
-        
-        {feedback ? (
-          <p className="text-xl font-bold animate-pulse" style={{ color: feedback.includes("✅") ? "#22C55E" : "#EF4444" }}>
-            {feedback}
-          </p>
-        ) : (
-          <>
-            <div className="flex gap-2 justify-center flex-wrap">
-              {scrambledWord.split("").map((char, index) => (
-                <span key={index} className="w-12 h-12 rounded-xl text-xl font-black bg-white/10 text-white border border-white/20 flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-                  {char}
-                </span>
-              ))}
-            </div>
-            <p className="text-xs text-gray-400 text-center italic mt-2">
-              💡 Hint: {activeItem.hint}
-            </p>
-          </>
-        )}
-      </div>
+      {/* Renders the hint when requested */}
+      {showHint && currentWord.hint && (
+        <p className="text-sm text-center px-4 py-2 rounded-lg max-w-md transition-all" style={{ background: "rgba(236,72,153,0.15)", color: "#EC4899", border: "1px solid rgba(236,72,153,0.3)" }}>
+          💡 <strong>Hint:</strong> {currentWord.hint}
+        </p>
+      )}
 
-      {!feedback && (
-        <div className="flex gap-2 w-full">
-          <input
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && userInput.trim() && checkAnswer()}
-            placeholder="Type your unscrambled answer here..."
-            className="flex-1 px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white outline-none font-semibold focus:border-pink-500/50 transition-colors"
-          />
-          <button
-            onClick={checkAnswer}
-            disabled={!userInput.trim()}
-            className="px-6 rounded-xl font-black text-sm text-slate-900 bg-pink-400 hover:bg-pink-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95 shadow-[0_0_20px_rgba(244,114,182,0.3)]"
-          >
-            SUBMIT
-          </button>
-        </div>
+      {feedback ? (
+        <div className="text-2xl font-bold" style={{ color: feedback.includes("✅") ? "#22C55E" : "#EF4444" }}>{feedback}</div>
+      ) : (
+        <>
+          <div className="flex gap-1 justify-center flex-wrap">
+            {currentWord.word.split('').map((_, i) => (
+              <div key={i} className="w-10 h-12 rounded-lg flex items-center justify-center text-lg font-bold"
+                style={{ background: builtWord[i] ? "rgba(236,72,153,0.3)" : "rgba(255,255,255,0.05)", border: `1px solid ${builtWord[i] ? "rgba(236,72,153,0.5)" : "rgba(255,255,255,0.15)"}`, color: "#F1F5F9" }}>
+                {builtWord[i] || '_'}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2 justify-center flex-wrap">
+            {scrambled.map((letter, i) => (
+              <button key={i} onClick={() => handleLetterClick(i)}
+                disabled={selected.includes(i)}
+                className={`w-12 h-12 rounded-xl text-lg font-bold transition-all ${selected.includes(i) ? 'opacity-20' : 'hover:scale-110 active:scale-95'}`}
+                style={{ background: selected.includes(i) ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.1)", border: "1px solid rgba(236,72,153,0.3)", color: "#F1F5F9" }}>
+                {letter}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={handleReset} className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+              style={{ background: "rgba(255,255,255,0.08)", color: "rgba(241,245,249,0.6)" }}>
+              🔄 Reset
+            </button>
+            
+            {/* Removed the early_learners check so hints are available to everyone */}
+            {!showHint && (
+              <button onClick={handleHint} className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:scale-105"
+                style={{ background: "rgba(236,72,153,0.15)", color: "#EC4899" }}>
+                💡 Hint (-3pts)
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

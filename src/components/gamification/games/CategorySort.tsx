@@ -4,12 +4,6 @@ import { AgeGroupId } from "../engine/ageGroups";
 import { getSortCategories, SortCategory } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound } from "../sounds";
 
-// Define a structural interface matching your custom content pool matrix items
-interface CustomCategoryGroup {
-  name: string;
-  items: string[];
-}
-
 interface Props {
   onComplete: (result: GameResult) => void;
   studentName: string;
@@ -17,10 +11,9 @@ interface Props {
   subject: string;
   gameIndex: number;
   timeLimit: number;
-  customCategories?: CustomCategoryGroup[]; // Integrated custom dynamic pool receiver prop
 }
 
-export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLimit, customCategories }: Props) {
+export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
   const categories = useRef<SortCategory[]>([]);
   const [catIndex, setCatIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState('');
@@ -36,12 +29,10 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   const itemStart = useRef(Date.now());
 
   const spawnItem = useCallback((cat: SortCategory) => {
-    if (!cat) return;
     const allItems = [
       ...cat.leftItems.map(i => ({ item: i, side: 'left' as const })),
       ...cat.rightItems.map(i => ({ item: i, side: 'right' as const })),
     ];
-    if (allItems.length === 0) return;
     const pick = allItems[Math.floor(Math.random() * allItems.length)];
     setCurrentItem(pick.item);
     setCorrectSide(pick.side);
@@ -49,37 +40,11 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   }, []);
 
   useEffect(() => {
-    let cats: SortCategory[] = [];
-
-    // Prioritize targeted incoming Class + Subject sorting parameters
-    if (customCategories && customCategories.length >= 2) {
-      // Split our pool groups into distinct Left vs Right categorizations dynamically
-      const leftGroup = customCategories[0];
-      const rightGroup = customCategories[1];
-
-      // Declare a completely separate plain config object to break the strict type loop
-      const intermediateCategoryConfig = {
-        id: 999, 
-        rule: `Classify items into ${leftGroup.name} or ${rightGroup.name}`,
-        leftLabel: leftGroup.name,
-        rightLabel: rightGroup.name,
-        leftItems: leftGroup.items,
-        rightItems: rightGroup.items
-      };
-
-      // Cast the entire object layout at once down to the target type array 
-      cats = [intermediateCategoryConfig as unknown as SortCategory];
-    } else {
-      // Fallback to legacy default engine pools
-      cats = getSortCategories(subject, ageGroup);
-    }
-
+    const cats = getSortCategories(subject, ageGroup);
     categories.current = cats;
-    if (cats.length > 0) {
-      spawnItem(cats[0]);
-    }
+    if (cats.length > 0) spawnItem(cats[0]);
     startTime.current = Date.now();
-  }, [customCategories, subject, ageGroup, spawnItem]);
+  }, []);
 
   useEffect(() => {
     if (timeLeft <= 0 || attempted >= MAX_QUESTIONS) { finishGame(); return; }
@@ -126,9 +91,10 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
 
     setTimeout(() => {
       setFeedback(null);
+      // Check if we've reached max after state update
       const nextAttempted = attempted + 1;
       if (nextAttempted >= MAX_QUESTIONS) {
-        return; // useEffect handler will trigger finishGame cleanly
+        return; // useEffect will trigger finishGame
       }
       playNextSound();
       spawnItem(cat);
@@ -156,21 +122,21 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
         <p className="text-sm font-bold" style={{ color: "#22C55E" }}>{cat.rule}</p>
       </div>
 
-      <div className="w-44 h-44 flex items-center justify-center rounded-2xl p-4 text-center text-xl font-bold transition-all shadow-xl"
+      <div className="w-36 h-36 flex items-center justify-center rounded-2xl text-2xl font-bold"
         style={{ background: "rgba(255,255,255,0.08)", border: "2px solid rgba(34,197,94,0.4)", color: "#F1F5F9" }}>
-        {feedback ? <span className="text-4xl">{feedback}</span> : currentItem.toUpperCase()}
+        {feedback ? <span className="text-4xl">{feedback}</span> : currentItem}
       </div>
 
       <div className="flex gap-4 w-full">
         <button onClick={() => handleSort('left')}
-          className="flex-1 py-5 px-3 rounded-xl font-bold text-sm sm:text-base transition-all hover:scale-105 active:scale-95 text-center break-words shadow-md"
-          style={{ background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.4)", color: "#C084FC" }}>
-          ⬅ {cat.leftLabel.toUpperCase()}
+          className="flex-1 py-5 rounded-xl font-bold text-base transition-all hover:scale-105 active:scale-95"
+          style={{ background: "rgba(168,85,247,0.2)", border: "1px solid rgba(168,85,247,0.4)", color: "#A855F7" }}>
+          ⬅ {cat.leftLabel}
         </button>
         <button onClick={() => handleSort('right')}
-          className="flex-1 py-5 px-3 rounded-xl font-bold text-sm sm:text-base transition-all hover:scale-105 active:scale-95 text-center break-words shadow-md"
-          style={{ background: "rgba(56,189,248,0.2)", border: "1px solid rgba(56,189,248,0.4)", color: "#7DD3FC" }}>
-          {cat.rightLabel.toUpperCase()} ➡
+          className="flex-1 py-5 rounded-xl font-bold text-base transition-all hover:scale-105 active:scale-95"
+          style={{ background: "rgba(56,189,248,0.2)", border: "1px solid rgba(56,189,248,0.4)", color: "#38BDF8" }}>
+          {cat.rightLabel} ➡
         </button>
       </div>
     </div>
