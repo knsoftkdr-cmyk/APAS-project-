@@ -196,25 +196,23 @@ const SuperAdminPanel = () => {
       .eq("school_id", sid);
     const matrix: PermMatrix = {};
     const saved = data ?? [];
-    const expectedCount = PERMISSION_ROLES.length * PERMISSION_MODULES.length;
-    if (saved.length >= expectedCount) {
-      for (const role of PERMISSION_ROLES) {
-        for (const module of PERMISSION_MODULES) {
-          const row = saved.find((r: any) => r.role === role && r.module_name === module);
-          matrix[`${role}-${module}`] = row ? row.allowed : (DEFAULT_PERMISSIONS[role] ?? []).includes(module);
-        }
-      }
-    } else {
-      const upserts: any[] = [];
-      for (const role of PERMISSION_ROLES) {
-        for (const module of PERMISSION_MODULES) {
-          const def = (DEFAULT_PERMISSIONS[role] ?? []).includes(module);
+    const upserts: any[] = [];
+    for (const role of PERMISSION_ROLES) {
+      const roleSaved = saved.filter((r: any) => r.role === role);
+      const hasAnyTrue = roleSaved.some((r: any) => r.allowed);
+      const roleHasAllRows = roleSaved.length >= PERMISSION_MODULES.length;
+      for (const module of PERMISSION_MODULES) {
+        const row = roleSaved.find((r: any) => r.module_name === module);
+        const def = (DEFAULT_PERMISSIONS[role] ?? []).includes(module);
+        if (roleHasAllRows && hasAnyTrue) {
+          matrix[`${role}-${module}`] = row ? row.allowed : def;
+        } else {
           matrix[`${role}-${module}`] = def;
           upserts.push({ school_id: sid, role, module_name: module, allowed: def, updated_at: new Date().toISOString() });
         }
       }
-      await supabase.from("role_permissions").upsert(upserts, { onConflict: "school_id,role,module_name" });
     }
+    if (upserts.length > 0) await supabase.from("role_permissions").upsert(upserts, { onConflict: "school_id,role,module_name" });
     setPermMatrix(matrix);
     setPermLoading(false);
   }, []);

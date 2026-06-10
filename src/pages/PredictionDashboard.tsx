@@ -26,16 +26,42 @@ export default function PredictionDashboard() {
   const { data: predictions, isLoading: predictionsLoading, error: predictionsError } = useQuery({
     queryKey: ["predictions", user?.id],
     queryFn: async () => {
-      if (profile?.role !== "student") {
-        throw new Error("Only students can view predictions");
-      }
-
-      const { data, error } = await supabase.functions.invoke("predict-performance", {
-        body: { student_id: user?.id },
-      });
-
+      if (!user?.id) throw new Error("Not logged in");
+      const { data: testScores, error } = await supabase
+        .from("academic_tests")
+        .select("subject, score, total_questions, completed_at")
+        .eq("student_id", user.id)
+        .order("completed_at", { ascending: false })
+        .limit(50);
       if (error) throw error;
-      return data as PredictionData;
+      if (!testScores || testScores.length === 0) {
+        return { predicted_score_pct: 50, confidence_level: 30, risk_level: "medium", recommended_interventions: ["Complete more practice tests to establish a baseline", "Review fundamental concepts", "Start with easier difficulty levels"], subject_predictions: {}, weekly_forecast: Array.from({ length: 8 }, (_, i) => ({ week: i + 1, predicted_score: 50 })) };
+      }
+      const bySubject: Record<string, { scores: number[], latest: number, oldest: number }> = {};
+      testScores.forEach((t: any) => {
+        const pct = t.total_questions > 0 ? (t.score / t.total_questions) * 100 : 0;
+        if (!bySubject[t.subject]) bySubject[t.subject] = { scores: [], latest: pct, oldest: pct };
+        bySubject[t.subject].scores.push(pct);
+        bySubject[t.subject].oldest = pct;
+      });
+      const subjectPredictions: Record<string, { predicted_pct: number, trend: string }> = {};
+      let totalPredicted = 0; let subjectCount = 0;
+      for (const [subject, d] of Object.entries(bySubject)) {
+        const avg = d.scores.reduce((a: number, b: number) => a + b, 0) / d.scores.length;
+        const trend = d.latest - d.oldest;
+        const predicted = Math.min(100, Math.max(0, avg + trend * 0.3));
+        subjectPredictions[subject] = { predicted_pct: Math.round(predicted), trend: trend > 5 ? "📈 Improving" : trend < -5 ? "📉 Declining" : "➡️ Stable" };
+        totalPredicted += predicted; subjectCount++;
+      }
+      const overall = subjectCount > 0 ? totalPredicted / subjectCount : 50;
+      const recentScores = testScores.slice(0, 10).map((t: any) => t.total_questions > 0 ? (t.score / t.total_questions) * 100 : 0);
+      const recentAvg = recentScores.reduce((a: number, b: number) => a + b, 0) / (recentScores.length || 1);
+      const volatility = Math.sqrt(recentScores.reduce((s: number, sc: number) => s + Math.pow(sc - recentAvg, 2), 0) / (recentScores.length || 1));
+      const confidence = Math.max(20, Math.round((1 - volatility / 100) * 100));
+      const riskLevel = overall > 75 ? "low" : overall > 50 ? "medium" : "high";
+      const interventions = riskLevel === "high" ? ["Increase study time by 30 minutes daily", "Review previous weak topics", "Schedule a session with your teacher"] : riskLevel === "medium" ? ["Practice 2-3 sample tests weekly", "Focus on areas with declining scores", "Track your progress regularly"] : ["Maintain current study habits", "Challenge yourself with advanced problems", "Help peers by explaining concepts"];
+      const trend = Object.values(bySubject)[0] ? Object.values(bySubject)[0].latest - Object.values(bySubject)[0].oldest : 0;
+      return { predicted_score_pct: Math.round(overall), confidence_level: confidence, risk_level: riskLevel, recommended_interventions: interventions, subject_predictions: subjectPredictions, weekly_forecast: Array.from({ length: 8 }, (_, i) => ({ week: i + 1, predicted_score: Math.round(Math.min(100, Math.max(0, overall + (trend * 0.1 / 8) * (i + 1)))) })) };
     },
     enabled: !!user?.id && profile?.role === "student",
   });
@@ -98,7 +124,6 @@ export default function PredictionDashboard() {
       </AppLayout>
     );
   }
-
   if (predictionsError) {
     return (
       <AppLayout>
@@ -109,7 +134,7 @@ export default function PredictionDashboard() {
               <div>
                 <h3 className="font-semibold text-destructive">Failed to Load Predictions</h3>
                 <p className="text-sm text-muted-foreground">
-                  Please ensure you've completed an assessment first.
+                  {predictionsError instanceof Error ? predictionsError.message : String(predictionsError)}
                 </p>
               </div>
             </div>

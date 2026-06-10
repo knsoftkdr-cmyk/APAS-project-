@@ -109,7 +109,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const isStudent = profile?.role === "student";
   const mobileNavItems = getMobileNavItems(profile?.role);
 
-  const BYPASS_ROLES = ["knsoft_admin", "admin", "principal", "school_admin"];
+  const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
   const needsPermCheck = profile?.role && !BYPASS_ROLES.includes(profile.role);
 
   const visibleItems = (needsPermCheck && permsLoading) ? [] : navItems
