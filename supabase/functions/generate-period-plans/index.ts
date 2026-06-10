@@ -6,6 +6,116 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// ─── KEY ROTATION (same keys as curative-assistant) ──────────────────────────
+function getGeminiKeys(): string[] {
+  return [
+    Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
+    Deno.env.get("GEMINI_KEY_2"),
+    Deno.env.get("GEMINI_KEY_3"),
+    Deno.env.get("GEMINI_KEY_4"),
+    // fallback: original Groq key still tried last via separate path
+  ].filter((k): k is string => !!k && k.trim().length > 0);
+}
+
+function getGroqKeys(): string[] {
+  return [
+    Deno.env.get("APAS_LESSON_GENERATOR"),
+  ].filter((k): k is string => !!k && k.trim().length > 0);
+}
+
+async function callGeminiWithRotation(
+  systemPrompt: string,
+  userPrompt: string,
+  keys: string[]
+): Promise<{ text: string } | null> {
+  const models = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"];
+
+  for (const key of keys) {
+    for (const model of models) {
+      console.log(`Trying Gemini ${model} with key ${key.slice(-6)}...`);
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: systemPrompt }] },
+              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+              generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
+            }),
+          }
+        );
+
+        if (response.status === 429 || response.status === 503) {
+          console.warn(`Key ${key.slice(-6)} / ${model} rate limited (${response.status}), rotating...`);
+          break; // try next key for this model
+        }
+
+        if (!response.ok) {
+          const err = await response.text();
+          console.warn(`Key ${key.slice(-6)} / ${model} error ${response.status}: ${err.substring(0, 150)}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        if (text) return { text };
+      } catch (e) {
+        console.error(`Network error on key ${key.slice(-6)} / ${model}:`, e);
+      }
+    }
+  }
+  return null;
+}
+
+async function callGroqWithRotation(
+  systemPrompt: string,
+  userPrompt: string,
+  keys: string[]
+): Promise<{ text: string } | null> {
+  for (const key of keys) {
+    console.log(`Trying Groq key ${key.slice(-6)}...`);
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          temperature: 0.4,
+          max_tokens: 8000,
+        }),
+      });
+
+      if (response.status === 429 || response.status === 401 || response.status === 402 || response.status === 403) {
+        console.warn(`Groq key ${key.slice(-6)} failed with ${response.status}, rotating...`);
+        continue;
+      }
+
+      if (!response.ok) {
+        const err = await response.text();
+        console.warn(`Groq key error ${response.status}: ${err.substring(0, 150)}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data.choices?.[0]?.message?.content || "";
+      if (text) return { text };
+    } catch (e) {
+      console.error(`Network error on Groq key ${key.slice(-6)}:`, e);
+    }
+  }
+  return null;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -30,13 +140,17 @@ serve(async (req) => {
       );
     }
 
-    const APAS_LESSON_GENERATOR = Deno.env.get("APAS_LESSON_GENERATOR");
-    if (!APAS_LESSON_GENERATOR) {
+    const geminiKeys = getGeminiKeys();
+    const groqKeys = getGroqKeys();
+
+    if (geminiKeys.length === 0 && groqKeys.length === 0) {
       return new Response(
-        JSON.stringify({ error: "AI API key not configured" }),
+        JSON.stringify({ error: "No AI API keys configured." }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`Keys available — Gemini: ${geminiKeys.length}, Groq: ${groqKeys.length}`);
 
     const totalPeriods = Math.ceil(
       (periodsPerWeek || 5) * ((totalTeachingDays || 20) / 5)
@@ -96,64 +210,33 @@ Return a JSON array of objects. Each object represents one period:
     "youtube_videos": [
       {"title": "Intro to ...", "url": "https://www.youtube.com/watch?v=VIDEO_ID", "channel": "Khan Academy", "why": "Visual walkthrough of the core concept"}
     ]
-  },
-  ...
+  }
 ]
 
 Generate exactly ${totalPeriods} period entries covering all ${totalTeachingDays} teaching days. Return ONLY the JSON array.`;
     }
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${APAS_LESSON_GENERATOR}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.4,
-        max_tokens: 8000,
-      }),
-    });
+    // Try Gemini keys first, fall back to Groq
+    let result = geminiKeys.length > 0
+      ? await callGeminiWithRotation(systemPrompt, userPrompt, geminiKeys)
+      : null;
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 401 || response.status === 403) {
-        return new Response(JSON.stringify({ error: "API authentication failed. Please check your API key configuration." }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "API credits exhausted. Please add funds." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const errText = await response.text();
-      console.error("Groq API error:", response.status, errText);
+    if (!result && groqKeys.length > 0) {
+      console.log("All Gemini keys failed/exhausted — falling back to Groq...");
+      result = await callGroqWithRotation(systemPrompt, userPrompt, groqKeys);
+    }
+
+    if (!result) {
       return new Response(
-        JSON.stringify({ error: "AI generation failed" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "All API keys exhausted. Please try again later or check your key quotas." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const data = await response.json();
-    const rawContent = data.choices?.[0]?.message?.content || "";
+    const rawContent = result.text;
 
-    // Extract JSON from the response
     let parsed: any;
     try {
-      // Try to find JSON array or object in the response
       const jsonMatch = rawContent.match(/\[[\s\S]*\]/) || rawContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         parsed = JSON.parse(jsonMatch[0]);
