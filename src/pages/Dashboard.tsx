@@ -336,7 +336,7 @@ const TeacherHome = () => {
   />
           <div className="relative z-10 max-w-2xl">
             <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="h-6 w-6 text-black/80" />
+              <GraduationCap className="h-7 w-7 text-black/80" />
               <span className="text-sm font-medium text-black/70 uppercase tracking-wider">{profile?.role === "school_admin" ? "APAS School Admin Portal" : profile?.role === "knsoft_admin" ? "APAS Platform Admin" : "APAS Teacher Portal"}</span>
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
@@ -352,38 +352,38 @@ const TeacherHome = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        <Card className="border-border/60">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-500 to-amber-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
           <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
-              <CheckCircle className="h-6 w-6 text-blue-600" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 shadow-lg shadow-blue-300/50">
+              <CheckCircle className="h-7 w-7 text-blue-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
                 {countLoading ? "â€”" : assessmentCount}
               </p>
-              <p className="text-sm text-muted-foreground">Assessments Completed</p>
+              <p className="text-sm text-white text-muted-foreground">Assessments Completed</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/60">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-600 to-green-600 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
           <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10">
-              <BookOpen className="h-6 w-6 text-emerald-600" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 shadow-lg shadow-blue-300/50">
+              <BookOpen className="h-7 w-7 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{lessonCount ?? "â€”"}</p>
-              <p className="text-sm text-muted-foreground">Lesson Plans Created</p>
+              <p className="text-3xl font-bold text-foreground">{lessonCount ?? "â€”"}</p>
+              <p className="text-sm text-white text-muted-foreground">Lesson Plans Created</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-border/60">
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-violet-500 to-purple-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
           <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10">
-              <Lightbulb className="h-6 w-6 text-violet-600" />
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 shadow-lg shadow-blue-300/50">
+              <Lightbulb className="h-7 w-7 text-violet-600" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">AI-Powered</p>
-              <p className="text-sm text-muted-foreground">Personalised Learning</p>
+              <p className="text-sm text-white text-muted-foreground">Personalised Learning</p>
             </div>
           </CardContent>
         </Card>
@@ -426,10 +426,22 @@ const TeacherHome = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {workflowSteps.map((step, i) => (
             <div key={i} className="relative">
-              <Card className="h-full border-border/60">
+              <Card className="h-full border-0 shadow-md bg-gradient-to-br from-blue-200 to-blue-200 transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl hover:rotate-1 group">
                 <CardContent className="p-5">
                   <span className="text-3xl font-black text-primary/15 absolute top-3 right-4">{step.step}</span>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">
+                  <div
+  className="
+  flex h-12 w-12
+  items-center justify-center
+  rounded-xl
+  bg-primary/10
+  mb-3
+  transition-all
+  duration-500
+  group-hover:rotate-12
+  group-hover:scale-110
+"
+>
                     <step.icon className="h-5 w-5 text-primary" />
                   </div>
                   <h3 className="text-sm font-semibold text-foreground mb-1.5">{step.title}</h3>

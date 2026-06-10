@@ -14,7 +14,17 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Send, Clock, CheckCircle, XCircle, ClipboardList, Eye } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
+import {
+  Languages,
+  Brain,
+  Music,
+  Dumbbell,
+  Users,
+  UserCircle,
+  Leaf,
+  GraduationCap,
+  ShieldCheck,
+} from "lucide-react";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -157,6 +167,19 @@ export const TeacherRequestForm = () => {
       default: return "secondary";
     }
   };
+const categoryIcons: Record<string, any> = {
+  "Language Skills": Languages,
+  "Logical Thinking": Brain,
+  "Visual Learning": Eye,
+  "Musical Intelligence": Music,
+  "Physical Learning": Dumbbell,
+  "Social Skills": Users,
+  "Self Awareness": UserCircle,
+  "Naturalist Intelligence": Leaf,
+  "VARK Learning Style": GraduationCap,
+  "Self-Regulation & School Readiness": ShieldCheck,
+};
+
 
   return (
     <div className="space-y-6">
@@ -169,7 +192,9 @@ export const TeacherRequestForm = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Send className="h-5 w-5" />
+            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+            <Send className="h-6 w-6 text-red-600" />
+            </div>
             Request Diagnostic Questionnaire
           </CardTitle>
           <CardDescription>
@@ -205,7 +230,19 @@ export const TeacherRequestForm = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {MI_CATEGORIES.map((category) => (
                 <div key={category} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                  <span className="text-sm text-foreground">{category}</span>
+                  <div className="flex items-center gap-2">
+  {(() => {
+    const Icon = categoryIcons[category];
+    return Icon ? (
+      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+        <Icon className="w-6 h-6 text-blue-600" />
+      </div>
+    ) : null;
+  })()}
+  <span className="text-sm font-medium text-foreground">
+    {category}
+  </span>
+</div>
                   <Input
                     type="number"
                     min={0}
@@ -232,7 +269,7 @@ export const TeacherRequestForm = () => {
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={submitting} className="w-full md:w-auto">
+          <Button onClick={handleSubmit} disabled={submitting} className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white">
             {submitting ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4 mr-1" />}
             Submit Request
           </Button>

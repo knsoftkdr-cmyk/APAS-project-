@@ -1276,7 +1276,19 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
   return (
     <AppLayout>
       {/* Hero Header */}
-      <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/90 via-primary to-primary/80 p-8 shadow-xl animate-fade-in">
+      <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/80 via-primary to-primary/80 p-8 shadow-xl animate-fade-in">
+          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+<div className="hidden md:block">
+                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+
+          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+</div>
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djJoLTJ2LTJoMnptMC00aDJ2MmgtMnYtMnptLTQgOGgydjJoLTJ2LTJ6bTIgMGgydjJoLTJ2LTJ6bTItNGgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
@@ -1284,20 +1296,20 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
               <Wand2 className="h-7 w-7 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Lesson Plan Generator</h1>
-              <p className="text-white/75 text-sm mt-0.5">AI-powered teaching assistant â€” generates differentiated lesson plans using class reports & textbooks</p>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Lesson Plan Generator</h1>
+              <p className="text-white/80 text-semibold mt-0.5">AI-powered teaching assistant - generates differentiated lesson plans using class reports & textbooks</p>
             </div>
           </div>
         </div>
       </div>
 
       <Tabs defaultValue="lesson-plan" className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
-          <TabsTrigger value="lesson-plan" className="gap-2">
-            <Wand2 className="h-4 w-4" /> Lesson Plan
+        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4 ">
+          <TabsTrigger value="lesson-plan" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
+            <Wand2 className="h-6 w-6" /> Lesson Plan
           </TabsTrigger>
-          <TabsTrigger value="assign-homework" className="gap-2">
-            <Briefcase className="h-4 w-4" /> Assign Homework
+          <TabsTrigger value="assign-homework" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
+            <Briefcase className="h-6 w-6" /> Assign Homework
           </TabsTrigger>
         </TabsList>
 
@@ -1306,7 +1318,9 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
           <Card className="border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500">
             <CardHeader className="pb-3 border-b border-border/50">
               <CardTitle className="text-base flex items-center gap-2 text-primary">
-                <BookMarked className="h-5 w-5" />
+                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+                <BookMarked className="h-7 w-7 text-red-600" />
+                </div>
                 Configure Your Lesson
               </CardTitle>
             </CardHeader>
@@ -1489,7 +1503,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                   )}
                   <Badge variant="outline" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> {selectedPeriods} {parseInt(selectedPeriods) === 1 ? "Period" : "Periods"} Ã— {periodDuration}min</Badge>
                   <span className="text-xs text-muted-foreground ml-2">
-                    {studentCount} student{studentCount !== 1 ? "s" : ""} found â€¢ AI will use assessment reports & textbook content
+                    {studentCount} student{studentCount !== 1 ? "s" : ""} found. AI will use assessment reports & textbook content
                   </span>
                 </div>
               )}
@@ -1499,7 +1513,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       {/* AI Teaching Assistant */}
       <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
         {/* Assistant Header */}
-        <div className="relative rounded-t-2xl overflow-hidden bg-gradient-to-r from-accent via-accent/90 to-primary p-5">
+        <div className="relative rounded-t-2xl overflow-hidden bg-gradient-to-r from-blue-500 via-blue-500 to-blue-500 p-5">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-60" />
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -1514,7 +1528,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                   AI Teaching Assistant
                   <span className="text-[10px] font-medium bg-white/20 backdrop-blur-sm text-white/90 px-2 py-0.5 rounded-full uppercase tracking-wider">Online</span>
                 </h2>
-                <p className="text-white/70 text-xs mt-0.5">Your intelligent co-teacher â€” ask anything about your class</p>
+                <p className="text-white/70 text-xs mt-0.5">Your intelligent co-teacher,ask anything about your class</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5">
@@ -1589,7 +1603,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                     <Sparkles className="h-2.5 w-2.5 text-white" />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-foreground mb-1.5">Hello, Teacher! ðŸ‘‹</h3>
+                <h3 className="text-lg font-bold text-foreground mb-1.5">Hello, Teacher!</h3>
                 <p className="text-sm text-muted-foreground max-w-md mb-1">I'm your AI Teaching Assistant powered by advanced intelligence.</p>
                 <p className="text-xs text-muted-foreground/70 max-w-sm mb-6">Select a class & section above, then generate a lesson plan or ask me anything about your students.</p>
                 
@@ -2363,7 +2377,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
           <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
             <Users className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-              {homeworkStudentCount} student{homeworkStudentCount !== 1 ? "s" : ""} found â€¢ Homework will be assigned to this group
+              {homeworkStudentCount} student{homeworkStudentCount !== 1 ? "s" : ""} found. Homework will be assigned to this group
             </span>
           </div>
 
