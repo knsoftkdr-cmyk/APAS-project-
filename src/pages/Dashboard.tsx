@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -61,7 +61,7 @@ const getProgressColor = (percentage: number) => {
   return "[&>div]:bg-red-400";
 };
 
-/* ───────────────────────────── STUDENT DASHBOARD ───────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ STUDENT DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const StudentDashboard = () => {
   const { profile, user } = useAuth();
@@ -146,14 +146,14 @@ const StudentDashboard = () => {
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-  <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+  <div className="absolute top-12 left-[45%] text-white/80 text-xl">âœ¦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">âœ¦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">âœ¦</div>
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+          <div className="absolute top-6 left-1/4 text-white/50 text-xl">âœ¦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">âœ¦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">âœ¦</div>
+          <div className="absolute top-24 right-[45%] text-white/90 text-lg">âœ¦</div>
 
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
 
@@ -204,13 +204,13 @@ const StudentDashboard = () => {
   );
 };
 
-/* ───────────────────────────── TEACHER HOME ───────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TEACHER HOME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const featureCards = [
   {
     icon: Users,
     title: "Student Reports",
-    description: "View detailed diagnostic reports for every student — learning styles, multiple intelligences, and cognitive profiles all in one place.",
+    description: "View detailed diagnostic reports for every student â€” learning styles, multiple intelligences, and cognitive profiles all in one place.",
     path: "/teacher",
     color: "from-blue-500/20 to-blue-600/10",
     iconColor: "text-blue-600",
@@ -282,14 +282,14 @@ const TeacherHome = () => {
   const { data: lessonCount } = useQuery({
     queryKey: ["teacher-lesson-count", user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lesson_assignments")
-        .select("lesson_id")
-        .eq("assigned_by", user!.id);
+      const { count, error } = await supabase
+        .from("lessons")
+        .select("id", { count: "exact", head: true })
+        .eq("teacher_id", user!.id)
+        .eq("ai_generated", true);
       if (error) throw error;
-      return data?.length || 0;
+      return count || 0;
     },
-    enabled: !!user?.id,
   });
 
   return (
@@ -313,14 +313,14 @@ const TeacherHome = () => {
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/50"></div>
 
-          <div className="absolute top-12 left-[45%] text-white/40 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-12 left-[45%] text-white/40 text-xl">âœ¦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">âœ¦</div>
+          <div className="absolute top-24 right-[35%] text-white/40 text-lg">âœ¦</div>
           
-          <div className="absolute top-6 left-1/4 text-white/40 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-6 left-1/4 text-white/40 text-xl">âœ¦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">âœ¦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">âœ¦</div>
+          <div className="absolute top-24 right-[45%] text-white/40 text-lg">âœ¦</div>
 
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
 
@@ -344,7 +344,7 @@ const TeacherHome = () => {
             </h1>
             <p className="text-base text-black/90 mb-1">{today}</p>
             <p className="text-sm text-black/80 max-w-lg mt-3 leading-relaxed">
-              {profile?.role === "school_admin" ? "Manage your school — create accounts, monitor student and teacher performance, and oversee school-wide operations." : profile?.role === "knsoft_admin" ? "KNSOFT Platform Admin — manage all schools, assign school admins, monitor platform-wide usage and billing." : "Adaptive Personalised Assessment System — empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."}
+              {profile?.role === "school_admin" ? "Manage your school â€” create accounts, monitor student and teacher performance, and oversee school-wide operations." : profile?.role === "knsoft_admin" ? "KNSOFT Platform Admin â€” manage all schools, assign school admins, monitor platform-wide usage and billing." : "Adaptive Personalised Assessment System â€” empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."}
             </p>
           </div>
         </div>
@@ -359,7 +359,7 @@ const TeacherHome = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {countLoading ? "—" : assessmentCount}
+                {countLoading ? "â€”" : assessmentCount}
               </p>
               <p className="text-sm text-muted-foreground">Assessments Completed</p>
             </div>
@@ -371,7 +371,7 @@ const TeacherHome = () => {
               <BookOpen className="h-6 w-6 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{lessonCount ?? "—"}</p>
+              <p className="text-2xl font-bold text-foreground">{lessonCount ?? "â€”"}</p>
               <p className="text-sm text-muted-foreground">Lesson Plans Created</p>
             </div>
           </CardContent>
@@ -444,13 +444,13 @@ const TeacherHome = () => {
   );
 };
 
-/* ───────────────────────────── ADMIN HOME ───────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ADMIN HOME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const adminFeatureCards = [
   {
     icon: Users,
     title: "Student Reports",
-    description: "View detailed diagnostic reports for every student across all classes — learning styles, multiple intelligences, and cognitive profiles.",
+    description: "View detailed diagnostic reports for every student across all classes â€” learning styles, multiple intelligences, and cognitive profiles.",
     path: "/teacher",
     color: "from-blue-500/20 to-blue-600/10",
     iconColor: "text-blue-600",
@@ -536,14 +536,14 @@ const AdminHome = () => {
     <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
     {/* Stars */}
-    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-    <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-    <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+    <div className="absolute top-12 left-[45%] text-white/80 text-xl">âœ¦</div>
+    <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">âœ¦</div>
+    <div className="absolute top-24 right-[35%] text-white/80 text-lg">âœ¦</div>
 
-    <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-    <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-    <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-    <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+    <div className="absolute top-6 left-1/4 text-white/50 text-xl">âœ¦</div>
+    <div className="absolute top-0 left-[45%] text-white/40 text-lg">âœ¦</div>
+    <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">âœ¦</div>
+    <div className="absolute top-24 right-[45%] text-white/90 text-lg">âœ¦</div>
 
     {/* Triangles */}
     <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
@@ -596,7 +596,7 @@ const AdminHome = () => {
                 <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{isLoading ? "—" : stat.value}</p>
+                <p className="text-2xl font-bold text-foreground">{isLoading ? "â€”" : stat.value}</p>
                 <p className="text-xs text-muted-foreground">{stat.label}</p>
               </div>
             </CardContent>
@@ -648,7 +648,7 @@ const AdminHome = () => {
         <Card className="border-border/60">
           <CardContent className="p-6 space-y-4">
             <p className="text-sm text-foreground leading-relaxed">
-              <strong>APAS</strong> (Adaptive Pedagogy & Analytics System) is a next-generation AI-powered educational platform that personalises learning for every student. It uses a collaborative network of AI agents — Planner, Executor, Analyst, Tutor, and Creator — to provide a highly individualised experience across CBSE, IB, and Cambridge curricula.
+              <strong>APAS</strong> (Adaptive Pedagogy & Analytics System) is a next-generation AI-powered educational platform that personalises learning for every student. It uses a collaborative network of AI agents â€” Planner, Executor, Analyst, Tutor, and Creator â€” to provide a highly individualised experience across CBSE, IB, and Cambridge curricula.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="rounded-lg border border-border p-4 bg-primary/5">
@@ -731,7 +731,7 @@ const AdminHome = () => {
   );
 };
 
-/* ───────────────────────────── ROUTER ───────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ROUTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 const Dashboard = () => {
   const { profile } = useAuth();
@@ -758,4 +758,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 
