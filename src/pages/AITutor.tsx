@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Bot, Send, User, Loader2, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import ReactMarkdown from "react-markdown";
-
+import landingairobot from "@/assets/landing-ai-robot.png"
 interface Message {
   role: "user" | "assistant";
   content: string;
@@ -101,7 +101,7 @@ const AITutor = () => {
 
   return (
     <AppLayout>
-      <div className="flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto p-4">
+       <div className="relative flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto p-4 overflow-hidden">
         <PageHeader
           title="AI Tutor"
           subtitle="Your personal 24/7 AI study companion"
@@ -110,7 +110,24 @@ const AITutor = () => {
         {/* Chat Area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
           {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-4 py-16">
+            <div className="relative flex flex-col items-center justify-center h-full text-center gap-4 py-16">
+              {/* Floating AI Robot */}
+
+<div className="relative mb-6">
+  <img
+    src={landingairobot}
+    alt="AI Robot"
+    className="relative
+      w-32
+      md:w-[400px]
+      animate-float
+      drop-shadow-2xl
+      left-32
+      top-[60px]
+    "
+  />
+  {/* Glow behind robot */}
+  <div className="absolute inset-0 bg-blue-300/20 blur-3xl rounded-full -z-10"/></div>
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                 <Sparkles className="h-8 w-8 text-primary" />
               </div>

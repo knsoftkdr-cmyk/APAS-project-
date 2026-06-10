@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import academictests from "@/assets/academictests-banner.png";
+import boyTeacher from "@/assets/BoyTeacher-guide.png";
 import {
   School,
   Users,
@@ -340,7 +341,12 @@ const subjectColors: Record<string, string> = {
       {/* ─── SELECT PHASE ─── */}
       {phase === "select" && (
         <div className="space-y-6 animate-fade-in">
-          <Card className="border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5">
+          <Card className="relative border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 overflow-visible">
+          <img
+  src={boyTeacher}
+  alt="Teacher Guide"
+  className="hidden lg:block absolute right-[70px] bottom-0 h-[500px] w-auto z-20 drop-shadow-2xl"
+/>
             <CardHeader className="text-center pb-2">
               <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg">
                 <GraduationCap className="h-8 w-8 text-primary-foreground" />

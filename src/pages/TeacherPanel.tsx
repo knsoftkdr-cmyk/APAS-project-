@@ -178,18 +178,20 @@ const TeacherPanel = () => {
         </div>
 
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setShowClassReport(false); setCurrentPage(1); }} className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="student-reports">Student Reports</TabsTrigger>
-          <TabsTrigger value="class-reports">Class Reports</TabsTrigger>
+        <TabsList className="mb-4 ">
+          <TabsTrigger value="student-reports" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg">Student Reports</TabsTrigger>
+          <TabsTrigger value="class-reports" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg">Class Reports</TabsTrigger>
         </TabsList>
 
         {/* ─── Shared Filters ─── */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-blue-100 p-1 rounded-xl">
           <CardContent className="p-4">
             <div className="flex flex-wrap items-end gap-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Filters:</span>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-blue-200 flex items-center justify-center">
+                  <Filter className="h-7 w-7 text-blue-600" />
+                </div>
+                <span className="text- font-semibold text-slate-900">Filters:</span>
               </div>
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Class</label>
@@ -261,7 +263,9 @@ const TeacherPanel = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                <Users className="h-7 w-7 text-green-600" />
+                </div>
                 Student Assessments
               </CardTitle>
             </CardHeader>
@@ -317,7 +321,7 @@ const TeacherPanel = () => {
                               year: "numeric",
                               month: "short",
                               day: "numeric",
-                            }) : "�"
+                            }) : "�"
                           }
                           </TableCell>
                           <TableCell>
@@ -462,7 +466,7 @@ const TeacherPanel = () => {
                                 year: "numeric",
                                 month: "short",
                                 day: "numeric",
-                              }) : "�"
+                              }) : "�"
                           }
                             </TableCell>
                             <TableCell>

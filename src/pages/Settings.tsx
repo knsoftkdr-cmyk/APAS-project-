@@ -486,7 +486,7 @@ const SettingsPage = () => {
           >
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center" style={{color:"#1e3a5f"}}>
-                <Globe className="h-5 w-5" />
+                <Globe className="h-6 w-6" />
               </div>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">Language</p>
@@ -503,7 +503,7 @@ const SettingsPage = () => {
           >
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
-                <Lock className="h-5 w-5" />
+                <Lock className="h-6 w-6" />
               </div>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">Change Password</p>

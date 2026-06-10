@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Trophy, Medal, Zap, Award } from "lucide-react";
 import leaderBanner from "@/assets/leaderboard-banner.png";
-
+import Confetti from "react-confetti";
 interface LeaderboardEntry {
   user_id: string;
   total_xp: number;
@@ -142,9 +142,9 @@ export default function Leaderboard() {
                   <TableCell className="text-center">
                     {isTopThree ? (
                       <div className="flex justify-center">
-                        {index === 0 && <Trophy className="h-5 w-5 text-amber-500" />}
-                        {index === 1 && <Medal className="h-5 w-5 text-slate-400" />}
-                        {index === 2 && <Medal className="h-5 w-5 text-orange-600" />}
+                        {index === 0 && <Trophy className="h-7 w-7 text-amber-500" />}
+                        {index === 1 && <Medal className="h-7 w-7 text-slate-400" />}
+                        {index === 2 && <Medal className="h-7 w-7 text-orange-600" />}
                       </div>
                     ) : (
                       <span className="text-sm text-muted-foreground">#{index + 1}</span>
@@ -169,7 +169,7 @@ export default function Leaderboard() {
                   </TableCell>
                   <TableCell className="text-right font-semibold">
                     <div className="flex items-center justify-end gap-1">
-                      <Zap className="h-4 w-4 text-yellow-500" />
+                      <Zap className="h-6 w-6 text-yellow-500" />
                       {entry.total_xp.toLocaleString()}
                     </div>
                   </TableCell>
@@ -227,12 +227,23 @@ export default function Leaderboard() {
         {/* Your Ranking Card */}
         {userRank >= 0 && (
           <Card className="border-primary/50 bg-gradient-to-r from-primary/5 to-transparent">
-            <CardContent className="py-6">
+             <CardContent className="py-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <div className="text-sm text-muted-foreground">Your Rank</div>
-                  <div className="text-3xl font-bold text-primary">#{userRank + 1}</div>
-                </div>
+<div>
+  <div className="text-sm text-muted-foreground">
+    🏅 Your Rank
+  </div>
+
+  <div className="flex items-center gap-2">
+    <div className="text-4xl font-bold text-primary">
+      #{userRank + 1}
+    </div>
+
+    <Badge className="bg-yellow-100 text-yellow-700 border-yellow-300">
+      Top 10%
+    </Badge>
+  </div>
+</div>
                 <div>
                   <div className="text-sm text-muted-foreground">Your XP</div>
                   <div className="text-3xl font-bold flex items-center gap-2">
@@ -261,6 +272,8 @@ export default function Leaderboard() {
           </Card>
         )}
 
+
+
         {/* Leaderboard Tabs */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
@@ -279,11 +292,165 @@ export default function Leaderboard() {
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="global">
+            <TabsContent value="global" className="space-y-4">
+              {globalLeaderboard && globalLeaderboard.length >= 3 && (
+                <Card className="border-0 bg-gradient-to-r from-yellow-50 via-white to-orange-50 shadow-lg">
+                  <CardContent className="py-8">
+
+                    <h2 className="text-base md:text-xl font-bold text-center mb-8">
+                      🏆 Top Performers
+                    </h2>
+
+<div className="space-y-10">
+
+  {/* WINNER SECTION */}
+  <div className="relative text-center">
+  <div className="absolute left-1/2 -translate-x-1/2 -top-12 w-[200px] md:w-[300px] h-[180px] md:h-[250px] overflow-hidden pointer-events-none">
+    <Confetti
+      numberOfPieces={100}
+      recycle={false}
+      gravity={0.08}
+      width={600}
+      height={250}
+    />
+</div>
+    <div className="text-3xl md:text-5xl mb-3 animate-bounce">
+      👑
+    </div>
+
+    <div className="mx-auto w-24 h-32 md:w-36 md:h-44 rounded-2xl bg-gradient-to-b  from-yellow-300 to-yellow-500 flex items-center justify-center text-3xl md:text-5xl font-bold text-white shadow-2xl">
+      1
+    </div>
+
+    <div className="mt-4">
+      <div className="font-bold text-base md:text-xl break-words">
+        {globalLeaderboard[0]?.full_name}
+      </div>
+
+      <div className="text-yellow-600 font-semibold text-sm md:text-base">
+        🥇 {globalLeaderboard[0]?.total_xp.toLocaleString()} XP
+      </div>
+    </div>
+  </div>
+
+  {/* SECOND & THIRD */}
+  <div className="flex flex-row justify-center flex-wrap items-center gap-6 md:gap-16">
+
+    {/* SECOND */}
+    <div className="text-center">
+      <div className="w-20 h-24 md:w-28 md:h-32 rounded-2xl bg-gradient-to-b from-slate-300  to-slate-500 flex items-center justify-center text-2xl md:text-4xl font-bold text-white shadow-xl">
+        2
+      </div>
+
+      <div className="mt-3">
+        <div className="font-semibold">
+          {globalLeaderboard[1]?.full_name}
+        </div>
+
+        <div className="text-slate-600">
+          🥈 {globalLeaderboard[1]?.total_xp.toLocaleString()} XP
+        </div>
+      </div>
+
+    </div>
+
+    {/* THIRD */}
+    <div className="text-center">
+      <div className="w-20 h-24 md:w-28 md:h-32 rounded-2xl bg-gradient-to-b  from-orange-300 to-orange-500 flex items-center justify-center text-2xl md:text-4xl font-bold text-white shadow-xl">
+        3
+      </div>
+
+      <div className="mt-3">
+        <div className="font-semibold">
+          {globalLeaderboard[2]?.full_name}
+        </div>
+
+        <div className="text-orange-600">
+          🥉 {globalLeaderboard[2]?.total_xp.toLocaleString()} XP
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+                  </CardContent>
+                </Card>
+              )}
               {renderLeaderboard(globalLeaderboard, globalLoading)}
             </TabsContent>
 
             <TabsContent value="class">
+              {classLeaderboard && classLeaderboard.length >= 3 && (
+                 <Card className="border-0 bg-gradient-to-r from-yellow-50 via-white to-orange-50 shadow-lg">
+                    <CardContent className="py-8">
+                      <h2 className="text-base md:text-xl font-bold text-center mb-8">
+                        🏫 Class Top Performers
+                      </h2>
+                      <div className="space-y-10">
+                        {/* WINNER */}
+                        <div className="relative text-center">
+                          {/* Confetti above #1 */}
+                          <div className="absolute left-1/2 -translate-x-1/2 -top-12 w-[200px] md:w-[300px] h-[180px] md:h-[250px] overflow-hidden pointer-events-none">
+                            <Confetti
+                              width={250}
+                              height={250}
+                              numberOfPieces={100}
+                              recycle={false}
+                              gravity={0.08}
+                            />
+                          </div>
+                          <div className="text-3xl md:text-5xl mb-3 animate-bounce">
+                            👑
+                          </div>
+                          <div className="mx-auto w-24 h-32 md:w-36 md:h-44 rounded-2xl bg-gradient-to-b  from-yellow-300 to-yellow-500 flex items-center justify-center text-3xl md:text-5xl font-bold  text-white shadow-2xl">
+                            1
+                          </div>
+                          <div className="mt-4">
+                            <div className="font-bold text-base md:text-xl break-words">
+                              {classLeaderboard[0]?.full_name}
+                            </div>
+                            <div className="text-yellow-600 font-semibold text-sm md:text-base">
+                              🥇 {classLeaderboard[0]?.total_xp.toLocaleString()} XP
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 2nd & 3rd */}
+                        <div className="flex flex-row justify-center flex-wrap items-center gap-6 md:gap-16">
+
+                          <div className="text-center">
+                            <div className="w-20 h-24 md:w-28 md:h-32 rounded-2xl bg-gradient-to-b from-slate-300 to-slate-500 flex items-center justify-center text-2xl md:text-4xl font-bold text-white shadow-xl">
+                              2
+                            </div>
+                            <div className="mt-3">
+                              <div className="font-semibold">
+                                {classLeaderboard[1]?.full_name}
+                              </div>
+                              <div className="text-slate-600">
+                                🥈 {classLeaderboard[1]?.total_xp.toLocaleString()} XP
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <div className="w-20 h-24 md:w-28 md:h-32 rounded-2xl bg-gradient-to-b from-orange-300 to-orange-500 flex items-center justify-center text-2xl md:text-4xl font-bold text-white shadow-xl">
+                              3
+                            </div>
+                            <div className="mt-3">
+                              <div className="font-semibold">
+                                {classLeaderboard[2]?.full_name}
+                              </div>
+                              <div className="text-orange-600">
+                                🥉 {classLeaderboard[2]?.total_xp.toLocaleString()} XP
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               {renderLeaderboard(classLeaderboard, classLoading)}
             </TabsContent>
           </Tabs>
