@@ -147,7 +147,7 @@ export default function ParentDashboard() {
         <div className="px-8 py-8 relative z-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-1">Welcome, {selectedChildData?.full_name ?? "Parent"}</h1>
           <p className="text-black-900 text-sm">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-          <p className="text-black-600 text-sm mt-1">Monitor your child's academic progress, homework, assessments and performance — all in one place.</p>
+          <p className="text-black-900 text-sm mt-1">Monitor your child's academic progress, homework, assessments and performance — all in one place.</p>
         </div>
         <img src={parentBanner} alt="" 
         className="hidden md:block absolute right-10 bottom-0 w-32" />
@@ -156,25 +156,25 @@ export default function ParentDashboard() {
       <div className="container mx-auto px-4 space-y-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-2">
-          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-            <GraduationCap className="h-5 w-5 text-purple-600" />
+          <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center">
+            <GraduationCap className="h-10 w-10 text-green-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold">Parent Dashboard</h2>
+            <h2 className="text-xl font-bold">Parent Dashboard 👨‍👩‍👧</h2>
             <p className="text-sm text-muted-foreground">Welcome, {user?.email}</p>
           </div>
         </div>
 
         {/* Child selector */}
         {children.length > 0 && (
-          <Card className="cursor-pointer border-2 border-purple-100">
+          <Card className="cursor-pointer border-0 shadow-xl bg-gradient-to-r from-blue-300 to-blue-400 hover:scale-[1.02] transition-all">
             <CardContent className="py-4 flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-bold">
                 {(selectedChildData?.full_name || "S").charAt(0)}
               </div>
               <div>
                 <p className="font-semibold text-lg">{selectedChildData?.full_name ?? "Student"}</p>
-                <p className="text-sm text-muted-foreground">Grade: {selectedChildData?.class_grade ?? "—"}</p>
+                <p className="text-sm text-black-600 ">Grade: {selectedChildData?.class_grade ?? "—"}</p>
               </div>
             </CardContent>
           </Card>
@@ -183,16 +183,41 @@ export default function ParentDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: "Tests Taken", value: scores.length, icon: BarChart3, color: "text-blue-600" },
-            { label: "Avg Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: TrendingUp, color: "text-green-600" },
-            { label: "Homework Done", value: `${completedHW}/${homework.length}`, icon: BookOpen, color: "text-purple-600" },
-          ].map((s) => (
-            <Card key={s.label}>
-              <CardContent className="py-4 flex items-center gap-3">
-                <s.icon className={`h-6 w-6 ${s.color}`} />
+  {
+    label: "Tests Taken",
+    value: scores.length,
+    icon: BarChart3,
+    bg: "bg-gradient-to-r from-blue-500 to-blue-500",
+    iconBg: "bg-white",
+    color: "text-white-600",
+  },
+  {
+    label: "Avg Score",
+    value: avgScore !== null ? `${avgScore}%` : "—",
+    icon: TrendingUp,
+    bg: "bg-gradient-to-r from-green-500 to-green-500",
+    iconBg: "bg-white",
+    color: "text-green-600",
+  },
+  {
+    label: "Homework Done",
+    value: `${completedHW}/${homework.length}`,
+    icon: BookOpen,
+    bg: "bg-gradient-to-r from-purple-500 to-purple-500",
+    iconBg: "bg-white",
+    color: "text-purple-600",
+  },
+].map((s) => (
+              <Card
+    key={s.label}
+    className={`${s.bg} border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden relative`}>
+              <CardContent className="py-5 flex items-center gap-4">
+                  <div className={`h-14 w-14 rounded-2xl text-white flex items-center justify-center ${s.iconBg}`}>
+                    <s.icon className={`h-7 w-7 text-blue-600 ${s.color}`} />
+                  </div>
                 <div>
-                  <p className="text-2xl font-bold">{s.value}</p>
-                  <p className="text-xs text-muted-foreground">{s.label}</p>
+                  <p className="text-2xl font-bold text-white">{s.value}</p>
+                  <p className="text-xs text-muted-foreground text-white">{s.label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -202,14 +227,17 @@ export default function ParentDashboard() {
         {/* Tabs */}
         <Tabs defaultValue="scores">
           <TabsList>
-            <TabsTrigger value="scores" className="gap-1.5"><BarChart3 className="h-4 w-4" /> Test Scores</TabsTrigger>
-            <TabsTrigger value="homework" className="gap-1.5"><BookOpen className="h-4 w-4" /> Homework</TabsTrigger>
+            <TabsTrigger value="scores" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><BarChart3 className="h-4 w-4" /> Test Scores</TabsTrigger>
+            <TabsTrigger value="homework" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><BookOpen className="h-4 w-4" /> Homework</TabsTrigger>
           </TabsList>
 
           {/* Test Scores */}
           <TabsContent value="scores">
             <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Assessment Results</CardTitle>
+              <CardHeader><CardTitle className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center">
+                <BarChart3 className="h-7 w-7 text-red-600" /> </div>
+                Assessment Results</CardTitle>
                 <p className="text-sm text-muted-foreground">Your child's diagnostic test scores</p>
               </CardHeader>
               <CardContent>
@@ -268,8 +296,8 @@ export default function ParentDashboard() {
 
       {/* Report Modal */}
       {reportRow && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setReportRow(null)}>
-          <div className="bg-white rounded-2xl p-6 max-w-lg w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-end md:items-center justify-center z-50" onClick={() => setReportRow(null)}>
+          <div className="bg-white rounded-3xl p-6 max-w-lg w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto animate-in slide-in-from-bottom-5 zoom-in-95 fade-in duration-700 ease-out" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-lg font-bold text-gray-900">{reportRow.title}</h3>
               <button onClick={() => setReportRow(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
