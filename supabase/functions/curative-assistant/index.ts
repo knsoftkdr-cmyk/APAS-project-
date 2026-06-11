@@ -48,7 +48,7 @@ const pipeGeminiSseToOpenAi = (
   initialBody: ReadableStream<Uint8Array>,
   continueRequest: (accumulated: string) => Promise<ReadableStream<Uint8Array> | null>,
 ) => {
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8");
   return new ReadableStream({
     async start(controller) {
       let accumulated = "";
@@ -130,7 +130,7 @@ serve(async (req) => {
   }
 
   try {
-    const { selectedClass, section, subject, prompt, mode, chatHistory } = await req.json();
+    const { selectedClass, section, subject, prompt, mode, chatHistory, schoolId } = await req.json();
 
     // Rotate through multiple API keys to distribute rate limits
     const allKeys = [
@@ -161,6 +161,7 @@ serve(async (req) => {
       .select("student_name, student_age, age_group, responses, student_class, section")
       .or(`student_class.eq.${normalizedClass},student_class.eq.${selectedClass}`);
 
+    if (schoolId) query = query.eq("school_id", schoolId);
     if (section) {
       query = query.eq("section", section);
     }
