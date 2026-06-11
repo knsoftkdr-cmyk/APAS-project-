@@ -422,10 +422,10 @@ interface TextbookFile {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/curative-assistant`;
 
 async function streamChat({
-  selectedClass, section, subject, prompt, mode, chatHistory, onDelta, onDone, onError,
+  selectedClass, section, subject, prompt, mode, chatHistory, schoolId, onDelta, onDone, onError,
 }: {
   selectedClass: string; section: string; subject: string; prompt: string;
-  mode: "generate" | "chat"; chatHistory: ChatMessage[];
+  mode: "generate" | "chat"; chatHistory: ChatMessage[]; schoolId: string | null;
   onDelta: (text: string) => void; onDone: () => void; onError: (msg: string) => void;
 }) {
   const resp = await fetch(CHAT_URL, {
@@ -434,7 +434,7 @@ async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ selectedClass, section, subject, prompt, mode, chatHistory }),
+    body: JSON.stringify({ selectedClass, section, subject, prompt, mode, chatHistory, schoolId }),
   });
 
   if (!resp.ok) {
@@ -453,7 +453,7 @@ async function streamChat({
   }
 
   const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8");
   let textBuffer = "";
 
   try {
@@ -708,18 +708,18 @@ const Curative = () => {
   );
 
   const { data: studentCount = 0 } = useQuery({
-    queryKey: ["curative-student-count", selectedClass, selectedSection, user?.id],
+    queryKey: ["curative-student-count", selectedClass, selectedSection, profile?.school_id],
     queryFn: async () => {
-      if (!selectedClass || !selectedSection || !user?.id) return 0;
+      if (!selectedClass || !selectedSection || !profile?.school_id) return 0;
       const { count } = await supabase
         .from("student_assessments")
         .select("id", { count: "exact", head: true })
         .eq("student_class", selectedClass)
         .eq("section", selectedSection)
-        .eq("teacher_id", user.id);
+        .eq("school_id", profile.school_id);
       return count || 0;
     },
-    enabled: !!selectedClass && !!selectedSection && !!user?.id,
+    enabled: !!selectedClass && !!selectedSection && !!profile?.school_id,
   });
 
   const userScrolledUp = useRef(false);
@@ -878,6 +878,7 @@ const Curative = () => {
         section: selectedSection,
         subject: selectedChapter || selectedSubject,
         prompt, mode, chatHistory: chatMessages,
+        schoolId: profile?.school_id ?? null,
         onDelta: (chunk) => upsertAssistant(chunk),
         onDone: async () => {
           setIsStreaming(false);
@@ -1245,9 +1246,15 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       </div>
     `;
     
+    // Ensure emoji font is available
+    const metaCharset = document.createElement('meta');
+    metaCharset.setAttribute('charset', 'utf-8');
+    tempDiv.prepend(metaCharset);
+
     const style = document.createElement('style');
     style.textContent = `
       @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { font-family: 'DM Sans', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
       
@@ -2362,9 +2369,15 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       </div>
     `;
     
+    // Ensure emoji font is available
+    const metaCharset = document.createElement('meta');
+    metaCharset.setAttribute('charset', 'utf-8');
+    tempDiv.prepend(metaCharset);
+
     const style = document.createElement('style');
     style.textContent = `
       @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { font-family: 'DM Sans', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
       
