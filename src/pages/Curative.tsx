@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -29,7 +29,7 @@ const CLASS_OPTIONS = [
   ...Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `Class ${i + 1}` })),
 ];
 
-// â”€â”€â”€ Custom Markdown Components â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Custom Markdown Components ───────────────────────────────────────
 const MarkdownComponents = {
   h1: ({ node, ...props }: any) => (
     <h1 className="text-xl font-bold mt-6 mb-4 text-foreground border-b-2 border-primary/30 pb-2 flex items-center gap-2" {...props}>
@@ -45,7 +45,7 @@ const MarkdownComponents = {
   ),
   h3: ({ node, ...props }: any) => (
     <h3 className="text-base font-semibold mt-4 mb-2 text-foreground/95" {...props}>
-      â€¢ {props.children}
+      • {props.children}
     </h3>
   ),
   h4: ({ node, ...props }: any) => (
@@ -131,7 +131,7 @@ const MarkdownComponents = {
         const q = u.searchParams.get("search_query") || u.searchParams.get("q") || "";
         topic = decodeURIComponent(q.replace(/\+/g, " ")).trim();
       } catch { /* ignore */ }
-      label = topic ? `â–¶ Watch on YouTube: ${topic}` : "â–¶ Watch on YouTube";
+      label = topic ? `▶ Watch on YouTube: ${topic}` : "▶ Watch on YouTube";
     }
     return (
       <a
@@ -178,13 +178,13 @@ const extractSubjectName = (filename: string): string => {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 };
 
-// â”€â”€â”€ Utility to extract and detect period count â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Utility to extract and detect period count ──────────────────────
 const extractPeriodsCount = (selectedPeriodsValue: string, lessonContent: string): number => {
   // First, try to use the selected periods value
   const selectedCount = parseInt(selectedPeriodsValue) || 1;
   
   // Then, verify by parsing the content to auto-detect periods
-  const periodMatches = lessonContent.match(/## ðŸ“… PERIOD (\d+)/g);
+  const periodMatches = lessonContent.match(/## 📅 PERIOD (\d+)/g);
   if (periodMatches && periodMatches.length > 0) {
     // Extract the highest period number found
     const periodNumbers = periodMatches.map((match) => {
@@ -200,15 +200,15 @@ const extractPeriodsCount = (selectedPeriodsValue: string, lessonContent: string
   return selectedCount;
 };
 
-// â”€â”€â”€ Extract all periods from lesson content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Extract all periods from lesson content ───────────────────────────
 const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; title: string }> => {
   const periods: Array<{ periodNumber: number; title: string }> = [];
   
   // Remove intro text 
-  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|ðŸ“)/m, '$1');
+  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
   
-  // Pattern 1: Multi-period format "## ðŸ“… PERIOD 1 â€” Title"
-  let periodRegex = /##\s*ðŸ“…\s*PERIOD\s+(\d+)\s*[â€”-]\s*([^(\n]+)/gi;
+  // Pattern 1: Multi-period format "## 📅 PERIOD 1 — Title"
+  let periodRegex = /##\s*📅\s*PERIOD\s+(\d+)\s*[—-]\s*([^(\n]+)/gi;
   let match;
   
   while ((match = periodRegex.exec(cleanContent)) !== null) {
@@ -221,9 +221,9 @@ const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; ti
   }
   
   // Pattern 2: If no periods found, check for single-period format
-  // (sections numbered like ðŸ“ 1. Learning Objectives, ðŸ“ 7. Assessment)
+  // (sections numbered like 📝 1. Learning Objectives, 📝 7. Assessment)
   if (periods.length === 0) {
-    const hasAssessmentSection = /ðŸ“\s*\d+\.\s*Assessment|###\s*Assessment/i.test(cleanContent);
+    const hasAssessmentSection = /📝\s*\d+\.\s*Assessment|###\s*Assessment/i.test(cleanContent);
     if (hasAssessmentSection) {
       periods.push({ periodNumber: 1, title: 'Main Content' });
     }
@@ -232,25 +232,25 @@ const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; ti
   return periods.sort((a, b) => a.periodNumber - b.periodNumber);
 };
 
-// â”€â”€â”€ Extract exit ticket for a specific period â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Extract exit ticket for a specific period ────────────────────────
 const extractExitTicket = (lessonContent: string, periodNumber: number): string => {
   if (!lessonContent) {
     console.log("No lesson content provided");
     return "";
   }
 
-  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|ðŸ“)/m, '$1');
+  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
   console.log("Extracting exit ticket for period:", periodNumber);
   console.log("Lesson content length:", cleanContent.length);
   
   // Check if multi-period or single-period format
-  const isMultiPeriod = /##\s*ðŸ“…\s*PERIOD\s+\d+/i.test(cleanContent);
+  const isMultiPeriod = /##\s*📅\s*PERIOD\s+\d+/i.test(cleanContent);
   console.log("Is multi-period format:", isMultiPeriod);
   
   if (isMultiPeriod) {
-    // Multi-period: Extract from "## ðŸ“… PERIOD X" section - be more flexible with the ending
+    // Multi-period: Extract from "## 📅 PERIOD X" section - be more flexible with the ending
     let periodRegex = new RegExp(
-      `##\\s*ðŸ“…\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*ðŸ“…|$)`,
+      `##\\s*📅\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*📅|$)`,
       "i"
     );
     let periodMatch = cleanContent.match(periodRegex);
@@ -280,14 +280,14 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
     const headers = periodContent.match(/###\s*[^\n]+/g);
     console.log("Section headers found:", headers);
     
-    // First try: Look for "7. Assessment â€” Exit Ticket" or "ðŸ“ 7." section (Evaluate Phase)
+    // First try: Look for "7. Assessment — Exit Ticket" or "📝 7." section (Evaluate Phase)
     let exitTicketMatch = null;
     
     // Try with various patterns for section 7
     const evaluatePatterns = [
-      /###\s*ðŸ“?\s*7\.?\s*Assessment[\s\S]*?(?=###|$)/i,
-      /###\s*ðŸ“?\s*7\.?\s*(?:Assessment|Evaluate)[\s\S]*?(?=###|$)/i,
-      /###\s*ðŸ“\s*Assessment.*?Evaluate.*?Phase[\s\S]*?(?=###|$)/i,
+      /###\s*📝?\s*7\.?\s*Assessment[\s\S]*?(?=###|$)/i,
+      /###\s*📝?\s*7\.?\s*(?:Assessment|Evaluate)[\s\S]*?(?=###|$)/i,
+      /###\s*📝\s*Assessment.*?Evaluate.*?Phase[\s\S]*?(?=###|$)/i,
       /###\s*(?:\d+\.?\s+)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i,
       /###\s*Assessment.*?Exit Ticket[\s\S]*?(?=###|$)/i,
       /###\s*\d+\.[\s\S]*?Exit Ticket[\s\S]*?(?=###|$)/i,
@@ -312,7 +312,7 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
     let exitTicketMatch = null;
     
     const singlePeriodPatterns = [
-      /ðŸ“\s*\d+\.\s*Assessment[\s\S]*?(?=ðŸ“\s*\d+\.|##|$)/i,
+      /📝\s*\d+\.\s*Assessment[\s\S]*?(?=📝\s*\d+\.|##|$)/i,
       /###\s*(?:\d+\.?\s+)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i,
       /###\s*Assessment[\s\S]*?(?=###|$)/i,
       /###\s*(?:\d+\.?\s+)?(?:Assessment|Exit Ticket|Evaluation)[\s\S]*?(?=###|$)/i,
@@ -330,14 +330,14 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
   }
 };
 
-// â”€â”€â”€ Extract questions from exit ticket content â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Extract questions from exit ticket content ───────────────────────
 const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => {
   if (!exitTicketContent) return [];
   
   // Remove markdown headers and metadata lines
   let cleanContent = exitTicketContent
     .replace(/^###\s*Assessment[\s\S]*?\n/i, '') // Remove header
-    .replace(/^(ðŸ“\s*\d+\.\s*)?Assessment[^\n]*\n/i, '') // Remove Assessment title
+    .replace(/^(📝\s*\d+\.\s*)?Assessment[^\n]*\n/i, '') // Remove Assessment title
     .replace(/^(Format:|Collection Method:|Success Criteria:|Follow-up:)[^\n]*\n?/gim, '') // Remove metadata
     .replace(/^(Format|Collection|Success|Follow).*$/gm, '') // Remove info lines
     .trim();
@@ -356,7 +356,7 @@ const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => 
   
   // If no numbered questions found, try to extract from bullet points
   if (questions.length === 0) {
-    const bulletPattern = /^[\s\-*â€¢]\s*(.+?)$/gm;
+    const bulletPattern = /^[\s\-*•]\s*(.+?)$/gm;
     while ((match = bulletPattern.exec(cleanContent)) !== null) {
       const question = match[1].trim();
       if (question && question.length > 0 && !question.match(/^(Format|Collection|Success|Follow)/i)) {
@@ -379,17 +379,17 @@ const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => 
   return questions;
 };
 
-// â”€â”€â”€ Extract period title and topic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Extract period title and topic ────────────────────────────────────
 const extractPeriodInfo = (lessonContent: string, periodNumber: number): { title: string; topic: string } => {
-  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|ðŸ“)/m, '$1');
+  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
   
   // Check if multi-period or single-period format
-  const isMultiPeriod = /##\s*ðŸ“…\s*PERIOD\s+\d+/i.test(cleanContent);
+  const isMultiPeriod = /##\s*📅\s*PERIOD\s+\d+/i.test(cleanContent);
   
   if (isMultiPeriod) {
-    // Extract from "## ðŸ“… PERIOD X â€” Title" or "## ðŸ“… PERIOD X: Title"
+    // Extract from "## 📅 PERIOD X — Title" or "## 📅 PERIOD X: Title"
     const periodRegex = new RegExp(
-      `##\\s*ðŸ“…\\s*PERIOD\\s+${periodNumber}\\s*(?:[â€”:-]\\s*)?([^\\n]+)`,
+      `##\\s*📅\\s*PERIOD\\s+${periodNumber}\\s*(?:[—:-]\\s*)?([^\\n]+)`,
       "i"
     );
     const matches = cleanContent.match(periodRegex);
@@ -401,7 +401,7 @@ const extractPeriodInfo = (lessonContent: string, periodNumber: number): { title
     return { title, topic: title };
   } else {
     // Single-period: Extract main topic from title or first section
-    const titleRegex = /###\s*([^\n]+)|ðŸ“\s*\d+\.\s*([^\n]+)/i;
+    const titleRegex = /###\s*([^\n]+)|📝\s*\d+\.\s*([^\n]+)/i;
     const matches = cleanContent.match(titleRegex);
     const title = matches ? (matches[1] || matches[2] || 'Main Content').trim() : 'Main Content';
     return { title, topic: title };
@@ -529,7 +529,7 @@ const Curative = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // â”€â”€â”€ Chat history persistence (localStorage) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Chat history persistence (localStorage) ──────────────────────────
   const historyKey = user?.id ? `curative-chat-history-${user.id}` : null;
 
   type ChatSession = {
@@ -568,13 +568,13 @@ const Curative = () => {
     if (!historyKey || messages.length === 0) return;
     const sessions = loadHistory();
     const firstUser = messages.find((m) => m.role === "user")?.content || "Untitled chat";
-    const title = firstUser.length > 60 ? firstUser.slice(0, 60) + "â€¦" : firstUser;
-    const classLabel = CLASS_OPTIONS.find((c) => c.value === selectedClass)?.label || selectedClass || "â€”";
+    const title = firstUser.length > 60 ? firstUser.slice(0, 60) + "…" : firstUser;
+    const classLabel = CLASS_OPTIONS.find((c) => c.value === selectedClass)?.label || selectedClass || "—";
     const session: ChatSession = {
       id: currentSessionId || `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       title,
       classLabel,
-      section: selectedSection || "â€”",
+      section: selectedSection || "—",
       subject: selectedSubject || "",
       classValue: selectedClass,
       sectionValue: selectedSection,
@@ -792,7 +792,6 @@ const Curative = () => {
         .from("topics")
         .select("id, topic_name")
         .eq("chapter_id", chapter.id)
-        .eq("status", "active")
         .order("id", { ascending: true });
       if (error || !data) return [];
       return data;
@@ -976,20 +975,20 @@ const Curative = () => {
 
         if (hasContent) {
           // Load the previously generated plan into the chat so the teacher can see it
-          const userPrompt = `Generate a lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} â€¢ ${subjectName}${topicTrimmed ? ` â€¢ "${topicTrimmed}"` : ""} â€¢ ${curriculumLabel || "this curriculum"} â€¢ ${periods} period(s).`;
+          const userPrompt = `Generate a lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""} • ${curriculumLabel || "this curriculum"} • ${periods} period(s).`;
           setChatMessages([
             { role: "user", content: userPrompt },
             { role: "assistant", content: existingLesson.lesson_content },
           ]);
           setHasGeneratedContent(true);
           toast.success(
-            `Loaded existing lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} â€¢ ${subjectName}${topicTrimmed ? ` â€¢ "${topicTrimmed}"` : ""}. Change topic, periods, or curriculum to generate a new one.`,
+            `Loaded existing lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""}. Change topic, periods, or curriculum to generate a new one.`,
             { duration: 6000 }
           );
         } else {
-          // Stale empty row â€” delete it so the teacher can regenerate
+          // Stale empty row — delete it so the teacher can regenerate
           await supabase.from("lessons").delete().eq("id", existingLesson.id);
-          toast.info("Found an incomplete previous attempt â€” regenerating now.");
+          toast.info("Found an incomplete previous attempt — regenerating now.");
           // Fall through to sendMessage below
         }
 
@@ -1010,35 +1009,35 @@ ${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divide
 MANDATORY SECTION STRUCTURE FOR EVERY PERIOD (do NOT deviate):
 Each period MUST have EXACTLY these 8 sections in this order:
 
-### ðŸ“‹ 1. Learning Objectives
+### 📋 1. Learning Objectives
 - Clear, measurable objectives for THIS period using Bloom's taxonomy
 
-### ðŸŽ£ 2. Introduction â€” Hook Activity (First [X] minutes â€” PRIMACY EFFECT)
+### 🎣 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
 - Engaging opening that captures attention
 - X = approximately 20% of period duration
 
-### ðŸ“š 3. Main Teaching â€” Chunked Delivery (10-2-10 Rule)
-- Chunk 1: Input â†’ 2-min Processing â†’ Application (with 3-tier differentiation)
-- Chunk 2: Input â†’ 2-min Processing â†’ Application (with 3-tier differentiation)
-- Chunk 3: (if time permits) Input â†’ 2-min Processing â†’ Application
+### 📚 3. Main Teaching — Chunked Delivery (10-2-10 Rule)
+- Chunk 1: Input → 2-min Processing → Application (with 3-tier differentiation)
+- Chunk 2: Input → 2-min Processing → Application (with 3-tier differentiation)
+- Chunk 3: (if time permits) Input → 2-min Processing → Application
 - Include VARK-aligned activities for Visual, Auditory, Read/Write, Kinesthetic learners
 
-### ðŸŽ¯ 4. Activities â€” Differentiated Group Work ([X] minutes)
+### 🎯 4. Activities — Differentiated Group Work ([X] minutes)
 - Group-based collaborative activities
 - 3-tier tasks: Support/Core/Extension for mixed ability groups
 - X = approximately 30-40% of period duration
 
-### âœ… 5. Assessment â€” Quick Check ([X] minutes)
+### ✅ 5. Assessment — Quick Check ([X] minutes)
 - Formative assessment to check understanding
 - Quick quiz, observation checklist, or interactive check
 - X = approximately 10% of period duration
 
-### ðŸ”„ 6. Closure â€” Revision Activity (Last [X] minutes â€” RECENCY EFFECT)
+### 🔄 6. Closure — Revision Activity (Last [X] minutes — RECENCY EFFECT)
 - Summarize key learning points
 - Quick review game, exit slip preview, or concept mapping
 - X = approximately 10% of period duration
 
-### ðŸ“ 7. Assessment â€” Exit Ticket (5 minutes â€” Evaluate Phase)
+### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
 - 3-5 NUMBERED questions (1. 2. 3. etc.) that assess the key learning from this period
 - Questions should be clear, specific, and answerable in 5 minutes
 - Format: Simple numbered list with clear question text
@@ -1049,33 +1048,33 @@ Each period MUST have EXACTLY these 8 sections in this order:
   4. Solve [sample problem]
   5. What would happen if [scenario]?
 
-### ðŸ“Š 8. BBL Compliance Checklist
-- Primacy Effect applied: âœ“
-- Recency Effect applied: âœ“
-- Cognitive Load managed: âœ“
-- Social Brain activated: âœ“
-- VARK differentiation: âœ“
-- 3-tier scaffolding: âœ“
+### 📊 8. BBL Compliance Checklist
+- Primacy Effect applied: ✓
+- Recency Effect applied: ✓
+- Cognitive Load managed: ✓
+- Social Brain activated: ✓
+- VARK differentiation: ✓
+- 3-tier scaffolding: ✓
 
 ---
 
 NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
 
-## ðŸ“ Overall Learning Objectives (for the complete unit across all periods)
+## 📝 Overall Learning Objectives (for the complete unit across all periods)
 (3-5 cumulative objectives for the entire ${periods}-period lesson)
 
 ---
-## ðŸ“… PERIOD 1 â€” [Sub-topic Title]
+## 📅 PERIOD 1 — [Sub-topic Title]
 [Apply the 8-section structure above]
 
 ---
-## ðŸ“… PERIOD 2 â€” [Sub-topic Title]
+## 📅 PERIOD 2 — [Sub-topic Title]
 [Apply the 8-section structure above, building on Period 1]
 
 ... repeat for ALL ${periods} periods ...
 
 ---
-## ðŸ“… PERIOD ${periods} â€” [Sub-topic Title]
+## 📅 PERIOD ${periods} — [Sub-topic Title]
 [Apply the 8-section structure above with comprehensive review]
 
 ---
@@ -1085,26 +1084,26 @@ NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
 ---
 
 CRITICAL REQUIREMENTS:
-âœ“ EVERY period (1 through ${periods}) MUST have ALL 8 sections
-âœ“ Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
-âœ“ Period timings MUST total exactly ${periodDurationMin} minutes per period
-âœ“ Content must be distributed evenly across ${periods} periods with progressive complexity
-âœ“ Each period builds on previous learning
-âœ“ Exit tickets must assess THAT period's specific learning objectives
+✓ EVERY period (1 through ${periods}) MUST have ALL 8 sections
+✓ Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
+✓ Period timings MUST total exactly ${periodDurationMin} minutes per period
+✓ Content must be distributed evenly across ${periods} periods with progressive complexity
+✓ Each period builds on previous learning
+✓ Exit tickets must assess THAT period's specific learning objectives
 ` : `Cover the complete topic within a single ${periodDurationMin}-minute period with full detail.
 
 Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs.
 
 Apply the same 8-section structure for the single period:
-### ðŸ“‹ 1. Learning Objectives
-### ðŸŽ£ 2. Introduction â€” Hook Activity
-### ðŸ“š 3. Main Teaching â€” Chunked Delivery
-### ðŸŽ¯ 4. Activities â€” Differentiated Group Work
-### âœ… 5. Assessment â€” Quick Check
-### ðŸ”„ 6. Closure â€” Revision Activity
-### ðŸ“ 7. Assessment â€” Exit Ticket (5 minutes â€” Evaluate Phase)
+### 📋 1. Learning Objectives
+### 🎣 2. Introduction — Hook Activity
+### 📚 3. Main Teaching — Chunked Delivery
+### 🎯 4. Activities — Differentiated Group Work
+### ✅ 5. Assessment — Quick Check
+### 🔄 6. Closure — Revision Activity
+### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
 [Include 3-5 NUMBERED exit ticket questions]
-### ðŸ“Š 8. BBL Compliance Checklist`}
+### 📊 8. BBL Compliance Checklist`}
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
@@ -1117,8 +1116,8 @@ IMPORTANT: For each VARK learning style group (Visual, Auditory, Read/Write, Kin
 
 IMPORTANT: You MUST complete the ENTIRE lesson plan. Do NOT stop early or truncate. The plan MUST end with the "Learning Outcomes" section.
 
-IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "ðŸ“– Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
-â†’ **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
+IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "📖 Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
+→ **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
 Include terms like: Primacy Effect, Recency Effect, 10-2-10 Chunking Rule, Cognitive Load, Amygdala Filter, Patterning & Meaning, Spaced Repetition, Social Brain, ZPD (Zone of Proximal Development), Scaffolding, Multiple Intelligences (MI), VARK, Bloom's Taxonomy, Formative Check, and any other technical terms used in the plan.
 
 Whenever you use any advanced or technical word in the lesson plan body, add a simple decode inline as well.`,
@@ -1144,21 +1143,21 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
         const q = u.searchParams.get('search_query') || u.searchParams.get('q');
         if (q) {
           const topic = decodeURIComponent(q.replace(/\+/g, ' ')).trim();
-          return `â–¶ Watch on YouTube: ${topic}`;
+          return `▶ Watch on YouTube: ${topic}`;
         }
       } catch { /* ignore */ }
-      if (fallback && !/^https?:/i.test(fallback)) return `â–¶ ${fallback}`;
-      return 'â–¶ Watch on YouTube';
+      if (fallback && !/^https?:/i.test(fallback)) return `▶ ${fallback}`;
+      return '▶ Watch on YouTube';
     };
 
-    // 1) Markdown links [text](url) â€” replace YouTube ones with friendly labels, all open in new tab
+    // 1) Markdown links [text](url) — replace YouTube ones with friendly labels, all open in new tab
     html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_m, text: string, url: string) => {
       const isYT = /youtube\.com|youtu\.be/i.test(url);
       const label = isYT ? makeYoutubeLabel(url, text) : text;
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
 
-    // 2) Bare YouTube URLs â†’ friendly anchor
+    // 2) Bare YouTube URLs → friendly anchor
     html = html.replace(/(^|[\s(])(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s)]+)/g, (_m, pre: string, url: string) => {
       return `${pre}<a href="${url}" target="_blank" rel="noopener noreferrer">${makeYoutubeLabel(url)}</a>`;
     });
@@ -1189,7 +1188,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
     // Horizontal rules
     html = html.replace(/^---$/gm, '<hr>');
 
-    // Lists â€” support both "- " and "* " bullets
+    // Lists — support both "- " and "* " bullets
     html = html.replace(/^[ \t]*[-*][ \t]+(.*?)$/gm, '<li>$1</li>');
     html = html.replace(/^(\d+)\. (.*?)$/gm, '<li>$1. $2</li>');
 
@@ -1241,7 +1240,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
 
         <div class="footer">
           <div class="footer-note">This report is auto-generated by the APAS AI engine. For academic use only.</div>
-          <div class="footer-apas">APAS Â· ${new Date().getFullYear()}</div>
+          <div class="footer-apas">APAS · ${new Date().getFullYear()}</div>
         </div>
       </div>
     `;
@@ -1276,7 +1275,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       
       .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
       .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
-      .content ul li::before { content: 'â†’'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
       
       .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
       .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
@@ -1323,9 +1322,9 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">?</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">?</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">?</div>
 
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
           <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
@@ -1542,15 +1541,6 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
 
               {/* Topic & Duration row */}
               <div className="mt-5 flex flex-wrap gap-4">
-                <div className="flex-1 min-w-[200px] group">
-                  <TopicSelector
-                    selectedClass={toSubtopicClass(selectedClass)}
-                    selectedSubject={selectedSubject}
-                    selectedChapterName={selectedChapterName}
-                    value={topicValue}
-                    onChange={setTopicValue}
-                  />
-                </div>
                 <div className="w-[170px] group">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors flex items-center gap-1.5">
                     <CalendarDays className="h-3 w-3" /> Periods
@@ -1609,7 +1599,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                   {topicValue.trim() && (
                     <Badge className="text-xs gap-1 bg-primary/10 text-primary border-primary/20"><BookMarked className="h-3 w-3" /> {topicValue.trim()}</Badge>
                   )}
-                  <Badge variant="outline" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> {selectedPeriods} {parseInt(selectedPeriods) === 1 ? "Period" : "Periods"} Ã— {periodDuration}min</Badge>
+                  <Badge variant="outline" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> {selectedPeriods} {parseInt(selectedPeriods) === 1 ? "Period" : "Periods"} × {periodDuration}min</Badge>
                   <span className="text-xs text-muted-foreground ml-2">
                     {studentCount} student{studentCount !== 1 ? "s" : ""} found. AI will use assessment reports & textbook content
                   </span>
@@ -1671,8 +1661,8 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-medium text-foreground truncate">{s.title}</div>
                           <div className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
-                            <span>{s.classLabel} â€¢ Sec {s.section}</span>
-                            <span>Â·</span>
+                            <span>{s.classLabel} • Sec {s.section}</span>
+                            <span>·</span>
                             <span>{new Date(s.updatedAt).toLocaleDateString()} {new Date(s.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
                         </div>
@@ -1731,7 +1721,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                     <button
                       onClick={() => {
                         const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "English";
-                        sendMessage(`Generate a lesson plan for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} â€“ Chapter 1 based on the class assessment report. Focus on class-wide performance patterns with ${studentCount} students. Do NOT mention individual student names - provide recommendations based on class-level weak areas and average performance metrics. Generate ONLY the lesson plan, not a diagnostic report.`, "generate");
+                        sendMessage(`Generate a lesson plan for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} – Chapter 1 based on the class assessment report. Focus on class-wide performance patterns with ${studentCount} students. Do NOT mention individual student names - provide recommendations based on class-level weak areas and average performance metrics. Generate ONLY the lesson plan, not a diagnostic report.`, "generate");
                       }}
                       disabled={isStreaming}
                       className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
@@ -1879,7 +1869,7 @@ REQUIREMENTS:
       </div>
         </TabsContent>
 
-        {/* â”€â”€â”€ Assign Homework Tab â”€â”€â”€ */}
+        {/* ─── Assign Homework Tab ─── */}
         <TabsContent value="assign-homework" className="space-y-6 mt-0">
           <AssignHomeworkTab user={user} profile={profile} getClassLabel={getClassLabel} />
         </TabsContent>
@@ -1888,7 +1878,7 @@ REQUIREMENTS:
   );
 };
 
-// â”€â”€â”€ Assign Homework Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Assign Homework Component ───────────────────────────────────────
 interface AssignHomeworkTabProps {
   user: any;
   profile: any;
@@ -2139,7 +2129,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         throw new Error(error.message || "Failed to create assignment");
       }
 
-      toast.success(`âœ“ Assignment created for Period ${selectedPeriod} (In Class)\nâœ“ Class Performance Score: ${score}%\nâœ“ This will be used for analytics and performance tracking.`);
+      toast.success(`✓ Assignment created for Period ${selectedPeriod} (In Class)\n✓ Class Performance Score: ${score}%\n✓ This will be used for analytics and performance tracking.`);
       setShowClassScoreModal(false);
       setClassPerformanceScore("");
       setAssignmentMode("none");
@@ -2262,7 +2252,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         questions: questionsArray,
       });
       
-      toast.success(`âœ“ Homework assigned to ${studentNames.length} student${studentNames.length !== 1 ? 's' : ''} in ${homeworkClass} - Section ${homeworkSection}`);
+      toast.success(`✓ Homework assigned to ${studentNames.length} student${studentNames.length !== 1 ? 's' : ''} in ${homeworkClass} - Section ${homeworkSection}`);
       setShowAssignmentConfirmation(true);
       setAssignmentMode("none");
       setSelectedPeriod("");
@@ -2367,7 +2357,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
 
         <div class="footer">
           <div class="footer-note">This report is auto-generated by the APAS AI engine. For academic use only.</div>
-          <div class="footer-apas">APAS Â· ${new Date().getFullYear()}</div>
+          <div class="footer-apas">APAS · ${new Date().getFullYear()}</div>
         </div>
       </div>
     `;
@@ -2402,7 +2392,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       
       .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
       .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
-      .content ul li::before { content: 'â†’'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
       
       .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
       .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
@@ -2515,7 +2505,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                         <SelectContent>
                           {availablePeriods.map((period) => (
                             <SelectItem key={period.periodNumber} value={String(period.periodNumber)}>
-                              Period {period.periodNumber} â€” {period.title}
+                              Period {period.periodNumber} — {period.title}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -2532,7 +2522,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                           {isSinglePeriod ? (
                             selectedPeriodInfo.title || "Assessment Questions"
                           ) : (
-                            `Period ${selectedPeriod} â€” ${selectedPeriodInfo.title}`
+                            `Period ${selectedPeriod} — ${selectedPeriodInfo.title}`
                           )}
                         </CardTitle>
                       </CardHeader>
@@ -2706,7 +2696,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                                 disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class" || !!existingInClassAssignment || !!existingAtHomeAssignment}
                               >
                                 <Home className="h-4 w-4" />
-                                {existingAtHomeAssignment ? 'Already Assigned At Home âœ“' : 'Assign At Home'}
+                                {existingAtHomeAssignment ? 'Already Assigned At Home ✓' : 'Assign At Home'}
                               </Button>
                             </div>
                           </>
@@ -2730,10 +2720,10 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                               Loading exit ticket content... If content doesn't appear:
                             </p>
                             <ul className="text-xs text-yellow-700 dark:text-yellow-300 mt-2 space-y-1">
-                              <li>â€¢ Check browser console (F12) for error details</li>
-                              <li>â€¢ Verify lesson plan was saved correctly</li>
-                              <li>â€¢ Try selecting a different period</li>
-                              <li>â€¢ Check the actual lesson content structure</li>
+                              <li>• Check browser console (F12) for error details</li>
+                              <li>• Verify lesson plan was saved correctly</li>
+                              <li>• Try selecting a different period</li>
+                              <li>• Check the actual lesson content structure</li>
                             </ul>
                           </div>
                         )}
@@ -2779,7 +2769,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
               onClick={() => setShowLessonPreview(false)}
               className="text-muted-foreground"
             >
-              âœ•
+              ✕
             </Button>
           </CardHeader>
           <CardContent className="p-6 max-h-[600px] overflow-y-auto">
@@ -2931,7 +2921,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
               {/* Info Message */}
               <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
                 <p className="text-sm text-emerald-900 dark:text-emerald-100">
-                  âœ“ These questions will appear in each student's homework with full details (Topic, Period, Subject)
+                  ✓ These questions will appear in each student's homework with full details (Topic, Period, Subject)
                 </p>
                 <p className="text-xs text-emerald-800 dark:text-emerald-200 mt-1">
                   Students will answer all questions and enter their test score before submission.
@@ -2945,7 +2935,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
               onClick={() => {
                 setShowAssignmentConfirmation(false);
                 setAssignmentConfirmationData(null);
-                toast.success("âœ“ Homework assignment complete!");
+                toast.success("✓ Homework assignment complete!");
               }}
               className="gap-2"
             >
