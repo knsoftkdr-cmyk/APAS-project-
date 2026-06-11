@@ -515,6 +515,7 @@ const Curative = () => {
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
   const [topicValue, setTopicValue] = useState("");
+  const [selectedSubtopic, setSelectedSubtopic] = useState("");
   const [selectedPeriods, setSelectedPeriods] = useState("1");
   const [periodDuration, setPeriodDuration] = useState("40");
   
@@ -667,31 +668,15 @@ const Curative = () => {
     queryKey: ["curative-textbooks", selectedClass],
     queryFn: async () => {
       if (!selectedClass) return [];
-      // Fetch subjects dynamically from Storage bucket
-      const folderName = selectedClass.match(/^\d+$/) ? `class ${selectedClass}` : selectedClass;
-      const { data: files, error } = await supabase.storage
-        .from("TextBooks")
-        .list(folderName, { limit: 100 });
-      if (error || !files) return [];
-      const subjectMap: Record<string, string> = {
-        "math": "Mathematics",
-        "english": "English",
-        "science": "Science",
-        "social": "Social",
-      };
-      const subjectSet = new Set<string>();
-      files.forEach(f => {
-        const match = f.name.match(/^([A-Za-z]+)/);
-        if (match) {
-          const key = match[1].toLowerCase();
-          subjectSet.add(subjectMap[key] || match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase());
-        }
-      });
-      return Array.from(subjectSet).map(subject => ({
-        fileName: subject,
-        subject,
-        chapter: "Storage",
-      }));
+      const classLabel = selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1);
+      const { data, error } = await supabase
+        .from("books")
+        .select("subject, book_name")
+        .eq("class_name", classLabel)
+        .eq("is_active", true)
+        .order("subject", { ascending: true });
+      if (error || !data) return [];
+      return data.map((b) => ({ fileName: b.book_name, subject: b.subject, chapter: "" }));
     },
     enabled: !!selectedClass,
   });
@@ -752,32 +737,87 @@ const Curative = () => {
     }
   }, [chatMessages]);
 
-  // Fetch chapters from database table
   const { data: chaptersList = [] } = useQuery({
     queryKey: ["chapters-by-class-subject", selectedClass, selectedSubject],
     queryFn: async () => {
       if (!selectedClass || !selectedSubject) return [];
-      const { data } = await supabase
-        .from("chapters")
-        .select("id, unit_number, chapter_name, full_chapter_name, class, subject, page_numbers")
-        .eq("class", selectedClass.match(/^\d+$/) ? `Class${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
+      const classLabel = selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1);
+      const { data: books } = await supabase
+        .from("books")
+        .select("id")
+        .eq("class_name", classLabel)
         .eq("subject", selectedSubject)
-        .order("unit_number", { ascending: true });
-      return data || [];
+        .eq("is_active", true)
+        .limit(1);
+      if (!books || books.length === 0) return [];
+      const bookId = books[0].id;
+      const { data: units } = await supabase
+        .from("units")
+        .select("id, unit_name")
+        .eq("book_id", bookId)
+        .eq("is_active", true)
+        .order("id", { ascending: true });
+      if (!units || units.length === 0) return [];
+      const unitIds = units.map((u: any) => u.id);
+      const { data: chapters } = await supabase
+        .from("curriculum_chapters")
+        .select("id, chapter_name, unit_id")
+        .in("unit_id", unitIds)
+        .eq("is_active", true)
+        .order("id", { ascending: true });
+      if (!chapters) return [];
+      return chapters.map((c: any) => {
+        const unit = units.find((u: any) => u.id === c.unit_id);
+        return {
+          id: c.id,
+          chapter_name: c.chapter_name,
+          full_chapter_name: `${unit?.unit_name ?? ""}: ${c.chapter_name}`,
+          unit_name: unit?.unit_name ?? "",
+        };
+      });
     },
     enabled: !!selectedClass && !!selectedSubject,
   });
 
-  // Update extracted chapters whenever the query data changes
-  useEffect(() => {
-    if (chaptersList.length > 0) {
-      setExtractedChapters(chaptersList);
-      setSelectedChapter("");
-    } else {
-      setExtractedChapters([]);
-      setSelectedChapter("");
-    }
-  }, [chaptersList]);
+  // Fetch topics from curriculum_chapters -> topics
+  const { data: topicsList = [] } = useQuery({
+    queryKey: ["topics-by-chapter", selectedChapter],
+    queryFn: async () => {
+      if (!selectedChapter) return [];
+      const chapter = (chaptersList as any[]).find(
+        (c) => (c.full_chapter_name || c.chapter_name) === selectedChapter
+      );
+      if (!chapter) return [];
+      const { data, error } = await supabase
+        .from("topics")
+        .select("id, topic_name")
+        .eq("chapter_id", chapter.id)
+        .eq("status", "active")
+        .order("id", { ascending: true });
+      if (error || !data) return [];
+      return data;
+    },
+    enabled: !!selectedChapter && chaptersList.length > 0,
+  });
+
+  // Fetch subtopics from topics -> subtopics
+  const { data: subtopicsList = [] } = useQuery({
+    queryKey: ["subtopics-by-topic", topicValue],
+    queryFn: async () => {
+      if (!topicValue) return [];
+      const topic = (topicsList as any[]).find((t) => t.topic_name === topicValue);
+      if (!topic) return [];
+      const { data, error } = await supabase
+        .from("subtopics")
+        .select("id, subtopic_name")
+        .eq("topic_id", topic.id)
+        .eq("is_active", true)
+        .order("id", { ascending: true });
+      if (error || !data) return [];
+      return data;
+    },
+    enabled: !!topicValue && topicsList.length > 0,
+  });
 
   // Derive the full chapter name for TopicSelector
   // Look it up from extractedChapters to get full_chapter_name (e.g., "Unit 9: Time")
@@ -801,6 +841,8 @@ const Curative = () => {
     setSelectedSection("");
     setSelectedSubject("");
     setSelectedChapter("");
+    setTopicValue("");
+    setSelectedSubtopic("");
     setExtractedChapters([]);
     setChatMessages([]);
   }, [selectedClass]);
@@ -1356,7 +1398,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
 
                 <div className="group">
                   <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">Select Subject</label>
-                  <Select value={selectedSubject} onValueChange={setSelectedSubject} disabled={!selectedClass}>
+                  <Select value={selectedSubject} onValueChange={(v) => { setSelectedSubject(v); setSelectedChapter(""); setTopicValue(""); setSelectedSubtopic(""); }} disabled={!selectedClass}>
                     <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
                       <SelectValue placeholder={!selectedClass ? "Select a class first..." : subjects.length === 0 ? "No textbooks found" : "Choose a subject..."} />
                     </SelectTrigger>
@@ -1376,7 +1418,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                   </label>
                   <Select
                     value={selectedChapter}
-                    onValueChange={setSelectedChapter}
+                    onValueChange={(v) => { setSelectedChapter(v); setTopicValue(""); setSelectedSubtopic(""); }}
                     disabled={!selectedSubject || chaptersList.length === 0}
                   >
                     <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
@@ -1391,11 +1433,77 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {extractedChapters.map((ch: any) => (
+                      {chaptersList.map((ch: any) => (
                         <SelectItem key={ch.id} value={ch.full_chapter_name || ch.chapter_name}>
                           <span className="flex items-center gap-2">
                             <BookOpen className="h-3.5 w-3.5 shrink-0" />
                             <span>{ch.full_chapter_name || ch.chapter_name}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">
+                    Select Topic
+                  </label>
+                  <Select
+                    value={topicValue}
+                    onValueChange={setTopicValue}
+                    disabled={!selectedChapter || topicsList.length === 0}
+                  >
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                      <SelectValue
+                        placeholder={
+                          !selectedChapter
+                            ? "Select a chapter first..."
+                            : topicsList.length === 0
+                            ? "No topics found"
+                            : "Choose a topic..."
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {topicsList.map((t: any) => (
+                        <SelectItem key={t.id} value={t.topic_name}>
+                          <span className="flex items-center gap-2">
+                            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                            <span>{t.topic_name}</span>
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="group">
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block group-hover:text-primary transition-colors">
+                    Select Subtopic
+                  </label>
+                  <Select
+                    value={selectedSubtopic}
+                    onValueChange={setSelectedSubtopic}
+                    disabled={!topicValue || subtopicsList.length === 0}
+                  >
+                    <SelectTrigger className="transition-all duration-300 hover:border-primary/50">
+                      <SelectValue
+                        placeholder={
+                          !topicValue
+                            ? "Select a topic first..."
+                            : subtopicsList.length === 0
+                            ? "No subtopics found"
+                            : "Choose a subtopic..."
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subtopicsList.map((s: any) => (
+                        <SelectItem key={s.id} value={s.subtopic_name}>
+                          <span className="flex items-center gap-2">
+                            <BookOpen className="h-3.5 w-3.5 shrink-0" />
+                            <span>{s.subtopic_name}</span>
                           </span>
                         </SelectItem>
                       ))}
@@ -2852,5 +2960,12 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
 };
 
 export default Curative;
+
+
+
+
+
+
+
 
 
