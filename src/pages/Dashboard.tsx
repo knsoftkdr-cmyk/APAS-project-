@@ -210,14 +210,16 @@ const featureCards = [
   {
     icon: Users,
     title: "Student Reports",
+    glow: "bg-red-400/80",
     description: "View detailed diagnostic reports for every student â€” learning styles, multiple intelligences, and cognitive profiles all in one place.",
     path: "/teacher",
-    color: "from-blue-500/20 to-blue-600/10",
+    color: "from-red-500/20 to-red-600/10",
     iconColor: "text-blue-600",
   },
   {
     icon: BookOpen,
     title: "AI Lesson Plan Generator",
+    glow: "bg-green-400/80",
     description: "Generate personalised, curriculum-aligned lesson plans powered by AI. Tailored to each student's VARK type and learning needs.",
     path: "/curative",
     color: "from-emerald-500/20 to-emerald-600/10",
@@ -226,6 +228,7 @@ const featureCards = [
   {
     icon: BarChart3,
     title: "Analytics & Insights",
+    glow: "bg-purple-400/80",
     description: "Track normalised learning gains, class-wide performance trends, and identify mismatch alerts before they become problems.",
     path: "/analytics",
     color: "from-violet-500/20 to-violet-600/10",
@@ -397,10 +400,14 @@ const TeacherHome = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {featureCards.map((feature) => (
             <Link key={feature.path} to={feature.path} className="group">
-              <Card className="h-full border-border/60 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
+              <Card className="h-full border-0 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 overflow-hidden relative bg-white group">
+                <div className={`h-1 w-full bg-gradient-to-r ${feature.color}`}></div>
+                <div className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${feature.color}`}></div>
+                <div className={`absolute right-0 top-0 h-full w-1 bg-gradient-to-b ${feature.color}`}></div>
                 <CardContent className="p-6">
+                  <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${feature.glow}`}/>
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
-                    <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
+                    <feature.icon className={`h-8 w-8 ${feature.iconColor}`} />
                   </div>
                   <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
                     {feature.title}
@@ -408,8 +415,8 @@ const TeacherHome = () => {
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                     {feature.description}
                   </p>
-                  <div className="flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    Explore <ArrowRight className="h-4 w-4" />
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-primary mt-3 opacity-0 max-h-0 overflow-hidden group-hover:max-h-10 group-hover:opacity-100 transition-all duration-500 ">
+                    Explore <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" />
                   </div>
                 </CardContent>
               </Card>
