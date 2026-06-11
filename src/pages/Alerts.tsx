@@ -147,9 +147,15 @@ const Alerts = () => {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`rounded-full px-4 py-1.5 text-xs font-medium capitalize transition-colors ${
-              filter === f ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground hover:bg-accent/20"
-            }`}
+className={`rounded-full px-5 py-2 text-sm font-semibold capitalize transition-all duration-300 ${
+  filter === f
+    ? f === "all"
+      ? "bg-blue-500 text-white shadow-lg"
+      : f === "flagged"
+      ? "bg-red-500 text-white shadow-lg"
+      : "bg-green-500 text-white shadow-lg"
+    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+}`}
           >
             {f}
           </button>
@@ -178,11 +184,18 @@ const Alerts = () => {
                 </TableRow>
               ) : (
                 filtered.map((a) => (
-                  <TableRow
-                    key={a.id}
-                    className={readAlertIds.has(a.id) ? "" : "bg-accent/5"}
-                    onMouseEnter={() => handleViewAlert(a.id)}
-                  >
+                  <TableRow key={a.id}
+                        className={`
+                          transition-all
+                          duration-300
+                          cursor-pointer
+                          hover:bg-blue-50
+                          hover:shadow-md
+                          hover:scale-[1.01]
+                          ${readAlertIds.has(a.id) ? "" : "bg-accent/5"}
+                        `}
+                        onMouseEnter={() => handleViewAlert(a.id)}
+                      >
                     <TableCell className="font-medium">{a.student_group || "—"}</TableCell>
                     <TableCell>{a.lesson_type || "—"}</TableCell>
                     <TableCell>{a.trigger_condition || "—"}</TableCell>

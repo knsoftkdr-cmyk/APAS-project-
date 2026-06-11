@@ -472,6 +472,7 @@ const adminFeatureCards = [
     description: "View detailed diagnostic reports for every student across all classes â€” learning styles, multiple intelligences, and cognitive profiles.",
     path: "/teacher",
     color: "from-blue-500/20 to-blue-600/10",
+    glow: "bg-blue-600/30",
     iconColor: "text-blue-600",
   },
   {
@@ -480,6 +481,7 @@ const adminFeatureCards = [
     description: "Monitor system-wide mismatch alerts, flagged performance issues, and intervention recommendations across all classes.",
     path: "/alerts",
     color: "from-amber-500/20 to-amber-600/10",
+    glow: "bg-amber-600/30",
     iconColor: "text-amber-600",
   },
   {
@@ -488,6 +490,7 @@ const adminFeatureCards = [
     description: "Manage classes, allot students and teachers, configure diagnostic questions, and import students via Excel.",
     path: "/admin",
     color: "from-violet-500/20 to-violet-600/10",
+    glow: "bg-purple-600/30",
     iconColor: "text-violet-600",
   },
 ];
@@ -555,14 +558,14 @@ const AdminHome = () => {
     <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
     {/* Stars */}
-    <div className="absolute top-12 left-[45%] text-white/80 text-xl">âœ¦</div>
-    <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">âœ¦</div>
-    <div className="absolute top-24 right-[35%] text-white/80 text-lg">âœ¦</div>
-
-    <div className="absolute top-6 left-1/4 text-white/50 text-xl">âœ¦</div>
-    <div className="absolute top-0 left-[45%] text-white/40 text-lg">âœ¦</div>
-    <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">âœ¦</div>
-    <div className="absolute top-24 right-[45%] text-white/90 text-lg">âœ¦</div>
+          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+          
+          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
 
     {/* Triangles */}
     <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
@@ -603,20 +606,51 @@ const AdminHome = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
         {[
-          { label: "Classes", value: stats?.classes, icon: Book, color: "bg-primary/10", iconColor: "text-primary" },
-          { label: "Students", value: stats?.students, icon: Users, color: "bg-blue-500/10", iconColor: "text-blue-600" },
-          { label: "Teachers", value: stats?.teachers, icon: GraduationCap, color: "bg-emerald-500/10", iconColor: "text-emerald-600" },
-          { label: "Assessments", value: stats?.assessments, icon: CheckCircle, color: "bg-violet-500/10", iconColor: "text-violet-600" },
-          { label: "Active Alerts", value: stats?.activeAlerts, icon: AlertTriangle, color: "bg-amber-500/10", iconColor: "text-amber-600" },
-        ].map((stat) => (
-          <Card key={stat.label} className="border-border/60">
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}>
-                <stat.icon className={`h-5 w-5 ${stat.iconColor}`} />
+  {
+    label: "Classes",
+    value: stats?.classes,
+    icon: Book,
+    bg: "from-blue-500 to-cyan-500",
+    iconBg: "bg-white/20",
+  },
+  {
+    label: "Students",
+    value: stats?.students,
+    icon: Users,
+    bg: "from-purple-500 to-pink-500",
+    iconBg: "bg-white/20",
+  },
+  {
+    label: "Teachers",
+    value: stats?.teachers,
+    icon: GraduationCap,
+    bg: "from-emerald-500 to-green-500",
+    iconBg: "bg-white/20",
+  },
+  {
+    label: "Assessments",
+    value: stats?.assessments,
+    icon: CheckCircle,
+    bg: "from-orange-500 to-red-500",
+    iconBg: "bg-white/20",
+  },
+  {
+    label: "Active Alerts",
+    value: stats?.activeAlerts,
+    icon: AlertTriangle,
+    bg: "from-yellow-500 to-amber-500",
+    iconBg: "bg-white/20",
+  },
+].map((stat) => (
+                    <Card key={stat.label} className={`bg-gradient-to-r ${stat.bg} border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden relative`}>
+            <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
+            <CardContent className="flex items-center justify-between p-5 relative z-10">
+              <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${stat.iconBg} backdrop-blur-sm`}>
+                <stat.icon className="h-8 w-8 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-foreground">{isLoading ? "â€”" : stat.value}</p>
-                <p className="text-xs text-muted-foreground">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{isLoading ? "â€”" : stat.value}</p>
+                <p className="text-xs text-white">{stat.label}</p>
               </div>
             </CardContent>
           </Card>
@@ -627,35 +661,42 @@ const AdminHome = () => {
       {atRiskStudents && atRiskStudents.length > 0 && (
         <div className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-destructive" />
+            <AlertTriangle className="h-8 w-8 text-red-600 text-destructive" />
             Students At Risk
           </h2>
           <p className="text-sm text-muted-foreground mb-4">AI-predicted high-risk students requiring immediate attention.</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {atRiskStudents.map((s, i) => (
-              <Card key={i} className="border-destructive/30">
+              <Card key={i} className="group overflow-hidden border-0 bg-gradient-to-br from-red-50 via-white to-orange-50 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge variant="destructive" className="text-xs">HIGH RISK</Badge>
-                    <span className="text-xs text-muted-foreground">{s.subject}</span>
+                    <Badge className="bg-red-500 text-white animate-pulse">HIGH RISK</Badge>
+                    <span className="text-semibold text-black-700">{s.subject}</span>
                   </div>
-                  <p className="text-sm text-foreground mb-1">
-                    Predicted: <strong>{Number(s.predicted_score_next_test).toFixed(0)}%</strong>
-                  </p>
+                <div className="flex items-center justify-between mt-4">
+                  <div>
                   <p className="text-xs text-muted-foreground">
-                    Dropout Risk: {Number(s.dropout_risk_percentage).toFixed(0)}%
+                    Predicted:<p className="text-xl font-semibold text-red-600">{Number(s.predicted_score_next_test).toFixed(0)}%</p>
                   </p>
+                  </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">
+                    Dropout Risk: <p className="text-xl font-semibold text-orange-600">{Number(s.dropout_risk_percentage).toFixed(0)}%</p>
+                  </p>
+                </div>
+                </div>
                   <div className="flex gap-1 mt-2 flex-wrap">
                     {(Array.isArray(s.contributing_factors) ? s.contributing_factors : typeof s.contributing_factors === "string" ? JSON.parse(s.contributing_factors || "[]") : []).slice(0, 2).map((f, j) => (
-                      <Badge key={j} variant="outline" className="text-xs">{f}</Badge>
+                      <Badge key={j} variant="outline" className="bg-white text-red-600 border border-red-200 hover:bg-red-50">{f}</Badge>
                     ))}
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
-          <Link to="/school-analytics" className="inline-flex items-center gap-1 mt-3 text-sm text-primary hover:underline">
-            View Full Analytics <ArrowRight className="h-3.5 w-3.5" />
+          <Link to="/school-analytics" className="inline-flex items-center gap-1 mt-3 text-semibold text-primary hover:underline">
+            View Full Analytics <ArrowRight className="h-5 w-5" />
           </Link>
         </div>
       )}
@@ -667,23 +708,23 @@ const AdminHome = () => {
         <Card className="border-border/60">
           <CardContent className="p-6 space-y-4">
             <p className="text-sm text-foreground leading-relaxed">
-              <strong>APAS</strong> (Adaptive Pedagogy & Analytics System) is a next-generation AI-powered educational platform that personalises learning for every student. It uses a collaborative network of AI agents â€” Planner, Executor, Analyst, Tutor, and Creator â€” to provide a highly individualised experience across CBSE, IB, and Cambridge curricula.
+              <strong>APAS</strong> (Adaptive Pedagogy & Analytics System) is a next-generation AI-powered educational platform that personalises learning for every student. It uses a collaborative network of AI agents” Planner, Executor, Analyst, Tutor, and Creator” to provide a highly individualised experience across CBSE, IB, and Cambridge curricula.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="rounded-lg border border-border p-4 bg-primary/5">
-                <Brain className="h-5 w-5 text-primary mb-2" />
+              <div className="group rounded-2xl border border-yellow-200 p-5 bg-gradient-to-br from-yellow-100 to-orange-50 hover:shadow-xl hover:-translate-y-2 hover:border-yellow-400 transition-all duration-500">
+                <Brain className="h-7 w-7 text-yellow-600 mb-3 group-hover:scale-125 group-hover:rotate-6 transition-all duration-500" />
                 <h4 className="text-sm font-semibold text-foreground mb-1">Diagnostic Intelligence</h4>
-                <p className="text-xs text-muted-foreground">Maps every student's VARK learning style, multiple intelligences, and Zone of Proximal Development using research-backed assessments.</p>
+                <p className="text-sm text-muted-foreground">Maps every student's VARK learning style, multiple intelligences, and Zone of Proximal Development using research-backed assessments.</p>
               </div>
-              <div className="rounded-lg border border-border p-4 bg-emerald-500/5">
-                <Sparkles className="h-5 w-5 text-emerald-600 mb-2" />
+              <div className="group rounded-2xl border border-emerald-200 p-5 bg-gradient-to-br from-emerald-100 to-teal-50 hover:shadow-xl hover:-translate-y-2 hover:border-emerald-400 transition-all duration-500">
+                <Sparkles className="h-7 w-7 text-emerald-600 mb-3 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500" />
                 <h4 className="text-sm font-semibold text-foreground mb-1">AI Lesson Generation</h4>
-                <p className="text-xs text-muted-foreground">Generates curriculum-aligned, personalised lesson plans tailored to each student's unique cognitive profile and learning needs.</p>
+                <p className="text-sm text-muted-foreground">Generates curriculum-aligned, personalised lesson plans tailored to each student's unique cognitive profile and learning needs.</p>
               </div>
-              <div className="rounded-lg border border-border p-4 bg-violet-500/5">
-                <LineChart className="h-5 w-5 text-violet-600 mb-2" />
+              <div className="group rounded-2xl border border-violet-200 p-5 bg-gradient-to-br from-violet-100 to-indigo-50 hover:shadow-xl hover:-translate-y-2 hover:border-violet-400 transition-all duration-500">
+                <LineChart className="h-7 w-7 text-violet-600 mb-3 group-hover:scale-125 transition-all duration-500" />
                 <h4 className="text-sm font-semibold text-foreground mb-1">Analytics & Tracking</h4>
-                <p className="text-xs text-muted-foreground">Tracks normalised learning gains, identifies performance mismatches, and provides real-time alerts for proactive intervention.</p>
+                <p className="text-sm text-muted-foreground">Tracks normalised learning gains, identifies performance mismatches, and provides real-time alerts for proactive intervention.</p>
               </div>
             </div>
           </CardContent>
@@ -698,20 +739,22 @@ const AdminHome = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {adminFeatureCards.map((feature) => (
             <Link key={feature.path} to={feature.path} className="group">
-              <Card className="h-full border-border/60 transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/30">
+              <Card className="h-full border-0 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 relative overflow-hidden bg-white">
                 <CardContent className="p-6">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
-                    <feature.icon className={`h-6 w-6 ${feature.iconColor}`} />
-                  </div>
-                  <h3 className="text-base font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">
+                  <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500  ${feature.glow}`}/>
+                    <div className={`relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${feature.color} mb-4 shadow-lg group-hover:scale-125 group-hover:rotate-12 transition-all duration-500`}>
+                      <feature.icon className={`h-7 w-7 ${feature.iconColor} group-hover:scale-110 transition-all duration-500`}/>
+                    </div>
+                  <h3 className="text-base font-bold text-foreground mb-2 group-hover:text-blue-600 transition-all duration-500">
                     {feature.title}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                     {feature.description}
                   </p>
-                  <div className="flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    Open <ArrowRight className="h-4 w-4" />
-                  </div>
+                    <div className="flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
+                      Open
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform duration-500" />
+                    </div>
                 </CardContent>
               </Card>
             </Link>
@@ -726,19 +769,49 @@ const AdminHome = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { step: "01", title: "Setup Classes", description: "Create classes with sections, or bulk import students via Excel to auto-create classes.", icon: Book },
-            { step: "02", title: "Assign Teachers", description: "Allot teachers to classes and assign diagnostic question sets by age group.", icon: GraduationCap },
-            { step: "03", title: "Monitor Reports", description: "Review all student diagnostic reports across every class and teacher in the system.", icon: FileText },
-            { step: "04", title: "Manage Alerts", description: "Oversee real-time mismatch alerts and ensure timely interventions across the system.", icon: AlertTriangle },
-          ].map((step, i) => (
+            {
+              step: "01",
+              title: "Setup Classes",
+              description: "Create classes with sections, or bulk import students via Excel.",
+              icon: Book,
+              bg: "from-blue-500 to-cyan-500",
+              glow: "bg-blue-700/70"
+            },
+            {
+              step: "02",
+              title: "Assign Teachers",
+              description: "Allot teachers to classes and assign diagnostic sets.",
+              icon: GraduationCap,
+              bg: "from-emerald-500 to-green-500",
+              glow: "bg-green-700/70"
+            },
+            {
+              step: "03",
+              title: "Monitor Reports",
+              description: "Review student diagnostic reports.",
+              icon: FileText,
+              bg: "from-purple-500 to-violet-500",
+              glow: "bg-purple-700/70"
+            },
+            {
+              step: "04",
+              title: "Manage Alerts",
+              description: "Handle mismatch alerts and interventions.",
+              icon: AlertTriangle,
+              bg: "from-orange-500 to-red-500",
+              glow: "bg-orange-700/70"
+            }
+            ].map((step, i) => (
             <div key={i} className="relative">
-              <Card className="h-full border-border/60">
+              <Card className="h-full border-0 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 overflow-hidden relative group">
                 <CardContent className="p-5">
-                  <span className="text-3xl font-black text-primary/15 absolute top-3 right-4">{step.step}</span>
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 mb-3">
-                    <step.icon className="h-5 w-5 text-primary" />
+                  <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${step.glow}`}/>
+                  <span className="text-5xl font-black text-slate-200 absolute top-2 right-3 group-hover:scale-125 transition-all duration-500">
+                  {step.step}</span>
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${step.bg} mb-4 shadow-lg group-hover:scale-125 group-hover:rotate-12 transition-all duration-500`}>
+                    <step.icon className="h-7 w-7 text-white" />
                   </div>
-                  <h3 className="text-sm font-semibold text-foreground mb-1.5">{step.title}</h3>
+                  <h3 className="text-base font-bold text-foreground mb-2 group-hover:text-blue-600 transition-all duration-300">{step.title}</h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
                 </CardContent>
               </Card>
