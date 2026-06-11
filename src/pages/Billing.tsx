@@ -108,20 +108,20 @@ const Billing = () => {
 
       <Tabs defaultValue="plans" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="plans">Plans</TabsTrigger>
-          <TabsTrigger value="usage">Usage</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="plans" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Plans</TabsTrigger>
+          <TabsTrigger value="usage" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Usage</TabsTrigger>
+          <TabsTrigger value="invoices" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Invoices</TabsTrigger>
         </TabsList>
 
         <TabsContent value="plans">
           {currentSub && (
-            <Card className="mb-6 border-primary">
-              <CardHeader>
+            <Card className="mb-6 border-2 border-green-500/40 hover:border-green-500 hover:shadow-green-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-green-50 transition-all duration-500 cursor-pointer ">
+              <CardHeader className="bg-green-100">
                 <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" /> Current Subscription
+                  <CreditCard className="h-7 w-7 text-cyan-500" /> Current Subscription
                 </CardTitle>
               </CardHeader>
-              <CardContent className="flex items-center justify-between">
+              <CardContent className="flex items-center justify-between bg-green-100">
                 <div>
                   <p className="text-lg font-bold">{currentSub.school_name}</p>
                   <p className="text-sm text-muted-foreground capitalize">{(currentSub as any).plans?.name || currentSub.plan_id} — {currentSub.billing_cycle}</p>
@@ -133,20 +133,21 @@ const Billing = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PLAN_TIERS.map(plan => (
-              <Card key={plan.tier} className={plan.popular ? "border-primary shadow-lg relative" : ""}>
-                {plan.popular && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">Most Popular</Badge>}
-                <CardHeader className="text-center">
+              <Card key={plan.tier} className={`group bg-cyan-200 relative overflow-hidden transition-all duration-700 hover:-translate-y-3 hover:scale-[1.03] hover:shadow-2xl cursor-pointer ${plan.popular ? "border-primary shadow-lg bg-white" : "" }`}>
+                <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 group-hover:left-[150%] transition-all duration-1000 z-10"/>
+                {plan.popular && <Badge className="absolute -top-0 left-1/2 -translate-x-1/2">Most Popular</Badge>}
+                <CardHeader className="text-center bg-cyan-200">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>
                   <CardDescription className="text-2xl font-bold text-foreground">{plan.price}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-3 bg-cyan-200">
                   {plan.features.map((f, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-primary shrink-0" />
+                      <Check className="h-4 w-4 text-primary shrink-0 group-hover:scale-125 transition-all duration-300"/>
                       <span>{f}</span>
                     </div>
                   ))}
-                  <Button variant={plan.popular ? "default" : "outline"} className="w-full mt-4">
+                  <Button variant={plan.popular ? "default" : "outline"} className="w-full mt-4 transition-all duration-300 group-hover:scale-105">
                     {plan.tier === "enterprise" ? "Contact Sales" : "Select Plan"}
                   </Button>
                 </CardContent>

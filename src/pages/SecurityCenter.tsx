@@ -78,36 +78,36 @@ const SecurityCenter = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <Card>
-          <CardContent className="pt-4 flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" />
+        <Card className="group border-2 border-blue-500/40 hover:border-blue-500 hover:shadow-blue-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-blue-50 transition-all duration-500 cursor-pointer ">
+          <CardContent className="pt-4 flex items-center gap-3 bg-blue-100">
+            <Shield className="h-8 w-8 text-blue-600 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500" />
             <div>
-              <p className="text-2xl font-bold">{auditLogs?.length || 0}</p>
-              <p className="text-xs text-muted-foreground">Total Events</p>
+              <p className="text-2xl font-bold text-black">{auditLogs?.length || 0}</p>
+              <p className="text-xs text-black">Total Events</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 flex items-center gap-3">
-            <Activity className="h-8 w-8 text-primary" />
+        <Card className="group border-2 border-green-500/40 hover:border-green-500 hover:shadow-green-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-green-50 transition-all duration-500 cursor-pointer ">
+          <CardContent className="pt-4 flex items-center gap-3 bg-green-100">
+            <Activity className="h-8 w-8 text-green-600 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500" />
             <div>
               <p className="text-2xl font-bold">{Object.keys(actionStats).length}</p>
               <p className="text-xs text-muted-foreground">Action Types</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 flex items-center gap-3">
-            <AlertTriangle className="h-8 w-8 text-destructive" />
+        <Card className="group border-2 border-red-500/40 hover:border-red-500 hover:shadow-red-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-red-50 transition-all duration-500 cursor-pointer ">
+          <CardContent className="pt-4 flex items-center gap-3 bg-red-100">
+            <AlertTriangle className="h-8 w-8 text-red-600 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500" />
             <div>
               <p className="text-2xl font-bold">{suspiciousLogs.length}</p>
               <p className="text-xs text-muted-foreground">Suspicious Actions</p>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="pt-4 flex items-center gap-3">
-            <Download className="h-8 w-8 text-accent" />
+        <Card className="group border-2 border-violet-500/40 hover:border-violet-500 hover:shadow-violet-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-violet-50 transition-all duration-500 cursor-pointer">
+          <CardContent className="pt-4 flex items-center gap-3 bg-violet-100">
+            <Download className="h-8 w-8 text-violet-600 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500"/>
             <div>
               <p className="text-2xl font-bold">{auditLogs?.filter(l => l.action.includes("export")).length || 0}</p>
               <p className="text-xs text-muted-foreground">Data Exports</p>
@@ -118,8 +118,8 @@ const SecurityCenter = () => {
 
       <Tabs defaultValue="all" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="all">All Logs</TabsTrigger>
-          <TabsTrigger value="suspicious">Suspicious Activity</TabsTrigger>
+          <TabsTrigger value="all" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">All Logs</TabsTrigger>
+          <TabsTrigger value="suspicious" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Suspicious Activity</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all">

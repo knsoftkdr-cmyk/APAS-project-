@@ -671,7 +671,7 @@ const AdminHome = () => {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <Badge className="bg-red-500 text-white animate-pulse">HIGH RISK</Badge>
+                    <Badge className="bg-red-500 text-white animate-pulse shadow-lg shadow-red-100">HIGH RISK</Badge>
                     <span className="text-semibold text-black-700">{s.subject}</span>
                   </div>
                 <div className="flex items-center justify-between mt-4">

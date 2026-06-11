@@ -473,40 +473,44 @@ const AdminPanel = () => {
 
         {/* Stats row */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-primary/10 p-2"><School className="h-5 w-5 text-primary" /></div>
-              <div><p className="text-2xl font-bold text-foreground">{classes.length}</p><p className="text-xs text-muted-foreground">Classes</p></div>
+          <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
+            <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-blue-500 to-cyan-400">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><School className="h-7 w-7 text-cyan-600" /></div>
+              <div><p className="text-2xl font-bold text-black-600 text-foreground">{classes.length}</p><p className="text-sm text-white">Classes</p></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-accent/10 p-2"><GraduationCap className="h-5 w-5 text-accent" /></div>
-              <div><p className="text-2xl font-bold text-foreground">{students.length}</p><p className="text-xs text-muted-foreground">Students</p></div>
+          <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
+            <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-pink-500 to-pink-400">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><GraduationCap className="h-7 w-7 text-pink-600" /></div>
+              <div><p className="text-2xl font-bold text-black-600">{students.length}</p><p className="text-sm text-white">Students</p></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-secondary/50 p-2"><Users className="h-5 w-5 text-secondary-foreground" /></div>
-              <div><p className="text-2xl font-bold text-foreground">{teachers.length}</p><p className="text-xs text-muted-foreground">Teachers</p></div>
+          <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
+            <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-500 to-green-500">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><Users className="h-7 w-7 text-green-600" /></div>
+              <div><p className="text-2xl font-bold text-black-600">{teachers.length}</p><p className="text-sm text-white">Teachers</p></div>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="flex items-center gap-3 p-4">
-              <div className="rounded-lg bg-primary/10 p-2"><BookOpen className="h-5 w-5 text-primary" /></div>
-              <div><p className="text-2xl font-bold text-foreground">{questionAssignments.length}</p><p className="text-xs text-muted-foreground">Q Assignments</p></div>
+          <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
+            <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-orange-500 to-red-500">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><BookOpen className="h-7 w-7 text-red-600" /></div>
+              <div><p className="text-2xl font-bold text-black-900">{questionAssignments.length}</p><p className="text-sm text-white">Q Assignments</p></div>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="classes" className="w-full">
-          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid", isMasterAdmin ? "grid-cols-8" : isPrincipalRole ? "grid-cols-6" : isSchoolAdmin ? "grid-cols-3" : "grid-cols-1")}>
-            <TabsTrigger value="classes">Classes</TabsTrigger>
-            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="notifications" className="gap-1"><Bell className="h-3.5 w-3.5" /> Notifications</TabsTrigger>}
-            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="lesson-plans" className="gap-1"><BookOpen className="h-3.5 w-3.5" /> Lesson Plans</TabsTrigger>}
-            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="students">Students</TabsTrigger>}
-            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="teachers">Teachers</TabsTrigger>}
-            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="approvals">Approvals</TabsTrigger>}
+          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid bg-blue-50 p-1 rounded-xl", isMasterAdmin ? "grid-cols-8" : isPrincipalRole ? "grid-cols-6" : isSchoolAdmin ? "grid-cols-3" : "grid-cols-1")}>
+            <TabsTrigger value="classes" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Classes</TabsTrigger>
+            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="notifications" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>}
+            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="lesson-plans" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><BookOpen className="h-4 w-4" /> Lesson Plans</TabsTrigger>}
+            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="students" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Students</TabsTrigger>}
+            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="teachers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Teachers</TabsTrigger>}
+            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="approvals" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Approvals</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="questions">Questions</TabsTrigger>}
             {isMasterAdmin && <TabsTrigger value="config">Config</TabsTrigger>}
           </TabsList>
@@ -563,8 +567,7 @@ const AdminPanel = () => {
                       {classes.map(c => (
                         <TableRow
                           key={c.id}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => setSelectedClassDetailsId(c.id)}
+                            className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500" onClick={() => setSelectedClassDetailsId(c.id)}
                         >
                           <TableCell className="font-medium">{c.name}</TableCell>
                           <TableCell><Badge variant="secondary">{c.section}</Badge></TableCell>
@@ -836,8 +839,8 @@ const AdminPanel = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={handleAssignStudent} disabled={!selectedClassForStudent || !selectedStudent}>
-                    <Plus className="h-4 w-4 mr-1" /> Assign
+                  <Button onClick={handleAssignStudent} disabled={!selectedClassForStudent || !selectedStudent} className="bg-blue-600">
+                    <Plus className="h-5 w-5 mr-1" /> Assign
                   </Button>
                 </div>
 
@@ -856,7 +859,7 @@ const AdminPanel = () => {
                       </TableHeader>
                       <TableBody>
                         {classStudents.filter(cs => cs.class_id === selectedClassForStudent).map(cs => (
-                          <TableRow key={cs.id}>
+                          <TableRow key={cs.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500">
                             <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.profiles?.full_name || "Unnamed"}</TableCell>
                             <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.grade || "—"}</TableCell>
                             <TableCell>
@@ -888,12 +891,13 @@ const AdminPanel = () => {
                 {/* View mode tabs */}
                 <div className="flex gap-2 border-b border-border pb-3">
                   {[
-                    { key: "assign" as const, label: "Assign Teacher" },
+                    { key: "assign" as const, label: "Assign Teacher"},
                     ...(!isPrincipalRole ? [{ key: "by-class" as const, label: "Class → Teachers" }, { key: "by-teacher" as const, label: "Teacher → Classes" }] : []),
                     
                   ].map(tab => (
                     <Button
                       key={tab.key}
+                      className="bg-blue-600"
                       variant={teacherViewMode === tab.key ? "default" : "outline"}
                       size="sm"
                       onClick={() => setTeacherViewMode(tab.key)}
@@ -945,8 +949,8 @@ const AdminPanel = () => {
                           <Input placeholder="e.g. Math, Science" value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)} />
                         </div>
                       )}
-                      <Button onClick={handleAssignTeacher} disabled={!selectedClassForTeacher || !selectedTeacher}>
-                        <Plus className="h-4 w-4 mr-1" /> Assign
+                      <Button onClick={handleAssignTeacher} disabled={!selectedClassForTeacher || !selectedTeacher} className="bg-blue-600">
+                        <Plus className="h-5 w-5 mr-1" /> Assign
                       </Button>
                     </div>
 
@@ -966,7 +970,7 @@ const AdminPanel = () => {
                           </TableHeader>
                           <TableBody>
                             {classTeachers.filter(ct => ct.class_id === selectedClassForTeacher).map(ct => (
-                              <TableRow key={ct.id}>
+                              <TableRow key={ct.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500">
                                 <TableCell className="font-medium">{(ct.profiles as any)?.full_name || "Unnamed"}</TableCell>
                                 <TableCell>
                                   <Badge variant={ct.teacher_role === "primary" ? "default" : "secondary"}>

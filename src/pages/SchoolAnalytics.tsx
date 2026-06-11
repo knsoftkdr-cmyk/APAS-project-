@@ -170,20 +170,21 @@ return (
           {runningDetection ? (
             <Loader2 className="h-4 w-4 animate-spin mr-1" />
           ) : (
-            <AlertTriangle className="h-4 w-4 mr-1" />
+            <AlertTriangle className="h-5 w-5 text-red-600 mr-1" />
           )}
           Run Issue Detection
         </Button>
 
         <Button
           size="sm"
+          className="bg-blue-600"
           onClick={runPrediction}
           disabled={runningPrediction}
         >
           {runningPrediction ? (
             <Loader2 className="h-4 w-4 animate-spin mr-1" />
           ) : (
-            <Brain className="h-4 w-4 mr-1" />
+            <Brain className="h-5 w-5 mr-1" />
           )}
           Run Predictions
         </Button>
@@ -191,49 +192,49 @@ return (
 
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
+          <Card className="border-2 border-green-500/40 hover:border-green-500 hover:shadow-green-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-green-50 transition-all duration-500 cursor-pointer ">
+            <CardContent className="p-4 bg-green-300">
               <div className="flex items-center gap-2 mb-1">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Learning Gain Index</span>
+                <TrendingUp className="h-7 w-7 text-green-600" />
+                <span className="text-xs text-black">Learning Gain Index</span>
               </div>
               <p className="text-2xl font-bold">{latestMetric ? `${(Number(latestMetric.learning_gain_index) * 100).toFixed(1)}%` : "—"}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
+          <Card className="border-2 border-violet-500/40 hover:border-violet-500 hover:shadow-violet-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-violet-50 transition-all duration-500 cursor-pointer">
+            <CardContent className="p-4 bg-violet-300">
               <div className="flex items-center gap-2 mb-1">
-                <GraduationCap className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">Teaching Effectiveness</span>
+                <GraduationCap className="h-7 w-7 text-violet-600" />
+                <span className="text-xs text-black">Teaching Effectiveness</span>
               </div>
               <p className="text-2xl font-bold">{latestMetric ? `${Number(latestMetric.teaching_effectiveness_score).toFixed(1)}` : "—"}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
+          <Card className="border-2 border-yellow-500/40 hover:border-yellow-500 hover:shadow-yellow-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-yellow-50 transition-all duration-500 cursor-pointer">
+            <CardContent className="p-4 bg-yellow-500">
               <div className="flex items-center gap-2 mb-1">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-xs text-muted-foreground">AI Lessons Generated</span>
+                <Sparkles className="h-7 w-7 text-yellow-700" />
+                <span className="text-xs text-black">AI Lessons Generated</span>
               </div>
               <p className="text-2xl font-bold">{latestMetric?.ai_usage_count ?? "—"}</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-4">
+          <Card className="border-2 border-red-500/40 hover:border-red-500 hover:shadow-red-500/30 hover:shadow-2xl hover:-translate-y-2 hover:bg-red-50 transition-all duration-500 cursor-pointer ">
+            <CardContent className="p-4 bg-red-400">
               <div className="flex items-center gap-2 mb-1">
-                <AlertTriangle className="h-4 w-4 text-destructive" />
-                <span className="text-xs text-muted-foreground">At-Risk Students</span>
+                <AlertTriangle className="h-7 w-7 text-red-800" />
+                <span className="text-xs text-black">At-Risk Students</span>
               </div>
-              <p className="text-2xl font-bold text-destructive">{highRiskStudents.length}</p>
+              <p className="text-2xl font-bold text-black">{highRiskStudents.length}</p>
             </CardContent>
           </Card>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="predictions">Predictions</TabsTrigger>
-            <TabsTrigger value="alerts">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
+            <TabsTrigger value="overview" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Overview</TabsTrigger>
+            <TabsTrigger value="predictions" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Predictions</TabsTrigger>
+            <TabsTrigger value="alerts" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -250,7 +251,7 @@ return (
                         <XAxis dataKey="date" fontSize={11} />
                         <YAxis fontSize={11} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Line type="monotone" dataKey="gain" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                        <Line type="monotone" dataKey="gain" stroke="#3B82F6" strokeWidth={3} dot={{ r: 3 }} />
                       </LineChart>
                     </ChartContainer>
                   ) : (
@@ -288,13 +289,13 @@ return (
               <Card className="border-destructive/30">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                    <AlertTriangle className="h-7 w-7 text-destructive" />
                     High Risk Students ({highRiskStudents.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {highRiskStudents.map((p, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div key={i} className="group flex items-center justify-between p-4 rounded-2xl border border-red-200 bg-gradient-to-r from-red-50 to-orange-50 hover:shadow-xl hover:-translate-y-1 hover:border-red-400 transition-all duration-500">
                       <div>
                         <p className="text-sm font-medium">{p.subject}</p>
                         <p className="text-xs text-muted-foreground">
@@ -317,13 +318,13 @@ return (
               <Card className="border-accent">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <TrendingDown className="h-5 w-5 text-muted-foreground" />
+                    <TrendingDown className="h-7 w-7 text-blue-600" />
                     Medium Risk Students ({medRiskStudents.length})
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {medRiskStudents.slice(0, 10).map((p, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 rounded-lg border">
+                    <div key={i} className="group flex items-center justify-between p-4 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-blue-50 hover:shadow-xl hover:-translate-y-1 hover:border-blue-400 transition-all duration-500">
                       <div>
                         <p className="text-sm font-medium">{p.subject}</p>
                         <p className="text-xs text-muted-foreground">
@@ -351,12 +352,15 @@ return (
           <TabsContent value="alerts" className="space-y-3">
             {(alerts || []).length > 0 ? (
               alerts!.map((alert) => (
-                <Card key={alert.id} className="border-l-4 border-l-destructive/50">
+                <Card key={alert.id} className="group relative overflow-hidden border-l-4 border-l-red-500 hover:shadow-xl hover:-translate-y-1 hover:border-l-red-600 transition-all duration-500 bg-gradient-to-r from-red-50/50 to-white">
                   <CardContent className="p-4">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">{alert.lesson_type}</Badge>
-                        <Badge variant="destructive" className="text-xs">{alert.fail_rate}% fail rate</Badge>
+                        <Badge className="text-xs bg-red-500 text-white animate-pulse shadow-lg shadow-red-100">
+                              {alert.fail_rate}% Fail Rate
+                        </Badge>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         {new Date(alert.created_at).toLocaleDateString()}

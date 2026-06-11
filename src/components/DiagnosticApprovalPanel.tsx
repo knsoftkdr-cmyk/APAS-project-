@@ -265,7 +265,7 @@ export const DiagnosticApprovalPanel = () => {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5" />
+          <ClipboardList className="h-7 w-7 text-violet-700" />
           Diagnostic Question Approvals
           {pendingCount > 0 && (
             <Badge variant="destructive" className="gap-1 ml-2">
@@ -296,7 +296,7 @@ export const DiagnosticApprovalPanel = () => {
             </TableHeader>
             <TableBody>
               {requests.map(r => (
-                <TableRow key={r.id} className={r.status === "pending" ? "bg-muted/30" : ""}>
+                <TableRow key={r.id} className={r.status === "pending" ? "bg-muted/30" : "cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500"}>
                   <TableCell className="font-medium">{(r.profiles as any)?.full_name || "Unknown"}</TableCell>
                   <TableCell>{r.class_name} - {r.section}</TableCell>
                   <TableCell>{r.subject}</TableCell>
@@ -322,7 +322,7 @@ export const DiagnosticApprovalPanel = () => {
 
       {/* Review Dialog */}
       <Dialog open={!!reviewRequest} onOpenChange={open => !open && setReviewRequest(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg rounded-3xl border-white/20 shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-bottom-5 data-[state=closed]:slide-out-to-bottom-5 duration-700">
           <DialogHeader>
             <DialogTitle>Review Diagnostic Request</DialogTitle>
           </DialogHeader>
