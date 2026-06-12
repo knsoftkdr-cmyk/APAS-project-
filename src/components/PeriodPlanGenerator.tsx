@@ -504,6 +504,7 @@ const PeriodPlanGenerator = () => {
         class_level: selectedClass,
         section: selectedSection.toUpperCase(),
         subject: selectedLesson.subject || null,
+        topic: selectedLesson.topic || null,
         exit_ticket_content: exitTicketContent || selectedLesson.lesson_content,
         assignment_type: "auto-assigned",
         assigned_at: new Date().toISOString(),
