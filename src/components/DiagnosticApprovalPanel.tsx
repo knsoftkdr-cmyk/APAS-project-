@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle, XCircle, Clock, Eye, ClipboardList, AlertTriangle } from "lucide-react";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { AGE_GROUPS, type AgeGroupConfig, type Dimension } from "@/data/assessmentQuestions";
+import { AGE_GROUPS } from "@/data/assessmentQuestions";
 
 const EXCELLENCIA_EMAILS = [
   "excellencia1@gmail.com",
@@ -24,28 +24,23 @@ const EXCELLENCIA_EMAILS = [
   "excellencia6@gmail.com",
 ];
 
-/** Build a 25-question distribution across all dimensions for a given class */
 function build25QuestionDistribution(className: string): Record<string, number> {
   const ageGroup = getAgeGroupForClass(className);
   const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
   if (!config) return {};
-
   const dims = config.dimensions;
   const total = 25;
   const base = Math.floor(total / dims.length);
   let remainder = total - base * dims.length;
-
   const distribution: Record<string, number> = {};
   for (const dim of dims) {
     const count = base + (remainder > 0 ? 1 : 0);
     distribution[dim.name] = Math.min(count, dim.questions.length);
     if (remainder > 0) remainder--;
   }
-
   return distribution;
 }
 
-/** Map class name to the appropriate age group in the question bank */
 function getAgeGroupForClass(className: string): number {
   const lower = className.toLowerCase().trim();
   if (["nursery", "lkg", "ukg"].includes(lower)) return 3;
@@ -55,16 +50,14 @@ function getAgeGroupForClass(className: string): number {
     if (num <= 10) return 10;
     return 15;
   }
-  return 5; // default
+  return 5;
 }
 
-/** Pick N random questions from an array */
 function pickRandom<T>(arr: T[], n: number): T[] {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, Math.min(n, arr.length));
 }
 
-/** Build the question set from the question bank based on distribution */
 function buildQuestionSet(
   className: string,
   distribution: Record<string, number>
@@ -72,21 +65,15 @@ function buildQuestionSet(
   const ageGroup = getAgeGroupForClass(className);
   const config = AGE_GROUPS.find(g => g.ageGroup === ageGroup);
   if (!config) return [];
-
   const result: { id: number; text: string; category: string; modality?: string }[] = [];
-
   for (const [category, count] of Object.entries(distribution)) {
     if (count <= 0) continue;
-    // Find matching dimension by name (case-insensitive partial match)
-    const dimension = config.dimensions.find(
-      d => d.name.toLowerCase() === category.toLowerCase()
-    );
+    const dimension = config.dimensions.find(d => d.name.toLowerCase() === category.toLowerCase());
     if (dimension) {
       const picked = pickRandom(dimension.questions, count);
       result.push(...picked.map(q => ({ id: q.id, text: q.text, category: dimension.name, modality: q.modality })));
     }
   }
-
   return result;
 }
 
@@ -119,43 +106,51 @@ export const DiagnosticApprovalPanel = () => {
   const [processing, setProcessing] = useState(false);
 
   const { data: requests, isLoading } = useQuery({
-    queryKey: ["admin-diagnostic-requests", profile?.school_id],
+    queryKey: ["admin-diagnostic-requests", user?.id],
     queryFn: async () => {
-      // Get teachers for this school only
-      let teacherIdsForSchool: string[] = [];
-      if (profile?.school_id) {
-        const { data: schoolTeachers } = await supabase
-          .from("profiles")
-          .select("id")
-          .eq("role", "teacher")
-          .eq("school_id", profile.school_id);
-        teacherIdsForSchool = (schoolTeachers || []).map((t: any) => t.id);
-        if (teacherIdsForSchool.length === 0) return [];
-      }
+      // Fetch teachers from the same school as the logged-in admin/principal
+      const { data: adminProfile } = await supabase
+        .from("profiles")
+        .select("school_id")
+        .eq("id", user!.id)
+        .single();
 
-      let query = supabase
+      if (!adminProfile?.school_id) return [];
+
+      const { data: schoolTeachers } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("role", "teacher")
+        .eq("school_id", adminProfile.school_id);
+
+      const teacherIds = (schoolTeachers || []).map((t: any) => t.id);
+      if (teacherIds.length === 0) return [];
+
+      // Step 2: fetch diagnostic_requests for those teachers only
+      const { data, error } = await supabase
         .from("diagnostic_requests")
         .select("*")
+        .in("teacher_id", teacherIds)
         .order("created_at", { ascending: false });
 
-      if (profile?.school_id && teacherIdsForSchool.length > 0) {
-        query = query.in("teacher_id", teacherIdsForSchool);
-      }
-
-      const { data, error } = await query;
       if (error) throw error;
 
-      const teacherIds = [...new Set((data || []).map((r: any) => r.teacher_id))];
+      // Step 3: attach teacher names
+      const uniqueTeacherIds = [...new Set((data || []).map((r: any) => r.teacher_id))];
       const { data: teacherProfiles } = await supabase
         .from("profiles")
         .select("id, full_name")
-        .in("id", teacherIds as string[]);
+        .in("id", uniqueTeacherIds as string[]);
       const nameMap = new Map((teacherProfiles || []).map((p: any) => [p.id, p.full_name]));
+
       return (data || []).map((r: any) => ({
         ...r,
         profiles: { full_name: nameMap.get(r.teacher_id) || null },
       })) as DiagnosticRequest[];
     },
+    enabled: !!user?.id,
+    // ── Refetch every 30 seconds so admin sees new requests without page reload ──
+    refetchInterval: 30000,
   });
 
   const openReview = (req: DiagnosticRequest) => {
@@ -177,18 +172,12 @@ export const DiagnosticApprovalPanel = () => {
     let assignedQuestions: any[] | null = null;
 
     if (action === "approved") {
-      // Check if this is an excellencia teacher request — use or build 25-question distribution
       let distribution = reviewRequest.question_distribution;
-      
       if (distribution) {
-        // If distribution exists (e.g., excellencia teacher auto-set), use it directly
         assignedQuestions = buildQuestionSet(reviewRequest.class_name, distribution);
       } else {
-        // No distribution — check if this teacher is excellencia by checking suggested_count pattern
-        // For excellencia teachers, auto-generate 25 question distribution
         const dist25 = build25QuestionDistribution(reviewRequest.class_name);
         if (reviewRequest.suggested_count === 25 && Object.keys(dist25).length > 0) {
-          // Could be excellencia teacher — check distribution total
           assignedQuestions = buildQuestionSet(reviewRequest.class_name, dist25);
         }
       }
@@ -320,7 +309,6 @@ export const DiagnosticApprovalPanel = () => {
         )}
       </CardContent>
 
-      {/* Review Dialog */}
       <Dialog open={!!reviewRequest} onOpenChange={open => !open && setReviewRequest(null)}>
         <DialogContent className="max-w-lg rounded-3xl border-white/20 shadow-2xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95 data-[state=open]:slide-in-from-bottom-5 data-[state=closed]:slide-out-to-bottom-5 duration-700">
           <DialogHeader>
@@ -370,7 +358,7 @@ export const DiagnosticApprovalPanel = () => {
                   <div className="space-y-1.5">
                     <Label>Approved Question Count</Label>
                     <Input type="number" min={1} max={200} value={approvedCount} onChange={e => setApprovedCount(e.target.value)} />
-                    <p className="text-xs text-muted-foreground">You may modify the count from the teacher's suggestion.</p>
+                    <p className="text-xs text-muted-foreground">You may modify the count from the teacher suggestion.</p>
                   </div>
                   <div className="space-y-1.5">
                     <Label>Master User Notes (optional)</Label>

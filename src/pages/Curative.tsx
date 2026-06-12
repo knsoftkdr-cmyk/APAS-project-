@@ -1948,7 +1948,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const { data, error } = await supabase
         .from("lessons")
         .select("*")
-        .eq("class_level", homeworkClass)
+        .eq("class_level", getClassLabel(homeworkClass))
         .eq("section", homeworkSection)
         .eq("teacher_id", user.id)
         .eq("ai_generated", true)
@@ -1987,7 +1987,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         .from("homework_assignments")
         .select("*")
         .eq("lesson_id", selectedLessonId)
-        .eq("class_level", homeworkClass)
+        .eq("class_level", getClassLabel(homeworkClass))
         .eq("section", homeworkSection)
         .eq("assignment_type", "in-class")
         .eq("school_id", profile?.school_id ?? "")
@@ -2010,7 +2010,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         .from("homework_assignments")
         .select("*")
         .eq("lesson_id", selectedLessonId)
-        .eq("class_level", homeworkClass)
+        .eq("class_level", getClassLabel(homeworkClass))
         .eq("section", homeworkSection)
         .eq("assignment_type", "at-home")
         .eq("school_id", profile?.school_id ?? "")
@@ -2112,7 +2112,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const assignmentData = {
         assigned_by: user?.id,
         lesson_id: selectedLesson.id,
-        class_level: homeworkClass,
+        class_level: getClassLabel(homeworkClass),
         section: homeworkSection,
         title: `${selectedLesson.subject || selectedLesson.curriculum || "General"} - Period ${selectedPeriod}`,
         questions: allQuestions,
@@ -2209,7 +2209,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const assignmentData = {
         assigned_by: user?.id,
         lesson_id: selectedLesson.id,
-        class_level: homeworkClass,
+        class_level: getClassLabel(homeworkClass),
         section: (homeworkSection || "").toUpperCase().trim(), // Normalize section for consistency
         title: `${selectedLesson.subject || selectedLesson.curriculum || "General"} - Period ${selectedPeriod}`,
         questions: allQuestions,
