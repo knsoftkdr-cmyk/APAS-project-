@@ -1,116 +1,390 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+  useRef,
+} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-interface Alert {
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export type NotificationType = "info" | "success" | "warning" | "error";
+
+export interface Notification {
   id: string;
-  student_group: string | null;
-  lesson_type: string | null;
-  trigger_condition: string | null;
-  fail_rate: number | null;
-  recommendation: string | null;
-  status: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  is_read: boolean;
   created_at: string;
+  link?: string;
 }
 
 interface NotificationContextType {
-  alerts: Alert[];
+  notifications: Notification[];
   unreadCount: number;
-  markAsRead: (alertId: string) => Promise<void>;
-  markAllAsRead: () => Promise<void>;
-  refreshAlerts: () => Promise<void>;
-  readAlertIds: Set<string>;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
 }
 
+// ─── Context ──────────────────────────────────────────────────────────────────
+
 const NotificationContext = createContext<NotificationContextType>({
-  alerts: [],
+  notifications: [],
   unreadCount: 0,
-  markAsRead: async () => {},
-  markAllAsRead: async () => {},
-  refreshAlerts: async () => {},
-  readAlertIds: new Set(),
+  markAsRead: () => {},
+  markAllAsRead: () => {},
 });
 
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
+function makeNotification(
+  overrides: Omit<Notification, "id" | "is_read" | "created_at">
+): Notification {
+  return {
+    ...overrides,
+    id: crypto.randomUUID(),
+    is_read: false,
+    created_at: new Date().toISOString(),
+  };
+}
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const [alerts, setAlerts] = useState<Alert[]>([]);
-  const [readAlertIds, setReadAlertIds] = useState<Set<string>>(new Set());
+  const { user, profile } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  const fetchAlerts = useCallback(async () => {
-    const { data } = await supabase
-      .from("mismatch_alerts")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(50);
-    if (data) setAlerts(data);
-  }, []);
+  const classIdsRef = useRef<string[]>([]);
+  const homeworkAssignmentIdsRef = useRef<string[]>([]);
 
-  const fetchReadIds = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("alert_reads")
-      .select("alert_id")
-      .eq("user_id", user.id);
-    if (data) setReadAlertIds(new Set(data.map((r: any) => r.alert_id)));
-  }, [user]);
+  const push = useCallback(
+    (n: Omit<Notification, "id" | "is_read" | "created_at">) => {
+      const notif = makeNotification(n);
+      setNotifications((prev) => [notif, ...prev].slice(0, 50));
+      const toastFn =
+        n.type === "success"
+          ? toast.success
+          : n.type === "warning"
+          ? toast.warning
+          : n.type === "error"
+          ? toast.error
+          : toast.info;
+      toastFn(n.title, { description: n.message, duration: 4000 });
+    },
+    []
+  );
 
-  const refreshAlerts = useCallback(async () => {
-    await Promise.all([fetchAlerts(), fetchReadIds()]);
-  }, [fetchAlerts, fetchReadIds]);
-
+  // ── Load teacher's class_ids and homework assignment_ids ──────────────────
   useEffect(() => {
-    if (!user) return;
-    refreshAlerts();
+    if (!user || profile?.role !== "teacher") return;
 
-    const channel = supabase
-      .channel("mismatch_alerts_realtime")
+    const loadTeacherContext = async () => {
+      const { data: classTeachers } = await supabase
+        .from("class_teachers")
+        .select("class_id")
+        .eq("teacher_id", user.id);
+
+      classIdsRef.current = (classTeachers || []).map((c) => c.class_id);
+
+      const { data: assignments } = await supabase
+        .from("homework_assignments")
+        .select("id")
+        .eq("teacher_id", user.id);
+
+      homeworkAssignmentIdsRef.current = (assignments || []).map((a) => a.id);
+    };
+
+    loadTeacherContext();
+  }, [user, profile]);
+
+  // ── Realtime subscriptions ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!user || profile?.role !== "teacher") return;
+
+    const channels: ReturnType<typeof supabase.channel>[] = [];
+
+    // 1. Homework submitted — INSERT
+    const hwInsertChannel = supabase
+      .channel("notif_hw_insert")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "mismatch_alerts" },
+        { event: "INSERT", schema: "public", table: "homework_submissions" },
         (payload) => {
-          const newAlert = payload.new as Alert;
-          setAlerts((prev) => [newAlert, ...prev].slice(0, 50));
-          if (newAlert.status === "flagged") {
-            toast.warning(
-              `New mismatch: ${newAlert.student_group || "Unknown"} — ${newAlert.lesson_type || "Unknown"}`,
-              { duration: 5000 }
-            );
-          }
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "mismatch_alerts" },
-        (payload) => {
-          const updated = payload.new as Alert;
-          setAlerts((prev) => prev.map((a) => (a.id === updated.id ? updated : a)));
+          const row = payload.new as {
+            assignment_id: string;
+            student_name: string | null;
+            submitted_at: string | null;
+          };
+          if (!homeworkAssignmentIdsRef.current.includes(row.assignment_id)) return;
+          if (!row.submitted_at) return;
+          push({
+            type: "info",
+            title: "Homework submitted",
+            message: `${row.student_name || "A student"} submitted their homework.`,
+            link: "/teacher",
+          });
         }
       )
       .subscribe();
+    channels.push(hwInsertChannel);
 
-    return () => { supabase.removeChannel(channel); };
-  }, [user, refreshAlerts]);
+    // 2. Homework submitted — UPDATE (student updates submitted_at)
+    const hwUpdateChannel = supabase
+      .channel("notif_hw_update")
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "homework_submissions" },
+        (payload) => {
+          const oldRow = payload.old as { submitted_at: string | null; assignment_id: string };
+          const newRow = payload.new as { submitted_at: string | null; assignment_id: string; student_name: string | null };
+          if (!homeworkAssignmentIdsRef.current.includes(newRow.assignment_id)) return;
+          if (!oldRow.submitted_at && newRow.submitted_at) {
+            push({
+              type: "info",
+              title: "Homework submitted",
+              message: `${newRow.student_name || "A student"} submitted their homework.`,
+              link: "/teacher",
+            });
+          }
+        }
+      )
+      .subscribe();
+    channels.push(hwUpdateChannel);
 
-  const unreadCount = alerts.filter((a) => a.status === "flagged" && !readAlertIds.has(a.id)).length;
+    // 3. Performance drop
+    const perfChannel = supabase
+      .channel("notif_perf_drop")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "performance_records" },
+        async (payload) => {
+          const row = payload.new as {
+            student_id: string;
+            posttest_score: number | null;
+            pretest_score: number | null;
+          };
+          if (row.posttest_score === null || row.pretest_score === null) return;
+          const drop = row.pretest_score - row.posttest_score;
+          if (drop < 20) return;
 
-  const markAsRead = async (alertId: string) => {
-    if (!user || readAlertIds.has(alertId)) return;
-    await supabase.from("alert_reads").insert({ user_id: user.id, alert_id: alertId });
-    setReadAlertIds((prev) => new Set(prev).add(alertId));
-  };
+          // Verify this student is in one of teacher's classes
+          if (classIdsRef.current.length === 0) return;
+          const { data: match } = await supabase
+            .from("class_students")
+            .select("student_id")
+            .in("class_id", classIdsRef.current)
+            .eq("student_id", row.student_id)
+            .maybeSingle();
+          if (!match) return;
 
-  const markAllAsRead = async () => {
-    if (!user) return;
-    const unread = alerts.filter((a) => !readAlertIds.has(a.id));
-    if (unread.length === 0) return;
-    const rows = unread.map((a) => ({ user_id: user.id, alert_id: a.id }));
-    await supabase.from("alert_reads").upsert(rows, { onConflict: "user_id,alert_id" });
-    setReadAlertIds(new Set(alerts.map((a) => a.id)));
-  };
+          // Get student name
+          let studentName = "A student";
+          const { data: stu } = await supabase
+            .from("students")
+            .select("profile_id")
+            .eq("id", row.student_id)
+            .maybeSingle();
+          if (stu?.profile_id) {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", stu.profile_id)
+              .maybeSingle();
+            studentName = prof?.full_name || "A student";
+          }
+
+          push({
+            type: "warning",
+            title: "Performance drop detected",
+            message: `${studentName}'s score dropped by ${Math.round(drop)} points. Consider early intervention.`,
+            link: "/analytics",
+          });
+        }
+      )
+      .subscribe();
+    channels.push(perfChannel);
+
+    // 4. Student milestone — diagnostic completed
+    const diagChannel = supabase
+      .channel("notif_diag_done")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "diagnostic_submissions" },
+        async (payload) => {
+          const row = payload.new as {
+            student_id: string;
+            request_id: string;
+            score: number;
+            total_questions: number;
+          };
+
+          const { data: diagReq } = await supabase
+            .from("diagnostic_requests")
+            .select("teacher_id, subject, class_name")
+            .eq("id", row.request_id)
+            .maybeSingle();
+          if (!diagReq || diagReq.teacher_id !== user.id) return;
+
+          let studentName = "A student";
+          const { data: stu } = await supabase
+            .from("students")
+            .select("profile_id")
+            .eq("id", row.student_id)
+            .maybeSingle();
+          if (stu?.profile_id) {
+            const { data: prof } = await supabase
+              .from("profiles")
+              .select("full_name")
+              .eq("id", stu.profile_id)
+              .maybeSingle();
+            studentName = prof?.full_name || "A student";
+          }
+
+          const pct =
+            row.total_questions > 0
+              ? Math.round((row.score / row.total_questions) * 100)
+              : 0;
+          const isHighScore = pct >= 80;
+
+          push({
+            type: isHighScore ? "success" : "info",
+            title: isHighScore ? "Student milestone reached 🎉" : "Diagnostic completed",
+            message: `${studentName} completed the ${diagReq.subject} diagnostic for ${diagReq.class_name} with ${pct}%.`,
+            link: "/diagnostic",
+          });
+        }
+      )
+      .subscribe();
+    channels.push(diagChannel);
+
+    // 5. Request approved / rejected
+    const requestChannel = supabase
+      .channel("notif_request_status")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "diagnostic_requests",
+          filter: `teacher_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const oldRow = payload.old as { status: string };
+          const newRow = payload.new as {
+            status: string;
+            subject: string;
+            class_name: string;
+            admin_notes: string | null;
+          };
+          if (oldRow.status === newRow.status) return;
+
+          if (newRow.status === "approved") {
+            push({
+              type: "success",
+              title: "Diagnostic request approved",
+              message: `Your ${newRow.subject} request for ${newRow.class_name} was approved.${newRow.admin_notes ? ` Note: ${newRow.admin_notes}` : ""}`,
+              link: "/requests",
+            });
+          } else if (newRow.status === "rejected") {
+            push({
+              type: "error",
+              title: "Diagnostic request rejected",
+              message: `Your ${newRow.subject} request for ${newRow.class_name} was rejected.${newRow.admin_notes ? ` Reason: ${newRow.admin_notes}` : ""}`,
+              link: "/requests",
+            });
+          }
+        }
+      )
+      .subscribe();
+    channels.push(requestChannel);
+
+    // 6. AI lesson plan ready
+    const lessonChannel = supabase
+      .channel("notif_ai_lesson")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "lessons",
+          filter: `teacher_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            title: string;
+            subject: string | null;
+            class_level: string | null;
+            ai_generated: boolean | null;
+          };
+          if (!row.ai_generated) return;
+          push({
+            type: "info",
+            title: "AI lesson plan ready",
+            message: `"${row.title}"${row.subject ? ` · ${row.subject}` : ""}${row.class_level ? ` · ${row.class_level}` : ""} is ready to review.`,
+            link: "/curative",
+          });
+        }
+      )
+      .subscribe();
+    channels.push(lessonChannel);
+
+    // 7. AI content approved (via governance_notifications)
+    const govChannel = supabase
+      .channel("notif_gov_approved")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "governance_notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            event_type: string;
+            title: string;
+            message: string;
+          };
+          if (!row.event_type.includes("approved")) return;
+          push({
+            type: "success",
+            title: row.title || "AI content approved",
+            message: row.message || "Your AI-generated content has been approved.",
+            link: "/curative",
+          });
+        }
+      )
+      .subscribe();
+    channels.push(govChannel);
+
+    return () => {
+      channels.forEach((ch) => supabase.removeChannel(ch));
+    };
+  }, [user, profile, push]);
+
+  // ── Read state ─────────────────────────────────────────────────────────────
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  const markAsRead = useCallback((id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+  }, []);
+
+  const markAllAsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  }, []);
 
   return (
-    <NotificationContext.Provider value={{ alerts, unreadCount, markAsRead, markAllAsRead, refreshAlerts, readAlertIds }}>
+    <NotificationContext.Provider
+      value={{ notifications, unreadCount, markAsRead, markAllAsRead }}
+    >
       {children}
     </NotificationContext.Provider>
   );

@@ -2122,6 +2122,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         assignment_type: "in-class",
         class_performance_score: score,
         status: "active",
+        school_id: profile?.school_id ?? null,
         // assigned_at will be set automatically by database DEFAULT once migration is applied
       };
 
@@ -2218,6 +2219,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         assignment_type: "at-home",
         assigned_student_count: studentNames.length, // Count of students with full names
         status: "active",
+        school_id: profile?.school_id ?? null,
         // assigned_at will be set automatically by database DEFAULT once migration is applied
       };
 
