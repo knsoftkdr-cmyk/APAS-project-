@@ -152,6 +152,8 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
+ 
+  const [showTeacher, setShowTeacher] = useState(true);
 
   // Auto-populate student's class and section from profile on component mount
   useEffect(() => {
@@ -178,6 +180,19 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
     };
     fetchTeachers();
   }, [profile?.school_id]);
+
+useEffect(() => {
+  const handleResize = () => {
+    setShowTeacher(window.innerWidth >= 1700);
+  };
+
+  handleResize();
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
 
   const canStartQuiz = name.trim() && age && studentClass && section.trim() && curriculum && teacherId;
 
@@ -413,18 +428,20 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
           />
         </div>
 
-<div className="relative min-h-[700px]">
+<div className="flex justify-center items-center min-h-[700px]">
 
-  {/* Teacher PNG */}
-  <div className="hidden lg:flex absolute left-10 top-1/2 -translate-y-1/2">
-    <img
-      src={teacherGuide}
-      alt="Teacher Guide"
-      className="w-[600px] object-contain"
-    />
-  </div>
+          {/* Teacher PNG */}
+        {showTeacher && (
+          <div className="absolute left-10 top-1/2 -translate-y-1/2 ">
+            <img
+              src={teacherGuide}
+              alt="Teacher Guide"
+              className="w-[600px] object-contain"
+            />
+          </div>
+        )}
           {/* Learning Profile Assessment */}
-          <Card className="max-w-lg mx-auto">
+          <Card className="w-full max-w-lg mx-auto">
             <CardContent className="p-6 space-y-5">
               <div className="text-center mb-2">
                 <ClipboardList className="h-10 w-10 text-primary mx-auto mb-2" />
