@@ -1948,7 +1948,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const { data, error } = await supabase
         .from("lessons")
         .select("*")
-        .eq("class_level", homeworkClass.match(/^\d+$/) ? `Class ${homeworkClass}` : homeworkClass.charAt(0).toUpperCase() + homeworkClass.slice(1))
+        .eq("class_level", homeworkClass)
         .eq("section", homeworkSection)
         .eq("teacher_id", user.id)
         .eq("ai_generated", true)
@@ -1987,9 +1987,10 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         .from("homework_assignments")
         .select("*")
         .eq("lesson_id", selectedLessonId)
-        .eq("class_level", homeworkClass.match(/^\d+$/) ? `Class ${homeworkClass}` : homeworkClass.charAt(0).toUpperCase() + homeworkClass.slice(1))
+        .eq("class_level", homeworkClass)
         .eq("section", homeworkSection)
         .eq("assignment_type", "in-class")
+        .eq("school_id", profile?.school_id ?? "")
         .order("created_at", { ascending: false });
       if (error) {
         console.error("Error fetching in-class assignments:", error);
@@ -2009,9 +2010,10 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         .from("homework_assignments")
         .select("*")
         .eq("lesson_id", selectedLessonId)
-        .eq("class_level", homeworkClass.match(/^\d+$/) ? `Class ${homeworkClass}` : homeworkClass.charAt(0).toUpperCase() + homeworkClass.slice(1))
+        .eq("class_level", homeworkClass)
         .eq("section", homeworkSection)
         .eq("assignment_type", "at-home")
+        .eq("school_id", profile?.school_id ?? "")
         .order("created_at", { ascending: false });
       if (error) {
         console.error("Error fetching at-home assignments:", error);
