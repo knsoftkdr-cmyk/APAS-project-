@@ -164,7 +164,7 @@ const PeriodPlanGenerator = () => {
       const { data } = await supabase
         .from("lessons")
         .select("id, title, subject, lesson_content, class_level, section")
-        .eq("class_level", selectedClass)
+        .eq("class_level", getClassLabel(selectedClass))
         .order("created_at", { ascending: false });
       // topic column exists in DB but not in generated types yet, so cast
       return (data || []).map((d: any) => ({ ...d, topic: d.topic || null }));
@@ -180,7 +180,7 @@ const PeriodPlanGenerator = () => {
       const { data } = await supabase
         .from("chapters")
         .select("subject")
-        .eq("class_level", selectedClass)
+        .eq("class_level", getClassLabel(selectedClass))
         .order("subject", { ascending: true });
       // Get unique subjects
       const uniqueSubjects = Array.from(new Set((data || []).map(d => d.subject).filter(Boolean)));
@@ -197,7 +197,7 @@ const PeriodPlanGenerator = () => {
       const { data } = await supabase
         .from("chapters")
         .select("id, unit_number, unit_name, subject, class_level")
-        .eq("class_level", selectedClass)
+        .eq("class_level", getClassLabel(selectedClass))
         .eq("subject", selectedSubject)
         .order("unit_number", { ascending: true });
       return data || [];
@@ -361,7 +361,7 @@ const PeriodPlanGenerator = () => {
     const payload = {
       lesson_id: currentLessonId,
       teacher_id: user.id,
-      class_level: selectedClass,
+      class_level: getClassLabel(selectedClass),
       section: selectedSection,
       subject: selectedLesson?.subject || null,
       periods_per_week: parseInt(periodsPerWeek),
@@ -501,7 +501,7 @@ const PeriodPlanGenerator = () => {
       const { error } = await supabase.from("homework_assignments").insert({
         lesson_id: selectedLessonId,
         teacher_id: user.id,
-        class_level: selectedClass,
+        class_level: getClassLabel(selectedClass),
         section: selectedSection.toUpperCase(),
         subject: selectedLesson.subject || null,
         topic: selectedLesson.topic || null,

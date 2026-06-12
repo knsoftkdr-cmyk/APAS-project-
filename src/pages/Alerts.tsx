@@ -19,7 +19,8 @@ type Filter = "all" | "flagged" | "resolved";
 const Alerts = () => {
   const { profile } = useAuth();
   const isStudent = profile?.role === "student";
-  const { alerts, readAlertIds, markAsRead, markAllAsRead, refreshAlerts } = useNotifications();
+  const { alerts: rawAlerts, readAlertIds, markAsRead, markAllAsRead, refreshAlerts } = useNotifications();
+  const alerts = rawAlerts ?? [];
   const [filter, setFilter] = useState<Filter>("all");
   const [bulkResolving, setBulkResolving] = useState(false);
 

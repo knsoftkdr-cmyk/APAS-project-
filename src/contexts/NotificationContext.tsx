@@ -1,4 +1,4 @@
-import {
+﻿import {
   createContext,
   useContext,
   useState,
@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type NotificationType = "info" | "success" | "warning" | "error";
 
@@ -32,7 +32,7 @@ interface NotificationContextType {
   markAllAsRead: () => void;
 }
 
-// ─── Context ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const NotificationContext = createContext<NotificationContextType>({
   notifications: [],
@@ -41,7 +41,7 @@ const NotificationContext = createContext<NotificationContextType>({
   markAllAsRead: () => {},
 });
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function makeNotification(
   overrides: Omit<Notification, "id" | "is_read" | "created_at">
@@ -54,9 +54,9 @@ function makeNotification(
   };
 }
 
-// ─── Provider ─────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Provider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// ─── Storage helpers ───────────────────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Storage helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function storageKey(userId: string) {
   return `apas_notifications_${userId}`;
@@ -75,7 +75,7 @@ function saveToStorage(userId: string, notifications: Notification[]) {
   try {
     localStorage.setItem(storageKey(userId), JSON.stringify(notifications.slice(0, 50)));
   } catch {
-    // storage quota exceeded — ignore
+    // storage quota exceeded â€” ignore
   }
 }
 
@@ -98,7 +98,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [notifications, user?.id]);
 
-  // ── Load persisted notifications when user logs in ────────────────────
+  // â”€â”€ Load persisted notifications when user logs in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!user) {
       setNotifications([]);
@@ -107,7 +107,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications(loadFromStorage(user.id));
   }, [user?.id]);
 
-  // ── Persist to localStorage whenever notifications change ─────────────
+  // â”€â”€ Persist to localStorage whenever notifications change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!user) return;
     saveToStorage(user.id, notifications);
@@ -135,7 +135,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // ── Load teacher's class_ids and homework assignment_ids (school-scoped) ──
+  // â”€â”€ Load teacher's class_ids and homework assignment_ids (school-scoped) â”€â”€
   const loadTeacherContext = useCallback(async () => {
     if (!user || profile?.role !== "teacher") return;
 
@@ -166,7 +166,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     loadTeacherContext();
   }, [loadTeacherContext]);
 
-  // ── Realtime subscriptions ────────────────────────────────────────────────
+  // â”€â”€ Realtime subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   useEffect(() => {
     if (!user || profile?.role !== "teacher") return;
 
@@ -180,10 +180,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     ): { title: string; message: string } => {
       const meta = assignmentMetaRef.current[assignmentId];
       const subject = meta?.subject || "Homework";
-      const topic = meta?.topic ? ` — ${meta.topic}` : "";
+      const topic = meta?.topic ? ` â€” ${meta.topic}` : "";
       const pctText = submissionPct != null ? ` (${submissionPct}% answered)` : "";
       return {
-        title: `📝 Homework submitted`,
+        title: `ðŸ“ Homework submitted`,
         message: `${studentName} submitted ${subject}${topic}${pctText}.`,
       };
     };
@@ -209,7 +209,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return true;
     };
 
-    // 1. Homework submitted — INSERT (fresh submission row)
+    // 1. Homework submitted â€” INSERT (fresh submission row)
     const hwInsertChannel = supabase
       .channel("notif_hw_insert")
       .on(
@@ -244,7 +244,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(hwInsertChannel);
 
-    // 2. Homework submitted — UPDATE (student answers & completes an existing row)
+    // 2. Homework submitted â€” UPDATE (student answers & completes an existing row)
     const hwUpdateChannel = supabase
       .channel("notif_hw_update")
       .on(
@@ -265,7 +265,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             submission_percentage: number | null;
           };
 
-          // Fire only on the transition: not-submitted → submitted
+          // Fire only on the transition: not-submitted â†’ submitted
           const justSubmitted =
             (!oldRow.submitted_at && !!newRow.submitted_at) ||
             (!oldRow.completed && !!newRow.completed);
@@ -339,7 +339,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(perfChannel);
 
-    // 4. Student milestone — diagnostic completed
+    // 4. Student milestone â€” diagnostic completed
     const diagChannel = supabase
       .channel("notif_diag_done")
       .on(
@@ -383,7 +383,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
           push({
             type: isHighScore ? "success" : "info",
-            title: isHighScore ? "Student milestone reached 🎉" : "Diagnostic completed",
+            title: isHighScore ? "Student milestone reached ðŸŽ‰" : "Diagnostic completed",
             message: `${studentName} completed the ${diagReq.subject} diagnostic for ${diagReq.class_name} with ${pct}%.`,
             link: "/diagnostic",
           });
@@ -455,7 +455,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           push({
             type: "info",
             title: "AI lesson plan ready",
-            message: `"${row.title}"${row.subject ? ` · ${row.subject}` : ""}${row.class_level ? ` · ${row.class_level}` : ""} is ready to review.`,
+            message: `"${row.title}"${row.subject ? ` Â· ${row.subject}` : ""}${row.class_level ? ` Â· ${row.class_level}` : ""} is ready to review.`,
             link: "/curative",
           });
         }
@@ -497,7 +497,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
   }, [user, profile, push, loadTeacherContext]);
 
-  // ── Read state ─────────────────────────────────────────────────────────────
+  // â”€â”€ Read state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAsRead = useCallback((id: string) => {
@@ -552,7 +552,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           if (t?.full_name) teacherName = t.full_name;
 
           const subject = row.subject || "Homework";
-          const topic = row.topic ? ` — ${row.topic}` : "";
+          const topic = row.topic ? ` â€” ${row.topic}` : "";
           push({
             type: "info",
             title: "New homework assigned",
@@ -565,6 +565,41 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return () => { supabase.removeChannel(ch); };
   }, [user, profile, push]);
 
+
+  // ── Admin/Principal: notify when a teacher submits a new diagnostic request ──
+  useEffect(() => {
+    const adminRoles = ["admin", "school_admin", "principal", "hod"];
+    if (!user || !profile?.role) return;
+    if (!adminRoles.includes(profile.role.toLowerCase())) return;
+    if (!profile?.school_id) return;
+
+    const ch = supabase
+      .channel("notif_diag_request_admin")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "diagnostic_requests" },
+        async (payload) => {
+          const row = payload.new as any;
+          const { data: teacherProf } = await supabase
+            .from("profiles")
+            .select("full_name, school_id")
+            .eq("id", row.teacher_id)
+            .maybeSingle();
+          if (teacherProf.school_id !== profile.school_id) return;
+          // single tenant - all admins see all requests
+
+          push({
+            type: "warning",
+            title: "New Diagnostic Request",
+            message: `${teacherProf.full_name || "A teacher"} submitted a diagnostic request for ${row.class_name} - ${row.section} (${row.subject}).`,
+            link: "/admin-panel",
+          });
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [user, profile, push]);
   return (
     <NotificationContext.Provider
       value={{ notifications, unreadCount, markAsRead, markAllAsRead }}
@@ -575,3 +610,4 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 }
 
 export const useNotifications = () => useContext(NotificationContext);
+
