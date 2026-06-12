@@ -182,12 +182,14 @@ export default function HODDashboard() {
             { label: "Avg Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: TrendingUp, color: "text-blue-600" },
             { label: "Lessons", value: lessons.length, icon: BookOpen, color: "text-orange-600" },
           ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label}>
+            <Card key={label} className={`group border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${label === "Teachers"
+        ? "bg-gradient-to-r from-blue-400 to-cyan-400" : label === "Students" ? "bg-gradient-to-r from-green-400 to-emerald-400"
+        : label === "Avg Score" ? "bg-gradient-to-r from-violet-400 to-purple-400" : "bg-gradient-to-r from-orange-400 to-red-400"}`}>
               <CardContent className="pt-6 pb-4 flex items-center gap-4">
-                <div className={`rounded-lg bg-muted p-2 ${color}`}><Icon className="h-5 w-5" /></div>
+                <div className={`rounded-lg bg-muted p-2 ${color}`}><Icon className="h-7 w-7" /></div>
                 <div>
-                  <p className="text-2xl font-bold">{value}</p>
-                  <p className="text-xs text-muted-foreground">{label}</p>
+                  <p className="text-2xl font-bold text-black">{value}</p>
+                  <p className="text-sm text-white">{label}</p>
                 </div>
               </CardContent>
             </Card>
@@ -196,9 +198,9 @@ export default function HODDashboard() {
 
         <Tabs defaultValue="teachers" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="teachers" className="gap-1.5"><Users className="h-4 w-4" /> Teachers</TabsTrigger>
+            <TabsTrigger value="teachers" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><Users className="h-5 w-5" /> Teachers</TabsTrigger>
             
-            <TabsTrigger value="lessons" className="gap-1.5"><BookOpen className="h-4 w-4" /> Lessons</TabsTrigger>
+            <TabsTrigger value="lessons" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><BookOpen className="h-5 w-5" /> Lessons</TabsTrigger>
           </TabsList>
 
           {/* Teachers Tab */}
@@ -213,7 +215,7 @@ export default function HODDashboard() {
                     <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Grade</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {teachers.map((t) => (
-                        <TableRow key={t.id}>
+                        <TableRow key={t.id} className="cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01]">
                           <TableCell className="font-medium">{t.full_name ?? "Unknown"}</TableCell>
                           <TableCell>{t.class_grade ?? "—"}</TableCell>
                           <TableCell><Badge className="bg-green-100 text-green-800">Active</Badge></TableCell>
@@ -238,7 +240,7 @@ export default function HODDashboard() {
                     <TableHeader><TableRow><TableHead>Student</TableHead><TableHead className="text-center">Tests</TableHead><TableHead className="text-center">Avg Score</TableHead><TableHead className="text-center">Status</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {students.map((s) => (
-                        <TableRow key={s.id}>
+                        <TableRow key={s.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-l-4 hover:border-l-blue-500">
                           <TableCell className="font-medium">{s.full_name ?? "Unknown"}</TableCell>
                           <TableCell className="text-center">{s.tests}</TableCell>
                           <TableCell className="text-center font-semibold">{s.avg_score !== null ? `${s.avg_score}%` : "—"}</TableCell>
@@ -269,7 +271,7 @@ export default function HODDashboard() {
                     <TableHeader><TableRow><TableHead>Lesson Title</TableHead><TableHead>Subject</TableHead><TableHead>Class</TableHead><TableHead>Teacher</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {lessons.map((l) => (
-                        <TableRow key={l.id}>
+                        <TableRow key={l.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-l-4 hover:border-l-blue-500">
                           <TableCell className="font-medium">{l.title}</TableCell>
                           <TableCell>{l.subject ?? "—"}</TableCell>
                           <TableCell>{l.class_level ?? "—"}{l.section ? ` - ${l.section}` : ""}</TableCell>

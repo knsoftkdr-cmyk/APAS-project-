@@ -539,11 +539,11 @@ const SuperAdminPanel = () => {
 
         <Tabs defaultValue="overview" className="space-y-4">
           <TabsList className="flex flex-wrap gap-1 h-auto">
-            <TabsTrigger value="overview" className="gap-1.5"><BarChart3 className="h-4 w-4" />Overview</TabsTrigger>
-            <TabsTrigger value="accounts" className="gap-1.5"><Users className="h-4 w-4" />Accounts</TabsTrigger>
-            <TabsTrigger value="performance" className="gap-1.5"><TrendingUp className="h-4 w-4" />Performance</TabsTrigger>
-            <TabsTrigger value="permissions" className="gap-1.5"><Lock className="h-4 w-4" />Permissions</TabsTrigger>
-            <TabsTrigger value="school" className="gap-1.5"><School className="h-4 w-4" />School Info</TabsTrigger>
+            <TabsTrigger value="overview" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><BarChart3 className="h-5 w-5" />Overview</TabsTrigger>
+            <TabsTrigger value="accounts" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Users className="h-5 w-5" />Accounts</TabsTrigger>
+            <TabsTrigger value="performance" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><TrendingUp className="h-5 w-5" />Performance</TabsTrigger>
+            <TabsTrigger value="permissions" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Lock className="h-5 w-5" />Permissions</TabsTrigger>
+            <TabsTrigger value="school" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><School className="h-5 w-5" />School Info</TabsTrigger>
           </TabsList>
 
           {/* ══════════════════════════════════════════ OVERVIEW */}
@@ -555,10 +555,16 @@ const SuperAdminPanel = () => {
                 { label: "Principals", count: countRole("principal"), icon: UserCheck,     color: "text-purple-600" },
                 { label: "HODs",       count: countRole("hod"),       icon: ShieldCheck,   color: "text-orange-600" },
               ].map(({ label, count, icon: Icon, color }) => (
-                <Card key={label}>
+                <Card key={label}
+  className={`group relative overflow-hidden border transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl
+    ${label === "Teachers" ? "bg-blue-200 hover:border-blue-500" : ""}
+    ${label === "Students" ? "bg-green-200 hover:border-green-500" : ""}
+    ${label === "Principals" ? "bg-purple-200 hover:border-purple-500" : ""}
+    ${label === "HODs" ? "bg-orange-200 hover:border-orange-500" : ""}
+  `}>
                   <CardContent className="pt-6 pb-4 flex items-center gap-4">
                     <div className={`rounded-lg bg-muted p-2 ${color}`}>
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-7 w-7" />
                     </div>
                     <div>
                       <p className="text-2xl font-bold">{count}</p>
@@ -568,7 +574,7 @@ const SuperAdminPanel = () => {
                 </Card>
               ))}
             </div>
-            <Card>
+            <Card className="border-2 border-slate-200 hover:border-emerald-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
               <CardHeader><CardTitle>Quick Stats</CardTitle></CardHeader>
               <CardContent className="space-y-3">
                 {[
@@ -598,7 +604,7 @@ const SuperAdminPanel = () => {
               </div>
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                 <DialogTrigger asChild>
-                  <Button className="gap-1.5"><Plus className="h-4 w-4" />Create Account</Button>
+                  <Button className="gap-1.5 bg-blue-600"><Plus className="h-4 w-4" />Create Account</Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader><DialogTitle>Create New Account</DialogTitle></DialogHeader>
@@ -667,7 +673,7 @@ const SuperAdminPanel = () => {
               const roleUsers = users.filter((u) => u.role === role);
               if (!roleUsers.length) return null;
               return (
-                <Card key={role}>
+                <Card key={role} className="border-2 border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
                   <CardHeader className="pb-3">
                     <CardTitle className="text-base flex items-center gap-2">
                       <Badge variant={roleBadgeVariant(role)} className="capitalize">{role}s</Badge>
@@ -685,11 +691,11 @@ const SuperAdminPanel = () => {
                       </TableHeader>
                       <TableBody>
                         {roleUsers.map((u) => (
-                          <TableRow key={u.id}>
-                            <TableCell className="font-medium">
+                          <TableRow key={u.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
+                            <TableCell className="font-medium group-hover:text-blue-600 transition-colors duration-300">
                               {u.full_name ?? <span className="italic text-muted-foreground">Unnamed</span>}
                             </TableCell>
-                            <TableCell className="text-xs text-muted-foreground font-mono">{u.id.slice(0, 8)}…</TableCell>
+                            <TableCell className="text-xs text-muted-foreground font-mono group-hover:text-blue-500 transition-colors duration-300">{u.id.slice(0, 8)}…</TableCell>
                             <TableCell>
                               {role === "parent" && (
                                 <div className="flex flex-col gap-1">
@@ -707,7 +713,7 @@ const SuperAdminPanel = () => {
                             </TableCell>
                             <TableCell className="flex items-center gap-1">
                               {role === "parent" && (<span></span>)}
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteUser(u.id)}>
+                              <Button variant="ghost" size="icon" className="hover:bg-red-100 hover:scale-110 transition-all duration-300" onClick={() => handleDeleteUser(u.id)}>
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
                             </TableCell>
@@ -749,9 +755,9 @@ const SuperAdminPanel = () => {
 
           {/* ══════════════════════════════════════════ PERFORMANCE */}
           <TabsContent value="performance" className="space-y-4">
-            <Card>
+            <Card className="border-2 border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><GraduationCap className="h-5 w-5" />Student Performance</CardTitle>
+                <CardTitle className="flex items-center gap-2"><GraduationCap className="h-7 w-7 text-cyan-600" />Student Performance</CardTitle>
                 <CardDescription>Average diagnostic scores</CardDescription>
               </CardHeader>
               <CardContent className="p-0">
@@ -769,7 +775,7 @@ const SuperAdminPanel = () => {
                       </TableHeader>
                       <TableBody>
                         {studentPerf.map((s) => (
-                          <TableRow key={s.student_id}>
+                          <TableRow key={s.student_id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
                             <TableCell className="font-medium">{s.full_name ?? "Unknown"}</TableCell>
                             <TableCell className="text-center">{s.tests_taken}</TableCell>
                             <TableCell className={`text-center ${scoreColor(s.avg_score)}`}>
@@ -789,9 +795,9 @@ const SuperAdminPanel = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-2 border-slate-200 hover:border-green-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><BookOpen className="h-5 w-5" />Teacher Overview</CardTitle>
+                <CardTitle className="flex items-center gap-2"><BookOpen className="h-7 w-7 text-green-600" />Teacher Overview</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {teacherPerf.length === 0
@@ -807,7 +813,7 @@ const SuperAdminPanel = () => {
                       </TableHeader>
                       <TableBody>
                         {teacherPerf.map((t) => (
-                          <TableRow key={t.teacher_id}>
+                          <TableRow key={t.teacher_id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
                             <TableCell className="font-medium">{t.full_name ?? "Unknown"}</TableCell>
                             <TableCell className="text-center">{t.students_taught}</TableCell>
                             <TableCell className="text-center">
@@ -826,10 +832,10 @@ const SuperAdminPanel = () => {
 
           {/* ══════════════════════════════════════════ PERMISSIONS */}
           <TabsContent value="permissions" className="space-y-4">
-            <Card>
+            <Card className="border-2 border-slate-200 hover:border-yellow-600 hover:shadow-xl transition-all duration-500 overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Lock className="h-5 w-5" />Role Permission Matrix
+                  <Lock className="h-7 w-7 text-yellow-600" />Role Permission Matrix
                 </CardTitle>
                 <CardDescription>
                   Control which modules each role can access in your school.
@@ -872,7 +878,7 @@ const SuperAdminPanel = () => {
                   </div>
                 )}
                 <div className="flex justify-end mt-6">
-                  <Button onClick={savePermissions} disabled={permSaving} className="min-w-[140px]">
+                  <Button onClick={savePermissions} disabled={permSaving} className="min-w-[140px] bg-blue-600">
                     {permSaving ? <LoadingSpinner size="sm" /> : "Save Permissions"}
                   </Button>
                 </div>
@@ -882,9 +888,9 @@ const SuperAdminPanel = () => {
 
           {/* ══════════════════════════════════════════ SCHOOL INFO */}
           <TabsContent value="school">
-            <Card>
+            <Card className="border-2 border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2"><School className="h-5 w-5" />School Information</CardTitle>
+                <CardTitle className="flex items-center gap-2"><School className="h-7 w-7 text-blue-600" />School Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 max-w-md">
                 {editSchool && (
@@ -963,7 +969,7 @@ const SuperAdminPanel = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <Button onClick={handleSaveSchool} disabled={savingSchool}>
+                    <Button onClick={handleSaveSchool} disabled={savingSchool} className="bg-blue-600">
                       {savingSchool ? <LoadingSpinner size="sm" /> : "Save Changes"}
                     </Button>
                   </>
