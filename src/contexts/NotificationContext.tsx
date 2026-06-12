@@ -56,12 +56,67 @@ function makeNotification(
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
+// ─── Storage helpers ───────────────────────────────────────────────────────────────────────────────
+
+function storageKey(userId: string) {
+  return `apas_notifications_${userId}`;
+}
+
+function loadFromStorage(userId: string): Notification[] {
+  try {
+    const raw = localStorage.getItem(storageKey(userId));
+    return raw ? (JSON.parse(raw) as Notification[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveToStorage(userId: string, notifications: Notification[]) {
+  try {
+    localStorage.setItem(storageKey(userId), JSON.stringify(notifications.slice(0, 50)));
+  } catch {
+    // storage quota exceeded — ignore
+  }
+}
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  useEffect(() => {
+    if (!user) { setNotifications([]); return; }
+    try {
+      const raw = localStorage.getItem(`apas_notifications_${user.id}`);
+      if (raw) setNotifications(JSON.parse(raw));
+    } catch {}
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user) return;
+    try {
+      localStorage.setItem(`apas_notifications_${user.id}`, JSON.stringify(notifications.slice(0, 50)));
+    } catch {}
+  }, [notifications, user?.id]);
+
+  // ── Load persisted notifications when user logs in ────────────────────
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+    setNotifications(loadFromStorage(user.id));
+  }, [user?.id]);
+
+  // ── Persist to localStorage whenever notifications change ─────────────
+  useEffect(() => {
+    if (!user) return;
+    saveToStorage(user.id, notifications);
+  }, [notifications, user?.id]);
+
   const classIdsRef = useRef<string[]>([]);
   const homeworkAssignmentIdsRef = useRef<string[]>([]);
+  // Maps assignment_id -> { subject, topic, class_level } for rich notifications
+  const assignmentMetaRef = useRef<Record<string, { subject: string | null; topic: string | null; class_level: string }>>({});
 
   const push = useCallback(
     (n: Omit<Notification, "id" | "is_read" | "created_at">) => {
@@ -80,28 +135,36 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // ── Load teacher's class_ids and homework assignment_ids ──────────────────
-  useEffect(() => {
+  // ── Load teacher's class_ids and homework assignment_ids (school-scoped) ──
+  const loadTeacherContext = useCallback(async () => {
     if (!user || profile?.role !== "teacher") return;
 
-    const loadTeacherContext = async () => {
-      const { data: classTeachers } = await supabase
-        .from("class_teachers")
-        .select("class_id")
-        .eq("teacher_id", user.id);
+    const { data: classTeachers } = await supabase
+      .from("class_teachers")
+      .select("class_id")
+      .eq("teacher_id", user.id);
 
-      classIdsRef.current = (classTeachers || []).map((c) => c.class_id);
+    classIdsRef.current = (classTeachers || []).map((c) => c.class_id);
 
-      const { data: assignments } = await supabase
-        .from("homework_assignments")
-        .select("id")
-        .eq("teacher_id", user.id);
+    // Load assignments scoped to this teacher only (school isolation via teacher_id)
+    const { data: assignments } = await supabase
+      .from("homework_assignments")
+      .select("id, subject, topic, class_level")
+      .eq("teacher_id", user.id);
 
-      homeworkAssignmentIdsRef.current = (assignments || []).map((a) => a.id);
-    };
+    homeworkAssignmentIdsRef.current = (assignments || []).map((a) => a.id);
 
-    loadTeacherContext();
+    // Build meta map for rich notification messages
+    const meta: Record<string, { subject: string | null; topic: string | null; class_level: string }> = {};
+    for (const a of assignments || []) {
+      meta[a.id] = { subject: a.subject, topic: a.topic, class_level: a.class_level };
+    }
+    assignmentMetaRef.current = meta;
   }, [user, profile]);
+
+  useEffect(() => {
+    loadTeacherContext();
+  }, [loadTeacherContext]);
 
   // ── Realtime subscriptions ────────────────────────────────────────────────
   useEffect(() => {
@@ -109,49 +172,115 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
     const channels: ReturnType<typeof supabase.channel>[] = [];
 
-    // 1. Homework submitted — INSERT
+    // Helper: build a rich homework notification message
+    const buildHwMessage = (
+      studentName: string,
+      assignmentId: string,
+      submissionPct: number | null
+    ): { title: string; message: string } => {
+      const meta = assignmentMetaRef.current[assignmentId];
+      const subject = meta?.subject || "Homework";
+      const topic = meta?.topic ? ` — ${meta.topic}` : "";
+      const pctText = submissionPct != null ? ` (${submissionPct}% answered)` : "";
+      return {
+        title: `📝 Homework submitted`,
+        message: `${studentName} submitted ${subject}${topic}${pctText}.`,
+      };
+    };
+
+    // Helper: verify submission belongs to this teacher's school by checking
+    // that the assignment's teacher_id matches our user and the student's
+    // school_id matches our school_id (double-guard)
+    const verifyOwnership = async (
+      assignmentId: string,
+      studentId: string | null
+    ): Promise<boolean> => {
+      // Primary check: is this assignment owned by the current teacher?
+      if (!homeworkAssignmentIdsRef.current.includes(assignmentId)) return false;
+
+      // Secondary check: does the student belong to the same school?
+      if (!studentId || !profile?.school_id) return true; // skip if no school_id on profile
+      const { data: stu } = await supabase
+        .from("students")
+        .select("school_id")
+        .eq("profile_id", studentId)
+        .maybeSingle();
+      if (stu && stu.school_id && stu.school_id !== profile.school_id) return false;
+      return true;
+    };
+
+    // 1. Homework submitted — INSERT (fresh submission row)
     const hwInsertChannel = supabase
       .channel("notif_hw_insert")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "homework_submissions" },
-        (payload) => {
+        async (payload) => {
           const row = payload.new as {
             assignment_id: string;
+            student_id: string | null;
             student_name: string | null;
             submitted_at: string | null;
+            submission_percentage: number | null;
+            completed: boolean | null;
           };
-          if (!homeworkAssignmentIdsRef.current.includes(row.assignment_id)) return;
-          if (!row.submitted_at) return;
-          push({
-            type: "info",
-            title: "Homework submitted",
-            message: `${row.student_name || "A student"} submitted their homework.`,
-            link: "/teacher",
-          });
+
+          // Only fire when this is an actual completed submission
+          if (!row.submitted_at && !row.completed) return;
+
+          const owned = await verifyOwnership(row.assignment_id, row.student_id);
+          if (!owned) return;
+
+          // If assignmentMetaRef is stale (new assignment added after login), refresh
+          if (!assignmentMetaRef.current[row.assignment_id]) {
+            await loadTeacherContext();
+          }
+
+          const studentName = row.student_name || "A student";
+          const { title, message } = buildHwMessage(studentName, row.assignment_id, row.submission_percentage);
+          push({ type: "success", title, message, link: "/analytics" });
         }
       )
       .subscribe();
     channels.push(hwInsertChannel);
 
-    // 2. Homework submitted — UPDATE (student updates submitted_at)
+    // 2. Homework submitted — UPDATE (student answers & completes an existing row)
     const hwUpdateChannel = supabase
       .channel("notif_hw_update")
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "homework_submissions" },
-        (payload) => {
-          const oldRow = payload.old as { submitted_at: string | null; assignment_id: string };
-          const newRow = payload.new as { submitted_at: string | null; assignment_id: string; student_name: string | null };
-          if (!homeworkAssignmentIdsRef.current.includes(newRow.assignment_id)) return;
-          if (!oldRow.submitted_at && newRow.submitted_at) {
-            push({
-              type: "info",
-              title: "Homework submitted",
-              message: `${newRow.student_name || "A student"} submitted their homework.`,
-              link: "/teacher",
-            });
+        async (payload) => {
+          const oldRow = payload.old as {
+            submitted_at: string | null;
+            completed: boolean | null;
+            assignment_id: string;
+          };
+          const newRow = payload.new as {
+            submitted_at: string | null;
+            completed: boolean | null;
+            assignment_id: string;
+            student_id: string | null;
+            student_name: string | null;
+            submission_percentage: number | null;
+          };
+
+          // Fire only on the transition: not-submitted → submitted
+          const justSubmitted =
+            (!oldRow.submitted_at && !!newRow.submitted_at) ||
+            (!oldRow.completed && !!newRow.completed);
+          if (!justSubmitted) return;
+
+          const owned = await verifyOwnership(newRow.assignment_id, newRow.student_id);
+          if (!owned) return;
+
+          if (!assignmentMetaRef.current[newRow.assignment_id]) {
+            await loadTeacherContext();
           }
+
+          const studentName = newRow.student_name || "A student";
+          const { title, message } = buildHwMessage(studentName, newRow.assignment_id, newRow.submission_percentage);
+          push({ type: "success", title, message, link: "/analytics" });
         }
       )
       .subscribe();
@@ -366,7 +495,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch));
     };
-  }, [user, profile, push]);
+  }, [user, profile, push, loadTeacherContext]);
 
   // ── Read state ─────────────────────────────────────────────────────────────
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -380,6 +509,61 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   }, []);
+
+
+  // Student: notify when teacher assigns homework
+  useEffect(() => {
+    if (!user || profile?.role !== "student") return;
+
+    let studentClass: any = null;
+    const loadStudentClass = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("class_grade, section, school_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      return data;
+    };
+    loadStudentClass().then((p) => { studentClass = p; });
+
+    const ch = supabase
+      .channel("notif_hw_assigned_student")
+      .on("postgres_changes",
+        { event: "INSERT", schema: "public", table: "homework_assignments" },
+        async (payload) => {
+          const row = payload.new as any;
+          if (!studentClass) studentClass = await loadStudentClass();
+          if (!studentClass) return;
+          if (row.class_level !== studentClass.class_grade) return;
+          if (row.section && studentClass.section &&
+              row.section.toUpperCase() !== studentClass.section.toUpperCase()) return;
+
+          // School-scope check: fetch teacher's school and compare
+          const { data: teacherProfile } = await supabase
+            .from("profiles").select("school_id")
+            .eq("id", row.teacher_id).maybeSingle();
+          if (!teacherProfile?.school_id) return;
+          if (teacherProfile.school_id !== studentClass.school_id) return;
+
+          let teacherName = "Your teacher";
+          const { data: t } = await supabase
+            .from("profiles").select("full_name")
+            .eq("id", row.teacher_id).maybeSingle();
+          if (t?.full_name) teacherName = t.full_name;
+
+          const subject = row.subject || "Homework";
+          const topic = row.topic ? ` — ${row.topic}` : "";
+          push({
+            type: "info",
+            title: "New homework assigned",
+            message: `${teacherName} assigned ${subject}${topic}.`,
+            link: "/dashboard",
+          });
+        }
+      ).subscribe();
+
+    return () => { supabase.removeChannel(ch); };
+  }, [user, profile, push]);
 
   return (
     <NotificationContext.Provider
