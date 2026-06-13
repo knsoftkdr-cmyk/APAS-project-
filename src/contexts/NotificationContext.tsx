@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
-// â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---------------------------------------- Types ---------------------------------------------------
 
 export type NotificationType = "info" | "success" | "warning" | "error";
 
@@ -32,7 +32,7 @@ interface NotificationContextType {
   markAllAsRead: () => void;
 }
 
-// â”€â”€â”€ Context â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ------------------------------------ Context ------------------------------------------
 
 const NotificationContext = createContext<NotificationContextType>({
   notifications: [],
@@ -41,7 +41,7 @@ const NotificationContext = createContext<NotificationContextType>({
   markAllAsRead: () => {},
 });
 
-// â”€â”€â”€ Helper â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -------------------------------------- Helper ------------------------------------------------
 
 function makeNotification(
   overrides: Omit<Notification, "id" | "is_read" | "created_at">
@@ -54,10 +54,8 @@ function makeNotification(
   };
 }
 
-// â”€â”€â”€ Provider â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
-// â”€â”€â”€ Storage helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-
+// ---------------------------------------- Provider -----------------------------------------
+// ---------------------------------------Storage helpers-------------------------------------
 function storageKey(userId: string) {
   return `apas_notifications_${userId}`;
 }
@@ -75,7 +73,7 @@ function saveToStorage(userId: string, notifications: Notification[]) {
   try {
     localStorage.setItem(storageKey(userId), JSON.stringify(notifications.slice(0, 50)));
   } catch {
-    // storage quota exceeded â€” ignore
+    // storage quota exceeded - ignore
   }
 }
 
@@ -98,7 +96,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     } catch {}
   }, [notifications, user?.id]);
 
-  // â”€â”€ Load persisted notifications when user logs in â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -------------------------------------Load persisted notifications when user logs in ------------------------------------
   useEffect(() => {
     if (!user) {
       setNotifications([]);
@@ -107,7 +105,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     setNotifications(loadFromStorage(user.id));
   }, [user?.id]);
 
-  // â”€â”€ Persist to localStorage whenever notifications change â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ------------------------------------ Persist to localStorage whenever notifications change ------------------------------------
   useEffect(() => {
     if (!user) return;
     saveToStorage(user.id, notifications);
@@ -135,7 +133,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  // â”€â”€ Load teacher's class_ids and homework assignment_ids (school-scoped) â”€â”€
+  // ---------- Load teacher's class_ids and homework assignment_ids (school-scoped) -------
   const loadTeacherContext = useCallback(async () => {
     if (!user || profile?.role !== "teacher") return;
 
@@ -166,7 +164,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     loadTeacherContext();
   }, [loadTeacherContext]);
 
-  // â”€â”€ Realtime subscriptions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // --------------------------- Realtime subscriptions -------------------------------
   useEffect(() => {
     if (!user || profile?.role !== "teacher") return;
 
@@ -180,10 +178,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     ): { title: string; message: string } => {
       const meta = assignmentMetaRef.current[assignmentId];
       const subject = meta?.subject || "Homework";
-      const topic = meta?.topic ? ` â€” ${meta.topic}` : "";
+      const topic = meta?.topic ? ` - ${meta.topic}` : "";
       const pctText = submissionPct != null ? ` (${submissionPct}% answered)` : "";
       return {
-        title: `ðŸ“ Homework submitted`,
+        title: `📝 Homework submitted`,
         message: `${studentName} submitted ${subject}${topic}${pctText}.`,
       };
     };
@@ -209,7 +207,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       return true;
     };
 
-    // 1. Homework submitted â€” INSERT (fresh submission row)
+    // 1. Homework submitted - INSERT (fresh submission row)
     const hwInsertChannel = supabase
       .channel("notif_hw_insert")
       .on(
@@ -244,7 +242,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(hwInsertChannel);
 
-    // 2. Homework submitted â€” UPDATE (student answers & completes an existing row)
+    // 2. Homework submitted - UPDATE (student answers & completes an existing row)
     const hwUpdateChannel = supabase
       .channel("notif_hw_update")
       .on(
@@ -339,7 +337,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(perfChannel);
 
-    // 4. Student milestone â€” diagnostic completed
+    // 4. Student milestone - diagnostic completed
     const diagChannel = supabase
       .channel("notif_diag_done")
       .on(
@@ -497,7 +495,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     };
   }, [user, profile, push, loadTeacherContext]);
 
-  // â”€â”€ Read state â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // -------------------------------- Read state -------------------------------------------
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   const markAsRead = useCallback((id: string) => {
@@ -552,7 +550,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           if (t?.full_name) teacherName = t.full_name;
 
           const subject = row.subject || "Homework";
-          const topic = row.topic ? ` â€” ${row.topic}` : "";
+          const topic = row.topic ? ` - ${row.topic}` : "";
           push({
             type: "info",
             title: "New homework assigned",
