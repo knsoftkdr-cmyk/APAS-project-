@@ -158,29 +158,29 @@ const Billing = () => {
 
         <TabsContent value="usage">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" /> Students</CardTitle></CardHeader>
+            <Card className="border-2 border-amber-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="h-6 w-6" /> Students</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex justify-between mb-2 text-sm"><span>32 / 50</span><span>64%</span></div>
                 <Progress value={64} />
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" /> Teachers</CardTitle></CardHeader>
+            <Card className="border-2 border-blue-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="h-6 w-6" /> Teachers</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex justify-between mb-2 text-sm"><span>3 / 5</span><span>60%</span></div>
                 <Progress value={60} />
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Cpu className="h-4 w-4" /> AI Generations</CardTitle></CardHeader>
+            <Card className="border-2 border-green-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Cpu className="h-6 w-6" /> AI Generations</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex justify-between mb-2 text-sm"><span>47 / 100</span><span>47%</span></div>
                 <Progress value={47} />
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><HardDrive className="h-4 w-4" /> Storage</CardTitle></CardHeader>
+            <Card className="border-2 border-red-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <CardHeader><CardTitle className="flex items-center gap-2 text-base"><HardDrive className="h-6 w-6" /> Storage</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex justify-between mb-2 text-sm"><span>120 MB / 500 MB</span><span>24%</span></div>
                 <Progress value={24} />
