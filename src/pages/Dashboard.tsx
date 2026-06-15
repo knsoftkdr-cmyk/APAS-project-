@@ -61,7 +61,7 @@ const getProgressColor = (percentage: number) => {
   return "[&>div]:bg-red-400";
 };
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ STUDENT DASHBOARD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ---------------------------------------------------- STUDENT DASHBOARD -----------------------------------*/
 
 const StudentDashboard = () => {
   const { profile, user } = useAuth();
@@ -204,14 +204,14 @@ const StudentDashboard = () => {
   );
 };
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ TEACHER HOME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ------------------------------------------ TEACHER HOME ------------------------------------------- */
 
 const featureCards = [
   {
     icon: Users,
     title: "Student Reports",
     glow: "bg-red-400/80",
-    description: "View detailed diagnostic reports for every student â€” learning styles, multiple intelligences, and cognitive profiles all in one place.",
+    description: "View detailed diagnostic reports for every student - learning styles, multiple intelligences, and cognitive profiles all in one place.",
     path: "/teacher",
     color: "from-red-500/20 to-red-600/10",
     iconColor: "text-blue-600",
@@ -347,7 +347,7 @@ const TeacherHome = () => {
             </h1>
             <p className="text-base text-black/90 mb-1">{today}</p>
             <p className="text-sm text-black/80 max-w-lg mt-3 leading-relaxed">
-              {profile?.role === "school_admin" ? "Manage your school â€” create accounts, monitor student and teacher performance, and oversee school-wide operations." : profile?.role === "knsoft_admin" ? "KNSOFT Platform Admin â€” manage all schools, assign school admins, monitor platform-wide usage and billing." : "Adaptive Personalised Assessment System â€” empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."}
+              {profile?.role === "school_admin" ? "Manage your school - create accounts, monitor student and teacher performance, and oversee school-wide operations." : profile?.role === "knsoft_admin" ? "KNSOFT Platform Admin - manage all schools, assign school admins, monitor platform-wide usage and billing." : "Adaptive Personalised Assessment System - empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."}
             </p>
           </div>
         </div>
@@ -362,7 +362,7 @@ const TeacherHome = () => {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {countLoading ? "â€”" : assessmentCount}
+                {countLoading ? "-" : assessmentCount}
               </p>
               <p className="text-sm text-white text-muted-foreground">Assessments Completed</p>
             </div>
@@ -374,7 +374,7 @@ const TeacherHome = () => {
               <BookOpen className="h-7 w-7 text-emerald-600" />
             </div>
             <div>
-              <p className="text-3xl font-bold text-foreground">{lessonCount ?? "â€”"}</p>
+              <p className="text-3xl font-bold text-foreground">{lessonCount ?? "-"}</p>
               <p className="text-sm text-white text-muted-foreground">Lesson Plans Created</p>
             </div>
           </CardContent>
@@ -463,13 +463,13 @@ const TeacherHome = () => {
   );
 };
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ADMIN HOME â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ----------------------------------------------- ADMIN HOME ------------------------------------------ */
 
 const adminFeatureCards = [
   {
     icon: Users,
     title: "Student Reports",
-    description: "View detailed diagnostic reports for every student across all classes â€” learning styles, multiple intelligences, and cognitive profiles.",
+    description: "View detailed diagnostic reports for every student across all classes - learning styles, multiple intelligences, and cognitive profiles.",
     path: "/teacher",
     color: "from-blue-500/20 to-blue-600/10",
     glow: "bg-blue-600/30",
@@ -649,7 +649,7 @@ const AdminHome = () => {
                 <stat.icon className="h-8 w-8 text-white" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-white">{isLoading ? "â€”" : stat.value}</p>
+                <p className="text-2xl font-bold text-white">{isLoading ? "-" : stat.value}</p>
                 <p className="text-xs text-white">{stat.label}</p>
               </div>
             </CardContent>
@@ -823,7 +823,7 @@ const AdminHome = () => {
   );
 };
 
-/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ ROUTER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+/* ------------------------------------------- ROUTER ---------------------------------------------- */
 
 const Dashboard = () => {
   const { profile } = useAuth();
