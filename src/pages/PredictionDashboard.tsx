@@ -210,40 +210,40 @@ export default function PredictionDashboard() {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="py-6">
+          <Card className="border-2 border-amber-600 shadow-lg bg-gradient-to-br from-amber-500 to-amber-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">            
+            <CardContent className="py-6 bg-orange-400">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-muted-foreground">Predicted Score</div>
+                  <div className="text-sm text-white">Predicted Score</div>
                   <div className="text-3xl font-bold">{Math.round(predictions?.predicted_score_pct || 0)}%</div>
                 </div>
-                <TrendingUp className="h-8 w-8 text-primary opacity-20" />
+                <TrendingUp className="h-8 w-8  text-orange-700" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-blue-500 shadow-lg bg-gradient-to-br from-cyan-500 to-cyan-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardContent className="py-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-muted-foreground">Confidence</div>
+                  <div className="text-sm text-white">Confidence</div>
                   <div className="text-3xl font-bold">{Math.round((predictions?.confidence_level || 0) * 100)}%</div>
                 </div>
-                <Brain className="h-8 w-8 text-blue-500 opacity-20" />
+                <Brain className="h-8 w-8 text-cyan-800" />
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-green-600 shadow-lg bg-gradient-to-br from-green-500 to-green-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardContent className="py-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-muted-foreground">Risk Level</div>
+                  <div className="text-sm text-white">Risk Level</div>
                   <Badge className={`mt-2 ${getRiskColor(predictions?.risk_level || "medium")}`}>
                     {predictions?.risk_level?.toUpperCase() || "MEDIUM"}
                   </Badge>
                 </div>
-                <AlertCircle className={`h-8 w-8 opacity-20 ${
+                <AlertCircle className={`h-8 w-8 text-green-800 ${
                   predictions?.risk_level === "high" ? "text-red-500" :
                   predictions?.risk_level === "medium" ? "text-amber-500" : "text-emerald-500"
                 }`} />
@@ -251,16 +251,16 @@ export default function PredictionDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-2 border-red-500 shadow-lg bg-gradient-to-br from-pink-500 to-pink-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardContent className="py-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-muted-foreground">Action Items</div>
-                  <div className="text-3xl font-bold text-amber-600">
+                  <div className="text-sm text-white">Action Items</div>
+                  <div className="text-3xl font-bold text-red-700">
                     {predictions?.recommended_interventions?.length || 0}
                   </div>
                 </div>
-                <Target className="h-8 w-8 text-amber-500 opacity-20" />
+                <Target className="h-8 w-8 text-red-700" />
               </div>
             </CardContent>
           </Card>
@@ -268,10 +268,10 @@ export default function PredictionDashboard() {
 
         {/* Recommended Interventions */}
         {predictions?.recommended_interventions && predictions.recommended_interventions.length > 0 && (
-          <Card>
+          <Card className="border-2 border-red-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Zap className="h-4 w-4" />
+                <Zap className="h-6 w-6 text-amber-500" />
                 Recommended Actions
               </CardTitle>
               <CardDescription>
@@ -296,7 +296,7 @@ export default function PredictionDashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Weekly Forecast */}
-          <Card>
+          <Card className="border-2 border-blue-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-base">Weekly Forecast</CardTitle>
               <CardDescription>Predicted scores for the next 8 weeks</CardDescription>
@@ -327,7 +327,7 @@ export default function PredictionDashboard() {
           </Card>
 
           {/* Subject Comparison */}
-          <Card>
+          <Card className="border-2 border-amber-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-base">Subject Analysis</CardTitle>
               <CardDescription>Current vs. Predicted performance by subject</CardDescription>
@@ -356,7 +356,7 @@ export default function PredictionDashboard() {
 
         {/* Subject Details */}
         {history && history.length > 0 && (
-          <Card>
+          <Card className="border-2 border-green-300 shadow-lg bg-gradient-to-br hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
             <CardHeader>
               <CardTitle className="text-base">Subject Performance Trends</CardTitle>
               <CardDescription>Latest score vs. average and prediction</CardDescription>
@@ -367,7 +367,7 @@ export default function PredictionDashboard() {
                   <div key={subj.subject} className="p-4 rounded-lg border">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold">{subj.subject}</h4>
-                      <Badge
+                      <Badge 
                         variant={subj.trend > 0 ? "default" : "secondary"}
                         className={subj.trend > 0 ? "bg-emerald-600" : ""}
                       >
