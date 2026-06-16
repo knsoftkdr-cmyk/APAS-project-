@@ -1329,9 +1329,9 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">?</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">?</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">?</div>
+          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
 
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
           <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
@@ -1948,7 +1948,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const { data, error } = await supabase
         .from("lessons")
         .select("*")
-        .eq("class_level", homeworkClass)
+        .eq("class_level", getClassLabel(homeworkClass))
         .eq("section", homeworkSection)
         .eq("teacher_id", user.id)
         .eq("ai_generated", true)
@@ -1987,7 +1987,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         .from("homework_assignments")
         .select("*")
         .eq("lesson_id", selectedLessonId)
-        .eq("class_level", homeworkClass)
+        .eq("class_level", getClassLabel(homeworkClass))
         .eq("section", homeworkSection)
         .eq("assignment_type", "in-class")
         .eq("school_id", profile?.school_id ?? "")
@@ -2010,7 +2010,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         .from("homework_assignments")
         .select("*")
         .eq("lesson_id", selectedLessonId)
-        .eq("class_level", homeworkClass)
+        .eq("class_level", getClassLabel(homeworkClass))
         .eq("section", homeworkSection)
         .eq("assignment_type", "at-home")
         .eq("school_id", profile?.school_id ?? "")
@@ -2112,7 +2112,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const assignmentData = {
         assigned_by: user?.id,
         lesson_id: selectedLesson.id,
-        class_level: homeworkClass,
+        class_level: getClassLabel(homeworkClass),
         section: homeworkSection,
         title: `${selectedLesson.subject || selectedLesson.curriculum || "General"} - Period ${selectedPeriod}`,
         questions: allQuestions,
@@ -2209,7 +2209,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       const assignmentData = {
         assigned_by: user?.id,
         lesson_id: selectedLesson.id,
-        class_level: homeworkClass,
+        class_level: getClassLabel(homeworkClass),
         section: (homeworkSection || "").toUpperCase().trim(), // Normalize section for consistency
         title: `${selectedLesson.subject || selectedLesson.curriculum || "General"} - Period ${selectedPeriod}`,
         questions: allQuestions,

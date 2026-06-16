@@ -308,7 +308,7 @@ const TeacherPanel = () => {
                       const classLabel = CLASS_OPTIONS.find(c => c.value === assessment.student_class)?.label || assessment.student_class || "—";
                       const globalIndex = (currentPage - 1) * rowsPerPage + index;
                       return (
-                        <TableRow key={assessment.id}>
+                        <TableRow key={assessment.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-l-4 hover:border-l-blue-500">
                           <TableCell className="font-medium">{globalIndex + 1}</TableCell>
                           <TableCell className="font-medium">{assessment.student_name}</TableCell>
                           <TableCell>{assessment.student_age}</TableCell>

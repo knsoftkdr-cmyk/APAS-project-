@@ -110,6 +110,8 @@ export default function AcademicTests() {
   const [timerActive, setTimerActive] = useState(false);
   const [reviewTest, setReviewTest] = useState<any>(null);
 
+  const [showTeacher, setShowTeacher] = useState(true);
+
   // Auto-populate student's class and section from profile on component mount
   useEffect(() => {
     if (profile?.class_grade && !studentClass) {
@@ -129,6 +131,19 @@ export default function AcademicTests() {
     return () => clearInterval(interval);
   }, [timerActive]);
 
+useEffect(() => {
+  const handleResize = () => {
+    setShowTeacher(window.innerWidth >= 1700);
+  };
+
+  handleResize();
+  window.addEventListener("resize", handleResize);
+
+  return () => {
+    window.removeEventListener("resize", handleResize);
+  };
+}, []);
+  
   // Fetch subjects dynamically from TextBooks storage based on selected class
   const { data: subjectOptions, isLoading: loadingSubjects } = useQuery({
     queryKey: ["class-subjects-storage", studentClass],
@@ -342,11 +357,13 @@ const subjectColors: Record<string, string> = {
       {phase === "select" && (
         <div className="space-y-6 animate-fade-in">
           <Card className="relative border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-accent/5 overflow-visible">
-          <img
-  src={boyTeacher}
-  alt="Teacher Guide"
-  className="hidden lg:block absolute right-[70px] bottom-0 h-[500px] w-auto z-20 drop-shadow-2xl"
-/>
+          {showTeacher && (
+              <img
+                src={boyTeacher}
+                alt="Teacher Guide"
+                className="absolute -right-5 bottom-0 h-[500px] w-auto z-20 drop-shadow-2xl"
+              />
+            )}
             <CardHeader className="text-center pb-2">
               <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg">
                 <GraduationCap className="h-8 w-8 text-primary-foreground" />
