@@ -1,5 +1,4 @@
-<<<<<<< Updated upstream
-﻿import { useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -397,5 +396,3 @@ export const DiagnosticApprovalPanel = () => {
     </Card>
   );
 };
-=======
->>>>>>> Stashed changes
