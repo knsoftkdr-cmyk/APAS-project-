@@ -156,7 +156,7 @@ const CURRICULUM_OPTIONS = [
   { value: "ib", label: "Inquiry-Based (IB)" },
   { value: "cbse", label: "CBSE" },
   { value: "cambridge", label: "Project-Based Learning (Cambridge)" },
-  { value: "ai", label: "AI (Auto-detect)" },
+  { value: "scert", label: "SCERT" },
 ];
 
 // Converts CLASS_OPTIONS value ("1", "2") to chapter_subtopics format ("Class1", "Class2")

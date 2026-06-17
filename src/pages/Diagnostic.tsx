@@ -531,6 +531,7 @@ useEffect(() => {
                     <SelectItem value="CBSE">CBSE</SelectItem>
                     <SelectItem value="IB">IB</SelectItem>
                     <SelectItem value="Cambridge">Cambridge</SelectItem>
+                    <SelectItem value="SCERT">SCERT</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

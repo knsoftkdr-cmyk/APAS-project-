@@ -74,6 +74,11 @@ const KNSoftAdminPanel = () => {
   const [newSchoolPlan, setNewSchoolPlan] = useState("basic");
   const [creatingSchool, setCreatingSchool] = useState(false);
 
+  // Edit school dialog
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingSchool, setEditingSchool] = useState<SchoolRow | null>(null);
+  const [updatingSchool, setUpdatingSchool] = useState(false);
+
   // Assign admin dialog
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignSchoolId, setAssignSchoolId] = useState("");
@@ -214,6 +219,32 @@ const KNSoftAdminPanel = () => {
       toast({ title: "Error assigning admin", description: e.message, variant: "destructive" });
     } finally {
       setAssigningAdmin(false);
+    }
+  };
+
+  // ── Edit school ────────────────────────────────────────────────────────────
+  const handleEditSchool = async () => {
+    if (!editingSchool || !editingSchool.name.trim()) {
+      toast({ title: "School name is required", variant: "destructive" });
+      return;
+    }
+    setUpdatingSchool(true);
+    try {
+      const { error } = await supabase.from("schools").update({
+        name: editingSchool.name.trim(),
+        email: editingSchool.email?.trim() || null,
+        curriculum: editingSchool.curriculum?.trim() || null,
+        subscription_plan: editingSchool.subscription_plan,
+      }).eq("id", editingSchool.id);
+      if (error) throw error;
+      toast({ title: "School updated successfully ✅" });
+      setEditOpen(false);
+      setEditingSchool(null);
+      fetchAll();
+    } catch (e: any) {
+      toast({ title: "Error updating school", description: e.message, variant: "destructive" });
+    } finally {
+      setUpdatingSchool(false);
     }
   };
 
@@ -371,7 +402,15 @@ const KNSoftAdminPanel = () => {
                     </div>
                     <div className="space-y-1.5">
                       <Label>Curriculum</Label>
-                      <Input placeholder="e.g. CBSE, IB, Cambridge" value={newSchoolCurriculum} onChange={(e) => setNewSchoolCurriculum(e.target.value)} />
+                      <Select value={newSchoolCurriculum} onValueChange={setNewSchoolCurriculum}>
+                        <SelectTrigger><SelectValue placeholder="Select curriculum" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cbse">CBSE</SelectItem>
+                          <SelectItem value="ib">IB</SelectItem>
+                          <SelectItem value="cambridge">Cambridge</SelectItem>
+                          <SelectItem value="scert">SCERT</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div className="space-y-1.5">
                       <Label>Subscription Plan</Label>
@@ -388,6 +427,51 @@ const KNSoftAdminPanel = () => {
                       {creatingSchool ? <LoadingSpinner size="sm" /> : "Create School"}
                     </Button>
                   </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Edit School Dialog */}
+              <Dialog open={editOpen} onOpenChange={setEditOpen}>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader><DialogTitle>Edit School</DialogTitle></DialogHeader>
+                  {editingSchool && (
+                    <div className="space-y-4 pt-2">
+                      <div className="space-y-1.5">
+                        <Label>School Name *</Label>
+                        <Input placeholder="e.g. Excellencia School" value={editingSchool.name} onChange={(e) => setEditingSchool({ ...editingSchool, name: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Email</Label>
+                        <Input type="email" placeholder="admin@school.edu" value={editingSchool.email ?? ""} onChange={(e) => setEditingSchool({ ...editingSchool, email: e.target.value })} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Curriculum</Label>
+                        <Select value={editingSchool.curriculum ?? ""} onValueChange={(v) => setEditingSchool({ ...editingSchool, curriculum: v })}>
+                          <SelectTrigger><SelectValue placeholder="Select curriculum" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="cbse">CBSE</SelectItem>
+                            <SelectItem value="ib">IB</SelectItem>
+                            <SelectItem value="cambridge">Cambridge</SelectItem>
+                            <SelectItem value="scert">SCERT</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label>Subscription Plan</Label>
+                        <Select value={editingSchool.subscription_plan ?? "basic"} onValueChange={(v) => setEditingSchool({ ...editingSchool, subscription_plan: v })}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="basic">Basic</SelectItem>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="premium">Premium</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button className="w-full" onClick={handleEditSchool} disabled={updatingSchool}>
+                        {updatingSchool ? <LoadingSpinner size="sm" /> : "Update School"}
+                      </Button>
+                    </div>
+                  )}
                 </DialogContent>
               </Dialog>
             </div>
@@ -425,6 +509,13 @@ const KNSoftAdminPanel = () => {
                                 : <Badge variant="outline">Inactive</Badge>}
                             </TableCell>
                             <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => { setEditingSchool(s); setEditOpen(true); }}
+                              >
+                                Edit
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"

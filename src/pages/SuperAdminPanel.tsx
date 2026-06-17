@@ -921,6 +921,7 @@ const SuperAdminPanel = () => {
                           <SelectItem value="cbse">CBSE</SelectItem>
                           <SelectItem value="ib">IB</SelectItem>
                           <SelectItem value="cambridge">Cambridge</SelectItem>
+                          <SelectItem value="scert">SCERT</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
