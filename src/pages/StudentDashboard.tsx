@@ -32,7 +32,7 @@ import {
   Area,
 } from "recharts";
 import {
-  ClipboardList,
+  ClipboardList, Download,
   TrendingUp,
   CheckCircle2,
   Clock,
@@ -47,6 +47,9 @@ import {
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { ProfileCompletionBar } from "@/components/onboarding/ProfileCompletionBar";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentReport } from "@/components/StudentReport";
 import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
 
@@ -77,6 +80,7 @@ export default function StudentDashboard() {
   const { percent: profilePct, missing: profileMissing } = useProfileCompletion();
   const [showReport, setShowReport] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [selectedWorksheet, setSelectedWorksheet] = useState<any>(null);
 
   // ── Homework assignments + own submissions
   const { data: hwData, isLoading: hwLoading } = useQuery({
@@ -91,7 +95,7 @@ export default function StudentDashboard() {
             .order("assigned_at", { ascending: false })
             .limit(50);
           if (profile?.school_id) q = q.eq("school_id", profile.school_id);
-          if (profile?.class_grade) q = q.eq("class_level", profile.class_grade);
+          if (profile?.class_grade) q = q.eq("class_level", `Class ${profile.class_grade}`);
           if (profile?.section)    q = q.eq("section", profile.section);
           return q;
         })(),
@@ -101,6 +105,41 @@ export default function StudentDashboard() {
           .eq("student_id", user!.id),
       ]);
       return { assignments: assignments || [], submissions: submissions || [] };
+    },
+  });
+
+  // ── Assigned Worksheets
+  const { data: assignedWorksheets = [], isLoading: worksheetsLoading } = useQuery({
+    queryKey: ["student-assigned-worksheets", user?.id, profile?.school_id, profile?.class_grade, profile?.section],
+    enabled: !!user?.id && !!profile?.school_id && !!profile?.class_grade,
+    queryFn: async () => {
+      // Guard: ensure class_grade exists before proceeding
+      if (!profile?.class_grade) return [];
+      
+      // Convert class_grade to class_level format (e.g., "1" -> "Class 1")
+      if (!profile?.class_grade) return [];
+      const classLevelFormatted = `Class ${profile?.class_grade}`;
+      
+      let query = supabase
+        .from("worksheet_assignments")
+        .select("id, worksheet_id, class_level, section, assigned_at, due_date, status, worksheets(id, worksheet_content, page_count, chapter, topic, subtopic, academic_year, subject)")
+        .eq("school_id", profile?.school_id!)
+        .eq("class_level", classLevelFormatted)
+        .eq("status", "active");
+      
+      // If student has a section, filter where section matches OR section is null/unset
+      if (profile?.section) {
+        query = query.or(`section.eq.${profile.section},section.is.null`);
+      }
+      // If student has no section, don't filter by section at all — show all class worksheets
+      
+      const { data, error } = await query.order("assigned_at", { ascending: false });
+      
+      if (error) {
+        console.error("Error fetching assigned worksheets:", error);
+        return [];
+      }
+      return data || [];
     },
   });
 
@@ -233,7 +272,7 @@ export default function StudentDashboard() {
     }));
   }, [tests]);
 
-  if (hwLoading || testsLoading) {
+  if (hwLoading || testsLoading || worksheetsLoading) {
     return (
       <AppLayout>
         <div className="flex h-96 items-center justify-center">
@@ -656,6 +695,71 @@ const subjectColors: Record<string, string> = {
           </CardContent>
         </Card>
 
+        {/* Assigned Worksheets */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                <FileText className="h-7 w-7 text-purple-600" />
+              </div>
+              Your Worksheets
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {assignedWorksheets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 text-center">
+                <Sparkles className="h-10 w-10 text-purple-500 mb-2" />
+                <p className="text-sm font-medium">No worksheets assigned yet</p>
+                <p className="text-xs text-muted-foreground">Worksheets assigned by your teacher will appear here.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {assignedWorksheets.slice(0, 5).map((ws: any) => (
+                  <div
+                    key={ws.id} onClick={() => setSelectedWorksheet(ws)} style={{cursor:"pointer"}}
+                    className={`
+                      flex
+                      items-center
+                      justify-between
+                      rounded-xl
+                      p-4
+                      text-white
+                      bg-gradient-to-r
+                      from-purple-600
+                      to-purple-700
+                      hover:shadow-xl
+                      hover:-translate-y-1
+                      hover:scale-[1.02]
+                      transition-all
+                      duration-300
+                    `}
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {ws.worksheets?.topic || ws.worksheets?.chapter || "Practice Worksheet"}
+                      </p>
+                      <p className="text-xs text-purple-100 truncate">
+                        {ws.worksheets?.subject || "—"} · {ws.worksheets?.page_count || 5} pages
+                        {ws.due_date && (
+                          <>
+                            {" "}
+                            · Due {format(new Date(ws.due_date), "MMM d")}
+                          </>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex gap-1 shrink-0">
+                      <Badge className="bg-purple-900 text-white border-purple-400 cursor-pointer">
+                        <FileText className="h-3 w-3 mr-1" /> View
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Daily Performance */}
         <Card>
           <CardHeader>
@@ -821,7 +925,64 @@ const subjectColors: Record<string, string> = {
           studentClass={myAssessment.student_class || undefined}
         />
       )}
+
+      {/* Worksheet Viewer Dialog */}
+      {selectedWorksheet && (
+        <Dialog open={!!selectedWorksheet} onOpenChange={() => setSelectedWorksheet(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-purple-600" />
+                {selectedWorksheet.worksheets?.topic || selectedWorksheet.worksheets?.chapter || "Worksheet"}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex gap-2 mb-4">
+              <Button
+                size="sm"
+                className="gap-2 bg-green-600 hover:bg-green-700"
+                onClick={async () => {
+                  const content = selectedWorksheet.worksheets?.worksheet_content || "";
+                  const topic = selectedWorksheet.worksheets?.topic || "Worksheet";
+                  let html = content
+                    .replace(/^#### (.*?)$/gm, "<h4></h4>")
+                    .replace(/^### (.*?)$/gm, "<h3></h3>")
+                    .replace(/^## (.*?)$/gm, "<h2></h2>")
+                    .replace(/^# (.*?)$/gm, "<h1></h1>")
+                    .replace(/\*\*(.*?)\*\*/g, "<strong></strong>")
+                    .replace(/^---$/gm, "<hr>")
+                    .replace(/^- (.*?)$/gm, "<li></li>")
+                    .replace(/((?:<li>.*?<\/li>\n?)+)/g, "<ul></ul>");
+                  html = html.split("\n\n").map((p: string) => {
+                    const t = p.trim();
+                    if (!t || t.startsWith("<h") || t.startsWith("<ul") || t.startsWith("<hr")) return t;
+                    return "<p>" + t.replace(/\n/g, "<br>") + "</p>";
+                  }).join("\n");
+                  const tempDiv = document.createElement("div");
+                  tempDiv.innerHTML = `<div class="report"><div class="header"><div class="header-left"><div class="brand">APAS <span>Worksheet</span></div><div class="report-label">Practice Worksheet</div></div><div class="header-right"><div class="report-date">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div><div class="status-badge">AI Generated</div></div></div><div class="learner-card"><div class="lc-field"><label>Class</label><value>Class ${profile?.class_grade || ""}</value><small>Section ${profile?.section || ""}</small></div><div class="lc-field"><label>Subject</label><value>${selectedWorksheet.worksheets?.subject || ""}</value><small>${topic}</small></div><div class="lc-field"><label>Report Type</label><value>Worksheet</value><small>Practice Activities</small></div></div><div class="content">${html}</div><div class="footer"><div class="footer-note">This worksheet is auto-generated by the APAS AI engine. For academic use only.</div><div class="footer-apas">APAS � ${new Date().getFullYear()}</div></div></div>`;
+                  const styleEl = document.createElement("style");
+                  styleEl.textContent = "* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; } .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; color: #1a1a2e; font-size: 12px; line-height: 1.6; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; } .brand { font-size: 24px; color: #1a1a2e; font-weight: bold; } .brand span { color: #0e9a7b; font-style: italic; } .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; } .header-right { text-align: right; } .report-date { font-size: 12px; color: #3a3a5c; } .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; } .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; } .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; } .lc-field value { font-size: 16px; color: white; display: block; font-weight: bold; } .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); } .content h1 { font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; } .content h2 { font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; } .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; } .content p { margin: 6px 0; color: #3a3a5c; } .content strong { color: #1a1a2e; font-weight: 600; } .content ul { list-style: none; margin: 6px 0; padding: 0; } .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; } .content hr { border: none; border-top: 1px solid #e2e0d8; margin: 16px 0; } .footer { border-top: 1px solid #e2e0d8; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; } .footer-note { font-size: 10px; color: #6b6b8a; } .footer-apas { font-size: 13px; color: #3a3a5c; font-style: italic; }";
+                  tempDiv.appendChild(styleEl);
+                  const html2pdf = (await import("html2pdf.js")).default;
+                  html2pdf().set({
+                    margin: [10,10,10,10],
+                    filename: "Worksheet-" + topic + ".pdf",
+                    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#f7f5f0" },
+                    jsPDF: { orientation: "portrait", unit: "mm", format: "a4" }
+                  }).from(tempDiv).save();
+                }}
+              >
+                <Download className="h-4 w-4" /> Download PDF
+              </Button>
+            </div>
+            <div className="prose prose-sm max-w-none border rounded-xl p-6 bg-muted/20">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {selectedWorksheet.worksheets?.worksheet_content || "No content available"}
+              </ReactMarkdown>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
     </AppLayout>
   );
 }
-

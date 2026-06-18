@@ -3125,6 +3125,13 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
   const [worksheetClass, setWorksheetClass] = useState("");
   const [worksheetSection, setWorksheetSection] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedWorksheetForAssign, setSelectedWorksheetForAssign] = useState<WorksheetRow | null>(null);
+  const [assignToClass, setAssignToClass] = useState("");
+  const [assignToSection, setAssignToSection] = useState("");
+  const [assignDueDate, setAssignDueDate] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: worksheetSections = [] } = useQuery({
     queryKey: ["worksheet-sections", worksheetClass, user?.id],
@@ -3292,6 +3299,57 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
     toast.success('Worksheet PDF downloaded successfully!');
   };
 
+  const handleAssignWorksheet = async () => {
+    if (!selectedWorksheetForAssign || !assignToClass || !assignToSection) {
+      toast.error('Please select a worksheet and target class/section');
+      return;
+    }
+
+    if (!profile?.school_id) {
+      toast.error('School ID not found in profile');
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      const { data, error } = await supabase.from('worksheet_assignments').insert([
+        {
+          worksheet_id: selectedWorksheetForAssign.id,
+          teacher_id: user.id,
+          school_id: profile.school_id,
+          class_level: getClassLabel(assignToClass),
+          section: assignToSection,
+          assigned_at: new Date().toISOString(),
+          due_date: assignDueDate ? new Date(assignDueDate).toISOString() : null,
+          status: 'active',
+        },
+      ]);
+
+      if (error) throw error;
+
+      toast.success(`Worksheet assigned to Class ${getClassLabel(assignToClass)} Section ${assignToSection} successfully!`);
+      setShowAssignModal(false);
+      setSelectedWorksheetForAssign(null);
+      setAssignToClass("");
+      setAssignToSection("");
+      setAssignDueDate("");
+      queryClient.invalidateQueries({ queryKey: ['worksheets-list'] });
+    } catch (error) {
+      console.error('Error assigning worksheet:', error);
+      toast.error('Failed to assign worksheet. Please try again.');
+    } finally {
+      setIsAssigning(false);
+    }
+  };
+
+  const openAssignModal = (ws: WorksheetRow) => {
+    setSelectedWorksheetForAssign(ws);
+    setAssignToClass("");
+    setAssignToSection("");
+    setAssignDueDate("");
+    setShowAssignModal(true);
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3363,6 +3421,13 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
                       </Button>
                       <Button
                         size="sm"
+                        className="gap-1.5 bg-blue-600 hover:bg-blue-700"
+                        onClick={() => openAssignModal(ws)}
+                      >
+                        <Users className="h-3.5 w-3.5" /> Assign to Class
+                      </Button>
+                      <Button
+                        size="sm"
                         className="gap-1.5 bg-green-600 hover:bg-green-700"
                         onClick={() => handleDownloadWorksheetPDF(ws)}
                       >
@@ -3385,6 +3450,69 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
           )}
         </>
       )}
+
+      {/* Assignment Modal */}
+      <Dialog open={showAssignModal} onOpenChange={setShowAssignModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Assign Worksheet to Class</DialogTitle>
+            <DialogDescription>
+              {selectedWorksheetForAssign && (
+                <span>Assigning: <strong>{selectedWorksheetForAssign.subject}</strong> - {selectedWorksheetForAssign.topic || selectedWorksheetForAssign.chapter}</span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-semibold text-muted-foreground mb-2 block">Select Target Class</label>
+              <Select value={assignToClass} onValueChange={(val) => { setAssignToClass(val); setAssignToSection(""); }}>
+                <SelectTrigger><SelectValue placeholder="Choose a class..." /></SelectTrigger>
+                <SelectContent>
+                  {CLASS_OPTIONS.map((c) => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-muted-foreground mb-2 block">Select Target Section</label>
+              <Select value={assignToSection} onValueChange={setAssignToSection} disabled={!assignToClass}>
+                <SelectTrigger><SelectValue placeholder={!assignToClass ? "Select a class first..." : "Choose a section..."} /></SelectTrigger>
+                <SelectContent>
+                  {DEFAULT_SECTIONS.map((s) => (
+                    <SelectItem key={s} value={s}>Section {s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-muted-foreground mb-2 block">Due Date (Optional)</label>
+              <Input
+                type="datetime-local"
+                value={assignDueDate}
+                onChange={(e) => setAssignDueDate(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAssignModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignWorksheet}
+              disabled={isAssigning || !assignToClass || !assignToSection}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isAssigning ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Users className="h-4 w-4 mr-2" />}
+              Assign Worksheet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
