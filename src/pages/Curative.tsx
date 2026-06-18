@@ -758,20 +758,21 @@ const Curative = () => {
   });
 
   const { data: textbookFiles = [] } = useQuery<TextbookFile[]>({
-    queryKey: ["curative-textbooks", selectedClass],
+    queryKey: ["curative-textbooks", selectedClass, profile?.school_id],
     queryFn: async () => {
-      if (!selectedClass) return [];
+      if (!selectedClass || !profile?.school_id) return [];
       const classLabel = selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1);
       const { data, error } = await supabase
         .from("books")
         .select("subject, book_name")
         .eq("class_name", classLabel)
+        .eq("school_id", profile.school_id)
         .eq("is_active", true)
         .order("subject", { ascending: true });
       if (error || !data) return [];
       return data.map((b) => ({ fileName: b.book_name, subject: b.subject, chapter: "" }));
     },
-    enabled: !!selectedClass,
+    enabled: !!selectedClass && !!profile?.school_id,
   });
 
   const subjects = useMemo(
@@ -831,15 +832,16 @@ const Curative = () => {
   }, [chatMessages]);
 
   const { data: chaptersList = [] } = useQuery({
-    queryKey: ["chapters-by-class-subject", selectedClass, selectedSubject],
+    queryKey: ["chapters-by-class-subject", selectedClass, selectedSubject, profile?.school_id],
     queryFn: async () => {
-      if (!selectedClass || !selectedSubject) return [];
+      if (!selectedClass || !selectedSubject || !profile?.school_id) return [];
       const classLabel = selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1);
       const { data: books } = await supabase
         .from("books")
         .select("id")
         .eq("class_name", classLabel)
         .eq("subject", selectedSubject)
+        .eq("school_id", profile.school_id)
         .eq("is_active", true)
         .limit(1);
       if (!books || books.length === 0) return [];
@@ -869,7 +871,7 @@ const Curative = () => {
         };
       });
     },
-    enabled: !!selectedClass && !!selectedSubject,
+    enabled: !!selectedClass && !!selectedSubject && !!profile?.school_id,
   });
 
   // Fetch topics from curriculum_chapters -> topics
