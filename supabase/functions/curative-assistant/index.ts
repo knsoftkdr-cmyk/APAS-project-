@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 
 const corsHeaders = {
@@ -99,13 +99,18 @@ const pipeGeminiSseToOpenAi = (
         // Continue up to 3 times if the model was cut off mid-generation.
         let continuations = 0;
         const isPlanIncomplete = () =>
-          !/Word Decoder/i.test(accumulated) &&
-          accumulated.length > 500;
+          !isWorksheetMode
+            ? (!/Word Decoder/i.test(accumulated) && accumulated.length > 500)
+            : (!/COMPLETE ANSWER KEY/i.test(accumulated) && accumulated.length > 500);
+        const isNearEnd = () =>
+          !isWorksheetMode
+            ? /Word Decoder/i.test(accumulated.slice(-1500))
+            : /COMPLETE ANSWER KEY[\s\S]{500,}/i.test(accumulated.slice(-2000));
         while (
           continuations < 5 &&
           (lastFinishReason === "MAX_TOKENS" || lastFinishReason === null || (lastFinishReason === "STOP" && isPlanIncomplete())) &&
           accumulated.length > 0 &&
-          !/Word Decoder/i.test(accumulated.slice(-1500))
+          !isNearEnd()
         ) {
           continuations++;
           console.log(`Continuing lesson plan (reason=${lastFinishReason}, attempt ${continuations})`);
@@ -296,8 +301,31 @@ ${studentSummaries.map((s) => s.summary).join("\n")}`;
       }
     }
 
+    // 3. Detect worksheet mode
+    const isWorksheetMode = /Generate ONLY a student practice worksheet/i.test(prompt || "");
+
     // 3. Build the FULL system prompt — preserve all pedagogy guidance, do NOT compact lesson plan content
-    const systemPrompt = `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive, science-backed LESSON PLANS grounded in Brain-Based Learning (BBL), Zone of Proximal Development (ZPD), and Multiple Intelligences (MI) theory.
+    const worksheetSystemPrompt = `You are APAS Worksheet Generator. Your ONLY job is to create printable student practice worksheets.
+
+STRICT RULES — NEVER BREAK THESE:
+1. Output ONLY worksheet content — nothing else
+2. NEVER generate lesson plans, learning objectives, hook activities, BBL checklists, VARK analysis, Word Decoders, or ANY lesson plan sections
+3. NEVER use headings like "Learning Objectives", "Hook Activity", "Main Teaching", "BBL Compliance", "Word Decoder", "Exit Ticket", "Closure", "Assessment Quick Check"
+4. Start directly with the worksheet title and "Name: ___ Date: ___"
+5. Generate exactly 5 pages of student activities
+6. After PAGE 5, write ONLY a "COMPLETE ANSWER KEY" section, then STOP immediately
+7. Do NOT write anything after the answer key
+
+FORMAT:
+- Do NOT use PAGE 1, PAGE 2, PAGE 3 etc headings at all
+- Just write activities one after another separated by a horizontal rule (---)
+- Each activity: creative topic-specific title, clear 1-2 sentence instruction, one worked example, 4-8 questions
+- Generate a total of 12-15 activities covering the full topic
+- Use varied formats: fill-in-the-blank, matching, true/false, multiple choice, short answer, story problems, draw-and-label
+
+ANSWER KEY: After all activities, write "COMPLETE ANSWER KEY" then list answers for every activity. Stop immediately after the last answer. Do NOT add any lesson plan content after.`;
+
+    const systemPrompt = isWorksheetMode ? worksheetSystemPrompt : `You are APAS (Adaptive Pedagogy & Analytics System) — an expert educational AI assistant for teachers. You generate comprehensive, science-backed LESSON PLANS grounded in Brain-Based Learning (BBL), Zone of Proximal Development (ZPD), and Multiple Intelligences (MI) theory.
 
 You have access to the following context:
 
@@ -433,7 +461,7 @@ For chat questions (mode != generate): respond with structured markdown using em
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: toGeminiContents(openaiMessages),
       generationConfig: {
-        temperature: 0.7,
+        temperature: isWorksheetMode ? 0.9 : 0.7,
         maxOutputTokens: mode === "generate" ? 65536 : 4096,
       },
     });
@@ -463,8 +491,9 @@ For chat questions (mode != generate): respond with structured markdown using em
               { role: "assistant", content: accumulated },
               {
                 role: "user",
-                content:
-                  `CONTINUE the lesson plan EXACTLY where you stopped. STRICT RULES:\n1. Do NOT repeat ANY text already written\n2. Do NOT restart or re-introduce any section\n3. Do NOT add preamble or summary of what was written\n4. Resume MID-SENTENCE if needed\n5. Finish ALL remaining sections through "Word Decoder"\n\nThe plan cut off here (last 3000 chars):\n"""${tail}"""\n\nContinue from exactly after the last character above:`,
+                content: isWorksheetMode
+                  ? `CONTINUE the worksheet EXACTLY where you stopped. RULES:\n1. Do NOT repeat anything already written\n2. Resume mid-sentence if needed\n3. Continue generating PAGE activities until PAGE 5 is done\n4. Then write COMPLETE ANSWER KEY and STOP\n5. Do NOT add any lesson plan content\n\nWorksheet cut off here:\n"""${tail}"""\n\nContinue from exactly after the last character above:`
+                  : `CONTINUE the lesson plan EXACTLY where you stopped. STRICT RULES:\n1. Do NOT repeat ANY text already written\n2. Do NOT restart or re-introduce any section\n3. Do NOT add preamble or summary of what was written\n4. Resume MID-SENTENCE if needed\n5. Finish ALL remaining sections through "Word Decoder"\n\nThe plan cut off here (last 3000 chars):\n"""${tail}"""\n\nContinue from exactly after the last character above:`,
               },
             ];
             const contBody = JSON.stringify({

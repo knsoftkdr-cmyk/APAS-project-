@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+﻿import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -159,6 +159,99 @@ const CURRICULUM_OPTIONS = [
   { value: "scert", label: "SCERT" },
 ];
 
+
+// ─── Worksheet Prompt Builder ──────────────────────────────────────────────
+interface WorksheetPromptParams {
+  classLabel: string;
+  section: string;
+  subject: string;
+  chapter: string;
+  topic: string;
+  subtopic: string;
+  studentCount: number;
+  contextLine: string;
+}
+
+const buildWorksheetPrompt = ({
+  classLabel, section, subject, chapter, topic, subtopic, studentCount, contextLine,
+}: WorksheetPromptParams): string => {
+  const subjectLower = subject.toLowerCase();
+
+  const isMath = /math|maths|arithmetic|algebra|geometry|number|numeracy/i.test(subjectLower);
+  const isScience = /science|physics|chemistry|biology|evs|environment/i.test(subjectLower);
+  const isLanguage = /english|language|grammar|reading|writing|literature|hindi|telugu|kannada|tamil/i.test(subjectLower);
+  const isSocial = /social|history|geography|civics|gk|general knowledge/i.test(subjectLower);
+  const isComputer = /computer|ict|coding|programming/i.test(subjectLower);
+
+  let pageStructure = "";
+
+  if (isMath) {
+    pageStructure = `
+2-3 activities on basic recognition and identification of "${topic || subject}" concepts (matching, visual, fill-in-the-blank)
+2-3 activities on understanding and applying "${topic || chapter}" with equations and symbol work
+2-3 story problem activities using real-life scenarios based on "${topic || subject}"
+2-3 mixed practice and challenge activities with pattern recognition and higher-order thinking on "${topic}"
+2-3 assessment and creative activities including a brain challenge and student-created problem on "${topic || subject}"`;
+  } else if (isScience) {
+    pageStructure = `
+2-3 activities on identifying and labeling "${topic || subject}" concepts (diagrams, matching, true/false)
+2-3 activities on understanding "${topic || chapter}" with fill-in-the-blank and sort/classify
+2-3 activities exploring "${topic}" through observation, cause-effect, and real-life examples
+2-3 activities applying "${topic}" to daily life with short answers and diagram completion
+2-3 assessment and creative activities including a quiz and a draw/explain task on "${topic || subject}"`;
+  } else if (isLanguage) {
+    pageStructure = `
+2-3 activities on recognizing and matching "${topic || subject}" (word/letter matching, tracing, identification)
+2-3 vocabulary activities on "${chapter || topic}" (fill-in-blanks, word scramble, word building)
+2-3 comprehension and grammar activities based on "${topic || chapter}" (passage, sentence completion)
+2-3 writing activities applying "${topic}" (sentence formation, paragraph, creative prompt)
+2-3 assessment and creative activities on "${topic || subject}" (quiz, grammar check, write your own)`;
+  } else if (isSocial) {
+    pageStructure = `
+2-3 activities identifying and matching facts about "${topic || subject}" (maps, diagrams, true/false)
+2-3 activities understanding key ideas of "${topic || chapter}" (fill-in-blank, define, sequence)
+2-3 reading and comprehension activities about "${topic}" with cause-and-effect questions
+2-3 activities applying "${topic}" to real-world context (short answer, compare-contrast)
+2-3 assessment and creative activities on "${topic || subject}" (quiz, timeline, creative project)`;
+  } else if (isComputer) {
+    pageStructure = `
+2-3 activities identifying parts and terms of "${topic || subject}" (matching, true/false, labeling)
+2-3 activities on how "${topic || chapter}" works (fill-in-blanks, sequence steps, label diagrams)
+2-3 practical activities applying "${topic}" to real-world technology use
+2-3 problem-solving activities on "${topic}" (logic puzzles, flowchart, simple algorithm)
+2-3 assessment and creative activities on "${topic || subject}" (quiz, design your own solution)`;
+  } else {
+    pageStructure = `
+2-3 activities identifying and recognizing key elements of "${topic || subject}" (matching, labeling, true/false)
+2-3 activities exploring "${topic || chapter}" concepts (fill-in-blank, sorting, definitions)
+2-3 comprehension activities about "${topic}" (scenario/passage, questions, compare-contrast)
+2-3 application activities connecting "${topic}" to real-life examples and short answers
+2-3 assessment and creative activities on "${topic || subject}" (quiz, higher-order thinking, creative task)`;
+  }
+
+  return `Generate ONLY a student practice worksheet for ${classLabel} Section ${section}.
+
+SUBJECT: ${subject}${chapter ? ` | CHAPTER: ${chapter}` : ""}${topic ? ` | TOPIC: ${topic}` : ""}${subtopic ? ` | SUBTOPIC: ${subtopic}` : ""}
+
+At the very top, write a title for the worksheet and a "Name: ___ Date: ___" line.
+
+Then generate 12-15 activities directly about "${topic || chapter || subject}", one after another. Do NOT use page numbers or page headings. Separate each activity with a horizontal line (---).
+
+${pageStructure}
+
+RULES FOR EVERY ACTIVITY:
+- Give each activity a creative, topic-specific title (e.g. "Subtraction Zero Hero!", "Shape Sorter", "Water Cycle Fill-In")
+- Write clear instructions in 1-2 sentences
+- Give 1 worked example
+- Then 4-8 questions in that activity's format
+- Use varied formats across the 5 pages: fill-in-the-blank, matching, true/false, multiple choice, short answer, sort/classify, draw-and-label, story problems
+- All content must be about "${topic || chapter || subject}" only — appropriate for ${classLabel} students
+- Do NOT mention individual student names
+
+After all 5 pages, write a "COMPLETE ANSWER KEY" section with answers for every activity on every page.
+
+CRITICAL: Output ONLY the worksheet content. Do NOT generate a lesson plan, learning objectives, hook activities, VARK analysis, BBL checklist, Word Decoder, or any lesson plan sections. Stop immediately after the COMPLETE ANSWER KEY.`;
+};
 // Converts CLASS_OPTIONS value ("1", "2") to chapter_subtopics format ("Class1", "Class2")
 const toSubtopicClass = (val: string): string => {
   if (!val || isNaN(Number(val))) return val; // nursery, lkg, ukg pass through as-is
@@ -890,29 +983,51 @@ const Curative = () => {
           if (mode === "generate") {
             setHasGeneratedContent(true);
             awardXp("generate_lesson", "Generated a lesson plan");
-            // Save lesson plan to database
-            try {
-              const classLabel = getClassLabel(selectedClass);
-              const title = `${classLabel}-${selectedSection} ${currentSubject}${currentTopic ? ` ${currentTopic}` : ""}`;
-              
-              // Extract periods count from selected periods and lesson content
-              const periodsCount = extractPeriodsCount(selectedPeriods, assistantSoFar);
-              
-              // Always create a new lesson plan (no override)
-              await supabase.from("lessons").insert({
-                title,
-                subject: currentSubject,
-                curriculum: selectedCurriculum || "",
-                class_level: selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1),
-                section: selectedSection,
-                lesson_content: assistantSoFar,
-                ai_generated: true,
-                topic: currentTopic,
-                teacher_id: user?.id || null,
-                periods_count: periodsCount,
-              } as any);
-            } catch (err) {
-              console.error("Failed to save lesson plan:", err);
+
+            // Detect if this is a worksheet (worksheet prompts produce PAGE 1..5 + ANSWER KEY)
+            const isWorksheet = assistantSoFar.includes("COMPLETE ANSWER KEY") && assistantSoFar.includes("ANSWER KEY") && !assistantSoFar.includes("Exit Ticket") && !assistantSoFar.includes("BBL Compliance");
+
+            if (isWorksheet) {
+              // Save worksheet to worksheets table
+              try {
+                await supabase.from("worksheets").insert({
+                  teacher_id: user?.id || null,
+                  school_id: profile?.school_id || null,
+                  class_level: selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1),
+                  section: selectedSection,
+                  subject: currentSubject,
+                  chapter: selectedChapter || null,
+                  topic: currentTopic || null,
+                  subtopic: selectedSubtopic || null,
+                  academic_year: academicYear,
+                  worksheet_content: assistantSoFar,
+                  page_count: (assistantSoFar.match(/PAGE \d+/g) || []).length || 5,
+                  ai_generated: true,
+                } as any);
+              } catch (err) {
+                console.error("Failed to save worksheet:", err);
+              }
+            } else {
+              // Save as lesson plan
+              try {
+                const classLabel = getClassLabel(selectedClass);
+                const title = `${classLabel}-${selectedSection} ${currentSubject}${currentTopic ? ` ${currentTopic}` : ""}`;
+                const periodsCount = extractPeriodsCount(selectedPeriods, assistantSoFar);
+                await supabase.from("lessons").insert({
+                  title,
+                  subject: currentSubject,
+                  curriculum: selectedCurriculum || "",
+                  class_level: selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1),
+                  section: selectedSection,
+                  lesson_content: assistantSoFar,
+                  ai_generated: true,
+                  topic: currentTopic,
+                  teacher_id: user?.id || null,
+                  periods_count: periodsCount,
+                } as any);
+              } catch (err) {
+                console.error("Failed to save lesson plan:", err);
+              }
             }
           }
         },
@@ -1132,7 +1247,10 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
     }).replace(/[/:]/g, '-');
     
-    const filename = `APAS-LessonPlan-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
+    const isWS = messageContent.includes("COMPLETE ANSWER KEY") && !messageContent.includes("Exit Ticket") && !messageContent.includes("BBL Compliance");
+    const filename = isWS
+      ? `APAS-Worksheet-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`
+      : `APAS-LessonPlan-${getClassLabel(selectedClass)}-Section${selectedSection}-${timestamp}.pdf`;
     
     // Convert markdown to structured HTML
     let html = messageContent;
@@ -1208,8 +1326,8 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       <div class="report">
         <div class="header">
           <div class="header-left">
-            <div class="brand">APAS <span>Lesson Plan</span></div>
-            <div class="report-label">Differentiated Lesson Plan</div>
+            <div class="brand">APAS <span>${isWS ? "Worksheet" : "Lesson Plan"}</span></div>
+            <div class="report-label">${isWS ? "Practice Worksheet" : "Differentiated Lesson Plan"}</div>
           </div>
           <div class="header-right">
             <div class="report-date">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
@@ -1230,8 +1348,8 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
           </div>
           <div class="lc-field">
             <label>Report Type</label>
-            <value>Lesson Plan</value>
-            <small>Differentiated</small>
+            <value>${isWS ? "Worksheet" : "Lesson Plan"}</value>
+            <small>${isWS ? "Practice Activities" : "Differentiated"}</small>
           </div>
         </div>
 
@@ -1352,12 +1470,15 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       </div>
 
       <Tabs defaultValue="lesson-plan" className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-4 ">
-          <TabsTrigger value="lesson-plan" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
-            <Wand2 className="h-6 w-6" /> Lesson Plan
-          </TabsTrigger>
-          <TabsTrigger value="assign-homework" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
-            <Briefcase className="h-6 w-6" /> Assign Homework
+<TabsList className="grid w-full max-w-lg grid-cols-3 mb-4 ">
+        <TabsTrigger value="lesson-plan" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
+          <Wand2 className="h-6 w-6" /> Lesson Plan
+        </TabsTrigger>
+        <TabsTrigger value="assign-homework" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
+          <Briefcase className="h-6 w-6" /> Assign Homework
+        </TabsTrigger>
+        <TabsTrigger value="worksheets" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
+          <FileText className="h-6 w-6" /> Worksheets
           </TabsTrigger>
         </TabsList>
 
@@ -1740,28 +1861,30 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                     </button>
                     <button
                       onClick={() => {
-                        const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "English";
-                        sendMessage(`Create a comprehensive practice worksheet package for ${getClassLabel(selectedClass)} Section ${selectedSection} ${subjectLabel} with MINIMUM 5 PAGES structured as follows:
+                        const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "General";
+                        const chapterLabel = selectedChapter || "";
+                        const topicLabel = topicValue.trim() || "";
+                        const subtopicLabel = selectedSubtopic || "";
 
-PAGE 1 - Foundation Skills: 2-3 activities targeting basic skills (visual recognition, sound identification, letter matching, tracing)
+                        const contextLine = [
+                          subjectLabel,
+                          chapterLabel && `Chapter: ${chapterLabel}`,
+                          topicLabel && `Topic: ${topicLabel}`,
+                          subtopicLabel && `Subtopic: ${subtopicLabel}`,
+                        ].filter(Boolean).join(" | ");
 
-PAGE 2 - Word Building: 2-3 activities (fill-in-vowels, word scramble, word formation, CVC words)
+                        const prompt = buildWorksheetPrompt({
+                          classLabel: getClassLabel(selectedClass),
+                          section: selectedSection,
+                          subject: subjectLabel,
+                          chapter: chapterLabel,
+                          topic: topicLabel,
+                          subtopic: subtopicLabel,
+                          studentCount,
+                          contextLine,
+                        });
 
-PAGE 3 - Comprehension & Grammar: 2-3 activities (sentence completion, structure recognition, reading comprehension)
-
-PAGE 4 - Application & Practice: 2-3 activities (context-based exercises, sentence formation, practical usage)
-
-PAGE 5 - Assessment & Extension: 2-3 activities (assessment questions, challenge activities, creative tasks)
-
-REQUIREMENTS:
-- Each page must have different activity types
-- Include diverse formats: fill-in-the-blank, matching, multiple choice, tracing, word scramble, sentence completion, picture labeling, sorting, true/false, short answer
-- Each activity needs clear title, step-by-step instructions, and examples
-- Focus on weak dimensions identified in the assessment report
-- Appropriate for ${studentCount} students in the class
-- Do NOT mention individual student names
-- Include a COMPLETE ANSWER KEY at the end covering all pages
-- Professional formatting with clear section breaks between pages`, "generate");
+                        sendMessage(prompt, "generate");
                       }}
                       disabled={isStreaming}
                       className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
@@ -1879,6 +2002,11 @@ REQUIREMENTS:
         {/* ─── Assign Homework Tab ─── */}
         <TabsContent value="assign-homework" className="space-y-6 mt-0">
           <AssignHomeworkTab user={user} profile={profile} getClassLabel={getClassLabel} />
+        </TabsContent>
+
+        {/* ─── Worksheets Tab ─── */}
+        <TabsContent value="worksheets" className="space-y-6 mt-0">
+          <WorksheetsTab user={user} profile={profile} getClassLabel={getClassLabel} />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -2962,6 +3090,299 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
+
+// ─── Worksheets Tab Component ───────────────────────────────────────
+interface WorksheetsTabProps {
+  user: any;
+  profile: any;
+  getClassLabel: (value: string) => string;
+}
+
+interface WorksheetRow {
+  id: string;
+  teacher_id: string | null;
+  school_id: string | null;
+  class_level: string;
+  section: string;
+  subject: string;
+  chapter: string | null;
+  topic: string | null;
+  subtopic: string | null;
+  academic_year: string;
+  worksheet_content: string;
+  page_count: number;
+  ai_generated: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => {
+  const [worksheetClass, setWorksheetClass] = useState("");
+  const [worksheetSection, setWorksheetSection] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const { data: worksheetSections = [] } = useQuery({
+    queryKey: ["worksheet-sections", worksheetClass, user?.id],
+    queryFn: async () => {
+      if (!worksheetClass || !user?.id) return DEFAULT_SECTIONS;
+      const { data } = await supabase
+        .from("student_assessments")
+        .select("section")
+        .eq("student_class", worksheetClass)
+        .eq("teacher_id", user.id);
+      if (!data || data.length === 0) return DEFAULT_SECTIONS;
+      const unique = [...new Set(data.map((d) => (d.section || "").toUpperCase()).filter(Boolean))] as string[];
+      return [...new Set([...unique, ...DEFAULT_SECTIONS])].sort();
+    },
+    enabled: !!worksheetClass && !!user?.id,
+  });
+
+  const { data: worksheetsList = [], isLoading: isLoadingWorksheets } = useQuery<WorksheetRow[]>({
+    queryKey: ["worksheets-list", worksheetClass, worksheetSection, user?.id],
+    queryFn: async () => {
+      if (!worksheetClass || !worksheetSection || !user?.id) return [];
+      const { data, error } = await supabase
+        .from("worksheets")
+        .select("*")
+        .eq("class_level", getClassLabel(worksheetClass))
+        .eq("section", worksheetSection)
+        .eq("teacher_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching worksheets:", error);
+        return [];
+      }
+      return (data as WorksheetRow[]) || [];
+    },
+    enabled: !!worksheetClass && !!worksheetSection && !!user?.id,
+  });
+
+  const handleDownloadWorksheetPDF = async (ws: WorksheetRow) => {
+    const timestamp = new Date().toLocaleString('en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    }).replace(/[\/:]/g, '-');
+    const filename = `APAS-Worksheet-${ws.class_level}-Section${ws.section}-${timestamp}.pdf`;
+
+    let html = ws.worksheet_content;
+
+    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((\|.+\|\n?)*)/gm, (match, header, sep, body) => {
+      const headerCells = header.split('|').filter((c: string) => c.trim()).map((c: string) => `<th>${c.trim()}</th>`).join('');
+      const rows = body.trim().split('\n').map((row: string) => {
+        const cells = row.split('|').filter((c: string) => c.trim()).map((c: string) => `<td>${c.trim()}</td>`).join('');
+        return `<tr>${cells}</tr>`;
+      }).join('');
+      return `<table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
+    });
+
+    html = html.replace(/^#### (.*?)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^### (.*?)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.*?)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.*?)$/gm, '<h1>$1</h1>');
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/(^|[\s(])\*([^\*\n]+)\*(?=[\s.,;:!?)]|$)/g, '$1<em>$2</em>');
+    html = html.replace(/^> (.*?)$/gm, '<blockquote>$1</blockquote>');
+    html = html.replace(/^---$/gm, '<hr>');
+    html = html.replace(/^[ \t]*[-*][ \t]+(.*?)$/gm, '<li>$1</li>');
+    html = html.replace(/^(\d+)\. (.*?)$/gm, '<li>$1. $2</li>');
+    html = html.replace(/((?: <li>.*?<\/li>\n?)+)/g, '<ul>$1</ul>');
+    html = html.split('\n\n').map(para => {
+      const trimmed = para.trim();
+      if (!trimmed || trimmed.startsWith('<h') || trimmed.startsWith('<ul') || trimmed.startsWith('<ol') || trimmed.startsWith('<table') || trimmed.startsWith('<blockquote') || trimmed.startsWith('<hr')) return trimmed;
+      return '<p>' + trimmed.replace(/\n/g, '<br>') + '</p>';
+    }).join('\n');
+
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = `
+      <div class="report">
+        <div class="header">
+          <div class="header-left">
+            <div class="brand">APAS <span>Worksheet</span></div>
+            <div class="report-label">Practice Worksheet</div>
+          </div>
+          <div class="header-right">
+            <div class="report-date">${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+            <div class="status-badge">AI Generated</div>
+          </div>
+        </div>
+        <div class="learner-card">
+          <div class="lc-field">
+            <label>Class</label>
+            <value>${ws.class_level}</value>
+            <small>Section ${ws.section}</small>
+          </div>
+          <div class="lc-field">
+            <label>Subject</label>
+            <value>${ws.subject}</value>
+            <small>${ws.topic || ws.chapter || 'Worksheet'}</small>
+          </div>
+          <div class="lc-field">
+            <label>Report Type</label>
+            <value>Worksheet</value>
+            <small>Practice Activities</small>
+          </div>
+        </div>
+        <div class="content">${html}</div>
+        <div class="footer">
+          <div class="footer-note">This worksheet is auto-generated by the APAS AI engine. For academic use only.</div>
+          <div class="footer-apas">APAS · ${new Date().getFullYear()}</div>
+        </div>
+      </div>
+    `;
+
+    const metaCharset = document.createElement('meta');
+    metaCharset.setAttribute('charset', 'utf-8');
+    tempDiv.prepend(metaCharset);
+
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { font-family: 'DM Sans', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; }
+      .brand { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; color: #1a1a2e; letter-spacing: -0.5px; }
+      .brand span { color: #0e9a7b; font-style: italic; }
+      .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; }
+      .header-right { text-align: right; }
+      .report-date { font-size: 12px; font-weight: 500; color: #3a3a5c; }
+      .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; }
+      .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+      .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; }
+      .lc-field value { font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; color: white; display: block; }
+      .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); }
+      .content h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; }
+      .content h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; }
+      .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; }
+      .content h4 { font-size: 12px; font-weight: 600; color: #6b6b8a; margin: 12px 0 4px 0; }
+      .content p { margin: 6px 0; text-align: justify; color: #3a3a5c; }
+      .content strong { color: #1a1a2e; font-weight: 600; }
+      .content em { font-style: italic; color: #6b6b8a; }
+      .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
+      .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
+      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
+      .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
+      .content table td { padding: 7px 10px; border-bottom: 1px solid #e2e0d8; color: #3a3a5c; vertical-align: top; }
+      .content table tr:last-child td { border-bottom: none; }
+      .content blockquote { background: linear-gradient(135deg, #fff1ee 0%, #fffbeb 100%); border-left: 4px solid #e55a3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 12px; color: #3a3a5c; }
+      .content hr { border: none; border-top: 1px solid #e2e0d8; margin: 16px 0; }
+      .footer { border-top: 1px solid #e2e0d8; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+      .footer-note { font-size: 10px; color: #6b6b8a; }
+      .footer-apas { font-family: 'DM Serif Display', Georgia, serif; font-size: 13px; color: #3a3a5c; font-style: italic; }
+    `;
+    tempDiv.appendChild(style);
+
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename,
+      image: { type: 'jpeg' as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#f7f5f0' },
+      jsPDF: { orientation: 'portrait' as const, unit: 'mm' as const, format: 'a4' as const, compress: true },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
+    };
+
+    const html2pdf = (await import("html2pdf.js")).default;
+    html2pdf().set(opt).from(tempDiv).save();
+    toast.success('Worksheet PDF downloaded successfully!');
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="group">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Select Class</label>
+          <Select value={worksheetClass} onValueChange={(val) => { setWorksheetClass(val); setWorksheetSection(""); }}>
+            <SelectTrigger className="transition-all duration-300"><SelectValue placeholder="Choose a class..." /></SelectTrigger>
+            <SelectContent>
+              {CLASS_OPTIONS.map((c) => (
+                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="group">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Select Section</label>
+          <Select value={worksheetSection} onValueChange={setWorksheetSection} disabled={!worksheetClass}>
+            <SelectTrigger className="transition-all duration-300"><SelectValue placeholder={!worksheetClass ? "Select a class first..." : "Choose a section..."} /></SelectTrigger>
+            <SelectContent>
+              {worksheetSections.map((s) => (
+                <SelectItem key={s} value={s}>Section {s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {worksheetClass && worksheetSection && (
+        <>
+          {isLoadingWorksheets ? (
+            <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading worksheets...
+            </div>
+          ) : worksheetsList.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border rounded-xl">
+              <FileText className="h-10 w-10 text-muted-foreground/50 mb-3" />
+              <p className="text-sm font-medium text-foreground">No worksheets found</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Generate a worksheet from the Lesson Plan tab for {getClassLabel(worksheetClass)} Section {worksheetSection} and it will show up here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {worksheetsList.map((ws) => (
+                <Card key={ws.id} className="border border-border/60 overflow-hidden">
+                  <div className="p-4 flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex-1 min-w-[200px]">
+                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1">
+                          <BookOpen className="h-3 w-3" /> {ws.subject}
+                        </Badge>
+                        {ws.chapter && <Badge variant="outline" className="text-xs">{ws.chapter}</Badge>}
+                        {ws.topic && <Badge variant="outline" className="text-xs">{ws.topic}</Badge>}
+                        {ws.subtopic && <Badge variant="outline" className="text-xs">{ws.subtopic}</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {ws.page_count} page{ws.page_count !== 1 ? "s" : ""} · {ws.academic_year} · {new Date(ws.created_at).toLocaleDateString()} {new Date(ws.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => setExpandedId(expandedId === ws.id ? null : ws.id)}
+                      >
+                        <Eye className="h-3.5 w-3.5" /> {expandedId === ws.id ? "Hide" : "View"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="gap-1.5 bg-green-600 hover:bg-green-700"
+                        onClick={() => handleDownloadWorksheetPDF(ws)}
+                      >
+                        <Download className="h-3.5 w-3.5" /> Download PDF
+                      </Button>
+                    </div>
+                  </div>
+                  {expandedId === ws.id && (
+                    <div className="border-t border-border/50 p-5 max-h-[500px] overflow-y-auto">
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                          {ws.worksheet_content}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 };
