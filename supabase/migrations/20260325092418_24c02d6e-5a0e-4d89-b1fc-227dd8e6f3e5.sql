@@ -1,0 +1,1 @@
+ALTER TABLE public.lessons ADD COLUMN IF NOT EXISTS learning_outcomes text;

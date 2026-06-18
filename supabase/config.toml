@@ -1,0 +1,55 @@
+project_id = "hpyvadzxmutbbzwgmecv"
+
+[functions.generate-lessons]
+verify_jwt = false
+
+[functions.curative-assistant]
+verify_jwt = false
+
+[functions.embed-knowledge]
+verify_jwt = false
+
+[functions.search-context]
+verify_jwt = false
+
+[functions.student-tutor-chat]
+verify_jwt = false
+
+[functions.detect-learning-issues]
+verify_jwt = false
+
+[functions.run-automation-engine]
+verify_jwt = false
+
+[functions.log-audit]
+verify_jwt = false
+
+[functions.register-student]
+verify_jwt = false
+
+[functions.create-students-batch]
+verify_jwt = false
+
+[functions.generate-mcqs]
+verify_jwt = false
+
+[functions.list-subjects]
+verify_jwt = false
+
+[functions.analyze-test-results]
+verify_jwt = false
+
+[functions.register-teacher]
+verify_jwt = false
+
+[functions.reset-student-passwords]
+verify_jwt = false
+
+[functions.send-otp]
+verify_jwt = false
+
+[functions.student-login]
+verify_jwt = false
+
+[functions.verify-otp]
+verify_jwt = false
