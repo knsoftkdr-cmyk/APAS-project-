@@ -164,6 +164,7 @@ const CURRICULUM_OPTIONS = [
 interface WorksheetPromptParams {
   classLabel: string;
   section: string;
+  varkType?: string;
   subject: string;
   chapter: string;
   topic: string;
@@ -173,8 +174,18 @@ interface WorksheetPromptParams {
 }
 
 const buildWorksheetPrompt = ({
-  classLabel, section, subject, chapter, topic, subtopic, studentCount, contextLine,
+  classLabel, section, subject, chapter, topic, subtopic, studentCount, contextLine, varkType,
 }: WorksheetPromptParams): string => {
+  const VARK_INSTRUCTIONS: Record<string, string> = {
+    visual:      "Design ALL activities for VISUAL learners: use number lines, diagrams, colour-coding, visual matching, and pictorial patterns.",
+    auditory:    "Design ALL activities for AUDITORY learners: include rhymes, rhythmic counting, partner-discussion tasks, listen-and-write, and dictation.",
+    readwrite:   "Design ALL activities for READ/WRITE learners: use definitions, fill-in-the-blank, written sequences, lists, and short-answer questions.",
+    kinesthetic: "Design ALL activities for KINESTHETIC learners: include cut-and-sort, trace-and-act, object counting, hands-on games, and real-life scenarios.",
+    general:     "Include one activity per VARK type (Visual, Auditory, Read/Write, Kinesthetic) — clearly label each one with its learning style.",
+  };
+  const varkInstruction = varkType && varkType !== "general"
+    ? VARK_INSTRUCTIONS[varkType] ?? ""
+    : VARK_INSTRUCTIONS["general"];
   const subjectLower = subject.toLowerCase();
 
   const isMath = /math|maths|arithmetic|algebra|geometry|number|numeracy/i.test(subjectLower);
@@ -232,6 +243,8 @@ const buildWorksheetPrompt = ({
   return `Generate ONLY a student practice worksheet for ${classLabel} Section ${section}.
 
 SUBJECT: ${subject}${chapter ? ` | CHAPTER: ${chapter}` : ""}${topic ? ` | TOPIC: ${topic}` : ""}${subtopic ? ` | SUBTOPIC: ${subtopic}` : ""}
+
+LEARNING STYLE TARGET: ${varkInstruction}
 
 At the very top, write a title for the worksheet and a "Name: ___ Date: ___" line.
 
@@ -604,6 +617,7 @@ const Curative = () => {
   const [selectedClass, setSelectedClass] = useState(searchParams.get("class") || "");
   const [academicYear, setAcademicYear] = useState(searchParams.get("academicYear") || "2025-26");
   const [selectedSection, setSelectedSection] = useState(searchParams.get("section") || "");
+  const [selectedVarkType, setSelectedVarkType] = useState<string>("general");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedCurriculum, setSelectedCurriculum] = useState("");
   const [selectedChapter, setSelectedChapter] = useState("");
@@ -1004,6 +1018,7 @@ const Curative = () => {
                   worksheet_content: assistantSoFar,
                   page_count: (assistantSoFar.match(/PAGE \d+/g) || []).length || 5,
                   ai_generated: true,
+                  vark_type: selectedVarkType ?? "general",
                 } as any);
               } catch (err) {
                 console.error("Failed to save worksheet:", err);
@@ -1022,6 +1037,7 @@ const Curative = () => {
                   section: selectedSection,
                   lesson_content: assistantSoFar,
                   ai_generated: true,
+                  vark_type: selectedVarkType ?? "general",
                   topic: currentTopic,
                   teacher_id: user?.id || null,
                   periods_count: periodsCount,
@@ -1836,6 +1852,35 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                 
                 {/* Quick Action Cards */}
                 {isReady && (
+                  <>
+                  {/* VARK Worksheet Type Selector */}
+                  <div className="w-full max-w-2xl mb-3">
+                    <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                      Worksheet type (for Worksheets button below)
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: "general",     label: "General",      bg: "bg-gray-100 dark:bg-gray-800",     ring: "ring-gray-400",   text: "text-gray-700 dark:text-gray-300" },
+                        { id: "visual",      label: "Visual",       bg: "bg-purple-100 dark:bg-purple-900/40", ring: "ring-purple-400", text: "text-purple-800 dark:text-purple-300" },
+                        { id: "auditory",    label: "Auditory",     bg: "bg-teal-100 dark:bg-teal-900/40",  ring: "ring-teal-400",   text: "text-teal-800 dark:text-teal-300" },
+                        { id: "readwrite",   label: "Read / Write", bg: "bg-blue-100 dark:bg-blue-900/40",  ring: "ring-blue-400",   text: "text-blue-800 dark:text-blue-300" },
+                        { id: "kinesthetic", label: "Kinesthetic",  bg: "bg-amber-100 dark:bg-amber-900/40", ring: "ring-amber-400",  text: "text-amber-800 dark:text-amber-300" },
+                      ].map((v) => (
+                        <button
+                          key={v.id}
+                          type="button"
+                          onClick={() => setSelectedVarkType(v.id)}
+                          className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${v.bg} ${v.text} ${
+                            selectedVarkType === v.id
+                              ? `ring-2 ${v.ring} border-transparent`
+                              : "border-border opacity-60 hover:opacity-100"
+                          }`}
+                        >
+                          {v.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 w-full max-w-2xl">
                     <button
                       onClick={() => sendMessage(`What are the class-wide weak areas for ${getClassLabel(selectedClass)} Section ${selectedSection} based on the assessment report? Focus on dimensions where the class is struggling overall and avoid mentioning individual student names. Provide a summary of weak dimensions and average performance levels.`, "chat")}
@@ -1877,6 +1922,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                         const prompt = buildWorksheetPrompt({
                           classLabel: getClassLabel(selectedClass),
                           section: selectedSection,
+                          varkType: selectedVarkType,
                           subject: subjectLabel,
                           chapter: chapterLabel,
                           topic: topicLabel,
@@ -1906,6 +1952,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
                       <span className="text-xs font-medium text-foreground/80">Strategies</span>
                     </button>
                   </div>
+                  </>
                 )}
               </div>
             )}
@@ -3116,6 +3163,7 @@ interface WorksheetRow {
   worksheet_content: string;
   page_count: number;
   ai_generated: boolean;
+  vark_type: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -3124,6 +3172,15 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
   const [worksheetClass, setWorksheetClass] = useState("");
   const [worksheetSection, setWorksheetSection] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [varkFilter, setVarkFilter] = useState<string>("all");
+  const VARK_OPTIONS = [
+    { id: "all",         label: "All Types",   color: "bg-gray-100 text-gray-700 border-gray-300" },
+    { id: "visual",      label: "Visual",       color: "bg-purple-100 text-purple-800 border-purple-300" },
+    { id: "auditory",    label: "Auditory",     color: "bg-teal-100 text-teal-800 border-teal-300" },
+    { id: "readwrite",   label: "Read / Write", color: "bg-blue-100 text-blue-800 border-blue-300" },
+    { id: "kinesthetic", label: "Kinesthetic",  color: "bg-amber-100 text-amber-800 border-amber-300" },
+    { id: "general",     label: "General",      color: "bg-gray-100 text-gray-700 border-gray-300" },
+  ];
 
   const { data: worksheetSections = [] } = useQuery({
     queryKey: ["worksheet-sections", worksheetClass, user?.id],
@@ -3335,9 +3392,19 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
             </div>
           ) : (
             <div className="space-y-3">
-              {worksheetsList.map((ws) => (
+              {worksheetsList.filter(ws => varkFilter === "all" || (ws.vark_type ?? "general") === varkFilter).map((ws) => (
                 <Card key={ws.id} className="border border-border/60 overflow-hidden">
                   <div className="p-4 flex items-start justify-between gap-3 flex-wrap">
+                    {ws.vark_type && ws.vark_type !== "general" && (
+                      <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border mr-auto
+                        ${ ws.vark_type === "visual"      ? "bg-purple-100 text-purple-800 border-purple-300"
+                         : ws.vark_type === "auditory"    ? "bg-teal-100 text-teal-800 border-teal-300"
+                         : ws.vark_type === "readwrite"   ? "bg-blue-100 text-blue-800 border-blue-300"
+                         : ws.vark_type === "kinesthetic" ? "bg-amber-100 text-amber-800 border-amber-300"
+                         : "bg-gray-100 text-gray-700 border-gray-300" }`}>
+                        {ws.vark_type}
+                      </span>
+                    )}
                     <div className="flex-1 min-w-[200px]">
                       <div className="flex items-center gap-2 flex-wrap mb-1.5">
                         <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1">
@@ -3389,6 +3456,22 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
 };
 
 export default Curative;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
