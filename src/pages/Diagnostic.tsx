@@ -367,6 +367,23 @@ useEffect(() => {
         curriculum: curriculum,
         school_id: profile?.school_id ?? null,
       } as any);
+
+      // Compute VARK scores and write back to students table
+      if (!error && userId) {
+        try {
+          const { deriveVarkScores } = await import("@/data/varkMapping");
+          const varkScores = deriveVarkScores(config.ageGroup, finalAnswers as Record<string, number>);
+          await supabase
+            .from("students")
+            .update({
+              vark_type: varkScores.dominant,
+              dominant_intelligence: varkScores.dominant,
+            })
+            .eq("profile_id", userId);
+        } catch (varkErr) {
+          console.warn("VARK write-back failed:", varkErr);
+        }
+      }
       if (error) throw error;
       setPhase("done");
       awardXp("complete_assessment", "Completed student assessment");
@@ -1129,4 +1146,6 @@ const DiagnosticTeacher = () => {
 };
 
 export default Diagnostic;
+
+
 
