@@ -78,7 +78,7 @@ const navItems: Array<{
   { title: "School Intelligence", icon: BarChart3, path: "/school-intelligence", roles: ["knsoft_admin"] },
   { title: "Automations", icon: Zap, path: "/automation-dashboard", roles: ["knsoft_admin"] },
   { title: "Multi-Tenant", icon: Building2, path: "/multi-tenant", roles: ["knsoft_admin"] },
-  { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student"], module: "Home" },
+  { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
