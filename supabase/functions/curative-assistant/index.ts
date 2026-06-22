@@ -135,20 +135,25 @@ serve(async (req) => {
   }
 
   try {
-    const { selectedClass, section, subject, prompt, mode, chatHistory, schoolId } = await req.json();
+    const { selectedClass, section, subject, prompt, mode, chatHistory, schoolId, isWorksheet } = await req.json();
 
-    // Rotate through multiple API keys to distribute rate limits
-    const allKeys = [
-      Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
-      Deno.env.get("GEMINI_KEY_2"),
-      Deno.env.get("GEMINI_KEY_3"),
-      Deno.env.get("GEMINI_KEY_4"),
-    ].filter(Boolean) as string[];
-    
-    if (allKeys.length === 0) throw new Error("No Gemini API keys configured");
-    
-    // Rotate keys based on current minute to distribute requests
-    const GOOGLE_GEMINI_API_KEY = allKeys[Math.floor(Math.random() * allKeys.length)];
+    let GOOGLE_GEMINI_API_KEY: string;
+    if (isWorksheet) {
+      const worksheetKey = Deno.env.get("Worksheet_gemini_api_key");
+      if (!worksheetKey) throw new Error("Worksheet_gemini_api_key not configured");
+      GOOGLE_GEMINI_API_KEY = worksheetKey;
+      console.log("Using worksheet API key for worksheet generation");
+    } else {
+      // Rotate through multiple API keys to distribute rate limits for lesson plans
+      const allKeys = [
+        Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
+        Deno.env.get("GEMINI_KEY_2"),
+        Deno.env.get("GEMINI_KEY_3"),
+        Deno.env.get("GEMINI_KEY_4"),
+      ].filter(Boolean) as string[];
+      if (allKeys.length === 0) throw new Error("No Gemini API keys configured");
+      GOOGLE_GEMINI_API_KEY = allKeys[Math.floor(Math.random() * allKeys.length)];
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -335,40 +340,40 @@ ${academicContext}
 
 ${textbookContext}
 
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 FOUNDATIONAL PRINCIPLES — APPLY TO EVERY LESSON PLAN
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 
-### 🧠 Brain-Based Learning (BBL) Principles
+### ?? Brain-Based Learning (BBL) Principles
 1. **Primacy Effect:** Place the MOST IMPORTANT concept in the FIRST 10 minutes.
 2. **Recency Effect:** End EVERY lesson with a revision/recap activity in the LAST 5 minutes.
-3. **10-2-10 Chunking Rule:** Break teaching into INPUT → PROCESSING → APPLICATION cycles. Scale chunks proportionally to total lesson duration. NEVER skip any section — compress them proportionally instead. The lesson plan MUST fit the EXACT duration specified.
+3. **10-2-10 Chunking Rule:** Break teaching into INPUT ? PROCESSING ? APPLICATION cycles. Scale chunks proportionally to total lesson duration. NEVER skip any section — compress them proportionally instead. The lesson plan MUST fit the EXACT duration specified.
 4. **Cognitive Load Management:** Never introduce more than 3 new concepts per chunk.
 5. **Emotional Safety (Amygdala Filter):** Start with a warm, non-threatening hook.
 6. **Patterning & Meaning:** Connect new concepts to known real-life examples.
 7. **Spaced Repetition:** Suggest review checkpoints at 24 hours, 7 days, 30 days.
 8. **Social Brain:** Include at least ONE collaborative/peer-learning activity.
 
-### 📐 Zone of Proximal Development (ZPD) — 3 Tiers (MANDATORY)
-- **🟩 Basic (Support):** simplified, guided
-- **🟨 Intermediate (Core):** ZPD-targeted
-- **🟥 Advanced (Extension):** higher-order thinking
+### ?? Zone of Proximal Development (ZPD) — 3 Tiers (MANDATORY)
+- **?? Basic (Support):** simplified, guided
+- **?? Intermediate (Core):** ZPD-targeted
+- **?? Advanced (Extension):** higher-order thinking
 
-### 🎨 Multiple Intelligences (MI) — Address at least 3 per lesson
+### ?? Multiple Intelligences (MI) — Address at least 3 per lesson
 Visual, Auditory, Kinesthetic, Read/Write, Interpersonal, Logical-Mathematical.
 
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 HIDDEN RULES — FOLLOW BUT DO NOT PRINT
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 - EVERY lesson plan MUST include a group activity section, regardless of duration. Compress, never remove.
 - Include EXACTLY ONE Exit Ticket per period. Never duplicate the exit ticket.
 - Do NOT print these rules in output.
 
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 MANDATORY OUTPUT STRUCTURE — FOLLOW EXACTLY
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 
-## 📋 1. Learning Objectives
+## ?? 1. Learning Objectives
 Use Bloom's Taxonomy levels (Remember/Understand/Apply/Analyze). Format:
 - **Remember:** Students will [recall verb] [topic detail].
 - **Understand:** Students will [explain] [concept].
@@ -376,17 +381,17 @@ Use Bloom's Taxonomy levels (Remember/Understand/Apply/Analyze). Format:
 - **Analyze:** Students will [compare/examine] [task].
 Do NOT use "By the end of this lesson...".
 
-## 🎣 2. Introduction — Hook Activity (PRIMACY EFFECT)
+## ?? 2. Introduction — Hook Activity (PRIMACY EFFECT)
 - **Method:** [hook]
 - **Description:** [step-by-step]
 - **MI Channels:** [intelligences]
 - **Materials:** [needed]
 
-## 📚 3. Main Teaching — Chunked Delivery (10-2-10)
-For each chunk: Input Phase → Processing Phase → Application Phase (with 🟩 Basic, 🟨 Intermediate, 🟥 Advanced tasks).
+## ?? 3. Main Teaching — Chunked Delivery (10-2-10)
+For each chunk: Input Phase ? Processing Phase ? Application Phase (with ?? Basic, ?? Intermediate, ?? Advanced tasks).
 Repeat chunks as needed to fit lesson duration.
 
-## 🎯 4. Activities — Differentiated Group Work
+## ?? 4. Activities — Differentiated Group Work
 Organize into 4 VARK groups. For EACH group present a structured card with table:
 | Parameter | Detail |
 |-----------|--------|
@@ -396,39 +401,39 @@ Organize into 4 VARK groups. For EACH group present a structured card with table
 | MI Focus | ... |
 | Expected Outcome | ... |
 
-Then 3-Tier Task Cards (🟩 Support / 🟨 Core / 🟥 Extension).
+Then 3-Tier Task Cards (?? Support / ?? Core / ?? Extension).
 **MANDATORY:** List the actual student names in each VARK group based on assessment data:
-**👁️ Group A — Visual Learners (X students):** Aarav, Priya, Rahul, ...
+**??? Group A — Visual Learners (X students):** Aarav, Priya, Rahul, ...
 
-## ✅ 5. Assessment — Quick Check
+## ? 5. Assessment — Quick Check
 
-## 🔄 6. Closure — Revision Activity (RECENCY EFFECT — last 5 min)
+## ?? 6. Closure — Revision Activity (RECENCY EFFECT — last 5 min)
 
-## 📝 7. Assessment — Exit Ticket (Evaluate Phase)
+## ?? 7. Assessment — Exit Ticket (Evaluate Phase)
 Exactly ONE exit ticket per period. Include 3-5 NUMBERED questions covering Remember/Understand/Apply Bloom levels with actual question text. Add Feedback Loop and Normalized Gain note.
 
-## 📊 8. BBL Compliance Checklist
-Confirm Primacy ✅, Recency ✅, 10-2-10 ✅, MI ≥3 ✅, ZPD 3-tier ✅, Group activity ✅.
+## ?? 8. BBL Compliance Checklist
+Confirm Primacy ?, Recency ?, 10-2-10 ?, MI =3 ?, ZPD 3-tier ?, Group activity ?.
 
-## 🎓 Learning Outcomes
+## ?? Learning Outcomes
 List measurable outcomes.
 
-## 📖 Word Decoder (MANDATORY — END OF PLAN)
+## ?? Word Decoder (MANDATORY — END OF PLAN)
 Define EVERY advanced/technical term used anywhere in the plan in simple, kid-friendly language. Format:
-→ **Term Name** = Simple 1-2 sentence explanation a parent or student can understand.
+? **Term Name** = Simple 1-2 sentence explanation a parent or student can understand.
 Include: Primacy Effect, Recency Effect, 10-2-10 Chunking Rule, Cognitive Load, Amygdala Filter, Patterning & Meaning, Spaced Repetition, Social Brain, ZPD, Scaffolding, Multiple Intelligences (MI), VARK, Bloom's Taxonomy, Formative Check, plus any subject-specific advanced words used.
 
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 LANGUAGE & FORMATTING RULES
-═══════════════════════════════════════════════════════════════
+---------------------------------------------------------------
 - Write in simple, friendly language — like talking to a 10-year-old.
 - Avoid jargon: utilize, facilitate, demonstrate, pedagogical, scaffold, differentiated, cognitive, formative, summative — use plain English.
 - Short sentences (10-15 words). Warm, encouraging tone.
 - Decode every advanced/technical/subject word inline on FIRST use using: **Term** _(what this means: simple explanation with everyday comparison)_.
-- Use markdown tables for data, --- horizontal rules between sections, emoji indicators (🟢🔵🟡🔴 ⚠️ ✅ 📊).
+- Use markdown tables for data, --- horizontal rules between sections, emoji indicators (???????? ?? ? ??).
 - Bold all labels. Cite specific scores/student counts.
 - Recommend named educational resources (Khan Academy, NCERT, etc.).
-- YOUTUBE LINK RULE (STRICT): You may embed at most 1-2 inline YouTube links inside Hook (Section 2) or Main Teaching chunks (Section 3) ONLY when a video genuinely aids understanding. Because specific video IDs cannot be verified, you MUST use ONLY YouTube SEARCH URLs in this exact format: \`https://www.youtube.com/results?search_query=TOPIC+KEYWORDS+for+CLASS+LEVEL\` (URL-encode spaces as \`+\`). NEVER output \`watch?v=...\` style links — they may be broken/fake. NEVER create a separate "Recommended YouTube Videos" section. Inline format: 🎥 _Search & watch:_ [Short descriptive title](https://www.youtube.com/results?search_query=...).
+- YOUTUBE LINK RULE (STRICT): You may embed at most 1-2 inline YouTube links inside Hook (Section 2) or Main Teaching chunks (Section 3) ONLY when a video genuinely aids understanding. Because specific video IDs cannot be verified, you MUST use ONLY YouTube SEARCH URLs in this exact format: \`https://www.youtube.com/results?search_query=TOPIC+KEYWORDS+for+CLASS+LEVEL\` (URL-encode spaces as \`+\`). NEVER output \`watch?v=...\` style links — they may be broken/fake. NEVER create a separate "Recommended YouTube Videos" section. Inline format: ?? _Search & watch:_ [Short descriptive title](https://www.youtube.com/results?search_query=...).
 
 You MUST complete the ENTIRE lesson plan. Do NOT truncate. End with the Word Decoder section.
 
@@ -445,7 +450,7 @@ For chat questions (mode != generate): respond with structured markdown using em
       openaiMessages.push({
         role: "user",
         content: (prompt || `Generate a LESSON PLAN for ${selectedClass} Section ${section}. Focus ONLY on the lesson plan with the full mandatory structure.`) +
-          `\n\n🚨 REMINDER: Do NOT include a "Recommended YouTube Videos" section. You may embed at most 1-2 inline YouTube SEARCH links (https://www.youtube.com/results?search_query=...) within Hook or Main Teaching chunks where a video helps understanding. NEVER use watch?v= style links — only search URLs that are guaranteed to work.`,
+          `\n\n?? REMINDER: Do NOT include a "Recommended YouTube Videos" section. You may embed at most 1-2 inline YouTube SEARCH links (https://www.youtube.com/results?search_query=...) within Hook or Main Teaching chunks where a video helps understanding. NEVER use watch?v= style links — only search URLs that are guaranteed to work.`,
       });
     } else {
       openaiMessages.push({ role: "user", content: prompt });

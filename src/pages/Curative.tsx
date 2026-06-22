@@ -29,7 +29,7 @@ const CLASS_OPTIONS = [
   ...Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `Class ${i + 1}` })),
 ];
 
-// ─── Custom Markdown Components ───────────────────────────────────────
+// --- Custom Markdown Components ---------------------------------------
 const MarkdownComponents = {
   h1: ({ node, ...props }: any) => (
     <h1 className="text-xl font-bold mt-6 mb-4 text-foreground border-b-2 border-primary/30 pb-2 flex items-center gap-2" {...props}>
@@ -131,7 +131,7 @@ const MarkdownComponents = {
         const q = u.searchParams.get("search_query") || u.searchParams.get("q") || "";
         topic = decodeURIComponent(q.replace(/\+/g, " ")).trim();
       } catch { /* ignore */ }
-      label = topic ? `▶ Watch on YouTube: ${topic}` : "▶ Watch on YouTube";
+      label = topic ? `? Watch on YouTube: ${topic}` : "? Watch on YouTube";
     }
     return (
       <a
@@ -160,7 +160,7 @@ const CURRICULUM_OPTIONS = [
 ];
 
 
-// ─── Worksheet Prompt Builder ──────────────────────────────────────────────
+// --- Worksheet Prompt Builder ----------------------------------------------
 interface WorksheetPromptParams {
   classLabel: string;
   section: string;
@@ -177,11 +177,67 @@ const buildWorksheetPrompt = ({
   classLabel, section, subject, chapter, topic, subtopic, studentCount, contextLine, varkType,
 }: WorksheetPromptParams): string => {
   const VARK_INSTRUCTIONS: Record<string, string> = {
-    visual:      "Design ALL activities for VISUAL learners: use number lines, diagrams, colour-coding, visual matching, and pictorial patterns.",
-    auditory:    "Design ALL activities for AUDITORY learners: include rhymes, rhythmic counting, partner-discussion tasks, listen-and-write, and dictation.",
-    readwrite:   "Design ALL activities for READ/WRITE learners: use definitions, fill-in-the-blank, written sequences, lists, and short-answer questions.",
-    kinesthetic: "Design ALL activities for KINESTHETIC learners: include cut-and-sort, trace-and-act, object counting, hands-on games, and real-life scenarios.",
-    general:     "Include one activity per VARK type (Visual, Auditory, Read/Write, Kinesthetic) — clearly label each one with its learning style.",
+    visual: `Design ALL 12-15 activities specifically for VISUAL learners studying "${topic || chapter || subject}".
+VISUAL ACTIVITY TYPES (rotate through these, never use [Image:] placeholders):
+- Draw and label: Student draws the concept by hand and writes labels. Example instruction: "Draw a circle in the box below and write its name."
+- Colour coding: List shapes/items as words. Student colours or circles each. Example: "Circle all triangles in blue."
+- Pattern completion using symbols: Use O [] /\ as shape symbols. Example: O -- [] -- O -- [] -- ___
+- Match with lines (text only): Write Column A and Column B as numbered/lettered text lists. Student draws lines.
+- Sort into table: Give a word list, student writes items into a 2-3 column table drawn with | characters.
+- Number line fill: 1---2---3---[___]---5  Student fills the blank.
+- Spot the difference: Describe two similar things in words, student writes what differs.
+STRICT RULE: NEVER write [Image: ...] or (Image of ...). Use text, symbols O [] /\, or "(Draw your answer in the box below)".`,
+
+    auditory: `Design ALL 12-15 activities specifically for AUDITORY learners studying "${topic || chapter || subject}".
+AUDITORY ACTIVITY TYPES (rotate through these, never use [Image:] placeholders):
+- Say and write: "Say this aloud three times, then write the next item: 10, 20, 30, ___"
+- Rhyme completion: Give a rhyme with blanks. Example: "Five, ten, ___, twenty - counting by fives is plenty!"
+- Read aloud and answer: A short 3-4 sentence passage the student reads, then 3 questions below it.
+- Echo pattern: "Continue the pattern you hear in your head: 100, 99, 98, ___, ___, ___"
+- Circle the direction: "100, 99, 98, 97 - is this counting (Forward / Backward)?" Student circles one.
+- Story with spoken numbers: Short story like "A bird sat on branch 125. It flew forward twice." Student writes the answer.
+- Partner dictation: "Your partner says a number. Write the number that comes before it: ___"
+STRICT RULE: NEVER write [Image: ...]. All activities must work as written text a student can read aloud.`,
+
+    readwrite: `Design ALL 12-15 activities specifically for READ/WRITE learners studying "${topic || chapter || subject}".
+READ/WRITE ACTIVITY TYPES (rotate through these, never use [Image:] placeholders):
+- Definition match: Terms on left (A,B,C), definitions on right (1,2,3). Student writes matching pairs.
+- Fill in the blank: Complete sentences using a word bank. Example: "A ___ has 3 sides." Word bank: [circle, triangle, square]
+- Rewrite in own words: Give a rule or definition, student rewrites it simply.
+- Jumbled facts: Give 4-5 facts out of order, student numbers them correctly.
+- True or False with reason: Statement, student writes T/F and one sentence explaining why.
+- Short answer: "Write 2 sentences explaining what forward counting means."
+- Vocabulary table: | Word | Meaning | My sentence | - student fills all 3 columns.
+- Compare table: Two columns (e.g. Forward Counting vs Backward Counting), student fills facts for each.
+STRICT RULE: NEVER write [Image: ...]. All tasks must be purely text-based reading and writing.`,
+
+    kinesthetic: `Design ALL 12-15 activities specifically for KINESTHETIC learners studying "${topic || chapter || subject}".
+KINESTHETIC ACTIVITY TYPES (rotate through these, never use [Image:] placeholders):
+- Cut and sort (written): Give a box of mixed words/numbers. Draw two columns below. Student writes each item in correct column.
+- Trace and write: "Trace this shape with your finger: a square has 4 equal sides. Now draw it yourself in the box below."
+- Act it out and record: "Start at 10. Hop forward 3 times. Write where you land: ___. Now hop back 2. Write it: ___"
+- Build with symbols: "Use O for circles and [] for squares. Extend this pattern 4 more: O [] O [] ___ ___ ___ ___"
+- Real-life scenario: "You have 15 apples. You give 4 to a friend. How many are left? Show your working: ___"
+- Step-by-step activity: Numbered steps where each answer feeds the next. Student works through all steps in order.
+- Paper game board: A simple 10-box path: [1]---[2]---[3]---[___]---[5]. Student fills answers to advance.
+STRICT RULE: NEVER write [Image: ...]. All hands-on elements must use text instructions, symbols, or ASCII.`,
+
+    general: `Design 12-15 activities covering ALL FOUR VARK learning styles for "${topic || chapter || subject}".
+Label each section clearly. NEVER write [Image: ...] anywhere.
+
+=== VISUAL (Activities 1-3) ===
+Use: draw-and-label (text instructions only), symbol pattern completion (O [] /\), text-based matching tables, or colour-coding tasks written as text.
+
+=== AUDITORY (Activities 4-6) ===
+Use: say-and-write sequences, rhyme completion with blanks, echo patterns, or read-aloud-and-answer passages.
+
+=== READ/WRITE (Activities 7-9) ===
+Use: definition matching (text columns), fill-in-blank with word bank, true/false with reason, or vocabulary/compare tables.
+
+=== KINESTHETIC (Activities 10-12) ===
+Use: cut-and-sort (written version), act-it-out-and-record, real-life scenario, or paper game board path.
+
+Each section must have exactly 3 activities. All 12 activities must be strictly about "${topic || chapter || subject}".`,
   };
   const varkInstruction = varkType && varkType !== "general"
     ? VARK_INSTRUCTIONS[varkType] ?? ""
@@ -242,28 +298,33 @@ const buildWorksheetPrompt = ({
 
   return `Generate ONLY a student practice worksheet for ${classLabel} Section ${section}.
 
+TOPIC LOCK: EVERY activity MUST be about "${topic || chapter || subject}" only. Never switch topics mid-worksheet.
+
 SUBJECT: ${subject}${chapter ? ` | CHAPTER: ${chapter}` : ""}${topic ? ` | TOPIC: ${topic}` : ""}${subtopic ? ` | SUBTOPIC: ${subtopic}` : ""}
 
-LEARNING STYLE TARGET: ${varkInstruction}
+${varkInstruction}
 
-At the very top, write a title for the worksheet and a "Name: ___ Date: ___" line.
+At the very top write:
+[Worksheet title about ${topic || chapter || subject}]
+Name: ___________________________ Date: ___________________________
 
-Then generate 12-15 activities directly about "${topic || chapter || subject}", one after another. Do NOT use page numbers or page headings. Separate each activity with a horizontal line (---).
+Then generate 12-15 activities. Separate each with ---. No page numbers or page headings.
 
 ${pageStructure}
 
 RULES FOR EVERY ACTIVITY:
-- Give each activity a creative, topic-specific title (e.g. "Subtraction Zero Hero!", "Shape Sorter", "Water Cycle Fill-In")
-- Write clear instructions in 1-2 sentences
-- Give 1 worked example
-- Then 4-8 questions in that activity's format
-- Use varied formats across the 5 pages: fill-in-the-blank, matching, true/false, multiple choice, short answer, sort/classify, draw-and-label, story problems
-- All content must be about "${topic || chapter || subject}" only — appropriate for ${classLabel} students
-- Do NOT mention individual student names
+- Creative topic-specific title
+- Clear 1-2 sentence instructions
+- 1 worked example with the answer shown
+- 4-8 questions with blanks written as ___ (underscores only, never backslashes)
+- NEVER write [Image: ...] or (Image of ...) — use text, symbols O [] /\, or "(Draw your answer in the box below)"
+- Matching tasks: write both sides as text lists, student draws connecting lines
+- All content strictly about "${topic || chapter || subject}" for ${classLabel} students
+- No individual student names
 
-After all 5 pages, write a "COMPLETE ANSWER KEY" section with answers for every activity on every page.
+After all activities write "COMPLETE ANSWER KEY" with answers for every question.
 
-CRITICAL: Output ONLY the worksheet content. Do NOT generate a lesson plan, learning objectives, hook activities, VARK analysis, BBL checklist, Word Decoder, or any lesson plan sections. Stop immediately after the COMPLETE ANSWER KEY.`;
+CRITICAL: Output ONLY worksheet content. No lesson plan, no objectives, no VARK analysis, no BBL checklist. Stop after COMPLETE ANSWER KEY.`;
 };
 // Converts CLASS_OPTIONS value ("1", "2") to chapter_subtopics format ("Class1", "Class2")
 const toSubtopicClass = (val: string): string => {
@@ -284,13 +345,13 @@ const extractSubjectName = (filename: string): string => {
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
 };
 
-// ─── Utility to extract and detect period count ──────────────────────
+// --- Utility to extract and detect period count ----------------------
 const extractPeriodsCount = (selectedPeriodsValue: string, lessonContent: string): number => {
   // First, try to use the selected periods value
   const selectedCount = parseInt(selectedPeriodsValue) || 1;
   
   // Then, verify by parsing the content to auto-detect periods
-  const periodMatches = lessonContent.match(/## 📅 PERIOD (\d+)/g);
+  const periodMatches = lessonContent.match(/## [^\w\n]* PERIOD (\d+)/g);
   if (periodMatches && periodMatches.length > 0) {
     // Extract the highest period number found
     const periodNumbers = periodMatches.map((match) => {
@@ -306,15 +367,15 @@ const extractPeriodsCount = (selectedPeriodsValue: string, lessonContent: string
   return selectedCount;
 };
 
-// ─── Extract all periods from lesson content ───────────────────────────
+// --- Extract all periods from lesson content ---------------------------
 const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; title: string }> => {
   const periods: Array<{ periodNumber: number; title: string }> = [];
   
   // Remove intro text 
-  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
+  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|[^\w\n])/m, '$1');
   
-  // Pattern 1: Multi-period format "## 📅 PERIOD 1 — Title"
-  let periodRegex = /##\s*📅\s*PERIOD\s+(\d+)\s*[—-]\s*([^(\n]+)/gi;
+  // Pattern 1: Multi-period format "## ?? PERIOD 1 — Title"
+  let periodRegex = /##\s*[^\w\n]*\s*PERIOD\s+(\d+)\s*[—-]\s*([^(\n]+)/gi;
   let match;
   
   while ((match = periodRegex.exec(cleanContent)) !== null) {
@@ -327,9 +388,9 @@ const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; ti
   }
   
   // Pattern 2: If no periods found, check for single-period format
-  // (sections numbered like 📝 1. Learning Objectives, 📝 7. Assessment)
+  // (sections numbered like ?? 1. Learning Objectives, ?? 7. Assessment)
   if (periods.length === 0) {
-    const hasAssessmentSection = /📝\s*\d+\.\s*Assessment|###\s*Assessment/i.test(cleanContent);
+    const hasAssessmentSection = /[^\w\n]*\s*\d+\.\s*Assessment|###\s*Assessment/i.test(cleanContent);
     if (hasAssessmentSection) {
       periods.push({ periodNumber: 1, title: 'Main Content' });
     }
@@ -338,25 +399,25 @@ const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; ti
   return periods.sort((a, b) => a.periodNumber - b.periodNumber);
 };
 
-// ─── Extract exit ticket for a specific period ────────────────────────
+// --- Extract exit ticket for a specific period ------------------------
 const extractExitTicket = (lessonContent: string, periodNumber: number): string => {
   if (!lessonContent) {
     console.log("No lesson content provided");
     return "";
   }
 
-  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
+  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|[^\w\n])/m, '$1');
   console.log("Extracting exit ticket for period:", periodNumber);
   console.log("Lesson content length:", cleanContent.length);
   
   // Check if multi-period or single-period format
-  const isMultiPeriod = /##\s*📅\s*PERIOD\s+\d+/i.test(cleanContent);
+  const isMultiPeriod = /##\s*[^\w\n]*\s*PERIOD\s+\d+/i.test(cleanContent);
   console.log("Is multi-period format:", isMultiPeriod);
   
   if (isMultiPeriod) {
-    // Multi-period: Extract from "## 📅 PERIOD X" section - be more flexible with the ending
+    // Multi-period: Extract from "## ?? PERIOD X" section - be more flexible with the ending
     let periodRegex = new RegExp(
-      `##\\s*📅\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*📅|$)`,
+      `##\\s*[^\\w\\n]*\\s*PERIOD\\s+${periodNumber}[\\s\\S]*?(?=##\\s*[^\\w\\n]*|$)`,
       "i"
     );
     let periodMatch = cleanContent.match(periodRegex);
@@ -386,14 +447,14 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
     const headers = periodContent.match(/###\s*[^\n]+/g);
     console.log("Section headers found:", headers);
     
-    // First try: Look for "7. Assessment — Exit Ticket" or "📝 7." section (Evaluate Phase)
+    // First try: Look for "7. Assessment — Exit Ticket" or "?? 7." section (Evaluate Phase)
     let exitTicketMatch = null;
     
     // Try with various patterns for section 7
     const evaluatePatterns = [
-      /###\s*📝?\s*7\.?\s*Assessment[\s\S]*?(?=###|$)/i,
-      /###\s*📝?\s*7\.?\s*(?:Assessment|Evaluate)[\s\S]*?(?=###|$)/i,
-      /###\s*📝\s*Assessment.*?Evaluate.*?Phase[\s\S]*?(?=###|$)/i,
+      /###\s*[^\w\n]*\s*7\.?\s*Assessment[\s\S]*?(?=###|$)/i,
+      /###\s*[^\w\n]*\s*7\.?\s*(?:Assessment|Evaluate)[\s\S]*?(?=###|$)/i,
+      /###\s*[^\w\n]*\s*Assessment.*?Evaluate.*?Phase[\s\S]*?(?=###|$)/i,
       /###\s*(?:\d+\.?\s+)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i,
       /###\s*Assessment.*?Exit Ticket[\s\S]*?(?=###|$)/i,
       /###\s*\d+\.[\s\S]*?Exit Ticket[\s\S]*?(?=###|$)/i,
@@ -418,7 +479,7 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
     let exitTicketMatch = null;
     
     const singlePeriodPatterns = [
-      /📝\s*\d+\.\s*Assessment[\s\S]*?(?=📝\s*\d+\.|##|$)/i,
+      /[^\w\n]*\s*\d+\.\s*Assessment[\s\S]*?(?=[^\w\n]*\s*\d+\.|##|$)/i,
       /###\s*(?:\d+\.?\s+)?Evaluate\s*Phase[\s\S]*?(?=###|$)/i,
       /###\s*Assessment[\s\S]*?(?=###|$)/i,
       /###\s*(?:\d+\.?\s+)?(?:Assessment|Exit Ticket|Evaluation)[\s\S]*?(?=###|$)/i,
@@ -436,14 +497,14 @@ const extractExitTicket = (lessonContent: string, periodNumber: number): string 
   }
 };
 
-// ─── Extract questions from exit ticket content ───────────────────────
+// --- Extract questions from exit ticket content -----------------------
 const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => {
   if (!exitTicketContent) return [];
   
   // Remove markdown headers and metadata lines
   let cleanContent = exitTicketContent
     .replace(/^###\s*Assessment[\s\S]*?\n/i, '') // Remove header
-    .replace(/^(📝\s*\d+\.\s*)?Assessment[^\n]*\n/i, '') // Remove Assessment title
+    .replace(/^([^\w\n]*\s*\d+\.\s*)?Assessment[^\n]*\n/i, '') // Remove Assessment title
     .replace(/^(Format:|Collection Method:|Success Criteria:|Follow-up:)[^\n]*\n?/gim, '') // Remove metadata
     .replace(/^(Format|Collection|Success|Follow).*$/gm, '') // Remove info lines
     .trim();
@@ -485,17 +546,17 @@ const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => 
   return questions;
 };
 
-// ─── Extract period title and topic ────────────────────────────────────
+// --- Extract period title and topic ------------------------------------
 const extractPeriodInfo = (lessonContent: string, periodNumber: number): { title: string; topic: string } => {
-  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|📝)/m, '$1');
+  const cleanContent = lessonContent.replace(/^[\s\S]*?(##|[^\w\n])/m, '$1');
   
   // Check if multi-period or single-period format
-  const isMultiPeriod = /##\s*📅\s*PERIOD\s+\d+/i.test(cleanContent);
+  const isMultiPeriod = /##\s*[^\w\n]*\s*PERIOD\s+\d+/i.test(cleanContent);
   
   if (isMultiPeriod) {
-    // Extract from "## 📅 PERIOD X — Title" or "## 📅 PERIOD X: Title"
+    // Extract from "## ?? PERIOD X — Title" or "## ?? PERIOD X: Title"
     const periodRegex = new RegExp(
-      `##\\s*📅\\s*PERIOD\\s+${periodNumber}\\s*(?:[—:-]\\s*)?([^\\n]+)`,
+      `##\\s*[^\\w\\n]*\\s*PERIOD\\s+${periodNumber}\\s*(?:[—:-]\\s*)?([^\\n]+)`,
       "i"
     );
     const matches = cleanContent.match(periodRegex);
@@ -507,7 +568,7 @@ const extractPeriodInfo = (lessonContent: string, periodNumber: number): { title
     return { title, topic: title };
   } else {
     // Single-period: Extract main topic from title or first section
-    const titleRegex = /###\s*([^\n]+)|📝\s*\d+\.\s*([^\n]+)/i;
+    const titleRegex = /###\s*([^\n]+)|[^\w\n]*\s*\d+\.\s*([^\n]+)/i;
     const matches = cleanContent.match(titleRegex);
     const title = matches ? (matches[1] || matches[2] || 'Main Content').trim() : 'Main Content';
     return { title, topic: title };
@@ -540,7 +601,7 @@ async function streamChat({
       "Content-Type": "application/json",
       Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ selectedClass, section, subject, prompt, mode, chatHistory, schoolId }),
+    body: JSON.stringify({ selectedClass, section, subject, prompt, mode, chatHistory, schoolId, isWorksheet: mode === "generate" && prompt.includes("COMPLETE ANSWER KEY") }),
   });
 
   if (!resp.ok) {
@@ -636,7 +697,7 @@ const Curative = () => {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // ─── Chat history persistence (localStorage) ──────────────────────────
+  // --- Chat history persistence (localStorage) --------------------------
   const historyKey = user?.id ? `curative-chat-history-${user.id}` : null;
 
   type ChatSession = {
@@ -979,6 +1040,7 @@ const Curative = () => {
     // Capture current values for the closure
     const currentTopic = topicValue.trim() || null;
     const currentSubject = selectedSubject ? extractSubjectName(selectedSubject) : "General";
+    const currentVarkType = selectedVarkType ?? "general";
 
     try {
       await streamChat({
@@ -1018,7 +1080,7 @@ const Curative = () => {
                   worksheet_content: assistantSoFar,
                   page_count: (assistantSoFar.match(/PAGE \d+/g) || []).length || 5,
                   ai_generated: true,
-                  vark_type: selectedVarkType ?? "general",
+                  vark_type: currentVarkType,
                 } as any);
               } catch (err) {
                 console.error("Failed to save worksheet:", err);
@@ -1037,7 +1099,7 @@ const Curative = () => {
                   section: selectedSection,
                   lesson_content: assistantSoFar,
                   ai_generated: true,
-                  vark_type: selectedVarkType ?? "general",
+                  vark_type: currentVarkType,
                   topic: currentTopic,
                   teacher_id: user?.id || null,
                   periods_count: periodsCount,
@@ -1055,7 +1117,7 @@ const Curative = () => {
       toast.error("Failed to connect to AI assistant");
       setIsStreaming(false);
     }
-  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id, persistCurrentSession]);
+  }, [selectedClass, selectedSection, selectedSubject, selectedChapter, selectedCurriculum, topicValue, chatMessages, isStreaming, user?.id, persistCurrentSession, selectedVarkType]);
 
   const getPeriodBreakdown = (periods: number) => {
     if (periods === 1) return "a single period";
@@ -1142,35 +1204,35 @@ ${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divide
 MANDATORY SECTION STRUCTURE FOR EVERY PERIOD (do NOT deviate):
 Each period MUST have EXACTLY these 8 sections in this order:
 
-### 📋 1. Learning Objectives
+### ?? 1. Learning Objectives
 - Clear, measurable objectives for THIS period using Bloom's taxonomy
 
-### 🎣 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
+### ?? 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
 - Engaging opening that captures attention
 - X = approximately 20% of period duration
 
-### 📚 3. Main Teaching — Chunked Delivery (10-2-10 Rule)
-- Chunk 1: Input → 2-min Processing → Application (with 3-tier differentiation)
-- Chunk 2: Input → 2-min Processing → Application (with 3-tier differentiation)
-- Chunk 3: (if time permits) Input → 2-min Processing → Application
+### ?? 3. Main Teaching — Chunked Delivery (10-2-10 Rule)
+- Chunk 1: Input ? 2-min Processing ? Application (with 3-tier differentiation)
+- Chunk 2: Input ? 2-min Processing ? Application (with 3-tier differentiation)
+- Chunk 3: (if time permits) Input ? 2-min Processing ? Application
 - Include VARK-aligned activities for Visual, Auditory, Read/Write, Kinesthetic learners
 
-### 🎯 4. Activities — Differentiated Group Work ([X] minutes)
+### ?? 4. Activities — Differentiated Group Work ([X] minutes)
 - Group-based collaborative activities
 - 3-tier tasks: Support/Core/Extension for mixed ability groups
 - X = approximately 30-40% of period duration
 
-### ✅ 5. Assessment — Quick Check ([X] minutes)
+### ? 5. Assessment — Quick Check ([X] minutes)
 - Formative assessment to check understanding
 - Quick quiz, observation checklist, or interactive check
 - X = approximately 10% of period duration
 
-### 🔄 6. Closure — Revision Activity (Last [X] minutes — RECENCY EFFECT)
+### ?? 6. Closure — Revision Activity (Last [X] minutes — RECENCY EFFECT)
 - Summarize key learning points
 - Quick review game, exit slip preview, or concept mapping
 - X = approximately 10% of period duration
 
-### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+### ?? 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
 - 3-5 NUMBERED questions (1. 2. 3. etc.) that assess the key learning from this period
 - Questions should be clear, specific, and answerable in 5 minutes
 - Format: Simple numbered list with clear question text
@@ -1181,33 +1243,33 @@ Each period MUST have EXACTLY these 8 sections in this order:
   4. Solve [sample problem]
   5. What would happen if [scenario]?
 
-### 📊 8. BBL Compliance Checklist
-- Primacy Effect applied: ✓
-- Recency Effect applied: ✓
-- Cognitive Load managed: ✓
-- Social Brain activated: ✓
-- VARK differentiation: ✓
-- 3-tier scaffolding: ✓
+### ?? 8. BBL Compliance Checklist
+- Primacy Effect applied: ?
+- Recency Effect applied: ?
+- Cognitive Load managed: ?
+- Social Brain activated: ?
+- VARK differentiation: ?
+- 3-tier scaffolding: ?
 
 ---
 
 NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
 
-## 📝 Overall Learning Objectives (for the complete unit across all periods)
+## ?? Overall Learning Objectives (for the complete unit across all periods)
 (3-5 cumulative objectives for the entire ${periods}-period lesson)
 
 ---
-## 📅 PERIOD 1 — [Sub-topic Title]
+## ?? PERIOD 1 — [Sub-topic Title]
 [Apply the 8-section structure above]
 
 ---
-## 📅 PERIOD 2 — [Sub-topic Title]
+## ?? PERIOD 2 — [Sub-topic Title]
 [Apply the 8-section structure above, building on Period 1]
 
 ... repeat for ALL ${periods} periods ...
 
 ---
-## 📅 PERIOD ${periods} — [Sub-topic Title]
+## ?? PERIOD ${periods} — [Sub-topic Title]
 [Apply the 8-section structure above with comprehensive review]
 
 ---
@@ -1217,26 +1279,26 @@ NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
 ---
 
 CRITICAL REQUIREMENTS:
-✓ EVERY period (1 through ${periods}) MUST have ALL 8 sections
-✓ Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
-✓ Period timings MUST total exactly ${periodDurationMin} minutes per period
-✓ Content must be distributed evenly across ${periods} periods with progressive complexity
-✓ Each period builds on previous learning
-✓ Exit tickets must assess THAT period's specific learning objectives
+? EVERY period (1 through ${periods}) MUST have ALL 8 sections
+? Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
+? Period timings MUST total exactly ${periodDurationMin} minutes per period
+? Content must be distributed evenly across ${periods} periods with progressive complexity
+? Each period builds on previous learning
+? Exit tickets must assess THAT period's specific learning objectives
 ` : `Cover the complete topic within a single ${periodDurationMin}-minute period with full detail.
 
 Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs.
 
 Apply the same 8-section structure for the single period:
-### 📋 1. Learning Objectives
-### 🎣 2. Introduction — Hook Activity
-### 📚 3. Main Teaching — Chunked Delivery
-### 🎯 4. Activities — Differentiated Group Work
-### ✅ 5. Assessment — Quick Check
-### 🔄 6. Closure — Revision Activity
-### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+### ?? 1. Learning Objectives
+### ?? 2. Introduction — Hook Activity
+### ?? 3. Main Teaching — Chunked Delivery
+### ?? 4. Activities — Differentiated Group Work
+### ? 5. Assessment — Quick Check
+### ?? 6. Closure — Revision Activity
+### ?? 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
 [Include 3-5 NUMBERED exit ticket questions]
-### 📊 8. BBL Compliance Checklist`}
+### ?? 8. BBL Compliance Checklist`}
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
@@ -1249,8 +1311,8 @@ IMPORTANT: For each VARK learning style group (Visual, Auditory, Read/Write, Kin
 
 IMPORTANT: You MUST complete the ENTIRE lesson plan. Do NOT stop early or truncate. The plan MUST end with the "Learning Outcomes" section.
 
-IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "📖 Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
-→ **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
+IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "?? Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
+? **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
 Include terms like: Primacy Effect, Recency Effect, 10-2-10 Chunking Rule, Cognitive Load, Amygdala Filter, Patterning & Meaning, Spaced Repetition, Social Brain, ZPD (Zone of Proximal Development), Scaffolding, Multiple Intelligences (MI), VARK, Bloom's Taxonomy, Formative Check, and any other technical terms used in the plan.
 
 Whenever you use any advanced or technical word in the lesson plan body, add a simple decode inline as well.`,
@@ -1279,11 +1341,11 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
         const q = u.searchParams.get('search_query') || u.searchParams.get('q');
         if (q) {
           const topic = decodeURIComponent(q.replace(/\+/g, ' ')).trim();
-          return `▶ Watch on YouTube: ${topic}`;
+          return `? Watch on YouTube: ${topic}`;
         }
       } catch { /* ignore */ }
-      if (fallback && !/^https?:/i.test(fallback)) return `▶ ${fallback}`;
-      return '▶ Watch on YouTube';
+      if (fallback && !/^https?:/i.test(fallback)) return `? ${fallback}`;
+      return '? Watch on YouTube';
     };
 
     // 1) Markdown links [text](url) — replace YouTube ones with friendly labels, all open in new tab
@@ -1293,7 +1355,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
     });
 
-    // 2) Bare YouTube URLs → friendly anchor
+    // 2) Bare YouTube URLs ? friendly anchor
     html = html.replace(/(^|[\s(])(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s)]+)/g, (_m, pre: string, url: string) => {
       return `${pre}<a href="${url}" target="_blank" rel="noopener noreferrer">${makeYoutubeLabel(url)}</a>`;
     });
@@ -1417,7 +1479,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       
       .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
       .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
-      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content ul li::before { content: '?'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
       
       .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
       .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
@@ -1464,9 +1526,9 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+          <div className="absolute top-12 left-[45%] text-white/80 text-xl">?</div>
+          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">?</div>
+          <div className="absolute top-24 right-[35%] text-white/80 text-lg">?</div>
 
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
           <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
@@ -2047,12 +2109,12 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       </div>
         </TabsContent>
 
-        {/* ─── Assign Homework Tab ─── */}
+        {/* --- Assign Homework Tab --- */}
         <TabsContent value="assign-homework" className="space-y-6 mt-0">
           <AssignHomeworkTab user={user} profile={profile} getClassLabel={getClassLabel} />
         </TabsContent>
 
-        {/* ─── Worksheets Tab ─── */}
+        {/* --- Worksheets Tab --- */}
         <TabsContent value="worksheets" className="space-y-6 mt-0">
           <WorksheetsTab user={user} profile={profile} getClassLabel={getClassLabel} />
         </TabsContent>
@@ -2061,7 +2123,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
   );
 };
 
-// ─── Assign Homework Component ───────────────────────────────────────
+// --- Assign Homework Component ---------------------------------------
 interface AssignHomeworkTabProps {
   user: any;
   profile: any;
@@ -2315,7 +2377,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         throw new Error(error.message || "Failed to create assignment");
       }
 
-      toast.success(`✓ Assignment created for Period ${selectedPeriod} (In Class)\n✓ Class Performance Score: ${score}%\n✓ This will be used for analytics and performance tracking.`);
+      toast.success(`? Assignment created for Period ${selectedPeriod} (In Class)\n? Class Performance Score: ${score}%\n? This will be used for analytics and performance tracking.`);
       setShowClassScoreModal(false);
       setClassPerformanceScore("");
       setAssignmentMode("none");
@@ -2439,7 +2501,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
         questions: questionsArray,
       });
       
-      toast.success(`✓ Homework assigned to ${studentNames.length} student${studentNames.length !== 1 ? 's' : ''} in ${homeworkClass} - Section ${homeworkSection}`);
+      toast.success(`? Homework assigned to ${studentNames.length} student${studentNames.length !== 1 ? 's' : ''} in ${homeworkClass} - Section ${homeworkSection}`);
       setShowAssignmentConfirmation(true);
       setAssignmentMode("none");
       setSelectedPeriod("");
@@ -2585,7 +2647,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       
       .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
       .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
-      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content ul li::before { content: '?'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
       
       .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
       .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
@@ -2615,6 +2677,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
     html2pdf().set(opt).from(tempDiv).save();
     toast.success('PDF downloaded successfully!');
   };
+
 
   return (
     <div className="space-y-4">
@@ -2889,7 +2952,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                                 disabled={isAssigning || isEditingQuestions || assignmentMode === "in-class" || !!existingInClassAssignment || !!existingAtHomeAssignment}
                               >
                                 <Home className="h-4 w-4" />
-                                {existingAtHomeAssignment ? 'Already Assigned At Home ✓' : 'Assign At Home'}
+                                {existingAtHomeAssignment ? 'Already Assigned At Home ?' : 'Assign At Home'}
                               </Button>
                             </div>
                           </>
@@ -2962,7 +3025,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
               onClick={() => setShowLessonPreview(false)}
               className="text-muted-foreground"
             >
-              ✕
+              ?
             </Button>
           </CardHeader>
           <CardContent className="p-6 max-h-[600px] overflow-y-auto">
@@ -3114,7 +3177,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
               {/* Info Message */}
               <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
                 <p className="text-sm text-emerald-900 dark:text-emerald-100">
-                  ✓ These questions will appear in each student's homework with full details (Topic, Period, Subject)
+                  ? These questions will appear in each student's homework with full details (Topic, Period, Subject)
                 </p>
                 <p className="text-xs text-emerald-800 dark:text-emerald-200 mt-1">
                   Students will answer all questions and enter their test score before submission.
@@ -3128,7 +3191,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
               onClick={() => {
                 setShowAssignmentConfirmation(false);
                 setAssignmentConfirmationData(null);
-                toast.success("✓ Homework assignment complete!");
+                toast.success("? Homework assignment complete!");
               }}
               className="gap-2"
             >
@@ -3142,7 +3205,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
   );
 };
 
-// ─── Worksheets Tab Component ───────────────────────────────────────
+// --- Worksheets Tab Component ---------------------------------------
 interface WorksheetsTabProps {
   user: any;
   profile: any;
@@ -3173,6 +3236,8 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
   const [worksheetSection, setWorksheetSection] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [varkFilter, setVarkFilter] = useState<string>("all");
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   const VARK_OPTIONS = [
     { id: "all",         label: "All Types",   color: "bg-gray-100 text-gray-700 border-gray-300" },
     { id: "visual",      label: "Visual",       color: "bg-purple-100 text-purple-800 border-purple-300" },
@@ -3321,7 +3386,7 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
       .content em { font-style: italic; color: #6b6b8a; }
       .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
       .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
-      .content ul li::before { content: '→'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content ul li::before { content: '?'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
       .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
       .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
       .content table td { padding: 7px 10px; border-bottom: 1px solid #e2e0d8; color: #3a3a5c; vertical-align: top; }
@@ -3346,6 +3411,43 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
     const html2pdf = (await import("html2pdf.js")).default;
     html2pdf().set(opt).from(tempDiv).save();
     toast.success('Worksheet PDF downloaded successfully!');
+  };
+
+  const handleAssignWorksheet = async (ws: WorksheetRow) => {
+    if (!user?.id || !profile?.school_id) { toast.error("Missing user or school info"); return; }
+    setAssigningId(ws.id);
+    try {
+      const classNum = ws.class_level.replace("Class ", "");
+      const { data: students } = await supabase
+        .from("student_assessments").select("student_name")
+        .eq("student_class", classNum).eq("section", ws.section)
+        .eq("teacher_id", user.id).eq("school_id", profile.school_id);
+      if (!students || students.length === 0) { toast.error("No students found"); return; }
+      const uniqueNames = [...new Set(students.map((s: any) => s.student_name).filter(Boolean))];
+      let targetStudents: string[] = uniqueNames as string[];
+      if (ws.vark_type && ws.vark_type !== "general") {
+        const { data: vs } = await supabase.from("student_assessments").select("student_name, vark_type")
+          .eq("student_class", classNum).eq("section", ws.section)
+          .eq("teacher_id", user.id).eq("school_id", profile.school_id).eq("vark_type", ws.vark_type);
+        if (vs && vs.length > 0) {
+          const vn = [...new Set(vs.map((s: any) => s.student_name).filter(Boolean))] as string[];
+          if (vn.length > 0) targetStudents = vn;
+        }
+      }
+      const { error } = await supabase.from("worksheet_assignments").insert([{
+        worksheet_id: ws.id,
+        teacher_id: user.id,
+        school_id: profile.school_id,
+        class_level: ws.class_level,
+        section: ws.section.toUpperCase().trim(),
+        status: "active",
+      }] as any);
+      if (error) throw new Error(error.message);
+      const label = ws.vark_type && ws.vark_type !== "general" ? ws.vark_type + " learners" : "all students";
+      toast.success(`Worksheet assigned to ${targetStudents.length} ${label} in ${ws.class_level} Section ${ws.section}`);
+    } catch (err: any) {
+      toast.error(`Failed to assign: ${err.message || 'Unknown error'}`);
+    } finally { setAssigningId(null); }
   };
 
   return (
@@ -3378,6 +3480,23 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
 
       {worksheetClass && worksheetSection && (
         <>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">Learning Style</label>
+            <div className="flex flex-wrap gap-2">
+              {VARK_OPTIONS.map((v) => (
+                <button key={v.id} onClick={() => setVarkFilter(v.id)}
+                  className={'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 ' + (varkFilter === v.id
+                    ? (v.id === 'visual' ? 'bg-purple-600 text-white border-purple-600'
+                      : v.id === 'auditory' ? 'bg-teal-600 text-white border-teal-600'
+                      : v.id === 'readwrite' ? 'bg-blue-600 text-white border-blue-600'
+                      : v.id === 'kinesthetic' ? 'bg-amber-500 text-white border-amber-500'
+                      : 'bg-gray-800 text-white border-gray-800')
+                    : v.color + ' opacity-70 hover:opacity-100')}>
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </div>
           {isLoadingWorksheets ? (
             <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
               <Loader2 className="h-4 w-4 animate-spin" /> Loading worksheets...
@@ -3433,6 +3552,19 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
                         onClick={() => handleDownloadWorksheetPDF(ws)}
                       >
                         <Download className="h-3.5 w-3.5" /> Download PDF
+                      </Button>
+                      <Button size="sm" disabled={assigningId === ws.id} onClick={() => handleAssignWorksheet(ws)}
+                        className={'gap-1.5 text-white ' + (ws.vark_type && ws.vark_type !== 'general'
+                          ? (ws.vark_type === 'visual' ? 'bg-purple-600 hover:bg-purple-700'
+                          : ws.vark_type === 'auditory' ? 'bg-teal-600 hover:bg-teal-700'
+                          : ws.vark_type === 'readwrite' ? 'bg-blue-600 hover:bg-blue-700'
+                          : 'bg-amber-500 hover:bg-amber-600')
+                          : 'bg-indigo-600 hover:bg-indigo-700')}>
+                        {assigningId === ws.id
+                          ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Assigning...</>
+                          : ws.vark_type && ws.vark_type !== 'general'
+                            ? <><Users className="h-3.5 w-3.5" /> Assign to {ws.vark_type} students</>
+                            : <><Users className="h-3.5 w-3.5" /> Assign to Class</>}
                       </Button>
                     </div>
                   </div>
