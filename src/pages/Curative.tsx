@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle, Plus, X, History } from "lucide-react";
+import { Sparkles, Loader2, Send, GraduationCap, MessageSquare, Bot, User, Trash2, Users, BookOpen, Lock, Download, Globe, Check, Clock, BookMarked, Wand2, CalendarDays, FileText, Briefcase, Eye, Home, CheckCircle, Plus, X, History, Image as ImageIcon } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
@@ -1067,7 +1067,7 @@ const Curative = () => {
             if (isWorksheet) {
               // Save worksheet to worksheets table
               try {
-                await supabase.from("worksheets").insert({
+                const { data: wsInsertData } = await supabase.from("worksheets").insert({
                   teacher_id: user?.id || null,
                   school_id: profile?.school_id || null,
                   class_level: selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1),
@@ -1081,7 +1081,19 @@ const Curative = () => {
                   page_count: (assistantSoFar.match(/PAGE \d+/g) || []).length || 5,
                   ai_generated: true,
                   vark_type: currentVarkType,
-                } as any);
+                } as any).select("id").single();
+
+                // Trigger image generation in background (non-blocking)
+                if (wsInsertData?.id) {
+                  supabase.functions.invoke("generate-worksheet-image", {
+                    body: {
+                      worksheet_id: wsInsertData.id,
+                      worksheet_content: assistantSoFar,
+                      topic: currentTopic || currentSubject,
+                      vark_type: currentVarkType,
+                    },
+                  }).catch((err: any) => console.warn("Image generation failed:", err));
+                }
               } catch (err) {
                 console.error("Failed to save worksheet:", err);
               }
@@ -3234,6 +3246,7 @@ interface WorksheetRow {
   page_count: number;
   ai_generated: boolean;
   vark_type: string | null;
+  image_url: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -3420,6 +3433,30 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
     toast.success('Worksheet PDF downloaded successfully!');
   };
 
+  const handleDownloadIllustratedPDF = async (ws: WorksheetRow) => {
+    if (!ws.image_url) {
+      toast.error("Illustrated image is still being generated. Please try again in a moment.");
+      return;
+    }
+    try {
+      toast.info("Downloading illustrated worksheet...");
+      const ext = ws.image_url.split(".").pop()?.split("?")[0] ?? "jpg";
+      const filename = `illustrated-worksheet-${ws.subject}-${ws.class_level}-${ws.section}.${ext}`;
+      const response = await fetch(ws.image_url);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Illustrated worksheet downloaded!");
+    } catch (err: any) {
+      toast.error("Failed to download: " + err.message);
+    }
+  };
   const handleAssignWorksheet = async (ws: WorksheetRow) => {
     if (!user?.id || !profile?.school_id) { toast.error("Missing user or school info"); return; }
     setAssigningId(ws.id);
@@ -3553,13 +3590,24 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
                       >
                         <Eye className="h-3.5 w-3.5" /> {expandedId === ws.id ? "Hide" : "View"}
                       </Button>
-                      <Button
-                        size="sm"
-                        className="gap-1.5 bg-green-600 hover:bg-green-700"
-                        onClick={() => handleDownloadWorksheetPDF(ws)}
-                      >
-                        <Download className="h-3.5 w-3.5" /> Download PDF
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" className="gap-1.5 bg-green-600 hover:bg-green-700">
+                            <Download className="h-3.5 w-3.5" /> Download
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="min-w-[210px]">
+                          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => handleDownloadWorksheetPDF(ws)}>
+                            <FileText className="h-3.5 w-3.5 text-green-600" />
+                            <span>Download PDF of Activities</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => handleDownloadIllustratedPDF(ws)}>
+                            <ImageIcon className="h-3.5 w-3.5 text-purple-600" />
+                            <span>Download Image Worksheet</span>
+                            {!ws.image_url && <span className="ml-auto text-[10px] text-amber-500">generating...</span>}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                       <Button size="sm" disabled={assigningId === ws.id} onClick={() => handleAssignWorksheet(ws)}
                         className={'gap-1.5 text-white ' + (ws.vark_type && ws.vark_type !== 'general'
                           ? (ws.vark_type === 'visual' ? 'bg-purple-600 hover:bg-purple-700'
