@@ -1549,7 +1549,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       </div>
 
       <Tabs defaultValue="lesson-plan" className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-<TabsList className="grid w-full max-w-lg grid-cols-3 mb-4 ">
+<TabsList className="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-4 gap-2 mb-4 ">
         <TabsTrigger value="lesson-plan" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
           <Wand2 className="h-6 w-6" /> Lesson Plan
         </TabsTrigger>
@@ -1558,6 +1558,9 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
         </TabsTrigger>
         <TabsTrigger value="worksheets" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
           <FileText className="h-6 w-6" /> Worksheets
+          </TabsTrigger>
+        <TabsTrigger value="generated-lessons" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
+          <History className="h-6 w-6" /> My Lessons
           </TabsTrigger>
         </TabsList>
 
@@ -2117,6 +2120,10 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
         {/* --- Worksheets Tab --- */}
         <TabsContent value="worksheets" className="space-y-6 mt-0">
           <WorksheetsTab user={user} profile={profile} getClassLabel={getClassLabel} />
+        </TabsContent>
+        {/* --- Generated Lesson Plans Tab --- */}
+        <TabsContent value="generated-lessons" className="space-y-6 mt-0">
+          <GeneratedLessonsTab user={user} profile={profile} getClassLabel={getClassLabel} />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -3582,6 +3589,337 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
             </div>
           )}
         </>
+      )}
+    </div>
+  );
+};
+
+
+// --- Generated Lesson Plans Tab Component ----------------------------
+interface GeneratedLessonsTabProps {
+  user: any;
+  profile: any;
+  getClassLabel: (value: string) => string;
+}
+
+interface GeneratedLessonRow {
+  id: string;
+  title: string;
+  subject: string;
+  topic: string | null;
+  class_level: string;
+  section: string;
+  curriculum: string | null;
+  periods_count: number | null;
+  duration_minutes: number | null;
+  completed: boolean;
+  created_at: string;
+  lesson_content: string | null;
+}
+
+const GeneratedLessonsTab = ({ user, getClassLabel }: GeneratedLessonsTabProps) => {
+  const [filterClass, setFilterClass] = useState("all");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const handleDownloadLessonPDF = async (lesson: GeneratedLessonRow) => {
+    if (!lesson.lesson_content) {
+      toast.error("No content available to download for this lesson");
+      return;
+    }
+    const timestamp = new Date().toLocaleString("en-US", {
+      year: "numeric", month: "2-digit", day: "2-digit",
+      hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+    }).replace(/[/:]/g, "-");
+
+    const filename = `APAS-LessonPlan-${lesson.title}-${timestamp}.pdf`;
+
+    let html = lesson.lesson_content;
+
+    html = html.replace(/^(\|.+\|)\n(\|[-| :]+\|)\n((?:\|.+\|\n?)*)/gm, (match, header, sep, body) => {
+      const headerCells = header.split("|").filter((c: string) => c.trim()).map((c: string) => `<th>${c.trim()}</th>`).join("");
+      const rows = body.trim().split("\n").map((row: string) => {
+        const cells = row.split("|").filter((c: string) => c.trim()).map((c: string) => `<td>${c.trim()}</td>`).join("");
+        return `<tr>${cells}</tr>`;
+      }).join("");
+      return `<table><thead><tr>${headerCells}</tr></thead><tbody>${rows}</tbody></table>`;
+    });
+
+    html = html.replace(/^#### (.*?)$/gm, "<h4>$1</h4>");
+    html = html.replace(/^### (.*?)$/gm, "<h3>$1</h3>");
+    html = html.replace(/^## (.*?)$/gm, "<h2>$1</h2>");
+    html = html.replace(/^# (.*?)$/gm, "<h1>$1</h1>");
+    html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+    html = html.replace(/^> (.*?)$/gm, "<blockquote>$1</blockquote>");
+    html = html.replace(/^---$/gm, "<hr>");
+    html = html.replace(/^- (.*?)$/gm, "<li>$1</li>");
+    html = html.replace(/^(\d+)\. (.*?)$/gm, "<li>$1. $2</li>");
+    html = html.replace(/((?:<li>.*?<\/li>\n?)+)/g, "<ul>$1</ul>");
+    html = html.split("\n\n").map((para) => {
+      const trimmed = para.trim();
+      if (!trimmed || trimmed.startsWith("<h") || trimmed.startsWith("<ul") || trimmed.startsWith("<ol") || trimmed.startsWith("<table") || trimmed.startsWith("<blockquote") || trimmed.startsWith("<hr")) return trimmed;
+      return "<p>" + trimmed.replace(/\n/g, "<br>") + "</p>";
+    }).join("\n");
+
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = `
+      <div class="report">
+        <div class="header">
+          <div class="header-left">
+            <div class="brand">APAS <span>Lesson Plan</span></div>
+            <div class="report-label">Differentiated Lesson Plan</div>
+          </div>
+          <div class="header-right">
+            <div class="report-date">${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</div>
+            <div class="status-badge">AI Generated</div>
+          </div>
+        </div>
+        <div class="learner-card">
+          <div class="lc-field">
+            <label>Class</label>
+            <value>${getClassLabel(lesson.class_level)}</value>
+            <small>Section ${lesson.section}</small>
+          </div>
+          <div class="lc-field">
+            <label>Subject</label>
+            <value>${lesson.subject || "General"}</value>
+            <small>${lesson.topic || "Lesson Plan"}</small>
+          </div>
+          <div class="lc-field">
+            <label>Report Type</label>
+            <value>Lesson Plan</value>
+            <small>Differentiated</small>
+          </div>
+        </div>
+        <div class="content">${html}</div>
+        <div class="footer">
+          <div class="footer-note">This report is auto-generated by the APAS AI engine. For academic use only.</div>
+          <div class="footer-apas">APAS · ${new Date().getFullYear()}</div>
+        </div>
+      </div>
+    `;
+
+    const metaCharset = document.createElement("meta");
+    metaCharset.setAttribute("charset", "utf-8");
+    tempDiv.prepend(metaCharset);
+
+    const style = document.createElement("style");
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+      * { font-family: 'DM Sans', 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; font-family: 'DM Sans', 'Segoe UI', Arial, sans-serif; color: #1a1a2e; line-height: 1.6; font-size: 12px; }
+      .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; }
+      .brand { font-family: 'DM Serif Display', Georgia, serif; font-size: 24px; color: #1a1a2e; letter-spacing: -0.5px; }
+      .brand span { color: #0e9a7b; font-style: italic; }
+      .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; }
+      .header-right { text-align: right; }
+      .report-date { font-size: 12px; font-weight: 500; color: #3a3a5c; }
+      .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; }
+      .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+      .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; }
+      .lc-field value { font-family: 'DM Serif Display', Georgia, serif; font-size: 16px; color: white; display: block; }
+      .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); }
+      .content h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; }
+      .content h2 { font-family: 'DM Serif Display', Georgia, serif; font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; }
+      .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; }
+      .content h4 { font-size: 12px; font-weight: 600; color: #6b6b8a; margin: 12px 0 4px 0; }
+      .content p { margin: 6px 0; text-align: justify; color: #3a3a5c; }
+      .content strong { color: #1a1a2e; font-weight: 600; }
+      .content em { font-style: italic; color: #6b6b8a; }
+      .content ul { list-style: none; margin: 6px 0 6px 0; padding: 0; }
+      .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; }
+      .content ul li::before { content: '•'; position: absolute; left: 0; color: #0e9a7b; font-weight: 600; }
+      .content table { width: 100%; border-collapse: collapse; margin: 10px 0 14px 0; font-size: 11px; }
+      .content table th { text-align: left; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: #6b6b8a; padding: 8px 10px; border-bottom: 2px solid #e2e0d8; background: #f7f5f0; }
+      .content table td { padding: 7px 10px; border-bottom: 1px solid #e2e0d8; color: #3a3a5c; vertical-align: top; }
+      .content table tr:last-child td { border-bottom: none; }
+      .content blockquote { background: linear-gradient(135deg, #fff1ee 0%, #fffbeb 100%); border-left: 4px solid #e55a3c; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 12px 0; font-size: 12px; color: #3a3a5c; }
+      .content hr { border: none; border-top: 1px solid #e2e0d8; margin: 16px 0; }
+      .footer { border-top: 1px solid #e2e0d8; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
+      .footer-note { font-size: 10px; color: #6b6b8a; }
+      .footer-apas { font-family: 'DM Serif Display', Georgia, serif; font-size: 13px; color: #3a3a5c; font-style: italic; }
+    `;
+    tempDiv.appendChild(style);
+
+    const opt = {
+      margin: [10, 10, 10, 10] as [number, number, number, number],
+      filename,
+      image: { type: "jpeg" as const, quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#f7f5f0" },
+      jsPDF: { orientation: "portrait" as const, unit: "mm" as const, format: "a4" as const, compress: true },
+      pagebreak: { mode: ["avoid-all", "css", "legacy"] },
+    };
+
+    const html2pdf = (await import("html2pdf.js")).default;
+    html2pdf().set(opt).from(tempDiv).save();
+    toast.success("Lesson plan PDF downloaded successfully!");
+  };
+
+
+  const { data: lessonsList = [], isLoading } = useQuery<GeneratedLessonRow[]>({
+    queryKey: ["generated-lessons-list", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("id, title, subject, topic, class_level, section, curriculum, periods_count, duration_minutes, completed, created_at, lesson_content")
+        .eq("teacher_id", user.id)
+        .order("created_at", { ascending: false });
+      if (error) {
+        console.error("Error fetching generated lessons:", error);
+        return [];
+      }
+      return (data as GeneratedLessonRow[]) || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  const filteredLessons = filterClass === "all"
+    ? lessonsList
+    : lessonsList.filter((l) => l.class_level === filterClass);
+
+  const handleToggleCompleted = async (lesson: GeneratedLessonRow) => {
+    setUpdatingId(lesson.id);
+    try {
+      const { error } = await supabase
+        .from("lessons")
+        .update({ completed: !lesson.completed })
+        .eq("id", lesson.id);
+      if (error) throw new Error(error.message);
+      queryClient.invalidateQueries({ queryKey: ["generated-lessons-list", user?.id] });
+      toast.success(!lesson.completed ? "Marked as completed" : "Marked as not completed");
+    } catch (err: any) {
+      toast.error(`Failed to update: ${err.message || "Unknown error"}`);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const uniqueClasses = [...new Set(lessonsList.map((l) => l.class_level).filter(Boolean))];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-foreground">Your Generated Lesson Plans</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Track what you've covered in class by marking lessons as completed.
+          </p>
+        </div>
+        {uniqueClasses.length > 0 && (
+          <Select value={filterClass} onValueChange={setFilterClass}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by class" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Classes</SelectItem>
+              {uniqueClasses.map((c) => (
+                <SelectItem key={c} value={c}>{c}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12 text-muted-foreground gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading lesson plans...
+        </div>
+      ) : filteredLessons.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center border-2 border-dashed border-border rounded-xl">
+          <History className="h-10 w-10 text-muted-foreground/50 mb-3" />
+          <p className="text-sm font-medium text-foreground">No lesson plans generated yet</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Generate a lesson plan from the Lesson Plan tab and it will show up here.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {filteredLessons.map((lesson) => (
+            <Card
+              key={lesson.id}
+              className={`border overflow-hidden transition-colors ${
+                lesson.completed ? "border-emerald-200 bg-emerald-50/40 dark:bg-emerald-900/10" : "border-border/60"
+              }`}
+            >
+              <div
+                className="p-4 flex items-start justify-between gap-3 flex-wrap cursor-pointer hover:bg-muted/30 transition-colors"
+                onClick={() => setExpandedId(expandedId === lesson.id ? null : lesson.id)}
+              >
+                <div className="flex-1 min-w-[200px]">
+                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                    <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs gap-1">
+                      <BookOpen className="h-3 w-3" /> {lesson.subject}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {lesson.class_level} · Section {lesson.section}
+                    </Badge>
+                    {lesson.topic && <Badge variant="outline" className="text-xs">{lesson.topic}</Badge>}
+                    {lesson.completed && (
+                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs gap-1">
+                        <Check className="h-3 w-3" /> Completed
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm font-medium text-foreground">{lesson.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {lesson.periods_count ? `${lesson.periods_count} period${lesson.periods_count > 1 ? "s" : ""}` : ""}
+                    {lesson.duration_minutes ? ` · ${lesson.duration_minutes} min` : ""}
+                    {" · "}
+                    {new Date(lesson.created_at).toLocaleDateString()}{" "}
+                    {new Date(lesson.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => setExpandedId(expandedId === lesson.id ? null : lesson.id)}
+                  >
+                    <Eye className="h-3.5 w-3.5" /> {expandedId === lesson.id ? "Hide" : "View"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={() => handleDownloadLessonPDF(lesson)}
+                  >
+                    <Download className="h-3.5 w-3.5" /> Download PDF
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={lesson.completed ? "outline" : "default"}
+                    disabled={updatingId === lesson.id}
+                    onClick={() => handleToggleCompleted(lesson)}
+                    className="gap-1.5"
+                  >
+                    {updatingId === lesson.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : lesson.completed ? (
+                      <X className="h-3.5 w-3.5" />
+                    ) : (
+                      <Check className="h-3.5 w-3.5" />
+                    )}
+                    {lesson.completed ? "Mark Incomplete" : "Mark Completed"}
+                  </Button>
+                </div>
+              </div>
+              {expandedId === lesson.id && (
+                <div className="border-t border-border/50 p-5 max-h-[500px] overflow-y-auto">
+                  <div className="prose prose-sm dark:prose-invert max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                      {lesson.lesson_content || "No content available for this lesson."}
+                    </ReactMarkdown>
+                  </div>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
