@@ -115,7 +115,7 @@ const StudentHomework = () => {
       const { data, error } = await supabase
         .from("homework_assignments")
         .select("*")
-        .eq("class_level", studentClassInfo.student_class)
+        .eq("class_level", studentClassInfo.student_class.match(/^\d+$/) ? `Class ${studentClassInfo.student_class}` : studentClassInfo.student_class)
         .eq("school_id", profile!.school_id)
         .order("created_at", { ascending: false });
       

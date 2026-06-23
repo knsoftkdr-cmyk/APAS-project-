@@ -400,9 +400,16 @@ Organize into 4 VARK groups. For EACH group use BRIEF inline format (no tables):
 **MANDATORY:** List the actual student names in each VARK group based on assessment data:
 **👁️ Group A — Visual Learners (X students):** Aarav, Priya, Rahul, ...
 
-## ? 5. Assessment — Quick Check
+## ? 5. Assessment — Quick Check (5 minutes)
+Write 3-5 ACTUAL topic-specific questions for the teacher to ask the class RIGHT NOW to check understanding. Not generic — tied to THIS lesson's content. Format:
+**Q1:** [Specific recall question about the topic just taught]
+**Q2:** [Concept-check question — "Explain in your own words..."]
+**Q3:** [Application question — "Give an example of..." or "What would happen if..."]
+**Q4 (optional):** [Higher-order — "How is X different from Y?"]
+**Method:** Cold call / Mini whiteboard / Thumbs up-down / Show me on slate
+**What to watch for:** [1 sentence describing what correct understanding looks like]
 
-## ?? 6. Closure — Revision Activity (RECENCY EFFECT — last 5 min)
+## 🔁 6. Closure — Revision Activity (RECENCY EFFECT — last 5 min)
 
 ## ?? 7. Assessment — Exit Ticket (Evaluate Phase)
 Exactly ONE exit ticket per period. Include 3-5 NUMBERED questions covering Remember/Understand/Apply Bloom levels with actual question text. Add Feedback Loop and Normalized Gain note.
@@ -424,6 +431,9 @@ LANGUAGE & FORMATTING RULES
 - Write in simple, friendly language — like talking to a 10-year-old.
 - Avoid jargon: utilize, facilitate, demonstrate, pedagogical, scaffold, differentiated, cognitive, formative, summative — use plain English.
 - Short sentences (10-15 words). Warm, encouraging tone.
+- NEVER repeat "Teacher says" or "Teacher asks" more than once per paragraph. Vary with: "Prompt students with...", "Pose the question:", "Ask the class:", "Invite responses:", "Display on board:", "Challenge students:".
+- Write all teacher dialogue as direct speech in quotes — e.g. "How many of you have seen a bar graph before?"
+- Make the lesson feel REAL and professional — like a master teacher wrote it, not a robot listing steps.
 - Decode every advanced/technical/subject word inline on FIRST use using: **Term** _(what this means: simple explanation with everyday comparison)_.
 - Use markdown tables for data, --- horizontal rules between sections, emoji indicators (???????? ?? ? ??).
 - Bold all labels. Cite specific scores/student counts.
