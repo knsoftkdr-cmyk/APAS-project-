@@ -54,6 +54,7 @@ const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenc
 const AutomationDashboard = lazy(() => import("./pages/AutomationDashboard"));
 const MultiTenantDashboard = lazy(() => import("./pages/MultiTenantDashboard"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
+const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
@@ -128,6 +129,7 @@ export default function App() {
                       <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher", "student", "parent"]}><Billing /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="*" element={<NotFound />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />

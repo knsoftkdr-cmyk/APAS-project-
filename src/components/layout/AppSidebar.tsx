@@ -1,5 +1,6 @@
 ﻿import {
   CalendarDays,
+  TrendingUp,
   UserCheck,
   LayoutDashboard,
   Brain,
@@ -82,6 +83,7 @@ const navItems: Array<{
   { title: "Automations", icon: Zap, path: "/automation-dashboard", roles: ["knsoft_admin"] },
   { title: "Multi-Tenant", icon: Building2, path: "/multi-tenant", roles: ["knsoft_admin"] },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
+  { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
