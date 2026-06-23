@@ -5,6 +5,7 @@ import { StatCard } from "@/components/StatCard";
 import { GettingStartedBanner } from "@/components/GettingStartedBanner";
 import { StatusBadge } from "@/components/StatusBadge";
 import { useAuth } from "@/contexts/AuthContext";
+import SyllabusTracker from "@/components/SyllabusTracker";
 import { Users, CheckCircle, Book, AlertTriangle, Target, BookOpen, Clock, Dumbbell, ClipboardCheck, TrendingUp, Brain, FileText, BarChart3, ArrowRight, Sparkles, GraduationCap, Lightbulb, LineChart, PenLine, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -385,6 +386,11 @@ const TeacherHome = () => {
         </Card>
       </div>
 
+      {/* Syllabus Tracker */}
+      <div className="mb-10">
+        <SyllabusTracker />
+      </div>
+
       {/* What You Can Do */}
       <div className="mb-10">
         <h2 className="text-xl font-bold text-foreground mb-1">What You Can Do</h2>
@@ -722,6 +728,11 @@ const AdminHome = () => {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Syllabus Tracker */}
+      <div className="mb-10">
+        <SyllabusTracker />
       </div>
 
       {/* What You Can Do */}
