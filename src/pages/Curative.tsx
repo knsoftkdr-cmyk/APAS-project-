@@ -374,7 +374,7 @@ const extractPeriods = (lessonContent: string): Array<{ periodNumber: number; ti
   // Remove intro text 
   const cleanContent = lessonContent.replace(/^[\s\S]*?(##|[^\w\n])/m, '$1');
   
-  // Pattern 1: Multi-period format "## ?? PERIOD 1 — Title"
+  // Pattern 1: Multi-period format "## 📚 PERIOD 1 — Title"
   let periodRegex = /##\s*[^\w\n]*\s*PERIOD\s+(\d+)\s*[—-]\s*([^(\n]+)/gi;
   let match;
   
@@ -1216,35 +1216,35 @@ ${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divide
 MANDATORY SECTION STRUCTURE FOR EVERY PERIOD (do NOT deviate):
 Each period MUST have EXACTLY these 8 sections in this order:
 
-### ?? 1. Learning Objectives
+### 🎯 1. Learning Objectives
 - Clear, measurable objectives for THIS period using Bloom's taxonomy
 
-### ?? 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
+### 🧠 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
 - Engaging opening that captures attention
 - X = approximately 20% of period duration
 
-### ?? 3. Main Teaching — Chunked Delivery (10-2-10 Rule)
+### 📚 3. Main Teaching — Chunked Delivery (10-2-10 Rule)
 - Chunk 1: Input ? 2-min Processing ? Application (with 3-tier differentiation)
 - Chunk 2: Input ? 2-min Processing ? Application (with 3-tier differentiation)
 - Chunk 3: (if time permits) Input ? 2-min Processing ? Application
 - Include VARK-aligned activities for Visual, Auditory, Read/Write, Kinesthetic learners
 
-### ?? 4. Activities — Differentiated Group Work ([X] minutes)
+### 🤝 4. Activities — Differentiated Group Work ([X] minutes)
 - Group-based collaborative activities
 - 3-tier tasks: Support/Core/Extension for mixed ability groups
 - X = approximately 30-40% of period duration
 
-### ? 5. Assessment — Quick Check ([X] minutes)
+### ✅ 5. Assessment — Quick Check ([X] minutes)
 - Formative assessment to check understanding
 - Quick quiz, observation checklist, or interactive check
 - X = approximately 10% of period duration
 
-### ?? 6. Closure — Revision Activity (Last [X] minutes — RECENCY EFFECT)
+### 🔁 6. Closure — Revision Activity (Last [X] minutes — RECENCY EFFECT)
 - Summarize key learning points
 - Quick review game, exit slip preview, or concept mapping
 - X = approximately 10% of period duration
 
-### ?? 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
 - 3-5 NUMBERED questions (1. 2. 3. etc.) that assess the key learning from this period
 - Questions should be clear, specific, and answerable in 5 minutes
 - Format: Simple numbered list with clear question text
@@ -1255,7 +1255,7 @@ Each period MUST have EXACTLY these 8 sections in this order:
   4. Solve [sample problem]
   5. What would happen if [scenario]?
 
-### ?? 8. BBL Compliance Checklist
+### ✅ 8. BBL Compliance Checklist
 - Primacy Effect applied: ?
 - Recency Effect applied: ?
 - Cognitive Load managed: ?
@@ -1267,21 +1267,21 @@ Each period MUST have EXACTLY these 8 sections in this order:
 
 NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
 
-## ?? Overall Learning Objectives (for the complete unit across all periods)
+## 🎯 Overall Learning Objectives (for the complete unit across all periods)
 (3-5 cumulative objectives for the entire ${periods}-period lesson)
 
 ---
-## ?? PERIOD 1 — [Sub-topic Title]
+## 📚 PERIOD 1 — [Sub-topic Title]
 [Apply the 8-section structure above]
 
 ---
-## ?? PERIOD 2 — [Sub-topic Title]
+## 📚 PERIOD 2 — [Sub-topic Title]
 [Apply the 8-section structure above, building on Period 1]
 
 ... repeat for ALL ${periods} periods ...
 
 ---
-## ?? PERIOD ${periods} — [Sub-topic Title]
+## 📚 PERIOD ${periods} — [Sub-topic Title]
 [Apply the 8-section structure above with comprehensive review]
 
 ---
@@ -1291,26 +1291,26 @@ NOW APPLY THIS STRUCTURE TO ALL ${periods} PERIODS:
 ---
 
 CRITICAL REQUIREMENTS:
-? EVERY period (1 through ${periods}) MUST have ALL 8 sections
-? Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
-? Period timings MUST total exactly ${periodDurationMin} minutes per period
-? Content must be distributed evenly across ${periods} periods with progressive complexity
-? Each period builds on previous learning
-? Exit tickets must assess THAT period's specific learning objectives
+✅ EVERY period (1 through ${periods}) MUST have ALL 8 sections
+✅ Section 7 (Evaluate Phase Exit Ticket) MUST have numbered questions (1. 2. 3. etc.)
+✅ Period timings MUST total exactly ${periodDurationMin} minutes per period
+✅ Content must be distributed evenly across ${periods} periods with progressive complexity
+✅ Each period builds on previous learning
+✅ Exit tickets must assess THAT period's specific learning objectives
 ` : `Cover the complete topic within a single ${periodDurationMin}-minute period with full detail.
 
 Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's taxonomy action verbs.
 
 Apply the same 8-section structure for the single period:
-### ?? 1. Learning Objectives
-### ?? 2. Introduction — Hook Activity
-### ?? 3. Main Teaching — Chunked Delivery
-### ?? 4. Activities — Differentiated Group Work
-### ? 5. Assessment — Quick Check
-### ?? 6. Closure — Revision Activity
-### ?? 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
+### 🎯 1. Learning Objectives
+### 🧠 2. Introduction — Hook Activity
+### 📚 3. Main Teaching — Chunked Delivery
+### 🤝 4. Activities — Differentiated Group Work
+### ✅ 5. Assessment — Quick Check
+### 🔁 6. Closure — Revision Activity
+### 📝 7. Assessment — Exit Ticket (5 minutes — Evaluate Phase)
 [Include 3-5 NUMBERED exit ticket questions]
-### ?? 8. BBL Compliance Checklist`}
+### ✅ 8. BBL Compliance Checklist`}
 
 Generate ONLY the lesson plan (do NOT generate a diagnostic report). Include:
 - Differentiated activities for each of the 4 VARK groups with 3-tier task cards (Support/Core/Extension)
@@ -1323,8 +1323,8 @@ IMPORTANT: For each VARK learning style group (Visual, Auditory, Read/Write, Kin
 
 IMPORTANT: You MUST complete the ENTIRE lesson plan. Do NOT stop early or truncate. The plan MUST end with the "Learning Outcomes" section.
 
-IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "?? Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
-? **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
+IMPORTANT: At the VERY END of the lesson plan, after Learning Outcomes, include a "📖 Word Decoder" section. This section MUST define every advanced/technical term used in the plan in simple, kid-friendly language. Format each term as:
+🔍 **Term Name** = Simple explanation in 1-2 sentences that a parent or student can understand.
 Include terms like: Primacy Effect, Recency Effect, 10-2-10 Chunking Rule, Cognitive Load, Amygdala Filter, Patterning & Meaning, Spaced Repetition, Social Brain, ZPD (Zone of Proximal Development), Scaffolding, Multiple Intelligences (MI), VARK, Bloom's Taxonomy, Formative Check, and any other technical terms used in the plan.
 
 Whenever you use any advanced or technical word in the lesson plan body, add a simple decode inline as well.`,

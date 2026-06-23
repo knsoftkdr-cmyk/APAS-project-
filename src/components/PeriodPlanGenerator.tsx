@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -807,7 +807,7 @@ const PeriodPlanGenerator = () => {
                 {selectedLesson ? getLessonLabel(selectedLesson) : "Lesson Plan"}
               </DialogTitle>
             </DialogHeader>
-            <div className="prose prose-sm max-w-none dark:prose-invert mt-2">
+            <div className="prose prose-sm max-w-none dark:prose-invert mt-2" style={{ fontFamily: `'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI', sans-serif` }}>
               <ReactMarkdown components={LessonMarkdownComponents}>
                 {selectedLesson?.lesson_content || "No content available."}
               </ReactMarkdown>

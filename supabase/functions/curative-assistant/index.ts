@@ -100,14 +100,14 @@ const pipeGeminiSseToOpenAi = (
         let continuations = 0;
         const isPlanIncomplete = () =>
           !isWorksheetMode
-            ? (!/Word Decoder/i.test(accumulated) && accumulated.length > 500)
+            ? (!/Word Decoder/i.test(accumulated) && accumulated.length > 500) || (!/Assessment.*Quick Check|## .* 5\./i.test(accumulated) && accumulated.length > 2000)
             : (!/COMPLETE ANSWER KEY/i.test(accumulated) && accumulated.length > 500);
         const isNearEnd = () =>
           !isWorksheetMode
             ? /Word Decoder/i.test(accumulated.slice(-1500))
             : /COMPLETE ANSWER KEY[\s\S]{500,}/i.test(accumulated.slice(-2000));
         while (
-          continuations < 5 &&
+          continuations < 8 &&
           (lastFinishReason === "MAX_TOKENS" || lastFinishReason === null || (lastFinishReason === "STOP" && isPlanIncomplete())) &&
           accumulated.length > 0 &&
           !isNearEnd()
@@ -392,18 +392,13 @@ For each chunk: Input Phase ? Processing Phase ? Application Phase (with ?? Basi
 Repeat chunks as needed to fit lesson duration.
 
 ## ?? 4. Activities — Differentiated Group Work
-Organize into 4 VARK groups. For EACH group present a structured card with table:
-| Parameter | Detail |
-|-----------|--------|
-| Description | ... |
-| Materials | ... |
-| Time | X min |
-| MI Focus | ... |
-| Expected Outcome | ... |
-
-Then 3-Tier Task Cards (?? Support / ?? Core / ?? Extension).
+Organize into 4 VARK groups. For EACH group use BRIEF inline format (no tables):
+**Group name (N students):** [1 sentence activity] | Materials: [brief] | Time: X min | MI: [list]
+- 🟢 Support: [1 sentence simplified task]
+- 🟡 Core: [1 sentence ZPD task]
+- 🔴 Extension: [1 sentence higher-order task]
 **MANDATORY:** List the actual student names in each VARK group based on assessment data:
-**??? Group A — Visual Learners (X students):** Aarav, Priya, Rahul, ...
+**👁️ Group A — Visual Learners (X students):** Aarav, Priya, Rahul, ...
 
 ## ? 5. Assessment — Quick Check
 
