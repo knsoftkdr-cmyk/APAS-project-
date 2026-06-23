@@ -1,4 +1,4 @@
-﻿import { useMemo, useState } from "react";
+﻿import { useMemo, useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -9,7 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 import studentBanner from "@/assets/student-dashboard-banner.png";
 import { BarChart3 } from "lucide-react";
 import {
@@ -44,6 +46,9 @@ import {
   FileText,
   Brain,
   ImageIcon,
+  Send,
+  Check,
+  Loader2,
 } from "lucide-react";
 import { format, subDays, startOfDay, isAfter } from "date-fns";
 import { ProfileCompletionBar } from "@/components/onboarding/ProfileCompletionBar";
@@ -75,13 +80,72 @@ const getProgressColor = (percentage: number) => {
   return "[&>div]:bg-red-400";
 };
 
+// Splits worksheet_content into individual activities on '---',
+// strips the COMPLETE ANSWER KEY section so students never see answers.
+function parseWorksheetActivities(content: string): string[] {
+  if (!content) return [];
+  // Cut off everything from "COMPLETE ANSWER KEY" onward
+  const keyIndex = content.search(/COMPLETE ANSWER KEY/i);
+  const studentFacing = keyIndex >= 0 ? content.slice(0, keyIndex) : content;
+  return studentFacing
+    .split(/^---$/m)
+    .map((block) => block.trim())
+    .filter((block) => block.length > 0);
+}
+
+// Fetch existing submission (if any) for this worksheet + student, so
+// the student can resume/edit answers before the teacher reviews them.
+function useWorksheetSubmission(worksheetId: string | undefined, studentId: string | undefined) {
+  return useQuery({
+    queryKey: ["worksheet-submission", worksheetId, studentId],
+    enabled: !!worksheetId && !!studentId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("worksheet_submissions")
+        .select("*")
+        .eq("worksheet_id", worksheetId!)
+        .eq("student_id", studentId!)
+        .maybeSingle();
+      if (error) {
+        console.error("Error fetching submission:", error);
+        return null;
+      }
+      return data;
+    },
+  });
+}
+
 export default function StudentDashboard() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { percent: profilePct, missing: profileMissing } = useProfileCompletion();
   const [showReport, setShowReport] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [selectedWorksheet, setSelectedWorksheet] = useState<any>(null);
+  const [answerMode, setAnswerMode] = useState(false);
+  const [activityAnswers, setActivityAnswers] = useState<Record<number, string>>({});
+  const [isSubmittingWorksheet, setIsSubmittingWorksheet] = useState(false);
+
+  // Fetch existing submission for the selected worksheet
+  const { data: existingSubmission, isLoading: submissionLoading } = useWorksheetSubmission(
+    selectedWorksheet?.worksheets?.id,
+    user?.id
+  );
+
+  // When a submission already exists, preload the saved answers when entering answer mode
+  useEffect(() => {
+    if (existingSubmission?.answers) {
+      setActivityAnswers(existingSubmission.answers as Record<number, string>);
+    } else {
+      setActivityAnswers({});
+    }
+  }, [existingSubmission]);
+
+  // Reset answer mode whenever the dialog opens for a different worksheet
+  useEffect(() => {
+    setAnswerMode(false);
+  }, [selectedWorksheet?.id]);
 
   // ── Homework assignments + own submissions
   const { data: hwData, isLoading: hwLoading } = useQuery({
@@ -179,6 +243,50 @@ export default function StudentDashboard() {
 
   const reportConfig = myAssessment ? getReportConfig(myAssessment.age_group) : null;
   const scores = myAssessment ? analyzeResponses(myAssessment.age_group, myAssessment.responses as Record<string, number>) : null;
+
+  const handleSubmitWorksheetAnswers = async () => {
+    if (!selectedWorksheet?.worksheets?.id || !user?.id) return;
+    setIsSubmittingWorksheet(true);
+    try {
+      const payload = {
+        worksheet_id: selectedWorksheet.worksheets.id,
+        assignment_id: selectedWorksheet.id, // worksheet_assignments.id
+        student_id: user.id,
+        student_name: profile?.full_name || null,
+        class_level: selectedWorksheet.class_level,
+        section: selectedWorksheet.section,
+        school_id: profile?.school_id || null,
+        answers: activityAnswers,
+        status: "submitted",
+        submitted_at: new Date().toISOString(),
+      };
+
+      if (existingSubmission?.id) {
+        const { error } = await supabase
+          .from("worksheet_submissions")
+          .update({ answers: activityAnswers, submitted_at: new Date().toISOString(), status: "submitted" })
+          .eq("id", existingSubmission.id);
+        if (error) throw new Error(error.message);
+        toast.success("Your answers have been updated!");
+      } else {
+        const { error } = await supabase
+          .from("worksheet_submissions")
+          .insert([payload] as any);
+        if (error) throw new Error(error.message);
+        toast.success("Worksheet submitted to your teacher!");
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: ["worksheet-submission", selectedWorksheet.worksheets.id, user.id],
+      });
+      setAnswerMode(false);
+    } catch (err: any) {
+      console.error("Failed to submit worksheet:", err);
+      toast.error(`Failed to submit: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsSubmittingWorksheet(false);
+    }
+  };
 
   // ── Compute homework breakdown
   const breakdown = useMemo(() => {
@@ -717,7 +825,7 @@ const subjectColors: Record<string, string> = {
               <div className="space-y-3">
                 {assignedWorksheets.slice(0, 5).map((ws: any) => (
                   <div
-                    key={ws.id} onClick={() => setSelectedWorksheet(ws)} style={{cursor:"pointer"}}
+                    key={ws.id} onClick={() => navigate("/worksheets")} style={{cursor:"pointer"}}
                     className={`
                       flex
                       items-center
@@ -1001,8 +1109,24 @@ const subjectColors: Record<string, string> = {
                   <ImageIcon className="h-4 w-4" /> Download Image
                 </Button>
               )}
+              {!answerMode && (
+                <Button
+                  size="sm"
+                  className="gap-2 bg-blue-600 hover:bg-blue-700"
+                  disabled={submissionLoading}
+                  onClick={() => setAnswerMode(true)}
+                >
+                  <Send className="h-4 w-4" />
+                  {existingSubmission ? "Edit My Answers" : "Answer & Submit"}
+                </Button>
+              )}
+              {existingSubmission?.status === "reviewed" && (
+                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 gap-1">
+                  <Check className="h-3 w-3" /> Reviewed by teacher
+                </Badge>
+              )}
             </div>
-            {selectedWorksheet.worksheets?.image_url && (
+            {!answerMode && selectedWorksheet.worksheets?.image_url && (
               <div className="mb-4 flex justify-center">
                 <img
                   src={selectedWorksheet.worksheets.image_url}
@@ -1011,11 +1135,63 @@ const subjectColors: Record<string, string> = {
                 />
               </div>
             )}
-            <div className="prose prose-sm max-w-none border rounded-xl p-6 bg-muted/20">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {selectedWorksheet.worksheets?.worksheet_content || "No content available"}
-              </ReactMarkdown>
-            </div>
+
+            {!answerMode ? (
+              <div className="prose prose-sm max-w-none border rounded-xl p-6 bg-muted/20">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {selectedWorksheet.worksheets?.worksheet_content || "No content available"}
+                </ReactMarkdown>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {existingSubmission?.status === "reviewed" && existingSubmission?.teacher_feedback && (
+                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+                    <p className="font-semibold mb-1">Teacher feedback:</p>
+                    <p>{existingSubmission.teacher_feedback}</p>
+                  </div>
+                )}
+                {parseWorksheetActivities(selectedWorksheet.worksheets?.worksheet_content || "").map(
+                  (activity, idx) => (
+                    <div key={idx} className="border rounded-xl p-4 bg-card">
+                      <div className="prose prose-sm max-w-none mb-3">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{activity}</ReactMarkdown>
+                      </div>
+                      <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                        Your Answer
+                      </label>
+                      <Textarea
+                        value={activityAnswers[idx] || ""}
+                        onChange={(e) =>
+                          setActivityAnswers((prev) => ({ ...prev, [idx]: e.target.value }))
+                        }
+                        placeholder="Write your answer here..."
+                        rows={4}
+                        className="bg-background"
+                      />
+                    </div>
+                  )
+                )}
+
+                <div className="flex gap-2 justify-end pt-2 border-t">
+                  <Button variant="outline" size="sm" onClick={() => setAnswerMode(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="gap-2 bg-blue-600 hover:bg-blue-700"
+                    disabled={isSubmittingWorksheet}
+                    onClick={handleSubmitWorksheetAnswers}
+                  >
+                    {isSubmittingWorksheet ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                    {existingSubmission ? "Update Answers" : "Submit Worksheet"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       )}

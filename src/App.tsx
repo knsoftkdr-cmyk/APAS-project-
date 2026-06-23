@@ -19,8 +19,10 @@ const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
+const Worksheets = lazy(() => import("./pages/Worksheets"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Curative = lazy(() => import("./pages/Curative"));
+const Submissions = lazy(() => import("./pages/Submissions"));
 const Requests = lazy(() => import("./pages/Requests"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const TeacherPanel = lazy(() => import("./pages/TeacherPanel"));
@@ -92,8 +94,10 @@ export default function App() {
                       <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
+                      <Route path="/worksheets" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Worksheets /></RoleGuard></ProtectedRoute>} />
                       <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />
                       <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Curative /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/submissions" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Submissions /></RoleGuard></ProtectedRoute>} />
                       <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "student", "parent"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                       <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><Alerts /></RoleGuard></ProtectedRoute>} />
