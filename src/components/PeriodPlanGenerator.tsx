@@ -127,7 +127,7 @@ const getClassLabel = (val: string): string => {
 };
 
 const PeriodPlanGenerator = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const queryClient = useQueryClient();
 
   const [selectedClass, setSelectedClass] = useState("");
@@ -163,7 +163,7 @@ const PeriodPlanGenerator = () => {
       if (!selectedClass) return [];
       const { data } = await supabase
         .from("lessons")
-        .select("id, title, subject, lesson_content, class_level, section")
+        .select("id, title, subject, lesson_content, class_level, section, teacher_id")
         .eq("class_level", getClassLabel(selectedClass))
         .order("created_at", { ascending: false });
       // topic column exists in DB but not in generated types yet, so cast
@@ -496,17 +496,19 @@ const PeriodPlanGenerator = () => {
       ? selectedLesson.lesson_content.split(/##\s*📝\s*Assessment|###\s*Assessment/i)[1]?.split(/^##|^###/m)[0] || ""
       : "";
 
+    const { data: { user: freshUser } } = await supabase.auth.getUser();
     setIsMarkingCompleted(true);
     try {
       const { error } = await supabase.from("homework_assignments").insert({
         lesson_id: selectedLessonId,
-        teacher_id: user.id,
+        teacher_id: (selectedLesson as any)?.teacher_id || freshUser?.id || user?.id || null,
         class_level: getClassLabel(selectedClass),
         section: selectedSection.toUpperCase(),
         subject: selectedLesson.subject || null,
         topic: selectedLesson.topic || null,
         exit_ticket_content: exitTicketContent || selectedLesson.lesson_content,
         assignment_type: "auto-assigned",
+        school_id: profile?.school_id || null,
         assigned_at: new Date().toISOString(),
       }) as any;
       if (error) throw error;

@@ -509,58 +509,64 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
-  // Student: notify when teacher assigns homework
+  // Student: notify when teacher assigns homework (polling)
+  const hwLastCheckedRef = useRef<string>(new Date().toISOString());
+  const hwPollSetupRef = useRef<string | null>(null);
   useEffect(() => {
     if (!user || profile?.role !== "student") return;
+    // Only set up the interval once per user session — avoid tearing down/rebuilding
+    // on every render, which was resetting lastChecked and causing missed events.
+    if (hwPollSetupRef.current === user.id) return;
+    hwPollSetupRef.current = user.id;
 
-    let studentClass: any = null;
-    const loadStudentClass = async () => {
-      const { data } = await supabase
+    const normalizeClass = (c: string | null | undefined) => (c || "").replace(/[^0-9]/g, "").trim();
+    let intervalId: any = null;
+    let cancelled = false;
+    const checkNewHomework = async () => {
+      if (cancelled) return;
+      const { data: studentClass } = await supabase
         .from("profiles")
         .select("class_grade, section, school_id")
         .eq("id", user.id)
         .maybeSingle();
-      return data;
-    };
-    loadStudentClass().then((p) => { studentClass = p; });
-
-    const ch = supabase
-      .channel("notif_hw_assigned_student")
-      .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "homework_assignments" },
-        async (payload) => {
-          const row = payload.new as any;
-          if (!studentClass) studentClass = await loadStudentClass();
-          if (!studentClass) return;
-          if (row.class_level !== studentClass.class_grade) return;
-          if (row.section && studentClass.section &&
-              row.section.toUpperCase() !== studentClass.section.toUpperCase()) return;
-
-          // School-scope check: fetch teacher's school and compare
-          const { data: teacherProfile } = await supabase
-            .from("profiles").select("school_id")
-            .eq("id", row.teacher_id).maybeSingle();
-          if (!teacherProfile?.school_id) return;
-          if (teacherProfile.school_id !== studentClass.school_id) return;
-
-          let teacherName = "Your teacher";
+      if (!studentClass || cancelled) return;
+      const checkFrom = hwLastCheckedRef.current;
+      hwLastCheckedRef.current = new Date().toISOString();
+      const { data: newAssignments, error: hwErr } = await supabase
+        .from("homework_assignments")
+        .select("id, class_level, section, subject, topic, teacher_id, school_id, assigned_at")
+        .gte("assigned_at", checkFrom)
+        .eq("school_id", studentClass.school_id || "");
+      if (!newAssignments || newAssignments.length === 0) return;
+      for (const row of newAssignments) {
+        if (normalizeClass(row.class_level) !== normalizeClass(studentClass.class_grade)) continue;
+        if (row.section && studentClass.section &&
+            row.section.toUpperCase() !== studentClass.section.toUpperCase()) continue;
+        let teacherName = "Your teacher";
+        if (row.teacher_id) {
           const { data: t } = await supabase
             .from("profiles").select("full_name")
             .eq("id", row.teacher_id).maybeSingle();
           if (t?.full_name) teacherName = t.full_name;
-
-          const subject = row.subject || "Homework";
-          const topic = row.topic ? ` - ${row.topic}` : "";
-          push({
-            type: "info",
-            title: "New homework assigned",
-            message: `${teacherName} assigned ${subject}${topic}.`,
-            link: "/dashboard",
-          });
         }
-      ).subscribe();
+        const subject = row.subject || "Homework";
+        const topic = row.topic ? ` - ${row.topic}` : "";
+        push({
+          type: "info",
+          title: "New homework assigned",
+          message: `${teacherName} assigned ${subject}${topic}.`,
+          link: "/dashboard",
+        });
+      }
+    };
+    checkNewHomework();
+    intervalId = setInterval(checkNewHomework, 30000);
+    return () => {
+      cancelled = true;
+      if (intervalId) clearInterval(intervalId);
+      hwPollSetupRef.current = null;
+    };
 
-    return () => { supabase.removeChannel(ch); };
   }, [user, profile, push]);
 
 
@@ -570,7 +576,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (!user || !profile?.role) return;
     if (!adminRoles.includes(profile.role.toLowerCase())) return;
     if (!profile?.school_id) return;
-
     const ch = supabase
       .channel("notif_diag_request_admin")
       .on(
