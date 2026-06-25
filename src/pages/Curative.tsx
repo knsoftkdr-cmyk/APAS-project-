@@ -1204,9 +1204,17 @@ const Curative = () => {
     } catch (err) {
       console.error("Duplicate lesson check failed:", err);
     }
+    const subjectLower2 = (selectedSubject ? extractSubjectName(selectedSubject) : "").toLowerCase();
+    const isTelugu = /telugu/.test(subjectLower2);
+    const isHindi = /hindi/.test(subjectLower2);
+    const languageInstruction = isTelugu
+      ? "\nIMPORTANT: This is a Telugu language subject. Generate the ENTIRE lesson plan content in Telugu language only."
+      : isHindi
+      ? "\nIMPORTANT: This is a Hindi language subject. Generate the ENTIRE lesson plan content in Hindi language only."
+      : "";
 
     sendMessage(
-      `Generate a COMPLETE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.
+      `Generate a COMPLETE LESSON PLAN for ${getClassLabel(selectedClass)} Section ${selectedSection}${subjectText}${chapterText}${topicText}${curriculumText} with ${studentCount} students.${languageInstruction}
 
 TOTAL PERIODS: ${periods}
 PERIOD DURATION: ${periodDurationMin} minutes each
