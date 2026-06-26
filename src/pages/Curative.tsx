@@ -2803,9 +2803,9 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                         <CardTitle className="text-sm flex items-center gap-2 text-accent">
                           <FileText className="h-4 w-4" />
                           {isSinglePeriod ? (
-                            selectedPeriodInfo.title || "Assessment Questions"
+                            "Assessment Questions / Exit Ticket Questions"
                           ) : (
-                            `Period ${selectedPeriod} — ${selectedPeriodInfo.title}`
+                            `Period ${selectedPeriod} — Assessment Questions / Exit Ticket Questions`
                           )}
                         </CardTitle>
                       </CardHeader>
@@ -2823,16 +2823,29 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
                                     {editedQuestions.map((question, idx) => (
                                       <div key={idx} className="space-y-1 mb-3">
                                         <label className="text-xs font-medium">Question {idx + 1}</label>
-                                        <Textarea
-                                          value={question}
-                                          onChange={(e) => {
-                                            const updated = [...editedQuestions];
-                                            updated[idx] = e.target.value;
-                                            setEditedQuestions(updated);
-                                          }}
-                                          className="text-sm"
-                                          rows={2}
-                                        />
+                                        <div className="flex gap-2">
+                                          <Textarea
+                                            value={question}
+                                            onChange={(e) => {
+                                              const updated = [...editedQuestions];
+                                              updated[idx] = e.target.value;
+                                              setEditedQuestions(updated);
+                                            }}
+                                            className="text-sm flex-1"
+                                            rows={2}
+                                          />
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                              const updated = editedQuestions.filter((_, i) => i !== idx);
+                                              setEditedQuestions(updated);
+                                            }}
+                                            className="h-fit text-destructive hover:bg-destructive/10"
+                                          >
+                                            <X className="h-4 w-4" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
