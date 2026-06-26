@@ -197,12 +197,12 @@ useEffect(() => {
   const canStartQuiz = name.trim() && age && studentClass && section.trim() && curriculum && teacherId;
 
   const getAgeGroupFromAge = (ageVal: number) => {
-    if (ageVal >= 3 && ageVal < 5) return 3;
-    if (ageVal >= 5 && ageVal < 10) return 5;
-    if (ageVal >= 10 && ageVal < 15) return 10;
-    return 15;
+    if (ageVal >= 3 && ageVal < 6) return 3;
+    if (ageVal >= 6 && ageVal < 9) return 6;
+    if (ageVal >= 9 && ageVal < 11) return 9;
+    if (ageVal >= 11 && ageVal < 14) return 11;
+    return 14;
   };
-
   const startQuiz = async () => {
     const ageNum = parseInt(age);
     const ageGroup = getAgeGroupFromAge(ageNum);
