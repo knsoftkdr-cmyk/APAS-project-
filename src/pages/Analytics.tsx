@@ -56,16 +56,16 @@ const Analytics = () => {
     CLASS_OPTIONS.find((c) => c.value === val)?.label || val;
 
   const { data: assignments = [] } = useQuery({
-    queryKey: ["analytics-athome-assignments", selectedClass, selectedSection, user?.id],
-    enabled: !!selectedClass && !!selectedSection && !!user?.id && isAuthorized,
+    queryKey: ["analytics-athome-assignments", selectedClass, selectedSection, user?.id, profile?.school_id],
+    enabled: !!selectedClass && !!selectedSection && !!user?.id && !!profile?.school_id && isAuthorized,
     queryFn: async () => {
       const { data } = await supabase
         .from("homework_assignments")
         .select("*")
         .eq("assignment_type", "at-home")
-        .eq("assigned_by", user!.id)
-        .eq("class_level", selectedClass)
+        .eq("class_level", CLASS_OPTIONS.find(c => c.value === selectedClass)?.label || selectedClass)
         .eq("section", selectedSection.toUpperCase())
+        .eq("school_id", profile!.school_id)
         .order("assigned_at", { ascending: false });
       return data || [];
     },
