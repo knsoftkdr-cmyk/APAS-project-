@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+﻿import { useState, useEffect, useMemo, useCallback } from "react";
 import { DiagnosticRequestForm } from "@/components/DiagnosticRequestForm";
 import { DiagnosticAssignPanel } from "@/components/DiagnosticAssignPanel";
 import { StudentDiagnosticTest } from "@/components/StudentDiagnosticTest";
@@ -133,6 +133,40 @@ function build25QuestionConfig(cfg: AgeGroupConfig): AgeGroupConfig {
   };
 }
 
+
+function getRespondentNote(ageGroup: number): { title: string; body: string; audience: "adult" | "student" } {
+  switch (ageGroup) {
+    case 3:
+      return {
+        title: "Before You Begin — For the Parent / Teacher",
+        body:
+          "This form is completed by a parent or class teacher, based on direct observation of the child over the past 4 weeks. It is not a self-report instrument — please do not have the child answer these questions themselves.",
+        audience: "adult",
+      };
+    case 6:
+      return {
+        title: "Before You Begin",
+        body:
+          "This is a self-report form completed by the student. If the student is in Grade 1, or is not yet a confident independent reader, a teacher or parent should read each question aloud.",
+        audience: "student",
+      };
+    case 9:
+      return {
+        title: "Before You Begin",
+        body:
+          "This is an independent self-report form, completed by the student on their own. A teacher or parent may clarify the meaning of a word if asked, but should not read the form aloud.",
+        audience: "student",
+      };
+    default:
+      return {
+        title: "Before You Begin",
+        body:
+          "This is an independent self-report form, completed by the student on their own. No assistance is required unless the student asks for it.",
+        audience: "student",
+      };
+  }
+}
+
 const StudentAssessment = ({ userId, studentName }: { userId?: string; studentName: string }) => {
   const { awardXp } = useGamification();
   const { validateTimer } = useTimerValidation();
@@ -154,6 +188,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
   const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
  
   const [showTeacher, setShowTeacher] = useState(true);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   // Auto-populate student's class and section from profile on component mount
   useEffect(() => {
@@ -216,6 +251,7 @@ useEffect(() => {
       setAnswers({});
       setCurrentQ(0);
       setQuizStartTime(Date.now());
+      setShowInstructions(true);
       setPhase("quiz");
       toast.info(`Loaded ${limited.totalQuestions} diagnostic questions`);
       return;
@@ -295,6 +331,7 @@ useEffect(() => {
           setAnswers({});
           setCurrentQ(0);
           setQuizStartTime(Date.now());
+          setShowInstructions(true);
           setPhase("quiz");
           toast.info(`Loaded ${filteredQuestions.length} teacher-assigned questions`);
           return;
@@ -320,6 +357,7 @@ useEffect(() => {
     setAnswers({});
     setCurrentQ(0);
     setQuizStartTime(Date.now());
+    setShowInstructions(true);
     setPhase("quiz");
   };
 
@@ -617,9 +655,27 @@ useEffect(() => {
     const displayNum = currentQ + 1;
 
     const dimInfo = getCurrentDimensionInfo(config, currentQ);
+    const note = getRespondentNote(config.ageGroup);
 
     return (
       <AppLayout>
+        <AlertDialog open={showInstructions}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                {note.title}
+              </AlertDialogTitle>
+              <AlertDialogDescription>{note.body}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction onClick={() => setShowInstructions(false)}>
+                OK, Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <div className="w-full">
           {/* Top exam bar */}
           <div className="flex items-center justify-between mb-6">
