@@ -20,13 +20,14 @@ const ForgotPassword = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { email: email.trim().toLowerCase() },
-      });
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+        {
+          redirectTo: `${window.location.origin}/update-password`,
+        }
+      );
 
-      if (error || !data?.success) {
-        throw new Error(data?.error || "Failed to send recovery link. Please try again.");
-      }
+      if (error) throw error;
 
       toast({ 
         title: "Link sent successfully!", 
