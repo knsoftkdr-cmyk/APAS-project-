@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -70,6 +71,8 @@ const AdminPanel = () => {
   const { toast } = useToast();
   const isMasterAdmin = profile?.role === "knsoft_admin" || profile?.role === "superadmin";
   const isSchoolAdmin = profile?.role === "school_admin";
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "classes");
   const [loading, setLoading] = useState(true);
   const [classes, setClasses] = useState<ClassRecord[]>([]);
   const [students, setStudents] = useState<StudentRecord[]>([]);
@@ -503,7 +506,7 @@ const AdminPanel = () => {
           </Card>
         </div>
 
-        <Tabs defaultValue="classes" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid bg-blue-50 p-1 rounded-xl", isMasterAdmin ? "grid-cols-8" : isPrincipalRole ? "grid-cols-6" : isSchoolAdmin ? "grid-cols-3" : "grid-cols-1")}>
             <TabsTrigger value="classes" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Classes</TabsTrigger>
             {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="notifications" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>}

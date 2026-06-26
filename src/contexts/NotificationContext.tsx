@@ -80,34 +80,23 @@ function saveToStorage(userId: string, notifications: Notification[]) {
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-
-  useEffect(() => {
-    if (!user) { setNotifications([]); return; }
-    try {
-      const raw = localStorage.getItem(`apas_notifications_${user.id}`);
-      if (raw) setNotifications(JSON.parse(raw));
-    } catch {}
-  }, [user?.id]);
-
-  useEffect(() => {
-    if (!user) return;
-    try {
-      localStorage.setItem(`apas_notifications_${user.id}`, JSON.stringify(notifications.slice(0, 50)));
-    } catch {}
-  }, [notifications, user?.id]);
+  const hasLoadedRef = useRef(false);
 
   // -------------------------------------Load persisted notifications when user logs in ------------------------------------
   useEffect(() => {
+    hasLoadedRef.current = false;
     if (!user) {
       setNotifications([]);
       return;
     }
     setNotifications(loadFromStorage(user.id));
+    hasLoadedRef.current = true;
   }, [user?.id]);
 
   // ------------------------------------ Persist to localStorage whenever notifications change ------------------------------------
   useEffect(() => {
     if (!user) return;
+    if (!hasLoadedRef.current) return; // don't overwrite storage before the initial load completes
     saveToStorage(user.id, notifications);
   }, [notifications, user?.id]);
 
@@ -595,7 +584,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             type: "warning",
             title: "New Diagnostic Request",
             message: `${teacherProf.full_name || "A teacher"} submitted a diagnostic request for ${row.class_name} - ${row.section} (${row.subject}).`,
-            link: "/admin-panel",
+            link: "/admin?tab=approvals",
           });
         }
       )
