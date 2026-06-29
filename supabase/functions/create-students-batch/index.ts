@@ -118,7 +118,14 @@ Deno.serve(async (req) => {
 
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
-          .upsert({ id: userId, full_name: s.student_name || null, role: "student" }, { onConflict: "id" });
+          .upsert({
+            id: userId,
+            full_name: s.student_name || null,
+            role: "student",
+            school_id: s.school_id || null,
+            class_grade: s.class ? String(s.class).toLowerCase() : null,
+            section: s.section || null,
+          }, { onConflict: "id" });
 
         if (profileError) {
           results.push({

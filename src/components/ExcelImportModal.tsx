@@ -229,6 +229,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       parent_email: "",
       teacher_name: v.row.teacher_name,
       date_of_birth: v.row.date_of_birth,
+      school_id: profile?.school_id || null,
     }));
 
     // Import every valid row so existing students also get their DOB/login credentials synced

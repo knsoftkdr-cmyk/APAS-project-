@@ -117,11 +117,20 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const mobileNavItems = getMobileNavItems(profile?.role);
 
   const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
-  const needsPermCheck = profile?.role && !BYPASS_ROLES.includes(profile.role);
+  const STUDENT_ROLES = ["student", "parent"];
+  const needsPermCheck = profile?.role && !BYPASS_ROLES.includes(profile.role) && !STUDENT_ROLES.includes(profile.role);
 
   const visibleItems = (needsPermCheck && permsLoading) ? [] : navItems
     .filter((item) => {
       if (item.roles && (!profile?.role || !item.roles.includes(profile.role))) return false;
+      // Students/parents use hardcoded allowed modules (no DB permission rows needed)
+      if (profile?.role === "student" || profile?.role === "parent") {
+        if (!(item as any).module) return true; // items with no module (Settings etc) always show
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor"];
+        const parentModules = ["Home", "Requests", "Alerts"];
+        const allowed = profile?.role === "student" ? studentModules : parentModules;
+        return allowed.includes((item as any).module);
+      }
       if (needsPermCheck && (item as any).module && !permsLoading) {
         return can((item as any).module);
       }

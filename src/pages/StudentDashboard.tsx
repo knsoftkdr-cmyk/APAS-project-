@@ -160,7 +160,13 @@ export default function StudentDashboard() {
             .order("assigned_at", { ascending: false })
             .limit(50);
           if (profile?.school_id) q = q.eq("school_id", profile.school_id);
-          if (profile?.class_grade) q = q.eq("class_level", `Class ${profile.class_grade}`);
+          if (profile?.class_grade) {
+          const rawGrade1 = profile.class_grade.toLowerCase();
+          const classLevel1 = /^\d+$/.test(rawGrade1)
+            ? `Class ${profile.class_grade}`
+            : rawGrade1.charAt(0).toUpperCase() + rawGrade1.slice(1);
+          q = q.eq("class_level", classLevel1);
+        }
           if (profile?.section)    q = q.eq("section", profile.section);
           return q;
         })(),
@@ -183,7 +189,10 @@ export default function StudentDashboard() {
       
       // Convert class_grade to class_level format (e.g., "1" -> "Class 1")
       if (!profile?.class_grade) return [];
-      const classLevelFormatted = `Class ${profile?.class_grade}`;
+      const rawGrade = (profile?.class_grade ?? "").toLowerCase();
+      const classLevelFormatted = /^\d+$/.test(rawGrade)
+        ? `Class ${profile?.class_grade}`
+        : rawGrade.charAt(0).toUpperCase() + rawGrade.slice(1);
       
       let query = supabase
         .from("worksheet_assignments")
