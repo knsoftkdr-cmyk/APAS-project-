@@ -5,17 +5,19 @@ import { useAuth } from "@/contexts/AuthContext";
 const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
 
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing"],
-  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing"],
-  hod:       ["Home", "Reports", "Assessments", "Analytics"],
-  teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests"],
+  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar"],
+  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar"],
+  hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar"],
+  teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar"],
   student:   ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor"],
-  parent:    ["Home"],
+  parent:    ["Home", "Academic Calendar"],
 };
 
-const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests"];
+const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar"];
 
 const permCache = new Map<string, string[]>();
+// Cache version — bump this to invalidate all cached permissions
+const CACHE_VERSION = "v2";
 
 interface UsePermissionsReturn {
   can: (moduleName: string) => boolean;
@@ -25,7 +27,7 @@ interface UsePermissionsReturn {
 
 export function usePermissions(): UsePermissionsReturn {
   const { profile } = useAuth();
-  const cacheKey = `${profile?.school_id}-${profile?.role}`;
+  const cacheKey = `${CACHE_VERSION}-${profile?.school_id}-${profile?.role}`;
   const [allowedModules, setAllowedModules] = useState<string[]>(() => permCache.get(cacheKey) ?? []);
   const [loading, setLoading] = useState(!permCache.has(cacheKey));
 
