@@ -19,7 +19,7 @@ interface HomeworkRow { id: string; title: string; due_date: string | null; stat
 interface ScoreRow { id: string; score: number | null; completed_at: string | null; total_questions: number | null; age_group?: number; }
 
 export default function ParentDashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [children, setChildren] = useState<Child[]>([]);
@@ -145,7 +145,7 @@ export default function ParentDashboard() {
           <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
 </div>
         <div className="px-8 py-8 relative z-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Welcome, {selectedChildData?.full_name ?? "Parent"}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-1">Welcome, {profile?.full_name ?? "Parent"}</h1>
           <p className="text-black-900 text-sm">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
           <p className="text-black-900 text-sm mt-1">Monitor your child's academic progress, homework, assessments and performance — all in one place.</p>
         </div>
@@ -154,16 +154,7 @@ export default function ParentDashboard() {
       </div>
 
       <div className="container mx-auto px-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-2">
-          <div className="h-14 w-14 rounded-full bg-green-100 flex items-center justify-center">
-            <GraduationCap className="h-10 w-10 text-green-600" />
-          </div>
-          <div>
-            <h2 className="text-xl font-bold">Parent Dashboard 👨‍👩‍👧</h2>
-            <p className="text-sm text-muted-foreground">Welcome, {user?.email}</p>
-          </div>
-        </div>
+
 
         {/* Child selector */}
         {children.length > 0 && (

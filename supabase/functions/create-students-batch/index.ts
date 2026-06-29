@@ -162,8 +162,7 @@ Deno.serve(async (req) => {
           section: s.section || null,
           date_of_birth: s.date_of_birth || null,
           profile_id: userId,
-          school_id: callerSchoolId,
-          school_id: s.school_id || null,
+          school_id: callerSchoolId || s.school_id || null,
         };
 
         if (studentId) {

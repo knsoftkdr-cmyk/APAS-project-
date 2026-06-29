@@ -125,6 +125,7 @@ const SuperAdminPanel = () => {
   const [schoolId, setSchoolId] = useState<string | null>(null);
   const [school, setSchool] = useState<SchoolInfo | null>(null);
   const [users, setUsers] = useState<ProfileRow[]>([]);
+  const [roleFilter, setRoleFilter] = useState("all");
   const [studentPerf, setStudentPerf] = useState<StudentPerf[]>([]);
   const [teacherPerf, setTeacherPerf] = useState<TeacherPerf[]>([]);
 
@@ -669,7 +670,30 @@ const SuperAdminPanel = () => {
               </Dialog>
             </div>
 
-            {(["admin", "principal", "hod", "teacher", "student", "parent"] as const).map((role) => {
+            {/* Role filter dropdown */}
+            <div className="flex items-center gap-3">
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Filter by role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Roles</SelectItem>
+                  <SelectItem value="teacher">Teachers</SelectItem>
+                  <SelectItem value="student">Students</SelectItem>
+                  <SelectItem value="parent">Parents</SelectItem>
+                  <SelectItem value="hod">HODs</SelectItem>
+                  <SelectItem value="principal">Principals</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                </SelectContent>
+              </Select>
+              <span className="text-sm text-muted-foreground">
+                {users.filter(u => roleFilter === "all" || u.role === roleFilter).length} users
+              </span>
+            </div>
+
+            {(["admin", "principal", "hod", "teacher", "student", "parent"] as const)
+              .filter((role) => roleFilter === "all" || role === roleFilter)
+              .map((role) => {
               const roleUsers = users.filter((u) => u.role === role);
               if (!roleUsers.length) return null;
               return (

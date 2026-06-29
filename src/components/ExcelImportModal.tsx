@@ -210,6 +210,10 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   // Step 3: Import students via edge function (bypasses RLS), then move to class setup
   const handleImport = async () => {
+    if (!profile?.school_id) {
+      alert("Your school profile hasn't finished loading. Please wait a few seconds and try again.");
+      return;
+    }
     setStep("importing");
     const errors: string[] = [];
     let imported = 0;
