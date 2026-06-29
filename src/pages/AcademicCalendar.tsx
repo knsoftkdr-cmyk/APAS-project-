@@ -12,6 +12,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Plus, Upload, Pencil, Trash2, X, Loader2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, parseISO, isWithinInterval } from "date-fns";
+import * as XLSX from "xlsx";
+import mammoth from "mammoth";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 type EventType = "holiday" | "exam" | "class_period" | "event";
 
@@ -56,6 +62,7 @@ export default function AcademicCalendar() {
   const [showUpload, setShowUpload] = useState(false);
   const [uploadText, setUploadText] = useState("");
   const [extracting, setExtracting] = useState(false);
+  const [readingFile, setReadingFile] = useState(false);
   const [extractedEvents, setExtractedEvents] = useState<Omit<CalendarEvent, "id" | "school_id">[]>([]);
 
   const fetchEvents = async () => {
@@ -118,12 +125,62 @@ export default function AcademicCalendar() {
   };
 
   const handleFileUpload = async (file: File) => {
+    const name = file.name.toLowerCase();
+    setReadingFile(true);
     try {
-      const text = await file.text();
-      setUploadText(text);
-    } catch {
-      toast.error("Could not read file. Please paste the content manually.");
+      if (name.endsWith(".xlsx") || name.endsWith(".xls") || name.endsWith(".csv")) {
+        const buffer = await file.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: "array", cellDates: true });
+        const allRows: string[] = [];
+        workbook.SheetNames.forEach(sheetName => {
+          const sheet = workbook.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json<any>(sheet, { header: 1, raw: false, dateNF: "yyyy-mm-dd" });
+          rows.forEach((row: any[]) => {
+            if (!row || row.length === 0) return;
+            const cells = row.map((c: any) => (c === null || c === undefined ? "" : String(c).trim()));
+            if (cells.some(c => c)) allRows.push(cells.join("\t"));
+          });
+        });
+        const text = allRows.join("\n");
+        setUploadText(text);
+        toast.success(`Excel file read (${workbook.SheetNames.length} sheet${workbook.SheetNames.length > 1 ? "s" : ""}) — click Extract Events`);
+
+      } else if (name.endsWith(".docx")) {
+        const buffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+        setUploadText(result.value);
+        toast.success("Word document read — click Extract Events");
+
+      } else if (name.endsWith(".doc")) {
+        toast.error(".doc (old Word format) isn't supported — please save as .docx and re-upload, or paste the text manually.");
+
+      } else if (name.endsWith(".pdf")) {
+        const buffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+        const pageTexts: string[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items.map((item: any) => item.str || "").join(" ");
+          pageTexts.push(pageText);
+        }
+        const text = pageTexts.join("\n");
+        setUploadText(text);
+        if (!text.trim()) {
+          toast.error("No selectable text found — this PDF may be a scanned image. Please paste the content manually.");
+        } else {
+          toast.success(`PDF read (${pdf.numPages} page${pdf.numPages > 1 ? "s" : ""}) — click Extract Events`);
+        }
+
+      } else {
+        const text = await file.text();
+        setUploadText(text);
+        toast.success("File loaded — click Extract Events");
+      }
+    } catch (err) {
+      toast.error("Could not read this file. Please paste the content manually.");
     }
+    setReadingFile(false);
   };
 
   const MONTH_MAP: Record<string, string> = {
@@ -152,9 +209,39 @@ export default function AcademicCalendar() {
     const year = String(new Date().getFullYear());
     const lines = text.split(/\n|\r\n|\r/).map((l: string) => l.trim()).filter(Boolean);
 
+    // Detect current section type for Excel files with section headers
+    let currentSection: EventType = "event";
+
     for (const line of lines) {
-      // Skip header-like lines
-      if (/^(s\.?no|sr\.?no|#|date|event|description|month|day|from|to)$/i.test(line)) continue;
+      // Skip header-like lines and detect section
+      if (/^(s\.?no|sr\.?no|#|description|month|day|from|to)$/i.test(line)) continue;
+
+      // Detect section headers like "Date	Holiday" or "Exam	Start Date"
+      if (/^date\s*(\t|,)\s*holiday$/i.test(line)) { currentSection = "holiday"; continue; }
+      if (/^exam\s*(\t|,)\s*start\s*date$/i.test(line)) { currentSection = "exam"; continue; }
+      if (/^event\s*(\t|,)/i.test(line)) { currentSection = "event"; continue; }
+      if (/^class\s*(\t|,)/i.test(line)) { currentSection = "class_period"; continue; }
+
+      // Handle tab-separated Excel rows: "2026-08-15	Independence Day" or "FA-1	2026-09-07"
+      const tabParts = line.split("\t").map((p: string) => p.trim()).filter(Boolean);
+      if (tabParts.length >= 2) {
+        // Pattern: YYYY-MM-DD 	 Title (holiday/event style)
+        const isoDate1 = tabParts[0].match(/^(\d{4}-\d{2}-\d{2})$/);
+        if (isoDate1) {
+          const title = tabParts[1];
+          const endDate = tabParts[2]?.match(/^(\d{4}-\d{2}-\d{2})$/) ? tabParts[2] : tabParts[0];
+          results.push({ title, event_type: currentSection || guessEventType(title), start_date: tabParts[0], end_date: endDate, description: "" });
+          continue;
+        }
+        // Pattern: Title 	 YYYY-MM-DD (exam style: "FA-1	2026-09-07")
+        const isoDate2 = tabParts[1].match(/^(\d{4}-\d{2}-\d{2})$/);
+        if (isoDate2) {
+          const title = tabParts[0];
+          const endDate = tabParts[2]?.match(/^(\d{4}-\d{2}-\d{2})$/) ? tabParts[2] : tabParts[1];
+          results.push({ title, event_type: currentSection || guessEventType(title), start_date: tabParts[1], end_date: endDate, description: "" });
+          continue;
+        }
+      }
 
       // Pattern 1: "Title: Jan 5 - Jan 10" or "Title: Jan 5 to Jan 10"
       const p1 = line.match(/^(.+?)[\s:–-]+(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?\s*(?:to|-|–)\s*(\w+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(\d{4}))?/i);
@@ -208,19 +295,39 @@ export default function AcademicCalendar() {
     return results;
   };
 
-  const extractEvents = () => {
+  const extractEvents = async () => {
     if (!uploadText.trim()) { toast.error("Please paste or upload document content"); return; }
     setExtracting(true);
     try {
-      const parsed = parseTextToEvents(uploadText);
-      if (parsed.length === 0) {
-        toast.error("Could not detect any events. Please check the format — try: \"Diwali Holiday: Oct 20-21\"");
-      } else {
-        setExtractedEvents(parsed);
-        toast.success(`Found ${parsed.length} events — review and confirm`);
+      const { data, error } = await supabase.functions.invoke("extract-calendar-events", {
+        body: { document_text: uploadText },
+      });
+
+      if (error) {
+        toast.error("AI extraction failed: " + error.message + " — falling back to manual parsing");
+        const fallback = parseTextToEvents(uploadText);
+        setExtractedEvents(fallback);
+        setExtracting(false);
+        return;
       }
-    } catch {
-      toast.error("Parsing failed. Please add events manually.");
+
+      if (data?.error) {
+        toast.error("AI extraction failed: " + data.error + " — falling back to manual parsing");
+        const fallback = parseTextToEvents(uploadText);
+        setExtractedEvents(fallback);
+        setExtracting(false);
+        return;
+      }
+
+      const events = data?.events || [];
+      if (events.length === 0) {
+        toast.error("No events detected in this document.");
+      } else {
+        setExtractedEvents(events);
+        toast.success(`AI found ${events.length} events — review and confirm`);
+      }
+    } catch (err) {
+      toast.error("Extraction failed. Please add events manually.");
     }
     setExtracting(false);
   };
@@ -452,9 +559,13 @@ export default function AcademicCalendar() {
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFileUpload(f); }}
               onClick={() => document.getElementById("cal-file-input")?.click()}
             >
-              <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm font-medium">Drop your document here</p>
-              <p className="text-xs text-muted-foreground mt-1">Supports PDF, Word, Excel, CSV, TXT</p>
+              {readingFile ? (
+                <Loader2 className="h-8 w-8 mx-auto text-muted-foreground mb-2 animate-spin" />
+              ) : (
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+              )}
+              <p className="text-sm font-medium">{readingFile ? "Reading document..." : "Drop your document here"}</p>
+              <p className="text-xs text-muted-foreground mt-1">Supports PDF, Word (.docx), Excel, CSV, TXT</p>
               <input id="cal-file-input" type="file" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />
             </div>
 
@@ -475,8 +586,8 @@ Term 1: June 1 - October 31`}
 
             <Button className="w-full" onClick={extractEvents} disabled={extracting || !uploadText.trim()}>
               {extracting
-                ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Parsing...</>
-                : "📋 Parse & Extract Events"}
+                ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Extracting with AI...</>
+                : "✨ Extract Events with AI"}
             </Button>
 
             {extractedEvents.length > 0 && (
