@@ -19,6 +19,22 @@ Deno.serve(async (req) => {
 
     const { students, mode } = await req.json();
 
+    // Get caller school_id from auth token
+    const authHeader = req.headers.get("Authorization") || "";
+    const callerToken = authHeader.replace("Bearer ", "");
+    let callerSchoolId: string | null = null;
+    if (callerToken) {
+      const { data: callerData } = await supabaseAdmin.auth.getUser(callerToken);
+      if (callerData?.user) {
+        const { data: callerProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("school_id")
+          .eq("id", callerData.user.id)
+          .single();
+        callerSchoolId = callerProfile?.school_id || null;
+      }
+    }
+
     // Mode: "import" — bulk create auth users (triggers profile + student auto-creation), then update student details
     if (mode === "import") {
       const results: any[] = [];
@@ -139,6 +155,7 @@ Deno.serve(async (req) => {
           section: s.section || null,
           date_of_birth: s.date_of_birth || null,
           profile_id: userId,
+          school_id: callerSchoolId,
           school_id: s.school_id || null,
         };
 

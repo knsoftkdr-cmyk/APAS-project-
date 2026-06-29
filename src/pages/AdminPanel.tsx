@@ -722,7 +722,7 @@ const AdminPanel = () => {
                           <TableBody>
                             {selectedClassMembers.map((member) => (
                               <TableRow key={member.id}>
-                                <TableCell className="font-medium">{(students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || (students as any[]).find(s => s.id === member.student_id)?.full_name || "Unnamed"}</TableCell>
+                                <TableCell className="font-medium">{(students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || (students as any[]).find(s => s.id === member.student_id)?.full_name || (students as any[]).find(s => s.id === member.student_id)?.full_name || "Unnamed"}</TableCell>
                                 <TableCell>{(() => { const s = (students as any[]).find(s => s.id === member.student_id); const cls = s?.class || s?.grade; if (!cls) return "—"; return /^\d+$/.test(cls) ? `Class ${cls}` : cls; })()}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.roll_number || "—"}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.date_of_birth ? new Date((students as any[]).find(s => s.id === member.student_id).date_of_birth).toLocaleDateString() : "—"}</TableCell>
