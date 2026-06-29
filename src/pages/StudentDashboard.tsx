@@ -240,7 +240,7 @@ export default function StudentDashboard() {
       const { data, error } = await supabase
         .from("student_assessments")
         .select("*")
-        .eq("submitted_by", user!.id)
+        .or(`student_id.eq.${user!.id},submitted_by.eq.${user!.id}`)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();

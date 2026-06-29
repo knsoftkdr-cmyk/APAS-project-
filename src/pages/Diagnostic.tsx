@@ -393,6 +393,17 @@ useEffect(() => {
         }
       }
 
+      // Resolve student_id by matching student name + school
+      let studentProfileId: string | null = null;
+      const { data: studentProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("full_name", name.trim())
+        .eq("school_id", profile?.school_id ?? "")
+        .eq("role", "student")
+        .maybeSingle();
+      studentProfileId = studentProfile?.id ?? null;
+
       const { error } = await supabase.from("student_assessments" as any).insert({
         student_name: name.trim(),
         student_age: parseInt(age),
@@ -400,6 +411,7 @@ useEffect(() => {
         teacher_id: teacherId,
         responses: finalAnswers,
         submitted_by: userId,
+        student_id: studentProfileId,
         student_class: studentClass,
         section: (section || "").toUpperCase().trim(),
         curriculum: curriculum,

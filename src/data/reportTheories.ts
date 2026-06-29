@@ -300,7 +300,14 @@ export const AGE_GROUP_REPORTS: AgeGroupReport[] = [
 ];
 
 export function getReportConfig(ageGroup: number): AgeGroupReport | undefined {
-  return AGE_GROUP_REPORTS.find((r) => r.ageGroup === ageGroup);
+  // Direct match first
+  const direct = AGE_GROUP_REPORTS.find((r) => r.ageGroup === ageGroup);
+  if (direct) return direct;
+  // Map teacher age groups (3,5,10) and student age groups (3,6,9,11,14) to report groups (3,5,10,15)
+  if (ageGroup >= 3 && ageGroup < 5) return AGE_GROUP_REPORTS.find((r) => r.ageGroup === 3);
+  if (ageGroup >= 5 && ageGroup < 9) return AGE_GROUP_REPORTS.find((r) => r.ageGroup === 5);
+  if (ageGroup >= 9 && ageGroup < 13) return AGE_GROUP_REPORTS.find((r) => r.ageGroup === 10);
+  return AGE_GROUP_REPORTS.find((r) => r.ageGroup === 15);
 }
 
 export interface DimensionScore {
