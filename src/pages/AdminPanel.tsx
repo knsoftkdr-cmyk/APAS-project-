@@ -257,7 +257,7 @@ const AdminPanel = () => {
 
     const [classesRes, studentsRes, teachersRes] = await Promise.all([
       supabase.from("classes").select("*").eq("school_id", schoolId!).order("name"),
-      supabase.from("students").select("id, profile_id, grade, class, section, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("school_id", schoolId!),
+      supabase.from("students").select("id, full_name, profile_id, grade, class, section, roll_number, date_of_birth, parent_phone, profiles(full_name)").eq("school_id", schoolId!),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher").eq("school_id", schoolId!),
     ]);
 
@@ -722,7 +722,7 @@ const AdminPanel = () => {
                           <TableBody>
                             {selectedClassMembers.map((member) => (
                               <TableRow key={member.id}>
-                                <TableCell className="font-medium">{(students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || "Unnamed"}</TableCell>
+                                <TableCell className="font-medium">{(students as any[]).find(s => s.id === member.student_id)?.profiles?.full_name || (students as any[]).find(s => s.id === member.student_id)?.full_name || "Unnamed"}</TableCell>
                                 <TableCell>{(() => { const s = (students as any[]).find(s => s.id === member.student_id); const cls = s?.class || s?.grade; if (!cls) return "—"; return /^\d+$/.test(cls) ? `Class ${cls}` : cls; })()}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.roll_number || "—"}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.date_of_birth ? new Date((students as any[]).find(s => s.id === member.student_id).date_of_birth).toLocaleDateString() : "—"}</TableCell>
@@ -863,7 +863,7 @@ const AdminPanel = () => {
                       <TableBody>
                         {classStudents.filter(cs => cs.class_id === selectedClassForStudent).map(cs => (
                           <TableRow key={cs.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500">
-                            <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.profiles?.full_name || "Unnamed"}</TableCell>
+                            <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.profiles?.full_name || (students as any[]).find(s => s.id === cs.student_id)?.full_name || "Unnamed"}</TableCell>
                             <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.grade || "—"}</TableCell>
                             <TableCell>
                               <Button variant="ghost" size="icon" onClick={() => handleRemoveStudent(cs.id)}>

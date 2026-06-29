@@ -51,7 +51,7 @@ interface CreatedClass {
 type Step = "upload" | "preview" | "importing" | "class-setup" | "done";
 
 export function ExcelImportModal({ open, onOpenChange, onImportComplete }: ExcelImportModalProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const classStudentMapRef = useRef<Map<string, { studentIds: string[]; teacherName: string }>>(new Map());
@@ -330,7 +330,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
       if (!classId && !classFailed) {
         const { data, error } = await supabase
           .from("classes")
-          .insert({ name: cls.className, section: cls.section, created_by: user?.id })
+          .insert({ name: cls.className, section: cls.section, created_by: user?.id, school_id: profile?.school_id })
           .select("id").single();
         if (error) {
           classErrors.push(`Class "${key}": ${error.message}`);

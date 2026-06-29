@@ -118,8 +118,7 @@ Deno.serve(async (req) => {
 
         const { error: profileError } = await supabaseAdmin
           .from("profiles")
-          .update({ full_name: s.student_name || null, role: "student" })
-          .eq("id", userId);
+          .upsert({ id: userId, full_name: s.student_name || null, role: "student" }, { onConflict: "id" });
 
         if (profileError) {
           results.push({
@@ -131,12 +130,16 @@ Deno.serve(async (req) => {
         }
 
         const studentPayload = {
+          full_name: s.student_name || null,
           roll_number: s.roll_number || null,
           parent_phone: s.parent_phone || null,
           parent_email: s.parent_email || null,
           grade: s.class || null,
+          class: s.class || null,
+          section: s.section || null,
           date_of_birth: s.date_of_birth || null,
           profile_id: userId,
+          school_id: s.school_id || null,
         };
 
         if (studentId) {
