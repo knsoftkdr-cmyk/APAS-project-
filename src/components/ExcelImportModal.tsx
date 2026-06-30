@@ -84,7 +84,7 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
 
   useEffect(() => {
     if (open) {
-      supabase.from("profiles").select("id, full_name").eq("role", "teacher").then(({ data }) => {
+      supabase.from("profiles").select("id, full_name").eq("role", "teacher").eq("school_id", profile?.school_id || "").then(({ data }) => {
         if (data) setAvailableTeachers(data);
       });
     }
