@@ -96,6 +96,7 @@ interface ProfileRow {
   full_name: string | null;
   role: string;
   school_id: string | null;
+  class_grade?: string | null;
 }
 
 interface StudentPerf {
@@ -126,6 +127,7 @@ const SuperAdminPanel = () => {
   const [school, setSchool] = useState<SchoolInfo | null>(null);
   const [users, setUsers] = useState<ProfileRow[]>([]);
   const [roleFilter, setRoleFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
   const [studentPerf, setStudentPerf] = useState<StudentPerf[]>([]);
   const [teacherPerf, setTeacherPerf] = useState<TeacherPerf[]>([]);
 
@@ -148,6 +150,7 @@ const SuperAdminPanel = () => {
   const [creating, setCreating] = useState(false);
   const [linkParentId, setLinkParentId] = useState<string | null>(null);
   const [linkStudentId, setLinkStudentId] = useState("");
+  const [linkClassFilter, setLinkClassFilter] = useState("all");
   const [linking, setLinking] = useState(false);
   const [parentLinks, setParentLinks] = useState<Record<string, {id: string, name: string}[]>>({});
 
@@ -239,7 +242,7 @@ const SuperAdminPanel = () => {
 
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, full_name, role, school_id")
+        .select("id, full_name, role, school_id, class_grade")
         .eq("school_id", sid);
       setUsers(profilesData ?? []);
       await fetchParentLinks(sid);
@@ -670,31 +673,72 @@ const SuperAdminPanel = () => {
               </Dialog>
             </div>
 
-            {/* Role filter dropdown */}
-            <div className="flex items-center gap-3">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="teacher">Teachers</SelectItem>
-                  <SelectItem value="student">Students</SelectItem>
-                  <SelectItem value="parent">Parents</SelectItem>
-                  <SelectItem value="hod">HODs</SelectItem>
-                  <SelectItem value="principal">Principals</SelectItem>
-                  <SelectItem value="admin">Admins</SelectItem>
-                </SelectContent>
-              </Select>
-              <span className="text-sm text-muted-foreground">
-                {users.filter(u => roleFilter === "all" || u.role === roleFilter).length} users
-              </span>
+            {/* Role filter pill bar */}
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {([
+                  { value: "all", label: "All Roles" },
+                  { value: "principal", label: "Principals" },
+                  { value: "hod", label: "HODs" },
+                  { value: "teacher", label: "Teachers" },
+                  { value: "student", label: "Students" },
+                  { value: "parent", label: "Parents" },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { setRoleFilter(opt.value); if (opt.value !== "student") setClassFilter("all"); }}
+                    className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                      roleFilter === opt.value
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-background text-muted-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {opt.label}
+                    <span className="ml-1.5 opacity-70">
+                      ({opt.value === "all" ? users.length : users.filter(u => u.role === opt.value).length})
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {roleFilter === "student" && (
+                <div className="flex items-center gap-3">
+                  <Select value={classFilter} onValueChange={setClassFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Filter by class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {Array.from(new Set(
+                        users.filter(u => u.role === "student" && u.class_grade)
+                          .map(u => String(u.class_grade).toLowerCase())
+                      )).sort().map(cg => (
+                        <SelectItem key={cg} value={cg}>
+                          {/^\d+$/.test(cg) ? `Class ${cg}` : cg.charAt(0).toUpperCase() + cg.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">
+                    {users.filter(u => u.role === "student" && (classFilter === "all" || String(u.class_grade ?? "").toLowerCase() === classFilter)).length} students
+                  </span>
+                </div>
+              )}
+
+              {roleFilter !== "student" && (
+                <span className="text-sm text-muted-foreground">
+                  {users.filter(u => roleFilter === "all" || u.role === roleFilter).length} users
+                </span>
+              )}
             </div>
 
             {(["admin", "principal", "hod", "teacher", "student", "parent"] as const)
               .filter((role) => roleFilter === "all" || role === roleFilter)
               .map((role) => {
-              const roleUsers = users.filter((u) => u.role === role);
+              const roleUsers = users.filter((u) =>
+                u.role === role &&
+                (role !== "student" || classFilter === "all" || String(u.class_grade ?? "").toLowerCase() === classFilter)
+              );
               if (!roleUsers.length) return null;
               return (
                 <Card key={role} className="border-2 border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
@@ -754,18 +798,37 @@ const SuperAdminPanel = () => {
             )}
 
             {/* Link Child Dialog */}
-            <Dialog open={!!linkParentId} onOpenChange={(o) => { if (!o) { setLinkParentId(null); setLinkStudentId(""); } }}>
+            <Dialog open={!!linkParentId} onOpenChange={(o) => { if (!o) { setLinkParentId(null); setLinkStudentId(""); setLinkClassFilter("all"); } }}>
               <DialogContent className="sm:max-w-md">
                 <DialogHeader><DialogTitle>Link Child to Parent</DialogTitle></DialogHeader>
                 <div className="space-y-4 pt-2">
+                  <div className="space-y-1.5">
+                    <Label>Filter by Class</Label>
+                    <Select value={linkClassFilter} onValueChange={(v) => { setLinkClassFilter(v); setLinkStudentId(""); }}>
+                      <SelectTrigger><SelectValue placeholder="All Classes" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Classes</SelectItem>
+                        {Array.from(new Set(
+                          users.filter(u => u.role === "student" && u.class_grade)
+                            .map(u => String(u.class_grade).toLowerCase())
+                        )).sort().map(cg => (
+                          <SelectItem key={cg} value={cg}>
+                            {/^\d+$/.test(cg) ? `Class ${cg}` : cg.charAt(0).toUpperCase() + cg.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-1.5">
                     <Label>Select Student</Label>
                     <Select value={linkStudentId} onValueChange={setLinkStudentId}>
                       <SelectTrigger><SelectValue placeholder="Choose a student" /></SelectTrigger>
                       <SelectContent>
-                        {users.filter(u => u.role === "student").map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.full_name ?? "Unnamed"}</SelectItem>
-                        ))}
+                        {users
+                          .filter(u => u.role === "student" && (linkClassFilter === "all" || String(u.class_grade ?? "").toLowerCase() === linkClassFilter))
+                          .map(s => (
+                            <SelectItem key={s.id} value={s.id}>{s.full_name ?? "Unnamed"}</SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>

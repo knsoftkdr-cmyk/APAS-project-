@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
             id: userId,
             full_name: s.student_name || null,
             role: "student",
-            school_id: s.school_id || null,
+            school_id: callerSchoolId || s.school_id || null,
             class_grade: s.class ? String(s.class).toLowerCase() : null,
             section: s.section || null,
           }, { onConflict: "id" });
