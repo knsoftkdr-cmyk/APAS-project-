@@ -307,10 +307,43 @@ const AdminPanel = () => {
     }
   };
 
-  const handleDeleteClass = async (id: string) => {
+  const handleDeleteClass = async (id: string, className: string, section: string) => {
+    if (!confirm(`Delete "${className} - ${section}"? This will permanently delete the class AND all students enrolled in it, including their accounts. This cannot be undone.`)) return;
+
+    // Find all students in this class by matching class+section+school_id text fields
+    // (students.class is not a foreign key to classes, so we match by value)
+    const { data: studentsInClass, error: fetchErr } = await supabase
+      .from("students")
+      .select("id, profile_id")
+      .eq("class", className)
+      .eq("section", section)
+      .eq("school_id", profile?.school_id ?? "");
+
+    if (fetchErr) {
+      toast({ title: "Error", description: fetchErr.message, variant: "destructive" });
+      return;
+    }
+
+    // Delete each student's profile + auth account via the existing RPC (cascades to students table)
+    if (studentsInClass && studentsInClass.length > 0) {
+      for (const s of studentsInClass) {
+        if (s.profile_id) {
+          await supabase.rpc("delete_user_permanently", { p_user_id: s.profile_id });
+        } else {
+          // No linked profile - just delete the students row directly
+          await supabase.from("students").delete().eq("id", s.id);
+        }
+      }
+    }
+
+    // Now delete the class itself (class_students/class_teachers cascade automatically)
     const { error } = await supabase.from("classes").delete().eq("id", id);
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else fetchAll();
+    if (error) {
+      toast({ title: "Error deleting class", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: `Class deleted${studentsInClass?.length ? ` along with ${studentsInClass.length} student(s)` : ""}` });
+      fetchAll();
+    }
   };
 
   const handleAssignStudent = async () => {
@@ -582,7 +615,7 @@ const AdminPanel = () => {
                               size="icon"
                               onClick={(event) => {
                                 event.stopPropagation();
-                                handleDeleteClass(c.id);
+                                handleDeleteClass(c.id, c.name, c.section);
                               }}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
