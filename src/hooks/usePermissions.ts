@@ -5,19 +5,19 @@ import { useAuth } from "@/contexts/AuthContext";
 const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
 
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar"],
-  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar"],
-  hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar"],
-  teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar"],
-  student:   ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor"],
-  parent:    ["Home", "Academic Calendar"],
+  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses"],
+  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses"],
+  hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar", "Houses"],
+  teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar", "Houses"],
+  student:   ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Houses"],
+  parent:    ["Home", "Academic Calendar", "Houses"],
 };
 
-const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar"];
+const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar","Houses"];
 
 const permCache = new Map<string, string[]>();
 // Cache version — bump this to invalidate all cached permissions
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v4";
 
 interface UsePermissionsReturn {
   can: (moduleName: string) => boolean;

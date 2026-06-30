@@ -29,7 +29,7 @@ import {
   BadgeCheck,
   Calendar,
   Building2,
-  GraduationCap,
+  GraduationCap, Trophy,
   Clock,
   Hash,
   ChevronRight,
@@ -202,6 +202,8 @@ const SettingsPage = () => {
   const [rollNumber, setRollNumber] = useState("");
   const [section, setSection] = useState("");
   const [classGrade, setClassGrade] = useState("");
+  const [houseInfo, setHouseInfo] = useState<{ name: string; color: string } | null>(null);
+  const [houseLoading, setHouseLoading] = useState(true);
 
   // Professional info state
   const [mobileNumber, setMobileNumber] = useState("");
@@ -222,6 +224,27 @@ const SettingsPage = () => {
 
   const isStudent = profile?.role === "student";
   const isTeacher = !isStudent;
+
+  useEffect(() => {
+    const fetchHouse = async () => {
+      if (profile?.role !== "student" || !profile?.id) { setHouseLoading(false); return; }
+      const { data: studentRow } = await supabase
+        .from("students")
+        .select("house_id")
+        .eq("profile_id", profile.id)
+        .maybeSingle();
+      if (studentRow?.house_id) {
+        const { data: houseRow } = await supabase
+          .from("houses")
+          .select("name, color")
+          .eq("id", studentRow.house_id)
+          .maybeSingle();
+        if (houseRow) setHouseInfo({ name: houseRow.name, color: houseRow.color });
+      }
+      setHouseLoading(false);
+    };
+    fetchHouse();
+  }, [profile?.id, profile?.role]);
 
   useEffect(() => {
     if (ext) {
@@ -453,6 +476,18 @@ const SettingsPage = () => {
                 <span className="flex items-center gap-1.5">
                   <BadgeCheck className="h-4 w-4 text-gray-400" />
                   Roll No: {rollNumber}
+                </span>
+              )}
+              {isStudent && !houseLoading && houseInfo && (
+                <span className="flex items-center gap-1.5">
+                  <Trophy className="h-4 w-4" style={{ color: houseInfo.color }} />
+                  House: {houseInfo.name}
+                </span>
+              )}
+              {isStudent && !houseLoading && !houseInfo && (
+                <span className="flex items-center gap-1.5 text-gray-400">
+                  <Trophy className="h-4 w-4 text-gray-300" />
+                  House not assigned
                 </span>
               )}
             </div>
