@@ -118,7 +118,7 @@ async function uploadAnswerFile(
     const safeName = `${ws.worksheet_id}_${userId}_${Date.now()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("worksheet-submission-files")
-      .upload(safeName, file, { upsert: true });
+      .upload(safeName, file, { upsert: true, contentType: file.type || "application/pdf" });
     if (uploadError) throw new Error(uploadError.message);
 
     const { data: urlData } = supabase.storage
@@ -256,13 +256,22 @@ export default function Worksheets() {
 
   const handleFileUpload = async (ws: WorksheetAssignment, file: File) => {
     if (!user?.id) return;
+    const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB cap (matches Supabase bucket limit)
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Max allowed size is 50MB.`);
+      return;
+    }
     setUploadingId(ws.id);
     try {
       const existing = getSubmissionFor(ws.worksheets?.id);
-      const result = await uploadAnswerFile(ws, file, user.id, profile, existing?.id);
+      const uploadPromise = uploadAnswerFile(ws, file, user.id, profile, existing?.id);
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 300000)); // 5 min, enough for 50MB on slow connections
+      const result = await Promise.race([uploadPromise, timeoutPromise]);
       if (result) {
         toast.success("Answer file uploaded and submitted to your teacher!");
         queryClient.invalidateQueries({ queryKey: ["student-all-worksheet-submissions", user.id] });
+      } else {
+        toast.error("Upload timed out. Please check your internet connection and try again.");
       }
     } finally {
       setUploadingId(null);

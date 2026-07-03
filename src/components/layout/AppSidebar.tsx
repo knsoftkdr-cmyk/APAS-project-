@@ -55,6 +55,7 @@ const navItems: Array<{
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "Worksheets", icon: FileText, path: "/worksheets", roles: ["student"], tourId: "nav-worksheets" },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"], module: "Lesson Plans" },
+  { title: "Entry Ticket", icon: ClipboardList, path: "/entry-ticket", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },

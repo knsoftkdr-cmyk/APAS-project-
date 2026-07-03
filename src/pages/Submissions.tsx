@@ -1,4 +1,4 @@
-﻿import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,13 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ClipboardCheck, Users, Check, Eye, FileText, BookOpen, Lock, Sparkles, Bot, Paperclip, CheckCircle2, XCircle, AlertCircle } from "lucide-react";
+import { Loader2, ClipboardCheck, Users, Check, Eye, FileText, BookOpen, Lock, Sparkles, Bot, Paperclip, CheckCircle2, XCircle, AlertCircle, Download } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import html2pdf from "html2pdf.js";
+import { AssessmentReport } from "@/components/report/AssessmentReport";
 
 const STATIC_CLASSES = Array.from({ length: 10 }, (_, i) => `Class ${i + 1}`);
 
@@ -38,6 +40,8 @@ interface WorksheetSubmissionRow {
   ai_score: number | null;
   ai_feedback: string | null;
   ai_per_activity: any[] | null;
+  ai_topic_analysis: any[] | null;
+  ai_study_plan: any[] | null;
   ai_reviewed_at: string | null;
   worksheets?: {
     id: string;
@@ -91,6 +95,42 @@ export default function Submissions() {
   const [isSaving, setIsSaving] = useState(false);
   const [aiEvaluatingId, setAiEvaluatingId] = useState<string | null>(null);
   const [isBulkEvaluating, setIsBulkEvaluating] = useState(false);
+  const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<string | null>(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    setPreviewBlobUrl(null);
+    setPreviewError(null);
+    if (selectedSubmission?.answer_file_url) {
+      setPreviewLoading(true);
+      fetch(selectedSubmission.answer_file_url)
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.blob();
+        })
+        .then((blob) => {
+          if (cancelled) return;
+          objectUrl = URL.createObjectURL(blob);
+          setPreviewBlobUrl(objectUrl);
+        })
+        .catch((err) => {
+          console.error("Failed to load preview file:", err);
+          if (!cancelled) setPreviewError(err?.message || "Failed to load preview");
+        })
+        .finally(() => {
+          if (!cancelled) setPreviewLoading(false);
+        });
+    }
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [selectedSubmission?.answer_file_url]);
 
   if (profile?.role !== "teacher") {
     return (
@@ -216,9 +256,37 @@ export default function Submissions() {
     }
   };
 
+  const handleDownloadReport = async () => {
+    if (!reportRef.current || !selectedSubmission) return;
+    setIsGeneratingPdf(true);
+    try {
+      const filename = `${(selectedSubmission.student_name || "student").replace(/\s+/g, "_")}-assessment-report.pdf`;
+      await html2pdf()
+        .set({
+          margin: 0,
+          filename,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+          jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+          pagebreak: { mode: ["css", "legacy"] },
+        })
+        .from(reportRef.current)
+        .save();
+    } catch (err: any) {
+      toast.error(`Failed to generate PDF: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
   const activities = selectedSubmission?.worksheets?.worksheet_content
     ? parseWorksheetActivities(selectedSubmission.worksheets.worksheet_content)
     : [];
+
+  const canDownloadReport =
+    !!selectedSubmission &&
+    selectedSubmission.ai_score !== null &&
+    selectedSubmission.ai_score !== undefined;
 
   return (
     <AppLayout>
@@ -368,14 +436,45 @@ export default function Submissions() {
                 {selectedSubmission.worksheets?.topic && <Badge variant="outline" className="text-xs">{selectedSubmission.worksheets.topic}</Badge>}
               </div>
 
-              {/* Uploaded file link */}
+              {/* Uploaded file link + inline preview */}
               {selectedSubmission.answer_file_url && (
-                <div className="p-3 rounded-lg bg-muted/40 border flex items-center gap-2 text-sm">
-                  <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  <span>Uploaded file:</span>
-                  <a href={selectedSubmission.answer_file_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">
-                    {selectedSubmission.answer_file_name || "View file"}
-                  </a>
+                <div className="p-3 rounded-lg bg-muted/40 border space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    <span>Uploaded file:</span>
+                    <a href={selectedSubmission.answer_file_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">
+                      {selectedSubmission.answer_file_name || "View file"}
+                    </a>
+                    <a
+                      href={selectedSubmission.answer_file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ml-auto text-xs text-muted-foreground hover:underline"
+                    >
+                      Open in new tab ↗
+                    </a>
+                  </div>
+                  {previewLoading ? (
+                    <div className="w-full h-[520px] rounded-lg border bg-white flex items-center justify-center text-sm text-muted-foreground">
+                      Loading preview...
+                    </div>
+                  ) : previewError ? (
+                    <div className="w-full h-[520px] rounded-lg border bg-white flex items-center justify-center text-sm text-destructive text-center px-6">
+                      Couldn't load inline preview ({previewError}). Use "Open in new tab" above to view the file.
+                    </div>
+                  ) : /\.pdf(\?|$)/i.test(selectedSubmission.answer_file_url) ? (
+                    <iframe
+                      src={previewBlobUrl ? previewBlobUrl + "#toolbar=0&navpanes=0&scrollbar=0" : undefined}
+                      title="Uploaded answer PDF"
+                      className="w-full h-[520px] rounded-lg border bg-white"
+                    />
+                  ) : /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(selectedSubmission.answer_file_url) ? (
+                    <img
+                      src={previewBlobUrl || selectedSubmission.answer_file_url}
+                      alt="Uploaded answer"
+                      className="max-w-full max-h-[520px] rounded-lg border object-contain mx-auto"
+                    />
+                  ) : null}
                 </div>
               )}
 
@@ -404,7 +503,8 @@ export default function Submissions() {
               )}
 
               {/* Activities with student answers + AI per-activity verdict */}
-              {activities.length === 0 ? (
+              {!selectedSubmission.answer_file_url && (
+                activities.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Could not load the original worksheet activities.</p>
               ) : (
                 activities.map((activity, idx) => {
@@ -416,16 +516,16 @@ export default function Submissions() {
                       <div className="prose prose-sm max-w-none">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>{activity}</ReactMarkdown>
                       </div>
-                      <div className="border-t pt-3">
-                        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                          Student's Answer
-                        </label>
-                        <p className="text-sm whitespace-pre-wrap bg-card border rounded-lg p-3">
-                          {selectedSubmission.answers?.[idx] || selectedSubmission.answers?.[String(idx)] || (
-                            <span className="text-muted-foreground italic">No typed answer</span>
-                          )}
-                        </p>
-                      </div>
+                      {(selectedSubmission.answers?.[idx] || selectedSubmission.answers?.[String(idx)]) && (
+                        <div className="border-t pt-3">
+                          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                            Student's Answer
+                          </label>
+                          <p className="text-sm whitespace-pre-wrap bg-card border rounded-lg p-3">
+                            {selectedSubmission.answers?.[idx] || selectedSubmission.answers?.[String(idx)]}
+                          </p>
+                        </div>
+                      )}
                       {aiActivity && (
                         <div className={`rounded-lg p-3 border text-sm space-y-1.5 ${
                           aiActivity.is_correct
@@ -476,6 +576,7 @@ export default function Submissions() {
                     </div>
                   );
                 })
+              )
               )}
 
               {/* Teacher review section */}
@@ -538,6 +639,17 @@ export default function Submissions() {
                 Run AI Evaluation
               </Button>
             )}
+            {canDownloadReport && (
+              <Button
+                variant="outline"
+                className="gap-2"
+                disabled={isGeneratingPdf}
+                onClick={handleDownloadReport}
+              >
+                {isGeneratingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                Download Report
+              </Button>
+            )}
             <Button
               onClick={handleMarkReviewed}
               disabled={isSaving || selectedSubmission?.status === "reviewed"}
@@ -549,6 +661,28 @@ export default function Submissions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Off-screen render target for PDF export. Must be laid out in the DOM
+          (not display:none) for html2canvas to capture it, so we push it
+          off-screen with fixed positioning instead of hiding it. */}
+      {canDownloadReport && selectedSubmission && (
+        <div style={{ position: "fixed", top: 0, left: "-9999px", zIndex: -1 }} aria-hidden="true">
+          <AssessmentReport
+            ref={reportRef}
+            studentName={selectedSubmission.student_name || "Student"}
+            classLevel={normalizeClass(selectedSubmission.class_level)}
+            section={selectedSubmission.section}
+            subject={selectedSubmission.worksheets?.subject}
+            topic={selectedSubmission.worksheets?.topic}
+            submittedAt={selectedSubmission.submitted_at}
+            aiScore={selectedSubmission.ai_score as number}
+            aiFeedback={selectedSubmission.ai_feedback || ""}
+            perActivity={selectedSubmission.ai_per_activity || []}
+            topicAnalysis={selectedSubmission.ai_topic_analysis || []}
+            studyPlan={selectedSubmission.ai_study_plan || []}
+          />
+        </div>
+      )}
     </AppLayout>
   );
 }
