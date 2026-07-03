@@ -101,6 +101,334 @@ function normalizeClass(cls: string | null): string {
   return cls.toLowerCase().replace(/^class\s*/i, "").trim();
 }
 
+
+
+// ── Admin/Teacher results card view ─────────────────────────────
+function AdminResultsView({ profile, semesters, academicYears, students, isAdmin, isTeacher, uniqueClasses, resultsClassFilter, setResultsClassFilter, teacherClassLabel }: {
+  profile: any;
+  semesters: any[];
+  academicYears: any[];
+  students: any[];
+  isAdmin: boolean;
+  isTeacher: boolean;
+  uniqueClasses: string[];
+  resultsClassFilter: string;
+  setResultsClassFilter: (v: string) => void;
+  teacherClassLabel: string;
+}) {
+  const [semId, setSemId] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [gpaMap, setGpaMap] = useState<Record<string, any>>({});
+  const [marksMap, setMarksMap] = useState<Record<string, any[]>>({});
+  const [viewingStudent, setViewingStudent] = useState<{ student: any; gpa: any; marks: any[] } | null>(null);
+
+  useEffect(() => {
+    if (!semId || students.length === 0) return;
+    setLoading(true);
+    const studentIds = students.map((s: any) => s.id);
+    Promise.all([
+      supabase.from("student_gpa").select("*").eq("semester_id", semId).in("student_id", studentIds),
+      supabase.from("semester_marks").select("*").eq("semester_id", semId).in("student_id", studentIds),
+    ]).then(([gpaRes, marksRes]) => {
+      const gm: Record<string, any> = {};
+      for (const g of gpaRes.data || []) gm[g.student_id] = g;
+      setGpaMap(gm);
+      const mm: Record<string, any[]> = {};
+      for (const m of marksRes.data || []) {
+        if (!mm[m.student_id]) mm[m.student_id] = [];
+        mm[m.student_id].push(m);
+      }
+      setMarksMap(mm);
+      setLoading(false);
+    });
+  }, [semId, students.length, resultsClassFilter]);
+
+  const selectedSem = semesters.find((s: any) => s.id === semId);
+  const selectedYr = selectedSem ? academicYears.find((y: any) => y.id === selectedSem.academic_year_id) : null;
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h2 className="font-semibold">Term-wise Results</h2>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={semId} onValueChange={setSemId}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Select Term" /></SelectTrigger>
+            <SelectContent>
+              {semesters.map((sem: any) => {
+                const yr = academicYears.find((y: any) => y.id === sem.academic_year_id);
+                return <SelectItem key={sem.id} value={sem.id}>{yr ? `${yr.name} — ${sem.name}` : sem.name}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
+          {isAdmin && (
+            <Select value={resultsClassFilter} onValueChange={setResultsClassFilter}>
+              <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {uniqueClasses.map((cl: string) => (
+                  <SelectItem key={cl} value={cl}>{/^\d+$/.test(cl) ? `Class ${cl}` : cl.charAt(0).toUpperCase() + cl.slice(1)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          {isTeacher && <Badge variant="outline">{teacherClassLabel}</Badge>}
+        </div>
+      </div>
+
+      {!semId ? (
+        <Card><CardContent className="py-12 text-center text-muted-foreground">Select a term above to view results.</CardContent></Card>
+      ) : loading ? (
+        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      ) : students.length === 0 ? (
+        <Card><CardContent className="py-12 text-center text-muted-foreground">No students found.</CardContent></Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {students.map((s: any) => {
+            const gpa = gpaMap[s.id];
+            const sm = marksMap[s.id] || [];
+            const avgPct = sm.length > 0
+              ? Math.round(sm.reduce((acc: number, m: any) => acc + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / sm.length)
+              : null;
+            return (
+              <Card key={s.id} className="cursor-pointer hover:border-primary transition-colors" onClick={() => setViewingStudent({ student: s, gpa, marks: sm })}>
+                <CardContent className="py-4 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{s.full_name ?? "Unnamed"}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{s.class ?? "-"} · Section {s.section ?? "-"} · {sm.length} subjects</p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="text-center">
+                      <p className="text-lg font-bold">{gpa?.gpa ?? "-"}</p>
+                      <p className="text-[10px] text-muted-foreground">GPA</p>
+                    </div>
+                    {gpa ? (
+                      <Badge className={gpa.result_status === "pass" ? "bg-green-100 text-green-700 border-green-200" : gpa.result_status === "fail" ? "bg-red-100 text-red-700 border-red-200" : "bg-gray-100 text-gray-600"}>
+                        {gpa.result_status === "pass" ? "✓ Pass" : gpa.result_status === "fail" ? "✗ Fail" : "Pending"}
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-gray-100 text-gray-500">No marks</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Marks detail dialog */}
+      <Dialog open={!!viewingStudent} onOpenChange={(v) => { if (!v) setViewingStudent(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{viewingStudent?.student.full_name} — {selectedSem?.name}</DialogTitle>
+          </DialogHeader>
+          {viewingStudent && (
+            <div className="space-y-4 mt-2">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+                <div className="text-center flex-1">
+                  <p className="text-2xl font-bold">{viewingStudent.gpa?.gpa ?? "-"}</p>
+                  <p className="text-xs text-muted-foreground">GPA / 10</p>
+                </div>
+                <div className="text-center flex-1">
+                  <p className="text-2xl font-bold">
+                    {viewingStudent.marks.length > 0
+                      ? `${Math.round(viewingStudent.marks.reduce((a: number, m: any) => a + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / viewingStudent.marks.length)}%`
+                      : "-"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Overall %</p>
+                </div>
+                {viewingStudent.gpa && (
+                  <Badge className={viewingStudent.gpa.result_status === "pass" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                    {viewingStudent.gpa.result_status === "pass" ? "Pass" : "Fail"}
+                  </Badge>
+                )}
+              </div>
+              {viewingStudent.marks.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No marks recorded.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Marks</TableHead>
+                      <TableHead>%</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingStudent.marks.map((m: any, i: number) => {
+                      const pct = m.marks_obtained !== null ? Math.round(((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100) : null;
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium capitalize">{m.subject}</TableCell>
+                          <TableCell>{m.marks_obtained ?? "-"}/{m.max_marks}</TableCell>
+                          <TableCell>
+                            <span className={pct !== null ? (pct >= 50 ? "text-green-600 font-medium" : "text-red-500 font-medium") : ""}>
+                              {pct !== null ? `${pct}%` : "-"}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// ── Standalone student results component ────────────────────────
+function StudentResultsView({ profile, semesters, academicYears, myStudentRecord }: {
+  profile: any;
+  semesters: any[];
+  academicYears: any[];
+  myStudentRecord: any;
+}) {
+  const [semFilter, setSemFilter] = useState("all");
+  const [myResults, setMyResults] = useState<Record<string, { gpa: any; marks: any[]; semester: any }>>({});
+  const [loading, setLoading] = useState(true);
+  const [viewingMarks, setViewingMarks] = useState<{ gpa: any; marks: any[]; semester: any } | null>(null);
+
+  useEffect(() => {
+    if (!profile?.school_id || !myStudentRecord?.id) { setLoading(false); return; }
+    const fetchMyResults = async () => {
+      setLoading(true);
+      const [gpaRes, marksRes] = await Promise.all([
+        supabase.from("student_gpa").select("*").eq("student_id", myStudentRecord.id),
+        supabase.from("semester_marks").select("*").eq("student_id", myStudentRecord.id),
+      ]);
+      const semMap: Record<string, any> = {};
+      for (const s of semesters) semMap[s.id] = s;
+      const results: Record<string, any> = {};
+      for (const g of gpaRes.data || []) {
+        const sem = semMap[g.semester_id];
+        if (!sem) continue;
+        const yr = academicYears.find((y: any) => y.id === sem.academic_year_id);
+        results[g.semester_id] = {
+          gpa: g,
+          marks: (marksRes.data || []).filter((m: any) => m.semester_id === g.semester_id),
+          semester: { ...sem, yearName: yr?.name ?? "" },
+        };
+      }
+      setMyResults(results);
+      setLoading(false);
+    };
+    fetchMyResults();
+  }, [profile?.school_id, myStudentRecord?.id, semesters.length]);
+
+  const resultList = Object.values(myResults);
+  const filtered = semFilter === "all" ? resultList : resultList.filter((r) => r.semester.id === semFilter);
+
+  if (loading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+
+  if (resultList.length === 0) return (
+    <Card>
+      <CardContent className="py-16 text-center text-muted-foreground">
+        <GraduationCap className="h-10 w-10 mx-auto mb-3" />
+        <p className="font-medium">No results yet</p>
+        <p className="text-sm mt-1">Your results will appear here after your teacher publishes them.</p>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Term filter pills */}
+      <div className="flex flex-wrap gap-2">
+        <button onClick={() => setSemFilter("all")} className={"px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all " + (semFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-muted")}>All Terms</button>
+        {resultList.map((r) => (
+          <button key={r.semester.id} onClick={() => setSemFilter(r.semester.id)}
+            className={"px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all " + (semFilter === r.semester.id ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-muted")}>
+            {r.semester.name}
+          </button>
+        ))}
+      </div>
+
+      {/* Result cards */}
+      <div className="grid gap-4">
+        {filtered.map((r) => (
+          <Card key={r.semester.id} className="cursor-pointer hover:border-primary transition-colors" onClick={() => setViewingMarks(r)}>
+            <CardContent className="py-5 flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <p className="font-semibold text-base">{r.semester.name}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{r.semester.yearName} · Click to view subject marks</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-center">
+                  <p className="text-2xl font-bold">{r.gpa.gpa ?? "-"}</p>
+                  <p className="text-xs text-muted-foreground">GPA / 10</p>
+                </div>
+                <Badge className={r.gpa.result_status === "pass" ? "bg-green-100 text-green-700 border-green-200 text-sm px-3 py-1" : r.gpa.result_status === "fail" ? "bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1" : "bg-gray-100 text-gray-600 text-sm px-3 py-1"}>
+                  {r.gpa.result_status === "pass" ? "✓ Pass" : r.gpa.result_status === "fail" ? "✗ Fail" : "Pending"}
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Marks detail dialog */}
+      <Dialog open={!!viewingMarks} onOpenChange={(v) => { if (!v) setViewingMarks(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{viewingMarks?.semester.name} — Subject Marks</DialogTitle>
+          </DialogHeader>
+          {viewingMarks && (
+            <div className="space-y-4 mt-2">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+                <div className="text-center flex-1">
+                  <p className="text-2xl font-bold">{viewingMarks.gpa.gpa ?? "-"}</p>
+                  <p className="text-xs text-muted-foreground">GPA / 10</p>
+                </div>
+                <div className="text-center flex-1">
+                  <p className="text-2xl font-bold">{viewingMarks.gpa.combined_score !== null ? `${Math.round(viewingMarks.gpa.combined_score ?? 0)}%` : "-"}</p>
+                  <p className="text-xs text-muted-foreground">Overall %</p>
+                </div>
+                <Badge className={viewingMarks.gpa.result_status === "pass" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                  {viewingMarks.gpa.result_status === "pass" ? "Pass" : "Fail"}
+                </Badge>
+              </div>
+              {viewingMarks.marks.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">No subject marks recorded.</p>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Marks</TableHead>
+                      <TableHead>%</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewingMarks.marks.map((m: any, i: number) => {
+                      const pct = m.marks_obtained !== null ? Math.round(((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100) : null;
+                      return (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium capitalize">{m.subject}</TableCell>
+                          <TableCell>{m.marks_obtained ?? "-"}/{m.max_marks}</TableCell>
+                          <TableCell>
+                            <span className={pct !== null ? (pct >= 50 ? "text-green-600 font-medium" : "text-red-500 font-medium") : ""}>
+                              {pct !== null ? `${pct}%` : "-"}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 export default function SemesterEngine() {
   const { profile } = useAuth();
   const isAdmin = ["admin", "principal", "school_admin"].includes(profile?.role ?? "");
@@ -710,92 +1038,27 @@ export default function SemesterEngine() {
 
             {/* RESULTS */}
             <TabsContent value="results" className="space-y-4 mt-4">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <h2 className="font-semibold">Term-wise Results</h2>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Select value={resultsSemesterId} onValueChange={setResultsSemesterId}>
-                    <SelectTrigger className="w-44"><SelectValue placeholder="Select Term" /></SelectTrigger>
-                    <SelectContent>
-                      {semesters.map((sem) => {
-                        const yr = academicYears.find((y) => y.id === sem.academic_year_id);
-                        return <SelectItem key={sem.id} value={sem.id}>{yr ? `${yr.name} — ${sem.name}` : sem.name}</SelectItem>;
-                      })}
-                    </SelectContent>
-                  </Select>
-                  {isAdmin && (
-                    <Select value={resultsClassFilter} onValueChange={setResultsClassFilter}>
-                      <SelectTrigger className="w-32"><SelectValue placeholder="Class" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Classes</SelectItem>
-                        {uniqueClasses.map((c) => (
-                          <SelectItem key={c} value={c}>{/^\d+$/.test(c) ? `Class ${c}` : c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  {isAdmin && (
-                    <Select value={resultsSectionFilter} onValueChange={setResultsSectionFilter}>
-                      <SelectTrigger className="w-28"><SelectValue placeholder="Section" /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Sections</SelectItem>
-                        {resultsUniqueSections.map((sec) => (
-                          <SelectItem key={sec} value={sec}>{sec}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                  {isTeacher && (
-                    <Badge variant="outline">{teacherClassLabel || "No class assigned"}</Badge>
-                  )}
-                </div>
-              </div>
-
-              {!resultsSemesterId ? (
-                <Card><CardContent className="py-12 text-center text-muted-foreground">Select a term above to view results.</CardContent></Card>
-              ) : resultsLoading ? (
-                <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-              ) : resultsFilteredStudents.length === 0 ? (
-                <Card><CardContent className="py-12 text-center text-muted-foreground">No students match this class/section.</CardContent></Card>
+              {isStudent ? (
+                /* ── Student card view ── */
+                <StudentResultsView
+                  profile={profile}
+                  semesters={semesters}
+                  academicYears={academicYears}
+                  myStudentRecord={myStudentRecord}
+                />
               ) : (
-                <Card className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Student</TableHead>
-                        <TableHead>Class</TableHead>
-                        <TableHead>Section</TableHead>
-                        {resultsSubjects.map((subj) => <TableHead key={subj}>{subj}</TableHead>)}
-                        <TableHead>Total %</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {resultsFilteredStudents.map((s) => {
-                        const sm = resultsMarks[s.id] || [];
-                        const byonSubject: Record<string, SemesterMark> = {};
-                        for (const m of sm) byonSubject[m.subject] = m;
-                        const avgPct = sm.length > 0
-                          ? Math.round(sm.reduce((acc, m) => acc + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / sm.length)
-                          : null;
-                        return (
-                          <TableRow key={s.id}>
-                            <TableCell className="font-medium">{s.full_name ?? "Unnamed"}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{s.class ?? "-"}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">{s.section ?? "-"}</TableCell>
-                            {resultsSubjects.map((subj) => {
-                              const mark = byonSubject[subj];
-                              return (
-                                <TableCell key={subj}>
-                                  {mark ? `${mark.marks_obtained ?? "-"}/${mark.max_marks}` : <span className="text-muted-foreground text-xs">-</span>}
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell className="font-medium">{avgPct !== null ? `${avgPct}%` : "-"}</TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </Card>
+                <AdminResultsView
+                  profile={profile}
+                  semesters={semesters}
+                  academicYears={academicYears}
+                  students={resultsFilteredStudents}
+                  isAdmin={isAdmin}
+                  isTeacher={isTeacher}
+                  uniqueClasses={uniqueClasses}
+                  resultsClassFilter={resultsClassFilter}
+                  setResultsClassFilter={setResultsClassFilter}
+                  teacherClassLabel={(isTeacher && profile) ? `Class ${(profile as any).class_grade || "-"}` : ""}
+                />
               )}
             </TabsContent>
 
