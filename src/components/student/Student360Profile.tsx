@@ -47,7 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
+import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
 
 export type ProfileRole = "student" | "parent" | "staff";
 
@@ -2138,6 +2138,8 @@ function DocumentRow({
 }) {
   const queryClient = useQueryClient();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [thumbUrl, setThumbUrl] = useState<string | null>(null);
+  const [isPreviewing, setIsPreviewing] = useState(false);
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteStudentDocument(doc.id, doc.file_url),
@@ -2151,11 +2153,32 @@ function DocumentRow({
   const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
   const isPdf = ext === "pdf";
 
+  // Load a short-lived signed URL for the thumbnail once, on mount
+  useState(() => {
+    if (isImage) {
+      getStudentDocumentSignedUrl(doc.file_url, 300)
+        .then(setThumbUrl)
+        .catch(() => setThumbUrl(null));
+    }
+  });
+
+  const handlePreview = async () => {
+    setIsPreviewing(true);
+    try {
+      const signedUrl = await getStudentDocumentSignedUrl(doc.file_url, 60);
+      window.open(signedUrl, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Failed to generate preview link", err);
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
   return (
     <div className="flex items-center justify-between gap-3 border-b pb-3 last:border-0">
       <div className="flex items-center gap-3 min-w-0">
-        {isImage ? (
-          <img src={doc.file_url} alt={doc.document_name} className="h-12 w-12 rounded object-cover shrink-0 border" />
+        {isImage && thumbUrl ? (
+          <img src={thumbUrl} alt={doc.document_name} className="h-12 w-12 rounded object-cover shrink-0 border" />
         ) : (
           <div className="h-12 w-12 rounded border flex items-center justify-center shrink-0 bg-muted">
             <FileText className="h-5 w-5 text-muted-foreground" />
@@ -2167,9 +2190,14 @@ function DocumentRow({
         </div>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline px-2 py-1">
-          {isImage || isPdf ? "Preview" : "Download"}
-        </a>
+        <button
+          type="button"
+          onClick={handlePreview}
+          disabled={isPreviewing}
+          className="text-sm text-primary hover:underline px-2 py-1 disabled:opacity-50"
+        >
+          {isPreviewing ? "Opening..." : isImage || isPdf ? "Preview" : "Download"}
+        </button>
         {canDelete && !confirmingDelete && (
           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setConfirmingDelete(true)}>
             Delete

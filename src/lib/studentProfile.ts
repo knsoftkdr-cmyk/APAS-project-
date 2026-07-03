@@ -106,7 +106,7 @@ export interface StudentDocument {
   student_id: string;
   document_type: string;
   document_name: string;
-  file_url: string;
+  file_url: string; // NOTE: now stores the storage PATH, not a public URL
   verified: boolean;
   expiry_date: string | null;
   created_at: string;
@@ -386,10 +386,12 @@ export async function uploadStudentDocument(
 
   if (uploadError) throw uploadError;
 
-  const { data: urlData } = supabase.storage
-    .from(DOCUMENTS_BUCKET)
-    .getPublicUrl(filePath);
-
+  // NOTE: student-documents is a PRIVATE bucket, so we don't use
+  // getPublicUrl() here (it produces a URL that always 404s / errors
+  // "Bucket not found" for private buckets). Instead we store the
+  // storage PATH and generate a short-lived signed URL on demand
+  // whenever the document needs to be previewed/downloaded — see
+  // getStudentDocumentSignedUrl() below.
   const { data, error } = await supabase
     .from("student_documents")
     .insert({
@@ -397,7 +399,7 @@ export async function uploadStudentDocument(
       student_id: studentId,
       document_type: documentType,
       document_name: file.name,
-      file_url: urlData.publicUrl,
+      file_url: filePath,
       verified: false,
     })
     .select()
@@ -407,13 +409,27 @@ export async function uploadStudentDocument(
   return data as StudentDocument;
 }
 
-export async function deleteStudentDocument(id: string, fileUrl: string) {
-  const marker = `/storage/v1/object/public/${DOCUMENTS_BUCKET}/`;
-  const idx = fileUrl.indexOf(marker);
-  if (idx !== -1) {
-    const path = fileUrl.slice(idx + marker.length);
-    await supabase.storage.from(DOCUMENTS_BUCKET).remove([path]);
-  }
+/**
+ * Generates a temporary signed URL for previewing/downloading a
+ * private document. Call this right before opening the preview —
+ * signed URLs expire, so don't store the result.
+ */
+export async function getStudentDocumentSignedUrl(
+  filePath: string,
+  expiresInSeconds = 60
+) {
+  const { data, error } = await supabase.storage
+    .from(DOCUMENTS_BUCKET)
+    .createSignedUrl(filePath, expiresInSeconds);
+
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export async function deleteStudentDocument(id: string, filePath: string) {
+  // filePath is now the raw storage path (e.g. "studentId/167890-file.jpg"),
+  // stored directly in file_url — no need to parse a public URL anymore.
+  await supabase.storage.from(DOCUMENTS_BUCKET).remove([filePath]);
 
   const { error } = await supabase
     .from("student_documents")
