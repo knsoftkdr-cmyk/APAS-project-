@@ -379,6 +379,21 @@ export default function ExamSeating() {
     openLayoutPrint(hall, sched, assignments, studentsById);
   };
 
+  const deleteSavedLayout = async (examScheduleId: string, hallId: string) => {
+    if (!confirm("Delete this saved seating layout? This cannot be undone.")) return;
+    const key = `${examScheduleId}::${hallId}::delete`;
+    setLayoutActionKey(key);
+    const { error } = await supabase
+      .from("seating_arrangements")
+      .delete()
+      .eq("exam_schedule_id", examScheduleId)
+      .eq("hall_id", hallId);
+    setLayoutActionKey(null);
+    if (error) { toast.error("Failed to delete layout"); return; }
+    toast.success("Layout deleted");
+    fetchAll();
+  };
+
   // For saved layouts loaded fresh from the DB (works after a page refresh, no regeneration needed)
   const loadAndRunSavedLayout = async (examScheduleId: string, hallId: string, action: "view" | "download") => {
     const key = `${examScheduleId}::${hallId}::${action}`;
@@ -630,6 +645,9 @@ export default function ExamSeating() {
                           <Button size="sm" variant="outline" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "download")} disabled={layoutActionKey === downloadKey}>
                             {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
                             Download
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => deleteSavedLayout(l.exam_schedule_id, l.hall_id)} disabled={layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete`}>
+                            {layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
                           </Button>
                         </TableCell>
                       </TableRow>
