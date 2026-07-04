@@ -41,6 +41,7 @@ const Alerts = lazy(() => import("./pages/Alerts"));
 const SemesterEngine = lazy(() => import("./pages/SemesterEngine"));
 const HouseManagement = lazy(() => import("./pages/HouseManagement"));
 const ReportCards = lazy(() => import("./pages/ReportCards"));
+const ExamSeating = lazy(() => import("./pages/ExamSeating"));
 const AutomationWorkflows = lazy(() => import("./pages/AutomationWorkflows"));
 const SecurityCenter = lazy(() => import("./pages/SecurityCenter"));
 const Billing = lazy(() => import("./pages/Billing"));
@@ -139,7 +140,8 @@ export default function App() {
                       <Route path="/academic-calendar" element={<ProtectedRoute><AcademicCalendar /></ProtectedRoute>} />
                       <Route path="/semester-engine" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student"]}><SemesterEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/houses" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"]}><HouseManagement /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/report-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student"]}><ReportCards /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/report-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent"]}><ReportCards /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/exam-seating" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><ExamSeating /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />

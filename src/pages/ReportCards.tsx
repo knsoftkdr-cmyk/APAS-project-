@@ -62,6 +62,7 @@ export default function ReportCards() {
   const isAdmin = ["admin", "principal", "school_admin"].includes(profile?.role ?? "");
   const isTeacher = profile?.role === "teacher";
   const isStudent = profile?.role === "student";
+  const isParent = profile?.role === "parent";
 
   const [semesters, setSemesters] = useState<Semester[]>([]);
   const [academicYears, setAcademicYears] = useState<AcademicYear[]>([]);
@@ -75,6 +76,8 @@ export default function ReportCards() {
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
   const [myStudentRow, setMyStudentRow] = useState<Student | null>(null);
   const [schoolName, setSchoolName] = useState<string>("");
+  const [linkedChildren, setLinkedChildren] = useState<Student[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string>("");
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,16 +99,30 @@ export default function ReportCards() {
         const mine = allStudents.find((s) => s.profile_id === profile.id) ?? null;
         setMyStudentRow(mine);
       }
+      if (isParent) {
+        const { data: linkRows } = await supabase
+          .from("parent_students")
+          .select("student_id")
+          .eq("parent_id", profile.id);
+        const linkedProfileIds = (linkRows || []).map((r: any) => r.student_id);
+        const kids = allStudents.filter((s) => s.profile_id && linkedProfileIds.includes(s.profile_id));
+        setLinkedChildren(kids);
+        if (kids.length > 0) setSelectedChildId(kids[0].id);
+      }
       setLoading(false);
     };
     fetchBase();
   }, [profile?.school_id]);
+
+  const activeChildForEffect = isParent ? (linkedChildren.find((c) => c.id === selectedChildId) ?? null) : null;
 
   useEffect(() => {
     if (!selectedSemId || !profile?.school_id) return;
     setSemLoading(true);
     const relevantStudents = isStudent
       ? (myStudentRow ? [myStudentRow] : [])
+      : isParent
+      ? (activeChildForEffect ? [activeChildForEffect] : [])
       : isTeacher
       ? students.filter((s) => normalizeClass(s.class) === normalizeClass((profile as any).class_grade ?? ""))
       : students.filter((s) => classFilter === "all" || normalizeClass(s.class) === classFilter);
@@ -127,14 +144,17 @@ export default function ReportCards() {
       setGpaMap(gm);
       setSemLoading(false);
     });
-  }, [selectedSemId, classFilter, students.length, myStudentRow?.id]);
+  }, [selectedSemId, classFilter, students.length, myStudentRow?.id, selectedChildId]);
 
   const selectedSem = semesters.find((s) => s.id === selectedSemId);
+  const activeChild = isStudent ? myStudentRow : isParent ? (linkedChildren.find((c) => c.id === selectedChildId) ?? null) : null;
   const selectedYear = selectedSem ? academicYears.find((y) => y.id === selectedSem.academic_year_id) : null;
   const uniqueClasses = Array.from(new Set(students.map((s) => normalizeClass(s.class)).filter(Boolean))).sort();
 
   const displayStudents = isStudent
-    ? (myStudentRow ? [myStudentRow] : [])
+    ? (activeChild ? [activeChild] : [])
+    : isParent
+    ? (activeChild ? [activeChild] : [])
     : isTeacher
     ? students.filter((s) => normalizeClass(s.class) === normalizeClass((profile as any).class_grade ?? ""))
     : students.filter((s) => classFilter === "all" || normalizeClass(s.class) === classFilter);
@@ -284,6 +304,17 @@ export default function ReportCards() {
             </SelectContent>
           </Select>
 
+          {isParent && linkedChildren.length > 1 && (
+            <Select value={selectedChildId} onValueChange={setSelectedChildId}>
+              <SelectTrigger className="w-48"><SelectValue placeholder="Select Child" /></SelectTrigger>
+              <SelectContent>
+                {linkedChildren.map((child) => (
+                  <SelectItem key={child.id} value={child.id}>{child.full_name ?? "Unnamed"}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+
           {isAdmin && (
             <Select value={classFilter} onValueChange={setClassFilter}>
               <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
@@ -312,41 +343,41 @@ export default function ReportCards() {
           </Card>
         ) : semLoading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : isStudent ? (
-          /* Student: show their own report card directly */
-          myStudentRow ? (
+        ) : (isStudent || isParent) ? (
+          /* Student or Parent: show the linked student report card directly */
+          activeChild ? (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <GraduationCap className="h-5 w-5" />
-                  {myStudentRow.full_name} — {selectedSem?.name}
+                  {activeChild.full_name} — {selectedSem?.name}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4 p-4 bg-muted rounded-lg flex-wrap">
                   <div className="text-center">
-                    <p className="text-3xl font-bold">{gpaMap[myStudentRow.id]?.gpa ?? "-"}</p>
+                    <p className="text-3xl font-bold">{gpaMap[activeChild.id]?.gpa ?? "-"}</p>
                     <p className="text-xs text-muted-foreground">GPA / 10</p>
                   </div>
                   <div className="text-center">
                     <p className="text-3xl font-bold">
-                      {(marksMap[myStudentRow.id] || []).length > 0
-                        ? `${Math.round((marksMap[myStudentRow.id] || []).reduce((a, m) => a + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / (marksMap[myStudentRow.id] || []).length)}%`
+                      {(marksMap[activeChild.id] || []).length > 0
+                        ? `${Math.round((marksMap[activeChild.id] || []).reduce((a, m) => a + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / (marksMap[activeChild.id] || []).length)}%`
                         : "-"}
                     </p>
                     <p className="text-xs text-muted-foreground">Overall %</p>
                   </div>
-                  {gpaMap[myStudentRow.id] && (
-                    <Badge className={gpaMap[myStudentRow.id].result_status === "pass" ? "bg-green-100 text-green-700 text-sm px-3 py-1" : "bg-red-100 text-red-700 text-sm px-3 py-1"}>
-                      {gpaMap[myStudentRow.id].result_status === "pass" ? "✓ Pass" : "✗ Fail"}
+                  {gpaMap[activeChild.id] && (
+                    <Badge className={gpaMap[activeChild.id].result_status === "pass" ? "bg-green-100 text-green-700 text-sm px-3 py-1" : "bg-red-100 text-red-700 text-sm px-3 py-1"}>
+                      {gpaMap[activeChild.id].result_status === "pass" ? "✓ Pass" : "✗ Fail"}
                     </Badge>
                   )}
-                  <Button className="ml-auto" onClick={() => generatePDF(myStudentRow)} disabled={generatingPdf === myStudentRow.id}>
-                    {generatingPdf === myStudentRow.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                  <Button className="ml-auto" onClick={() => generatePDF(activeChild)} disabled={generatingPdf === activeChild.id}>
+                    {generatingPdf === activeChild.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
                     Download Report Card
                   </Button>
                 </div>
-                {(marksMap[myStudentRow.id] || []).length > 0 && (
+                {(marksMap[activeChild.id] || []).length > 0 && (
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -357,7 +388,7 @@ export default function ReportCards() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {(marksMap[myStudentRow.id] || []).map((m, i) => {
+                      {(marksMap[activeChild.id] || []).map((m, i) => {
                         const pct = m.marks_obtained !== null ? Math.round(((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100) : null;
                         return (
                           <TableRow key={i}>
@@ -376,7 +407,7 @@ export default function ReportCards() {
               </CardContent>
             </Card>
           ) : (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">Could not find your student record. Contact your school admin.</CardContent></Card>
+            <Card><CardContent className="py-12 text-center text-muted-foreground">Could not find the linked student record. Contact your school admin.</CardContent></Card>
           )
         ) : (
           /* Admin/Teacher: gradebook grid */
