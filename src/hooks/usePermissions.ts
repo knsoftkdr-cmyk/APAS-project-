@@ -6,7 +6,7 @@ const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
 
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
   admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards"],
-  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards"],
+  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards", "Invigilation", "Exam Seating", "Hall Tickets"],
   hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar", "Houses"],
   teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar", "Houses", "Semester Engine"],
   student:   ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Houses", "Semester Engine"],
