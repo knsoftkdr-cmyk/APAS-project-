@@ -258,3 +258,51 @@
 .login-card {
   animation: floatCard 6s ease-in-out infinite;
 }
+
+@keyframes zoomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
+
+@keyframes rocket-launch {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(-120vh);
+    opacity: 0;
+  }
+}
+
+.animate-rocket-launch {
+  animation: rocket-launch 2.5s ease-in-out forwards;
+}
+
+
+@keyframes busMove {
+  0% {
+    transform: translateX(-80px);
+  }
+
+  100% {
+    transform: translateX(280px);
+  }
+}
+
+.animate-bus {
+  animation: busMove 3s linear infinite;
+}

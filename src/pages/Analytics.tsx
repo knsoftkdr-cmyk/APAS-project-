@@ -209,21 +209,59 @@ const Analytics = () => {
       return;
     }
     setSaving(true);
-    const { error } = await supabase
-      .from("homework_submissions")
-      .update({
-        teacher_score: score,
-        teacher_feedback: feedbackInput,
-        evaluated_at: new Date().toISOString(),
-        evaluated_by: user?.id,
-      })
-      .eq("id", reviewing.id);
-    setSaving(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+const { error } = await supabase
+  .from("homework_submissions")
+  .update({
+    teacher_score: score,
+    teacher_feedback: feedbackInput,
+    evaluated_at: new Date().toISOString(),
+    evaluated_by: user?.id,
+  })
+  .eq("id", reviewing.id);
+setSaving(false);
+if (error) {
+  toast.error(error.message);
+  return;
+}
+toast.success("Score saved");
+
+// Send grade notification to student + parent
+try {
+  const topic = reviewing.assignment?.topic || reviewing.assignment?.period_title || "Homework";
+  const subject = reviewing.assignment?.subject || "";
+
+  const studentBody = feedbackInput
+    ? `You scored ${score}/100. Teacher says: ${feedbackInput.substring(0, 60)}${feedbackInput.length > 60 ? "..." : ""}`
+    : `You scored ${score}/100 in ${topic}. Keep it up!`;
+
+  await fetch(
+    "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "single_by_user_id",
+        payload: {
+          user_id: reviewing.student_id,
+          student_name: reviewing.student_name,
+          title: `${subject ? subject + ": " : ""}${topic} graded`,
+          body: studentBody,
+          score: String(score),
+          subject,
+          topic,
+          feedback: feedbackInput || "",
+          data: {
+            type: "grade",
+            assignment_id: reviewing.assignment_id || "",
+            score: String(score),
+          },
+        },
+      }),
     }
-    toast.success("Score saved");
+  );
+} catch (notifError) {
+  console.error("Grade notification failed:", notifError);
+}
     queryClient.invalidateQueries({ queryKey: ["analytics-athome-submissions", assignmentIds] });
     setReviewing(null);
   };

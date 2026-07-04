@@ -175,7 +175,7 @@ export default function HODDashboard() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[
             { label: "Teachers", value: teachers.length, icon: Users, color: "text-blue-600" },
             { label: "Students", value: students.length, icon: GraduationCap, color: "text-green-600" },

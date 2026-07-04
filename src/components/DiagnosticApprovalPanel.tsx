@@ -212,17 +212,56 @@ export const DiagnosticApprovalPanel = () => {
       .update(updatePayload)
       .eq("id", reviewRequest.id);
 
-    if (error) {
+if (error) {
       toast.error(error.message);
-    } else {
-      toast.success(
-        action === "approved"
-          ? `Request approved! ${assignedQuestions?.length || 0} questions assigned to ${reviewRequest.class_name} - ${reviewRequest.section} students.`
-          : "Request rejected."
-      );
-      setReviewRequest(null);
-      queryClient.invalidateQueries({ queryKey: ["admin-diagnostic-requests"] });
+      setProcessing(false);
+      return;
     }
+
+    toast.success(
+      action === "approved"
+        ? `Request approved! ${assignedQuestions?.length || 0} questions assigned to ${reviewRequest.class_name} - ${reviewRequest.section} students.`
+        : "Request rejected."
+    );
+    setReviewRequest(null);
+    queryClient.invalidateQueries({ queryKey: ["admin-diagnostic-requests"] });
+
+    // Notify the teacher about the decision
+    try {
+      const isApproved = action === "approved";
+      const notifTitle = isApproved
+        ? "Diagnostic Request Approved ✅"
+        : "Diagnostic Request Rejected ❌";
+      const notifBody = isApproved
+        ? `Your diagnostic request for ${reviewRequest.class_name} - Section ${reviewRequest.section} has been approved. ${count} questions assigned.${adminNotes ? " Note: " + adminNotes : ""}`
+        : `Your diagnostic request for ${reviewRequest.class_name} - Section ${reviewRequest.section} was rejected.${adminNotes ? " Reason: " + adminNotes : ""}`;
+
+      const response = await fetch(
+        "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "single_by_user_id",
+            payload: {
+              user_id: reviewRequest.teacher_id,
+              title: notifTitle,
+              body: notifBody,
+              data: {
+                type: "diagnostic_decision",
+                request_id: reviewRequest.id,
+                action,
+              },
+            },
+          }),
+        }
+      );
+      const result = await response.json();
+      console.log("Teacher notification result:", result);
+    } catch (notifError) {
+      console.error("Teacher notification failed:", notifError);
+    }
+
     setProcessing(false);
   };
 

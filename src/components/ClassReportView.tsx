@@ -224,7 +224,7 @@ export const ClassReportView = ({
       </div>
 
       {/* CHARTS ROW */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* VARK Doughnut */}
         <div className="bg-white border border-[#e4e2dc] rounded-xl p-4">
           <p className="text-xs font-semibold text-[#3d3d5c] uppercase tracking-[1px] mb-3">VARK Distribution — Class of {data.totalStudents}</p>

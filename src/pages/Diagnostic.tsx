@@ -25,6 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import assessmentbanner from "@/assets/assessment-banner.png";
 import teacherassessmentbanner from "@/assets/teacher-assessment-banner.png";
 import teacherGuide from "@/assets/teacher-guide.png";
+import SchoolBusLoader from "@/components/SchoolBusLoader";
 import {
   User,
   Calendar,
@@ -189,6 +190,7 @@ const StudentAssessment = ({ userId, studentName }: { userId?: string; studentNa
  
   const [showTeacher, setShowTeacher] = useState(true);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [showLoader, setShowLoader] = useState(false);
 
   // Auto-populate student's class and section from profile on component mount
   useEffect(() => {
@@ -238,6 +240,15 @@ useEffect(() => {
     if (ageVal >= 11 && ageVal < 14) return 11;
     return 14;
   };
+
+const startQuizWithLoader = () => {
+  setShowLoader(true);
+
+  setTimeout(() => {
+    startQuiz();
+  }, 3000);
+};
+
   const startQuiz = async () => {
     const ageNum = parseInt(age);
     const ageGroup = getAgeGroupFromAge(ageNum);
@@ -252,7 +263,8 @@ useEffect(() => {
       setCurrentQ(0);
       setQuizStartTime(Date.now());
       setShowInstructions(true);
-      setPhase("quiz");
+      setShowLoader(false);
+setPhase("quiz");
       toast.info(`Loaded ${limited.totalQuestions} diagnostic questions`);
       return;
     }
@@ -332,6 +344,7 @@ useEffect(() => {
           setCurrentQ(0);
           setQuizStartTime(Date.now());
           setShowInstructions(true);
+          setShowLoader(false);
           setPhase("quiz");
           toast.info(`Loaded ${filteredQuestions.length} teacher-assigned questions`);
           return;
@@ -358,6 +371,7 @@ useEffect(() => {
     setCurrentQ(0);
     setQuizStartTime(Date.now());
     setShowInstructions(true);
+    setShowLoader(false);
     setPhase("quiz");
   };
 
@@ -450,6 +464,10 @@ useEffect(() => {
   const totalAnswered = Object.keys(answers).length;
   const progress = Math.round((totalAnswered / (totalQuestions || 1)) * 100);
 
+if (showLoader) {
+  return <SchoolBusLoader />;
+}
+  
   // ─── Form Phase ───
   if (phase === "form") {
     return (
@@ -629,7 +647,7 @@ useEffect(() => {
               </div>
             </div>
 
-              <Button className="w-full h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-300/40 hover:scale-105 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-400/50 transition-all duration-300 " onClick={startQuiz} disabled={!canStartQuiz}>
+              <Button className="w-full h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-300/40 hover:scale-105 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-400/50 transition-all duration-300 " onClick={startQuizWithLoader} disabled={!canStartQuiz}>
                 Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </CardContent>

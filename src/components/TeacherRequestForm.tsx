@@ -132,17 +132,60 @@ export const TeacherRequestForm = () => {
       question_distribution: distribution,
     } as any);
 
-    if (error) {
+if (error) {
       toast.error(error.message);
-    } else {
-      toast.success("Request submitted! Any previous request for this class has been replaced.");
-      setClassName("");
-      setSection("A");
-      setPurpose("");
-      setDistribution(Object.fromEntries(MI_CATEGORIES.map((c) => [c, 5])));
-      setShowForm(false);
-      queryClient.invalidateQueries({ queryKey: ["teacher-diagnostic-requests"] });
+      setSubmitting(false);
+      return;
     }
+
+    toast.success("Request submitted! Any previous request for this class has been replaced.");
+    setClassName("");
+    setSection("A");
+    setPurpose("");
+    setDistribution(Object.fromEntries(MI_CATEGORIES.map((c) => [c, 5])));
+    setShowForm(false);
+    queryClient.invalidateQueries({ queryKey: ["teacher-diagnostic-requests"] });
+
+    // Notify principals of the same school
+    try {
+      const { data: teacherProfile } = await supabase
+        .from("profiles")
+        .select("full_name, school_id")
+        .eq("id", user!.id)
+        .single();
+
+      if ((teacherProfile as any)?.school_id) {
+        const teacherName = (teacherProfile as any).full_name || "A teacher";
+        const notifTitle = "New Diagnostic Request";
+        const notifBody = `${teacherName} has requested a diagnostic test for ${className} - Section ${section}. ${totalQuestions} questions suggested.`;
+
+        const response = await fetch(
+          "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "notify_role",
+              payload: {
+                school_id: (teacherProfile as any).school_id,
+                role: "principal",
+                title: notifTitle,
+                body: notifBody,
+                data: {
+                  type: "diagnostic_request",
+                  class_name: className,
+                  section,
+                },
+              },
+            }),
+          }
+        );
+        const result = await response.json();
+      } 
+    } catch (notifError) {
+      console.error("❌ Principal notification failed:", notifError);
+    }
+
     setSubmitting(false);
   };
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "591061390248",
+    "project_id": "apas-1234",
+    "storage_bucket": "apas-1234.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:591061390248:android:397658b1094749bff3039d",
+        "android_client_info": {
+          "package_name": "com.apas.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB3K3NZGA-b7A7pjwfP71_DieEEXKrGD6g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

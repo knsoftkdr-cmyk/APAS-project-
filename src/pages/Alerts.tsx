@@ -14,6 +14,9 @@ import { Download, CheckCheck, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import alertsbanner from "@/assets/alerts-banner.png";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+
 type Filter = "all" | "flagged" | "resolved";
 
 const Alerts = () => {
@@ -39,19 +42,41 @@ const Alerts = () => {
     toast.success(`${flagged.length} alerts resolved`);
   };
 
-  const exportCSV = () => {
-    const header = "Student Group,Lesson Type,Trigger,Recommendation,Status,Date\n";
-    const rows = filtered.map((a) =>
-      `"${a.student_group || ""}","${a.lesson_type || ""}","${a.trigger_condition || ""}","${a.recommendation || ""}","${a.status}","${a.created_at}"`
-    ).join("\n");
-    const blob = new Blob([header + rows], { type: "text/csv" });
+const exportCSV = async () => {
+  const header =
+    "Student Group,Lesson Type,Trigger,Recommendation,Status,Date\n";
+
+  const rows = filtered
+    .map(
+      (a) =>
+        `"${a.student_group || ""}","${a.lesson_type || ""}","${a.trigger_condition || ""}","${a.recommendation || ""}","${a.status}","${a.created_at}"`
+    )
+    .join("\n");
+
+  const csvContent = header + rows;
+
+  // Browser
+  if (!Capacitor.isNativePlatform()) {
+    const blob = new Blob([csvContent], { type: "text/csv" });
+
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
     link.download = "alerts.csv";
     link.click();
     URL.revokeObjectURL(url);
-  };
+    return;
+  }
+
+  // Android App
+  await Filesystem.writeFile({
+    path: "alerts.csv",
+    data: btoa(csvContent),
+    directory: Directory.Documents,
+  });
+
+  alert("CSV downloaded successfully!");
+};
 
   // Mark visible alerts as read
   const handleViewAlert = (id: string) => {

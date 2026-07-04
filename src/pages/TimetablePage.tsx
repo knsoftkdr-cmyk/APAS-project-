@@ -237,6 +237,37 @@ const TimetablePage = () => {
       setClassFile(null); setSelectedClass(""); setSelectedSection("");
       if (classFileRef.current) classFileRef.current.value = "";
       fetchTimetables();
+
+toast({ title: "Class timetable uploaded ✅", description: `Class ${selectedClass} - Section ${selectedSection}` });
+setClassFile(null); setSelectedClass(""); setSelectedSection("");
+if (classFileRef.current) classFileRef.current.value = "";
+fetchTimetables();
+
+// Notify students + parents of this class/section
+try {
+  await fetch(
+    "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "homework_with_parents",
+        payload: {
+          school_id: schoolId,
+          class_level: `Class ${selectedClass.trim()}`,
+          section: selectedSection.trim().toUpperCase(),
+          title: "Timetable Updated",
+          body: `Your timetable for Class ${selectedClass} - Section ${selectedSection.trim().toUpperCase()} has been updated. Check your timetable now.`,
+          homework_id: "",
+        },
+      }),
+    }
+  );
+} catch (notifError) {
+  console.error("Timetable notification failed:", notifError);
+}
+
+
     } catch (e: any) {
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });
     } finally {
@@ -273,6 +304,36 @@ const TimetablePage = () => {
       setTeacherFile(null); setSelectedTeacherId("");
       if (teacherFileRef.current) teacherFileRef.current.value = "";
       fetchTimetables();
+
+toast({ title: "Teacher timetable uploaded ✅", description: teacher?.full_name });
+setTeacherFile(null); setSelectedTeacherId("");
+if (teacherFileRef.current) teacherFileRef.current.value = "";
+fetchTimetables();
+
+// Notify the teacher directly
+try {
+  await fetch(
+    "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "single_by_user_id",
+        payload: {
+          user_id: selectedTeacherId,
+          title: "Your Timetable Updated",
+          body: `Your weekly timetable has been updated by the principal. Check your timetable now.`,
+          data: {
+            type: "timetable_update",
+          },
+        },
+      }),
+    }
+  );
+} catch (notifError) {
+  console.error("Teacher timetable notification failed:", notifError);
+}
+
     } catch (e: any) {
       toast({ title: "Upload failed", description: e.message, variant: "destructive" });
     } finally {

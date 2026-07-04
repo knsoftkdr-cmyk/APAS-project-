@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
-
+import { App as CapacitorApp } from "@capacitor/app";
 console.log("🔍 main.tsx: Starting app initialization...");
 const rootElement = document.getElementById("root");
 console.log("🔍 main.tsx: Root element found:", rootElement ? "✓" : "✗");
@@ -16,3 +16,12 @@ if (rootElement) {
   console.error("❌ CRITICAL: Root element not found in DOM");
   document.body.innerHTML = "<h1>Error: Root element not found</h1>";
 }
+
+
+CapacitorApp.addListener("backButton", () => {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    CapacitorApp.exitApp();
+  }
+});

@@ -21,7 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import teacherAiAvatar from "@/assets/teacher-ai-avatar.png";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -1525,8 +1526,34 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
     
-    const html2pdf = (await import("html2pdf.js")).default;
-    html2pdf().set(opt).from(tempDiv).save();
+const html2pdf = (await import("html2pdf.js")).default;
+
+// Browser
+if (!Capacitor.isNativePlatform()) {
+  html2pdf().set(opt).from(tempDiv).save();
+  toast.success("PDF downloaded successfully!");
+  return;
+}
+
+// Android App
+const worker = html2pdf().set(opt).from(tempDiv);
+
+// Generate PDF as base64
+const pdfBase64 = await worker.outputPdf("datauristring");
+
+// Remove the prefix
+const base64Data = pdfBase64.split(",")[1];
+
+const permission = await Filesystem.checkPermissions();
+if (permission.publicStorage !== "granted") {
+  await Filesystem.requestPermissions();
+}
+const result = await Filesystem.writeFile({
+  path: filename,
+  data: base64Data,
+  directory: Directory.Documents,
+});
+console.log("PDF SAVED:", result.uri);
     toast.success('PDF downloaded successfully!');
   };
 
@@ -1569,7 +1596,8 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
       </div>
 
       <Tabs defaultValue="lesson-plan" className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-<TabsList className="grid w-full max-w-3xl grid-cols-2 sm:grid-cols-4 gap-2 mb-4 ">
+        <div className="overflow-x-auto">
+<TabsList className="grid w-full max-w-lg grid-cols-4 mb-4 ">
         <TabsTrigger value="lesson-plan" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
           <Wand2 className="h-6 w-6" /> Lesson Plan
         </TabsTrigger>
@@ -1583,7 +1611,7 @@ Whenever you use any advanced or technical word in the lesson plan body, add a s
           <History className="h-6 w-6" /> My Lessons
           </TabsTrigger>
         </TabsList>
-
+</div>
         <TabsContent value="lesson-plan" className="space-y-6 mt-0">
           {/* Configuration Card */}
           <Card className="border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500">
@@ -2530,6 +2558,32 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       
       toast.success(`? Homework assigned to ${studentNames.length} student${studentNames.length !== 1 ? 's' : ''} in ${homeworkClass} - Section ${homeworkSection}`);
       setShowAssignmentConfirmation(true);
+      // Send push notification to students
+try {
+  await fetch(
+    "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "homework_with_parents",
+        payload: {
+          school_id: profile?.school_id,
+          class_level: getClassLabel(homeworkClass),
+          section: (homeworkSection || "").toUpperCase().trim(),
+          title: "📚 New Homework Assigned",
+          body: `${assignmentData.subject}: ${selectedPeriodInfo.title}`,
+          homework_id: assignment[0].id,
+        },
+      }),
+    }
+  );
+} catch (notifError) {
+  console.error("Notification failed:", notifError);
+  // Don't block homework assignment if notification fails
+}
+
+toast.success(`✓ Homework assigned to ${studentNames.length} student...`);
       setAssignmentMode("none");
       setSelectedPeriod("");
       setEditedQuestions([]);
@@ -2700,9 +2754,24 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
     
-    const html2pdf = (await import("html2pdf.js")).default;
-    html2pdf().set(opt).from(tempDiv).save();
-    toast.success('PDF downloaded successfully!');
+const html2pdf = (await import("html2pdf.js")).default;
+if (!Capacitor.isNativePlatform()) {
+  html2pdf().set(opt).from(tempDiv).save();
+  toast.success("PDF downloaded successfully!");
+} else {
+  const worker = html2pdf().set(opt).from(tempDiv);
+
+  const pdfBase64 = await worker.outputPdf("datauristring");
+  const base64Data = pdfBase64.split(",")[1];
+
+  await Filesystem.writeFile({
+    path: filename,
+    data: base64Data,
+    directory: Directory.Documents,
+  });
+
+  toast.success("PDF downloaded successfully!");
+}
   };
 
 
@@ -3449,9 +3518,24 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
       pagebreak: { mode: ['avoid-all', 'css', 'legacy'] },
     };
 
-    const html2pdf = (await import("html2pdf.js")).default;
-    html2pdf().set(opt).from(tempDiv).save();
-    toast.success('Worksheet PDF downloaded successfully!');
+const html2pdf = (await import("html2pdf.js")).default;
+if (!Capacitor.isNativePlatform()) {
+  html2pdf().set(opt).from(tempDiv).save();
+  toast.success("Worksheet PDF downloaded successfully!");
+} else {
+  const worker = html2pdf().set(opt).from(tempDiv);
+
+  const pdfBase64 = await worker.outputPdf("datauristring");
+  const base64Data = pdfBase64.split(",")[1];
+
+  await Filesystem.writeFile({
+    path: filename,
+    data: base64Data,
+    directory: Directory.Documents,
+  });
+
+  toast.success("Worksheet PDF downloaded successfully!");
+}
   };
 
   const handleDownloadIllustratedPDF = async (ws: WorksheetRow) => {
@@ -3499,17 +3583,42 @@ const WorksheetsTab = ({ user, profile, getClassLabel }: WorksheetsTabProps) => 
           if (vn.length > 0) targetStudents = vn;
         }
       }
-      const { error } = await supabase.from("worksheet_assignments").insert([{
-        worksheet_id: ws.id,
-        teacher_id: user.id,
-        school_id: profile.school_id,
-        class_level: ws.class_level,
-        section: ws.section.toUpperCase().trim(),
-        status: "active",
-      }] as any);
-      if (error) throw new Error(error.message);
-      const label = ws.vark_type && ws.vark_type !== "general" ? ws.vark_type + " learners" : "all students";
-      toast.success(`Worksheet assigned to ${targetStudents.length} ${label} in ${ws.class_level} Section ${ws.section}`);
+const { error } = await supabase.from("worksheet_assignments").insert([{
+  worksheet_id: ws.id,
+  teacher_id: user.id,
+  school_id: profile.school_id,
+  class_level: ws.class_level,
+  section: ws.section.toUpperCase().trim(),
+  status: "active",
+}] as any);
+if (error) throw new Error(error.message);
+
+// Send push notification to students
+try {
+  await fetch(
+    "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "homework_with_parents",
+        payload: {
+          school_id: profile.school_id,
+          class_level: ws.class_level,
+          section: ws.section.toUpperCase().trim(),
+          title: "New Worksheet Assigned",
+          body: `${ws.subject}${ws.topic ? ": " + ws.topic : ""} - Practice worksheet is ready`,
+          homework_id: ws.id,
+        },
+      }),
+    }
+  );
+} catch (notifError) {
+  console.error("Worksheet notification failed:", notifError);
+}
+
+const label = ws.vark_type && ws.vark_type !== "general" ? ws.vark_type + " learners" : "all students";
+toast.success(`Worksheet assigned to ${targetStudents.length} ${label} in ${ws.class_level} Section ${ws.section}`);
     } catch (err: any) {
       toast.error(`Failed to assign: ${err.message || 'Unknown error'}`);
     } finally { setAssigningId(null); }
@@ -3823,8 +3932,36 @@ const GeneratedLessonsTab = ({ user, getClassLabel }: GeneratedLessonsTabProps) 
     };
 
     const html2pdf = (await import("html2pdf.js")).default;
-    html2pdf().set(opt).from(tempDiv).save();
-    toast.success("Lesson plan PDF downloaded successfully!");
+
+// Browser
+if (!Capacitor.isNativePlatform()) {
+  html2pdf().set(opt).from(tempDiv).save();
+  toast.success("Lesson plan PDF downloaded successfully!");
+  return;
+}
+
+try {
+  // Android App
+  const worker = html2pdf().set(opt).from(tempDiv);
+
+  // Generate PDF as Base64
+  const pdfData = await worker.outputPdf("datauristring");
+  const base64Data = pdfData.split(",")[1];
+
+  // Save into phone storage
+  const result = await Filesystem.writeFile({
+    path: filename,
+    data: base64Data,
+    directory: Directory.Documents,
+  });
+
+  console.log("Lesson PDF saved:", result);
+
+  toast.success("Lesson plan PDF downloaded successfully!");
+} catch (err) {
+  console.error("Lesson PDF download failed:", err);
+  toast.error("Failed to download PDF");
+}
   };
 
 

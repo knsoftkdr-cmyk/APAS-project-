@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import apasLogo from "@/assets/APAS-logo.png";
 import knsoftLogo from "@/assets/knsoft-logo.png";
-
+import LoginSplash from "./LoginSplash";
+import { getPendingFCMToken } from "@/services/pushNotifications";
+import { saveFCMToken } from "@/services/deviceService";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
@@ -16,6 +18,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -27,6 +30,10 @@ const Login = () => {
     setRememberMe(true);
   }
 }, []);
+
+if (showSplash) {
+  return <LoginSplash />;
+}
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,13 +71,35 @@ const Login = () => {
         email: data.session.user.email,
         role: "student",
       });
+      // Save FCM token after student login
+try {
+  const fcmToken = getPendingFCMToken();
+  if (fcmToken) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("school_id")
+      .eq("id", data.session.user.id)
+      .single();
+    if (profile?.school_id) {
+      await saveFCMToken(data.session.user.id, profile.school_id, fcmToken, "student");
+      console.log("✅ FCM Token saved after student login");
+    }
+  }
+} catch (err) {
+  console.error("FCM save error:", err);
+}
 if (rememberMe) {
   localStorage.setItem("rememberedIdentifier", identifier);
 } else {
   localStorage.removeItem("rememberedIdentifier");
 }
-      navigate("/student-dashboard");
-      setLoading(false);
+      setShowSplash(true);
+
+setTimeout(() => {
+  navigate("/student-dashboard");
+}, 2000);
+
+setLoading(false);
       return;
     }
 
@@ -123,23 +152,40 @@ if (!role || !roleMap[selectedRole]?.includes(role)) {
       email: data.session.user.email,
       role: role ?? "unknown",
     });
-
-    if (role === "knsoft_admin") {
-      navigate("/knsoft-admin");
-    } else if (role === "school_admin") {
-      navigate("/super-admin");
-    } else if (role === "hod") {
-      navigate("/hod-dashboard");
-    } else if (role === "parent") {
-      navigate("/parent-dashboard");
-    } else if (role === "student") {
-      navigate("/student-dashboard");
-    } else if (role === "admin" || role === "principal") {
-      navigate("/dashboard");
-    } else {
-      navigate("/dashboard");
+// Save FCM token after staff login
+try {
+  const fcmToken = getPendingFCMToken();
+  if (fcmToken) {
+    const { data: profileFcm } = await supabase
+      .from("profiles")
+      .select("school_id")
+      .eq("id", data.session.user.id)
+      .single();
+    if (profileFcm?.school_id) {
+      await saveFCMToken(data.session.user.id, profileFcm.school_id, fcmToken, role ?? "unknown");
+      console.log("✅ FCM Token saved after staff login");
     }
-    setLoading(false);
+  }
+} catch (err) {
+  console.error("FCM save error:", err);
+}
+setShowSplash(true);
+setTimeout(() => {
+  if (role === "knsoft_admin") {
+    navigate("/knsoft-admin");
+  } else if (role === "school_admin") {
+    navigate("/super-admin");
+  } else if (role === "hod") {
+    navigate("/hod-dashboard");
+  } else if (role === "parent") {
+    navigate("/parent-dashboard");
+  } else if (role === "student") {
+    navigate("/student-dashboard");
+  } else {
+    navigate("/dashboard");
+  }
+}, 2000);
+setLoading(false);
   };
 
 return (

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/contexts/NotificationContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ClipboardCheck, CheckCircle, Clock, BookOpen, Send, Loader2, Award, Play, AlertCircle, ChevronRight, ChevronLeft, Home } from "lucide-react";
@@ -71,6 +72,7 @@ const extractQuestionsFromExitTicket = (exitTicketContent: string): string[] => 
 
 const StudentHomework = () => {
   const { user, profile } = useAuth();
+  const { markHomeworkNotificationAsRead } = useNotifications();
   const queryClient = useQueryClient();
   const [answers, setAnswers] = useState<Record<string, Record<number, string>>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
@@ -289,7 +291,35 @@ const StudentHomework = () => {
       }
 
       toast.success(`✓ Homework submitted!\n✓ Submission: ${submissionPercentage}%`);
+// Notify teacher that student submitted homework
+try {
+  const assignment = assignments?.find((a: any) => a.id === assignmentId);
+  if (assignment?.assigned_by) {
+    await fetch(
+      "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "single_by_user_id",
+          payload: {
+            user_id: assignment.assigned_by,
+            title: "Homework Submitted",
+            body: `${profile?.full_name || "A student"} has submitted homework for ${assignment.subject || ""}: ${assignment.period_title || assignment.topic || "Homework"}`,
+            data: {
+              type: "homework_submission",
+              assignment_id: assignmentId,
+            },
+          },
+        }),
+      }
+    );
+  }
+} catch (notifError) {
+  console.error("Teacher notification failed:", notifError);
+}
       await queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+      markHomeworkNotificationAsRead(assignmentId);
       setCurrentView("list");
       setActiveHomeworkId(null);
     } catch (e: any) {

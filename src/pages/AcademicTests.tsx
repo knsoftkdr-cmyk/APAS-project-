@@ -259,6 +259,46 @@ useEffect(() => {
           total_questions: questions.length,
         });
         refetchTests();
+
+        // Recompute this student's risk prediction immediately so dashboards
+        // (Risk Prediction / At-Risk Students) reflect the new test right away.
+        try {
+          await supabase.functions.invoke("predict-performance", {
+            body: { student_id: user!.id },
+          });
+        } catch (predictError) {
+          console.error("Failed to refresh risk prediction:", predictError);
+        }
+
+        // Low performance alert to parent
+        const percentage = questions.length > 0 ? (score / questions.length) * 100 : 0;
+        if (percentage < 50) {
+          try {
+            await fetch(
+              "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  type: "parent_only_alert",
+                  payload: {
+                    student_id: user!.id,
+                    title: "Performance Alert",
+                    body: `${profile?.full_name || "Your child"} requires support in ${subject}. Scored ${score}/${questions.length} (${Math.round(percentage)}%).`,
+                    data: {
+                      type: "low_performance_alert",
+                      subject,
+                      score: String(score),
+                      total: String(questions.length),
+                    },
+                  },
+                }),
+              }
+            );
+          } catch (notifError) {
+            console.error("Low performance alert failed:", notifError);
+          }
+        }
       } catch (err) {
         console.error("Failed to save test:", err);
       }

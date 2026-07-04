@@ -552,7 +552,7 @@ const SuperAdminPanel = () => {
 
           {/* ══════════════════════════════════════════ OVERVIEW */}
           <TabsContent value="overview" className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {[
                 { label: "Teachers",   count: countRole("teacher"),   icon: BookOpen,      color: "text-blue-600" },
                 { label: "Students",   count: countRole("student"),   icon: GraduationCap, color: "text-green-600" },

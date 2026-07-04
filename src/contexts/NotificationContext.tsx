@@ -23,6 +23,9 @@ export interface Notification {
   is_read: boolean;
   created_at: string;
   link?: string;
+
+  assignment_id?: string;
+  worksheet_assignment_id?: string;
 }
 
 interface NotificationContextType {
@@ -30,6 +33,8 @@ interface NotificationContextType {
   unreadCount: number;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
+  markHomeworkNotificationAsRead: (assignmentId: string) => void;
+markWorksheetNotificationAsRead: (worksheetAssignmentId: string) => void;
 }
 
 // ------------------------------------ Context ------------------------------------------
@@ -39,6 +44,8 @@ const NotificationContext = createContext<NotificationContextType>({
   unreadCount: 0,
   markAsRead: () => {},
   markAllAsRead: () => {},
+  markHomeworkNotificationAsRead: () => {},
+  markWorksheetNotificationAsRead: () => {},
 });
 
 // -------------------------------------- Helper ------------------------------------------------
@@ -77,26 +84,84 @@ function saveToStorage(userId: string, notifications: Notification[]) {
   }
 }
 
+function notifiedHomeworkKey(userId: string) {
+  return `apas_notified_homework_${userId}`;
+}
+
+function loadNotifiedHomework(userId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(notifiedHomeworkKey(userId));
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveNotifiedHomework(userId: string, ids: Set<string>) {
+  try {
+    localStorage.setItem(
+      notifiedHomeworkKey(userId),
+      JSON.stringify(Array.from(ids))
+    );
+  } catch {}
+}
+
+function notifiedWorksheetKey(userId: string) {
+  return `apas_notified_worksheets_${userId}`;
+}
+
+function loadNotifiedWorksheets(userId: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(notifiedWorksheetKey(userId));
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveNotifiedWorksheets(
+  userId: string,
+  ids: Set<string>
+) {
+  try {
+    localStorage.setItem(
+      notifiedWorksheetKey(userId),
+      JSON.stringify(Array.from(ids))
+    );
+  } catch {}
+}
+
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const hasLoadedRef = useRef(false);
+  
+  // useEffect(() => {
+  //   if (!user) { setNotifications([]); return; }
+  //   try {
+  //     const raw = localStorage.getItem(`apas_notifications_${user.id}`);
+  //     if (raw) setNotifications(JSON.parse(raw));
+  //   } catch {}
+  // }, [user?.id]);
+
+  // useEffect(() => {
+  //   if (!user) return;
+  //   try {
+  //     localStorage.setItem(`apas_notifications_${user.id}`, JSON.stringify(notifications.slice(0, 50)));
+  //   } catch {}
+  // }, [notifications, user?.id]);
 
   // -------------------------------------Load persisted notifications when user logs in ------------------------------------
   useEffect(() => {
-    hasLoadedRef.current = false;
     if (!user) {
       setNotifications([]);
       return;
     }
     setNotifications(loadFromStorage(user.id));
-    hasLoadedRef.current = true;
   }, [user?.id]);
 
   // ------------------------------------ Persist to localStorage whenever notifications change ------------------------------------
   useEffect(() => {
     if (!user) return;
-    if (!hasLoadedRef.current) return; // don't overwrite storage before the initial load completes
     saveToStorage(user.id, notifications);
   }, [notifications, user?.id]);
 
@@ -487,27 +552,77 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   // -------------------------------- Read state -------------------------------------------
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  const markAsRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-    );
-  }, []);
+   const markAsRead = useCallback((id: string) => {
+     setNotifications((prev) =>
+       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+     );
+   }, []);
+
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    //setNotifications([]);
   }, []);
+
+const markHomeworkNotificationAsRead = useCallback((assignmentId: string) => {
+  console.log("Looking for assignment:", assignmentId);
+
+  setNotifications((prev) => {
+    console.log("Notifications:", prev);
+
+    return prev.map((n) => {
+      console.log(
+        "Notification assignment_id:",
+        n.assignment_id,
+        "Matches:",
+        n.assignment_id === assignmentId
+      );
+
+      return n.assignment_id === assignmentId
+        ? { ...n, is_read: true }
+        : n;
+    });
+  });
+}, []);
+
+const markWorksheetNotificationAsRead = useCallback(
+  (worksheetAssignmentId: string) => {
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.worksheet_assignment_id === worksheetAssignmentId
+          ? { ...n, is_read: true }
+          : n
+      )
+    );
+  },
+  []
+);
 
 
   // Student: notify when teacher assigns homework (polling)
   const hwLastCheckedRef = useRef<string>(new Date().toISOString());
   const hwPollSetupRef = useRef<string | null>(null);
+  const notifiedHomeworkIdsRef = useRef<Set<string>>(new Set());
+  const worksheetPollSetupRef = useRef<string | null>(null);
+  const notifiedWorksheetIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+  if (!user) return;
+  notifiedHomeworkIdsRef.current =
+    loadNotifiedHomework(user.id);
+}, [user?.id]);
+
+useEffect(() => {
+  if (!user) return;
+  notifiedWorksheetIdsRef.current =
+    loadNotifiedWorksheets(user.id);
+}, [user?.id]);
+
   useEffect(() => {
     if (!user || profile?.role !== "student") return;
     // Only set up the interval once per user session — avoid tearing down/rebuilding
     // on every render, which was resetting lastChecked and causing missed events.
     if (hwPollSetupRef.current === user.id) return;
     hwPollSetupRef.current = user.id;
-
     const normalizeClass = (c: string | null | undefined) => (c || "").replace(/[^0-9]/g, "").trim();
     let intervalId: any = null;
     let cancelled = false;
@@ -519,18 +634,29 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         .eq("id", user.id)
         .maybeSingle();
       if (!studentClass || cancelled) return;
+
       const checkFrom = hwLastCheckedRef.current;
       hwLastCheckedRef.current = new Date().toISOString();
       const { data: newAssignments, error: hwErr } = await supabase
-        .from("homework_assignments")
-        .select("id, class_level, section, subject, topic, teacher_id, school_id, assigned_at")
-        .gte("assigned_at", checkFrom)
-        .eq("school_id", studentClass.school_id || "");
+  .from("homework_assignments")
+  .select("id, class_level, section, subject, topic, teacher_id, school_id, assigned_at")
+  .order("assigned_at", { ascending: false })
+  .limit(10);
+
       if (!newAssignments || newAssignments.length === 0) return;
       for (const row of newAssignments) {
         if (normalizeClass(row.class_level) !== normalizeClass(studentClass.class_grade)) continue;
         if (row.section && studentClass.section &&
             row.section.toUpperCase() !== studentClass.section.toUpperCase()) continue;
+        if (notifiedHomeworkIdsRef.current.has(row.id))
+  continue;
+
+notifiedHomeworkIdsRef.current.add(row.id);
+
+saveNotifiedHomework(
+  user.id,
+  notifiedHomeworkIdsRef.current
+);
         let teacherName = "Your teacher";
         if (row.teacher_id) {
           const { data: t } = await supabase
@@ -545,6 +671,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
           title: "New homework assigned",
           message: `${teacherName} assigned ${subject}${topic}.`,
           link: "/dashboard",
+
+          assignment_id: row.id,
         });
       }
     };
@@ -558,6 +686,115 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   }, [user, profile, push]);
 
+useEffect(() => {
+  if (!user || profile?.role !== "student") return;
+
+  if (worksheetPollSetupRef.current === user.id) return;
+  worksheetPollSetupRef.current = user.id;
+
+  const normalizeClass = (c: string | null |undefined) =>
+    (c || "").replace(/[^0-9]/g, "").trim();
+
+  let intervalId: any = null;
+  let cancelled = false;
+
+  const checkNewWorksheets = async () => {
+
+  const { data: studentClass } = await supabase
+    .from("profiles")
+    .select("class_grade, section, school_id")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!studentClass || cancelled) return;
+
+  const { data: worksheets } = await supabase
+  .from("worksheet_assignments")
+  .select(`
+      id,
+      class_level,
+      section,
+      teacher_id,
+      school_id,
+      assigned_at,
+      worksheet_id,
+      worksheets (
+        subject,
+        chapter
+      )
+  `)
+  .eq("status", "active")
+  .order("assigned_at", { ascending: false })
+  .limit(10);
+
+  if (!worksheets) return;
+for (const row of worksheets) {
+  if (
+  normalizeClass(row.class_level) !==
+  normalizeClass(studentClass.class_grade)
+)
+  continue;
+
+  if (
+  row.section &&
+  studentClass.section &&
+  row.section.toUpperCase() !==
+    studentClass.section.toUpperCase()
+)
+  continue;
+if (row.school_id !== studentClass.school_id)
+  continue;
+
+if (notifiedWorksheetIdsRef.current.has(row.id))
+  continue;
+notifiedWorksheetIdsRef.current.add(row.id);
+saveNotifiedWorksheets(
+  user.id,
+  notifiedWorksheetIdsRef.current
+);
+
+  let teacherName = "Your teacher";
+
+if (row.teacher_id) {
+  const { data: teacher } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", row.teacher_id)
+    .maybeSingle();
+
+  if (teacher?.full_name)
+    teacherName = teacher.full_name;
+}
+push({
+  type: "info",
+  title: "New worksheet assigned",
+  message: `${teacherName} assigned ${
+    row.worksheets?.subject || "a worksheet"
+  }${
+    row.worksheets?.chapter
+      ? ` - ${row.worksheets.chapter}`
+      : ""
+  }.`,
+  link: "/dashboard",
+  worksheet_assignment_id: row.id,
+});
+};
+};
+
+checkNewWorksheets();
+
+intervalId = setInterval(checkNewWorksheets, 30000);
+
+return () => {
+  cancelled = true;
+
+  if (intervalId)
+    clearInterval(intervalId);
+
+  worksheetPollSetupRef.current = null;
+};
+
+}, [user, profile, push]);
 
   // ── Admin/Principal: notify when a teacher submits a new diagnostic request ──
   useEffect(() => {
@@ -584,7 +821,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
             type: "warning",
             title: "New Diagnostic Request",
             message: `${teacherProf.full_name || "A teacher"} submitted a diagnostic request for ${row.class_name} - ${row.section} (${row.subject}).`,
-            link: "/admin?tab=approvals",
+            link: "/admin-panel",
           });
         }
       )
@@ -594,7 +831,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [user, profile, push]);
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead }}
+      value={{ notifications, unreadCount, markAsRead, markAllAsRead,markHomeworkNotificationAsRead,markWorksheetNotificationAsRead}}
     >
       {children}
     </NotificationContext.Provider>

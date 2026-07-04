@@ -110,10 +110,10 @@ const EditDrawer = ({
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">{children}</div>
+<div className="flex-1 overflow-y-auto px-6 py-5 pb-24 md:pb-5 space-y-5">{children}</div>
 
       {/* Footer */}
-      <div className="border-t border-gray-100 px-6 py-4">
+      <div className="border-t border-gray-100 px-6 py-4 pb-20 md:pb-4 bg-white">
         <Button
           onClick={onSave}
           disabled={saving}
@@ -335,6 +335,31 @@ const SettingsPage = () => {
       setNewPassword("");
       setConfirmPassword("");
       setActiveDrawer(null);
+
+      try {
+        const dateTime = new Date().toLocaleString("en-US", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "single_by_user_id",
+              payload: {
+                user_id: user!.id,
+                title: "Password Changed",
+                body: `Your password was changed successfully on ${dateTime}.`,
+                data: { type: "password_changed" },
+              },
+            }),
+          }
+        );
+      } catch (notifError) {
+        console.error("Password change notification failed:", notifError);
+      }
     }
   };
 

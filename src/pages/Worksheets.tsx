@@ -13,7 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-
+import { useNotifications } from "@/contexts/NotificationContext";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 interface WorksheetAssignment {
   id: string;
   worksheet_id: string;
@@ -72,13 +74,49 @@ async function downloadWorksheetPDF(ws: WorksheetAssignment, profile: any) {
   const styleEl = document.createElement("style");
   styleEl.textContent = "* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; } .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; color: #1a1a2e; font-size: 12px; line-height: 1.6; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; } .brand { font-size: 24px; color: #1a1a2e; font-weight: bold; } .brand span { color: #0e9a7b; font-style: italic; } .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; } .header-right { text-align: right; } .report-date { font-size: 12px; color: #3a3a5c; } .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; } .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; } .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; } .lc-field value { font-size: 16px; color: white; display: block; font-weight: bold; } .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); } .content h1 { font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; } .content h2 { font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; } .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; } .content p { margin: 6px 0; color: #3a3a5c; } .content strong { color: #1a1a2e; font-weight: 600; } .content ul { list-style: none; margin: 6px 0; padding: 0; } .content ul li { position: relative; padding-left: 20px; color: #3a3a5c; margin: 3px 0; } .content ul li:before { content: '\\25CF'; position: absolute; left: 0; color: #0e9a7b; font-weight: bold; } .content hr { border: none; border-top: 1px solid #d0d0e8; margin: 12px 0; } .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid #e0e0e8; display: flex; justify-content: space-between; font-size: 10px; color: #6b6b8a; } .footer-apas { text-align: right; font-weight: 600; }";
   tempDiv.appendChild(styleEl);
-  const html2pdf = (await import("html2pdf.js")).default;
-  html2pdf().set({
-    margin: [10, 10, 10, 10],
-    filename: "Worksheet-" + topic + ".pdf",
-    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#f7f5f0" },
-    jsPDF: { orientation: "portrait", unit: "mm", format: "a4" },
-  }).from(tempDiv).save();
+const html2pdf = (await import("html2pdf.js")).default;
+
+const options: any = {
+  margin: 10,
+  filename: `Worksheet-${topic}.pdf`,
+  html2canvas: {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#f7f5f0",
+  },
+  jsPDF: {
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
+  },
+};
+
+// Browser
+if (!Capacitor.isNativePlatform()) {
+  html2pdf().set(options).from(tempDiv).save();
+  toast.success("Worksheet downloaded!");
+  return;
+}
+
+// Android App
+const worker = html2pdf().set(options).from(tempDiv);
+
+// Generate PDF as data URI
+const pdfData = await worker.outputPdf("datauristring");
+
+// Extract Base64
+const base64 = pdfData.split(",")[1];
+
+// Save PDF
+const result = await Filesystem.writeFile({
+  path: `Worksheet-${topic}.pdf`,
+  data: base64,
+  directory: Directory.Documents,
+});
+
+console.log(result);
+
+toast.success("Worksheet downloaded successfully!");
 }
 
 async function downloadWorksheetImage(ws: WorksheetAssignment) {
@@ -197,6 +235,7 @@ async function removeAnswerFile(submissionId: string, fileUrl: string): Promise<
 
 export default function Worksheets() {
   const { user, profile } = useAuth();
+  const { markWorksheetNotificationAsRead } = useNotifications();
   const queryClient = useQueryClient();
 
   const [practiceWorksheet, setPracticeWorksheet] = useState<WorksheetAssignment | null>(null);
@@ -346,6 +385,7 @@ export default function Worksheets() {
       queryClient.invalidateQueries({
         queryKey: ["student-all-worksheet-submissions", user.id],
       });
+      markWorksheetNotificationAsRead(practiceWorksheet.id);
       setPracticeWorksheet(null);
     } catch (err: any) {
       console.error("Failed to submit worksheet:", err);

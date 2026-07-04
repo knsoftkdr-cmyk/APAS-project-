@@ -247,6 +247,51 @@ export default function Submissions() {
         .eq("id", selectedSubmission.id);
       if (error) throw new Error(error.message);
       toast.success("Marked as reviewed and feedback saved!");
+
+// Notify student + parent that worksheet has been reviewed
+try {
+  const scoreVal = scoreInput.trim() === "" ? null : parseFloat(scoreInput);
+  const worksheetTopic = selectedSubmission.worksheets?.topic || 
+                         selectedSubmission.worksheets?.subject || 
+                         "Worksheet";
+  
+  const studentBody = scoreVal !== null
+    ? feedbackText.trim()
+      ? `Your worksheet scored ${scoreVal}/100. Teacher says: ${feedbackText.trim().substring(0, 60)}${feedbackText.trim().length > 60 ? "..." : ""}`
+      : `Your worksheet has been reviewed. You scored ${scoreVal}/100.`
+    : feedbackText.trim()
+      ? `Your worksheet has been reviewed. Teacher says: ${feedbackText.trim().substring(0, 80)}${feedbackText.trim().length > 80 ? "..." : ""}`
+      : "Your worksheet has been reviewed by your teacher.";
+
+  await fetch(
+    "https://qkclzrscyhzrbixajaiw.supabase.co/functions/v1/send-push-notification",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "single_by_user_id",
+        payload: {
+          user_id: selectedSubmission.student_id,
+          student_name: selectedSubmission.student_name || "Student",
+          title: `${worksheetTopic} reviewed`,
+          body: studentBody,
+          score: scoreVal !== null ? String(scoreVal) : "",
+          subject: selectedSubmission.worksheets?.subject || "",
+          topic: worksheetTopic,
+          feedback: feedbackText.trim() || "",
+          data: {
+            type: "worksheet_reviewed",
+            submission_id: selectedSubmission.id,
+            score: scoreVal !== null ? String(scoreVal) : "",
+          },
+        },
+      }),
+    }
+  );
+} catch (notifError) {
+  console.error("Worksheet review notification failed:", notifError);
+}
+
       queryClient.invalidateQueries({ queryKey: ["worksheet-submissions-list", user?.id, profile?.school_id] });
       setSelectedSubmission(null);
     } catch (err: any) {

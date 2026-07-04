@@ -12,7 +12,11 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { lazy } from "react";
-
+import { useEffect, useState } from "react";
+import SplashScreen from "./pages/SplashScreen";
+import { initializePushNotifications } from "./services/pushNotifications";
+import { Capacitor } from "@capacitor/core";
+import TeacherWorkspaceDashboard from "@/pages/TeacherWorkspaceDashboard";
 // Lazy load all page components for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
@@ -58,6 +62,10 @@ const CacheManagementDashboard = lazy(() => import("./pages/CacheManagementDashb
 const OCRProcessingDashboard = lazy(() => import("./pages/OCRProcessingDashboard"));
 const NotificationDashboard = lazy(() => import("./pages/NotificationDashboard"));
 const RiskPredictionDashboard = lazy(() => import("./pages/RiskPredictionDashboard"));
+const TeacherAtRiskStudents = lazy(() => import("./pages/TeacherAtRiskStudents"));
+const TeacherBehaviourDashboard = lazy(() => import("./pages/TeacherBehaviourDashboard"));
+const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicationCenter"));
+const AITeacherAssistant = lazy(() => import("./pages/AITeacherAssistant"));
 const KnowledgeGraphDashboard = lazy(() => import("./pages/KnowledgeGraphDashboard"));
 const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenceDashboard"));
 const AutomationDashboard = lazy(() => import("./pages/AutomationDashboard"));
@@ -87,6 +95,26 @@ const queryClient = new QueryClient({
 });
 
 export default function App() {
+    const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const timer = setTimeout(async () => {
+    setLoading(false);
+   if (Capacitor.isNativePlatform()) {
+    try {
+      await initializePushNotifications();
+    } catch (error) {
+      console.error("Push notification initialization failed:", error);
+    }
+  }
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, []);
+
+  if (loading) {
+    return <SplashScreen />;
+  }
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -105,6 +133,13 @@ export default function App() {
                       <Route path="/student-profile" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><StudentProfile360 /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherPanel /></RoleGuard></ProtectedRoute>} />
+                      
+                      <Route path="/teacher-workspace" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherWorkspaceDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher-at-risk" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherAtRiskStudents /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/ai-teacher-assistant" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><AITeacherAssistant /></RoleGuard></ProtectedRoute>} />
+                      
                       <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
                       <Route path="/worksheets" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Worksheets /></RoleGuard></ProtectedRoute>} />
                       <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />

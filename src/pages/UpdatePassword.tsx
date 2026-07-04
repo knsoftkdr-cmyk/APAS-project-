@@ -38,6 +38,34 @@ const UpdatePassword = () => {
       toast({ title: "Update failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Success!", description: "Your password has been securely updated." });
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData?.session?.user?.id;
+        if (userId) {
+          const dateTime = new Date().toLocaleString("en-US", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          });
+          await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "single_by_user_id",
+                payload: {
+                  user_id: userId,
+                  title: "Password Changed",
+                  body: `Your password was changed successfully on ${dateTime}.`,
+                  data: { type: "password_changed" },
+                },
+              }),
+            }
+          );
+        }
+      } catch (notifError) {
+        console.error("Password change notification failed:", notifError);
+      }
       navigate("/login", { replace: true });
     }
     setLoading(false);

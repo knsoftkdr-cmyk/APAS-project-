@@ -118,7 +118,7 @@ const AutomationDashboard = () => {
     { id: 4, job: "build-student-profile", status: "completed", duration: "3.1s", time: "2 hr ago" },
     { id: 5, job: "detect-learning-issues", status: "running", duration: "—", time: "Just now" },
   ];
-
+    
   if (loading) return <AppLayout><div className="flex min-h-[60vh] items-center justify-center"><LoadingSpinner size="lg" /></div></AppLayout>;
 
   const tabs = [

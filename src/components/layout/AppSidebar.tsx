@@ -15,6 +15,7 @@
   GraduationCap,
   AlertCircle,
   Trophy,
+  MessageSquare,
   ClipboardList,
   ClipboardCheck,
   Shield,
@@ -50,6 +51,10 @@ const navItems: Array<{
   tourId?: string;
 }> = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
+
+{ title: "Dashboard", icon: LayoutDashboard, path: "/teacher-workspace", roles: ["teacher"], tourId: "nav-home", module: "Home" },
+
+  
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
   { title: "My Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
@@ -61,6 +66,10 @@ const navItems: Array<{
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
+
+{ title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"] },
+{ title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
+{ title: "Communication", icon: MessageSquare, path: "/teacher-communication", roles: ["teacher"]},
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Alerts" },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Admin Panel" },
@@ -105,16 +114,66 @@ const navItems: Array<{
 
 // Bottom nav items for mobile (max 5) — built dynamically based on role
 const getMobileNavItems = (role?: string) => {
-  const isStudent = role === "student";
-  const items = [
-    { title: "Home", icon: LineChart, path: "/student-dashboard" },
-    { title: isStudent ? "Assessments" : "Diagnostic", icon: Brain, path: "/diagnostic" },
-    ...(!isStudent ? [{ title: "Lesson Plan", icon: BookOpen, path: "/curative" }] : []),
-    ...(!isStudent ? [{ title: "Analytics", icon: BarChart3, path: "/analytics" }] : []),
-    ...(!isStudent ? [{ title: "Alerts", icon: AlertCircle, path: "/alerts" }] : []),
-    { title: "Settings", icon: Settings, path: "/settings" },
-  ];
-  return items.slice(0, 5);
+
+  if (role === "student") {
+    return [
+      { title: "Home", icon: LineChart, path: "/student-dashboard" },
+      { title: "Assessments", icon: Brain, path: "/diagnostic" },
+      { title: "Homework", icon: LayoutDashboard, path: "/dashboard" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  if (role === "teacher") {
+    return [
+      { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
+      { title: "Lesson Plan", icon: BookOpen, path: "/curative" },
+      { title: "Analytics", icon: BarChart3, path: "/analytics" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  if (role === "admin" || role === "principal") {
+    return [
+      { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
+      { title: "Reports", icon: Users, path: "/teacher" },
+      { title: "Alerts", icon: AlertCircle, path: "/alerts" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  if (role === "hod") {
+    return [
+      { title: "Home", icon: UserCheck, path: "/hod-dashboard" },
+      { title: "Reports", icon: Users, path: "/teacher" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  if (role === "school_admin") {
+    return [
+      { title: "School Admin", icon: Shield, path: "/super-admin" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  if (role === "parent") {
+    return [
+      { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  if (role === "knsoft_admin") {
+    return [
+      { title: "Platform", icon: Shield, path: "/knsoft-admin" },
+      { title: "Billing", icon: CreditCard, path: "/billing-dashboard" },
+      { title: "Security", icon: Lock, path: "/security-dashboard" },
+      { title: "Settings", icon: Settings, path: "/settings" },
+    ];
+  }
+
+  return [];
 };
 
 interface AppSidebarProps {
@@ -158,7 +217,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
     }
     return isStudent && item.studentTitle ? item.studentTitle : item.title;
   };
-  const mobileNavItems = getMobileNavItems(profile?.role);
+  const mobileNavItems =
+  profile?.role === "parent"
+    ? []
+    : getMobileNavItems(profile?.role);
 
   const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
   const STUDENT_ROLES = ["student", "parent"];
@@ -316,7 +378,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       </aside>
 
       {/* Mobile bottom navigation bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
+            {profile?.role !== "parent" && (
+  <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
         {mobileNavItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -336,7 +399,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             </NavLink>
           );
         })}
-      </nav>
+      </nav>)}
     </>
   );
 }

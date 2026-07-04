@@ -103,6 +103,56 @@ export default function AcademicCalendar() {
     setShowForm(true);
   };
 
+const notifyCalendarEvent = async (
+    events: { title: string; event_type: EventType; start_date: string }[],
+    isUpdate: boolean = false
+  ) => {
+    if (!profile?.school_id) return;
+    const relevant = events.filter(e => e.event_type === "holiday" || e.event_type === "exam");
+    if (relevant.length === 0) return;
+
+    for (const e of relevant) {
+      const isHoliday = e.event_type === "holiday";
+      const title = isUpdate
+        ? (isHoliday ? "Holiday Updated" : "Exam Schedule Updated")
+        : (isHoliday ? "Holiday Announced" : "Exam Schedule Published");
+      const body = isUpdate
+        ? (isHoliday
+            ? `The holiday "${e.title}" has been updated. New date: ${format(parseISO(e.start_date), "MMMM d, yyyy")}.`
+            : `The exam schedule for ${e.title} has been updated.`)
+        : (isHoliday
+            ? `Holiday declared on ${format(parseISO(e.start_date), "MMMM d, yyyy")}.`
+            : `Exam schedule for ${e.title} is now available.`);
+
+      try {
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "notify_school_roles",
+              payload: {
+                school_id: profile.school_id,
+                roles: ["student", "parent"],
+                title,
+                body,
+                data: {
+                  type: isHoliday ? "holiday_announced" : "exam_schedule_published",
+                  event_title: e.title,
+                  start_date: e.start_date,
+                  is_update: String(isUpdate),
+                },
+              },
+            }),
+          }
+        );
+      } catch (notifError) {
+        console.error("Calendar event notification failed:", notifError);
+      }
+    }
+  };
+
   const saveEvent = async () => {
     if (!form.title || !form.start_date || !form.end_date) { toast.error("Title and dates are required"); return; }
     setSaving(true);
@@ -114,6 +164,10 @@ export default function AcademicCalendar() {
     if (error) { toast.error(error.message); return; }
     toast.success(editingEvent ? "Event updated" : "Event added");
     setShowForm(false);
+    await notifyCalendarEvent(
+      [{ title: form.title, event_type: form.event_type, start_date: form.start_date }],
+      !!editingEvent
+    );
     fetchEvents();
   };
 
@@ -340,6 +394,7 @@ export default function AcademicCalendar() {
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success(`${extractedEvents.length} events saved to calendar`);
+    await notifyCalendarEvent(extractedEvents);
     setShowUpload(false);
     setExtractedEvents([]);
     setUploadText("");

@@ -57,6 +57,8 @@ interface AppHeaderProps {
 export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const { profile, signOut } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  console.log("Bell Notifications:", notifications);
+console.log("Bell Unread Count:", unreadCount);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -166,7 +168,9 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                     </div>
                   </div>
                 ) : (
-                  notifications.map((n) => {
+                  notifications
+  .filter((n) => !n.is_read)
+  .map((n) => {
                     const cfg = typeConfig[n.type] ?? typeConfig.info;
                     return (
                       <button

@@ -150,7 +150,7 @@ export const DiagnosticRequestForm = () => {
     }
     setSubmitting(false);
   };
-
+  
   const statusIcon = (status: string) => {
     switch (status) {
       case "pending": return <Clock className="h-3.5 w-3.5" />;
@@ -275,4 +275,4 @@ export const DiagnosticRequestForm = () => {
       </Card>
     </div>
   );
-};
+  };

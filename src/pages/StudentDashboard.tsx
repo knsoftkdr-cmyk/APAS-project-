@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import studentBanner from "@/assets/student-dashboard-banner.png";
 import { BarChart3 } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 import {
   ChartContainer,
   ChartTooltip,
@@ -1080,13 +1082,44 @@ const subjectColors: Record<string, string> = {
                   const styleEl = document.createElement("style");
                   styleEl.textContent = "* { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; } .report { max-width: 780px; margin: 0 auto; padding: 28px 24px; color: #1a1a2e; font-size: 12px; line-height: 1.6; } .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 2px solid #1a1a2e; } .brand { font-size: 24px; color: #1a1a2e; font-weight: bold; } .brand span { color: #0e9a7b; font-style: italic; } .report-label { font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #6b6b8a; margin-top: 4px; } .header-right { text-align: right; } .report-date { font-size: 12px; color: #3a3a5c; } .status-badge { display: inline-block; background: #0e9a7b; color: white; font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; margin-top: 4px; } .learner-card { background: #1a1a2e; color: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; } .lc-field label { font-size: 9px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); display: block; margin-bottom: 3px; } .lc-field value { font-size: 16px; color: white; display: block; font-weight: bold; } .lc-field small { font-size: 11px; color: rgba(255,255,255,0.55); } .content h1 { font-size: 18px; color: #1a1a2e; margin: 24px 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid #0e9a7b; } .content h2 { font-size: 15px; color: #1a1a2e; margin: 20px 0 8px 0; padding-left: 12px; border-left: 4px solid #0e9a7b; } .content h3 { font-size: 13px; font-weight: 600; color: #3a3a5c; margin: 16px 0 6px 0; } .content p { margin: 6px 0; color: #3a3a5c; } .content strong { color: #1a1a2e; font-weight: 600; } .content ul { list-style: none; margin: 6px 0; padding: 0; } .content ul li { position: relative; padding: 3px 0 3px 18px; color: #3a3a5c; } .content hr { border: none; border-top: 1px solid #e2e0d8; margin: 16px 0; } .footer { border-top: 1px solid #e2e0d8; padding-top: 12px; margin-top: 20px; display: flex; justify-content: space-between; } .footer-note { font-size: 10px; color: #6b6b8a; } .footer-apas { font-size: 13px; color: #3a3a5c; font-style: italic; }";
                   tempDiv.appendChild(styleEl);
-                  const html2pdf = (await import("html2pdf.js")).default;
-                  html2pdf().set({
-                    margin: [10,10,10,10],
-                    filename: "Worksheet-" + topic + ".pdf",
-                    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#f7f5f0" },
-                    jsPDF: { orientation: "portrait", unit: "mm", format: "a4" }
-                  }).from(tempDiv).save();
+const html2pdf = (await import("html2pdf.js")).default;
+
+const opt = {
+  margin: [10, 10, 10, 10] as [number,number,number,number],
+  filename: `Worksheet-${topic}.pdf`,
+  html2canvas: {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#f7f5f0",
+  },
+  jsPDF: {
+    orientation: "portrait" as const,
+    unit: "mm" as const,
+    format: "a4" as const,
+  },
+};
+
+// Browser
+if (!Capacitor.isNativePlatform()) {
+  html2pdf().set(opt).from(tempDiv).save();
+  return;
+}
+
+// Android App
+const worker = html2pdf().set(opt).from(tempDiv);
+
+const pdfBase64 = await worker.outputPdf("datauristring");
+
+const base64Data = pdfBase64.split(",")[1];
+
+const filename = `Worksheet-${topic}.pdf`;
+
+await Filesystem.writeFile({
+  path: filename,
+  data: base64Data,
+  directory: Directory.Documents,
+});
+toast.success("Worksheet PDF downloaded successfully!");
                 }}
               >
                 <Download className="h-4 w-4" /> Download PDF

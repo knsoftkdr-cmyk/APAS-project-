@@ -12,7 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Upload, FileSpreadsheet, CheckCircle2, XCircle, AlertTriangle, Download, Users, Pencil, Plus, Edit2, Save } from "lucide-react";
 import * as XLSX from "xlsx";
-
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 interface ExcelImportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -199,14 +200,42 @@ export function ExcelImportModal({ open, onOpenChange, onImportComplete }: Excel
     revalidate(updated);
   };
 
-  const downloadTemplate = () => {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ["Student Name", "Class", "section", "Date OF birth", "Student ID", "Parent Phone Number", "Teacher Name"],
-    ]);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Students");
+const downloadTemplate = async () => {
+  const ws = XLSX.utils.aoa_to_sheet([
+    [
+      "Student Name",
+      "Class",
+      "section",
+      "Date OF birth",
+      "Student ID",
+      "Parent Phone Number",
+      "Teacher Name",
+    ],
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Students");
+
+  // Browser
+  if (!Capacitor.isNativePlatform()) {
     XLSX.writeFile(wb, "student_import_template_v2.xlsx");
-  };
+    return;
+  }
+
+  // Android App
+  const excelBuffer = XLSX.write(wb, {
+    bookType: "xlsx",
+    type: "base64",
+  });
+
+  await Filesystem.writeFile({
+    path: "student_import_template_v2.xlsx",
+    data: excelBuffer,
+    directory: Directory.Documents,
+  });
+
+  alert("Template saved to Documents folder");
+};
 
   // Step 3: Import students via edge function (bypasses RLS), then move to class setup
   const handleImport = async () => {

@@ -12,7 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { BookOpen, Calendar, Clock, Download, FileText, GraduationCap, Printer, Search, User } from "lucide-react";
 import { format } from "date-fns";
-
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 interface TeacherOpt {
   id: string;
   full_name: string | null;
@@ -103,6 +104,43 @@ function downloadHtml(l: Lesson, teacherName: string) {
   const a = document.createElement("a");
   a.href = url; a.download = `${safeFile(l.title)}.html`; a.click();
   URL.revokeObjectURL(url);
+}
+
+async function downloadLessonPdf(l: Lesson, teacherName: string) {
+  const html = buildHtml(l, teacherName);
+
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+  document.body.appendChild(tempDiv);
+
+  const html2pdf = (await import("html2pdf.js")).default;
+
+  const opt: any = {
+    margin: 0.5,
+    filename: `${safeFile(l.title)}.pdf`,
+    image: { type: "jpeg", quality: 1 },
+    html2canvas: { scale: 2 },
+    jsPDF: {
+      unit: "in",
+      format: "a4",
+      orientation: "portrait",
+    },
+  };
+
+  const worker = html2pdf().set(opt).from(tempDiv);
+
+  const pdfBase64 = await worker.outputPdf("datauristring");
+  const base64Data = pdfBase64.split(",")[1];
+
+  await Filesystem.writeFile({
+    path: `${safeFile(l.title)}.pdf`,
+    data: base64Data,
+    directory: Directory.Documents,
+  });
+
+  document.body.removeChild(tempDiv);
+
+  alert("PDF downloaded successfully!");
 }
 
 function printLesson(l: Lesson, teacherName: string) {
@@ -332,18 +370,67 @@ export const AdminLessonPlansView = () => {
               )}
             </div>
           </ScrollArea>
-          <div className="flex flex-wrap justify-end gap-2 pt-3 border-t">
-            <Button variant="outline" size="sm" onClick={() => openLesson && downloadMarkdown(openLesson, teacherName)}>
-              <FileText className="mr-1.5 h-4 w-4" /> Markdown
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => openLesson && downloadHtml(openLesson, teacherName)}>
-              <Download className="mr-1.5 h-4 w-4" /> HTML
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => openLesson && printLesson(openLesson, teacherName)}>
-              <Printer className="mr-1.5 h-4 w-4" /> Print / PDF
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setOpenLesson(null)}>Close</Button>
-          </div>
+<div className="flex flex-wrap justify-end gap-2 pt-3 border-t">
+
+  {/* Mobile Only */}
+  <div className="flex gap-2 md:hidden">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => openLesson && downloadLessonPdf(openLesson, teacherName)}
+    >
+      <Download className="mr-1.5 h-4 w-4" />
+      Download
+    </Button>
+
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setOpenLesson(null)}
+    >
+      Close
+    </Button>
+  </div>
+
+  {/* Desktop Only */}
+  <div className="hidden md:flex gap-2">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => openLesson && downloadMarkdown(openLesson, teacherName)}
+    >
+      <FileText className="mr-1.5 h-4 w-4" />
+      Markdown
+    </Button>
+
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => openLesson && downloadHtml(openLesson, teacherName)}
+    >
+      <Download className="mr-1.5 h-4 w-4" />
+      HTML
+    </Button>
+
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => openLesson && printLesson(openLesson, teacherName)}
+    >
+      <Printer className="mr-1.5 h-4 w-4" />
+      Print / PDF
+    </Button>
+
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => setOpenLesson(null)}
+    >
+      Close
+    </Button>
+  </div>
+
+</div>
         </DialogContent>
       </Dialog>
     </Card>

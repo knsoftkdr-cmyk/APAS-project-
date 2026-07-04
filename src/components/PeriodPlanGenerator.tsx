@@ -305,12 +305,38 @@ const PeriodPlanGenerator = () => {
         const err = await resp.json();
         throw new Error(err.error || "Generation failed");
       }
-      const data = await resp.json();
+const data = await resp.json();
       const plans = Array.isArray(data.plan) ? data.plan : [data.plan];
       setPeriodPlans(plans);
       setIsLocked(false);
       await savePlan(plans, false);
       toast.success("Period plan generated successfully!");
+
+      // Notify the teacher
+      try {
+        const topicName = selectedLesson?.topic || selectedLesson?.subject || "this lesson";
+        await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "single_by_user_id",
+              payload: {
+                user_id: user!.id,
+                title: "Lesson Plan Generated",
+                body: `AI lesson plan generated successfully for ${topicName}.`,
+                data: {
+                  type: "lesson_plan_generated",
+                  lesson_id: currentLessonId || "",
+                },
+              },
+            }),
+          }
+        );
+      } catch (notifError) {
+        console.error("Lesson plan notification failed:", notifError);
+      }
     } catch (e: any) {
       toast.error(e.message || "Failed to generate period plan");
     } finally {
