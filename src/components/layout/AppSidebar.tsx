@@ -89,6 +89,9 @@ const navItems: Array<{
   { title: "Automations", icon: Zap, path: "/automation-dashboard", roles: ["knsoft_admin"] },
   { title: "Multi-Tenant", icon: Building2, path: "/multi-tenant", roles: ["knsoft_admin"] },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"], module: "Academic Calendar" },
+  { title: "Semester Engine", icon: GraduationCap, path: "/semester-engine", roles: ["admin", "principal", "school_admin", "teacher", "student"], module: "Semester Engine" },
+  { title: "Report Cards", icon: FileText, path: "/report-cards", roles: ["admin", "principal", "school_admin", "teacher", "student"], module: "Report Cards" },
+  { title: "Houses", icon: Trophy, path: "/houses", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"], module: "Houses" },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
@@ -161,7 +164,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       // Students/parents use hardcoded allowed modules (no DB permission rows needed)
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar","Student Profile"];
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses"];
         const parentModules = ["Home", "Student Profile"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);

@@ -38,6 +38,9 @@ const AITutor = lazy(() => import("./pages/AITutor"));
 const AIKnowledgeHub = lazy(() => import("./pages/AIKnowledgeHub"));
 const SchoolAnalytics = lazy(() => import("./pages/SchoolAnalytics"));
 const Alerts = lazy(() => import("./pages/Alerts"));
+const SemesterEngine = lazy(() => import("./pages/SemesterEngine"));
+const HouseManagement = lazy(() => import("./pages/HouseManagement"));
+const ReportCards = lazy(() => import("./pages/ReportCards"));
 const AutomationWorkflows = lazy(() => import("./pages/AutomationWorkflows"));
 const SecurityCenter = lazy(() => import("./pages/SecurityCenter"));
 const Billing = lazy(() => import("./pages/Billing"));
@@ -134,12 +137,15 @@ export default function App() {
                       <Route path="/security" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><SecurityCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/billing" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher", "student", "parent"]}><Billing /></RoleGuard></ProtectedRoute>} />
                       <Route path="/academic-calendar" element={<ProtectedRoute><AcademicCalendar /></ProtectedRoute>} />
+                      <Route path="/semester-engine" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student"]}><SemesterEngine /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/houses" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"]}><HouseManagement /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/report-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student"]}><ReportCards /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
-                      <Route path="*" element={<NotFound />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
                       <Route path="/update-password" element={<UpdatePassword />} />
+                      <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Suspense>
                 </NotificationProvider>

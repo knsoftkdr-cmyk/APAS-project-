@@ -5,19 +5,19 @@ import { useAuth } from "@/contexts/AuthContext";
 const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
 
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine"],
-  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine"],
+  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards"],
+  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards"],
   hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar", "Houses"],
   teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar", "Houses", "Semester Engine"],
   student:   ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Houses", "Semester Engine"],
   parent:    ["Home", "Academic Calendar", "Houses"],
 };
 
-const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar","Houses","Semester Engine"];
+const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar","Houses","Semester Engine","Report Cards"];
 
 const permCache = new Map<string, string[]>();
 // Cache version — bump this to invalidate all cached permissions
-const CACHE_VERSION = "v5";
+const CACHE_VERSION = "v6";
 
 interface UsePermissionsReturn {
   can: (moduleName: string) => boolean;
