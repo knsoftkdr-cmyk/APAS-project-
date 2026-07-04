@@ -165,7 +165,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       // Students/parents use hardcoded allowed modules (no DB permission rows needed)
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses"];
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile"];
         const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);

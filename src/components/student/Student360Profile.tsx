@@ -25,6 +25,32 @@ import {
   AlertTriangle,
   Info,
   Upload,
+  Briefcase,
+  Mail,
+  MessageCircle,
+  MapPin,
+  Droplet,
+  PersonStanding,
+  NotebookPen,
+  Pill,
+  HeartPulse,
+  Hash,
+  Route,
+  MapPinned,
+  Clock,
+  UserCircle,
+  IdCard,
+  Wallet,
+  FileText as FileTextIcon,
+  CalendarDays,
+  ClipboardCheck,
+  Stethoscope as DiagnosisIcon,
+  Target as GoalIcon,
+  Brain,
+  Target,
+  ShieldCheck,
+  CalendarPlus,
+  CalendarClock,
 } from "lucide-react";
 import {
   LineChart,
@@ -103,21 +129,21 @@ export default function Student360Profile({ studentId, role }: Student360Profile
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap h-auto gap-1.5 bg-slate-100/70 p-1.5 rounded-xl">
           {TABS.map((tab) => (
-            <div key={tab.value} className="relative group">
+            <div key={tab.value} className="relative">
               <TabsTrigger
                 value={tab.value}
-                className="gap-1.5 rounded-lg data-[state=active]:shadow-sm data-[state=active]:bg-white"
+                className="gap-1.5 rounded-lg bg-blue-600 text-white transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-blue-500 data-[state=active]:bg-blue-800 data-[state=active]:text-white data-[state=active]:shadow-sm"
               >
-                <tab.icon className={`h-4 w-4 ${tab.color}`} />
+                <tab.icon className="h-4 w-4 text-white" />
                 {tab.label}
               </TabsTrigger>
-              <div className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-48 -translate-x-1/2 rounded-lg bg-slate-800 px-3 py-2 text-xs text-white opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
-                {tab.hint}
-                <div className="absolute -top-1 left-1/2 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-800" />
-              </div>
             </div>
           ))}
         </TabsList>
+
+        <div className="mt-8">
+          <TabActiveHeading activeTab={activeTab} />
+        </div>
 
         <TabsContent value="overview" className="mt-4">
           <OverviewTab data={data} canEdit={canEdit} studentId={studentId} />
@@ -266,6 +292,8 @@ function OverviewTab({
         canEdit={canEdit}
         fields={personalFields}
         studentId={studentId}
+        theme="indigo"
+        variant="feature"
       />
 
       <EditableInfoCard
@@ -274,12 +302,17 @@ function OverviewTab({
         canEdit={canEdit}
         fields={academicFields}
         studentId={studentId}
+        theme="blue"
+        variant="feature"
       />
 
-      <Card>
+      <Card className="border-2 border-slate-200 hover:border-slate-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" /> Summary Analytics
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
+              <TrendingUp className="h-4 w-4 text-slate-600" />
+            </span>
+            Summary Analytics
           </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-3 gap-2">
@@ -303,9 +336,14 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card className="lg:col-span-2">
+      <Card className="lg:col-span-2 border-2 border-cyan-200 hover:border-cyan-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-cyan-100">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Attendance Trend (Last 6 Months)</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-50">
+              <TrendingUp className="h-4 w-4 text-cyan-600" />
+            </span>
+            Attendance Trend (Last 6 Months)
+          </CardTitle>
         </CardHeader>
         <CardContent className="h-64">
           {attendanceRecords.length === 0 ? (
@@ -336,10 +374,13 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-2 border-purple-200 hover:border-purple-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Sparkles className="h-4 w-4" /> AI Insights
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50">
+              <Sparkles className="h-4 w-4 text-purple-600" />
+            </span>
+            AI Insights
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -351,10 +392,13 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-2 border-yellow-200 hover:border-yellow-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-yellow-100">
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Star className="h-4 w-4" /> Recent Behaviour Records
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-yellow-50">
+              <Star className="h-4 w-4 text-yellow-600" />
+            </span>
+            Recent Behaviour Records
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -376,10 +420,13 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-100">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardList className="h-4 w-4" /> Recent Assessments
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
+              <ClipboardList className="h-4 w-4 text-emerald-600" />
+            </span>
+            Recent Assessments
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -417,13 +464,33 @@ function EditableInfoCard({
   canEdit,
   fields,
   studentId,
+  theme = "indigo",
+  variant = "standard",
 }: {
   title: string;
   icon: React.ElementType;
   canEdit: boolean;
   fields: EditableField[];
   studentId: string;
+  theme?: "indigo" | "blue";
+  variant?: "standard" | "feature";
 }) {
+  const themeClasses = {
+    indigo: {
+      bg: "bg-indigo-50",
+      text: "text-indigo-600",
+      border: "border-t-indigo-400",
+      ring: "border-indigo-200 hover:border-indigo-300",
+      glow: "hover:shadow-indigo-100",
+    },
+    blue: {
+      bg: "bg-blue-50",
+      text: "text-blue-600",
+      border: "border-t-blue-400",
+      ring: "border-blue-200 hover:border-blue-300",
+      glow: "hover:shadow-blue-100",
+    },
+  }[theme];
   const [isEditing, setIsEditing] = useState(false);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const queryClient = useQueryClient();
@@ -455,11 +522,28 @@ function EditableInfoCard({
     mutation.reset();
   };
 
+  const isFeature = variant === "feature";
+
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Icon className="h-4 w-4" /> {title}
+    <Card
+      className={
+        isFeature
+          ? `border-2 ${themeClasses.ring} rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl ${themeClasses.glow}`
+          : `border-t-4 ${themeClasses.border}`
+      }
+    >
+      <CardHeader className={isFeature ? "pb-3 flex flex-row items-center justify-between" : "pb-2 flex flex-row items-center justify-between"}>
+        <CardTitle className={isFeature ? "flex items-center gap-3" : "text-base flex items-center gap-2"}>
+          <span
+            className={
+              isFeature
+                ? `flex h-12 w-12 items-center justify-center rounded-xl ${themeClasses.bg}`
+                : `flex h-7 w-7 items-center justify-center rounded-lg ${themeClasses.bg}`
+            }
+          >
+            <Icon className={isFeature ? `h-6 w-6 ${themeClasses.text}` : `h-4 w-4 ${themeClasses.text}`} />
+          </span>
+          <span className={isFeature ? "text-lg font-bold text-slate-800" : ""}>{title}</span>
         </CardTitle>
         {canEdit && !isEditing && (
           <Button variant="ghost" size="sm" onClick={startEditing}>
@@ -639,12 +723,16 @@ function ParentCard({
   };
 
   return (
-    <Card>
+    <Card className="border-t-4 border-t-violet-400">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2 capitalize">
-          <Users className="h-4 w-4" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-50">
+            <Users className="h-4 w-4 text-violet-600" />
+          </span>
           {isNew ? "New Parent / Guardian" : parent!.relation}
-          {parent?.is_primary_contact && <Badge variant="default" className="ml-1">Primary</Badge>}
+          {parent?.is_primary_contact && (
+            <Badge className="ml-1 bg-violet-100 text-violet-800 hover:bg-violet-100 border-violet-200">Primary</Badge>
+          )}
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
@@ -736,14 +824,26 @@ function ParentCard({
           </>
         ) : (
           <>
-            <InfoRow label="Full Name" value={parent?.full_name} />
-            <InfoRow label="Occupation" value={parent?.occupation} />
-            <InfoRow label="Phone" value={parent?.phone} />
-            <InfoRow label="Alternate Phone" value={parent?.alternate_phone} />
-            <InfoRow label="Email" value={parent?.email} />
-            <InfoRow label="WhatsApp" value={parent?.whatsapp_number} />
-            <InfoRow label="Address" value={parent?.address} />
-            <InfoRow label="Pickup Authorized" value={parent?.pickup_authorized ? "Yes" : "No"} />
+            <InfoRow label="Full Name" value={parent?.full_name} icon={User} iconColor="text-indigo-500" />
+            <InfoRow label="Occupation" value={parent?.occupation} icon={Briefcase} iconColor="text-amber-500" />
+            <InfoRow label="Phone" value={parent?.phone} icon={Phone} iconColor="text-emerald-500" />
+            <InfoRow label="Alternate Phone" value={parent?.alternate_phone} icon={Phone} iconColor="text-emerald-500" />
+            <InfoRow label="Email" value={parent?.email} icon={Mail} iconColor="text-blue-500" />
+            <InfoRow label="WhatsApp" value={parent?.whatsapp_number} icon={MessageCircle} iconColor="text-green-500" />
+            <InfoRow label="Address" value={parent?.address} icon={MapPin} iconColor="text-rose-500" />
+            <div className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
+              <span className="text-muted-foreground">Pickup Authorized</span>
+              <Badge
+                variant="secondary"
+                className={
+                  parent?.pickup_authorized
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-100"
+                }
+              >
+                {parent?.pickup_authorized ? "Authorized" : "Not Authorized"}
+              </Badge>
+            </div>
           </>
         )}
       </CardContent>
@@ -882,10 +982,13 @@ function MedicalTab({
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
   return (
-    <Card>
+    <Card className="border-t-4 border-t-rose-400">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2">
-          <Stethoscope className="h-4 w-4" /> Medical Information
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-50">
+            <Stethoscope className="h-4 w-4 text-rose-600" />
+          </span>
+          Medical Information
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
@@ -979,12 +1082,56 @@ function MedicalTab({
           </>
         ) : record ? (
           <>
-            <InfoRow label="Blood Group" value={record.blood_group} />
-            <InfoRow label="Allergies" value={record.allergies?.join(", ")} />
-            <InfoRow label="Chronic Conditions" value={record.chronic_conditions?.join(", ")} />
-            <InfoRow label="Current Medications" value={record.current_medications?.join(", ")} />
-            <InfoRow label="Disabilities" value={record.disabilities} />
-            <InfoRow label="Emergency Medical Notes" value={record.emergency_medical_notes} />
+            {record.allergies && record.allergies.length > 0 && (
+              <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-rose-600 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-rose-800 mb-1">Allergy Alert</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {record.allergies.map((a) => (
+                      <Badge key={a} className="bg-rose-100 text-rose-800 hover:bg-rose-100 border-rose-200">
+                        {a}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <InfoRow label="Blood Group" value={record.blood_group} icon={Droplet} iconColor="text-rose-500" />
+
+            {record.chronic_conditions && record.chronic_conditions.length > 0 && (
+              <div className="flex justify-between items-start text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <HeartPulse className="h-3.5 w-3.5 text-amber-500" /> Chronic Conditions
+                </span>
+                <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                  {record.chronic_conditions.map((c) => (
+                    <Badge key={c} variant="secondary" className="bg-amber-50 text-amber-700 hover:bg-amber-50">
+                      {c}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {record.current_medications && record.current_medications.length > 0 && (
+              <div className="flex justify-between items-start text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
+                <span className="text-muted-foreground flex items-center gap-1.5">
+                  <Pill className="h-3.5 w-3.5 text-sky-500" /> Current Medications
+                </span>
+                <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                  {record.current_medications.map((m) => (
+                    <Badge key={m} variant="secondary" className="bg-sky-50 text-sky-700 hover:bg-sky-50">
+                      {m}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <InfoRow label="Disabilities" value={record.disabilities} icon={PersonStanding} iconColor="text-purple-500" />
+            <InfoRow label="Emergency Medical Notes" value={record.emergency_medical_notes} icon={NotebookPen} iconColor="text-slate-500" />
           </>
         ) : (
           <EmptyState message="No medical information added yet." />
@@ -1076,10 +1223,13 @@ function TransportTab({
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
   return (
-    <Card>
+    <Card className="border-t-4 border-t-amber-400">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2">
-          <Bus className="h-4 w-4" /> Transport Details
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
+            <Bus className="h-4 w-4 text-amber-600" />
+          </span>
+          Transport Details
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
@@ -1231,18 +1381,45 @@ function TransportTab({
           </>
         ) : record ? (
           <>
-            <InfoRow label="Bus Number" value={record.bus_number} />
-            <InfoRow label="Route Name" value={record.route_name} />
-            <InfoRow label="Pickup Point" value={record.pickup_point} />
-            <InfoRow label="Pickup Time" value={record.pickup_time} />
-            <InfoRow label="Drop Point" value={record.drop_point} />
-            <InfoRow label="Drop Time" value={record.drop_time} />
-            <InfoRow label="Driver Name" value={record.driver_name} />
-            <InfoRow label="Driver Phone" value={record.driver_phone} />
-            <InfoRow label="Vehicle Registration Number" value={record.vehicle_registration_number} />
-            <InfoRow label="Transport Fee" value={record.transport_fee != null ? String(record.transport_fee) : null} />
-            <InfoRow label="Fee Status" value={record.fee_status} />
-            <InfoRow label="Status" value={record.status} />
+            <InfoRow label="Bus Number" value={record.bus_number} icon={Hash} iconColor="text-amber-500" />
+            <InfoRow label="Route Name" value={record.route_name} icon={Route} iconColor="text-orange-500" />
+            <InfoRow label="Pickup Point" value={record.pickup_point} icon={MapPinned} iconColor="text-emerald-500" />
+            <InfoRow label="Pickup Time" value={record.pickup_time} icon={Clock} iconColor="text-emerald-500" />
+            <InfoRow label="Drop Point" value={record.drop_point} icon={MapPinned} iconColor="text-rose-500" />
+            <InfoRow label="Drop Time" value={record.drop_time} icon={Clock} iconColor="text-rose-500" />
+            <InfoRow label="Driver Name" value={record.driver_name} icon={UserCircle} iconColor="text-indigo-500" />
+            <InfoRow label="Driver Phone" value={record.driver_phone} icon={Phone} iconColor="text-blue-500" />
+            <InfoRow label="Vehicle Registration Number" value={record.vehicle_registration_number} icon={IdCard} iconColor="text-slate-500" />
+            <InfoRow label="Transport Fee" value={record.transport_fee != null ? String(record.transport_fee) : null} icon={Wallet} iconColor="text-green-500" />
+            <div className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
+              <span className="text-muted-foreground">Fee Status</span>
+              <Badge
+                variant="secondary"
+                className={
+                  {
+                    paid: "bg-emerald-50 text-emerald-700 hover:bg-emerald-50",
+                    pending: "bg-amber-50 text-amber-700 hover:bg-amber-50",
+                    overdue: "bg-rose-50 text-rose-700 hover:bg-rose-50",
+                    waived: "bg-slate-100 text-slate-600 hover:bg-slate-100",
+                  }[record.fee_status ?? "pending"]
+                }
+              >
+                {record.fee_status}
+              </Badge>
+            </div>
+            <div className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
+              <span className="text-muted-foreground">Status</span>
+              <Badge
+                variant="secondary"
+                className={
+                  record.status === "active"
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-100"
+                }
+              >
+                {record.status}
+              </Badge>
+            </div>
           </>
         ) : (
           <EmptyState message="No transport information added yet." />
@@ -1383,10 +1560,12 @@ function BehaviourRecordCard({
   };
 
   return (
-    <Card>
+    <Card className="border-t-4 border-t-yellow-400">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2">
-          <Star className="h-4 w-4" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-yellow-50">
+            <Star className="h-4 w-4 text-yellow-600" />
+          </span>
           {isNew ? "New Behaviour Record" : record!.title}
           {!isNew && (
             <Badge variant={record!.category === "positive" ? "default" : record!.category === "negative" ? "destructive" : "secondary"}>
@@ -1494,10 +1673,26 @@ function BehaviourRecordCard({
           </>
         ) : (
           <>
-            <InfoRow label="Category" value={record?.category} />
-            <InfoRow label="Description" value={record?.description} />
-            <InfoRow label="Date" value={record?.recorded_date} />
-            <InfoRow label="Action Taken" value={record?.action_taken} />
+            <div className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
+              <span className="text-muted-foreground flex items-center gap-1.5">
+                <Star className="h-3.5 w-3.5 text-purple-500" /> Category
+              </span>
+              <Badge
+                variant="secondary"
+                className={
+                  record?.category === "positive"
+                    ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-50"
+                    : record?.category === "negative"
+                    ? "bg-rose-50 text-rose-700 hover:bg-rose-50"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-100"
+                }
+              >
+                {record?.category}
+              </Badge>
+            </div>
+            <InfoRow label="Description" value={record?.description} icon={FileTextIcon} iconColor="text-blue-500" />
+            <InfoRow label="Date" value={record?.recorded_date} icon={CalendarDays} iconColor="text-yellow-500" />
+            <InfoRow label="Action Taken" value={record?.action_taken} icon={ClipboardCheck} iconColor="text-emerald-500" />
           </>
         )}
       </CardContent>
@@ -1584,7 +1779,7 @@ function LearningSupportCard({
   const queryClient = useQueryClient();
 
   const buildInitial = () => ({
-    support_type: record?.support_type ?? "",
+    support_type: record?.support_type ?? "iep",
     diagnosis: record?.diagnosis ?? "",
     goals: record?.goals ?? "",
     accommodations: record?.accommodations ?? "",
@@ -1632,10 +1827,12 @@ function LearningSupportCard({
   };
 
   return (
-    <Card>
+    <Card className="border-t-4 border-t-emerald-400">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2 capitalize">
-          <HeartHandshake className="h-4 w-4" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
+            <HeartHandshake className="h-4 w-4 text-emerald-600" />
+          </span>
           {isNew ? "New Learning Support Record" : record!.support_type || "Support Record"}
           {!isNew && (
             <Badge variant={record!.status === "active" ? "default" : record!.status === "completed" ? "secondary" : "destructive"}>
@@ -1678,11 +1875,18 @@ function LearningSupportCard({
           <>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Support Type</label>
-              <Input
+              <select
+                className="w-full rounded-md border px-3 py-2 text-sm bg-background"
                 value={formValues.support_type}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, support_type: e.target.value }))}
-                placeholder="e.g. Speech Therapy, ADHD Support, Dyslexia Accommodation"
-              />
+              >
+                <option value="" disabled>Select a support type</option>
+                <option value="iep">IEP (Individualized Education Program)</option>
+                <option value="learning_disability">Learning Disability</option>
+                <option value="special_education_need">Special Education Need</option>
+                <option value="intervention_plan">Intervention Plan</option>
+                <option value="remedial_program">Remedial Program</option>
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Diagnosis</label>
@@ -1751,11 +1955,11 @@ function LearningSupportCard({
           </>
         ) : (
           <>
-            <InfoRow label="Diagnosis" value={record?.diagnosis} />
-            <InfoRow label="Goals" value={record?.goals} />
-            <InfoRow label="Accommodations" value={record?.accommodations} />
-            <InfoRow label="Start Date" value={record?.start_date} />
-            <InfoRow label="Review Date" value={record?.review_date} />
+            <InfoRow label="Diagnosis" value={record?.diagnosis} icon={Brain} iconColor="text-pink-500" />
+            <InfoRow label="Goals" value={record?.goals} icon={Target} iconColor="text-emerald-500" />
+            <InfoRow label="Accommodations" value={record?.accommodations} icon={ShieldCheck} iconColor="text-blue-500" />
+            <InfoRow label="Start Date" value={record?.start_date} icon={CalendarPlus} iconColor="text-teal-500" />
+            <InfoRow label="Review Date" value={record?.review_date} icon={CalendarClock} iconColor="text-amber-500" />
           </>
         )}
       </CardContent>
@@ -1935,11 +2139,16 @@ function EmergencyContactCard({
   };
 
   return (
-    <Card>
+    <Card className="border-t-4 border-t-red-400">
       <CardHeader className="pb-2 flex flex-row items-center justify-between">
         <CardTitle className="text-base flex items-center gap-2 capitalize">
-          <Phone className="h-4 w-4" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50">
+            <Phone className="h-4 w-4 text-red-600" />
+          </span>
           {isNew ? "New Emergency Contact" : contact!.relation}
+          {!isNew && contact!.priority_order === 1 && (
+            <Badge className="ml-1 bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Primary</Badge>
+          )}
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
@@ -2016,6 +2225,21 @@ function EmergencyContactCard({
               </p>
             )}
           </>
+        ) : contact?.priority_order === 1 ? (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 flex items-start gap-2">
+            <Phone className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+            <div className="flex-1 space-y-1">
+              <p className="text-xs font-medium text-red-800">Call first in an emergency</p>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-medium text-slate-800">{contact?.full_name || "—"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Phone Number</span>
+                <span className="font-medium text-slate-800">{contact?.phone || "—"}</span>
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             <InfoRow label="Name" value={contact?.full_name} />
@@ -2107,10 +2331,13 @@ function DocumentsTab({
         </Card>
       )}
 
-      <Card>
+      <Card className="border-t-4 border-t-slate-400">
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <FileText className="h-4 w-4" /> Uploaded Documents
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100">
+              <FileText className="h-4 w-4 text-slate-600" />
+            </span>
+            Uploaded Documents
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -2152,6 +2379,11 @@ function DocumentRow({
   const ext = doc.document_name.split(".").pop()?.toLowerCase() ?? "";
   const isImage = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext);
   const isPdf = ext === "pdf";
+  const iconTheme = isImage
+    ? { bg: "bg-sky-50", text: "text-sky-600" }
+    : isPdf
+    ? { bg: "bg-rose-50", text: "text-rose-600" }
+    : { bg: "bg-slate-100", text: "text-slate-600" };
 
   // Load a short-lived signed URL for the thumbnail once, on mount
   useState(() => {
@@ -2180,8 +2412,8 @@ function DocumentRow({
         {isImage && thumbUrl ? (
           <img src={thumbUrl} alt={doc.document_name} className="h-12 w-12 rounded object-cover shrink-0 border" />
         ) : (
-          <div className="h-12 w-12 rounded border flex items-center justify-center shrink-0 bg-muted">
-            <FileText className="h-5 w-5 text-muted-foreground" />
+          <div className={`h-12 w-12 rounded border flex items-center justify-center shrink-0 ${iconTheme.bg}`}>
+            <FileText className={`h-5 w-5 ${iconTheme.text}`} />
           </div>
         )}
         <div className="min-w-0">
@@ -2221,10 +2453,23 @@ function DocumentRow({
 // Small shared pieces
 // ============================================================
 
-function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
+function InfoRow({
+  label,
+  value,
+  icon: Icon,
+  iconColor = "text-slate-400",
+}: {
+  label: string;
+  value: string | null | undefined;
+  icon?: React.ElementType;
+  iconColor?: string;
+}) {
   return (
     <div className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50 transition-colors">
-      <span className="text-muted-foreground">{label}</span>
+      <span className="text-muted-foreground flex items-center gap-1.5">
+        {Icon && <Icon className={`h-3.5 w-3.5 ${iconColor}`} />}
+        {label}
+      </span>
       <span className="font-medium text-slate-800 text-right">{value || "—"}</span>
     </div>
   );
@@ -2240,15 +2485,15 @@ function StatBox({
   status?: "good" | "warning";
 }) {
   return (
-    <div className="rounded-lg border p-3 text-center">
+    <div className="rounded-lg border p-3 text-center bg-gradient-to-b from-slate-50 to-white">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p
         className={
           status === "good"
-            ? "text-lg font-semibold text-green-600"
+            ? "text-xl font-bold text-green-600"
             : status === "warning"
-            ? "text-lg font-semibold text-amber-600"
-            : "text-lg font-semibold"
+            ? "text-xl font-bold text-amber-600"
+            : "text-xl font-bold text-slate-700"
         }
       >
         {value}
@@ -2275,6 +2520,29 @@ function InsightCard({ insight }: { insight: { insight_type: string; title: stri
           <p className="text-xs opacity-90">{insight.description}</p>
         </div>
       </div>
+    </div>
+  );
+}
+const TAB_HEADING_THEME: Record<string, { bg: string; text: string }> = {
+  overview: { bg: "bg-indigo-50", text: "text-indigo-700" },
+  parents: { bg: "bg-blue-50", text: "text-blue-700" },
+  medical: { bg: "bg-rose-50", text: "text-rose-700" },
+  transport: { bg: "bg-amber-50", text: "text-amber-700" },
+  documents: { bg: "bg-violet-50", text: "text-violet-700" },
+  behaviour: { bg: "bg-yellow-50", text: "text-yellow-700" },
+  "learning-support": { bg: "bg-pink-50", text: "text-pink-700" },
+  emergency: { bg: "bg-red-50", text: "text-red-700" },
+};
+
+function TabActiveHeading({ activeTab }: { activeTab: string }) {
+  const tab = TABS.find((t) => t.value === activeTab);
+  if (!tab) return null;
+  const theme = TAB_HEADING_THEME[activeTab] ?? { bg: "bg-slate-50", text: "text-slate-700" };
+  const Icon = tab.icon;
+  return (
+    <div className={`flex items-center gap-2 rounded-lg px-4 py-2.5 mt-3 ${theme.bg}`}>
+      <Icon className={`h-5 w-5 ${theme.text}`} />
+      <h3 className={`text-lg font-semibold ${theme.text}`}>{tab.label}</h3>
     </div>
   );
 }
