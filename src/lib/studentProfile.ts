@@ -617,6 +617,91 @@ export async function deleteEmergencyContact(id: string) {
 
   if (error) throw error;
 }
+
+export async function getSiblingStudentIds(parentUserId: string, excludeStudentId: string) {
+  const { data: links, error } = await supabase
+    .from("parent_students")
+    .select("student_id")
+    .eq("parent_id", parentUserId);
+  if (error) throw error;
+
+  const profileIds = (links ?? []).map((l) => l.student_id);
+  if (profileIds.length === 0) return [];
+
+  const { data: students, error: err2 } = await supabase
+    .from("students")
+    .select("id, profile_id")
+    .in("profile_id", profileIds);
+  if (err2) throw err2;
+
+  return (students ?? []).map((s) => s.id).filter((id) => id !== excludeStudentId);
+}
+
+export async function syncParentProfileAcrossSiblings(
+  schoolId: string,
+  parentUserId: string,
+  sourceStudentId: string,
+  parentData: { relation: string; full_name: string; occupation: string | null; phone: string | null; alternate_phone: string | null; email: string | null; whatsapp_number: string | null; address: string | null; is_primary_contact: boolean; pickup_authorized: boolean }
+) {
+  const siblingIds = await getSiblingStudentIds(parentUserId, sourceStudentId);
+
+  for (const siblingId of siblingIds) {
+    const { data: existing } = await supabase
+      .from("parent_profiles")
+      .select("id")
+      .eq("student_id", siblingId)
+      .eq("relation", parentData.relation)
+      .maybeSingle();
+
+    await supabase
+      .from("parent_profiles")
+      .upsert({
+        ...(existing?.id ? { id: existing.id } : {}),
+        school_id: schoolId,
+        student_id: siblingId,
+        ...parentData,
+      });
+  }
+}
+
+export async function syncEmergencyContactAcrossSiblings(
+  schoolId: string,
+  parentUserId: string,
+  sourceStudentId: string,
+  contactData: { relation: string; full_name: string; phone: string }
+) {
+  const siblingIds = await getSiblingStudentIds(parentUserId, sourceStudentId);
+
+  for (const siblingId of siblingIds) {
+    const { data: existing } = await supabase
+      .from("emergency_contacts")
+      .select("id")
+      .eq("student_id", siblingId)
+      .eq("relation", contactData.relation)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabase
+        .from("emergency_contacts")
+        .update({ full_name: contactData.full_name, phone: contactData.phone })
+        .eq("id", existing.id);
+    } else {
+      const { count } = await supabase
+        .from("emergency_contacts")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", siblingId);
+
+      await supabase.from("emergency_contacts").insert({
+        school_id: schoolId,
+        student_id: siblingId,
+        relation: contactData.relation,
+        full_name: contactData.full_name,
+        phone: contactData.phone,
+        priority_order: (count ?? 0) + 1,
+      });
+    }
+  }
+}
 // ============================================================
 // Marks / GPA (Step 3 will add calculateGPA on top of this)
 // ============================================================

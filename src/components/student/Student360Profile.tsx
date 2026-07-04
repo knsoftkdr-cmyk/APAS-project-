@@ -73,13 +73,14 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
+import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
 
 export type ProfileRole = "student" | "parent" | "staff";
 
 interface Student360ProfileProps {
   studentId: string;
   role: ProfileRole;
+  viewerId?: string;
 }
 
 const TABS = [
@@ -94,7 +95,7 @@ const TABS = [
 ] as const;
 
 
-export default function Student360Profile({ studentId, role }: Student360ProfileProps) {
+export default function Student360Profile({ studentId, role, viewerId }: Student360ProfileProps) {
   const [activeTab, setActiveTab] = useState<string>("overview");
   const canEdit = role === "student" || role === "parent";
   const canDelete = role === "parent";
@@ -156,6 +157,8 @@ export default function Student360Profile({ studentId, role }: Student360Profile
             schoolId={data.core.school_id ?? ""}
             canEdit={canEdit}
             canDelete={canDelete}
+            syncEnabled={role === "parent"}
+            parentUserId={viewerId}
           />
         </TabsContent>
         <TabsContent value="medical" className="mt-4">
@@ -205,6 +208,8 @@ export default function Student360Profile({ studentId, role }: Student360Profile
             parents={data.parentProfiles}
             canEdit={canEdit}
             canDelete={canDelete}
+            syncEnabled={role === "parent"}
+            parentUserId={viewerId}
           />
         </TabsContent>
       </Tabs>
@@ -598,12 +603,16 @@ function ParentsTab({
   schoolId,
   canEdit,
   canDelete,
+  syncEnabled,
+  parentUserId,
 }: {
   parents: ParentProfile[];
   studentId: string;
   schoolId: string;
   canEdit: boolean;
   canDelete: boolean;
+  syncEnabled?: boolean;
+  parentUserId?: string;
 }) {
   const [addingNew, setAddingNew] = useState(false);
 
@@ -620,6 +629,8 @@ function ParentsTab({
           schoolId={schoolId}
           canEdit={canEdit}
           canDelete={canDelete}
+          syncEnabled={syncEnabled}
+          parentUserId={parentUserId}
         />
       ))}
       {addingNew && (
@@ -628,6 +639,8 @@ function ParentsTab({
           schoolId={schoolId}
           canEdit={canEdit}
           canDelete={canDelete}
+          syncEnabled={syncEnabled}
+          parentUserId={parentUserId}
           onDoneAdding={() => setAddingNew(false)}
         />
       )}
@@ -656,6 +669,8 @@ function ParentCard({
   schoolId,
   canEdit,
   canDelete,
+  syncEnabled,
+  parentUserId,
   onDoneAdding,
 }: {
   parent?: ParentProfile;
@@ -663,6 +678,8 @@ function ParentCard({
   schoolId: string;
   canEdit: boolean;
   canDelete: boolean;
+  syncEnabled?: boolean;
+  parentUserId?: string;
   onDoneAdding?: () => void;
 }) {
   const isNew = !parent;
@@ -688,10 +705,28 @@ function ParentCard({
   const mutation = useMutation({
     mutationFn: (payload: Partial<ParentProfile> & { school_id: string; student_id: string }) =>
       upsertParentProfile(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["student-overview", studentId] });
+    onSuccess: async (saved) => {
       setIsEditing(false);
       if (isNew && onDoneAdding) onDoneAdding();
+      if (syncEnabled && parentUserId) {
+        try {
+          await syncParentProfileAcrossSiblings(schoolId, parentUserId, studentId, {
+            relation: saved.relation,
+            full_name: saved.full_name,
+            occupation: saved.occupation,
+            phone: saved.phone,
+            alternate_phone: saved.alternate_phone,
+            email: saved.email,
+            whatsapp_number: saved.whatsapp_number,
+            address: saved.address,
+            is_primary_contact: saved.is_primary_contact,
+            pickup_authorized: saved.pickup_authorized,
+          });
+        } catch (e) {
+          console.error("Sync to siblings failed:", e);
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ["student-overview"] });
     },
   });
 
@@ -1978,12 +2013,16 @@ function EmergencyTab({
   parents,
   canEdit,
   canDelete,
+  syncEnabled,
+  parentUserId,
 }: {
   studentId: string;
   schoolId: string;
   parents: ParentProfile[];
   canEdit: boolean;
   canDelete: boolean;
+  syncEnabled?: boolean;
+  parentUserId?: string;
 }) {
   const [addingNew, setAddingNew] = useState(false);
   const queryClient = useQueryClient();
@@ -2024,8 +2063,11 @@ function EmergencyTab({
           key={contact.id}
           contact={contact}
           studentId={studentId}
+          schoolId={schoolId}
           canEdit={canEdit}
           canDelete={canDelete}
+          syncEnabled={syncEnabled}
+          parentUserId={parentUserId}
         />
       ))}
       {addingNew && (
@@ -2035,6 +2077,8 @@ function EmergencyTab({
           nextPriority={(contacts?.length ?? 0) + 1}
           canEdit={canEdit}
           canDelete={canDelete}
+          syncEnabled={syncEnabled}
+          parentUserId={parentUserId}
           onDoneAdding={() => setAddingNew(false)}
         />
       )}
@@ -2078,6 +2122,8 @@ function EmergencyContactCard({
   nextPriority,
   canEdit,
   canDelete,
+  syncEnabled,
+  parentUserId,
   onDoneAdding,
 }: {
   contact?: EmergencyContact;
@@ -2086,6 +2132,8 @@ function EmergencyContactCard({
   nextPriority?: number;
   canEdit: boolean;
   canDelete: boolean;
+  syncEnabled?: boolean;
+  parentUserId?: string;
   onDoneAdding?: () => void;
 }) {
   const isNew = !contact;
@@ -2113,10 +2161,22 @@ function EmergencyContactCard({
       }
       return updateEmergencyContact(contact!.id, formValues);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["emergency-contacts", studentId] });
+    onSuccess: async () => {
       setIsEditing(false);
       if (isNew && onDoneAdding) onDoneAdding();
+      if (syncEnabled && parentUserId && schoolId) {
+        try {
+          await syncEmergencyContactAcrossSiblings(schoolId, parentUserId, studentId, {
+            relation: formValues.relation,
+            full_name: formValues.full_name,
+            phone: formValues.phone,
+          });
+        } catch (e) {
+          console.error("Sync to siblings failed:", e);
+        }
+      }
+      queryClient.invalidateQueries({ queryKey: ["emergency-contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["student-overview"] });
     },
   });
 

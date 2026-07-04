@@ -7,15 +7,19 @@ import { supabase } from "@/integrations/supabase/client";
 import Student360Profile from "@/components/student/Student360Profile";
 import type { ProfileRole } from "@/components/student/Student360Profile";
 
+interface ChildOption {
+  studentId: string;
+  fullName: string;
+  className: string | null;
+  section: string | null;
+}
+
 export default function StudentProfile360() {
   const { user, profile } = useAuth();
-  const [studentId, setStudentId] = useState<string | null>(null);
+  const [children, setChildren] = useState<ChildOption[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Resolve the correct studentId and role based on who is logged in:
-  // - student  → their own students.id via profile_id
-  // - parent   → first child's students.id via parent_students
-  // - staff    → no self-student, page shouldn't be accessible
   useEffect(() => {
     if (!user?.id || !profile?.role) return;
 
@@ -25,25 +29,36 @@ export default function StudentProfile360() {
         if (profile.role === "student") {
           const { data } = await supabase
             .from("students")
-            .select("id")
+            .select("id, full_name, class, section")
             .eq("profile_id", user.id)
             .maybeSingle();
-          setStudentId(data?.id ?? null);
+          if (data) {
+            setChildren([{ studentId: data.id, fullName: data.full_name, className: data.class, section: data.section }]);
+            setSelectedStudentId(data.id);
+          }
         } else if (profile.role === "parent") {
-          // parent_students.student_id stores profiles.id, so join through students.profile_id
-          const { data } = await supabase
+          const { data: links } = await supabase
             .from("parent_students")
             .select("student_id")
-            .eq("parent_id", user.id)
-            .limit(1)
-            .maybeSingle();
-          if (data?.student_id) {
-            const { data: student } = await supabase
+            .eq("parent_id", user.id);
+
+          if (links && links.length > 0) {
+            const profileIds = links.map((l) => l.student_id);
+            const { data: students } = await supabase
               .from("students")
-              .select("id")
-              .eq("profile_id", data.student_id)
-              .maybeSingle();
-            setStudentId(student?.id ?? null);
+              .select("id, full_name, class, section, profile_id")
+              .in("profile_id", profileIds);
+
+            if (students && students.length > 0) {
+              const options: ChildOption[] = students.map((s) => ({
+                studentId: s.id,
+                fullName: s.full_name,
+                className: s.class,
+                section: s.section,
+              }));
+              setChildren(options);
+              setSelectedStudentId(options[0].studentId);
+            }
           }
         }
       } finally {
@@ -63,19 +78,41 @@ export default function StudentProfile360() {
 
   return (
     <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800">My 360° Profile</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Your complete student profile — personal info, academics, behaviour, health and more.
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800">My 360° Profile</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Your complete student profile — personal info, academics, behaviour, health and more.
+          </p>
+        </div>
+
+        {children.length > 1 && (
+          <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-blue-50 px-4 py-3 shadow-sm w-full sm:w-72">
+            <label className="text-[11px] font-medium text-indigo-700 uppercase tracking-wide block mb-1.5">
+              Viewing profile for
+            </label>
+            <select
+              className="w-full rounded-lg border-0 bg-white px-3 py-2 text-sm font-semibold text-slate-800 shadow-sm ring-1 ring-indigo-200 focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+              value={selectedStudentId ?? ""}
+              onChange={(e) => setSelectedStudentId(e.target.value)}
+            >
+              {children.map((child) => (
+                <option key={child.studentId} value={child.studentId}>
+                  {child.fullName}
+                  {child.className ? ` — Class ${child.className}${child.section ? ` ${child.section}` : ""}` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <LoadingSpinner />
         </div>
-      ) : studentId ? (
-        <Student360Profile studentId={studentId} role={role} />
+      ) : selectedStudentId ? (
+        <Student360Profile studentId={selectedStudentId} role={role} viewerId={role === "parent" ? user?.id : undefined} />
       ) : (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
           No student profile found. Please contact your school administrator.

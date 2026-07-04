@@ -158,15 +158,33 @@ export default function ParentDashboard() {
 
         {/* Child selector */}
         {children.length > 0 && (
-          <Card className="cursor-pointer border-0 shadow-xl bg-gradient-to-r from-blue-300 to-blue-400 hover:scale-[1.02] transition-all">
+          <Card className="border-0 shadow-xl bg-gradient-to-r from-blue-300 to-blue-400">
             <CardContent className="py-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-bold">
+              <div className="h-10 w-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-bold shrink-0">
                 {(selectedChildData?.full_name || "S").charAt(0)}
               </div>
-              <div>
-                <p className="font-semibold text-lg">{selectedChildData?.full_name ?? "Student"}</p>
-                <p className="text-sm text-black-600 ">Grade: {selectedChildData?.class_grade ?? "—"}</p>
-              </div>
+
+              {children.length > 1 ? (
+                <div className="flex-1">
+                  <label className="text-xs text-gray-700 block mb-0.5">Viewing data for</label>
+                  <select
+                    className="w-full max-w-xs rounded-md border-0 bg-white/90 px-3 py-1.5 text-sm font-semibold text-gray-900"
+                    value={selectedChild ?? ""}
+                    onChange={(e) => setSelectedChild(e.target.value)}
+                  >
+                    {children.map((child) => (
+                      <option key={child.id} value={child.id}>
+                        {child.full_name} — Grade: {child.class_grade ?? "—"}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <p className="font-semibold text-lg">{selectedChildData?.full_name ?? "Student"}</p>
+                  <p className="text-sm text-black-600">Grade: {selectedChildData?.class_grade ?? "—"}</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}

@@ -57,7 +57,7 @@ const navItems: Array<{
   
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
-  { title: "My Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
+  { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
   { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Reports" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "Worksheets", icon: FileText, path: "/worksheets", roles: ["student"], tourId: "nav-worksheets" },
@@ -189,32 +189,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const location = useLocation();
 
   const isStudent = profile?.role === "student";
-  const { data: linkedStudentName } = useQuery({
-    queryKey: ["sidebar-linked-student-name", profile?.id],
-    queryFn: async () => {
-      const { data: link } = await supabase
-        .from("parent_students")
-        .select("student_id")
-        .eq("parent_id", profile!.id)
-        .limit(1)
-        .maybeSingle();
-      if (!link?.student_id) return null;
-
-      const { data: student } = await supabase
-        .from("students")
-        .select("full_name")
-        .eq("profile_id", link.student_id)
-        .maybeSingle();
-
-      return student?.full_name ?? null;
-    },
-    enabled: profile?.role === "parent" && !!profile?.id,
-  });
-
   const getItemLabel = (item: (typeof navItems)[number]) => {
-    if (item.title === "My Profile" && profile?.role === "parent" && linkedStudentName) {
-      return `${linkedStudentName}'s Profile`;
-    }
     return isStudent && item.studentTitle ? item.studentTitle : item.title;
   };
   const mobileNavItems =
