@@ -29,7 +29,8 @@
   Zap,
   Lock,
   CreditCard,
-  UserCircle
+  UserCircle,
+  Sparkles
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,6 +59,7 @@ const navItems: Array<{
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Entry Ticket", icon: ClipboardList, path: "/entry-ticket", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
+  { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Alerts" },

@@ -24,6 +24,7 @@ const Worksheets = lazy(() => import("./pages/Worksheets"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Curative = lazy(() => import("./pages/Curative"));
 const Submissions = lazy(() => import("./pages/Submissions"));
+const AssessmentEvaluation = lazy(() => import("./pages/AssessmentEvaluation"));
 const EntryTicket = lazy(() => import("./pages/EntryTicket"));
 const Requests = lazy(() => import("./pages/Requests"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
@@ -108,6 +109,7 @@ export default function App() {
                       <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />
                       <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Curative /></RoleGuard></ProtectedRoute>} />
                       <Route path="/submissions" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Submissions /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/assessment-evaluation" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><AssessmentEvaluation /></RoleGuard></ProtectedRoute>} />
                       <Route path="/entry-ticket" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><EntryTicket /></RoleGuard></ProtectedRoute>} />
                       <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "student", "parent"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
