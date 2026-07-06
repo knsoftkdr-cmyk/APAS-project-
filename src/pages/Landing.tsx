@@ -139,7 +139,7 @@ const Landing = () => {
           </div>
 
           <div className="hidden md:block">
-            <Link to="/login">
+            <Link to="/request-demo">
               <Button className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white shadow-lg shadow-blue-500/30 rounded-full px-5">
                 Request Demo
               </Button>
@@ -161,7 +161,7 @@ const Landing = () => {
             <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
             <a href="#analytics" onClick={() => setMenuOpen(false)} className="block">Analytics</a>
             <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
-            <Link to="/login" className="block">
+            <Link to="/request-demo" className="block">
               <Button className="w-full bg-gradient-to-r from-blue-600 to-green-500 text-white rounded-full">
                 Request Demo
               </Button>

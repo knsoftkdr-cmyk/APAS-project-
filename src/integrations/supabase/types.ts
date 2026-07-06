@@ -654,6 +654,42 @@ export type Database = {
           },
         ]
       }
+      demo_requests: {
+        Row: {
+          id: string
+          first_name: string
+          last_name: string
+          institution_name: string
+          email: string
+          phone_number: string | null
+          description: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          first_name: string
+          last_name: string
+          institution_name: string
+          email: string
+          phone_number?: string | null
+          description?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          first_name?: string
+          last_name?: string
+          institution_name?: string
+          email?: string
+          phone_number?: string | null
+          description?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       diagnostic_requests: {
         Row: {
           admin_notes: string | null

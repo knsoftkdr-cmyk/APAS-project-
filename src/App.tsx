@@ -20,6 +20,7 @@ import TeacherWorkspaceDashboard from "@/pages/TeacherWorkspaceDashboard";
 // Lazy load all page components for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
+const RequestDemo = lazy(() => import("./pages/RequestDemo"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
@@ -129,6 +130,7 @@ useEffect(() => {
                     <Routes>
                       <Route path="/" element={<Landing />} />
                       <Route path="/login" element={<Login />} />
+                      <Route path="/request-demo" element={<RequestDemo />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                       <Route path="/student-profile" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><StudentProfile360 /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
