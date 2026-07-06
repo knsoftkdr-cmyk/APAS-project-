@@ -92,6 +92,57 @@ const TimetablePage = () => {
   const [viewingLabel, setViewingLabel] = useState("");
   const [loadingView, setLoadingView] = useState(false);
 
+  // Clash detection
+  const [checkingClashes, setCheckingClashes] = useState(false);
+  const [clashResults, setClashResults] = useState<{
+    clashes: { day: string; period: string; teacherName: string; classesInvolved: { className: string; section: string; subject: string }[]; suggestedSwap: string | null }[];
+    unmatched: { className: string; section: string; day: string; period: string; rawText: string }[];
+  } | null>(null);
+
+  const handleCheckClashes = async () => {
+    if (!schoolId) return;
+    setCheckingClashes(true);
+    setClashResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-timetable-clashes", {
+        body: { school_id: schoolId },
+      });
+      if (error) throw error;
+      setClashResults(data);
+    } catch (e: any) {
+      toast({ title: "Couldn't check clashes", description: e.message, variant: "destructive" });
+    } finally {
+      setCheckingClashes(false);
+    }
+  };
+
+  // What-If: simulate a teacher's absence
+  const [absenceTeacherId, setAbsenceTeacherId] = useState("");
+  const [absenceDay, setAbsenceDay] = useState("monday");
+  const [checkingAbsence, setCheckingAbsence] = useState(false);
+  const [absenceResults, setAbsenceResults] = useState<{
+    teacherName: string;
+    day: string;
+    impact: { className: string; section: string; period: string; subject: string; candidateSubstitutes: string[] }[];
+  } | null>(null);
+
+  const handleSimulateAbsence = async () => {
+    if (!schoolId || !absenceTeacherId) return;
+    setCheckingAbsence(true);
+    setAbsenceResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("whatif-timetable", {
+        body: { mode: "teacher_absence", school_id: schoolId, teacher_id: absenceTeacherId, day: absenceDay },
+      });
+      if (error) throw error;
+      setAbsenceResults(data);
+    } catch (e: any) {
+      toast({ title: "Couldn't simulate absence", description: e.message, variant: "destructive" });
+    } finally {
+      setCheckingAbsence(false);
+    }
+  };
+
   const schoolId = profile?.school_id;
 
   // ── Fetch teachers ─────────────────────────────────────────────────────────
@@ -218,6 +269,22 @@ const TimetablePage = () => {
     if (!schoolId) return;
     setUploadingClass(true);
     try {
+      // Parse the grid now (same shape as the existing "view" feature: headers + rows)
+      // so clash-detection can read structured data later without re-parsing the file.
+      let parsedGrid: { headers: string[]; rows: string[][] } | null = null;
+      try {
+        const arrayBuffer = await classFile.arrayBuffer();
+        const workbook = XLSX.read(arrayBuffer, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const json: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+        if (json.length > 0) {
+          parsedGrid = { headers: (json[0] ?? []).map(String), rows: json.slice(1).map(r => r.map(String)) };
+        }
+      } catch {
+        // If parsing fails, we still upload the file itself — clash detection
+        // just won't be available for this class until it's re-uploaded in a readable format.
+      }
+
       const filePath = `${schoolId}/class_${selectedClass}_section_${selectedSection}.xlsx`;
       const { error: uploadError } = await supabase.storage.from("timetables").upload(filePath, classFile, { upsert: true });
       if (uploadError) throw uploadError;
@@ -229,6 +296,7 @@ const TimetablePage = () => {
         timetable_type: "class",
         file_path: filePath,
         file_name: classFile.name,
+        parsed_grid: parsedGrid,
         uploaded_by: user?.id,
         updated_at: new Date().toISOString(),
       }, { onConflict: "school_id,class_grade,section,teacher_id,timetable_type" });
@@ -371,7 +439,7 @@ try {
           <thead>
             <tr className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
               {headers.map((h, i) => (
-                <th key={i} className="px-4 py-3 text-left font-semibold whitespace-nowrap">{h || `Col ${i+1}`}</th>
+                <th key={i} className="px-3 py-3 text-left font-semibold whitespace-nowrap text-sm">{h || `Col ${i+1}`}</th>
               ))}
             </tr>
           </thead>
@@ -379,7 +447,7 @@ try {
             {rows.map((row, ri) => (
               <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50"}>
                 {row.map((cell, ci) => (
-                  <td key={ci} className={`px-4 py-3 border-b border-slate-100 whitespace-nowrap
+                  <td key={ci} className={`px-3 py-2.5 border-b border-slate-100 whitespace-nowrap
                     ${ci === 0 ? "font-semibold text-slate-700 bg-slate-50" : ""}
                     ${ci > 0 && cell && !cell.includes("BREAK") && !cell.includes("LUNCH") ? dayColors[(ci-1) % dayColors.length] + " font-medium" : ""}
                     ${cell.includes("BREAK") || cell.includes("LUNCH") ? "text-slate-400 italic text-center" : ""}
@@ -501,7 +569,7 @@ try {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left - list */}
           <div className="lg:col-span-1">
             <Card className="border-2 border-slate-200">
@@ -598,14 +666,58 @@ try {
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <CalendarDays className="h-6 w-6 text-white" />
             </div>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold">Timetable Manager</h1>
               <p className="text-blue-100 mt-1">Manage class and teacher timetables</p>
             </div>
+            <Button
+              variant="secondary"
+              className="bg-white/20 hover:bg-white/30 text-white border-0"
+              onClick={handleCheckClashes}
+              disabled={checkingClashes}
+            >
+              {checkingClashes ? "Checking..." : "Check Clashes"}
+            </Button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Clash results panel */}
+        {clashResults && (
+          <Card className={clashResults.clashes.length > 0 ? "border-2 border-red-200" : "border-2 border-emerald-200"}>
+            <CardHeader>
+              <CardTitle className="text-base">
+                {clashResults.clashes.length === 0
+                  ? "No teacher clashes found ✅"
+                  : `${clashResults.clashes.length} clash(es) found`}
+              </CardTitle>
+              <CardDescription>
+                {clashResults.unmatched.length > 0 &&
+                  `${clashResults.unmatched.length} subject entries couldn't be matched to a teacher — likely missing teacher assignments in Class Management.`}
+              </CardDescription>
+            </CardHeader>
+            {clashResults.clashes.length > 0 && (
+              <CardContent className="space-y-3">
+                {clashResults.clashes.map((clash, i) => (
+                  <div key={i} className="border border-red-200 bg-red-50 rounded-lg p-3 space-y-1">
+                    <p className="text-sm font-semibold text-red-800">
+                      {clash.teacherName} — {clash.day}, {clash.period}
+                    </p>
+                    <p className="text-sm text-red-700">
+                      Booked in: {clash.classesInvolved.map((c) => `${c.className}-${c.section} (${c.subject})`).join(" and ")}
+                    </p>
+                    {clash.suggestedSwap ? (
+                      <p className="text-sm text-emerald-700 mt-1">💡 {clash.suggestedSwap}</p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground mt-1">No automatic swap suggestion available — resolve manually.</p>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            )}
+          </Card>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left panel */}
           <div className="lg:col-span-1 space-y-4">
             <Tabs defaultValue="class">
@@ -615,6 +727,9 @@ try {
                 </TabsTrigger>
                 <TabsTrigger value="teacher" className="flex-1 gap-1.5">
                   <Users className="h-4 w-4" />Teacher
+                </TabsTrigger>
+                <TabsTrigger value="whatif" className="flex-1 gap-1.5">
+                  <Users className="h-4 w-4" />What-If
                 </TabsTrigger>
               </TabsList>
 
@@ -698,6 +813,68 @@ try {
                   </CardContent>
                 </Card>
               </TabsContent>
+              {/* What-If tab */}
+              <TabsContent value="whatif">
+                <Card className="border-2 border-amber-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold text-amber-700 flex items-center gap-2">
+                      <Users className="h-4 w-4" />What-If: Teacher Absence
+                    </CardTitle>
+                    <CardDescription className="text-xs">See which classes are affected and who's free to substitute</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Teacher</Label>
+                      <Select value={absenceTeacherId} onValueChange={setAbsenceTeacherId}>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Choose a teacher..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teachers.map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Day</Label>
+                      <Select value={absenceDay} onValueChange={setAbsenceDay}>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map(d => (
+                            <SelectItem key={d} value={d}>{d[0].toUpperCase() + d.slice(1)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      className="w-full bg-amber-600 hover:bg-amber-700"
+                      onClick={handleSimulateAbsence}
+                      disabled={checkingAbsence || !absenceTeacherId}
+                    >
+                      {checkingAbsence ? "Checking..." : "Simulate Absence"}
+                    </Button>
+                    {absenceResults && (
+                      <div className="space-y-2 pt-2 border-t">
+                        {absenceResults.impact.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">{absenceResults.teacherName} has no classes on {absenceResults.day}.</p>
+                        ) : (
+                          absenceResults.impact.map((imp, i) => (
+                            <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-sm">
+                              <p className="font-semibold text-amber-800">{imp.className}-{imp.section}, {imp.period} ({imp.subject})</p>
+                              <p className="text-xs text-amber-700 mt-1">
+                                Free to substitute: {imp.candidateSubstitutes.length > 0 ? imp.candidateSubstitutes.join(", ") : "No one free — reschedule needed"}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
 
             {/* Timetables list */}
@@ -778,7 +955,7 @@ try {
           </div>
 
           {/* Viewer */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <Card className="border-2 border-slate-200 min-h-[500px]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
