@@ -296,6 +296,7 @@ const SettingsPage = () => {
     else {
       toast.success("Personal information saved");
       invalidate();
+      await refreshProfile();
       setActiveDrawer(null);
     }
   };
@@ -316,8 +317,8 @@ const SettingsPage = () => {
     setProSaving(false);
     if (error) toast.error("Failed to save");
     else {
-      toast.success("Professional information saved");
       invalidate();
+      await refreshProfile();
       setActiveDrawer(null);
     }
   };

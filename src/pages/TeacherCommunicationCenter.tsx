@@ -25,6 +25,7 @@ import {
   Sparkles, Smile, X, FileText, Image as ImageIcon, ChevronLeft,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
+import { TeacherCommunitiesContent } from "@/pages/TeacherCommunities";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -111,6 +112,7 @@ export default function TeacherCommunicationCenter() {
   const [meetingReason, setMeetingReason] = useState("");
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [view, setView] = useState<"messages" | "communities">("messages");
 
   // Last message per contact, for history/preview
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
@@ -481,11 +483,32 @@ export default function TeacherCommunicationCenter() {
   return (
     <AppLayout>
       <div className="h-[calc(100vh-100px)] flex flex-col">
-        <div className="mb-4 flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-blue-600" />
-          <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
+        <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-blue-600" />
+            <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant={view === "messages" ? "default" : "outline"}
+              onClick={() => setView("messages")}
+            >
+              Messages
+            </Button>
+            <Button
+              size="sm"
+              variant={view === "communities" ? "default" : "outline"}
+              onClick={() => setView("communities")}
+            >
+              Teacher Communities
+            </Button>
+          </div>
         </div>
 
+        {view === "communities" ? (
+          <TeacherCommunitiesContent />
+        ) : (
         <Card className="flex-1 overflow-hidden border border-border/60">
           <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full">
 
@@ -792,6 +815,7 @@ export default function TeacherCommunicationCenter() {
             </div>
           </div>
         </Card>
+        )}
       </div>
 
       {/* Meeting Request Dialog */}

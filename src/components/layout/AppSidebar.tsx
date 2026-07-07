@@ -32,7 +32,8 @@
   CreditCard,
   UserCircle,
   Sparkles,
-  Compass
+  Compass,
+  Award
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,6 +73,7 @@ const navItems: Array<{
 { title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"] },
 { title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
 { title: "Communication", icon: MessageSquare, path: "/teacher-communication", roles: ["teacher"]},
+{ title: "Professional Development", icon: Award, path: "/teacher-professional-development", roles: ["teacher"]},
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Alerts" },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Admin Panel" },
@@ -89,6 +91,7 @@ const navItems: Array<{
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
   
   { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
+{ title: "Executive Reporting", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
 
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing-dashboard", roles: ["knsoft_admin"] },

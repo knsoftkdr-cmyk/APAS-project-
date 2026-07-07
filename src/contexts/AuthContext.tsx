@@ -8,6 +8,10 @@ interface Profile {
   role: string;
   avatar_url: string | null;
   school_id: string | null;
+  employee_id?: string | null;
+  designation?: string | null;
+  department?: string | null;
+  date_of_joining?: string | null;
 }
 
 interface AuthContextType {
@@ -16,6 +20,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   isSchoolAdmin: boolean;
   isAdmin: boolean;
   isTeacher: boolean;
@@ -30,6 +35,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
   isSchoolAdmin: false,
   isAdmin: false,
   isTeacher: false,
@@ -46,16 +52,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSupabaseInitialized =
     import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-  const fetchProfile = async (userId: string) => {
+const fetchProfile = async (userId: string) => {
     try {
       const { data } = await supabase
         .from("profiles")
-        .select("id, full_name, role, avatar_url, school_id, class_grade, roll_number, section")
+        .select("id, full_name, role, avatar_url, school_id, class_grade, roll_number, section, employee_id, designation, department, date_of_joining")
         .eq("id", userId)
         .single();
       setProfile(data);
     } catch (error) {
       console.error("Error fetching profile:", error);
+    }
+  };
+
+  const refreshProfile = async () => {
+    if (session?.user?.id) {
+      await fetchProfile(session.user.id);
     }
   };
 
@@ -122,6 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         signOut,
+        refreshProfile,
         isSchoolAdmin,
         isAdmin,
         isTeacher,

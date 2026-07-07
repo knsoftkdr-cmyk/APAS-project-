@@ -65,6 +65,7 @@ const NotificationDashboard = lazy(() => import("./pages/NotificationDashboard")
 const RiskPredictionDashboard = lazy(() => import("./pages/RiskPredictionDashboard"));
 const TeacherAtRiskStudents = lazy(() => import("./pages/TeacherAtRiskStudents"));
 const TeacherBehaviourDashboard = lazy(() => import("./pages/TeacherBehaviourDashboard"));
+const TeacherProfessionalDevelopment = lazy(() => import("./pages/TeacherProfessionalDevelopment"));
 const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicationCenter"));
 const AITeacherAssistant = lazy(() => import("./pages/AITeacherAssistant"));
 const KnowledgeGraphDashboard = lazy(() => import("./pages/KnowledgeGraphDashboard"));
@@ -79,7 +80,9 @@ const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 const AcademicCalendar = lazy(() => import("./pages/AcademicCalendar"));
-
+const TeacherCommunities = lazy(() => import("./pages/TeacherCommunities"));
+const ExecutiveReporting = lazy(() => import("./pages/ExecutiveReporting"));
+const PredictiveAnalytics = lazy(() => import("./pages/PredictiveAnalytics"));
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -142,7 +145,8 @@ useEffect(() => {
                       <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ai-teacher-assistant" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><AITeacherAssistant /></RoleGuard></ProtectedRoute>} />
-                      
+                      <Route path="/teacher-communities" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunities /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher-professional-development" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherProfessionalDevelopment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
                       <Route path="/worksheets" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Worksheets /></RoleGuard></ProtectedRoute>} />
                       <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />
@@ -154,6 +158,10 @@ useEffect(() => {
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                       <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><Alerts /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher", "student", "parent"]}><AdminPanel /></RoleGuard></ProtectedRoute>} />
+                      
+                      <Route path="/executive-reporting" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><ExecutiveReporting /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/predictive-analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><PredictiveAnalytics /></RoleGuard></ProtectedRoute>} />
+                      
                       <Route path="/super-admin" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><SuperAdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/knsoft-admin" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><KNSoftAdminPanel /></RoleGuard></ProtectedRoute>} />
                       <Route path="/billing-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><BillingDashboard /></RoleGuard></ProtectedRoute>} />
