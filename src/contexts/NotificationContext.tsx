@@ -164,6 +164,39 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     saveToStorage(user.id, notifications);
   }, [notifications, user?.id]);
+  // ------------------------------------ Load unread governance_notifications (e.g. substitute approvals) on login ------------------------------------
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("governance_notifications")
+        .select("id, event_type, title, message, is_read, created_at")
+        .eq("user_id", user.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (data && data.length > 0) {
+        setNotifications((prev) => {
+          const existingIds = new Set(prev.map((n) => n.id));
+          const mapped: Notification[] = data
+            .filter((row) => !existingIds.has(row.id))
+            .map((row) => ({
+              id: row.id,
+              title: row.title,
+              message: row.message,
+              type: row.event_type.includes("rejected")
+                ? "warning"
+                : row.event_type.includes("approved")
+                ? "success"
+                : "info",
+              is_read: row.is_read,
+              created_at: row.created_at,
+            }));
+          return [...mapped, ...prev].slice(0, 50);
+        });
+      }
+    })();
+  }, [user?.id]);
 
   const classIdsRef = useRef<string[]>([]);
   const homeworkAssignmentIdsRef = useRef<string[]>([]);

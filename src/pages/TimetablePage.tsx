@@ -28,7 +28,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import * as XLSX from "xlsx";
 import {
   CalendarDays, Upload, Trash2, Eye, FileSpreadsheet,
-  BookOpen, GraduationCap, RefreshCw, Users, User,
+  BookOpen, GraduationCap, RefreshCw, Users, User, Pencil, X,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -65,6 +65,108 @@ const TimetablePage = () => {
   const { toast } = useToast();
 
   const isPrincipal = profile?.role === "principal" || profile?.role === "admin" || profile?.role === "school_admin";
+  const [activeTab, setActiveTab] = useState("class");
+  const [substituteAssignments, setSubstituteAssignments] = useState<any[]>([]);
+  const [loadingSubstitutes, setLoadingSubstitutes] = useState(false);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [editingSubId, setEditingSubId] = useState<string | null>(null);
+  const [editSubTeacherId, setEditSubTeacherId] = useState<string>("");
+  const [savingEditId, setSavingEditId] = useState<string | null>(null);
+  const [deletingSubId, setDeletingSubId] = useState<string | null>(null);
+
+  const fetchSubstituteAssignments = async () => {
+    if (!profile?.school_id) return;
+    setLoadingSubstitutes(true);
+    const { data, error } = await supabase
+      .from("substitute_assignments")
+      .select(`
+        id, day, period, subject, status, created_at, substitute_teacher_id,
+        original_teacher:profiles!substitute_assignments_original_teacher_id_fkey(full_name),
+        substitute_teacher:profiles!substitute_assignments_substitute_teacher_id_fkey(full_name),
+        classes(name, section)
+      `)
+      .eq("school_id", profile.school_id)
+      .order("created_at", { ascending: false });
+    if (error) console.error("fetchSubstituteAssignments error:", error);
+    if (!error && data) setSubstituteAssignments(data);
+    setLoadingSubstitutes(false);
+  };
+
+  const handleApproveSubstitute = async (id: string) => {
+    setApprovingId(id);
+    const row = substituteAssignments.find(sa => sa.id === id);
+    const { error } = await supabase
+      .from("substitute_assignments")
+      .update({ status: "approved" })
+      .eq("id", id);
+    if (!error) {
+      if (row?.substitute_teacher_id) {
+        const className = row.classes?.name ?? "?";
+        const section = row.classes?.section ?? "?";
+        const dayCap = row.day ? row.day[0].toUpperCase() + row.day.slice(1) : "";
+        await supabase.from("governance_notifications").insert({
+          user_id: row.substitute_teacher_id,
+          event_type: "substitute_approved",
+          title: "Substitute Assignment Approved",
+          message: `You're covering ${className}-${section}, ${row.period} (${row.subject}) on ${dayCap}.`,
+          reference_id: id,
+          reference_type: "substitute_assignment",
+          channel: "in_app",
+          is_read: false,
+        });
+      }
+      await fetchSubstituteAssignments();
+    }
+    setApprovingId(null);
+  };
+
+  const handleStartEditSubstitute = (sa: any) => {
+    setEditingSubId(sa.id);
+    setEditSubTeacherId(sa.substitute_teacher_id ?? "");
+  };
+
+  const handleCancelEditSubstitute = () => {
+    setEditingSubId(null);
+    setEditSubTeacherId("");
+  };
+
+  const handleSaveEditSubstitute = async (id: string) => {
+    if (!editSubTeacherId) return;
+    setSavingEditId(id);
+    const { error } = await supabase
+      .from("substitute_assignments")
+      .update({ substitute_teacher_id: editSubTeacherId, status: "pending_review" })
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Couldn't reassign substitute", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Substitute reassigned ✅", description: "Awaiting approval again." });
+      await fetchSubstituteAssignments();
+      setEditingSubId(null);
+      setEditSubTeacherId("");
+    }
+    setSavingEditId(null);
+  };
+
+  const handleDeleteSubstituteAssignment = async (id: string) => {
+    if (!window.confirm("Delete this substitute assignment?")) return;
+    setDeletingSubId(id);
+    const { error } = await supabase
+      .from("substitute_assignments")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      toast({ title: "Couldn't delete assignment", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Assignment deleted" });
+      await fetchSubstituteAssignments();
+    }
+    setDeletingSubId(null);
+  };
+
+  useEffect(() => {
+    if (activeTab === "substitutes" && profile?.school_id) fetchSubstituteAssignments();
+  }, [activeTab, profile?.school_id]);
   const isStudent = profile?.role === "student";
   const isTeacher = profile?.role === "teacher";
   const isHOD = profile?.role === "hod";
@@ -140,6 +242,34 @@ const TimetablePage = () => {
       toast({ title: "Couldn't simulate absence", description: e.message, variant: "destructive" });
     } finally {
       setCheckingAbsence(false);
+    }
+  };
+
+  // Substitute Automation: actually assigns and saves substitutes (not just a preview)
+  const [substituteTeacherId, setSubstituteTeacherId] = useState("");
+  const [substituteDay, setSubstituteDay] = useState("monday");
+  const [assigningSubstitutes, setAssigningSubstitutes] = useState(false);
+  const [substituteResults, setSubstituteResults] = useState<{
+    teacherName: string;
+    day: string;
+    assignments: { className: string; section: string; period: string; subject: string; substituteName: string | null; status: string }[];
+  } | null>(null);
+
+  const handleAssignSubstitutes = async () => {
+    if (!schoolId || !substituteTeacherId) return;
+    setAssigningSubstitutes(true);
+    setSubstituteResults(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("assign-substitutes", {
+        body: { school_id: schoolId, teacher_id: substituteTeacherId, day: substituteDay },
+      });
+      if (error) throw error;
+      setSubstituteResults(data);
+      toast({ title: "Substitutes assigned ✅", description: `${data.assignments.length} class(es) covered for ${data.teacherName}` });
+    } catch (e: any) {
+      toast({ title: "Couldn't assign substitutes", description: e.message, variant: "destructive" });
+    } finally {
+      setAssigningSubstitutes(false);
     }
   };
 
@@ -717,11 +847,8 @@ try {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left panel */}
-          <div className="lg:col-span-1 space-y-4">
-            <Tabs defaultValue="class">
-              <TabsList className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full">
                 <TabsTrigger value="class" className="flex-1 gap-1.5">
                   <BookOpen className="h-4 w-4" />Class
                 </TabsTrigger>
@@ -731,7 +858,14 @@ try {
                 <TabsTrigger value="whatif" className="flex-1 gap-1.5">
                   <Users className="h-4 w-4" />What-If
                 </TabsTrigger>
-              </TabsList>
+                <TabsTrigger value="substitutes" className="flex-1 gap-1.5">
+                  <Users className="h-4 w-4" />Substitutes
+                </TabsTrigger>
+          </TabsList>
+
+          <div className={`grid grid-cols-1 gap-6 ${(activeTab === "whatif" || activeTab === "substitutes") ? "lg:grid-cols-1" : "lg:grid-cols-4"}`}>
+            {/* Left panel */}
+            <div className={(activeTab === "whatif" || activeTab === "substitutes") ? "space-y-4" : "lg:col-span-1 space-y-4"}>
 
               {/* Class upload tab */}
               <TabsContent value="class">
@@ -875,9 +1009,186 @@ try {
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
+              {/* Substitute Automation tab */}
+              <TabsContent value="substitutes">
+                <Card className="border-2 border-rose-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold text-rose-700 flex items-center gap-2">
+                      <Users className="h-4 w-4" />Substitute Automation
+                    </CardTitle>
+                    <CardDescription className="text-xs">Automatically assign and save substitutes for an absent teacher</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Absent Teacher</Label>
+                      <Select value={substituteTeacherId} onValueChange={setSubstituteTeacherId}>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue placeholder="Choose a teacher..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teachers.map(t => (
+                            <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Day</Label>
+                      <Select value={substituteDay} onValueChange={setSubstituteDay}>
+                        <SelectTrigger className="h-9 text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"].map(d => (
+                            <SelectItem key={d} value={d}>{d[0].toUpperCase() + d.slice(1)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      className="w-full bg-rose-600 hover:bg-rose-700"
+                      onClick={async () => { await handleAssignSubstitutes(); await fetchSubstituteAssignments(); }}
+                      disabled={assigningSubstitutes || !substituteTeacherId}
+                    >
+                      {assigningSubstitutes ? "Assigning..." : "Assign Substitutes"}
+                    </Button>
+                    {substituteResults && (
+                      <div className="space-y-2 pt-2 border-t">
+                        {substituteResults.assignments.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">{substituteResults.teacherName} has no classes on {substituteResults.day}.</p>
+                        ) : (
+                          substituteResults.assignments.map((a, i) => (
+                            <div key={i} className={`rounded-lg p-2.5 text-sm border ${a.status === "assigned" ? "bg-emerald-50 border-emerald-200" : "bg-red-50 border-red-200"}`}>
+                              <p className={`font-semibold ${a.status === "assigned" ? "text-emerald-800" : "text-red-800"}`}>
+                                {a.className}-{a.section}, {a.period} ({a.subject})
+                              </p>
+                              <p className={`text-xs mt-1 ${a.status === "assigned" ? "text-emerald-700" : "text-red-700"}`}>
+                                {a.status === "assigned" ? `Covered by ${a.substituteName}` : "No substitute available — needs manual attention"}
+                              </p>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
+                {/* Persistent substitute assignments table - visible to all, approve restricted to principal/admin */}
+                <Card className="border-2 border-rose-100 mt-4">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-sm font-semibold text-rose-700 flex items-center gap-2">
+                        <Users className="h-4 w-4" />Substitute Assignments
+                        <Badge className="bg-rose-100 text-rose-700 ml-1">{substituteAssignments.length}</Badge>
+                      </CardTitle>
+                      <Button variant="ghost" size="icon" onClick={fetchSubstituteAssignments} className="h-7 w-7">
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <CardDescription className="text-xs">
+                      {isPrincipal ? "Review and approve auto-assigned substitutes" : "History of substitute assignments"}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {loadingSubstitutes ? (
+                      <div className="flex items-center justify-center py-8"><LoadingSpinner size="md" /></div>
+                    ) : substituteAssignments.length === 0 ? (
+                      <p className="p-4 text-center text-sm text-slate-400">No substitute assignments yet</p>
+                    ) : (
+                      <div className="divide-y divide-slate-100">
+                        {substituteAssignments.map(sa => (
+                          <div key={sa.id} className="px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-slate-700 truncate">
+                                  {sa.classes?.name ?? "?"}-{sa.classes?.section ?? "?"}, {sa.period} ({sa.subject})
+                                </p>
+                                <p className="text-xs text-slate-400 truncate">
+                                  {sa.original_teacher?.full_name ?? "Unknown"} → {sa.substitute_teacher?.full_name ?? "Unassigned"} · {sa.day}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <Badge
+                                  className={
+                                    sa.status === "approved" ? "bg-emerald-100 text-emerald-700" :
+                                    sa.status === "unresolved" ? "bg-red-100 text-red-700" :
+                                    "bg-amber-100 text-amber-700"
+                                  }
+                                >
+                                  {sa.status}
+                                </Badge>
+                                {isPrincipal && sa.status === "pending_review" && (
+                                  <Button
+                                    size="sm"
+                                    className="h-7 bg-emerald-600 hover:bg-emerald-700 text-xs"
+                                    onClick={() => handleApproveSubstitute(sa.id)}
+                                    disabled={approvingId === sa.id}
+                                  >
+                                    {approvingId === sa.id ? "..." : "Approve"}
+                                  </Button>
+                                )}
+                                {isPrincipal && editingSubId !== sa.id && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => handleStartEditSubstitute(sa)}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 text-blue-600" />
+                                  </Button>
+                                )}
+                                {isPrincipal && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7"
+                                    onClick={() => handleDeleteSubstituteAssignment(sa.id)}
+                                    disabled={deletingSubId === sa.id}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                            {isPrincipal && editingSubId === sa.id && (
+                              <div className="flex items-center gap-2 mt-2 pl-1">
+                                <Select value={editSubTeacherId} onValueChange={setEditSubTeacherId}>
+                                  <SelectTrigger className="h-8 text-xs w-56">
+                                    <SelectValue placeholder="Choose substitute..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {teachers.map(t => (
+                                      <SelectItem key={t.id} value={t.id}>{t.full_name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  size="sm"
+                                  className="h-8 bg-blue-600 hover:bg-blue-700 text-xs"
+                                  onClick={() => handleSaveEditSubstitute(sa.id)}
+                                  disabled={savingEditId === sa.id || !editSubTeacherId}
+                                >
+                                  {savingEditId === sa.id ? "Saving..." : "Save"}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={handleCancelEditSubstitute}
+                                >
+                                  <X className="h-3.5 w-3.5 text-slate-500" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
             {/* Timetables list */}
+            {activeTab !== "whatif" && activeTab !== "substitutes" && (
             <Card className="border-2 border-slate-200">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -892,7 +1203,7 @@ try {
               </CardHeader>
               <CardContent className="p-0">
                 {/* Class timetables */}
-                {classTimetables.length > 0 && (
+                {(activeTab === "class" || activeTab === "substitutes") && classTimetables.length > 0 && (
                   <>
                     <p className="px-4 py-2 text-xs font-semibold text-blue-600 bg-blue-50">CLASS TIMETABLES</p>
                     <div className="divide-y divide-slate-100">
@@ -920,7 +1231,7 @@ try {
                 )}
 
                 {/* Teacher timetables */}
-                {teacherTimetables.length > 0 && (
+                {(activeTab === "teacher" || activeTab === "substitutes") && teacherTimetables.length > 0 && (
                   <>
                     <p className="px-4 py-2 text-xs font-semibold text-green-600 bg-green-50">TEACHER TIMETABLES</p>
                     <div className="divide-y divide-slate-100">
@@ -952,9 +1263,11 @@ try {
                 )}
               </CardContent>
             </Card>
+            )}
           </div>
 
           {/* Viewer */}
+          {activeTab !== "whatif" && activeTab !== "substitutes" && (
           <div className="lg:col-span-3">
             <Card className="border-2 border-slate-200 min-h-[500px]">
               <CardHeader>
@@ -979,7 +1292,9 @@ try {
               </CardContent>
             </Card>
           </div>
+          )}
         </div>
+      </Tabs>
       </div>
     </AppLayout>
   );
