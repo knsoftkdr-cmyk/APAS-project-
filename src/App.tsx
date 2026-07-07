@@ -77,6 +77,7 @@ const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
+import AttendanceMarking from "@/pages/AttendanceMarking";
 const AcademicCalendar = lazy(() => import("./pages/AcademicCalendar"));
 
 // Loading fallback component
@@ -186,6 +187,7 @@ useEffect(() => {
                       <Route path="/hall-tickets" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "student", "parent"]}><HallTicketEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/invigilation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><InvigilationManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/attendance" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "principal", "admin", "student", "parent"]}><AttendanceMarking /></RoleGuard></ProtectedRoute>} />
                       <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />

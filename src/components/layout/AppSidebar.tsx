@@ -110,6 +110,7 @@ const navItems: Array<{
   { title: "Invigilation", icon: UserCheck, path: "/invigilation", roles: ["admin", "principal", "school_admin", "teacher"], module: "Invigilation" },
   { title: "Houses", icon: Trophy, path: "/houses", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"], module: "Houses" },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
+  { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher", "principal", "admin", "student", "parent"], module: "Attendance" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
@@ -209,8 +210,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       // Students/parents use hardcoded allowed modules (no DB permission rows needed)
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets"];
-        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Hall Tickets"];
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance"];
+        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Hall Tickets", "Attendance"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);
       }
