@@ -202,6 +202,9 @@ export default function ExecutiveReporting() {
               <p>Conducted: <span className="font-semibold">{data.assessment.conducted}</span></p>
               <p>Avg Score: <span className="font-semibold">{na(data.assessment.average_score)}</span></p>
               <p className="col-span-2">Pass Rate: <span className="font-semibold">{na(data.assessment.pass_rate)}</span></p>
+              <p className="col-span-2 text-xs text-muted-foreground">
+                {data.assessment.from_academic_tests} from Academic Tests · {data.assessment.from_semester_engine} from Semester Engine
+              </p>
             </CardContent>
           </Card>
         </div>

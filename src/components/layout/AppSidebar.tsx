@@ -1,4 +1,4 @@
-import {
+﻿import {
   CalendarDays,
   TrendingUp,
   UserCheck,
@@ -89,7 +89,8 @@ const navItems: Array<{
   { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Billing" },
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
   { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
-  { title: "Executive Reporting", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
+{ title: "Analytics", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
+
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing-dashboard", roles: ["knsoft_admin"] },
   { title: "Security", icon: Lock, path: "/security-dashboard", roles: ["knsoft_admin"] },

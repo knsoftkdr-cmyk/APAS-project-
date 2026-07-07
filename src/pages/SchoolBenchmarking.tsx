@@ -69,7 +69,7 @@ export function SchoolBenchmarkingContent() {
   const [targetDrafts, setTargetDrafts] = useState<Record<string, string>>({});
 
   const { data: raw, isLoading } = useQuery({
-    queryKey: ["school-benchmark-raw", schoolId],
+    queryKey: ["school-benchmark-raw-v2", schoolId],
     queryFn: async () => {
       if (!schoolId) return null;
 
@@ -78,7 +78,13 @@ export function SchoolBenchmarkingContent() {
         .select("id, profile_id, class, section")
         .eq("school_id", schoolId);
       const studentIds = (students || []).map((s: any) => s.id);
-      const profileIds = (students || []).map((s: any) => s.profile_id).filter(Boolean);
+
+      const { data: studentProfiles } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("school_id", schoolId)
+        .eq("role", "student");
+      const profileIds = (studentProfiles || []).map((p: any) => p.id);
 
       const { data: teachers } = await supabase
         .from("profiles")
@@ -87,8 +93,8 @@ export function SchoolBenchmarkingContent() {
         .eq("role", "teacher");
       const teacherIds = (teachers || []).map((t: any) => t.id);
 
-      const { data: assignments } = teacherIds.length
-        ? await supabase.from("homework_assignments").select("id, assigned_by, class_level, section").in("assigned_by", teacherIds)
+        const { data: assignments } = teacherIds.length
+        ? await supabase.from("homework_assignments").select("id, assigned_by, class_level, section, created_at").in("assigned_by", teacherIds)
         : { data: [] as any[] };
       const assignmentIds = (assignments || []).map((a: any) => a.id);
 
@@ -218,14 +224,25 @@ export function SchoolBenchmarkingContent() {
       });
   }, [raw, teacherFilter]);
 
-  const trend = useMemo(() => {
+const trend = useMemo(() => {
     const thisMonthKey = format(new Date(), "yyyy-MM");
     const lastMonthKey = format(subMonths(new Date(), 1), "yyyy-MM");
 
     const hwFor = (key: string) => {
-      const subs = (raw?.submissions || []).filter((s: any) => s.submitted_at && format(new Date(s.submitted_at), "yyyy-MM") === key);
-      return pct(subs.length, (raw?.assignments || []).length || 1);
+      // Only assignments created in that month
+      const monthAssignments = (raw?.assignments || []).filter(
+        (a: any) => a.created_at && format(new Date(a.created_at), "yyyy-MM") === key
+      );
+      const monthAssignmentIds = new Set(monthAssignments.map((a: any) => a.id));
+
+      // Submissions for those specific assignments (regardless of when submitted)
+      const subs = (raw?.submissions || []).filter(
+        (s: any) => monthAssignmentIds.has(s.assignment_id) && s.submitted_at
+      );
+
+      return pct(subs.length, monthAssignments.length);
     };
+
     const assessFor = (key: string) => {
       const t = (raw?.tests || []).filter((x: any) => x.completed_at && format(new Date(x.completed_at), "yyyy-MM") === key);
       return pct(t.reduce((s: number, x: any) => s + x.score, 0), t.reduce((s: number, x: any) => s + x.total_questions, 0));
@@ -361,22 +378,7 @@ export function SchoolBenchmarkingContent() {
           </Select>
         </div>
 
-        <Card className="border-0 shadow-elevated bg-gradient-to-br from-[hsl(210,29%,20%)] to-[hsl(217,60%,32%)] text-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 flex-1">
-                <ScoreItem label="Academic" value={scorecard.academic} />
-                <ScoreItem label="Homework" value={scorecard.homework} />
-                <ScoreItem label="Risk Management" value={scorecard.risk} />
-                <ScoreItem label="Intervention Success" value={scorecard.teacherPerf} />
-              </div>
-              <div className="text-center shrink-0 pl-6 border-l border-white/20">
-                <p className="text-4xl font-bold">{scorecard.overall}</p>
-                <p className="text-xs text-blue-200">Overall Score</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        
 
         {insight && (
           <Card className="border border-blue-200/60 bg-blue-50/40">

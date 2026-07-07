@@ -57,8 +57,8 @@ serve(async (req) => {
       : null;
 
     // ── Homework summary ──────────────────────────────────────────────────────
-    const { data: assignments } = await supabase
-      .from("homework_assignments").select("id, class_level, section").eq("school_id", school_id);
+const { data: assignments } = await supabase
+      .from("homework_assignments").select("id, class_level, section, assigned_student_count").eq("school_id", school_id);
     const assignmentIds = (assignments || []).map((a: any) => a.id);
     const { count: submittedCount } = assignmentIds.length
       ? await supabase.from("homework_submissions").select("id", { count: "exact", head: true }).in("assignment_id", assignmentIds).not("submitted_at", "is", null)
@@ -66,12 +66,64 @@ serve(async (req) => {
     const { count: pendingEvalCount } = assignmentIds.length
       ? await supabase.from("homework_submissions").select("id", { count: "exact", head: true }).in("assignment_id", assignmentIds).is("teacher_score", null).not("submitted_at", "is", null)
       : { count: 0 };
-    const expectedSubmissions = (assignments || []).length * Math.max((students || []).length, 1);
+
+    // Expected submissions = sum of how many students each assignment actually targeted.
+    // Most rows have assigned_student_count populated; for older rows missing it,
+    // fall back to counting real students in that class/section from `students`.
+    const assignmentsMissingCount = (assignments || []).filter(
+      (a: any) => !a.assigned_student_count
+    );
+    let fallbackCountByAssignment = new Map<string, number>();
+    if (assignmentsMissingCount.length > 0) {
+      const classSectionPairs = [...new Set(
+        assignmentsMissingCount.map((a: any) => `${a.class_level}|||${a.section}`)
+      )];
+      for (const pair of classSectionPairs) {
+        const [classLevel, section] = pair.split("|||");
+        const classNumber = classLevel.replace("Class ", "").trim();
+        const { count } = await supabase
+          .from("students")
+          .select("id", { count: "exact", head: true })
+          .eq("school_id", school_id)
+          .eq("class", classNumber)
+          .eq("section", section);
+        assignmentsMissingCount
+          .filter((a: any) => `${a.class_level}|||${a.section}` === pair)
+          .forEach((a: any) => fallbackCountByAssignment.set(a.id, count || 0));
+      }
+    }
+
+    const expectedSubmissions = (assignments || []).reduce((sum: number, a: any) => {
+      const count = a.assigned_student_count || fallbackCountByAssignment.get(a.id) || 0;
+      return sum + count;
+    }, 0);
     const homeworkCompletionPct = expectedSubmissions > 0 ? Math.round(((submittedCount || 0) / expectedSubmissions) * 100) : null;
 
-    // ── Assessment summary (from academic_tests — auto-evaluated, no pending concept) ──
-    const passCount = (tests || []).filter((t: any) => t.total_questions > 0 && (t.score / t.total_questions) >= 0.4).length;
-    const passRate = (tests || []).length ? Math.round((passCount / (tests || []).length) * 100) : null;
+    // ── Assessment summary: combine academic_tests + Semester Engine's semester_marks ──
+    const { data: semMarks } = await supabase
+      .from("semester_marks")
+      .select("marks_obtained, max_marks")
+      .eq("school_id", school_id);
+
+    // Build one combined list of percentage scores from both sources
+    const testPercentages = (tests || [])
+      .map((t: any) => t.total_questions > 0 ? (t.score / t.total_questions) * 100 : null)
+      .filter((p: number | null): p is number => p !== null);
+    const semMarkPercentages = (semMarks || [])
+      .map((m: any) => m.marks_obtained !== null && m.max_marks > 0 ? (m.marks_obtained / m.max_marks) * 100 : null)
+      .filter((p: number | null): p is number => p !== null);
+
+    const combinedPercentages = [...testPercentages, ...semMarkPercentages];
+    const assessmentConducted = combinedPercentages.length;
+    const assessmentAvgScore = assessmentConducted > 0
+      ? Math.round(combinedPercentages.reduce((a, b) => a + b, 0) / assessmentConducted)
+      : null;
+    // Using the same 40% pass threshold across both sources for consistency —
+    // note this differs from Semester Engine's own GPA pass cutoff (GPA >= 5,
+    // i.e. 50%), since GPA pass/fail is a separate business rule tied to
+    // report cards, not a general "did they pass this assessment" signal.
+    const assessmentPassCount = combinedPercentages.filter((p) => p >= 40).length;
+    const assessmentPassRate = assessmentConducted > 0 ? Math.round((assessmentPassCount / assessmentConducted) * 100) : null;
 
     // ── Behaviour summary (from teacher_notes, school-wide) ──────────────────
     const { data: teacherProfiles } = await supabase.from("profiles").select("id").eq("role", "teacher").eq("school_id", school_id);
@@ -195,7 +247,13 @@ serve(async (req) => {
       behaviour: { positive: positiveCount, concern: concernCount, incident: incidentCount, resolved: resolvedCount },
       interventions: { created: ivCreated, completed: ivCompleted, active: ivActive, success_rate: ivSuccessRate },
       homework: { assigned: (assignments || []).length, submitted: submittedCount || 0, completion_rate: homeworkCompletionPct },
-      assessment: { conducted: (tests || []).length, average_score: overallAvgScore, pass_rate: passRate },
+      assessment: {
+        conducted: assessmentConducted,
+        average_score: assessmentAvgScore,
+        pass_rate: assessmentPassRate,
+        from_academic_tests: testPercentages.length,
+        from_semester_engine: semMarkPercentages.length,
+      },
       grade_wise: gradeWise,
       health_score: healthScore,
       health_components: components,
