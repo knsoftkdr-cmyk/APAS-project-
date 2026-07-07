@@ -224,37 +224,45 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
 function ProfileHeader({ student }: { student: Awaited<ReturnType<typeof getStudentOverview>>["core"] }) {
   return (
     <Card className="overflow-hidden border-0 shadow-md">
-      <div className="h-16 bg-gradient-to-r from-indigo-500 via-blue-500 to-cyan-400" />
-      <CardContent className="pt-0 pb-5">
-        <div className="flex items-center gap-4 -mt-8">
-          <Avatar className="h-20 w-20 ring-4 ring-white shadow-lg">
+      <div className="relative bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 px-6 py-6">
+        {/* decorative accents, matching the workspace banner */}
+        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute right-12 bottom-5 h-1.5 w-1.5 rounded-full bg-white/40" />
+
+        <div className="relative flex items-center gap-4">
+          <Avatar className="h-14 w-14 ring-2 ring-white/40 shrink-0">
             <AvatarImage src={undefined} alt={student.full_name ?? "Student"} />
-            <AvatarFallback className="text-xl bg-indigo-100 text-indigo-700 font-semibold">
+            <AvatarFallback className="text-lg bg-white/15 text-white font-semibold backdrop-blur">
               {(student.full_name ?? "S").slice(0, 1)}
             </AvatarFallback>
           </Avatar>
-          <div className="pb-1">
-            <h2 className="text-xl font-bold text-slate-800">{student.full_name ?? "Unnamed Student"}</h2>
-            <div className="flex flex-wrap gap-1.5 mt-1.5">
+
+          <div>
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/75">
+              <GraduationCap className="h-3.5 w-3.5" />
+              Student Profile
+            </div>
+            <h2 className="mt-1 text-2xl font-bold text-white">{student.full_name ?? "Unnamed Student"}</h2>
+            <div className="flex flex-wrap gap-1.5 mt-2">
               {student.class && (
-                <Badge variant="secondary" className="bg-indigo-50 text-indigo-700 hover:bg-indigo-50 font-normal">
+                <Badge className="border-0 bg-white/15 text-white font-normal backdrop-blur hover:bg-white/15">
                   Class {student.class}
                 </Badge>
               )}
               {student.section && (
-                <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-50 font-normal">
+                <Badge className="border-0 bg-white/15 text-white font-normal backdrop-blur hover:bg-white/15">
                   Section {student.section}
                 </Badge>
               )}
               {student.roll_number && (
-                <Badge variant="secondary" className="bg-cyan-50 text-cyan-700 hover:bg-cyan-50 font-normal">
+                <Badge className="border-0 bg-white/15 text-white font-normal backdrop-blur hover:bg-white/15">
                   Roll No. {student.roll_number}
                 </Badge>
               )}
             </div>
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }
@@ -551,7 +559,7 @@ function EditableInfoCard({
           <span className={isFeature ? "text-lg font-bold text-slate-800" : ""}>{title}</span>
         </CardTitle>
         {canEdit && !isEditing && (
-          <Button variant="ghost" size="sm" onClick={startEditing}>
+          <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={startEditing}>
             Edit
           </Button>
         )}
@@ -700,6 +708,7 @@ function ParentCard({
   });
 
   const [formValues, setFormValues] = useState<Record<string, any>>(buildInitial);
+  const [validationError, setValidationError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
@@ -738,7 +747,16 @@ function ParentCard({
     },
   });
 
-  const handleSave = () => {
+  const validateAndSave = () => {
+    const missing: string[] = [];
+    if (!formValues.full_name?.trim()) missing.push("Full Name");
+    if (!formValues.phone?.trim()) missing.push("Phone");
+
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+    setValidationError(null);
     mutation.mutate({
       ...(parent?.id ? { id: parent.id } : {}),
       school_id: schoolId,
@@ -753,6 +771,7 @@ function ParentCard({
       return;
     }
     setFormValues(buildInitial());
+    setValidationError(null);
     setIsEditing(false);
     mutation.reset();
   };
@@ -771,7 +790,7 @@ function ParentCard({
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={() => setIsEditing(true)}>
               Edit
             </Button>
           )}
@@ -817,7 +836,10 @@ function ParentCard({
             </div>
             {PARENT_FIELD_DEFS.map((f) => (
               <div key={f.key as string} className="space-y-1">
-                <label className="text-xs text-muted-foreground">{f.label}</label>
+                <label className="text-xs text-muted-foreground">
+                  {f.label}
+                  {(f.key === "full_name" || f.key === "phone") && <span className="text-destructive"> *</span>}
+                </label>
                 <Input
                   type={f.type ?? "text"}
                   value={formValues[f.key as string] ?? ""}
@@ -844,13 +866,16 @@ function ParentCard({
               </label>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
+              <Button size="sm" onClick={validateAndSave} disabled={mutation.isPending}>
                 {mutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancel} disabled={mutation.isPending}>
                 Cancel
               </Button>
             </div>
+            {validationError && (
+              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
+            )}
             {mutation.isError && (
               <p className="text-xs text-destructive pt-1">
                 {mutation.error instanceof Error ? mutation.error.message : "Failed to save"}
@@ -978,6 +1003,7 @@ function MedicalTab({
   });
 
   const [formValues, setFormValues] = useState<any>(buildInitial);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: (payload: Partial<MedicalRecord> & { school_id: string; student_id: string }) =>
@@ -1001,7 +1027,16 @@ function MedicalTab({
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const validateAndSave = () => {
+    const missing: string[] = [];
+    if (!formValues.blood_group?.trim()) missing.push("Blood Group");
+    if (!formValues.emergency_medical_notes?.trim()) missing.push("Emergency Medical Notes");
+
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+    setValidationError(null);
     mutation.mutate({
       school_id: schoolId,
       student_id: studentId,
@@ -1011,6 +1046,7 @@ function MedicalTab({
 
   const handleCancel = () => {
     setIsEditing(false);
+    setValidationError(null);
     mutation.reset();
   };
 
@@ -1027,7 +1063,7 @@ function MedicalTab({
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" onClick={startEditing}>
+            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={startEditing}>
               {record ? "Edit" : "Add Medical Info"}
             </Button>
           )}
@@ -1059,7 +1095,7 @@ function MedicalTab({
         ) : isEditing ? (
           <>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Blood Group</label>
+              <label className="text-xs text-muted-foreground">Blood Group <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.blood_group}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, blood_group: e.target.value }))}
@@ -1092,23 +1128,24 @@ function MedicalTab({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Emergency Medical Notes</label>
+              <label className="text-xs text-muted-foreground">Emergency Medical Notes <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.emergency_medical_notes}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, emergency_medical_notes: e.target.value }))}
               />
             </div>
 
-            <div className="flex gap-2 pt-2"></div>
-
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
+              <Button size="sm" onClick={validateAndSave} disabled={mutation.isPending}>
                 {mutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancel} disabled={mutation.isPending}>
                 Cancel
               </Button>
             </div>
+            {validationError && (
+              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
+            )}
             {mutation.isError && (
               <p className="text-xs text-destructive pt-1">
                 {mutation.error instanceof Error ? mutation.error.message : "Failed to save"}
@@ -1217,6 +1254,7 @@ function TransportTab({
   });
 
   const [formValues, setFormValues] = useState<any>(buildInitial);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const mutation = useMutation({
     mutationFn: (payload: Partial<TransportAssignment> & { school_id: string; student_id: string }) =>
@@ -1241,7 +1279,18 @@ function TransportTab({
     setIsEditing(true);
   };
 
-  const handleSave = () => {
+  const validateAndSave = () => {
+    const missing: string[] = [];
+    if (!formValues.bus_number?.trim()) missing.push("Bus Number");
+    if (!formValues.route_name?.trim()) missing.push("Route Name");
+    if (!formValues.driver_name?.trim()) missing.push("Driver Name");
+    if (!formValues.driver_phone?.trim()) missing.push("Driver Phone");
+
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+    setValidationError(null);
     mutation.mutate({
       school_id: schoolId,
       student_id: studentId,
@@ -1252,6 +1301,7 @@ function TransportTab({
 
   const handleCancel = () => {
     setIsEditing(false);
+    setValidationError(null);
     mutation.reset();
   };
 
@@ -1268,7 +1318,7 @@ function TransportTab({
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" onClick={startEditing}>
+            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={startEditing}>
               {record ? "Edit" : "Add Transport Info"}
             </Button>
           )}
@@ -1301,14 +1351,14 @@ function TransportTab({
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Bus Number</label>
+                <label className="text-xs text-muted-foreground">Bus Number <span className="text-destructive">*</span></label>
                 <Input
                   value={formValues.bus_number}
                   onChange={(e) => setFormValues((p: any) => ({ ...p, bus_number: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Route Name</label>
+                <label className="text-xs text-muted-foreground">Route Name <span className="text-destructive">*</span></label>
                 <Input
                   value={formValues.route_name}
                   onChange={(e) => setFormValues((p: any) => ({ ...p, route_name: e.target.value }))}
@@ -1345,14 +1395,14 @@ function TransportTab({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Driver Name</label>
+                <label className="text-xs text-muted-foreground">Driver Name <span className="text-destructive">*</span></label>
                 <Input
                   value={formValues.driver_name}
                   onChange={(e) => setFormValues((p: any) => ({ ...p, driver_name: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Driver Phone</label>
+                <label className="text-xs text-muted-foreground">Driver Phone <span className="text-destructive">*</span></label>
                 <Input
                   type="tel"
                   value={formValues.driver_phone}
@@ -1401,13 +1451,16 @@ function TransportTab({
             </div>
 
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={handleSave} disabled={mutation.isPending}>
+              <Button size="sm" onClick={validateAndSave} disabled={mutation.isPending}>
                 {mutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancel} disabled={mutation.isPending}>
                 Cancel
               </Button>
             </div>
+            {validationError && (
+              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
+            )}
             {mutation.isError && (
               <p className="text-xs text-destructive pt-1">
                 {mutation.error instanceof Error ? mutation.error.message : "Failed to save"}
@@ -1551,6 +1604,7 @@ function BehaviourRecordCard({
   });
 
   const [formValues, setFormValues] = useState<any>(buildInitial);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -1584,12 +1638,27 @@ function BehaviourRecordCard({
     },
   });
 
+  const validateAndSave = () => {
+    const missing: string[] = [];
+    if (!formValues.title?.trim()) missing.push("Title");
+    if (formValues.points === "" || formValues.points === null || formValues.points === undefined) missing.push("Points");
+    if (!formValues.recorded_date) missing.push("Date");
+
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+    setValidationError(null);
+    saveMutation.mutate();
+  };
+
   const handleCancel = () => {
     if (isNew && onDoneAdding) {
       onDoneAdding();
       return;
     }
     setFormValues(buildInitial());
+    setValidationError(null);
     setIsEditing(false);
     saveMutation.reset();
   };
@@ -1610,7 +1679,7 @@ function BehaviourRecordCard({
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={() => setIsEditing(true)}>
               Edit
             </Button>
           )}
@@ -1654,7 +1723,7 @@ function BehaviourRecordCard({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Title</label>
+              <label className="text-xs text-muted-foreground">Title <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.title}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, title: e.target.value }))}
@@ -1669,7 +1738,7 @@ function BehaviourRecordCard({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Points</label>
+                <label className="text-xs text-muted-foreground">Points <span className="text-destructive">*</span></label>
                 <Input
                   type="number"
                   value={formValues.points}
@@ -1677,7 +1746,7 @@ function BehaviourRecordCard({
                 />
               </div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Date</label>
+                <label className="text-xs text-muted-foreground">Date <span className="text-destructive">*</span></label>
                 <Input
                   type="date"
                   value={formValues.recorded_date}
@@ -1693,13 +1762,16 @@ function BehaviourRecordCard({
               />
             </div>
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              <Button size="sm" onClick={validateAndSave} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
                 Cancel
               </Button>
             </div>
+            {validationError && (
+              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
+            )}
             {saveMutation.isError && (
               <p className="text-xs text-destructive pt-1">
                 {saveMutation.error instanceof Error ? saveMutation.error.message : "Failed to save"}
@@ -1824,17 +1896,23 @@ function LearningSupportCard({
   });
 
   const [formValues, setFormValues] = useState<any>(buildInitial);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: () => {
+      const payload = {
+        ...formValues,
+        start_date: formValues.start_date || null,
+        review_date: formValues.review_date || null,
+      };
       if (isNew) {
         return createLearningSupportRecord({
           school_id: schoolId!,
           student_id: studentId,
-          ...formValues,
+          ...payload,
         });
       }
-      return updateLearningSupportRecord(record!.id, formValues);
+      return updateLearningSupportRecord(record!.id, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["learning-support-records", studentId] });
@@ -1851,12 +1929,29 @@ function LearningSupportCard({
     },
   });
 
+  const validateAndSave = () => {
+    const missing: string[] = [];
+    if (!formValues.support_type?.trim()) missing.push("Support Type");
+    if (!formValues.diagnosis?.trim()) missing.push("Diagnosis");
+    if (!formValues.goals?.trim()) missing.push("Goals");
+    if (!formValues.accommodations?.trim()) missing.push("Accommodations");
+    if (!formValues.start_date) missing.push("Start Date");
+
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+    setValidationError(null);
+    saveMutation.mutate();
+  };
+
   const handleCancel = () => {
     if (isNew && onDoneAdding) {
       onDoneAdding();
       return;
     }
     setFormValues(buildInitial());
+    setValidationError(null);
     setIsEditing(false);
     saveMutation.reset();
   };
@@ -1877,7 +1972,7 @@ function LearningSupportCard({
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={() => setIsEditing(true)}>
               Edit
             </Button>
           )}
@@ -1909,7 +2004,7 @@ function LearningSupportCard({
         ) : isEditing ? (
           <>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Support Type</label>
+              <label className="text-xs text-muted-foreground">Support Type <span className="text-destructive">*</span></label>
               <select
                 className="w-full rounded-md border px-3 py-2 text-sm bg-background"
                 value={formValues.support_type}
@@ -1924,21 +2019,21 @@ function LearningSupportCard({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Diagnosis</label>
+              <label className="text-xs text-muted-foreground">Diagnosis <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.diagnosis}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, diagnosis: e.target.value }))}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Goals</label>
+              <label className="text-xs text-muted-foreground">Goals <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.goals}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, goals: e.target.value }))}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Accommodations</label>
+              <label className="text-xs text-muted-foreground">Accommodations <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.accommodations}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, accommodations: e.target.value }))}
@@ -1946,7 +2041,7 @@ function LearningSupportCard({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Start Date</label>
+                <label className="text-xs text-muted-foreground">Start Date <span className="text-destructive">*</span></label>
                 <Input
                   type="date"
                   value={formValues.start_date}
@@ -1975,13 +2070,16 @@ function LearningSupportCard({
               </select>
             </div>
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              <Button size="sm" onClick={validateAndSave} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
                 Cancel
               </Button>
             </div>
+            {validationError && (
+              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
+            )}
             {saveMutation.isError && (
               <p className="text-xs text-destructive pt-1">
                 {saveMutation.error instanceof Error ? saveMutation.error.message : "Failed to save"}
@@ -2148,6 +2246,7 @@ function EmergencyContactCard({
   });
 
   const [formValues, setFormValues] = useState<any>(buildInitial);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -2188,12 +2287,26 @@ function EmergencyContactCard({
     },
   });
 
+  const validateAndSave = () => {
+    const missing: string[] = [];
+    if (!formValues.full_name?.trim()) missing.push("Name");
+    if (!formValues.phone?.trim()) missing.push("Phone Number");
+
+    if (missing.length > 0) {
+      setValidationError(`Please fill in: ${missing.join(", ")}`);
+      return;
+    }
+    setValidationError(null);
+    saveMutation.mutate();
+  };
+
   const handleCancel = () => {
     if (isNew && onDoneAdding) {
       onDoneAdding();
       return;
     }
     setFormValues(buildInitial());
+    setValidationError(null);
     setIsEditing(false);
     saveMutation.reset();
   };
@@ -2212,7 +2325,7 @@ function EmergencyContactCard({
         </CardTitle>
         <div className="flex gap-1">
           {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
+            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={() => setIsEditing(true)}>
               Edit
             </Button>
           )}
@@ -2257,14 +2370,14 @@ function EmergencyContactCard({
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Name</label>
+              <label className="text-xs text-muted-foreground">Name <span className="text-destructive">*</span></label>
               <Input
                 value={formValues.full_name}
                 onChange={(e) => setFormValues((p: any) => ({ ...p, full_name: e.target.value }))}
               />
             </div>
             <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Phone Number</label>
+              <label className="text-xs text-muted-foreground">Phone Number <span className="text-destructive">*</span></label>
               <Input
                 type="tel"
                 value={formValues.phone}
@@ -2272,13 +2385,16 @@ function EmergencyContactCard({
               />
             </div>
             <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              <Button size="sm" onClick={validateAndSave} disabled={saveMutation.isPending}>
                 {saveMutation.isPending ? "Saving..." : "Save"}
               </Button>
               <Button size="sm" variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
                 Cancel
               </Button>
             </div>
+            {validationError && (
+              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
+            )}
             {saveMutation.isError && (
               <p className="text-xs text-destructive pt-1">
                 {saveMutation.error instanceof Error ? saveMutation.error.message : "Failed to save"}
@@ -2377,6 +2493,7 @@ function DocumentsTab({
             </div>
             <Button
               size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700"
               onClick={() => uploadMutation.mutate()}
               disabled={!file || uploadMutation.isPending}
             >

@@ -31,7 +31,8 @@
   Lock,
   CreditCard,
   UserCircle,
-  Sparkles
+  Sparkles,
+  Compass
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,6 +50,7 @@ const navItems: Array<{
   roles?: string[];
   studentTitle?: string;
   tourId?: string;
+  subItem?: { title: string; path: string; icon: any };
 }> = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
 
@@ -78,7 +80,7 @@ const navItems: Array<{
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-gamification", module: "Gamification" },
   { title: "Leaderboard", icon: Trophy, path: "/leaderboard", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], module: "Leaderboard" },
   { title: "Predictions", icon: Brain, path: "/predictions", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-predictions", module: "Risk Prediction" },
-  { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-ai-tutor", module: "AI Tutor" },
+  { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-ai-tutor", module: "AI Tutor", subItem: { title: "AI Career Coach", path: "/ai-tutor?mode=career", icon: Compass } },
   { title: "AI Knowledge Hub", icon: Brain, path: "/ai-knowledge", roles: ["knsoft_admin"] },
   { title: "School Intelligence", icon: LineChart, path: "/school-analytics", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "School Intelligence" },
   { title: "Automation", icon: Zap, path: "/automation", roles: ["knsoft_admin"] },
@@ -251,26 +253,45 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const isSubActive =
+              item.subItem &&
+              location.pathname === "/ai-tutor" &&
+              new URLSearchParams(location.search).get("mode") === "career";
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                data-tour-id={item.tourId}
-                className={cn(
-                  "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1 hover:shadow-sm"
+              <div key={item.path}>
+                <NavLink
+                  to={item.path}
+                  data-tour-id={item.tourId}
+                  className={cn(
+                    "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                    isActive && !isSubActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
+                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1 hover:shadow-sm"
+                  )}
+                >
+                  {isActive && !isSubActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full animate-[scale-in_0.2s_ease-out]" />
+                  )}
+                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
+                  {!collapsed && (
+                    <span className="transition-all duration-200">{getItemLabel(item)}</span>
+                  )}
+                </NavLink>
+                {item.subItem && !collapsed && isActive && (
+                  <NavLink
+                    to={item.subItem.path}
+                    className={cn(
+                      "group relative flex items-center gap-2 rounded-button py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                      isSubActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
+                    )}
+                  >
+                    <item.subItem.icon className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-300", isSubActive ? "scale-110" : "group-hover:scale-110")} />
+                    <span>{item.subItem.title}</span>
+                  </NavLink>
                 )}
-              >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full animate-[scale-in_0.2s_ease-out]" />
-                )}
-                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
-                {!collapsed && (
-                  <span className="transition-all duration-200">{getItemLabel(item)}</span>
-                )}
-              </NavLink>
+              </div>
             );
           })}
         </nav>
@@ -329,24 +350,44 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
+            const isSubActive =
+              item.subItem &&
+              location.pathname === "/ai-tutor" &&
+              new URLSearchParams(location.search).get("mode") === "career";
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onMobileClose}
-                className={cn(
-                  "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
-                  isActive
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
-                    : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
+              <div key={item.path}>
+                <NavLink
+                  to={item.path}
+                  onClick={onMobileClose}
+                  className={cn(
+                    "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                    isActive && !isSubActive
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
+                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
+                  )}
+                >
+                  {isActive && !isSubActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full" />
+                  )}
+                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
+                  <span>{getItemLabel(item)}</span>
+                </NavLink>
+                {item.subItem && isActive && (
+                  <NavLink
+                    to={item.subItem.path}
+                    onClick={onMobileClose}
+                    className={cn(
+                      "group relative flex items-center gap-2 rounded-button py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                      isSubActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
+                    )}
+                  >
+                    <item.subItem.icon className="h-3.5 w-3.5 shrink-0" />
+                    <span>{item.subItem.title}</span>
+                  </NavLink>
                 )}
-              >
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full" />
-                )}
-                <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
-                <span>{getItemLabel(item)}</span>
-              </NavLink>
+              </div>
             );
           })}
         </nav>
