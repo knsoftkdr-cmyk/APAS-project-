@@ -1,4 +1,4 @@
-﻿import {
+import {
   CalendarDays,
   TrendingUp,
   UserCheck,
@@ -33,7 +33,8 @@
   UserCircle,
   Sparkles,
   Compass,
-  Award
+  Award,
+  CalendarCheck
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,7 +42,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
-// Add this import at the top with other imports
 import apasLogo from "@/assets/APAS-logo.png";
 
 const navItems: Array<{
@@ -51,13 +51,11 @@ const navItems: Array<{
   roles?: string[];
   studentTitle?: string;
   tourId?: string;
+  module?: string;
   subItem?: { title: string; path: string; icon: any };
 }> = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
-
-{ title: "Dashboard", icon: LayoutDashboard, path: "/teacher-workspace", roles: ["teacher"], tourId: "nav-home", module: "Home" },
-
-  
+  { title: "Dashboard", icon: LayoutDashboard, path: "/teacher-workspace", roles: ["teacher"], tourId: "nav-home", module: "Home" },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
   { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
@@ -69,11 +67,12 @@ const navItems: Array<{
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
-
-{ title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"] },
-{ title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
-{ title: "Communication", icon: MessageSquare, path: "/teacher-communication", roles: ["teacher"]},
-{ title: "Professional Development", icon: Award, path: "/teacher-professional-development", roles: ["teacher"]},
+  { title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"] },
+  { title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
+  { title: "Communication", icon: MessageSquare, path: "/teacher-communication", roles: ["teacher"] },
+  { title: "Professional Development", icon: Award, path: "/teacher-professional-development", roles: ["teacher"] },
+  { title: "Appointments", icon: CalendarCheck, path: "/teacher/appointments", roles: ["teacher"] },
+  { title: "Appointments", icon: CalendarCheck, path: "/appointments", roles: ["parent", "admin", "principal", "school_admin", "hod"], module: "Appointments" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Alerts" },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Admin Panel" },
@@ -89,10 +88,8 @@ const navItems: Array<{
   { title: "Security Center", icon: Lock, path: "/security", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Security Center" },
   { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Billing" },
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
-  
   { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
-{ title: "Executive Reporting", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
-
+  { title: "Executive Reporting", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing-dashboard", roles: ["knsoft_admin"] },
   { title: "Security", icon: Lock, path: "/security-dashboard", roles: ["knsoft_admin"] },
@@ -118,9 +115,7 @@ const navItems: Array<{
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
-// Bottom nav items for mobile (max 5) — built dynamically based on role
 const getMobileNavItems = (role?: string) => {
-
   if (role === "student") {
     return [
       { title: "Home", icon: LineChart, path: "/student-dashboard" },
@@ -129,7 +124,6 @@ const getMobileNavItems = (role?: string) => {
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   if (role === "teacher") {
     return [
       { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
@@ -138,7 +132,6 @@ const getMobileNavItems = (role?: string) => {
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   if (role === "admin" || role === "principal") {
     return [
       { title: "Home", icon: LayoutDashboard, path: "/dashboard" },
@@ -147,7 +140,6 @@ const getMobileNavItems = (role?: string) => {
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   if (role === "hod") {
     return [
       { title: "Home", icon: UserCheck, path: "/hod-dashboard" },
@@ -155,21 +147,18 @@ const getMobileNavItems = (role?: string) => {
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   if (role === "school_admin") {
     return [
       { title: "School Admin", icon: Shield, path: "/super-admin" },
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   if (role === "parent") {
     return [
       { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard" },
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   if (role === "knsoft_admin") {
     return [
       { title: "Platform", icon: Shield, path: "/knsoft-admin" },
@@ -178,7 +167,6 @@ const getMobileNavItems = (role?: string) => {
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
-
   return [];
 };
 
@@ -199,9 +187,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
     return isStudent && item.studentTitle ? item.studentTitle : item.title;
   };
   const mobileNavItems =
-  profile?.role === "parent"
-    ? []
-    : getMobileNavItems(profile?.role);
+    profile?.role === "parent"
+      ? []
+      : getMobileNavItems(profile?.role);
 
   const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
   const STUDENT_ROLES = ["student", "parent"];
@@ -210,11 +198,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const visibleItems = (needsPermCheck && permsLoading) ? [] : navItems
     .filter((item) => {
       if (item.roles && (!profile?.role || !item.roles.includes(profile.role))) return false;
-      // Students/parents use hardcoded allowed modules (no DB permission rows needed)
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
         const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance"];
-        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Hall Tickets", "Attendance"];
+        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);
       }
@@ -230,7 +217,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
   return (
     <>
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div
           className="fixed inset-0 z-30 bg-foreground/30 backdrop-blur-sm md:hidden"
@@ -238,7 +224,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         />
       )}
 
-      {/* Desktop / tablet sidebar */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 hidden h-screen flex-col bg-sidebar transition-all duration-300 md:flex",
@@ -246,14 +231,13 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         )}
       >
         <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
-  {collapsed ? (
-    <img src={apasLogo} alt="APAS" className="h-12 w-12 object-contain" />
-  ) : (
-    <img src={apasLogo} alt="APAS" className="h-20 w-auto object-contain" />
-  )}
-</div>
+          {collapsed ? (
+            <img src={apasLogo} alt="APAS" className="h-12 w-12 object-contain" />
+          ) : (
+            <img src={apasLogo} alt="APAS" className="h-20 w-auto object-contain" />
+          )}
+        </div>
 
-        {/* Navigation */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -300,7 +284,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           })}
         </nav>
 
-        {/* User info + Logout */}
         <div className="border-t border-sidebar-border p-3 space-y-2">
           {profile && (
             <div className="flex items-center gap-3 px-2 py-1">
@@ -341,7 +324,6 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </div>
       </aside>
 
-      {/* Mobile slide-out sidebar (for full nav) */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-40 flex h-screen w-[var(--sidebar-width)] flex-col bg-sidebar transition-transform duration-300 md:hidden",
@@ -349,8 +331,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         )}
       >
         <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
-  <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
-</div>
+          <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
+        </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
@@ -397,29 +379,29 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         </nav>
       </aside>
 
-      {/* Mobile bottom navigation bar */}
-            {profile?.role !== "parent" && (
-  <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
-        {mobileNavItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "relative flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-all duration-300",
-                isActive ? "text-accent scale-110" : "text-muted-foreground hover:text-accent/70 active:scale-95"
-              )}
-            >
-              {isActive && (
-                <span className="absolute -top-1 w-6 h-[3px] bg-accent rounded-b-full" />
-              )}
-              <item.icon className={cn("h-5 w-5 transition-transform duration-300", isActive && "animate-[fade-in_0.3s_ease-out]")} />
-              <span>{item.title}</span>
-            </NavLink>
-          );
-        })}
-      </nav>)}
+      {profile?.role !== "parent" && (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
+          {mobileNavItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "relative flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-all duration-300",
+                  isActive ? "text-accent scale-110" : "text-muted-foreground hover:text-accent/70 active:scale-95"
+                )}
+              >
+                {isActive && (
+                  <span className="absolute -top-1 w-6 h-[3px] bg-accent rounded-b-full" />
+                )}
+                <item.icon className={cn("h-5 w-5 transition-transform duration-300", isActive && "animate-[fade-in_0.3s_ease-out]")} />
+                <span>{item.title}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+      )}
     </>
   );
 }

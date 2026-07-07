@@ -17,6 +17,7 @@ import SplashScreen from "./pages/SplashScreen";
 import { initializePushNotifications } from "./services/pushNotifications";
 import { Capacitor } from "@capacitor/core";
 import TeacherWorkspaceDashboard from "@/pages/TeacherWorkspaceDashboard";
+
 // Lazy load all page components for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
@@ -75,6 +76,7 @@ const MultiTenantDashboard = lazy(() => import("./pages/MultiTenantDashboard"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
 const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
+const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
@@ -83,6 +85,10 @@ const AcademicCalendar = lazy(() => import("./pages/AcademicCalendar"));
 const TeacherCommunities = lazy(() => import("./pages/TeacherCommunities"));
 const ExecutiveReporting = lazy(() => import("./pages/ExecutiveReporting"));
 const PredictiveAnalytics = lazy(() => import("./pages/PredictiveAnalytics"));
+
+// Lazy load the teacher appointments page component
+const TeacherAppointmentsPage = lazy(() => import("./pages/TeacherAppointments"));
+
 // Loading fallback component
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
@@ -93,33 +99,34 @@ const PageLoader = () => (
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      gcTime: 1000 * 60 * 10, // 10 minutes (formerly cacheTime)
+      staleTime: 1000 * 60 * 5,
+      gcTime: 1000 * 60 * 10,
     },
   },
 });
 
 export default function App() {
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const timer = setTimeout(async () => {
-    setLoading(false);
-   if (Capacitor.isNativePlatform()) {
-    try {
-      await initializePushNotifications();
-    } catch (error) {
-      console.error("Push notification initialization failed:", error);
-    }
-  }
-  }, 3000);
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      setLoading(false);
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await initializePushNotifications();
+        } catch (error) {
+          console.error("Push notification initialization failed:", error);
+        }
+      }
+    }, 3000);
 
-  return () => clearTimeout(timer);
-}, []);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (loading) {
     return <SplashScreen />;
   }
+  
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -140,10 +147,12 @@ useEffect(() => {
                       <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherPanel /></RoleGuard></ProtectedRoute>} />
                       
+                      {/* TEACHER ROUTE ECOSYSTEM SYSTEM */}
                       <Route path="/teacher-workspace" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherWorkspaceDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-at-risk" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherAtRiskStudents /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ai-teacher-assistant" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><AITeacherAssistant /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communities" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunities /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-professional-development" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherProfessionalDevelopment /></RoleGuard></ProtectedRoute>} />
@@ -191,7 +200,10 @@ useEffect(() => {
                       <Route path="/semester-engine" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student"]}><SemesterEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/houses" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"]}><HouseManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/report-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent"]}><ReportCards /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/exam-seating" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><ExamSeating /></RoleGuard></ProtectedRoute>} />
+                      
+                      <Route path="/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><AppointmentBooking /></RoleGuard></ProtectedRoute>} />
+                      
+                      <Route path="/exam-seating" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><ExamSeating /></RouteGuard></ProtectedRoute>} />
                       <Route path="/hall-tickets" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "student", "parent"]}><HallTicketEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/invigilation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><InvigilationManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
