@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Loader2, ChevronDown, ChevronUp, FileText, CheckCircle2, Upload, X, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -40,6 +41,19 @@ interface EvaluationRow {
   created_at: string;
 }
 
+interface AssessmentPaper {
+  id: string;
+  teacher_id: string;
+  title: string | null;
+  class_level: string | null;
+  section: string | null;
+  subject: string | null;
+  file_path: string;
+  file_name: string;
+  file_type: string | null;
+  created_at: string;
+}
+
 type TabFilter = "pending" | "ai_reviewed" | "reviewed" | "all";
 
 export default function AssessmentEvaluation() {
@@ -65,6 +79,13 @@ export default function AssessmentEvaluation() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Question paper selection state
+  const [paperMode, setPaperMode] = useState<"existing" | "new">("existing");
+  const [selectedPaperId, setSelectedPaperId] = useState<string>("");
+  const [newPaperFile, setNewPaperFile] = useState<File | null>(null);
+  const [newPaperTitle, setNewPaperTitle] = useState("");
+  const paperFileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: evaluations, isLoading } = useQuery({
     queryKey: ["assessment-evaluations"],
     queryFn: async () => {
@@ -75,6 +96,19 @@ export default function AssessmentEvaluation() {
       if (error) throw error;
       return (data || []) as unknown as EvaluationRow[];
     },
+  });
+
+  const { data: papers } = useQuery({
+    queryKey: ["assessment-papers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("assessment_papers")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as AssessmentPaper[];
+    },
+    enabled: uploadOpen,
   });
 
   const filtered = (evaluations || []).filter((s) => {
@@ -109,11 +143,20 @@ export default function AssessmentEvaluation() {
     setPendingFiles((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const handlePaperFilePicked = (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setNewPaperFile(files[0]);
+  };
+
   const resetUploadForm = () => {
     setPendingFiles([]);
     setStudentName("");
     setClassLevel("");
     setSubject("");
+    setPaperMode("existing");
+    setSelectedPaperId("");
+    setNewPaperFile(null);
+    setNewPaperTitle("");
   };
 
   const closePreview = () => {
@@ -209,9 +252,46 @@ export default function AssessmentEvaluation() {
     if (pageCountErr) throw pageCountErr;
   };
 
+  const createQuestionPaper = async (teacherId: string): Promise<string> => {
+    if (!newPaperFile) throw new Error("Select a question paper file");
+    const safeName = newPaperFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `${teacherId}/${crypto.randomUUID()}-${safeName}`;
+
+    const { error: uploadErr } = await supabase.storage
+      .from("assessment-question-papers")
+      .upload(filePath, newPaperFile, { contentType: newPaperFile.type || undefined });
+    if (uploadErr) throw uploadErr;
+
+    const { data: inserted, error: insertErr } = await supabase
+      .from("assessment_papers")
+      .insert({
+        teacher_id: teacherId,
+        title: newPaperTitle.trim() || newPaperFile.name,
+        class_level: classLevel.trim() || null,
+        subject: subject.trim() || null,
+        file_path: filePath,
+        file_name: newPaperFile.name,
+        file_type: newPaperFile.type || null,
+      })
+      .select()
+      .single();
+    if (insertErr) throw insertErr;
+
+    queryClient.invalidateQueries({ queryKey: ["assessment-papers"] });
+    return inserted.id as string;
+  };
+
   const handleUpload = async () => {
     if (pendingFiles.length === 0) {
-      toast.error("Select at least one file to upload");
+      toast.error("Select at least one answer sheet to upload");
+      return;
+    }
+    if (paperMode === "existing" && !selectedPaperId) {
+      toast.error("Select the question paper for this assessment first");
+      return;
+    }
+    if (paperMode === "new" && !newPaperFile) {
+      toast.error("Upload the question paper for this assessment first");
       return;
     }
     setUploading(true);
@@ -219,6 +299,8 @@ export default function AssessmentEvaluation() {
       const { data: userData, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userData?.user) throw new Error("Not authenticated");
       const teacherId = userData.user.id;
+
+      const paperId = paperMode === "new" ? await createQuestionPaper(teacherId) : selectedPaperId;
 
       for (const file of pendingFiles) {
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -234,6 +316,7 @@ export default function AssessmentEvaluation() {
           student_name: studentName.trim() || null,
           class_level: classLevel.trim() || null,
           subject: subject.trim() || null,
+          assessment_paper_id: paperId,
           file_path: filePath,
           file_name: file.name,
           file_type: file.type || null,
@@ -320,34 +403,120 @@ export default function AssessmentEvaluation() {
               Upload Assessment
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md p-6 max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Upload Assessment Files</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              <div
-                className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:bg-muted/40 transition-colors"
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => { e.preventDefault(); handleFilesPicked(e.dataTransfer.files); }}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={(e) => handleFilesPicked(e.target.files)}
-                />
-                <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">Click to browse or drag files here</p>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label>Question Paper</Label>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={paperMode === "existing" ? "default" : "outline"}
+                      onClick={() => setPaperMode("existing")}
+                    >
+                      Use Existing
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={paperMode === "new" ? "default" : "outline"}
+                      onClick={() => setPaperMode("new")}
+                    >
+                      Upload New
+                    </Button>
+                  </div>
+                </div>
+
+                {paperMode === "existing" ? (
+                  <Select value={selectedPaperId} onValueChange={setSelectedPaperId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={papers && papers.length > 0 ? "Choose a question paper" : "No question papers uploaded yet"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(papers || []).map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {(p.title || p.file_name)}
+                          {(p.class_level || p.subject) ? ` \u00B7 ${[p.class_level, p.subject].filter(Boolean).join(" ")}` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      value={newPaperTitle}
+                      onChange={(e) => setNewPaperTitle(e.target.value)}
+                      placeholder="Paper title, e.g. Mid-Term Maths"
+                      className="w-full"
+                    />
+                    <div
+                      className="w-full border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                      onClick={() => paperFileInputRef.current?.click()}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => { e.preventDefault(); handlePaperFilePicked(e.dataTransfer.files); }}
+                    >
+                      <input
+                        ref={paperFileInputRef}
+                        type="file"
+                        accept="application/pdf,image/png,image/jpeg"
+                        className="hidden"
+                        onChange={(e) => handlePaperFilePicked(e.target.files)}
+                      />
+                      {newPaperFile ? (
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <span className="truncate min-w-0 flex-1" title={newPaperFile.name}>{newPaperFile.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0"
+                            onClick={(e) => { e.stopPropagation(); setNewPaperFile(null); }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
+                          <p className="text-xs text-muted-foreground">Click to browse or drag the question paper here (PDF or image)</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <Separator />
+
+              <div>
+                <Label className="mb-2 block">Answer Sheets</Label>
+                <div
+                  className="w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => { e.preventDefault(); handleFilesPicked(e.dataTransfer.files); }}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleFilesPicked(e.target.files)}
+                  />
+                  <Upload className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Click to browse or drag files here</p>
+                </div>
               </div>
 
               {pendingFiles.length > 0 && (
-                <div className="space-y-1">
+                <div className="space-y-2">
                   {pendingFiles.map((f, i) => (
-                    <div key={i} className="flex items-center justify-between text-sm bg-muted/40 rounded px-2 py-1">
-                      <span className="truncate">{f.name}</span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removePendingFile(i)}>
+                    <div key={i} className="flex items-center justify-between gap-2 text-sm bg-muted/40 border rounded-md px-3 py-2">
+                      <span className="truncate min-w-0 flex-1" title={f.name}>{f.name}</span>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removePendingFile(i)}>
                         <X className="h-3 w-3" />
                       </Button>
                     </div>
@@ -356,26 +525,37 @@ export default function AssessmentEvaluation() {
               )}
 
               <Separator />
-              <p className="text-xs text-muted-foreground">Optional details (can be filled in later)</p>
 
-              <div className="space-y-2">
-                <Label htmlFor="student-name">Student Name</Label>
-                <Input id="student-name" value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="e.g. Vivaan Sharma" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-4">
+                <p className="text-xs text-muted-foreground">Optional details (can be filled in later)</p>
+
                 <div className="space-y-2">
-                  <Label htmlFor="class-level">Class</Label>
-                  <Input id="class-level" value={classLevel} onChange={(e) => setClassLevel(e.target.value)} placeholder="e.g. 5-A" />
+                  <Label htmlFor="student-name">Student Name</Label>
+                  <Input id="student-name" value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="e.g. Vivaan Sharma" className="w-full" />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Mathematics" />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="class-level">Class</Label>
+                    <Input id="class-level" value={classLevel} onChange={(e) => setClassLevel(e.target.value)} placeholder="e.g. 5-A" className="w-full" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="subject">Subject</Label>
+                    <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Mathematics" className="w-full" />
+                  </div>
                 </div>
               </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4 mt-2 border-t">
               <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
-              <Button onClick={handleUpload} disabled={uploading || pendingFiles.length === 0}>
+              <Button
+                onClick={handleUpload}
+                disabled={
+                  uploading ||
+                  pendingFiles.length === 0 ||
+                  (paperMode === "existing" ? !selectedPaperId : !newPaperFile)
+                }
+              >
                 {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
                 Upload
               </Button>

@@ -84,9 +84,18 @@ function evidenceIcon(value: string | undefined) {
 }
 
 function boxColor(status: string) {
-  if (status === "correct") return "border-green-500 bg-green-500/10";
-  if (status === "partial") return "border-amber-500 bg-amber-500/10";
-  return "border-red-500 bg-red-500/10";
+  switch (status) {
+    case "full":
+      return "border-green-500 bg-green-500/10";
+    case "partial":
+      return "border-amber-500 bg-amber-500/10";
+    case "low_zero":
+      return "border-red-500 bg-red-500/10";
+    case "needs_review":
+      return "border-orange-500 bg-orange-500/10";
+    default:
+      return "border-muted-foreground bg-muted/10";
+  }
 }
 
 export function AssessmentReportView({ evaluationId, open, onOpenChange }: AssessmentReportViewProps) {
@@ -226,7 +235,23 @@ export function AssessmentReportView({ evaluationId, open, onOpenChange }: Asses
               {/* Marks Breakdown */}
               {data.questionScores.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold mb-3">Marks Breakdown</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-semibold">Marks Breakdown</h3>
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full bg-green-500 inline-block" /> Full marks
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full bg-amber-500 inline-block" /> Partial
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="h-2 w-2 rounded-full bg-red-500 inline-block" /> Low/Zero
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3 text-orange-500" /> Needs Review
+                      </span>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {data.questionScores.map((q) => (
                       <div
