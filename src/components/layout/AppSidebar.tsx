@@ -36,6 +36,8 @@
   Award,
   CalendarCheck,
   ArrowRightLeft,
+  IdCard,
+  History,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -113,6 +115,8 @@ const navItems: Array<{
   { title: "Invigilation", icon: UserCheck, path: "/invigilation", roles: ["admin", "principal", "school_admin", "teacher"], module: "Invigilation" },
   { title: "Houses", icon: Trophy, path: "/houses", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"], module: "Houses" },
   { title: "Student Transfers", icon: ArrowRightLeft, path: "/student-transfers", roles: ["school_admin"], module: "Student Transfers" },
+  { title: "ID Cards", icon: IdCard, path: "/id-cards", roles: ["school_admin"], module: "ID Cards" },
+  { title: "Lifecycle Timeline", icon: History, path: "/lifecycle-timeline", roles: ["school_admin"], module: "Lifecycle Timeline" },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher", "principal", "admin", "student", "parent"], module: "Attendance" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },

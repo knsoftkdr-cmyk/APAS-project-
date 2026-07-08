@@ -83,6 +83,9 @@ const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
+import IDCardGenerator from "@/pages/IDCardGenerator";
+import StudentVerify from "@/pages/StudentVerify";
+import LifecycleTimeline from "@/pages/LifecycleTimeline";
 const AcademicCalendar = lazy(() => import("./pages/AcademicCalendar"));
 const TeacherCommunities = lazy(() => import("./pages/TeacherCommunities"));
 const ExecutiveReporting = lazy(() => import("./pages/ExecutiveReporting"));
@@ -212,6 +215,9 @@ export default function App() {
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/attendance" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "principal", "admin", "student", "parent"]}><AttendanceMarking /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-transfers" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><StudentTransfers /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/id-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><IDCardGenerator /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/verify-student/:id" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><StudentVerify /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/lifecycle-timeline" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><LifecycleTimeline /></RoleGuard></ProtectedRoute>} />
                       <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
