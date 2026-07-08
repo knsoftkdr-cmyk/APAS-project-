@@ -798,12 +798,33 @@ export default function SemesterEngine() {
           batch_year: activeYear.name,
           graduation_date: new Date().toISOString().slice(0, 10),
         });
+        if (pid) {
+          await supabase.from("profiles").update({ status: "alumni" }).eq("id", pid);
+          await supabase.from("student_lifecycle_events").insert({
+            student_id: pid,
+            school_id: profile!.school_id,
+            event_type: "alumni_conversion",
+            event_date: new Date().toISOString().slice(0, 10),
+            details: { graduated_class: prog.from_class, batch_year: activeYear.name },
+            created_by: profile!.id,
+          });
+        }
         graduatedCount++;
       } else if (prog.to_class && prog.to_class !== prog.from_class) {
         const displayClass = /^\d+$/.test(prog.to_class) ? `Class ${prog.to_class}` : prog.to_class.charAt(0).toUpperCase() + prog.to_class.slice(1);
         await supabase.from("students").update({ class: displayClass }).eq("id", studentId);
         const pid = students.find((s) => s.id === studentId)?.profile_id;
-        if (pid) await supabase.from("profiles").update({ class_grade: prog.to_class }).eq("id", pid);
+        if (pid) {
+          await supabase.from("profiles").update({ class_grade: prog.to_class }).eq("id", pid);
+          await supabase.from("student_lifecycle_events").insert({
+            student_id: pid,
+            school_id: profile!.school_id,
+            event_type: "promotion",
+            event_date: new Date().toISOString().slice(0, 10),
+            details: { from_class: prog.from_class, to_class: prog.to_class, academic_year: activeYear?.name },
+            created_by: profile!.id,
+          });
+        }
         count++;
       }
     }
