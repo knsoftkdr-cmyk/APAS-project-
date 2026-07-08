@@ -161,7 +161,7 @@ export interface StudentMark {
 export interface AttendanceRecord {
   id: string;
   student_id: string;
-  attendance_date: string;
+  date: string;
   status: "present" | "absent" | "late" | "excused";
 }
 
@@ -810,8 +810,8 @@ export async function getAttendanceRecords(studentId: string, months = 6) {
     .from("attendance_records")
     .select("*")
     .eq("student_id", studentId)
-    .gte("attendance_date", since.toISOString().slice(0, 10))
-    .order("attendance_date", { ascending: true });
+    .gte("date", since.toISOString().slice(0, 10))
+    .order("date", { ascending: true });
 
   if (error) throw error;
   return (data ?? []) as AttendanceRecord[];

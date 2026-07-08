@@ -2760,11 +2760,11 @@ function ProfileSkeleton() {
 // Helpers
 // ============================================================
 
-function toMonthlyTrend(records: { attendance_date: string; status: string }[]) {
+function toMonthlyTrend(records: { date: string; status: string }[]) {
   const byMonth: Record<string, { present: number; total: number }> = {};
 
   for (const r of records) {
-    const month = new Date(r.attendance_date).toLocaleString("default", { month: "short" });
+    const month = new Date(r.date).toLocaleString("default", { month: "short" });
     if (!byMonth[month]) byMonth[month] = { present: 0, total: 0 };
     byMonth[month].total += 1;
     if (r.status === "present" || (r.status === "late" && APP_CONFIG.attendance.countLateAsPresent)) {
