@@ -587,6 +587,9 @@ interface TextbookFile {
   chapter: string;
 }
 
+const stripEmojiForPdf = (text: string): string => {
+  return text.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2190}-\u{21FF}\u{2B00}-\u{2BFF}\uFE0F]/gu, "").replace(/[ \t]+/g, " ").trim();
+};
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/curative-assistant`;
 
 async function streamChat({
@@ -1294,6 +1297,8 @@ const Curative = () => {
 TOTAL PERIODS: ${periods}
 PERIOD DURATION: ${periodDurationMin} minutes each
 
+CRITICAL TIME BUDGET: The Entry Ticket, Hook Activity, Main Teaching, Activities, Quick Check, Closure, and Exit Ticket sections in EACH period MUST sum to EXACTLY ${periodDurationMin} minutes total - not one minute more or less. Suggested proportional split (scale for the actual duration): Entry Ticket ~8%, Hook Activity ~12%, Main Teaching ~45%, Activities ~20%, Quick Check ~5%, Closure ~5%, Exit Ticket ~5%. State the actual rounded minutes for each section in its heading, and double-check the sum equals ${periodDurationMin} minutes before finishing.
+
 ${periods > 1 ? `CRITICAL STRUCTURE REQUIREMENT: This lesson plan MUST be divided into exactly ${periods} PERIODS. Each period is ${periodDurationMin} minutes. 
 
 MANDATORY SECTION STRUCTURE FOR EVERY PERIOD (do NOT deviate):
@@ -1301,6 +1306,11 @@ Each period MUST have EXACTLY these 8 sections in this order:
 
 ### 🎯 1. Learning Objectives
 - Clear, measurable objectives for THIS period using Bloom's taxonomy
+
+### Entry Ticket - Prior Knowledge Check (Period 1 ONLY - 3-5 minutes)
+- Exactly 5 NUMBERED basic questions (1. 2. 3. 4. 5.) checking students' prior/basic knowledge of this topic BEFORE teaching begins
+- Questions must be simple, quick-answer (yes/no, one word, or one line), testing only foundational understanding - NOT the new content about to be taught
+- Include this section ONLY in Period 1. Skip it entirely for Period 2 onward.
 
 ### 🧠 2. Introduction — Hook Activity (First [X] minutes — PRIMACY EFFECT)
 - Engaging opening that captures attention
@@ -1386,6 +1396,9 @@ Auto-generate 3-5 clear, measurable learning objectives using simple Bloom's tax
 
 Apply the same 8-section structure for the single period:
 ### 🎯 1. Learning Objectives
+### Entry Ticket - Prior Knowledge Check (3-5 minutes)
+- Exactly 5 NUMBERED basic questions (1. 2. 3. 4. 5.) checking students' prior/basic knowledge of this topic BEFORE teaching begins
+- Questions must be simple, quick-answer (yes/no, one word, or one line), testing only foundational understanding - NOT the new content about to be taught
 ### 🧠 2. Introduction — Hook Activity
 ### 📚 3. Main Teaching — Chunked Delivery
 ### 🤝 4. Activities — Differentiated Group Work
