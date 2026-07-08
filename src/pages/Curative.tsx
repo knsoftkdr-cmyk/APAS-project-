@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -1137,6 +1137,80 @@ const Curative = () => {
     return `${periods} periods (spread across ${periods} teaching sessions)`;
   };
 
+  const handleGenerateWorksheet = async () => {
+    const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "General";
+    const chapterLabel = selectedChapter || "";
+    const topicLabel = topicValue.trim() || "";
+    const subtopicLabel = selectedSubtopic || "";
+    const classLevelLabel = selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1);
+
+    // Duplicate check: prevent regenerating an identical worksheet
+    try {
+      let dupQuery = supabase
+        .from("worksheets")
+        .select("id, worksheet_content, created_at")
+        .eq("class_level", classLevelLabel)
+        .eq("section", selectedSection)
+        .eq("subject", subjectLabel)
+        .eq("vark_type", selectedVarkType || "general");
+
+      dupQuery = chapterLabel ? dupQuery.eq("chapter", chapterLabel) : dupQuery.is("chapter", null);
+      dupQuery = topicLabel ? dupQuery.eq("topic", topicLabel) : dupQuery.is("topic", null);
+      dupQuery = subtopicLabel ? dupQuery.eq("subtopic", subtopicLabel) : dupQuery.is("subtopic", null);
+
+      if (user?.id) dupQuery = dupQuery.eq("teacher_id", user.id);
+
+      const { data: existing, error: dupErr } = await dupQuery
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (!dupErr && existing && existing.length > 0) {
+        const existingWs = existing[0] as any;
+        const hasContent = typeof existingWs.worksheet_content === "string" && existingWs.worksheet_content.trim().length > 0;
+
+        if (hasContent) {
+          const labelParts = [subjectLabel, chapterLabel, topicLabel, subtopicLabel].filter(Boolean).join(" - ");
+          const userPrompt = `Generate a worksheet for ${getClassLabel(selectedClass)}-${selectedSection} - ${labelParts}`;
+          setChatMessages([
+            { role: "user", content: userPrompt },
+            { role: "assistant", content: existingWs.worksheet_content },
+          ]);
+          setHasGeneratedContent(true);
+          toast.success(
+            `Worksheet already generated for this topic${subtopicLabel ? ` (Subtopic: ${subtopicLabel})` : topicLabel ? ` (Topic: ${topicLabel})` : ""}. Loaded the existing worksheet.`,
+            { duration: 6000 }
+          );
+          return;
+        } else {
+          await supabase.from("worksheets").delete().eq("id", existingWs.id);
+          toast.info("Found an incomplete previous worksheet - regenerating now.");
+        }
+      }
+    } catch (err) {
+      console.error("Duplicate worksheet check failed:", err);
+    }
+
+    const contextLine = [
+      subjectLabel,
+      chapterLabel && `Chapter: ${chapterLabel}`,
+      topicLabel && `Topic: ${topicLabel}`,
+      subtopicLabel && `Subtopic: ${subtopicLabel}`,
+    ].filter(Boolean).join(" | ");
+
+    const prompt = buildWorksheetPrompt({
+      classLabel: getClassLabel(selectedClass),
+      section: selectedSection,
+      varkType: selectedVarkType,
+      subject: subjectLabel,
+      chapter: chapterLabel,
+      topic: topicLabel,
+      subtopic: subtopicLabel,
+      studentCount,
+      contextLine,
+    });
+
+    sendMessage(prompt, "generate");
+  };
   const handleGeneratePlan = async () => {
     const subjectLabel = selectedSubject ? selectedSubject : "";
     // selectedChapter is now the full chapter name directly from extractedChapters
@@ -2019,33 +2093,7 @@ console.log("PDF SAVED:", result.uri);
                       <span className="text-xs font-medium text-foreground/80">Ch. 1 Plan</span>
                     </button>
                     <button
-                      onClick={() => {
-                        const subjectLabel = selectedSubject ? extractSubjectName(selectedSubject) : "General";
-                        const chapterLabel = selectedChapter || "";
-                        const topicLabel = topicValue.trim() || "";
-                        const subtopicLabel = selectedSubtopic || "";
-
-                        const contextLine = [
-                          subjectLabel,
-                          chapterLabel && `Chapter: ${chapterLabel}`,
-                          topicLabel && `Topic: ${topicLabel}`,
-                          subtopicLabel && `Subtopic: ${subtopicLabel}`,
-                        ].filter(Boolean).join(" | ");
-
-                        const prompt = buildWorksheetPrompt({
-                          classLabel: getClassLabel(selectedClass),
-                          section: selectedSection,
-                          varkType: selectedVarkType,
-                          subject: subjectLabel,
-                          chapter: chapterLabel,
-                          topic: topicLabel,
-                          subtopic: subtopicLabel,
-                          studentCount,
-                          contextLine,
-                        });
-
-                        sendMessage(prompt, "generate");
-                      }}
+                      onClick={handleGenerateWorksheet}
                       disabled={isStreaming}
                       className="group flex flex-col items-center gap-2 p-3.5 rounded-xl border border-border bg-card hover:border-accent/40 hover:bg-accent/5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 text-center disabled:opacity-50"
                     >
