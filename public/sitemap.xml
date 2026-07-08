@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Starter sitemap: only public marketing/informational pages belong here.
+  Authenticated app routes (dashboards, teacher/student/parent panels, etc.)
+  should NOT be listed — they're already excluded in robots.txt.
+  Update <lastmod> whenever a page's content changes, and add real URLs
+  once /privacy-policy and /terms-of-service are published.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://apaslearning.com/</loc>
+    <lastmod>2026-07-06</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://apaslearning.com/privacy-policy</loc>
+    <lastmod>2026-07-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://apaslearning.com/terms-of-service</loc>
+    <lastmod>2026-07-06</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>

@@ -14,6 +14,7 @@ import airobot from "@/assets/landing-ai-robot.png";
 import schoolbg from "@/assets/school-bg.png";
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { Helmet } from "react-helmet-async";
 import {
   Brain,
   BarChart3,
@@ -113,7 +114,29 @@ const Landing = () => {
   }, []);
 
   return (
-      <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900 scroll-smooth">
+  <>
+    <Helmet>
+      <title>
+        APAS | AI-Powered School Management & Personalized Learning Platform
+      </title>
+
+      <meta
+        name="description"
+        content="APAS is an AI-powered school management platform."
+      />
+
+      <meta
+        property="og:title"
+        content="APAS | AI-Powered School Management Platform"
+      />
+
+      <meta
+        property="og:description"
+        content="Transform education with AI."
+      />
+    </Helmet>
+
+    <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900 scroll-smooth">
       {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -1973,7 +1996,8 @@ duration-300
           scroll-margin-top: 92px;
         }
       `}</style>
-    </div>
+     </div>
+  </>
   );
 };
 

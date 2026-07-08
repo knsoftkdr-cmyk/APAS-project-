@@ -1,8 +1,32 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /teacher
+Disallow: /student
+Disallow: /parent
+Disallow: /hod
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /update-password
+Disallow: /verify-email
 
 User-agent: Bingbot
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /teacher
+Disallow: /student
+Disallow: /parent
+Disallow: /hod
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /update-password
+Disallow: /verify-email
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +36,17 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /teacher
+Disallow: /student
+Disallow: /parent
+Disallow: /hod
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /update-password
+Disallow: /verify-email
+
+Sitemap: https://apaslearning.com/sitemap.xml
