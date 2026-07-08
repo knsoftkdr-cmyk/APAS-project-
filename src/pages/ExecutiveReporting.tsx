@@ -28,7 +28,7 @@ const KPI = ({ label, value, icon: Icon, color }: { label: string; value: string
 );
 
 const PRIORITY_DOT: Record<string, string> = { red: "bg-red-500", orange: "bg-orange-500", yellow: "bg-amber-400", green: "bg-green-500" };
-const RISK_BADGE: Record<string, string> = { High: "bg-red-100 text-red-700", Medium: "bg-amber-100 text-amber-700", Low: "bg-green-100 text-green-700" };
+const RISK_BADGE: Record<string, string> = { High: "bg-red-100 text-red-700", Medium: "bg-amber-100 text-amber-700", Low: "bg-green-100 text-green-700", "No Data": "bg-gray-100 text-gray-500", "No Tests": "bg-gray-100 text-gray-500" };
 
 export default function ExecutiveReporting() {
   const { profile } = useAuth();
@@ -220,7 +220,7 @@ export default function ExecutiveReporting() {
                   {data.grade_wise.map((g: any) => (
                     <TableRow key={g.grade}>
                       <TableCell className="font-medium">{g.grade}</TableCell>
-                      <TableCell>{g.avg_score}%</TableCell>
+                      <TableCell>{g.avg_score !== null ? `${g.avg_score}%` : "No Tests"}</TableCell>
                       <TableCell><Badge className={RISK_BADGE[g.risk]}>{g.risk}</Badge></TableCell>
                     </TableRow>
                   ))}
@@ -230,24 +230,36 @@ export default function ExecutiveReporting() {
           </Card>
         )}
 
-        {/* Teacher Performance Summary */}
+{/* Teacher Performance Summary */}
         {data.teacher_performance.teacher_summary?.length > 0 && (
           <Card className="border border-border/60">
             <CardHeader className="pb-2"><CardTitle className="text-base">Teacher Summary</CardTitle></CardHeader>
             <CardContent className="p-0">
               <Table>
-                <TableHeader><TableRow><TableHead>Teacher</TableHead><TableHead>Class Assignments</TableHead><TableHead>Workload</TableHead></TableRow></TableHeader>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Teacher</TableHead>
+                    <TableHead>Classes</TableHead>
+                    <TableHead>Interventions</TableHead>
+                    <TableHead>Pending Grading</TableHead>
+                    <TableHead>At-Risk Students</TableHead>
+                    <TableHead>Workload</TableHead>
+                  </TableRow>
+                </TableHeader>
                 <TableBody>
                   {data.teacher_performance.teacher_summary.map((t: any) => (
                     <TableRow key={t.teacher_name}>
                       <TableCell className="font-medium">{t.teacher_name}</TableCell>
                       <TableCell>{t.class_assignments}</TableCell>
+                      <TableCell>{t.active_interventions}</TableCell>
+                      <TableCell>{t.pending_evaluations}</TableCell>
+                      <TableCell>{t.at_risk_students}</TableCell>
                       <TableCell><Badge className={t.workload === "High" ? "bg-red-100 text-red-700" : t.workload === "Medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}>{t.workload}</Badge></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-              <p className="text-xs text-muted-foreground p-3 italic">Note: "Class Assignments" is a proxy based on class/subject assignments — no timetable data exists yet for true classes/day.</p>
+              <p className="text-xs text-muted-foreground p-3 italic">Workload = weighted score across classes taught, active interventions, pending grading, homework/worksheets created, and at-risk students in their classes.</p>
             </CardContent>
           </Card>
         )}

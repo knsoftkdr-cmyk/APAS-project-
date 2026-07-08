@@ -55,6 +55,22 @@ function pct(n: number, d: number) {
   return d > 0 ? Math.round((n / d) * 100) : 0;
 }
 
+// Averages test scores per student first, then averages those student
+// averages together — so a student who took many tests doesn't outweigh
+// a student who took only one or two.
+function perStudentAverage(tests: { student_id: string; score: number; total_questions: number }[]): number {
+  const byStudent: Record<string, number[]> = {};
+  tests.forEach((t) => {
+    if (t.total_questions > 0) {
+      const p = (t.score / t.total_questions) * 100;
+      (byStudent[t.student_id] ||= []).push(p);
+    }
+  });
+  const studentAverages = Object.values(byStudent).map((scores) => scores.reduce((a, b) => a + b, 0) / scores.length);
+  if (studentAverages.length === 0) return 0;
+  return Math.round(studentAverages.reduce((a, b) => a + b, 0) / studentAverages.length);
+}
+
 export function SchoolBenchmarkingContent() {
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -94,7 +110,7 @@ export function SchoolBenchmarkingContent() {
       const teacherIds = (teachers || []).map((t: any) => t.id);
 
         const { data: assignments } = teacherIds.length
-        ? await supabase.from("homework_assignments").select("id, assigned_by, class_level, section, created_at").in("assigned_by", teacherIds)
+        ? await supabase.from("homework_assignments").select("id, assigned_by, class_level, section, created_at, assigned_student_count").in("assigned_by", teacherIds)
         : { data: [] as any[] };
       const assignmentIds = (assignments || []).map((a: any) => a.id);
 
@@ -151,33 +167,42 @@ export function SchoolBenchmarkingContent() {
     });
   }, [raw, gradeFilter, subjectFilter, monthFilter]);
 
-  const assessmentAverage = useMemo(() => {
-    const totalScore = filteredTests.reduce((s: number, t: any) => s + (t.score || 0), 0);
-    const totalMax = filteredTests.reduce((s: number, t: any) => s + (t.total_questions || 0), 0);
-    return pct(totalScore, totalMax);
-  }, [filteredTests]);
+const assessmentAverage = useMemo(() => perStudentAverage(filteredTests), [filteredTests]);
 
   const filteredAssignments = useMemo(() => {
     return (raw?.assignments || []).filter((a: any) => gradeFilter === "all" || a.class_level === gradeFilter);
   }, [raw, gradeFilter]);
 
-  const homeworkCompletion = useMemo(() => {
+const homeworkCompletion = useMemo(() => {
     const assignmentIds = new Set(filteredAssignments.map((a: any) => a.id));
     let submitted = (raw?.submissions || []).filter((s: any) => assignmentIds.has(s.assignment_id) && s.submitted_at);
     if (monthFilter !== "all") {
       submitted = submitted.filter((s: any) => format(new Date(s.submitted_at), "yyyy-MM") === monthFilter);
     }
-    return pct(submitted.length, filteredAssignments.length);
+    // Expected submissions = sum of how many students each assignment actually
+    // targeted, not the number of assignments — an assignment sent to 30
+    // students should count as 30 expected submissions, not 1.
+    const expectedSubmissions = filteredAssignments.reduce(
+      (sum: number, a: any) => sum + (a.assigned_student_count || 0), 0
+    );
+    return pct(submitted.length, expectedSubmissions);
   }, [raw, filteredAssignments, monthFilter]);
 
   const classByStudentId = useMemo(() => new Map((raw?.students || []).map((s: any) => [s.id, s.class])), [raw]);
   const filteredPredictions = useMemo(() => {
     return (raw?.predictions || []).filter((p: any) => gradeFilter === "all" || classByStudentId.get(p.student_id) === gradeFilter);
   }, [raw, gradeFilter, classByStudentId]);
-  const avgDropoutRisk = useMemo(() => {
+const avgDropoutRisk = useMemo(() => {
     if (filteredPredictions.length === 0) return 0;
-    const sum = filteredPredictions.reduce((s: number, p: any) => s + (p.dropout_risk_percentage || 0), 0);
-    return Math.round(sum / filteredPredictions.length);
+    // Average per-student first (a student with predictions for 3 subjects
+    // shouldn't count 3x as much as a student with only 1), then average
+    // those student-level averages together.
+    const byStudent: Record<string, number[]> = {};
+    filteredPredictions.forEach((p: any) => {
+      (byStudent[p.student_id] ||= []).push(Number(p.dropout_risk_percentage) || 0);
+    });
+    const studentAverages = Object.values(byStudent).map((scores) => scores.reduce((a, b) => a + b, 0) / scores.length);
+    return Math.round(studentAverages.reduce((a, b) => a + b, 0) / studentAverages.length);
   }, [filteredPredictions]);
 
   const interventionSuccess = useMemo(() => {
@@ -186,22 +211,23 @@ export function SchoolBenchmarkingContent() {
     return pct(completed, list.length);
   }, [raw, teacherFilter]);
 
-  const gradeRows = useMemo(() => {
+const gradeRows = useMemo(() => {
     return grades.map((g) => {
       const gTests = (raw?.tests || []).filter((t: any) => t.student_class === g);
-      const score = pct(gTests.reduce((s: number, t: any) => s + t.score, 0), gTests.reduce((s: number, t: any) => s + t.total_questions, 0));
+      const score = perStudentAverage(gTests);
       const gAssignments = (raw?.assignments || []).filter((a: any) => a.class_level === g);
       const ids = new Set(gAssignments.map((a: any) => a.id));
       const submitted = (raw?.submissions || []).filter((s: any) => ids.has(s.assignment_id) && s.submitted_at);
-      const hw = pct(submitted.length, gAssignments.length);
+      const expected = gAssignments.reduce((sum: number, a: any) => sum + (a.assigned_student_count || 0), 0);
+      const hw = pct(submitted.length, expected);
       return { grade: g, score, homework: hw };
     });
   }, [raw, grades]);
 
-  const subjectRows = useMemo(() => {
+const subjectRows = useMemo(() => {
     return subjects.map((sub) => {
       const sTests = (raw?.tests || []).filter((t: any) => t.subject === sub);
-      const score = pct(sTests.reduce((s: number, t: any) => s + t.score, 0), sTests.reduce((s: number, t: any) => s + t.total_questions, 0));
+      const score = perStudentAverage(sTests);
       return { subject: sub, score };
     });
   }, [raw, subjects]);
@@ -243,9 +269,9 @@ const trend = useMemo(() => {
       return pct(subs.length, monthAssignments.length);
     };
 
-    const assessFor = (key: string) => {
+const assessFor = (key: string) => {
       const t = (raw?.tests || []).filter((x: any) => x.completed_at && format(new Date(x.completed_at), "yyyy-MM") === key);
-      return pct(t.reduce((s: number, x: any) => s + x.score, 0), t.reduce((s: number, x: any) => s + x.total_questions, 0));
+      return perStudentAverage(t);
     };
 
     return {
@@ -254,12 +280,12 @@ const trend = useMemo(() => {
     };
   }, [raw]);
 
-  const last6MonthsChart = useMemo(() => {
+const last6MonthsChart = useMemo(() => {
     const months = Array.from({ length: 6 }, (_, i) => startOfMonth(subMonths(new Date(), 5 - i)));
     return months.map((m) => {
       const key = format(m, "yyyy-MM");
       const t = (raw?.tests || []).filter((x: any) => x.completed_at && format(new Date(x.completed_at), "yyyy-MM") === key);
-      const score = pct(t.reduce((s: number, x: any) => s + x.score, 0), t.reduce((s: number, x: any) => s + x.total_questions, 0));
+      const score = perStudentAverage(t);
       return { month: format(m, "MMM"), score };
     });
   }, [raw]);
@@ -277,29 +303,6 @@ const trend = useMemo(() => {
     const overall = Math.round((academic + homework + risk + teacherPerf) / 4);
     return { academic, homework, risk, teacherPerf, overall };
   }, [assessmentAverage, homeworkCompletion, avgDropoutRisk, interventionSuccess, targets]);
-
-  const insight = useMemo(() => {
-    if (gradeRows.length === 0 && subjectRows.length === 0) return null;
-    const schoolAvg = assessmentAverage;
-    const worstGrade = [...gradeRows].sort((a, b) => a.score - b.score)[0];
-    const worstSubject = [...subjectRows].sort((a, b) => a.score - b.score)[0];
-    const candidates = [
-      worstGrade && schoolAvg - worstGrade.score >= 5
-        ? { label: `${worstGrade.grade}`, gap: schoolAvg - worstGrade.score, kind: "grade" }
-        : null,
-      worstSubject && schoolAvg - worstSubject.score >= 5
-        ? { label: `${worstSubject.subject}`, gap: schoolAvg - worstSubject.score, kind: "subject" }
-        : null,
-    ].filter(Boolean) as { label: string; gap: number; kind: string }[];
-    if (candidates.length === 0) return null;
-    const worst = candidates.sort((a, b) => b.gap - a.gap)[0];
-    return {
-      text: `${worst.label} is ${worst.gap}% below the school average in assessments.`,
-      recommendation: worst.kind === "grade"
-        ? `Conduct remedial sessions for ${worst.label} and review the current teaching pace.`
-        : `Review the teaching approach for ${worst.label} — consider peer observation or a refresher workshop.`,
-    };
-  }, [gradeRows, subjectRows, assessmentAverage]);
 
   const openEditTargets = () => {
     const drafts: Record<string, string> = {};
@@ -377,22 +380,6 @@ const trend = useMemo(() => {
             </SelectContent>
           </Select>
         </div>
-
-        
-
-        {insight && (
-          <Card className="border border-blue-200/60 bg-blue-50/40">
-            <CardContent className="p-4 flex items-start gap-3">
-              <Sparkles className="h-4 w-4 text-blue-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">{insight.text}</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  <span className="font-medium">Recommendation: </span>{insight.recommendation}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <BenchmarkCard label="Homework Completion" value={homeworkCompletion} target={targets.homework_completion} />

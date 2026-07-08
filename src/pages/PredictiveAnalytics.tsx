@@ -390,28 +390,6 @@ if (!predictions || predictions.length === 0) {
           </Card>
         )}
 
-        {/* School Health Score */}
-        {schoolHealth && (
-          <Card className="border-2 border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <HeartPulse className="h-4 w-4 text-primary" /> School Health Score
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4">
-                <p className={`text-5xl font-bold ${schoolHealth.color}`}>{schoolHealth.score}</p>
-                <div>
-                  <p className="text-lg font-semibold">{schoolHealth.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Avg predicted score {Math.round(schoolHealth.avgPredicted)}% · Avg dropout risk {Math.round(schoolHealth.avgDropout)}%
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* AI Recommendations */}
         <Card>
           <CardHeader className="pb-2">
