@@ -777,8 +777,29 @@ export default function SemesterEngine() {
     setSaving(true);
     const promoted = Object.entries(progressions).filter(([, p]) => p.promotion_status === "promoted");
     let count = 0;
+    let graduatedCount = 0;
+
+    const { data: schoolRow } = await supabase
+      .from("schools")
+      .select("terminal_class")
+      .eq("id", profile!.school_id)
+      .single();
+    const terminalClass = schoolRow?.terminal_class ?? null;
+
     for (const [studentId, prog] of promoted) {
-      if (prog.to_class && prog.to_class !== prog.from_class) {
+      const isGraduating = terminalClass && prog.from_class === terminalClass;
+
+      if (isGraduating) {
+        const pid = students.find((s) => s.id === studentId)?.profile_id;
+        await supabase.from("alumni_profiles").insert({
+          student_id: pid ?? studentId,
+          school_id: profile!.school_id,
+          graduated_class: /^\d+$/.test(prog.from_class) ? `Class ${prog.from_class}` : prog.from_class,
+          batch_year: activeYear.name,
+          graduation_date: new Date().toISOString().slice(0, 10),
+        });
+        graduatedCount++;
+      } else if (prog.to_class && prog.to_class !== prog.from_class) {
         const displayClass = /^\d+$/.test(prog.to_class) ? `Class ${prog.to_class}` : prog.to_class.charAt(0).toUpperCase() + prog.to_class.slice(1);
         await supabase.from("students").update({ class: displayClass }).eq("id", studentId);
         const pid = students.find((s) => s.id === studentId)?.profile_id;
@@ -786,18 +807,19 @@ export default function SemesterEngine() {
         count++;
       }
     }
+
     await supabase.from("semester_rollover_logs").insert({
       school_id: profile!.school_id,
       from_academic_year: activeYear.id,
       processed_students: promoted.length,
       promoted_count: count,
-      retained_count: promoted.length - count,
+      retained_count: promoted.length - count - graduatedCount,
       completed_at: new Date().toISOString(),
       status: "completed",
       triggered_by: profile!.id,
     });
     setSaving(false);
-    toast.success(`Rollover complete — ${count} students moved to next class`);
+    toast.success(`Rollover complete — ${count} moved up, ${graduatedCount} graduated to alumni`);
     fetchAll();
   };
 

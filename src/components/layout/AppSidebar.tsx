@@ -34,7 +34,8 @@
   Sparkles,
   Compass,
   Award,
-  CalendarCheck
+  CalendarCheck,
+  ArrowRightLeft,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -106,10 +107,12 @@ const navItems: Array<{
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"], module: "Academic Calendar" },
   { title: "Semester Engine", icon: GraduationCap, path: "/semester-engine", roles: ["admin", "principal", "school_admin", "teacher", "student"], module: "Semester Engine" },
   { title: "Report Cards", icon: FileText, path: "/report-cards", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent"], module: "Report Cards" },
+  { title: "Alumni", icon: Users, path: "/alumni", roles: ["school_admin"] },
   { title: "Exam Seating", icon: Building2, path: "/exam-seating", roles: ["admin", "principal", "school_admin"], module: "Exam Seating" },
   { title: "Hall Tickets", icon: Ticket, path: "/hall-tickets", roles: ["admin", "principal", "school_admin", "student", "parent"], module: "Hall Tickets" },
   { title: "Invigilation", icon: UserCheck, path: "/invigilation", roles: ["admin", "principal", "school_admin", "teacher"], module: "Invigilation" },
   { title: "Houses", icon: Trophy, path: "/houses", roles: ["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"], module: "Houses" },
+  { title: "Student Transfers", icon: ArrowRightLeft, path: "/student-transfers", roles: ["school_admin"], module: "Student Transfers" },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher", "principal", "admin", "student", "parent"], module: "Attendance" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
