@@ -1,4 +1,4 @@
-﻿import { useState, useRef } from "react";
+import { useState, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +34,7 @@ interface EvaluationRow {
   file_name: string;
   file_type: string | null;
   status: string;
+  assessment_paper_id: string | null;
   ai_score: number | null;
   ai_feedback: string | null;
   score: number | null;
@@ -75,6 +76,7 @@ export default function AssessmentEvaluation() {
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [studentName, setStudentName] = useState("");
   const [classLevel, setClassLevel] = useState("");
+  const [sectionLevel, setSectionLevel] = useState("");
   const [subject, setSubject] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +88,43 @@ export default function AssessmentEvaluation() {
   const [newPaperTitle, setNewPaperTitle] = useState("");
   const paperFileInputRef = useRef<HTMLInputElement>(null);
 
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
+  const [paperFilter, setPaperFilter] = useState<string>("all");
+
+
+  const { data: currentSchoolId } = useQuery({
+    queryKey: ["current-school-id"],
+    queryFn: async () => {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userData?.user) throw new Error("Not authenticated");
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("school_id")
+        .eq("id", userData.user.id)
+        .single();
+      if (error) throw error;
+      return (data?.school_id as string | null) ?? null;
+    },
+  });
+
+  const studentClassValue = classLevel ? (/^\d+$/.test(classLevel) ? `Class ${classLevel}` : classLevel) : "";
+
+  const { data: studentsForClassSection } = useQuery({
+    queryKey: ["students-for-class-section", currentSchoolId, studentClassValue, sectionLevel],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, full_name")
+        .eq("school_id", currentSchoolId)
+        .eq("class", studentClassValue)
+        .eq("section", sectionLevel)
+        .order("full_name");
+      if (error) throw error;
+      return (data || []) as { id: string; full_name: string }[];
+    },
+    enabled: !!currentSchoolId && !!classLevel && !!sectionLevel,
+  });
   const { data: evaluations, isLoading } = useQuery({
     queryKey: ["assessment-evaluations"],
     queryFn: async () => {
@@ -108,10 +147,19 @@ export default function AssessmentEvaluation() {
       if (error) throw error;
       return (data || []) as unknown as AssessmentPaper[];
     },
-    enabled: uploadOpen,
   });
 
-  const filtered = (evaluations || []).filter((s) => {
+  const classOptions = ["Nursery", "LKG", "UKG", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+  const sectionOptions = ["A", "B", "C", "D", "E"];
+
+  const classSectionFiltered = (evaluations || []).filter((s) => {
+    if (classFilter !== "all" && s.class_level !== classFilter) return false;
+    if (sectionFilter !== "all" && s.section !== sectionFilter) return false;
+    if (paperFilter !== "all" && s.assessment_paper_id !== paperFilter) return false;
+    return true;
+  });
+
+  const filtered = classSectionFiltered.filter((s) => {
     if (activeTab === "pending") return s.status === "pending";
     if (activeTab === "ai_reviewed") return s.status === "ai_reviewed";
     if (activeTab === "reviewed") return s.status === "reviewed";
@@ -119,10 +167,10 @@ export default function AssessmentEvaluation() {
   });
 
   const counts = {
-    pending: (evaluations || []).filter((s) => s.status === "pending").length,
-    ai_reviewed: (evaluations || []).filter((s) => s.status === "ai_reviewed").length,
-    reviewed: (evaluations || []).filter((s) => s.status === "reviewed").length,
-    all: (evaluations || []).length,
+    pending: classSectionFiltered.filter((s) => s.status === "pending").length,
+    ai_reviewed: classSectionFiltered.filter((s) => s.status === "ai_reviewed").length,
+    reviewed: classSectionFiltered.filter((s) => s.status === "reviewed").length,
+    all: classSectionFiltered.length,
   };
 
   const toggleSelect = (id: string) => {
@@ -152,6 +200,7 @@ export default function AssessmentEvaluation() {
     setPendingFiles([]);
     setStudentName("");
     setClassLevel("");
+    setSectionLevel("");
     setSubject("");
     setPaperMode("existing");
     setSelectedPaperId("");
@@ -268,6 +317,7 @@ export default function AssessmentEvaluation() {
         teacher_id: teacherId,
         title: newPaperTitle.trim() || newPaperFile.name,
         class_level: classLevel.trim() || null,
+        section: sectionLevel.trim() || null,
         subject: subject.trim() || null,
         file_path: filePath,
         file_name: newPaperFile.name,
@@ -315,6 +365,7 @@ export default function AssessmentEvaluation() {
           teacher_id: teacherId,
           student_name: studentName.trim() || null,
           class_level: classLevel.trim() || null,
+          section: sectionLevel.trim() || null,
           subject: subject.trim() || null,
           assessment_paper_id: paperId,
           file_path: filePath,
@@ -529,20 +580,51 @@ export default function AssessmentEvaluation() {
               <div className="space-y-4">
                 <p className="text-xs text-muted-foreground">Optional details (can be filled in later)</p>
 
-                <div className="space-y-2">
-                  <Label htmlFor="student-name">Student Name</Label>
-                  <Input id="student-name" value={studentName} onChange={(e) => setStudentName(e.target.value)} placeholder="e.g. Vivaan Sharma" className="w-full" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="class-level">Class</Label>
-                    <Input id="class-level" value={classLevel} onChange={(e) => setClassLevel(e.target.value)} placeholder="e.g. 5-A" className="w-full" />
+                    <Select value={classLevel} onValueChange={(v) => { setClassLevel(v); setStudentName(""); }}>
+                      <SelectTrigger id="class-level" className="w-full">
+                        <SelectValue placeholder="Select class" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {classOptions.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="section-level">Section</Label>
+                    <Select value={sectionLevel} onValueChange={(v) => { setSectionLevel(v); setStudentName(""); }}>
+                      <SelectTrigger id="section-level" className="w-full">
+                        <SelectValue placeholder="Select section" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sectionOptions.map((sec) => (
+                          <SelectItem key={sec} value={sec}>{sec}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subject">Subject</Label>
                     <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Mathematics" className="w-full" />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="student-name">Student Name</Label>
+                  <Select value={studentName} onValueChange={setStudentName} disabled={!classLevel || !sectionLevel}>
+                    <SelectTrigger id="student-name" className="w-full">
+                      <SelectValue placeholder={!classLevel || !sectionLevel ? "Select class & section first" : "Select student"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(studentsForClassSection || []).map((st) => (
+                        <SelectItem key={st.id} value={st.full_name}>{st.full_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -562,6 +644,42 @@ export default function AssessmentEvaluation() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Select value={classFilter} onValueChange={setClassFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Classes" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Classes</SelectItem>
+            {classOptions.map((c) => (
+              <SelectItem key={c} value={c}>{c}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={sectionFilter} onValueChange={setSectionFilter}>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="All Sections" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Sections</SelectItem>
+            {sectionOptions.map((sec) => (
+              <SelectItem key={sec} value={sec}>{sec}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={paperFilter} onValueChange={setPaperFilter}>
+          <SelectTrigger className="w-[220px]">
+            <SelectValue placeholder="All Question Papers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Question Papers</SelectItem>
+            {(papers || []).map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabFilter)}>

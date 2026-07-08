@@ -135,9 +135,29 @@ export function AssessmentReportView({ evaluationId, open, onOpenChange }: Asses
     },
   });
 
+  const waitForImagesToLoad = (container: HTMLElement): Promise<void> => {
+    const imgs = Array.from(container.querySelectorAll("img"));
+    const pending = imgs.filter((img) => !img.complete || img.naturalWidth === 0);
+    if (pending.length === 0) return Promise.resolve();
+    return new Promise((resolve) => {
+      let remaining = pending.length;
+      const done = () => {
+        remaining -= 1;
+        if (remaining <= 0) resolve();
+      };
+      pending.forEach((img) => {
+        img.addEventListener("load", done, { once: true });
+        img.addEventListener("error", done, { once: true });
+      });
+      // Safety timeout in case an image never fires load/error
+      setTimeout(resolve, 15000);
+    });
+  };
+
   const handleDownload = async () => {
     if (!contentRef.current || !data) return;
     setDownloading(true);
+      if (contentRef.current) { await waitForImagesToLoad(contentRef.current); }
     try {
       const rawName = data.evaluation.student_name || data.evaluation.file_name || "assessment";
       const filename = `${rawName.replace(/[^a-zA-Z0-9]/g, "_")}_report.pdf`;
