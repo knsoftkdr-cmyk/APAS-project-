@@ -8,6 +8,7 @@ import {
   createAppointment,
   getMyAppointments,
   cancelAppointment,
+  updateAppointmentStatus,
   type ChildOption,
   type TeacherOption,
   type AvailableSlot,
@@ -26,7 +27,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { CalendarCheck, Clock, MapPin, Video, X, Loader2 } from "lucide-react";
+import { CalendarCheck, Clock, MapPin, Video, X, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 type TabKey = "book" | "upcoming" | "history";
@@ -71,6 +72,10 @@ export default function AppointmentBooking() {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [loadingAppointments, setLoadingAppointments] = useState(true);
+
+  // Decline flow for teacher-initiated requests
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [declineReason, setDeclineReason] = useState("");
 
   // Load children on mount
   useEffect(() => {
@@ -145,6 +150,7 @@ export default function AppointmentBooking() {
         reasonNote: reasonNote || undefined,
         meetingMode,
         meetingLink: meetingMode === "virtual" ? meetingLink || undefined : undefined,
+        requestedBy: "parent",
       });
       toast.success("Appointment requested — waiting for teacher confirmation");
       setSelectedSlot(null);
@@ -173,6 +179,28 @@ export default function AppointmentBooking() {
       refreshAppointments();
     } catch {
       toast.error("Couldn't cancel the appointment");
+    }
+  };
+
+  const handleAccept = async (appointmentId: string) => {
+    try {
+      await updateAppointmentStatus(appointmentId, "confirmed");
+      toast.success("Meeting confirmed");
+      refreshAppointments();
+    } catch {
+      toast.error("Couldn't confirm the appointment");
+    }
+  };
+
+  const handleDeclineSubmit = async (appointmentId: string) => {
+    try {
+      await updateAppointmentStatus(appointmentId, "rejected", declineReason.trim() || undefined);
+      toast.success("Meeting declined");
+      setDecliningId(null);
+      setDeclineReason("");
+      refreshAppointments();
+    } catch {
+      toast.error("Couldn't decline the appointment");
     }
   };
 
@@ -411,7 +439,24 @@ export default function AppointmentBooking() {
             <EmptyState text="No upcoming appointments. Book one from the 'Book New' tab." />
           ) : (
             upcoming.map((appt) => (
-              <AppointmentCard key={appt.id} appt={appt} onCancel={handleCancel} />
+              <AppointmentCard
+                key={appt.id}
+                appt={appt}
+                onCancel={handleCancel}
+                onAccept={handleAccept}
+                decliningId={decliningId}
+                declineReason={declineReason}
+                onStartDecline={(id) => {
+                  setDecliningId(id);
+                  setDeclineReason("");
+                }}
+                onDeclineReasonChange={setDeclineReason}
+                onDeclineConfirm={handleDeclineSubmit}
+                onDeclineCancel={() => {
+                  setDecliningId(null);
+                  setDeclineReason("");
+                }}
+              />
             ))
           )}
         </div>
@@ -437,51 +482,121 @@ export default function AppointmentBooking() {
 function AppointmentCard({
   appt,
   onCancel,
+  onAccept,
+  decliningId,
+  declineReason,
+  onStartDecline,
+  onDeclineReasonChange,
+  onDeclineConfirm,
+  onDeclineCancel,
 }: {
   appt: Appointment;
   onCancel?: (id: string) => void;
+  onAccept?: (id: string) => void;
+  decliningId?: string | null;
+  declineReason?: string;
+  onStartDecline?: (id: string) => void;
+  onDeclineReasonChange?: (v: string) => void;
+  onDeclineConfirm?: (id: string) => void;
+  onDeclineCancel?: () => void;
 }) {
+  // A teacher-initiated request still pending needs the parent to act on it
+  const needsMyResponse = appt.requestedBy === "teacher" && appt.status === "pending";
+  const isDeclining = decliningId === appt.id;
+
   return (
-    <div className="rounded-xl border border-border bg-card p-4 flex items-start justify-between gap-4">
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{appt.teacherName ?? "Teacher"}</span>
-          <Badge variant="outline" className={STATUS_STYLES[appt.status]}>
-            {appt.status.replace("_", " ")}
-          </Badge>
-        </div>
-        <div className="text-sm text-muted-foreground flex items-center gap-1.5">
-          <Clock className="h-3.5 w-3.5" />
-          {formatDateShort(appt.appointmentDate)} · {appt.startTime}–{appt.endTime}
-        </div>
-        <div className="text-sm text-muted-foreground flex items-center gap-1.5">
-          {appt.meetingMode === "virtual" ? (
-            <Video className="h-3.5 w-3.5" />
-          ) : (
-            <MapPin className="h-3.5 w-3.5" />
+    <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{appt.teacherName ?? "Teacher"}</span>
+            <Badge variant="outline" className={STATUS_STYLES[appt.status]}>
+              {appt.status.replace("_", " ")}
+            </Badge>
+          </div>
+          <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" />
+            {formatDateShort(appt.appointmentDate)} · {appt.startTime}–{appt.endTime}
+          </div>
+          <div className="text-sm text-muted-foreground flex items-center gap-1.5">
+            {appt.meetingMode === "virtual" ? (
+              <Video className="h-3.5 w-3.5" />
+            ) : (
+              <MapPin className="h-3.5 w-3.5" />
+            )}
+            {appt.meetingMode === "virtual" ? "Virtual" : "In person"}
+            {" · "}
+            {REASON_LABELS[appt.reasonCategory]}
+          </div>
+          {appt.reasonNote && (
+            <p className="text-sm text-muted-foreground italic">"{appt.reasonNote}"</p>
           )}
-          {appt.meetingMode === "virtual" ? "Virtual" : "In person"}
-          {" · "}
-          {REASON_LABELS[appt.reasonCategory]}
+          {appt.status === "rejected" && appt.rejectionReason && (
+            <p className="text-sm text-red-600 italic">
+              Reason given: "{appt.rejectionReason}"
+            </p>
+          )}
+          {needsMyResponse && !isDeclining && (
+            <p className="text-sm text-amber-700">
+              {appt.teacherName ?? "Your child's teacher"} requested this meeting — please confirm or decline.
+            </p>
+          )}
         </div>
-        {appt.reasonNote && (
-          <p className="text-sm text-muted-foreground italic">"{appt.reasonNote}"</p>
-        )}
-        {appt.status === "rejected" && appt.rejectionReason && (
-          <p className="text-sm text-red-600 italic">
-            Teacher's reason: "{appt.rejectionReason}"
-          </p>
+        {onCancel && !needsMyResponse && ["pending", "confirmed"].includes(appt.status) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onCancel(appt.id)}
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 shrink-0"
+          >
+            <X className="h-4 w-4 mr-1" /> Cancel
+          </Button>
         )}
       </div>
-      {onCancel && ["pending", "confirmed"].includes(appt.status) && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onCancel(appt.id)}
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-        >
-          <X className="h-4 w-4 mr-1" /> Cancel
-        </Button>
+
+      {needsMyResponse && !isDeclining && onAccept && onStartDecline && (
+        <div className="flex gap-2 border-t border-border pt-3">
+          <button
+            onClick={() => onAccept(appt.id)}
+            className="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-2 px-3 rounded-lg"
+          >
+            <Check className="h-3.5 w-3.5" /> Confirm
+          </button>
+          <button
+            onClick={() => onStartDecline(appt.id)}
+            className="flex-1 flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-medium py-2 px-3 rounded-lg"
+          >
+            <X className="h-3.5 w-3.5" /> Decline
+          </button>
+        </div>
+      )}
+
+      {isDeclining && onDeclineReasonChange && onDeclineConfirm && onDeclineCancel && (
+        <div className="border-t border-border pt-3 space-y-2">
+          <label className="text-xs font-medium text-muted-foreground">
+            Reason for declining (optional, shown to the teacher)
+          </label>
+          <textarea
+            value={declineReason}
+            onChange={(e) => onDeclineReasonChange(e.target.value)}
+            placeholder="e.g. That time doesn't work for me, could we reschedule?"
+            className="w-full text-sm border rounded-lg p-2 min-h-[70px]"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => onDeclineConfirm(appt.id)}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-2 px-3 rounded-lg"
+            >
+              Confirm Decline
+            </button>
+            <button
+              onClick={onDeclineCancel}
+              className="flex-1 bg-muted hover:bg-muted/70 text-xs font-medium py-2 px-3 rounded-lg border"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

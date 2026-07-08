@@ -17,6 +17,7 @@ import SplashScreen from "./pages/SplashScreen";
 import { initializePushNotifications } from "./services/pushNotifications";
 import { Capacitor } from "@capacitor/core";
 import TeacherWorkspaceDashboard from "@/pages/TeacherWorkspaceDashboard";
+import ParentCommunicationCenter from "@/pages/ParentCommunicationCenter"; // adjust path to match where you save it
 
 // Lazy load all page components for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
@@ -157,6 +158,7 @@ export default function App() {
                       <Route path="/teacher-at-risk" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherAtRiskStudents /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/parent-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ai-teacher-assistant" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><AITeacherAssistant /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communities" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunities /></RoleGuard></ProtectedRoute>} />

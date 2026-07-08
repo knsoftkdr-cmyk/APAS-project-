@@ -2,9 +2,10 @@
  * TeacherCommunicationCenter.tsx — APAS-060
  * Centralized messaging hub: Teacher <-> Parents / Students / Administrators.
  * Supports individual chat, class broadcasts, appreciation/behaviour message
- * types, meeting requests, file attachments, and read-receipt tracking.
+ * types, appointment booking shortcut, file attachments, and read-receipt tracking.
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,9 +17,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Search, Send, Paperclip, Users, User, ShieldCheck,
   MessageSquare, Check, CheckCheck, Calendar as CalendarIcon,
@@ -85,6 +83,7 @@ const roleBadgeColor: Record<RecipientRole, string> = {
 export default function TeacherCommunicationCenter() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loadingContacts, setLoadingContacts] = useState(true);
@@ -105,11 +104,6 @@ export default function TeacherCommunicationCenter() {
   const [sending, setSending] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
-
-  const [showMeetingDialog, setShowMeetingDialog] = useState(false);
-  const [meetingDate, setMeetingDate] = useState("");
-  const [meetingTime, setMeetingTime] = useState("");
-  const [meetingReason, setMeetingReason] = useState("");
 
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [view, setView] = useState<"messages" | "communities">("messages");
@@ -441,17 +435,19 @@ export default function TeacherCommunicationCenter() {
     }
   };
 
-  const handleMeetingRequest = async () => {
-    if (!meetingDate || !meetingTime) {
-      toast({ title: "Select date and time", variant: "destructive" });
+  // ── Navigate to Appointment Booking, carrying selected parent/student context ──
+  const goToAppointments = () => {
+    if (!selectedContact) {
+      navigate("/teacher/appointments");
       return;
     }
-    const text = `Parent Meeting Request\nDate: ${format(new Date(meetingDate), "d MMM yyyy")}\nTime: ${meetingTime}${meetingReason ? `\nReason: ${meetingReason}` : ""}`;
-    await handleSend(text, "meeting_request", { date: meetingDate, time: meetingTime });
-    setShowMeetingDialog(false);
-    setMeetingDate("");
-    setMeetingTime("");
-    setMeetingReason("");
+    navigate("/teacher/appointments", {
+      state: {
+        parentId: selectedContact.id,
+        parentName: selectedContact.name,
+        context: selectedContact.subtitle,
+      },
+    });
   };
 
   // ── Filtered contact list based on active tab + search ──────────────────────
@@ -644,10 +640,10 @@ export default function TeacherCommunicationCenter() {
                         size="sm"
                         variant="outline"
                         className="gap-1.5 text-xs"
-                        onClick={() => setShowMeetingDialog(true)}
+                        onClick={goToAppointments}
                       >
                         <CalendarIcon className="h-3.5 w-3.5" />
-                        Request Meeting
+                        Appointments
                       </Button>
                     )}
                   </div>
@@ -817,43 +813,6 @@ export default function TeacherCommunicationCenter() {
         </Card>
         )}
       </div>
-
-      {/* Meeting Request Dialog */}
-      <Dialog open={showMeetingDialog} onOpenChange={setShowMeetingDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CalendarIcon className="h-5 w-5 text-blue-600" />
-              Request Parent Meeting
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Date</label>
-                <Input type="date" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium">Time</label>
-                <Input type="time" value={meetingTime} onChange={e => setMeetingTime(e.target.value)} />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Reason (optional)</label>
-              <Textarea
-                placeholder="e.g. Discuss academic progress"
-                value={meetingReason}
-                onChange={e => setMeetingReason(e.target.value)}
-                rows={2}
-              />
-            </div>
-            <Button onClick={handleMeetingRequest} disabled={sending} className="w-full gap-1.5">
-              {sending ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4" />}
-              Send Meeting Request
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </AppLayout>
   );
 }

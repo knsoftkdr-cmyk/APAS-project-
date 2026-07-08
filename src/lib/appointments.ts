@@ -17,6 +17,7 @@ export type AppointmentStatus =
   | "cancelled"
   | "completed"
   | "no_show";
+export type RequestedBy = "parent" | "teacher";
 
 export interface ChildOption {
   studentId: string;
@@ -32,6 +33,11 @@ export interface TeacherOption {
   designation: string | null;
   subject: string | null;
   teacherRole: string | null;
+}
+
+export interface ParentOption {
+  parentId: string;
+  parentName: string;
 }
 
 export interface AvailableSlot {
@@ -57,8 +63,10 @@ export interface Appointment {
   meetingLink: string | null;
   createdAt: string;
   rejectionReason: string | null;
+  requestedBy: RequestedBy;
   teacherName?: string;
   studentName?: string;
+  parentName?: string;
 }
 
 // ============================================================
@@ -146,6 +154,108 @@ export async function getTeachersForChild(
       teacherRole: a.teacher_role,
     };
   });
+}
+
+// ============================================================
+// 2b. GET PARENTS LINKED TO A TEACHER'S STUDENTS (for teacher-initiated booking)
+// ============================================================
+
+export async function getTeacherParents(teacherId: string): Promise<ParentOption[]> {
+  const { data: assignedClasses } = await supabase
+    .from("class_teachers")
+    .select("class_id")
+    .eq("teacher_id", teacherId);
+  const classIds = [...new Set((assignedClasses ?? []).map((c: any) => c.class_id))];
+  if (classIds.length === 0) return [];
+
+  const { data: classStudentLinks } = await supabase
+    .from("class_students")
+    .select("student_id")
+    .in("class_id", classIds);
+  const studentIds = [...new Set((classStudentLinks ?? []).map((c: any) => c.student_id))];
+  if (studentIds.length === 0) return [];
+
+  const { data: students } = await supabase
+    .from("students")
+    .select("profile_id")
+    .in("id", studentIds);
+  const profileIds = (students ?? []).map((s: any) => s.profile_id).filter(Boolean);
+  if (profileIds.length === 0) return [];
+
+  const { data: parentLinks } = await supabase
+    .from("parent_students")
+    .select("parent_id")
+    .in("student_id", profileIds);
+  const parentIds = [...new Set((parentLinks ?? []).map((p: any) => p.parent_id))];
+  if (parentIds.length === 0) return [];
+
+  const { data: parentProfiles } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .in("id", parentIds);
+
+  return (parentProfiles ?? []).map((p: any) => ({
+    parentId: p.id,
+    parentName: p.full_name ?? "Unnamed Parent",
+  }));
+}
+
+// ============================================================
+// 2c. GET A SPECIFIC PARENT'S CHILDREN, SCOPED TO THIS TEACHER'S CLASSES
+// ============================================================
+
+export async function getChildrenForParentByTeacher(
+  teacherId: string,
+  parentId: string
+): Promise<ChildOption[]> {
+  const { data: assignedClasses } = await supabase
+    .from("class_teachers")
+    .select("class_id")
+    .eq("teacher_id", teacherId);
+  const classIds = [...new Set((assignedClasses ?? []).map((c: any) => c.class_id))];
+  if (classIds.length === 0) return [];
+
+  const { data: classRows } = await supabase
+    .from("classes")
+    .select("id, name, section, school_id")
+    .in("id", classIds);
+  const classMap = new Map((classRows ?? []).map((c: any) => [c.id, c]));
+
+  const { data: classStudentLinks } = await supabase
+    .from("class_students")
+    .select("class_id, student_id")
+    .in("class_id", classIds);
+  const studentIds = [...new Set((classStudentLinks ?? []).map((c: any) => c.student_id))];
+  if (studentIds.length === 0) return [];
+
+  const { data: students } = await supabase
+    .from("students")
+    .select("id, full_name, profile_id")
+    .in("id", studentIds);
+
+  const { data: parentLinks } = await supabase
+    .from("parent_students")
+    .select("student_id")
+    .eq("parent_id", parentId);
+  const linkedProfileIds = new Set((parentLinks ?? []).map((p: any) => p.student_id));
+
+  const studentToClass = new Map(
+    (classStudentLinks ?? []).map((cs: any) => [cs.student_id, cs.class_id])
+  );
+
+  return (students ?? [])
+    .filter((s: any) => s.profile_id && linkedProfileIds.has(s.profile_id))
+    .map((s: any) => {
+      const cId = studentToClass.get(s.id);
+      const cls = classMap.get(cId);
+      return {
+        studentId: s.profile_id,
+        fullName: s.full_name,
+        className: cls?.name ?? "",
+        section: cls?.section ?? "",
+        schoolId: cls?.school_id ?? "",
+      };
+    });
 }
 
 // ============================================================
@@ -268,6 +378,7 @@ export interface CreateAppointmentPayload {
   meetingMode: MeetingMode;
   locationRoom?: string;
   meetingLink?: string;
+  requestedBy?: RequestedBy; // defaults to "parent" — pass "teacher" for teacher-initiated bookings
 }
 
 export async function createAppointment(payload: CreateAppointmentPayload): Promise<Appointment> {
@@ -287,6 +398,7 @@ export async function createAppointment(payload: CreateAppointmentPayload): Prom
       location_room: payload.locationRoom ?? null,
       meeting_link: payload.meetingLink ?? null,
       status: "pending",
+      requested_by: payload.requestedBy ?? "parent",
     })
     .select()
     .single();
@@ -390,7 +502,8 @@ export async function getTeacherAppointments(teacherId: string): Promise<{
 
   const all = rows.map((row: any) => ({
     ...mapAppointmentRow(row),
-    teacherName: parentProfiles?.find((p) => p.id === row.parent_id)?.full_name,
+    // NOTE: fixed from a previous bug where the parent's name was stored under `teacherName`.
+    parentName: parentProfiles?.find((p) => p.id === row.parent_id)?.full_name,
     studentName: studentProfiles?.find((s) => s.id === row.student_id)?.full_name,
   }));
 
@@ -401,7 +514,7 @@ export async function getTeacherAppointments(teacherId: string): Promise<{
 }
 
 // ============================================================
-// 8. UPDATE APPOINTMENT STATUS (Teacher actions) — now supports rejection reason
+// 8. UPDATE APPOINTMENT STATUS (Teacher OR parent actions, depending on who needs to respond)
 // ============================================================
 
 export async function updateAppointmentStatus(
@@ -442,5 +555,6 @@ function mapAppointmentRow(row: any): Appointment {
     meetingLink: row.meeting_link,
     createdAt: row.created_at,
     rejectionReason: row.rejection_reason ?? null,
+    requestedBy: row.requested_by ?? "parent",
   };
 }
