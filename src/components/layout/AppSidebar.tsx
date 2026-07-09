@@ -38,6 +38,7 @@
   ArrowRightLeft,
   IdCard,
   History,
+  Grid3x3,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -121,6 +122,10 @@ const navItems: Array<{
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher", "principal", "admin", "student", "parent"], module: "Attendance" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
+  { title: "Competency & Outcomes", icon: BookOpen, path: "/competency-definitions", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
+  { title: "Competency Assessment", icon: ClipboardCheck, path: "/competency-assessment", roles: ["teacher"], module: "Home" },
+  { title: "Competency Heatmap", icon: Grid3x3, path: "/competency-heatmap", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
+  { title: "Skills Passport", icon: Award, path: "/skills-passport", roles: ["student", "parent"], module: "Home" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 

@@ -77,6 +77,10 @@ const AutomationDashboard = lazy(() => import("./pages/AutomationDashboard"));
 const MultiTenantDashboard = lazy(() => import("./pages/MultiTenantDashboard"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
 const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
+const CompetencyDefinitions = lazy(() => import("./pages/CompetencyDefinitions"));
+const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
+const CompetencyHeatmap = lazy(() => import("./pages/CompetencyHeatmap"));
+const SkillsPassport = lazy(() => import("./pages/SkillsPassport"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
@@ -221,6 +225,10 @@ export default function App() {
                       <Route path="/verify-student/:id" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><StudentVerify /></RoleGuard></ProtectedRoute>} />
                       <Route path="/lifecycle-timeline" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><LifecycleTimeline /></RoleGuard></ProtectedRoute>} />
                       <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/competency-definitions" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyDefinitions /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/competency-assessment" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><CompetencyAssessment /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/competency-heatmap" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyHeatmap /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
                       <Route path="/update-password" element={<UpdatePassword />} />
