@@ -95,7 +95,7 @@ const AcademicCalendar = lazy(() => import("./pages/AcademicCalendar"));
 const TeacherCommunities = lazy(() => import("./pages/TeacherCommunities"));
 const ExecutiveReporting = lazy(() => import("./pages/ExecutiveReporting"));
 const PredictiveAnalytics = lazy(() => import("./pages/PredictiveAnalytics"));
-
+const Surveys = lazy(() => import("./pages/Surveys"));
 // Lazy load the teacher appointments page component
 const TeacherAppointmentsPage = lazy(() => import("./pages/TeacherAppointments"));
 
@@ -214,7 +214,7 @@ export default function App() {
                       <Route path="/alumni" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><AlumniPage /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><AppointmentBooking /></RoleGuard></ProtectedRoute>} />
-                      
+                      <Route path="/surveys" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "school_admin", "hod", "student", "parent"]}><Surveys /></RoleGuard></ProtectedRoute>} />
                       <Route path="/exam-seating" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><ExamSeating /></RoleGuard></ProtectedRoute>} />
                       <Route path="/hall-tickets" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "student", "parent"]}><HallTicketEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/invigilation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><InvigilationManagement /></RoleGuard></ProtectedRoute>} />

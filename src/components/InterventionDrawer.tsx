@@ -7,6 +7,12 @@
  * - View / edit an existing one
  * - Mark the active intervention as completed
  *
+ * PBIS tier: every intervention is classified Tier 2 (targeted) or Tier 3
+ * (intensive) — this drawer is only ever opened for individualized support,
+ * so Tier 1 (universal, whole-class) isn't an option here. When opened from
+ * a flagged Behaviour Analytics row, `suggestedTier` pre-selects a sensible
+ * default (Watch -> Tier 2, High -> Tier 3) which the teacher can override.
+ *
  * Rules:
  * - Active intervention  -> [Edit] [Mark Completed]
  * - Completed/cancelled  -> [View] [+ New Intervention]
@@ -31,6 +37,7 @@ export interface Intervention {
   student_id: string;
   reason: string;
   priority: "low" | "medium" | "high";
+  tier: 2 | 3;
   action_plan: string[];
   expected_outcome: string | null;
   outcome: string | null;
@@ -46,6 +53,7 @@ interface Props {
   student: { id: string; full_name: string; class: string; section: string } | null;
   riskLevel?: string;
   contributingFactors?: string[];
+  suggestedTier?: 2 | 3; // pre-selects tier on a NEW intervention only; ignored when editing an existing one
   interventions: Intervention[]; // FULL history for this student, newest first
   onSaved: () => void;
 }
@@ -73,6 +81,16 @@ const STATUS_DOT: Record<string, string> = {
   cancelled: "bg-gray-400",
 };
 
+const TIER_STYLES: Record<number, string> = {
+  2: "bg-sky-100 text-sky-700",
+  3: "bg-purple-100 text-purple-700",
+};
+
+const TIER_LABEL: Record<number, string> = {
+  2: "Tier 2 — Targeted",
+  3: "Tier 3 — Intensive",
+};
+
 // Turn AI-generated contributing factors (e.g. "Homework completion is low (28%)")
 // into a readable, pre-filled Reason paragraph the teacher can edit before saving.
 function buildReasonFromFactors(factors?: string[]): string {
@@ -88,7 +106,7 @@ function buildReasonFromFactors(factors?: string[]): string {
 type View = "list" | "form";
 type FormMode = "view" | "edit";
 
-export function InterventionDrawer({ open, onOpenChange, student, riskLevel, contributingFactors, interventions, onSaved }: Props) {
+export function InterventionDrawer({ open, onOpenChange, student, riskLevel, contributingFactors, suggestedTier, interventions, onSaved }: Props) {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -101,6 +119,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
   const [reason, setReason] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [tier, setTier] = useState<2 | 3>(2);
   const [actionPlan, setActionPlan] = useState<string[]>([]);
   const [customAction, setCustomAction] = useState("");
   const [expectedOutcome, setExpectedOutcome] = useState("");
@@ -111,6 +130,9 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
   const resetFormFields = (iv: Intervention | null) => {
     setReason(iv?.reason ?? buildReasonFromFactors(contributingFactors));
     setPriority(iv?.priority || "medium");
+    // Only apply the Analytics-suggested tier on a brand-new intervention;
+    // an existing one keeps whatever tier it was already saved with.
+    setTier(iv?.tier ?? suggestedTier ?? 2);
     setActionPlan(iv?.action_plan || []);
     setCustomAction("");
     setExpectedOutcome(iv?.expected_outcome || "");
@@ -177,6 +199,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
         teacher_id: user.id,
         reason: reason.trim(),
         priority,
+        tier,
         action_plan: actionPlan,
         expected_outcome: expectedOutcome.trim() || null,
         review_date: reviewDate || null,
@@ -240,7 +263,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
             {/* Student — always read-only */}
             <div>
               <label className="text-xs font-medium text-muted-foreground">Student</label>
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
                 <p className="text-sm font-semibold">{student.full_name}</p>
                 <span className="text-xs text-muted-foreground">{student.class} - {student.section}</span>
                 {riskLevel && (
@@ -258,10 +281,11 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                   interventions.map((iv) => (
                     <div key={iv.id} className="rounded-lg border p-3">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className={cn("h-2 w-2 rounded-full", STATUS_DOT[iv.status])} />
                           <Badge className={STATUS_STYLES[iv.status]}>{iv.status}</Badge>
                           <Badge variant="outline" className={PRIORITY_STYLES[iv.priority]}>{iv.priority}</Badge>
+                          {iv.tier && <Badge variant="outline" className={TIER_STYLES[iv.tier]}>Tier {iv.tier}</Badge>}
                         </div>
                         <span className="text-xs text-muted-foreground">
                           {iv.status === "completed"
@@ -315,7 +339,11 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
                 {formMode === "view" && selected ? (
                   <>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground">Tier</label>
+                        <div className="mt-1"><Badge className={TIER_STYLES[selected.tier]}>{TIER_LABEL[selected.tier]}</Badge></div>
+                      </div>
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">Priority</label>
                         <div className="mt-1"><Badge className={PRIORITY_STYLES[selected.priority]}>{selected.priority}</Badge></div>
@@ -408,6 +436,21 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
+                        <label className="text-xs font-medium text-muted-foreground">
+                          Tier
+                          {suggestedTier && !selected && (
+                            <span className="ml-1 text-[10px] text-cyan-600 font-normal">(suggested from Analytics)</span>
+                          )}
+                        </label>
+                        <Select value={String(tier)} onValueChange={(v) => setTier(Number(v) as 2 | 3)}>
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="2">Tier 2 — Targeted</SelectItem>
+                            <SelectItem value="3">Tier 3 — Intensive</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
                         <label className="text-xs font-medium text-muted-foreground">Priority</label>
                         <Select value={priority} onValueChange={(v: any) => setPriority(v)}>
                           <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
@@ -418,10 +461,11 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                           </SelectContent>
                         </Select>
                       </div>
-                      <div data-vaul-no-drag>
-                        <label className="text-xs font-medium text-muted-foreground">Review Date</label>
-                        <Input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="mt-1" />
-                      </div>
+                    </div>
+
+                    <div data-vaul-no-drag>
+                      <label className="text-xs font-medium text-muted-foreground">Review Date</label>
+                      <Input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="mt-1" />
                     </div>
 
                     <div>

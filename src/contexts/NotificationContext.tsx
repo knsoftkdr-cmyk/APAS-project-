@@ -26,6 +26,7 @@ export interface Notification {
 
   assignment_id?: string;
   worksheet_assignment_id?: string;
+  sender_id?: string; // NEW — used to scope message-thread read state
 }
 
 interface NotificationContextType {
@@ -34,7 +35,10 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   markHomeworkNotificationAsRead: (assignmentId: string) => void;
-markWorksheetNotificationAsRead: (worksheetAssignmentId: string) => void;
+  markWorksheetNotificationAsRead: (worksheetAssignmentId: string) => void;
+  markMessageNotificationsAsRead: (contactId: string) => void; // NEW
+  activeMessageThreadId: string | null;                         // NEW
+  setActiveMessageThreadId: (id: string | null) => void;        // NEW
 }
 
 // ------------------------------------ Context ------------------------------------------
@@ -46,6 +50,9 @@ const NotificationContext = createContext<NotificationContextType>({
   markAllAsRead: () => {},
   markHomeworkNotificationAsRead: () => {},
   markWorksheetNotificationAsRead: () => {},
+  markMessageNotificationsAsRead: () => {}, // NEW
+  activeMessageThreadId: null,               // NEW
+  setActiveMessageThreadId: () => {},        // NEW
 });
 
 // -------------------------------------- Helper ------------------------------------------------
@@ -134,7 +141,15 @@ function saveNotifiedWorksheets(
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  
+  const [activeMessageThreadId, setActiveMessageThreadId] = useState<string | null>(null);
+
+const markMessageNotificationsAsRead = useCallback((contactId: string) => {
+  setNotifications((prev) =>
+    prev.map((n) =>
+      n.sender_id === contactId ? { ...n, is_read: true } : n
+    )
+  );
+}, []);
   // useEffect(() => {
   //   if (!user) { setNotifications([]); return; }
   //   try {
@@ -864,7 +879,7 @@ return () => {
   }, [user, profile, push]);
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead,markHomeworkNotificationAsRead,markWorksheetNotificationAsRead}}
+      value={{ notifications, unreadCount, markAsRead, markAllAsRead,markHomeworkNotificationAsRead,markWorksheetNotificationAsRead,markMessageNotificationsAsRead, activeMessageThreadId,setActiveMessageThreadId}}
     >
       {children}
     </NotificationContext.Provider>

@@ -329,6 +329,29 @@ export default function TeacherCommunicationCenter() {
     }
   };
 
+  // ── Omnichannel fan-out ───────────────────────────────────────────────────
+  // Fire-and-forget: never blocks the chat UI, and a failure here must never
+  // surface as a "message failed to send" error — the in-app row already
+  // landed, this is just the push/email echo of it.
+  const dispatchOmnichannel = (params: {
+    sourceId: string;
+    recipientId: string;
+    title: string;
+    body: string;
+  }) => {
+    supabase.functions
+      .invoke("dispatch-message", {
+        body: {
+          source_table: "teacher_messages",
+          source_id: params.sourceId,
+          recipient_id: params.recipientId,
+          title: params.title,
+          body: params.body,
+        },
+      })
+      .catch((e) => console.error("dispatch-message failed", e));
+  };
+
   const handleSend = async (
     overrideText?: string,
     messageType: MessageType = "general",
@@ -348,8 +371,13 @@ export default function TeacherCommunicationCenter() {
         attachment = await uploadAttachment(attachedFile);
       }
 
+      const senderName = profile.full_name || "Your teacher";
+      const notifyBody = text.trim() || (attachment ? `📎 ${attachment.name}` : "New message");
+
       if (selectedContact.kind === "individual") {
+        const messageId = crypto.randomUUID();
         const { error } = await supabase.from("teacher_messages" as any).insert({
+          id: messageId,
           school_id: profile.school_id,
           sender_id: user.id,
           recipient_id: selectedContact.id,
@@ -363,16 +391,16 @@ export default function TeacherCommunicationCenter() {
           meeting_status: messageType === "meeting_request" ? "pending" : null,
         });
         if (error) throw error;
+
+        dispatchOmnichannel({
+          sourceId: messageId,
+          recipientId: selectedContact.id,
+          title: `New message from ${senderName}`,
+          body: notifyBody,
+        });
       } else {
         // Class broadcast: expand into one row per recipient
         const batchId = crypto.randomUUID();
-        const recipients = selectedContact.role === "parent"
-          ? parentContacts.filter(p => studentContacts.some(s => s.classId === selectedContact.classId))
-          : studentContacts.filter(s => s.classId === selectedContact.classId);
-
-        const targetContacts = selectedContact.role === "parent"
-          ? parentContacts // parents linked to students of this class — approximate: all parents of students in this class
-          : studentContacts.filter(s => s.classId === selectedContact.classId);
 
         // Build recipient id list precisely
         let recipientIds: string[] = [];
@@ -382,10 +410,6 @@ export default function TeacherCommunicationCenter() {
             .map(s => s.id);
         } else {
           // parents: find students in this class, then their linked parents
-          const classStudentProfileIds = studentContacts
-            .filter(s => s.classId === selectedContact.classId)
-            .map(s => s.id);
-          // parentContacts subtitle contains student names; safer to re-query
         const { data: classStudentRows } = await supabase
             .from("students")
             .select("profile_id")
@@ -405,6 +429,7 @@ export default function TeacherCommunicationCenter() {
         }
 
         const rows = recipientIds.map(rid => ({
+          id: crypto.randomUUID(),
           school_id: profile.school_id,
           sender_id: user.id,
           recipient_id: rid,
@@ -419,6 +444,16 @@ export default function TeacherCommunicationCenter() {
 
         const { error } = await supabase.from("teacher_messages" as any).insert(rows);
         if (error) throw error;
+
+        const broadcastTitle = `${senderName} sent a message to ${selectedContact.name}`;
+        rows.forEach(row => {
+          dispatchOmnichannel({
+            sourceId: row.id,
+            recipientId: row.recipient_id,
+            title: broadcastTitle,
+            body: notifyBody,
+          });
+        });
 
         toast({ title: `Sent to ${recipientIds.length} ${selectedContact.role}(s)` });
       }
@@ -505,8 +540,8 @@ export default function TeacherCommunicationCenter() {
         {view === "communities" ? (
           <TeacherCommunitiesContent />
         ) : (
-        <Card className="flex-1 overflow-hidden border border-border/60">
-          <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full">
+        <Card className="flex-1 overflow-hidden border border-border/60 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
             <div className={`border-r border-border/60 flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
@@ -606,7 +641,7 @@ export default function TeacherCommunicationCenter() {
             </div>
 
             {/* ── Chat Panel ── */}
-            <div className={`flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
+            <div className={`min-h-0 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
               {!selectedContact ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
                   <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-3" />

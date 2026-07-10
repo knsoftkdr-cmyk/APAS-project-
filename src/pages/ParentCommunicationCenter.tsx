@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { getMyChildren, getTeachersForChild } from "@/lib/appointments";
-
+import { useNotifications } from "@/contexts/NotificationContext";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TeacherContact {
@@ -62,6 +62,7 @@ const dayLabel = (dateStr: string) => {
 
 export default function ParentCommunicationCenter() {
   const { user, profile } = useAuth();
+  const { markMessageNotificationsAsRead, setActiveMessageThreadId } = useNotifications();
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +134,9 @@ export default function ParentCommunicationCenter() {
   }, [user?.id, toast]);
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
+  useEffect(() => {
+  return () => setActiveMessageThreadId(null);
+}, []);
 
   // ── Fetch thread for selected teacher ───────────────────────────────────────
   const fetchThread = useCallback(async (contact: TeacherContact) => {
@@ -170,6 +174,8 @@ export default function ParentCommunicationCenter() {
     setShowMobileChat(true);
     setMessageText("");
     setAttachedFile(null);
+    markMessageNotificationsAsRead(contact.id);
+    setActiveMessageThreadId(contact.id);
   };
 
   // ── Send message ─────────────────────────────────────────────────────────────

@@ -3,6 +3,11 @@
  * - Behaviour Alerts: scoped strictly to this teacher's assigned classes.
  * - Student Notes: teacher can log a confidential note for ANY student in
  *   their school (not just their own classes), with follow-up reminders.
+ * - Behaviour Analytics surfaces flagged students and, when a teacher opens
+ *   an intervention from a flagged row, pre-fills risk level + contributing
+ *   factors instead of starting blank.
+ * - Reviews Due tracks active interventions with an approaching/overdue
+ *   review_date, the same way Follow-Ups Due tracks notes.
  */
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,8 +22,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { format, isPast } from "date-fns";
-import { MessageSquarePlus, Clock, Trash2, ClipboardList } from "lucide-react";
+import { MessageSquarePlus, Clock, Trash2, ClipboardList, CalendarClock } from "lucide-react";
 import { InterventionDrawer, Intervention } from "@/components/InterventionDrawer";
+import { BehaviourAnalytics, AnalyticsMeta } from "@/components/BehaviourAnalytics";
 
 interface Student {
   id: string;
@@ -35,6 +41,12 @@ interface Note {
   follow_up_date: string | null;
   follow_up_completed: boolean;
   created_at: string;
+}
+
+interface ReviewDueItem extends Intervention {
+  student_name: string;
+  student_class: string;
+  student_section: string;
 }
 
 const NOTE_TYPE_STYLES: Record<string, string> = {
@@ -60,6 +72,17 @@ export default function TeacherBehaviourDashboard() {
   const activeIntervention = studentInterventions.find((i) => i.status === "active") || null;
   const [interventionDrawerOpen, setInterventionDrawerOpen] = useState(false);
   const [allFollowUps, setAllFollowUps] = useState<(Note & { student_name: string; student_class: string; student_section: string })[]>([]);
+
+  // Set only when the current selection came from clicking a flagged row in
+  // Behaviour Analytics. Cleared implicitly whenever selectedStudentId no
+  // longer matches (see the studentId check where it's consumed below).
+  const [analyticsRisk, setAnalyticsRisk] = useState<{
+    studentId: string;
+    riskLevel: "low" | "medium" | "high";
+    contributingFactors: string[];
+  } | null>(null);
+
+  const [reviewsDue, setReviewsDue] = useState<ReviewDueItem[]>([]);
 
   const [noteType, setNoteType] = useState("observation");
   const [noteText, setNoteText] = useState("");
@@ -98,6 +121,27 @@ export default function TeacherBehaviourDashboard() {
     );
   }, [user?.id]);
 
+  // ---- This teacher's active interventions with a review date set ----
+  const fetchReviewsDue = useCallback(async () => {
+    if (!user?.id) return;
+    const { data } = await supabase
+      .from("student_interventions")
+      .select("*, students(full_name, class, section)")
+      .eq("teacher_id", user.id)
+      .eq("status", "active")
+      .not("review_date", "is", null)
+      .order("review_date", { ascending: true });
+
+    setReviewsDue(
+      (data || []).map((iv: any) => ({
+        ...iv,
+        student_name: iv.students?.full_name || "Unknown",
+        student_class: iv.students?.class || "",
+        student_section: iv.students?.section || "",
+      }))
+    );
+  }, [user?.id]);
+
   const fetchNotesForStudent = useCallback(async (studentId: string) => {
     if (!user?.id) return;
     setNotesLoading(true);
@@ -114,8 +158,13 @@ export default function TeacherBehaviourDashboard() {
     }
   }, [user?.id]);
 
-  useEffect(() => { fetchStudents(); fetchFollowUps(); }, [fetchStudents, fetchFollowUps]);
-    const fetchStudentInterventions = useCallback(async (studentId: string) => {
+  useEffect(() => {
+    fetchStudents();
+    fetchFollowUps();
+    fetchReviewsDue();
+  }, [fetchStudents, fetchFollowUps, fetchReviewsDue]);
+
+  const fetchStudentInterventions = useCallback(async (studentId: string) => {
     if (!user?.id) return;
     const { data } = await supabase
       .from("student_interventions")
@@ -183,6 +232,36 @@ export default function TeacherBehaviourDashboard() {
     }
   };
 
+  // Clicking a flagged row in Behaviour Analytics: select the student AND
+  // stash risk info so the InterventionDrawer can pre-fill instead of
+  // starting from a blank reason field.
+  const handleAnalyticsSelect = (student: Student, meta: AnalyticsMeta) => {
+    setSelectedClass(student.class);
+    setSelectedSection(student.section);
+    setSelectedStudentId(student.id);
+
+    const contributingFactors = Object.entries(meta.breakdown)
+      .filter(([, count]) => count > 0)
+      .map(([type, count]) => `${count} ${type} note${count > 1 ? "s" : ""} logged in the last 30 days`);
+
+    setAnalyticsRisk({
+      studentId: student.id,
+      riskLevel: meta.level === "high" ? "high" : meta.level === "watch" ? "medium" : "low",
+      contributingFactors,
+    });
+  };
+
+  // Clicking "Review" on a Reviews Due row: jump straight to that student
+  // and open the drawer. This is a manual open, not from Analytics, so any
+  // stale analyticsRisk for a different student is cleared.
+  const handleOpenReview = (iv: ReviewDueItem) => {
+    setAnalyticsRisk(null);
+    setSelectedClass(iv.student_class);
+    setSelectedSection(iv.student_section);
+    setSelectedStudentId(iv.student_id);
+    setInterventionDrawerOpen(true);
+  };
+
   const markFollowUpDone = async (noteId: string) => {
     await supabase.from("teacher_notes").update({ follow_up_completed: true }).eq("id", noteId);
     fetchFollowUps();
@@ -194,6 +273,16 @@ export default function TeacherBehaviourDashboard() {
     if (selectedStudent) fetchNotesForStudent(selectedStudent.id);
     fetchFollowUps();
   };
+
+  // Only pass risk data through if it actually belongs to the currently
+  // selected student (guards against stale data after switching students).
+  const activeRiskLevel = analyticsRisk?.studentId === selectedStudent?.id ? analyticsRisk?.riskLevel : undefined;
+  const activeContributingFactors = analyticsRisk?.studentId === selectedStudent?.id ? analyticsRisk?.contributingFactors : undefined;
+  // PBIS tier suggestion: High risk -> Tier 3 (intensive), Medium/Watch -> Tier 2 (targeted).
+  // "low" risk students aren't flagged by Analytics in the first place, so this only
+  // ever fires for students who were actually clicked from a flagged row.
+  const suggestedTier: 2 | 3 | undefined =
+    activeRiskLevel === "high" ? 3 : activeRiskLevel === "medium" ? 2 : undefined;
 
   return (
     <AppLayout>
@@ -221,79 +310,87 @@ export default function TeacherBehaviourDashboard() {
         </div>
       </div>
 
-        <div className="max-w-5xl space-y-8 mt-6 mx-auto">
-          {/* Student Notes */}
-          <Card className="overflow-hidden border border-orange-300 shadow-lg rounded-2xl">
-              <CardHeader className="pb-3"><CardTitle className="text-base">Add a Confidential Note</CardTitle></CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-3">
-                  <Select
-                    value={selectedClass}
-                    onValueChange={(v) => { setSelectedClass(v); setSelectedSection(""); setSelectedStudentId(""); }}
-                  >
-                    <SelectTrigger className="w-40"><SelectValue placeholder="Class" /></SelectTrigger>
-                    <SelectContent>
-                      {classOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+        <div className="max-w-6xl space-y-8 mt-6 mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+            <BehaviourAnalytics
+              teacherId={user?.id || ""}
+              students={students}
+              onSelectStudent={handleAnalyticsSelect}
+            />
 
-                  <Select
-                    value={selectedSection}
-                    onValueChange={(v) => { setSelectedSection(v); setSelectedStudentId(""); }}
-                    disabled={!selectedClass}
-                  >
-                    <SelectTrigger className="w-40"><SelectValue placeholder="Section" /></SelectTrigger>
-                    <SelectContent>
-                      {sectionOptions.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+            {/* Student Notes */}
+            <Card className="overflow-hidden border border-orange-300 shadow-lg rounded-2xl">
+                <CardHeader className="pb-3"><CardTitle className="text-base">Add a Confidential Note</CardTitle></CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex gap-3">
+                    <Select
+                      value={selectedClass}
+                      onValueChange={(v) => { setSelectedClass(v); setSelectedSection(""); setSelectedStudentId(""); }}
+                    >
+                      <SelectTrigger className="w-40"><SelectValue placeholder="Class" /></SelectTrigger>
+                      <SelectContent>
+                        {classOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
 
-                  <Select
-                    value={selectedStudentId}
-                    onValueChange={setSelectedStudentId}
-                    disabled={!selectedSection}
-                  >
-                    <SelectTrigger className="w-56"><SelectValue placeholder="Student" /></SelectTrigger>
-                    <SelectContent>
-                      {studentsInSection.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <Select
+                      value={selectedSection}
+                      onValueChange={(v) => { setSelectedSection(v); setSelectedStudentId(""); }}
+                      disabled={!selectedClass}
+                    >
+                      <SelectTrigger className="w-40"><SelectValue placeholder="Section" /></SelectTrigger>
+                      <SelectContent>
+                        {sectionOptions.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
 
-                {selectedStudent && (
-                  <>
-                    <div className="flex gap-3">
-                      <Select value={noteType} onValueChange={setNoteType}>
-                        <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="observation">Observation</SelectItem>
-                          <SelectItem value="positive">Positive</SelectItem>
-                          <SelectItem value="concern">Concern</SelectItem>
-                          <SelectItem value="incident">Incident</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Input
-                        type="date"
-                        value={followUpDate}
-                        onChange={(e) => setFollowUpDate(e.target.value)}
-                        className="w-48"
-                        placeholder="Follow-up date (optional)"
+                    <Select
+                      value={selectedStudentId}
+                      onValueChange={setSelectedStudentId}
+                      disabled={!selectedSection}
+                    >
+                      <SelectTrigger className="w-56"><SelectValue placeholder="Student" /></SelectTrigger>
+                      <SelectContent>
+                        {studentsInSection.map((s) => <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedStudent && (
+                    <>
+                      <div className="flex gap-3">
+                        <Select value={noteType} onValueChange={setNoteType}>
+                          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="observation">Observation</SelectItem>
+                            <SelectItem value="positive">Positive</SelectItem>
+                            <SelectItem value="concern">Concern</SelectItem>
+                            <SelectItem value="incident">Incident</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          type="date"
+                          value={followUpDate}
+                          onChange={(e) => setFollowUpDate(e.target.value)}
+                          className="w-48"
+                          placeholder="Follow-up date (optional)"
+                        />
+                      </div>
+                      <Textarea
+                        placeholder="Write your note here — only you can see this."
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        rows={3}
                       />
-                    </div>
-                    <Textarea
-                      placeholder="Write your note here — only you can see this."
-                      value={noteText}
-                      onChange={(e) => setNoteText(e.target.value)}
-                      rows={3}
-                    />
-                    <Button onClick={handleSaveNote} disabled={saving}>
-                      <MessageSquarePlus className="h-4 w-4 mr-2" />
-                      {saving ? "Saving..." : "Save Note"}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                      <Button onClick={handleSaveNote} disabled={saving}>
+                        <MessageSquarePlus className="h-4 w-4 mr-2" />
+                        {saving ? "Saving..." : "Save Note"}
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+          </div>
 
             {selectedStudent && activeIntervention && (
               <Card className="border border-blue-200 bg-blue-50/40">
@@ -386,6 +483,42 @@ export default function TeacherBehaviourDashboard() {
                 )}
               </CardContent>
             </Card>
+
+            <Card className="border border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4 text-blue-600" />
+                  Reviews Due
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!reviewsDue.length ? (
+                  <p className="text-sm text-muted-foreground py-2 text-center">No intervention reviews scheduled.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {reviewsDue.map((iv) => (
+                      <div key={iv.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium">
+                            {iv.student_name}
+                            {iv.student_class && <span className="font-normal text-muted-foreground text-xs"> · {iv.student_class}{iv.student_section ? ` - ${iv.student_section}` : ""}</span>}
+                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{iv.reason}</p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge variant={isPast(new Date(iv.review_date!)) ? "destructive" : "secondary"}>
+                            {format(new Date(iv.review_date!), "d MMM")}
+                          </Badge>
+                          <Button size="sm" variant="outline" onClick={() => handleOpenReview(iv)}>
+                            Review
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
         </div>
 
       {selectedStudent && (
@@ -393,8 +526,14 @@ export default function TeacherBehaviourDashboard() {
           open={interventionDrawerOpen}
           onOpenChange={setInterventionDrawerOpen}
           student={selectedStudent}
+          riskLevel={activeRiskLevel}
+          contributingFactors={activeContributingFactors}
+          suggestedTier={suggestedTier}
           interventions={studentInterventions}
-          onSaved={() => fetchStudentInterventions(selectedStudent.id)}
+          onSaved={() => {
+            fetchStudentInterventions(selectedStudent.id);
+            fetchReviewsDue();
+          }}
         />
       )}
     </AppLayout>

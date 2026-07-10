@@ -95,7 +95,7 @@ const navItems: Array<{
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
   { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
 { title: "Analytics", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
-
+{ title: "Surveys", icon: ClipboardList, path: "/surveys", roles: ["teacher", "admin", "principal", "school_admin", "hod", "student", "parent"] },
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
   { title: "Billing", icon: CreditCard, path: "/billing-dashboard", roles: ["knsoft_admin"] },
   { title: "Security", icon: Lock, path: "/security-dashboard", roles: ["knsoft_admin"] },
