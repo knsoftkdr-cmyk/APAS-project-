@@ -76,6 +76,9 @@ const navItems: Array<{
   { title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
   { title: "Communication", icon: MessageSquare, path: "/teacher-communication", roles: ["teacher"] },
   { title: "Communication", icon: MessageSquare, path: "/parent-communication", roles: ["parent"], module: "Communication" },
+  { title: "Communication", icon: MessageSquare, path: "/student-communication", roles: ["student"] },
+  { title: "Communication", icon: MessageSquare, path: "/admin-communication", roles: ["admin", "principal", "hod", "school_admin"] },
+
   { title: "Professional Development", icon: Award, path: "/teacher-professional-development", roles: ["teacher"] },
   { title: "Appointments", icon: CalendarCheck, path: "/teacher/appointments", roles: ["teacher"] },
   { title: "Virtual Classroom", icon: Video, path: "/virtual-classrooms", roles: ["teacher"] },

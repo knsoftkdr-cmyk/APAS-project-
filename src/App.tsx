@@ -75,6 +75,8 @@ const TeacherAtRiskStudents = lazy(() => import("./pages/TeacherAtRiskStudents")
 const TeacherBehaviourDashboard = lazy(() => import("./pages/TeacherBehaviourDashboard"));
 const TeacherProfessionalDevelopment = lazy(() => import("./pages/TeacherProfessionalDevelopment"));
 const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicationCenter"));
+const StudentCommunicationCenter = lazy(() => import("./pages/StudentCommunicationCenter"));
+const AdminCommunicationCenter = lazy(() => import("./pages/AdminCommunicationCenter"));
 const AITeacherAssistant = lazy(() => import("./pages/AITeacherAssistant"));
 const KnowledgeGraphDashboard = lazy(() => import("./pages/KnowledgeGraphDashboard"));
 const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenceDashboard"));
@@ -171,6 +173,9 @@ export default function App() {
                       <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/student-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><AdminCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><GroupProjectsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupProjectsPage /></RoleGuard></ProtectedRoute>} />

@@ -1,56 +1,51 @@
 /**
- * TeacherCommunicationCenter.tsx — APAS-060
- * Centralized messaging hub: Teacher <-> Parents / Students / Administrators.
- * Supports individual chat, class broadcasts, appreciation/behaviour message
- * types, appointment booking shortcut, file attachments, and read-receipt tracking.
+ * AdminCommunicationCenter.tsx
+ * Admin / School Admin / Principal / HOD facing messaging hub.
+ * Can message any Teacher, Parent, or Student in the school individually,
+ * broadcast to "All Teachers" / "All Parents" / "All Students", or send a
+ * single "Whole School" announcement across all three roles at once.
+ * Reuses the same `teacher_messages` table as the other Communication
+ * Center pages — `sender_id` here is just whichever admin-type role sent it.
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
-  Search, Send, Paperclip, Users, User, ShieldCheck,
-  MessageSquare, Check, CheckCheck, Calendar as CalendarIcon,
-  Sparkles, Smile, X, FileText, Image as ImageIcon, ChevronLeft, Trash2,
+  Search, Send, Paperclip, Users, User, GraduationCap,
+  MessageSquare, Check, CheckCheck, Smile, X, FileText, ChevronLeft, Megaphone,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
-import { TeacherCommunitiesContent } from "@/pages/TeacherCommunities";
 import { useNotifications } from "@/contexts/NotificationContext";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type RecipientRole = "parent" | "student" | "admin";
-type MessageType = "general" | "appreciation" | "behaviour" | "meeting_request";
+type ContactRole = "teacher" | "parent" | "student";
 
 interface Contact {
-  id: string; // profile id (recipient_id) OR class_id for group
-  kind: "individual" | "class_group";
-  role: RecipientRole;
+  id: string; // profile id, or a synthetic "group-*" id for broadcast groups
+  kind: "individual" | "group";
+  role: ContactRole;
   name: string;
-  subtitle?: string; // e.g. class/section, or "Parents" / "Students" for group
-  classId?: string;
+  subtitle?: string;
 }
 
 interface Message {
   id: string;
   sender_id: string;
   recipient_id: string;
-  recipient_role: RecipientRole;
+  recipient_role: string;
   message: string;
-  message_type: MessageType;
+  message_type: string;
   attachment_url: string | null;
   attachment_name: string | null;
-  meeting_date: string | null;
-  meeting_time: string | null;
-  meeting_status: string | null;
   batch_id: string | null;
   broadcast_label: string | null;
   is_read: boolean;
@@ -63,6 +58,12 @@ const QUICK_EMOJIS = [
   "❤️", "💯", "🔥", "📚", "✏️", "📝", "📌", "⏰", "📅", "🏆",
 ];
 
+const roleBadgeColor: Record<ContactRole, string> = {
+  teacher: "bg-amber-100 text-amber-700 border-amber-200",
+  parent: "bg-blue-100 text-blue-700 border-blue-200",
+  student: "bg-green-100 text-green-700 border-green-200",
+};
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const dayLabel = (dateStr: string) => {
@@ -72,29 +73,24 @@ const dayLabel = (dateStr: string) => {
   return format(d, "d MMM yyyy");
 };
 
-const roleBadgeColor: Record<RecipientRole, string> = {
-  parent: "bg-blue-100 text-blue-700 border-blue-200",
-  student: "bg-green-100 text-green-700 border-green-200",
-  admin: "bg-purple-100 text-purple-700 border-purple-200",
-};
+const WHOLE_SCHOOL_ID = "group-whole-school";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function TeacherCommunicationCenter() {
+export default function AdminCommunicationCenter() {
   const { user, profile } = useAuth();
   const { markMessageNotificationsAsRead, setActiveMessageThreadId } = useNotifications();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const [loadingContacts, setLoadingContacts] = useState(true);
-  const [contactTab, setContactTab] = useState<RecipientRole>("parent");
+  const [contactTab, setContactTab] = useState<ContactRole>("teacher");
   const [search, setSearch] = useState("");
 
+  const [teacherContacts, setTeacherContacts] = useState<Contact[]>([]);
   const [parentContacts, setParentContacts] = useState<Contact[]>([]);
   const [studentContacts, setStudentContacts] = useState<Contact[]>([]);
-  const [adminContacts, setAdminContacts] = useState<Contact[]>([]);
-  const [classGroups, setClassGroups] = useState<{ classId: string; className: string; section: string }[]>([]);
 
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
@@ -105,138 +101,64 @@ export default function TeacherCommunicationCenter() {
   const [sending, setSending] = useState(false);
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
-
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const [view, setView] = useState<"messages" | "communities">("messages");
 
-  // Last message per contact, for history/preview
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
 
-  // ── Fetch contacts (parents, students, admins in teacher's classes/school) ──
+  // ── Fetch every teacher / parent / student in this school ─────────────────
   const fetchContacts = useCallback(async () => {
     if (!user?.id || !profile?.school_id) return;
     setLoadingContacts(true);
     try {
-      // Teacher's assigned classes
-      const { data: assignedClasses } = await supabase
-        .from("class_teachers")
-        .select("class_id")
-        .eq("teacher_id", user.id);
-      const classIds = [...new Set((assignedClasses || []).map((c: any) => c.class_id))];
-
-      if (classIds.length === 0) {
-        setParentContacts([]);
-        setStudentContacts([]);
-        setClassGroups([]);
-      } else {
-        const { data: classRows } = await supabase
-          .from("classes")
-          .select("id, name, section")
-          .in("id", classIds);
-
-        setClassGroups(
-          (classRows || []).map((c: any) => ({ classId: c.id, className: c.name, section: c.section }))
-        );
-
-        // Students in those classes
-        const { data: classStudentLinks } = await supabase
-          .from("class_students")
-          .select("class_id, student_id")
-          .in("class_id", classIds);
-
-        const studentIds = [...new Set((classStudentLinks || []).map((cs: any) => cs.student_id))];
-
-        if (studentIds.length > 0) {
-  const { data: students } = await supabase
-    .from("students")
-    .select("id, full_name, profile_id, class, section")
-    .in("id", studentIds);
-
-  const classMap = new Map((classRows || []).map((c: any) => [c.id, c]));
-  const studentToClass = new Map(
-    (classStudentLinks || []).map((cs: any) => [cs.student_id, cs.class_id])
-  );
-
-  const studentContactsList: Contact[] = (students || [])
-    .filter((s: any) => s.profile_id)
-    .map((s: any) => {
-      const cId = studentToClass.get(s.id);
-      const cls = classMap.get(cId);
-      return {
-        id: s.profile_id,
-        kind: "individual" as const,
-        role: "student" as const,
-        name: s.full_name || "Unnamed Student",
-        subtitle: cls ? `${cls.name} - ${cls.section}` : "",
-        classId: cId,
-      };
-    });
-  setStudentContacts(studentContactsList);
-
-  // Parents linked to those students — parent_students.student_id is a
-  // PROFILE id (matches students.profile_id), NOT students.id.
-  const profileIds = (students || []).map((s: any) => s.profile_id).filter(Boolean);
-  const { data: parentLinks } = profileIds.length > 0
-    ? await supabase.from("parent_students").select("parent_id, student_id").in("student_id", profileIds)
-    : { data: [] as any[] };
-
-  const parentIds = [...new Set((parentLinks || []).map((p: any) => p.parent_id))];
-  if (parentIds.length > 0) {
-    const { data: parentProfiles } = await supabase
-      .from("profiles")
-      .select("id, full_name")
-      .in("id", parentIds);
-
-    const studentNameMap = new Map((students || []).map((s: any) => [s.profile_id, s]));
-    const parentToStudents = new Map<string, { name: string; class: string; section: string }[]>();
-    for (const link of (parentLinks || []) as any[]) {
-      const list = parentToStudents.get(link.parent_id) || [];
-      const stu = studentNameMap.get(link.student_id);
-      if (stu) list.push({ name: stu.full_name, class: stu.class, section: stu.section });
-      parentToStudents.set(link.parent_id, list);
-    }
-
-            const parentContactsList: Contact[] = (parentProfiles || []).map((p: any) => {
-              const kids = parentToStudents.get(p.id) || [];
-              const subtitle = kids
-                .map(k => `${k.name}${k.class ? ` (${k.class}${k.section ? ` - ${k.section}` : ""})` : ""}`)
-                .join(", ");
-              return {
-                id: p.id,
-                kind: "individual" as const,
-                role: "parent" as const,
-                name: p.full_name || "Unnamed Parent",
-                subtitle: `Parent of ${subtitle}`,
-              };
-            });
-            setParentContacts(parentContactsList);
-          } else {
-            setParentContacts([]);
-          }
-        } else {
-          setStudentContacts([]);
-          setParentContacts([]);
-        }
-      }
-
-      // Administrators in the same school
-      const { data: admins } = await supabase
+      const { data: teachers } = await supabase
         .from("profiles")
-        .select("id, full_name, role")
+        .select("id, full_name, designation")
         .eq("school_id", profile.school_id)
-        .in("role", ["admin", "principal", "school_admin", "hod"]);
+        .eq("role", "teacher");
 
-      setAdminContacts(
-        (admins || []).map((a: any) => ({
-          id: a.id,
+      setTeacherContacts(
+        (teachers || []).map((t: any) => ({
+          id: t.id,
           kind: "individual" as const,
-          role: "admin" as const,
-          name: a.full_name || "Unnamed",
-          subtitle: a.role === "school_admin" ? "School Admin" : a.role.charAt(0).toUpperCase() + a.role.slice(1),
+          role: "teacher" as const,
+          name: t.full_name || "Unnamed Teacher",
+          subtitle: t.designation || "Teacher",
         }))
       );
 
-      // Fetch last message per contact for previews
+      const { data: parents } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .eq("school_id", profile.school_id)
+        .eq("role", "parent");
+
+      setParentContacts(
+        (parents || []).map((p: any) => ({
+          id: p.id,
+          kind: "individual" as const,
+          role: "parent" as const,
+          name: p.full_name || "Unnamed Parent",
+          subtitle: "Parent",
+        }))
+      );
+
+      const { data: students } = await supabase
+        .from("profiles")
+        .select("id, full_name, class_grade, section")
+        .eq("school_id", profile.school_id)
+        .eq("role", "student");
+
+      setStudentContacts(
+        (students || []).map((s: any) => ({
+          id: s.id,
+          kind: "individual" as const,
+          role: "student" as const,
+          name: s.full_name || "Unnamed Student",
+          subtitle: s.class_grade ? `${s.class_grade}${s.section ? ` - ${s.section}` : ""}` : "Student",
+        }))
+      );
+
+      // Last message per contact for previews
       const { data: allMsgs } = await supabase
         .from("teacher_messages" as any)
         .select("*")
@@ -257,10 +179,12 @@ export default function TeacherCommunicationCenter() {
   }, [user?.id, profile?.school_id, toast]);
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
-useEffect(() => {
+
+  useEffect(() => {
     return () => setActiveMessageThreadId(null);
   }, []);
-  // ── Fetch thread for selected contact ───────────────────────────────────────
+
+  // ── Fetch thread for selected contact / group ───────────────────────────────
   const fetchThread = useCallback(async (contact: Contact) => {
     if (!user?.id) return;
     setThreadLoading(true);
@@ -275,24 +199,31 @@ useEffect(() => {
           .order("created_at", { ascending: true });
         setMessages((data || []) as unknown as Message[]);
 
-        // Mark received messages as read
         const unreadIds = ((data || []) as any[])
           .filter(m => m.recipient_id === user.id && !m.is_read)
           .map(m => m.id);
         if (unreadIds.length > 0) {
           await supabase.from("teacher_messages" as any).update({ is_read: true }).in("id", unreadIds);
+          setLastMessages((prev) => {
+            const next = new Map(prev);
+            const existing = next.get(contact.id);
+            if (existing) next.set(contact.id, { ...existing, is_read: true });
+            return next;
+          });
         }
       } else {
-        // Class group: show all broadcast messages sent to this class
+        // Broadcast group: show this admin's own past broadcasts under this label
         const { data } = await supabase
           .from("teacher_messages" as any)
           .select("*")
           .eq("sender_id", user.id)
           .not("batch_id", "is", null)
           .order("created_at", { ascending: true });
-        const filteredAll = ((data || []) as any[]).filter(
-          m => m.broadcast_label?.includes(contact.name)
-        );
+        const label = contact.id === WHOLE_SCHOOL_ID ? "Whole School" : `All ${contact.role}s`;
+        const filteredAll = ((data || []) as any[]).filter(m => m.broadcast_label === label);
+        // Each broadcast inserts one row PER RECIPIENT (same batch_id) — keep
+        // only one representative row per batch so the thread shows the
+        // message once, not once per person it was sent to.
         const seenBatches = new Set<string>();
         const deduped = filteredAll.filter(m => {
           if (!m.batch_id || seenBatches.has(m.batch_id)) return false;
@@ -324,6 +255,8 @@ useEffect(() => {
     if (contact.kind === "individual") {
       markMessageNotificationsAsRead(contact.id);
       setActiveMessageThreadId(contact.id);
+    } else {
+      setActiveMessageThreadId(null);
     }
   };
 
@@ -345,36 +278,8 @@ useEffect(() => {
     }
   };
 
-  // ── Omnichannel fan-out ───────────────────────────────────────────────────
-  // Fire-and-forget: never blocks the chat UI, and a failure here must never
-  // surface as a "message failed to send" error — the in-app row already
-  // landed, this is just the push/email echo of it.
-  const dispatchOmnichannel = (params: {
-    sourceId: string;
-    recipientId: string;
-    title: string;
-    body: string;
-  }) => {
-    supabase.functions
-      .invoke("dispatch-message", {
-        body: {
-          source_table: "teacher_messages",
-          source_id: params.sourceId,
-          recipient_id: params.recipientId,
-          title: params.title,
-          body: params.body,
-        },
-      })
-      .catch((e) => console.error("dispatch-message failed", e));
-  };
-
-  const handleSend = async (
-    overrideText?: string,
-    messageType: MessageType = "general",
-    meetingInfo?: { date: string; time: string }
-  ) => {
-    const text = overrideText ?? messageText;
-    if (!text.trim() && !attachedFile) {
+  const handleSend = async () => {
+    if (!messageText.trim() && !attachedFile) {
       toast({ title: "Write a message or attach a file", variant: "destructive" });
       return;
     }
@@ -383,95 +288,64 @@ useEffect(() => {
     setSending(true);
     try {
       let attachment: { url: string; name: string } | null = null;
-      if (attachedFile) {
-        attachment = await uploadAttachment(attachedFile);
-      }
-
-      const senderName = profile.full_name || "Your teacher";
-      const notifyBody = text.trim() || (attachment ? `📎 ${attachment.name}` : "New message");
+      if (attachedFile) attachment = await uploadAttachment(attachedFile);
+      const text = messageText.trim() || "📎 Attachment";
 
       if (selectedContact.kind === "individual") {
-        const messageId = crypto.randomUUID();
         const { error } = await supabase.from("teacher_messages" as any).insert({
-          id: messageId,
           school_id: profile.school_id,
           sender_id: user.id,
           recipient_id: selectedContact.id,
           recipient_role: selectedContact.role,
-          message: text.trim() || "📎 Attachment",
-          message_type: messageType,
+          message: text,
+          message_type: "general",
           attachment_url: attachment?.url || null,
           attachment_name: attachment?.name || null,
-          meeting_date: meetingInfo?.date || null,
-          meeting_time: meetingInfo?.time || null,
-          meeting_status: messageType === "meeting_request" ? "pending" : null,
         });
         if (error) throw error;
-
-        dispatchOmnichannel({
-          sourceId: messageId,
-          recipientId: selectedContact.id,
-          title: `New message from ${senderName}`,
-          body: notifyBody,
-        });
       } else {
-        // Class broadcast: expand into one row per recipient
+        // Broadcast: one row per recipient
         const batchId = crypto.randomUUID();
+        let recipients: { id: string; role: ContactRole }[] = [];
 
-        // Build recipient id list precisely
-        let recipientIds: string[] = [];
-        if (selectedContact.role === "student") {
-          recipientIds = studentContacts
-            .filter(s => s.classId === selectedContact.classId)
-            .map(s => s.id);
+        if (selectedContact.id === WHOLE_SCHOOL_ID) {
+          recipients = [
+            ...teacherContacts.map(c => ({ id: c.id, role: "teacher" as const })),
+            ...parentContacts.map(c => ({ id: c.id, role: "parent" as const })),
+            ...studentContacts.map(c => ({ id: c.id, role: "student" as const })),
+          ];
+        } else if (selectedContact.role === "teacher") {
+          recipients = teacherContacts.map(c => ({ id: c.id, role: "teacher" as const }));
+        } else if (selectedContact.role === "parent") {
+          recipients = parentContacts.map(c => ({ id: c.id, role: "parent" as const }));
         } else {
-          // parents: find students in this class, then their linked parents
-        const { data: classStudentRows } = await supabase
-            .from("students")
-            .select("profile_id")
-            .eq("class", selectedContact.name.split(" - ")[0])
-            .eq("section", selectedContact.name.split(" - ")[1] || "");
-          const stuProfileIds = (classStudentRows || []).map((s: any) => s.profile_id).filter(Boolean);
-          const { data: pLinks } = stuProfileIds.length > 0
-            ? await supabase.from("parent_students").select("parent_id").in("student_id", stuProfileIds)
-            : { data: [] as any[] };
-          recipientIds = [...new Set((pLinks || []).map((p: any) => p.parent_id))];
+          recipients = studentContacts.map(c => ({ id: c.id, role: "student" as const }));
         }
 
-        if (recipientIds.length === 0) {
-          toast({ title: "No recipients found in this class", variant: "destructive" });
+        if (recipients.length === 0) {
+          toast({ title: "No recipients found", variant: "destructive" });
           setSending(false);
           return;
         }
 
-        const rows = recipientIds.map(rid => ({
-          id: crypto.randomUUID(),
+        const label = selectedContact.id === WHOLE_SCHOOL_ID ? "Whole School" : `All ${selectedContact.role}s`;
+        const rows = recipients.map(r => ({
           school_id: profile.school_id,
           sender_id: user.id,
-          recipient_id: rid,
-          recipient_role: selectedContact.role,
-          message: text.trim() || "📎 Attachment",
-          message_type: messageType,
+          recipient_id: r.id,
+          recipient_role: r.role,
+          message: text,
+          message_type: "general",
           attachment_url: attachment?.url || null,
           attachment_name: attachment?.name || null,
           batch_id: batchId,
-          broadcast_label: selectedContact.name,
+          broadcast_label: label,
         }));
 
         const { error } = await supabase.from("teacher_messages" as any).insert(rows);
         if (error) throw error;
 
-        const broadcastTitle = `${senderName} sent a message to ${selectedContact.name}`;
-        rows.forEach(row => {
-          dispatchOmnichannel({
-            sourceId: row.id,
-            recipientId: row.recipient_id,
-            title: broadcastTitle,
-            body: notifyBody,
-          });
-        });
-
-        toast({ title: `Sent to ${recipientIds.length} ${selectedContact.role}(s)` });
+        toast({ title: `Sent to ${recipients.length} recipient(s)` });
       }
 
       setMessageText("");
@@ -486,98 +360,67 @@ useEffect(() => {
     }
   };
 
-  // ── Navigate to Appointment Booking, carrying selected parent/student context ──
-  const goToAppointments = () => {
-    if (!selectedContact) {
-      navigate("/teacher/appointments");
-      return;
-    }
-    navigate("/teacher/appointments", {
-      state: {
-        parentId: selectedContact.id,
-        parentName: selectedContact.name,
-        context: selectedContact.subtitle,
-      },
-    });
-  };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!window.confirm("Delete this message? This cannot be undone.")) return;
-    try {
-      const { error } = await supabase.from("teacher_messages" as any).delete().eq("id", messageId);
-      if (error) throw error;
-      setMessages(prev => prev.filter(m => m.id !== messageId));
-      fetchContacts();
-    } catch (e: any) {
-      toast({ title: "Couldn't delete message", description: e.message, variant: "destructive" });
-    }
-  };
-
-  // ── Filtered contact list based on active tab + search ──────────────────────
   const currentContacts = useMemo(() => {
-    let list: Contact[] = [];
-    if (contactTab === "parent") list = parentContacts;
-    else if (contactTab === "student") list = studentContacts;
-    else list = adminContacts;
-
+    let list: Contact[] =
+      contactTab === "teacher" ? teacherContacts : contactTab === "parent" ? parentContacts : studentContacts;
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(c => c.name.toLowerCase().includes(q) || c.subtitle?.toLowerCase().includes(q));
     }
     return list;
-  }, [contactTab, parentContacts, studentContacts, adminContacts, search]);
+  }, [contactTab, teacherContacts, parentContacts, studentContacts, search]);
 
-  const groupContactsForTab = useMemo(() => {
-    if (contactTab === "admin") return [];
-    return classGroups.map(cg => ({
-      id: cg.classId,
-      kind: "class_group" as const,
-      role: contactTab,
-      name: `${cg.className} - ${cg.section}`,
-      subtitle: contactTab === "parent" ? "All Parents" : "All Students",
-      classId: cg.classId,
-    }));
-  }, [classGroups, contactTab]);
+  const groupForTab: Contact = useMemo(() => ({
+    id: `group-all-${contactTab}`,
+    kind: "group",
+    role: contactTab,
+    name: `All ${contactTab === "teacher" ? "Teachers" : contactTab === "parent" ? "Parents" : "Students"}`,
+    subtitle: `Broadcast to every ${contactTab}`,
+  }), [contactTab]);
+
+  const wholeSchoolContact: Contact = {
+    id: WHOLE_SCHOOL_ID,
+    kind: "group",
+    role: "teacher", // arbitrary — badge color only, recipients span all roles
+    name: "Whole School",
+    subtitle: "Broadcast to every teacher, parent & student",
+  };
 
   return (
     <AppLayout>
       <div className="h-[calc(100vh-100px)] flex flex-col">
-        <div className="mb-4 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5 text-blue-600" />
-            <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant={view === "messages" ? "default" : "outline"}
-              onClick={() => setView("messages")}
-            >
-              Messages
-            </Button>
-            <Button
-              size="sm"
-              variant={view === "communities" ? "default" : "outline"}
-              onClick={() => setView("communities")}
-            >
-              Teacher Communities
-            </Button>
-          </div>
+        <div className="mb-4 flex items-center gap-2">
+          <MessageSquare className="h-5 w-5 text-blue-600" />
+          <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
         </div>
 
-        {view === "communities" ? (
-          <TeacherCommunitiesContent />
-        ) : (
         <Card className="flex-1 overflow-hidden border border-border/60 min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`border-r border-border/60 flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
-              <div className="p-3 border-b border-border/60">
+            <div className={`min-h-0 border-r border-border/60 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
+              <div className="p-3 border-b border-border/60 space-y-2">
+                <button
+                  onClick={() => openContact(wholeSchoolContact)}
+                  className={`w-full text-left p-2.5 rounded-lg flex items-center gap-2.5 transition-colors border ${
+                    selectedContact?.id === WHOLE_SCHOOL_ID
+                      ? "bg-purple-50 border-purple-200"
+                      : "bg-purple-50/40 border-purple-100 hover:bg-purple-50"
+                  }`}
+                >
+                  <div className="h-9 w-9 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                    <Megaphone className="h-4 w-4 text-purple-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">Whole School</p>
+                    <p className="text-xs text-muted-foreground truncate">Announce to everyone</p>
+                  </div>
+                </button>
+
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search student/parent"
+                    placeholder="Search teacher/parent/student"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     className="pl-8 h-9 text-sm"
@@ -587,14 +430,14 @@ useEffect(() => {
 
               <Tabs value={contactTab} onValueChange={(v: any) => setContactTab(v)} className="px-2 pt-2">
                 <TabsList className="grid grid-cols-3 w-full h-9">
+                  <TabsTrigger value="teacher" className="text-xs gap-1">
+                    <User className="h-3.5 w-3.5" /> Teachers
+                  </TabsTrigger>
                   <TabsTrigger value="parent" className="text-xs gap-1">
                     <Users className="h-3.5 w-3.5" /> Parents
                   </TabsTrigger>
                   <TabsTrigger value="student" className="text-xs gap-1">
-                    <User className="h-3.5 w-3.5" /> Students
-                  </TabsTrigger>
-                  <TabsTrigger value="admin" className="text-xs gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5" /> Admin
+                    <GraduationCap className="h-3.5 w-3.5" /> Students
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -604,34 +447,25 @@ useEffect(() => {
                   <div className="flex justify-center py-8"><LoadingSpinner /></div>
                 ) : (
                   <>
-                    {/* Class groups (parents/students only) */}
-                    {groupContactsForTab.map(g => {
-                      const isSelected = selectedContact?.id === g.id && selectedContact?.kind === "class_group";
-                      return (
-                        <button
-                          key={`group-${g.id}`}
-                          onClick={() => openContact(g)}
-                          className={`w-full text-left p-2.5 rounded-lg flex items-center gap-2.5 transition-colors ${
-                            isSelected ? "bg-blue-50 border border-blue-200" : "hover:bg-muted/50"
-                          }`}
-                        >
-                          <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                            <Users className="h-4 w-4 text-indigo-600" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold truncate">{g.name}</p>
-                            <p className="text-xs text-muted-foreground">{g.subtitle}</p>
-                          </div>
-                        </button>
-                      );
-                    })}
+                    {/* "All X" broadcast group for the active tab */}
+                    <button
+                      onClick={() => openContact(groupForTab)}
+                      className={`w-full text-left p-2.5 rounded-lg flex items-center gap-2.5 transition-colors ${
+                        selectedContact?.id === groupForTab.id ? "bg-blue-50 border border-blue-200" : "hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                        <Users className="h-4 w-4 text-indigo-600" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">{groupForTab.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{groupForTab.subtitle}</p>
+                      </div>
+                    </button>
 
-                    {groupContactsForTab.length > 0 && currentContacts.length > 0 && (
-                      <div className="h-px bg-border my-2" />
-                    )}
+                    {currentContacts.length > 0 && <div className="h-px bg-border my-2" />}
 
-                    {/* Individual contacts */}
-                    {currentContacts.length === 0 && groupContactsForTab.length === 0 ? (
+                    {currentContacts.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-8">
                         No contacts found.
                       </p>
@@ -674,41 +508,33 @@ useEffect(() => {
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
                   <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-3" />
                   <p className="text-sm text-muted-foreground">
-                    Select a contact to start messaging
+                    Select a contact, a role group, or Whole School to start messaging
                   </p>
                 </div>
               ) : (
                 <>
                   {/* Chat header */}
                   <div className="p-3 border-b border-border/60 flex items-center gap-2.5">
-                    <button
-                      className="md:hidden p-1"
-                      onClick={() => setShowMobileChat(false)}
-                    >
+                    <button className="md:hidden p-1" onClick={() => setShowMobileChat(false)}>
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <div className={`h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
-                      selectedContact.kind === "class_group" ? "bg-indigo-100 text-indigo-600" : "bg-blue-100 text-blue-700"
+                      selectedContact.kind === "group" ? "bg-indigo-100 text-indigo-600" : "bg-blue-100 text-blue-700"
                     }`}>
-                      {selectedContact.kind === "class_group" ? <Users className="h-4 w-4" /> : selectedContact.name[0]}
+                      {selectedContact.kind === "group"
+                        ? (selectedContact.id === WHOLE_SCHOOL_ID ? <Megaphone className="h-4 w-4" /> : <Users className="h-4 w-4" />)
+                        : selectedContact.name[0]}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold truncate">{selectedContact.name}</p>
-                      <Badge className={`text-[10px] border ${roleBadgeColor[selectedContact.role]} capitalize`}>
-                        {selectedContact.subtitle || selectedContact.role}
-                      </Badge>
+                      {selectedContact.kind === "individual" ? (
+                        <span className={`text-[10px] inline-block px-1.5 py-0.5 rounded border ${roleBadgeColor[selectedContact.role]} capitalize`}>
+                          {selectedContact.subtitle || selectedContact.role}
+                        </span>
+                      ) : (
+                        <p className="text-xs text-muted-foreground truncate">{selectedContact.subtitle}</p>
+                      )}
                     </div>
-                    {selectedContact.role === "parent" && selectedContact.kind === "individual" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5 text-xs"
-                        onClick={goToAppointments}
-                      >
-                        <CalendarIcon className="h-3.5 w-3.5" />
-                        Appointments
-                      </Button>
-                    )}
                   </div>
 
                   {/* Messages */}
@@ -732,16 +558,7 @@ useEffect(() => {
                                 </span>
                               </div>
                             )}
-                            <div className={`flex ${isMine ? "justify-end" : "justify-start"} group`}>
-                              {isMine && (
-                                <button
-                                  onClick={() => handleDeleteMessage(m.id)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
-                                  title="Delete message"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              )}
+                            <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
                                   isMine
@@ -749,23 +566,6 @@ useEffect(() => {
                                     : "bg-white border border-border/60 rounded-bl-sm"
                                 }`}
                               >
-                                {m.message_type === "appreciation" && (
-                                  <div className="flex items-center gap-1 mb-1 opacity-90">
-                                    <Sparkles className="h-3 w-3" />
-                                    <span className="text-[10px] font-semibold uppercase tracking-wide">Appreciation</span>
-                                  </div>
-                                )}
-                                {m.message_type === "behaviour" && (
-                                  <div className="flex items-center gap-1 mb-1 opacity-90">
-                                    <span className="text-[10px] font-semibold uppercase tracking-wide">Behaviour Update</span>
-                                  </div>
-                                )}
-                                {m.message_type === "meeting_request" && (
-                                  <div className="flex items-center gap-1 mb-1 opacity-90">
-                                    <CalendarIcon className="h-3 w-3" />
-                                    <span className="text-[10px] font-semibold uppercase tracking-wide">Meeting Request</span>
-                                  </div>
-                                )}
                                 <p className="text-sm whitespace-pre-line">{m.message}</p>
                                 {m.attachment_url && (
                                   <a
@@ -859,7 +659,7 @@ useEffect(() => {
                       <Smile className="h-4 w-4" />
                     </Button>
                     <Textarea
-                      placeholder="Type a message..."
+                      placeholder={selectedContact.kind === "group" ? "Write a broadcast message..." : "Type a message..."}
                       value={messageText}
                       onChange={e => setMessageText(e.target.value)}
                       onKeyDown={e => {
@@ -872,7 +672,7 @@ useEffect(() => {
                       className="resize-none min-h-[40px] max-h-32 text-sm"
                     />
                     <Button
-                      onClick={() => handleSend()}
+                      onClick={handleSend}
                       disabled={sending || uploadingFile}
                       className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700"
                     >
@@ -884,7 +684,6 @@ useEffect(() => {
             </div>
           </div>
         </Card>
-        )}
       </div>
     </AppLayout>
   );

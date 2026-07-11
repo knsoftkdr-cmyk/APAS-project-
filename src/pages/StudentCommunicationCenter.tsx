@@ -1,11 +1,10 @@
 /**
- * ParentCommunicationCenter.tsx
- * Parent-facing messaging hub: Parent <-> their children's Teachers.
- * Reuses the same `teacher_messages` table as the teacher-side Communication
- * Center, just scoped to a 1:1 view with each teacher.
+ * StudentCommunicationCenter.tsx
+ * Student-facing messaging hub: Student <-> their own Teachers.
+ * Same pattern as ParentCommunicationCenter, but contacts are derived from
+ * the student's own class/section instead of a parent's linked children.
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,17 +16,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, MessageSquare, Check, CheckCheck,
-  Calendar as CalendarIcon, Smile, X, FileText, ChevronLeft, Trash2,
+  Smile, X, FileText, ChevronLeft,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
-import { getMyChildren, getTeachersForChild } from "@/lib/appointments";
+import { getTeachersForChild } from "@/lib/appointments";
 import { useNotifications } from "@/contexts/NotificationContext";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TeacherContact {
   id: string; // teacher profile id
   name: string;
-  subtitle: string; // e.g. "Teaches Varun Gupta (Nursery - A)"
+  subtitle: string; // e.g. "Class 6 - A · Mathematics"
   role: string; // "teacher" | "admin" | "principal" | "school_admin" | "hod"
 }
 
@@ -61,11 +61,10 @@ const dayLabel = (dateStr: string) => {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ParentCommunicationCenter() {
+export default function StudentCommunicationCenter() {
   const { user, profile } = useAuth();
   const { markMessageNotificationsAsRead, setActiveMessageThreadId } = useNotifications();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -86,32 +85,35 @@ export default function ParentCommunicationCenter() {
 
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
 
-  // ── Fetch teacher contacts across all of the parent's children ─────────────
+  // ── Fetch this student's own teachers ───────────────────────────────────────
   const fetchContacts = useCallback(async () => {
     if (!user?.id) return;
     setLoadingContacts(true);
     try {
-      const children = await getMyChildren(user.id);
+      // Pull class_grade/section/school_id fresh from profiles rather than
+      // trusting the AuthContext profile object to carry every column.
+      const { data: ownProfile } = await supabase
+        .from("profiles")
+        .select("class_grade, section, school_id")
+        .eq("id", user.id)
+        .maybeSingle();
 
       const teacherMap = new Map<string, TeacherContact>();
-      for (const child of children) {
-        if (!child.className) continue;
-        const teachers = await getTeachersForChild(child.className, child.section, child.schoolId);
+      if (ownProfile?.class_grade && ownProfile?.school_id) {
+        const teachers = await getTeachersForChild(
+          ownProfile.class_grade,
+          ownProfile.section || "",
+          ownProfile.school_id
+        );
         for (const t of teachers) {
-          const existing = teacherMap.get(t.teacherId);
-          const childLabel = `${child.fullName} (${child.className}${child.section ? ` - ${child.section}` : ""})`;
-          if (existing) {
-            existing.subtitle = existing.subtitle.includes(childLabel)
-              ? existing.subtitle
-              : `${existing.subtitle}, ${childLabel}`;
-          } else {
-            teacherMap.set(t.teacherId, {
-              id: t.teacherId,
-              name: t.fullName,
-              subtitle: `Teaches ${childLabel}`,
-              role: "teacher",
-            });
-          }
+          teacherMap.set(t.teacherId, {
+            id: t.teacherId,
+            name: t.fullName,
+            subtitle: t.subject
+              ? `${t.subject}${t.designation ? ` · ${t.designation}` : ""}`
+              : t.designation || "Your teacher",
+            role: "teacher",
+          });
         }
       }
       // Also surface anyone who has messaged this student but isn't one of
@@ -172,9 +174,10 @@ export default function ParentCommunicationCenter() {
   }, [user?.id, toast]);
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
   useEffect(() => {
-  return () => setActiveMessageThreadId(null);
-}, []);
+    return () => setActiveMessageThreadId(null);
+  }, []);
 
   // ── Fetch thread for selected teacher ───────────────────────────────────────
   const fetchThread = useCallback(async (contact: TeacherContact) => {
@@ -213,7 +216,7 @@ export default function ParentCommunicationCenter() {
     if (selectedContact) fetchThread(selectedContact);
   }, [selectedContact, fetchThread]);
 
-useEffect(() => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [messages, selectedContact]);
 
@@ -277,18 +280,6 @@ useEffect(() => {
       toast({ title: "Error sending message", description: e.message, variant: "destructive" });
     } finally {
       setSending(false);
-    }
-  };
-
-  const handleDeleteMessage = async (messageId: string) => {
-    if (!window.confirm("Delete this message? This cannot be undone.")) return;
-    try {
-      const { error } = await supabase.from("teacher_messages" as any).delete().eq("id", messageId);
-      if (error) throw error;
-      setMessages(prev => prev.filter(m => m.id !== messageId));
-      if (selectedContact) fetchContacts();
-    } catch (e: any) {
-      toast({ title: "Couldn't delete message", description: e.message, variant: "destructive" });
     }
   };
 
@@ -384,15 +375,6 @@ useEffect(() => {
                       <p className="text-sm font-semibold truncate">{selectedContact.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{selectedContact.subtitle}</p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="gap-1.5 text-xs"
-                      onClick={() => navigate("/appointments")}
-                    >
-                      <CalendarIcon className="h-3.5 w-3.5" />
-                      Appointments
-                    </Button>
                   </div>
 
                   {/* Messages */}
@@ -416,16 +398,7 @@ useEffect(() => {
                                 </span>
                               </div>
                             )}
-                            <div className={`flex ${isMine ? "justify-end" : "justify-start"} group`}>
-                              {isMine && (
-                                <button
-                                  onClick={() => handleDeleteMessage(m.id)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
-                                  title="Delete message"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              )}
+                            <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
                                   isMine
