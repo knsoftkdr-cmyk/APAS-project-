@@ -18,6 +18,11 @@ import { initializePushNotifications } from "./services/pushNotifications";
 import { Capacitor } from "@capacitor/core";
 import TeacherWorkspaceDashboard from "@/pages/TeacherWorkspaceDashboard";
 import ParentCommunicationCenter from "@/pages/ParentCommunicationCenter"; // adjust path to match where you save it
+import TeacherVirtualClassroom from "@/pages/TeacherVirtualClassroom";
+import GroupProjectsPage from "@/pages/GroupProjectsPage";
+import StudentGroupProjectsPage from "@/pages/StudentGroupProjectsPage";
+import StudentGroupWorkspacePage from "@/pages/StudentGroupWorkspacePage";
+
 
 // Lazy load all page components for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
@@ -86,6 +91,7 @@ const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
+const StudentVirtualClassroom = lazy(() => import("./pages/StudentVirtualClassroom"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
 import IDCardGenerator from "@/pages/IDCardGenerator";
@@ -159,11 +165,16 @@ export default function App() {
                       
                       {/* TEACHER ROUTE ECOSYSTEM SYSTEM */}
                       <Route path="/teacher-workspace" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherWorkspaceDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/virtual-classrooms" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherVirtualClassroom /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/virtual-classroom" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentVirtualClassroom /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-at-risk" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherAtRiskStudents /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><GroupProjectsPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/student/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupProjectsPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/student/group-projects/:groupId" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupWorkspacePage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ai-teacher-assistant" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><AITeacherAssistant /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communities" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunities /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-professional-development" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherProfessionalDevelopment /></RoleGuard></ProtectedRoute>} />

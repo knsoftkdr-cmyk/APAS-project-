@@ -18,6 +18,7 @@ import {
 import { format, isToday, isTomorrow, parseISO, isAfter } from "date-fns";
 import { MyTasksWidget } from "@/components/MyTasksWidget";
 import { cn } from "@/lib/utils";
+import { TeacherGroupProjectsSummary } from "@/components/collaboration/TeacherGroupProjectsSummary";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -725,8 +726,11 @@ const TeacherWorkspaceDashboard = () => {
             </Card>
           </div>
 
-          {/* Right column: Upcoming Events */}
+          {/* Right column: Group Projects + Upcoming Events */}
           <div className="lg:col-span-1 space-y-5">
+
+            {/* Group Projects */}
+            <TeacherGroupProjectsSummary />
 
             <Card className="group border border-green-400 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ">
               <CardContent className="p-5">

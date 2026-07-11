@@ -3,12 +3,14 @@
   TrendingUp,
   UserCheck,
   LayoutDashboard,
+  Video,
   Brain,
   BookOpen,
   BarChart3,
   Building2,
   Ticket,
   Users,
+  Users2,
   Settings,
   LogOut,
   ChevronLeft,
@@ -38,7 +40,6 @@
   ArrowRightLeft,
   IdCard,
   History,
-  Grid3x3,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -77,6 +78,10 @@ const navItems: Array<{
   { title: "Communication", icon: MessageSquare, path: "/parent-communication", roles: ["parent"], module: "Communication" },
   { title: "Professional Development", icon: Award, path: "/teacher-professional-development", roles: ["teacher"] },
   { title: "Appointments", icon: CalendarCheck, path: "/teacher/appointments", roles: ["teacher"] },
+  { title: "Virtual Classroom", icon: Video, path: "/virtual-classrooms", roles: ["teacher"] },
+  { title: "Virtual Classroom", icon: Video, path: "/virtual-classroom", roles: ["student"], module: "Virtual Classroom" },
+  { title: "Group Projects", icon: Users2, path: "/teacher/group-projects", roles: ["teacher"] },
+  { title: "Group Projects", icon: Users2, path: "/student/group-projects", roles: ["student"] },
   { title: "Appointments", icon: CalendarCheck, path: "/appointments", roles: ["parent"], module: "Appointments" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },
   { title: "Alerts", icon: AlertCircle, path: "/alerts", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Alerts" },
@@ -122,10 +127,6 @@ const navItems: Array<{
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal", "admin", "student", "teacher", "hod"], module: "Home" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher", "principal", "admin", "student", "parent"], module: "Attendance" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
-  { title: "Competency & Outcomes", icon: BookOpen, path: "/competency-definitions", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
-  { title: "Competency Assessment", icon: ClipboardCheck, path: "/competency-assessment", roles: ["teacher"], module: "Home" },
-  { title: "Competency Heatmap", icon: Grid3x3, path: "/competency-heatmap", roles: ["principal", "admin", "hod", "school_admin"], module: "Home" },
-  { title: "Skills Passport", icon: Award, path: "/skills-passport", roles: ["student", "parent"], module: "Home" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
@@ -214,7 +215,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       if (item.roles && (!profile?.role || !item.roles.includes(profile.role))) return false;
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance"];
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects"];
         const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);

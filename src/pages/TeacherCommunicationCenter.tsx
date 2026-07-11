@@ -20,7 +20,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, Users, User, ShieldCheck,
   MessageSquare, Check, CheckCheck, Calendar as CalendarIcon,
-  Sparkles, Smile, X, FileText, Image as ImageIcon, ChevronLeft,
+  Sparkles, Smile, X, FileText, Image as ImageIcon, ChevronLeft, Trash2,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { TeacherCommunitiesContent } from "@/pages/TeacherCommunities";
@@ -485,6 +485,18 @@ export default function TeacherCommunicationCenter() {
     });
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!window.confirm("Delete this message? This cannot be undone.")) return;
+    try {
+      const { error } = await supabase.from("teacher_messages" as any).delete().eq("id", messageId);
+      if (error) throw error;
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      fetchContacts();
+    } catch (e: any) {
+      toast({ title: "Couldn't delete message", description: e.message, variant: "destructive" });
+    }
+  };
+
   // ── Filtered contact list based on active tab + search ──────────────────────
   const currentContacts = useMemo(() => {
     let list: Contact[] = [];
@@ -704,7 +716,16 @@ export default function TeacherCommunicationCenter() {
                                 </span>
                               </div>
                             )}
-                            <div className={`flex ${isMine ? "justify-end" : "justify-start"}`}>
+                            <div className={`flex ${isMine ? "justify-end" : "justify-start"} group`}>
+                              {isMine && (
+                                <button
+                                  onClick={() => handleDeleteMessage(m.id)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
+                                  title="Delete message"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
                                   isMine

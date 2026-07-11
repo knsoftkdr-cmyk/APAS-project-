@@ -60,6 +60,8 @@ import remarkGfm from "remark-gfm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StudentReport } from "@/components/StudentReport";
 import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
+import StudentVirtualClassroomWidget from "@/components/StudentVirtualClassroomWidget";
+import { StudentGroupProjectsSummary } from "@/components/collaboration/StudentGroupProjectsSummary";
 
 const COMPLETION_COLORS = {
   completed: "hsl(142, 71%, 45%)",
@@ -459,6 +461,16 @@ const subjectColors: Record<string, string> = {
 </div>
 
       <ProfileCompletionBar percent={profilePct} missing={profileMissing} />
+
+      {/* Virtual Classrooms — upcoming/live sessions */}
+      <div className="mb-6">
+        <StudentVirtualClassroomWidget />
+      </div>
+
+      {/* Group Projects — groups you belong to + task progress */}
+      <div className="mb-6">
+        <StudentGroupProjectsSummary />
+      </div>
 
       {/* Diagnostic Assessment CTA */}
       <Card className="mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent hover:border-primary/40 transition-all">
