@@ -66,6 +66,7 @@ export default function ParentCommunicationCenter() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [search, setSearch] = useState("");
@@ -157,6 +158,12 @@ export default function ParentCommunicationCenter() {
         .map(m => m.id);
       if (unreadIds.length > 0) {
         await supabase.from("teacher_messages" as any).update({ is_read: true }).in("id", unreadIds);
+        setLastMessages((prev) => {
+          const next = new Map(prev);
+          const existing = next.get(contact.id);
+          if (existing) next.set(contact.id, { ...existing, is_read: true });
+          return next;
+        });
       }
     } catch (e: any) {
       toast({ title: "Error loading messages", description: e.message, variant: "destructive" });
@@ -168,6 +175,10 @@ export default function ParentCommunicationCenter() {
   useEffect(() => {
     if (selectedContact) fetchThread(selectedContact);
   }, [selectedContact, fetchThread]);
+
+useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, selectedContact]);
 
   const openContact = (contact: TeacherContact) => {
     setSelectedContact(contact);
@@ -258,8 +269,8 @@ export default function ParentCommunicationCenter() {
           <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
         </div>
 
-        <Card className="flex-1 overflow-hidden border border-border/60">
-          <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full">
+        <Card className="flex-1 overflow-hidden border border-border/60 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
             <div className={`border-r border-border/60 flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
@@ -314,7 +325,7 @@ export default function ParentCommunicationCenter() {
             </div>
 
             {/* ── Chat Panel ── */}
-            <div className={`flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
+            <div className={`min-h-0 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
               {!selectedContact ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
                   <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-3" />
@@ -413,6 +424,7 @@ export default function ParentCommunicationCenter() {
                         );
                       })
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
 
                   {/* Emoji picker */}

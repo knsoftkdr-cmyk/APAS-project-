@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { TeacherCommunitiesContent } from "@/pages/TeacherCommunities";
-
+import { useNotifications } from "@/contexts/NotificationContext";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type RecipientRole = "parent" | "student" | "admin";
@@ -82,10 +82,11 @@ const roleBadgeColor: Record<RecipientRole, string> = {
 
 export default function TeacherCommunicationCenter() {
   const { user, profile } = useAuth();
+  const { markMessageNotificationsAsRead, setActiveMessageThreadId } = useNotifications();
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [contactTab, setContactTab] = useState<RecipientRole>("parent");
   const [search, setSearch] = useState("");
@@ -256,7 +257,9 @@ export default function TeacherCommunicationCenter() {
   }, [user?.id, profile?.school_id, toast]);
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
-
+useEffect(() => {
+    return () => setActiveMessageThreadId(null);
+  }, []);
   // ── Fetch thread for selected contact ───────────────────────────────────────
   const fetchThread = useCallback(async (contact: Contact) => {
     if (!user?.id) return;
@@ -304,11 +307,19 @@ export default function TeacherCommunicationCenter() {
     if (selectedContact) fetchThread(selectedContact);
   }, [selectedContact, fetchThread]);
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ block: "end" });
+  }, [messages, selectedContact]);
+
   const openContact = (contact: Contact) => {
     setSelectedContact(contact);
     setShowMobileChat(true);
     setMessageText("");
     setAttachedFile(null);
+    if (contact.kind === "individual") {
+      markMessageNotificationsAsRead(contact.id);
+      setActiveMessageThreadId(contact.id);
+    }
   };
 
   // ── Send message ─────────────────────────────────────────────────────────────
@@ -778,6 +789,7 @@ export default function TeacherCommunicationCenter() {
                         );
                       })
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
 
                   {/* Emoji picker */}

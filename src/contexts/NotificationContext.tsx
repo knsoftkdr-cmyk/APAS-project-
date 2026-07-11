@@ -26,7 +26,7 @@ export interface Notification {
 
   assignment_id?: string;
   worksheet_assignment_id?: string;
-  sender_id?: string; // NEW — used to scope message-thread read state
+  sender_id?: string;
 }
 
 interface NotificationContextType {
@@ -35,10 +35,9 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   markHomeworkNotificationAsRead: (assignmentId: string) => void;
-  markWorksheetNotificationAsRead: (worksheetAssignmentId: string) => void;
-  markMessageNotificationsAsRead: (contactId: string) => void; // NEW
-  activeMessageThreadId: string | null;                         // NEW
-  setActiveMessageThreadId: (id: string | null) => void;        // NEW
+markWorksheetNotificationAsRead: (worksheetAssignmentId: string) => void;
+  markMessageNotificationsAsRead: (senderId: string) => void;
+  setActiveMessageThreadId: (id: string | null) => void;
 }
 
 // ------------------------------------ Context ------------------------------------------
@@ -50,9 +49,8 @@ const NotificationContext = createContext<NotificationContextType>({
   markAllAsRead: () => {},
   markHomeworkNotificationAsRead: () => {},
   markWorksheetNotificationAsRead: () => {},
-  markMessageNotificationsAsRead: () => {}, // NEW
-  activeMessageThreadId: null,               // NEW
-  setActiveMessageThreadId: () => {},        // NEW
+  markMessageNotificationsAsRead: () => {},
+  setActiveMessageThreadId: () => {},
 });
 
 // -------------------------------------- Helper ------------------------------------------------
@@ -141,15 +139,7 @@ function saveNotifiedWorksheets(
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [activeMessageThreadId, setActiveMessageThreadId] = useState<string | null>(null);
-
-const markMessageNotificationsAsRead = useCallback((contactId: string) => {
-  setNotifications((prev) =>
-    prev.map((n) =>
-      n.sender_id === contactId ? { ...n, is_read: true } : n
-    )
-  );
-}, []);
+  
   // useEffect(() => {
   //   if (!user) { setNotifications([]); return; }
   //   try {
@@ -217,6 +207,12 @@ const markMessageNotificationsAsRead = useCallback((contactId: string) => {
   const homeworkAssignmentIdsRef = useRef<string[]>([]);
   // Maps assignment_id -> { subject, topic, class_level } for rich notifications
   const assignmentMetaRef = useRef<Record<string, { subject: string | null; topic: string | null; class_level: string }>>({});
+  // Tracks which sender's message thread is currently open on screen, so we
+  // can skip creating a bell notification for messages already being viewed.
+  const activeMessageThreadIdRef = useRef<string | null>(null);
+  const setActiveMessageThreadId = useCallback((id: string | null) => {
+    activeMessageThreadIdRef.current = id;
+  }, []);
 
   const push = useCallback(
     (n: Omit<Notification, "id" | "is_read" | "created_at">) => {
@@ -283,7 +279,7 @@ const markMessageNotificationsAsRead = useCallback((contactId: string) => {
       const topic = meta?.topic ? ` - ${meta.topic}` : "";
       const pctText = submissionPct != null ? ` (${submissionPct}% answered)` : "";
       return {
-        title: `📝 Homework submitted`,
+        title: `Homework submitted`,
         message: `${studentName} submitted ${subject}${topic}${pctText}.`,
       };
     };
@@ -646,6 +642,14 @@ const markWorksheetNotificationAsRead = useCallback(
   []
 );
 
+const markMessageNotificationsAsRead = useCallback((senderId: string) => {
+  setNotifications((prev) =>
+    prev.map((n) =>
+      n.sender_id === senderId ? { ...n, is_read: true } : n
+    )
+  );
+}, []);
+
 
   // Student: notify when teacher assigns homework (polling)
   const hwLastCheckedRef = useRef<string>(new Date().toISOString());
@@ -871,15 +875,70 @@ return () => {
             message: `${teacherProf.full_name || "A teacher"} submitted a diagnostic request for ${row.class_name} - ${row.section} (${row.subject}).`,
             link: "/admin-panel",
           });
-        }
-      )
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(ch); };
   }, [user, profile, push]);
+
+  // ── New message received (works for any recipient role: student, parent, admin) ──
+  useEffect(() => {
+    if (!user) return;
+
+    const ch = supabase
+      .channel("notif_teacher_message")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "teacher_messages",
+          filter: `recipient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            sender_id: string;
+            message_type: string;
+          };
+
+          // Already viewing this exact conversation — no need to notify
+          if (activeMessageThreadIdRef.current === row.sender_id) return;
+
+          const typeLabel =
+            row.message_type === "meeting_request"
+              ? "New meeting request"
+              : row.message_type === "appreciation"
+              ? "New appreciation note"
+              : row.message_type === "behaviour"
+              ? "New behaviour update"
+              : "You have a new message";
+
+          const messageLink =
+            profile?.role === "parent"
+              ? "/parent-communication"
+              : profile?.role === "teacher"
+              ? "/teacher-communication"
+              : undefined;
+
+          push({
+            type: "info",
+            title: typeLabel,
+            message: "Open Communication Center to view it.",
+            link: messageLink,
+            sender_id: row.sender_id,
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ch);
+    };
+  }, [user, profile, push]);
+
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead,markHomeworkNotificationAsRead,markWorksheetNotificationAsRead,markMessageNotificationsAsRead, activeMessageThreadId,setActiveMessageThreadId}}
+      value={{ notifications, unreadCount, markAsRead, markAllAsRead, markHomeworkNotificationAsRead, markWorksheetNotificationAsRead, markMessageNotificationsAsRead, setActiveMessageThreadId }}
     >
       {children}
     </NotificationContext.Provider>
@@ -887,4 +946,3 @@ return () => {
 }
 
 export const useNotifications = () => useContext(NotificationContext);
-
