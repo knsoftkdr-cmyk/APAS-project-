@@ -25,6 +25,7 @@ import { format, isPast } from "date-fns";
 import { MessageSquarePlus, Clock, Trash2, ClipboardList, CalendarClock } from "lucide-react";
 import { InterventionDrawer, Intervention } from "@/components/InterventionDrawer";
 import { BehaviourAnalytics, AnalyticsMeta } from "@/components/BehaviourAnalytics";
+import { TierOnePositiveRecognition } from "@/components/TierOnePositiveRecognition.tsx";
 
 interface Student {
   id: string;
@@ -262,6 +263,16 @@ export default function TeacherBehaviourDashboard() {
     setInterventionDrawerOpen(true);
   };
 
+  // Clicking "+ Recognize" in Tier 1 panel: select the student and pre-set
+  // the note form to "positive" so the teacher just has to write the note.
+  const handleGiveRecognition = (student: Student) => {
+    setAnalyticsRisk(null);
+    setSelectedClass(student.class);
+    setSelectedSection(student.section);
+    setSelectedStudentId(student.id);
+    setNoteType("positive");
+  };
+
   const markFollowUpDone = async (noteId: string) => {
     await supabase.from("teacher_notes").update({ follow_up_completed: true }).eq("id", noteId);
     fetchFollowUps();
@@ -310,14 +321,44 @@ export default function TeacherBehaviourDashboard() {
         </div>
       </div>
 
-        <div className="max-w-6xl space-y-8 mt-6 mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="max-w-7xl mx-auto mt-6">
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 items-start">
+            <div className="xl:col-span-2 space-y-6">
             <BehaviourAnalytics
               teacherId={user?.id || ""}
               students={students}
               onSelectStudent={handleAnalyticsSelect}
             />
+            
+          <TierOnePositiveRecognition
+            teacherId={user?.id || ""}
+            students={students}
+            onGiveRecognition={handleGiveRecognition}
+          />
 
+            {selectedStudent && activeIntervention && (
+              <Card className="border border-blue-200 bg-blue-50/40">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <ClipboardList className="h-4 w-4 text-blue-600" />
+                      <p className="text-sm font-semibold">Active Intervention</p>
+                      <Badge className="bg-amber-100 text-amber-700">{activeIntervention.priority} priority</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {activeIntervention.review_date
+                        ? `Review by ${format(new Date(activeIntervention.review_date), "d MMM yyyy")}`
+                        : "No review date set"}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="outline" onClick={() => setInterventionDrawerOpen(true)}>
+                    View Details
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+</div>
+            <div className="xl:col-span-3 space-y-6">
             {/* Student Notes */}
             <Card className="overflow-hidden border border-orange-300 shadow-lg rounded-2xl">
                 <CardHeader className="pb-3"><CardTitle className="text-base">Add a Confidential Note</CardTitle></CardHeader>
@@ -390,29 +431,7 @@ export default function TeacherBehaviourDashboard() {
                   )}
                 </CardContent>
               </Card>
-          </div>
-
-            {selectedStudent && activeIntervention && (
-              <Card className="border border-blue-200 bg-blue-50/40">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <ClipboardList className="h-4 w-4 text-blue-600" />
-                      <p className="text-sm font-semibold">Active Intervention</p>
-                      <Badge className="bg-amber-100 text-amber-700">{activeIntervention.priority} priority</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {activeIntervention.review_date
-                        ? `Review by ${format(new Date(activeIntervention.review_date), "d MMM yyyy")}`
-                        : "No review date set"}
-                    </p>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => setInterventionDrawerOpen(true)}>
-                    View Details
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+          
 
             {selectedStudent && (
               <Card className="border border-border/60">
@@ -520,7 +539,8 @@ export default function TeacherBehaviourDashboard() {
               </CardContent>
             </Card>
         </div>
-
+        </div>
+</div>
       {selectedStudent && (
         <InterventionDrawer
           open={interventionDrawerOpen}
