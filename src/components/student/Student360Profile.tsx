@@ -133,9 +133,9 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
             <div key={tab.value} className="relative">
               <TabsTrigger
                 value={tab.value}
-                className="gap-1.5 rounded-lg bg-blue-600 text-white transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-blue-500 data-[state=active]:bg-blue-800 data-[state=active]:text-white data-[state=active]:shadow-sm"
+                className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm"
               >
-                <tab.icon className="h-4 w-4 text-white" />
+                <tab.icon className="h-4 w-4" />
                 {tab.label}
               </TabsTrigger>
             </div>
