@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -22,6 +23,10 @@ import TeacherVirtualClassroom from "@/pages/TeacherVirtualClassroom";
 import GroupProjectsPage from "@/pages/GroupProjectsPage";
 import StudentGroupProjectsPage from "@/pages/StudentGroupProjectsPage";
 import StudentGroupWorkspacePage from "@/pages/StudentGroupWorkspacePage";
+import CourseCatalog from "@/pages/Coursecatalog";
+import CourseDetail from "@/pages/Coursedetail";
+import LearningPathView from "@/pages/Learningpathview";
+import MyCredentials from "@/pages/Mycredentials";
 
 
 // Lazy load all page components for code splitting
@@ -264,6 +269,19 @@ export default function App() {
                       <Route path="/forgot-password" element={<ForgotPassword />} />
                       <Route path="/update-password" element={<UpdatePassword />} />
                       <Route path="*" element={<NotFound />} />
+
+                      <Route path="/student/courses" element={
+                <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><CourseCatalog /></AppLayout></RoleGuard></ProtectedRoute>
+} />
+<Route path="/student/courses/:courseId" element={
+  <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><CourseDetail /></AppLayout></RoleGuard></ProtectedRoute>
+} />
+<Route path="/student/paths/:pathId" element={
+  <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><LearningPathView /></AppLayout></RoleGuard></ProtectedRoute>
+} />
+<Route path="/student/credentials" element={
+  <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><MyCredentials /></AppLayout></RoleGuard></ProtectedRoute>
+} />
                     </Routes>
                   </Suspense>
                 </NotificationProvider>
