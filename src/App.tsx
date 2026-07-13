@@ -92,12 +92,16 @@ const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
 const CompetencyHeatmap = lazy(() => import("./pages/CompetencyHeatmap"));
 const SkillsPassport = lazy(() => import("./pages/SkillsPassport"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
+const ParentSafeguardingPage = lazy(() => import("./pages/ParentSafeguardingPage"));
 const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
 const RotationScheduleManagement = lazy(() => import("./pages/RotationScheduleManagement"));
 const StudentVirtualClassroom = lazy(() => import("./pages/StudentVirtualClassroom"));
+const TeacherSafeguardingReport = lazy(() => import("./pages/TeacherSafeguardingReport"));
+const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
+
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
 import IDCardGenerator from "@/pages/IDCardGenerator";
@@ -182,6 +186,9 @@ export default function App() {
                       <Route path="/admin/electives" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><AdminElectivesPage /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher/safeguarding-report" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherSafeguardingReport /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/safeguarding" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod"]}><SafeguardingPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/parent/safeguarding" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentSafeguardingPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><GroupProjectsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupProjectsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student/group-projects/:groupId" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupWorkspacePage /></RoleGuard></ProtectedRoute>} />

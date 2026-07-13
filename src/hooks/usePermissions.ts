@@ -5,15 +5,15 @@ import { useAuth } from "@/contexts/AuthContext";
 const BYPASS_ROLES = ["knsoft_admin", "school_admin"];
 
 const DEFAULT_PERMISSIONS: Record<string, string[]> = {
-  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards", "Attendance"],
-  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards", "Invigilation", "Exam Seating", "Hall Tickets", "Attendance"],
-  hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar", "Houses"],
-  teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar", "Houses", "Semester Engine", "Attendance", "Group Projects"],
+  admin:     ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards", "Attendance", "Safeguarding & Child Protection"],
+  principal: ["Home", "Reports", "Alerts", "Admin Panel", "AI Tutor", "School Intelligence", "Security Center", "Billing", "Academic Calendar", "Houses", "Semester Engine", "Report Cards", "Invigilation", "Exam Seating", "Hall Tickets", "Attendance", "Safeguarding & Child Protection"],
+  hod:       ["Home", "Reports", "Assessments", "Analytics", "Academic Calendar", "Houses", "Safeguarding & Child Protection"],
+  teacher:   ["Home", "Reports", "Lesson Plans", "Analytics", "Requests", "Academic Calendar", "Houses", "Semester Engine", "Attendance", "Group Projects", "Safeguarding & Child Protection"],
   student:   ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Houses", "Semester Engine", "Attendance"],
   parent:    ["Home", "Academic Calendar", "Houses", "Report Cards", "Attendance"],
 };
 
-const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar","Houses","Semester Engine","Report Cards","Group Projects"];
+const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School Intelligence","Security Center","Billing","Settings","Student Profile","Teacher Profile","Attendance","Homework","Lesson Plans","Assessments","Analytics","Gamification","Leaderboard","Predictions","Parent Communication","Risk Prediction","Academic Tests","Requests","Academic Calendar","Houses","Semester Engine","Report Cards","Group Projects","Safeguarding & Child Protection"];
 
 const permCache = new Map<string, string[]>();
 // Cache version — bump this to invalidate all cached permissions

@@ -39,7 +39,10 @@
   CalendarCheck,
   ArrowRightLeft,
   IdCard,
-  History, RotateCw } from "lucide-react";
+  History,
+  RotateCw,
+  ShieldAlert,
+} from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -87,6 +90,9 @@ const navItems: Array<{
   { title: "Virtual Classroom", icon: Video, path: "/virtual-classrooms", roles: ["teacher"] },
   { title: "Virtual Classroom", icon: Video, path: "/virtual-classroom", roles: ["student"], module: "Virtual Classroom" },
   { title: "Group Projects", icon: Users2, path: "/teacher/group-projects", roles: ["teacher"] },
+  { title: "Safeguarding", icon: ShieldAlert, path: "/teacher/safeguarding-report", roles: ["teacher"], module: "Safeguarding & Child Protection" },
+  { title: "Safeguarding", icon: ShieldAlert, path: "/safeguarding", roles: ["admin", "principal", "hod"], module: "Safeguarding & Child Protection" },
+  { title: "Safeguarding", icon: ShieldAlert, path: "/parent/safeguarding", roles: ["parent"], module: "Safeguarding & Child Protection" },
   { title: "Group Projects", icon: Users2, path: "/student/group-projects", roles: ["student"] },
   { title: "Appointments", icon: CalendarCheck, path: "/appointments", roles: ["parent"], module: "Appointments" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Requests" },
@@ -222,7 +228,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
         const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects"];
-        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication"];
+        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication", "Safeguarding & Child Protection"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);
       }
