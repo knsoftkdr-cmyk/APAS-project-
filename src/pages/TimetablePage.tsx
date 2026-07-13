@@ -192,6 +192,9 @@ const TimetablePage = () => {
   // Viewer
   const [viewingTimetable, setViewingTimetable] = useState<ParsedTimetable | null>(null);
   const [viewingLabel, setViewingLabel] = useState("");
+  const [viewingClassInfo, setViewingClassInfo] = useState<{ class_grade: string; section: string } | null>(null);
+  const [rotationData, setRotationData] = useState<{ day_of_week: string; slots: any[] } | null>(null);
+  const [teacherRotationDuties, setTeacherRotationDuties] = useState<any[]>([]);
   const [loadingView, setLoadingView] = useState(false);
 
   // Clash detection
@@ -327,7 +330,7 @@ const TimetablePage = () => {
         .eq("section", profile.section ?? "")
         .eq("timetable_type", "class")
         .single();
-      if (data) await loadAndParseFile(data.file_path, `Class ${data.class_grade} - Section ${data.section}`);
+      if (data) await loadAndParseFile(data.file_path, `Class ${data.class_grade} - Section ${data.section}`, { class_grade: data.class_grade, section: data.section });
     } catch (e: any) {
       console.warn("No student timetable found");
     } finally {
@@ -354,6 +357,27 @@ const TimetablePage = () => {
     }
   }, [user, schoolId, profile]);
 
+  // ── Fetch this teacher's rotation duties for today ─────────────────────────
+  const fetchTeacherRotationDuties = useCallback(async () => {
+    if (!user?.id || !schoolId) return;
+    try {
+      const { data, error } = await supabase.functions.invoke("get-teacher-rotation-schedule", {
+        body: { school_id: schoolId, teacher_id: user.id },
+      });
+      if (error) { console.error("Failed to load teacher rotation duties", error); setTeacherRotationDuties([]); return; }
+      setTeacherRotationDuties(data?.assignments ?? []);
+    } catch (e) {
+      console.error("Failed to load teacher rotation duties", e);
+      setTeacherRotationDuties([]);
+    }
+  }, [user, schoolId]);
+
+  useEffect(() => {
+    if (!isPrincipal && !isHOD) {
+      fetchTeacherRotationDuties();
+    }
+  }, [isPrincipal, isHOD, fetchTeacherRotationDuties]);
+
   useEffect(() => {
     if (isPrincipal || isHOD) {
       fetchTeachers().then(() => fetchTimetables());
@@ -372,7 +396,7 @@ const TimetablePage = () => {
   }, [teachers]);
 
   // ── Parse Excel from storage ───────────────────────────────────────────────
-  const loadAndParseFile = async (filePath: string, label: string) => {
+  const loadAndParseFile = async (filePath: string, label: string, classInfo?: { class_grade: string; section: string }) => {
     setLoadingView(true);
     try {
       const { data, error } = await supabase.storage.from("timetables").download(filePath);
@@ -384,12 +408,25 @@ const TimetablePage = () => {
       if (json.length === 0) { toast({ title: "Empty file", variant: "destructive" }); return; }
       setViewingTimetable({ headers: (json[0] ?? []).map(String), rows: json.slice(1).map(r => r.map(String)) });
       setViewingLabel(label);
+      setViewingClassInfo(classInfo ?? null);
     } catch (e: any) {
       toast({ title: "Error reading file", description: e.message, variant: "destructive" });
     } finally {
       setLoadingView(false);
     }
   };
+
+  // ── Fetch live rotation schedule overlay for the currently viewed class ────
+  useEffect(() => {
+    if (!viewingClassInfo || !schoolId) { setRotationData(null); return; }
+    (async () => {
+      const { data, error } = await supabase.functions.invoke("get-rotation-schedule", {
+        body: { school_id: schoolId, class_grade: viewingClassInfo.class_grade, section: viewingClassInfo.section },
+      });
+      if (error) { console.error("Failed to load rotation schedule", error); setRotationData(null); return; }
+      setRotationData({ day_of_week: data?.day_of_week ?? "", slots: data?.slots ?? [] });
+    })();
+  }, [viewingClassInfo, schoolId]);
 
   // ── Upload class timetable ─────────────────────────────────────────────────
   const handleUploadClass = async () => {
@@ -574,19 +611,42 @@ try {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, ri) => (
-              <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                {row.map((cell, ci) => (
-                  <td key={ci} className={`px-3 py-2.5 border-b border-slate-100 whitespace-nowrap
-                    ${ci === 0 ? "font-semibold text-slate-700 bg-slate-50" : ""}
-                    ${ci > 0 && cell && !cell.includes("BREAK") && !cell.includes("LUNCH") ? dayColors[(ci-1) % dayColors.length] + " font-medium" : ""}
-                    ${cell.includes("BREAK") || cell.includes("LUNCH") ? "text-slate-400 italic text-center" : ""}
-                  `}>
-                    {cell || "—"}
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {rows.map((row, ri) => {
+              const periodMatch = row[0]?.match(/\d+/);
+              const periodNumber = periodMatch ? parseInt(periodMatch[0], 10) : null;
+              const STANDARD_DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+              return (
+                <tr key={ri} className={ri % 2 === 0 ? "bg-white" : "bg-slate-50"}>
+                  {row.map((cell, ci) => {
+                    const dayForColumn = ci > 0 ? STANDARD_DAYS[ci - 1] : null;
+                    const isTodayColumn = dayForColumn && rotationData && dayForColumn === rotationData.day_of_week;
+                    const rotationSlot = isTodayColumn && periodNumber != null
+                      ? rotationData!.slots.find((s: any) => s.period_number === periodNumber)
+                      : null;
+                    const rotationAssignments = rotationSlot?.assignments?.filter((a: any) => !a.skipped) ?? [];
+                    const hasRotation = Boolean(isTodayColumn && rotationSlot && rotationAssignments.length > 0);
+                    return (
+                      <td key={ci} className={`px-3 py-2.5 border-b border-slate-100 whitespace-nowrap
+                        ${ci === 0 ? "font-semibold text-slate-700 bg-slate-50" : ""}
+                        ${ci > 0 && cell && !cell.includes("BREAK") && !cell.includes("LUNCH") && !hasRotation ? dayColors[(ci-1) % dayColors.length] + " font-medium" : ""}
+                        ${cell.includes("BREAK") || cell.includes("LUNCH") ? "text-slate-400 italic text-center" : ""}
+                        ${hasRotation ? "bg-indigo-50 text-indigo-800 font-medium border border-indigo-200 rounded" : ""}
+                      `}>
+                        {hasRotation ? (
+                          <div className="flex flex-col gap-0.5">
+                            {rotationAssignments.map((a: any) => (
+                              <span key={a.group_id} className="text-xs">
+                                {rotationAssignments.length > 1 ? `${a.group_name}: ` : ""}{a.block_name} ({a.subject}{a.teacher_name ? ` – ${a.teacher_name}` : ""})
+                              </span>
+                            ))}
+                          </div>
+                        ) : (cell || "—")}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -659,6 +719,34 @@ try {
             </div>
           </div>
         </div>
+        {teacherRotationDuties.length > 0 && (
+          <Card className="border-2 border-indigo-100">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-indigo-700">
+                <CalendarDays className="h-5 w-5" />Today's Rotation Duties
+              </CardTitle>
+              <CardDescription>Rotation-based classes you're teaching today, in addition to your regular timetable</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {teacherRotationDuties.map((duty, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-lg border border-indigo-100 bg-indigo-50 px-4 py-3">
+                    <div>
+                      <span className="font-semibold text-indigo-800">Period {duty.period_number}</span>
+                      <span className="text-slate-500 mx-2">·</span>
+                      <span className="text-slate-700">Class {duty.class_grade} - Section {duty.section}</span>
+                      {duty.group_name ? <span className="text-slate-400 text-sm ml-2">({duty.group_name})</span> : null}
+                    </div>
+                    <div className="text-sm text-indigo-700 font-medium">
+                      {duty.block_name} {duty.subject && duty.subject !== duty.block_name ? `(${duty.subject})` : ""}
+                      {duty.room ? <span className="text-slate-400 ml-2">· {duty.room}</span> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {viewingTimetable ? (
           <Card className="border-2 border-green-100">
             <CardHeader>
@@ -669,7 +757,7 @@ try {
             </CardHeader>
             <CardContent>{renderTimetable()}</CardContent>
           </Card>
-        ) : (
+        ) : teacherRotationDuties.length === 0 ? (
           <Card className="border-2 border-dashed border-slate-200">
             <CardContent className="py-16 text-center">
               <CalendarDays className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -677,7 +765,7 @@ try {
               <p className="text-slate-400 text-sm mt-1">Your principal hasn't assigned a timetable to you yet.</p>
             </CardContent>
           </Card>
-        )}
+        ) : null}
       </div>
     </AppLayout>
   );
@@ -718,7 +806,7 @@ try {
                         <div key={tt.id}
                           className={`flex items-center justify-between px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors
                             ${viewingLabel === `Class ${tt.class_grade} - Section ${tt.section}` ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}`}
-                          onClick={() => loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`)}>
+                          onClick={() => loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`, { class_grade: tt.class_grade ?? "", section: tt.section ?? "" })}>
                           <div>
                             <p className="text-sm font-semibold text-slate-700">Class {tt.class_grade} · Section {tt.section}</p>
                             <p className="text-xs text-slate-400">{tt.file_name}</p>
@@ -1211,13 +1299,13 @@ try {
                         <div key={tt.id}
                           className={`flex items-center justify-between px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors
                             ${viewingLabel === `Class ${tt.class_grade} - Section ${tt.section}` ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}`}
-                          onClick={() => loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`)}>
+                          onClick={() => loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`, { class_grade: tt.class_grade ?? "", section: tt.section ?? "" })}>
                           <div>
                             <p className="text-sm font-semibold text-slate-700">Class {tt.class_grade} · Section {tt.section}</p>
                             <p className="text-xs text-slate-400">{tt.file_name}</p>
                           </div>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`); }}>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`, { class_grade: tt.class_grade ?? "", section: tt.section ?? "" }); }}>
                               <Eye className="h-3.5 w-3.5 text-blue-600" />
                             </Button>
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => { e.stopPropagation(); handleDelete(tt); }}>

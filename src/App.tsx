@@ -33,6 +33,8 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
 const StudentProfile360 = lazy(() => import("./pages/StudentProfile360"));
 const Worksheets = lazy(() => import("./pages/Worksheets"));
+const StudentElectives = lazy(() => import("./pages/StudentElectives"));
+const TeacherElectives = lazy(() => import("./pages/TeacherElectives"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Curative = lazy(() => import("./pages/Curative"));
 const Submissions = lazy(() => import("./pages/Submissions"));
@@ -77,6 +79,7 @@ const TeacherProfessionalDevelopment = lazy(() => import("./pages/TeacherProfess
 const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicationCenter"));
 const StudentCommunicationCenter = lazy(() => import("./pages/StudentCommunicationCenter"));
 const AdminCommunicationCenter = lazy(() => import("./pages/AdminCommunicationCenter"));
+const AdminElectivesPage = lazy(() => import("./pages/AdminElectivesPage"));
 const AITeacherAssistant = lazy(() => import("./pages/AITeacherAssistant"));
 const KnowledgeGraphDashboard = lazy(() => import("./pages/KnowledgeGraphDashboard"));
 const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenceDashboard"));
@@ -93,6 +96,7 @@ const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
+const RotationScheduleManagement = lazy(() => import("./pages/RotationScheduleManagement"));
 const StudentVirtualClassroom = lazy(() => import("./pages/StudentVirtualClassroom"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
@@ -175,6 +179,7 @@ export default function App() {
                       <Route path="/parent-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><AdminCommunicationCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin/electives" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><AdminElectivesPage /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><GroupProjectsPage /></RoleGuard></ProtectedRoute>} />
@@ -185,11 +190,13 @@ export default function App() {
                       <Route path="/teacher-professional-development" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherProfessionalDevelopment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/diagnostic" element={<ProtectedRoute><Diagnostic /></ProtectedRoute>} />
                       <Route path="/worksheets" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Worksheets /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/electives" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentElectives /></RoleGuard></ProtectedRoute>} />
                       <Route path="/analytics" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><Analytics /></RoleGuard></ProtectedRoute>} />
                       <Route path="/curative" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Curative /></RoleGuard></ProtectedRoute>} />
                       <Route path="/submissions" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Submissions /></RoleGuard></ProtectedRoute>} />
                       <Route path="/assessment-evaluation" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><AssessmentEvaluation /></RoleGuard></ProtectedRoute>} />
                       <Route path="/entry-ticket" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><EntryTicket /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher-electives" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherElectives /></RoleGuard></ProtectedRoute>} />
                       <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "student", "parent"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
                       <Route path="/alerts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "teacher", "student", "parent"]}><Alerts /></RoleGuard></ProtectedRoute>} />
@@ -235,6 +242,7 @@ export default function App() {
                       <Route path="/hall-tickets" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "student", "parent"]}><HallTicketEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/invigilation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><InvigilationManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/rotation-schedules" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><RotationScheduleManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/attendance" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "principal", "admin", "student", "parent"]}><AttendanceMarking /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-transfers" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><StudentTransfers /></RoleGuard></ProtectedRoute>} />
                       <Route path="/id-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><IDCardGenerator /></RoleGuard></ProtectedRoute>} />

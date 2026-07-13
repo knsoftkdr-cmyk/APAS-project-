@@ -39,8 +39,7 @@
   CalendarCheck,
   ArrowRightLeft,
   IdCard,
-  History,
-} from "lucide-react";
+  History, RotateCw } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -60,6 +59,8 @@ const navItems: Array<{
   subItem?: { title: string; path: string; icon: any };
 }> = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
+  { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["admin", "principal", "school_admin"], module: "Rotation Schedules" },
+  { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal", "school_admin", "knsoft_admin"] },
   { title: "Dashboard", icon: LayoutDashboard, path: "/teacher-workspace", roles: ["teacher"], tourId: "nav-home", module: "Home" },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
@@ -67,10 +68,12 @@ const navItems: Array<{
   { title: "Reports", icon: Users, path: "/teacher", roles: ["teacher", "admin", "principal", "hod", "student", "parent"], module: "Reports" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "Worksheets", icon: FileText, path: "/worksheets", roles: ["student"], tourId: "nav-worksheets" },
+  { title: "Electives", icon: BookOpen, path: "/electives", roles: ["student"] },
   { title: "Lesson Plan Generator", icon: BookOpen, path: "/curative", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Entry Ticket", icon: ClipboardList, path: "/entry-ticket", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
+  { title: "My Electives", icon: Users2, path: "/teacher-electives", roles: ["teacher"] },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
   { title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"] },
   { title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
