@@ -436,24 +436,30 @@ export default function AssessmentEvaluation() {
   return (
     <AppLayout>
     <div className="p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-primary" />
-            Assessment Evaluation
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Upload student assessment files and run AI-powered evaluation.
-          </p>
-        </div>
+<div className="rounded-2xl p-6 relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg">
+  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+  <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
+  <div className="relative flex items-center gap-4">
+    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+      <Sparkles className="h-6 w-6 text-white" />
+    </div>
+    <div className="flex flex-col gap-1">
+      <h1 className="text-2xl font-bold text-white">Assessment Evaluation</h1>
+      <p className="text-sm text-white/80">
+        Upload student assessment files and run AI-powered evaluation.
+      </p>
+    </div>
+  </div>
+</div>
 
-        <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetUploadForm(); }}>
-          <DialogTrigger asChild>
-            <Button>
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Assessment
-            </Button>
-          </DialogTrigger>
+<div className="flex justify-end">
+  <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetUploadForm(); }}>
+    <DialogTrigger asChild>
+      <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+        <Upload className="h-4 w-4 mr-2" />
+        Upload Assessment
+      </Button>
+    </DialogTrigger>
           <DialogContent className="sm:max-w-md p-6 max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Upload Assessment Files</DialogTitle>
@@ -468,6 +474,11 @@ export default function AssessmentEvaluation() {
                       size="sm"
                       variant={paperMode === "existing" ? "default" : "outline"}
                       onClick={() => setPaperMode("existing")}
+                      className={`rounded-lg transition-all duration-200 ${
+                        paperMode === "existing"
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-transparent text-slate-600 hover:bg-white"
+                      }`}
                     >
                       Use Existing
                     </Button>
@@ -476,6 +487,11 @@ export default function AssessmentEvaluation() {
                       size="sm"
                       variant={paperMode === "new" ? "default" : "outline"}
                       onClick={() => setPaperMode("new")}
+                      className={`rounded-lg transition-all duration-200 ${
+                        paperMode === "new"
+                          ? "bg-blue-600 text-white shadow-md"
+                          : "bg-transparent text-slate-600 hover:bg-white"
+                      }`}
                     >
                       Upload New
                     </Button>
@@ -505,7 +521,7 @@ export default function AssessmentEvaluation() {
                       className="w-full"
                     />
                     <div
-                      className="w-full border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                      className="w-full border-2 border-dashed border-amber-200 rounded-lg p-4 text-center cursor-pointer hover:bg-amber-50 hover:border-amber-300 transition-colors"
                       onClick={() => paperFileInputRef.current?.click()}
                       onDragOver={(e) => e.preventDefault()}
                       onDrop={(e) => { e.preventDefault(); handlePaperFilePicked(e.dataTransfer.files); }}
@@ -545,7 +561,7 @@ export default function AssessmentEvaluation() {
               <div>
                 <Label className="mb-2 block">Answer Sheets</Label>
                 <div
-                  className="w-full border-2 border-dashed rounded-lg p-8 text-center cursor-pointer hover:bg-muted/40 transition-colors"
+                  className="w-full border-2 border-dashed border-orange-200 rounded-lg p-8 text-center cursor-pointer hover:bg-orange-50 hover:border-orange-300 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => { e.preventDefault(); handleFilesPicked(e.dataTransfer.files); }}
@@ -631,6 +647,7 @@ export default function AssessmentEvaluation() {
             <DialogFooter className="pt-4 mt-2 border-t">
               <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
               <Button
+                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
                 onClick={handleUpload}
                 disabled={
                   uploading ||
@@ -645,8 +662,10 @@ export default function AssessmentEvaluation() {
           </DialogContent>
         </Dialog>
       </div>
-
-      <div className="flex items-center gap-3">
+    
+      <div className="rounded-xl border border-orange-100 bg-white shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+        <div className="flex items-center gap-3 p-4">
         <Select value={classFilter} onValueChange={setClassFilter}>
           <SelectTrigger className="w-[160px]">
             <SelectValue placeholder="All Classes" />
@@ -680,33 +699,43 @@ export default function AssessmentEvaluation() {
             ))}
           </SelectContent>
         </Select>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabFilter)}>
-        <TabsList>
-          <TabsTrigger value="pending">Pending ({counts.pending})</TabsTrigger>
-          <TabsTrigger value="ai_reviewed">AI Reviewed ({counts.ai_reviewed})</TabsTrigger>
-          <TabsTrigger value="reviewed">Reviewed ({counts.reviewed})</TabsTrigger>
-          <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
+        <TabsList className="bg-orange-50 border border-orange-100">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+            Pending ({counts.pending})
+          </TabsTrigger>
+          <TabsTrigger value="ai_reviewed" className="data-[state=active]:bg-violet-500 data-[state=active]:text-white">
+            AI Reviewed ({counts.ai_reviewed})
+          </TabsTrigger>
+          <TabsTrigger value="reviewed" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
+            Reviewed ({counts.reviewed})
+          </TabsTrigger>
+          <TabsTrigger value="all" className="data-[state=active]:bg-gray-700 data-[state=active]:text-white">
+            All ({counts.all})
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
       {activeTab === "pending" && filtered.length > 0 && (
-        <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-4 py-2">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              checked={selectedIds.length > 0 && selectedIds.length === filtered.length}
-              onCheckedChange={toggleSelectAll}
-            />
-            <span className="text-sm text-muted-foreground">
-              {selectedIds.length > 0 ? `${selectedIds.length} selected` : "Select all"}
-            </span>
-          </div>
-          <Button
-            size="sm"
-            disabled={selectedIds.length === 0 || evaluatingIds.length > 0}
-            onClick={() => runEvaluation(selectedIds)}
-          >
+  <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50 px-4 py-2.5">
+    <div className="flex items-center gap-2">
+      <Checkbox
+        checked={selectedIds.length > 0 && selectedIds.length === filtered.length}
+        onCheckedChange={toggleSelectAll}
+      />
+      <span className="text-sm text-amber-800 font-medium">
+        {selectedIds.length > 0 ? `${selectedIds.length} selected` : "Select all"}
+      </span>
+    </div>
+    <Button
+      size="sm"
+      className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+      disabled={selectedIds.length === 0 || evaluatingIds.length > 0}
+      onClick={() => runEvaluation(selectedIds)}
+    >
             {evaluatingIds.length > 0 ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -733,7 +762,7 @@ export default function AssessmentEvaluation() {
             const isExpanded = expandedId === s.id;
             const label = s.student_name || s.file_name;
             return (
-              <Card key={s.id} className="overflow-hidden">
+              <Card key={s.id} className={`overflow-hidden border-l-4 ${s.status === "pending" ? "border-l-amber-400" : s.status === "ai_reviewed" ? "border-l-violet-400" : s.status === "reviewed" ? "border-l-emerald-400" : "border-l-gray-300" }`}>
                 <CardHeader className="flex flex-row items-center justify-between gap-4 py-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {s.status === "pending" && (
@@ -819,7 +848,7 @@ export default function AssessmentEvaluation() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closePreview}>Close</Button>
+            <Button className="bg-blue-600 text-white" variant="outline" onClick={closePreview}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

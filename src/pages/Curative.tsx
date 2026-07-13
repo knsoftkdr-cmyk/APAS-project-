@@ -1655,19 +1655,9 @@ console.log("PDF SAVED:", result.uri);
   return (
     <AppLayout>
       {/* Hero Header */}
-      <div className="relative mb-8 rounded-2xl overflow-hidden bg-gradient-to-br from-primary/80 via-primary to-primary/80 p-8 shadow-xl animate-fade-in">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
-          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
-<div className="hidden md:block">
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">?</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">?</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">?</div>
-
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-</div>
+      <div className="relative mb-6 md:mb-8 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-700 via-sky-600 to-sky-700 p-5 md:p-8 shadow-xl animate-fade-in">
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djJoLTJ2LTJoMnptMC00aDJ2MmgtMnYtMnptLTQgOGgydjJoLTJ2LTJ6bTIgMGgydjJoLTJ2LTJ6bTItNGgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
@@ -1683,29 +1673,30 @@ console.log("PDF SAVED:", result.uri);
       </div>
 
       <Tabs defaultValue="lesson-plan" className="mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-        <div className="overflow-x-auto">
-<TabsList className="grid w-full max-w-lg grid-cols-4 mb-4 ">
-        <TabsTrigger value="lesson-plan" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
-          <Wand2 className="h-6 w-6" /> Lesson Plan
-        </TabsTrigger>
-        <TabsTrigger value="assign-homework" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
-          <Briefcase className="h-6 w-6" /> Assign Homework
-        </TabsTrigger>
-        <TabsTrigger value="worksheets" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
-          <FileText className="h-6 w-6" /> Worksheets
+        <div className="overflow-x-auto scrollbar-hide pb-2">
+          <TabsList className="flex w-max md:w-full md:max-w-4xl gap-3 bg-transparent p-0 h-auto">
+                  <TabsTrigger value="lesson-plan" className="min-w-[140px] md:min-w-0 h-10 md:h-12 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all duration-300 hover:bg-slate-100 hover:shadow-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-sky-400 data-[state=active]:text-white data-[state=active]:border-transparent data-[state=active]:shadow-lg flex items-center justify-center gap-1.5 md:gap-2">
+            <Wand2 className="h-4 w-4 md:h-6 md:w-6" /> Lesson Plan
           </TabsTrigger>
-        <TabsTrigger value="generated-lessons" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg gap-2">
-          <History className="h-6 w-6" /> My Lessons
+          <TabsTrigger value="assign-homework" className="min-w-[140px] md:min-w-0 h-10 md:h-12 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all duration-300 hover:bg-slate-100 hover:shadow-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-sky-400 data-[state=active]:text-white data-[state=active]:border-transparent data-[state=active]:shadow-lg flex items-center justify-center gap-1.5 md:gap-2">
+            <Briefcase className="h-4 w-4 md:h-6 md:w-6" /> Assign Homework
           </TabsTrigger>
+          <TabsTrigger value="worksheets" className="min-w-[140px] md:min-w-0 h-10 md:h-12 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all duration-300 hover:bg-slate-100 hover:shadow-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-sky-400 data-[state=active]:text-white data-[state=active]:border-transparent data-[state=active]:shadow-lg flex items-center justify-center gap-1.5 md:gap-2">
+            <FileText className="h-4 w-4 md:h-6 md:w-6" /> Worksheets
+            </TabsTrigger>
+          <TabsTrigger value="generated-lessons" className="min-w-[140px] md:min-w-0 h-10 md:h-12 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-medium transition-all duration-300 hover:bg-slate-100 hover:shadow-md data-[state=active]:bg-gradient-to-r data-[state=active]:from-sky-500 data-[state=active]:to-sky-400 data-[state=active]:text-white data-[state=active]:border-transparent data-[state=active]:shadow-lg flex items-center justify-center gap-1.5 md:gap-2">
+            <History className="h-4 w-4 md:h-6 md:w-6" /> My Lessons
+            </TabsTrigger>
         </TabsList>
 </div>
         <TabsContent value="lesson-plan" className="space-y-6 mt-0">
           {/* Configuration Card */}
-          <Card className="border-2 border-primary/10 shadow-lg hover:shadow-xl transition-all duration-500">
+          <Card className="border-2 border-blue-100 shadow-lg hover:shadow-xl transition-all duration-500 overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-blue-600 via-sky-500 to-blue-500" />
             <CardHeader className="pb-3 border-b border-border/50">
-              <CardTitle className="text-base flex items-center gap-2 text-primary">
-                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-                <BookMarked className="h-7 w-7 text-red-600" />
+              <CardTitle className="text-sm md:text-base flex items-center gap-2 text-blue-700">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
+                <BookMarked className="h-5 w-5 md:h-7 md:w-7 text-blue-600" />
                 </div>
                 Configure Your Lesson
               </CardTitle>
@@ -1920,7 +1911,7 @@ console.log("PDF SAVED:", result.uri);
                   onClick={handleGeneratePlan}
                   disabled={!isReady || isStreaming}
                   size="lg"
-                  className="shrink-0 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-base px-8 py-3 rounded-xl"
+                  className="w-full sm:w-auto shrink-0 bg-gradient-to-r from-sky-500 to-sky-500 hover:from-sky-600 hover:to-sky-700 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-sm md:text-base px-6 md:px-8 py-2.5 md:py-3 rounded-xl"
                 >
                   {isStreaming ? (
                     <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating...</>
@@ -1956,7 +1947,7 @@ console.log("PDF SAVED:", result.uri);
       {/* AI Teaching Assistant */}
       <div className="mb-6 animate-fade-in" style={{ animationDelay: '0.2s' }}>
         {/* Assistant Header */}
-        <div className="relative rounded-t-2xl overflow-hidden bg-gradient-to-r from-blue-500 via-blue-500 to-blue-500 p-5">
+        <div className="relative rounded-t-2xl overflow-hidden bg-gradient-to-r from-indigo-700 via-blue-600 to-blue-600 p-4 md:p-5">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxLjUiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4xKSIvPjwvc3ZnPg==')] opacity-60" />
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -2139,11 +2130,11 @@ console.log("PDF SAVED:", result.uri);
                       <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" loading="lazy" />
                     </div>
                   )}
-                  <div className={`rounded-2xl px-5 py-4 max-w-[85%] shadow-sm ${
-                    msg.role === "user" 
-                      ? "bg-gradient-to-br from-accent to-accent/85 text-white text-sm rounded-br-md" 
-                      : "bg-card border border-border/60 rounded-bl-md"
-                  }`}>
+                  <div className={`rounded-2xl px-4 md:px-5 py-3 md:py-4 max-w-[90%] sm:max-w-[85%] shadow-sm ${
+  msg.role === "user" 
+    ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-sm rounded-br-md" 
+    : "bg-card border border-border/60 rounded-bl-md"
+}`}>
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none">
                         <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
@@ -2153,7 +2144,7 @@ console.log("PDF SAVED:", result.uri);
                     ) : (<p className="text-sm leading-relaxed">{msg.content}</p>)}
                   </div>
                   {msg.role === "user" && (
-                    <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center mt-1 shadow-sm">
+                    <div className="shrink-0 w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center mt-1 shadow-sm">
                       <User className="h-4 w-4 text-primary-foreground" />
                     </div>
                   )}
@@ -2211,7 +2202,7 @@ console.log("PDF SAVED:", result.uri);
                 onClick={handleSendChat} 
                 disabled={!isReady || !inputValue.trim() || isStreaming} 
                 size="icon"
-                className="h-11 w-11 rounded-xl bg-gradient-to-br from-accent to-accent/85 hover:from-accent/90 hover:to-accent shadow-md hover:shadow-lg hover:scale-[1.05] active:scale-[0.95] transition-all duration-300"
+                className="h-10 w-10 md:h-11 md:w-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md hover:shadow-lg hover:scale-[1.05] active:scale-[0.95] transition-all duration-300 shrink-0"
               >
                 <Send className="h-4.5 w-4.5" />
               </Button>
@@ -4162,14 +4153,14 @@ try {
                     variant={lesson.completed ? "outline" : "default"}
                     disabled={updatingId === lesson.id}
                     onClick={() => handleToggleCompleted(lesson)}
-                    className="gap-1.5"
+                    className="gap-1.5 bg-cyan-500 text-white"
                   >
                     {updatingId === lesson.id ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : lesson.completed ? (
-                      <X className="h-3.5 w-3.5" />
+                      <X className="h-4 w-4 text-white" />
                     ) : (
-                      <Check className="h-3.5 w-3.5" />
+                      <Check className="h-4 w-4 text-white" />
                     )}
                     {lesson.completed ? "Mark Incomplete" : "Mark Completed"}
                   </Button>

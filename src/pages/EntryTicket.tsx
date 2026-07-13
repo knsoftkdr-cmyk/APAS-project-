@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
-
+import { Sparkles, Loader2, ChevronDown, ChevronUp, FileText, CheckCircle2, Upload, X, Eye, GraduationCap, User, BookOpen, BookMarked, Layers, Hash, ClipboardList, Ticket } from "lucide-react";
 const CLASS_OPTIONS = [
   { value: "1", label: "Class 1" },
   { value: "2", label: "Class 2" },
@@ -369,28 +369,34 @@ export default function EntryTicket() {
   return (
     <AppLayout>
 <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl lg:max-w-7xl mx-auto">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Entry Ticket</h1>
-            <p className="text-gray-500 text-sm mt-1">Measure student learning gain before and after a topic</p>
-          </div>
-          <div className="flex gap-2">
-            {phase !== "setup" && (
-              <button onClick={resetAll} className="px-4 py-2 text-sm bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
-                + New Ticket
-              </button>
-            )}
-            <button
-              onClick={() => { setShowPast(!showPast); fetchPastSessions(); }}
-              className="px-4 py-2 text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100"
-            >
-              Past Sessions
-            </button>
-          </div>
-        </div>
+       {/* Header */}
+<div className="rounded-2xl p-6 mb-4 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
+  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full"></div>
+  <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full"></div>
+  <div className="relative flex items-center gap-4">
+    <Ticket className="h-10 w-10 text-white" />
+    <div>
+      <h1 className="text-2xl font-bold text-white">Entry Ticket</h1>
+      <p className="text-indigo-100 text-sm mt-1">Measure student learning gain before and after a topic</p>
+    </div>
+  </div>
+</div>
+
+<div className="flex justify-end gap-2 mb-6">
+  {phase !== "setup" && (
+    <button onClick={resetAll} className="px-4 py-2 text-sm bg-white border border-blue-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 shadow-sm">
+      + New Ticket
+    </button>
+  )}
+  <button
+    onClick={() => { setShowPast(!showPast); fetchPastSessions(); }}
+    className="px-4 py-2 text-sm bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 font-medium"
+  >
+    Past Sessions
+  </button>
+</div>
 
         {/* Error / Success */}
         {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>}
@@ -398,7 +404,7 @@ export default function EntryTicket() {
 
         {/* Past Sessions Panel */}
         {showPast && (
-          <div className="mb-6 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <div className="mb-6 bg-white rounded-2xl border border-purple-300 shadow-sm overflow-hidden hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
             <div className="px-5 py-4 border-b border-gray-100 bg-gradient-to-r from-indigo-50 to-white flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
               <h2 className="font-semibold text-gray-800 text-sm">Past Ticket Sessions</h2>
@@ -461,31 +467,45 @@ export default function EntryTicket() {
 
         {/* PHASE: SETUP */}
         {phase === "setup" && (
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-            <h2 className="font-semibold text-gray-800 mb-4">Create Entry Ticket</h2>
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <div className="px-6 py-4 bg-gradient-to-r from-indigo-50 to-white border-b border-gray-100 flex items-center gap-2">
+    <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+      <ClipboardList className="h-4 w-4 text-indigo-600" />
+    </div>
+    <h2 className="font-semibold text-gray-800">Create Entry Ticket</h2>
+  </div>
+  <div className="p-6">
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+  <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <GraduationCap className="h-3.5 w-3.5 text-indigo-500" /> Class
+  </label>
+  <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors hover:border-indigo-300">
                   <option value="">Select Class</option>
                   {CLASS_OPTIONS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Section</label>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <User className="h-3.5 w-3.5 text-indigo-500" /> Section
+  </label>
                 <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
                   <option value="">Select Section</option>
                   {SECTION_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <BookOpen className="h-3.5 w-3.5 text-indigo-500" /> Subject
+  </label>
                 <select value={selectedSubject} onChange={e => { setSelectedSubject(e.target.value); setSelectedChapter(""); setTopicValue(""); setSelectedSubtopic(""); }} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" disabled={!selectedClass}>
                   <option value="">-- Select Subject --</option>
                   {subjectsList.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
                 <div className="mt-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Chapter</label>
+                  <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <BookMarked className="h-3.5 w-3.5 text-indigo-500" /> Chapter
+  </label>
                   <select value={selectedChapter} onChange={e => { setSelectedChapter(e.target.value); setTopicValue(""); setSelectedSubtopic(""); }} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" disabled={!selectedSubject}>
                     <option value="">-- Select Chapter --</option>
                     {chaptersList.map(ch => <option key={ch.id} value={ch.label}>{ch.label}</option>)}
@@ -493,18 +513,24 @@ export default function EntryTicket() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total Marks</label>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <Hash className="h-3.5 w-3.5 text-indigo-500" /> Total Marks
+  </label>
                 <input type="number" value={totalMarks} onChange={e => setTotalMarks(parseInt(e.target.value) || 10)} min={1} max={100} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Topic / Chapter</label>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <BookOpen className="h-3.5 w-3.5 text-indigo-500" /> Topic / Chapter
+  </label>
                 <select value={topicValue} onChange={e => { setTopicValue(e.target.value); setSelectedSubtopic(""); }} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" disabled={!selectedChapter}>
                   <option value="">-- Select Topic --</option>
                   {topicsList.map(t => <option key={t.id} value={t.topic_name}>{t.topic_name}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subtopic</label>
+                <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
+    <Layers className="h-3.5 w-3.5 text-indigo-500" /> Subtopic
+  </label>
                 <select value={selectedSubtopic} onChange={e => setSelectedSubtopic(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400" disabled={!topicValue}>
                   <option value="">-- Select Subtopic --</option>
                   {subtopicsList.map(st => <option key={st.id} value={st.subtopic_name}>{st.subtopic_name}</option>)}
@@ -521,13 +547,14 @@ export default function EntryTicket() {
               ) : "Generate Entry Ticket Questions"}
             </button>
           </div>
+          </div>
         )}
 
         {/* PHASE: PRE - Show questions + class score entry */}
         {phase === "pre" && (
-          <div className="space-y-4">
+          <div className="space-y-4 ">
             {/* Questions Card */}
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-blue-300 shadow-sm p-6 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
               <div className="flex items-center gap-2 mb-4">
                 <span className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg tracking-wide">ENTRY TICKET</span>
                 <span className="text-sm text-gray-500">{selectedSubject} {topicValue && `· ${topicValue}`} {selectedSubtopic && `· ${selectedSubtopic}`}</span>
@@ -544,7 +571,7 @@ export default function EntryTicket() {
             </div>
 
             {/* Class Score Entry */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+            <div className="bg-white rounded-xl border border-blue-300 shadow-sm p-6 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
               <h3 className="font-semibold text-gray-800 mb-1">Enter Class Pre-Score</h3>
               <p className="text-xs text-gray-500 mb-4">Enter the overall class score out of {totalMarks}</p>
               <div className="flex items-center gap-2 mb-4">
@@ -574,8 +601,8 @@ export default function EntryTicket() {
 
         {/* PHASE: POST - Enter exit score */}
         {phase === "post" && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+          <div className="space-y-4 ">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
               <div className="flex items-center gap-2 mb-2">
                 <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">EXIT TICKET</span>
                 <span className="text-sm text-gray-500">{selectedSubject} | {topicValue} | {selectedSubtopic}</span>
@@ -610,25 +637,31 @@ export default function EntryTicket() {
         {phase === "results" && (
           <div className="space-y-4">
             {/* Summary */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Class Normalized Gain</p>
-                <p className={`text-2xl font-bold ${parseFloat(avgGain || "0") >= 0.7 ? "text-green-600" : parseFloat(avgGain || "0") >= 0.3 ? "text-yellow-600" : "text-red-600"}`}>
-                  {avgGain}
-                </p>
-              </div>
-              <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 text-center">
-                <p className="text-xs text-gray-500 mb-1">Gain Level</p>
-                {responses[0] && (
-                  <span className={`inline-block text-sm px-3 py-1 rounded-full font-medium ${gainBadge(responses[0].gain_level)}`}>
-                    {responses[0].gain_level?.toUpperCase()}
-                  </span>
-                )}
-              </div>
-            </div>
+<div className="grid grid-cols-3 gap-4 ">
+  <div className="bg-white rounded-xl border-l-4 border-indigo-400 border-t border-r border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
+    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Class Normalized Gain</p>
+    <p className={`text-2xl font-bold ${parseFloat(avgGain || "0") >= 0.7 ? "text-emerald-600" : parseFloat(avgGain || "0") >= 0.3 ? "text-amber-600" : "text-red-600"}`}>
+      {avgGain}
+    </p>
+  </div>
+  <div className="bg-white rounded-xl border-l-4 border-emerald-400 border-t border-r border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
+    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Pre → Post</p>
+    <p className="text-2xl font-bold text-emerald-600">
+      {responses[0]?.pre_score}/{responses[0]?.total_marks} → {responses[0]?.post_score}/{responses[0]?.total_marks}
+    </p>
+  </div>
+  <div className="bg-white rounded-xl border-l-4 border-amber-400 border-t border-r border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
+    <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Gain Level</p>
+    {responses[0] && (
+      <span className={`inline-block text-sm px-3 py-1 rounded-full font-medium ${gainBadge(responses[0].gain_level)}`}>
+        {responses[0].gain_level?.toUpperCase()}
+      </span>
+    )}
+  </div>
+</div>
 
             {/* Results Table */}
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-xl border border-cyan-300 shadow-sm overflow-hidden hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
               <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
                 <h2 className="font-semibold text-gray-700 text-sm">Normalized Gain Results</h2>
                 <p className="text-xs text-gray-400">{selectedSubject} | {topicValue} | {selectedSubtopic}</p>

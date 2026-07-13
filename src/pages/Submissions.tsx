@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, ClipboardCheck, Users, Check, Eye, FileText, BookOpen, Lock, Sparkles, Bot, Paperclip, CheckCircle2, XCircle, AlertCircle, Download } from "lucide-react";
+import { Loader2, ClipboardCheck, Users, Check, Eye, FileText, BookOpen, Lock, Sparkles, FileCheck, Bot, Paperclip, CheckCircle2, XCircle, AlertCircle, Download } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -335,14 +335,24 @@ try {
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Worksheet Submissions"
-        subtitle="Review and AI-evaluate student worksheet answers"
-      />
+      <div className="rounded-2xl p-6 mb-6 relative overflow-hidden bg-gradient-to-r from-violet-600 to-fuchsia-600 shadow-lg">
+  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+  <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
+  <div className="relative flex items-center gap-4">
+    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+      <FileCheck className="h-7 w-7 text-white" />
+    </div>
+    <div>
+      <h1 className="text-2xl font-bold text-white">Worksheet Submissions</h1>
+      <p className="text-white/80 text-sm mt-1">Review and AI-evaluate student worksheet answers</p>
+    </div>
+  </div>
+</div>
 
       {/* Filters + Bulk AI button */}
-      <Card className="mb-6 border-2 border-primary/10">
-        <CardContent className="p-4 flex flex-wrap gap-3 items-end">
+<Card className="mb-6 border border-purple-200 shadow-sm overflow-hidden">
+  <div className="h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500" />
+  <CardContent className="p-5 flex flex-wrap gap-3 items-end">
           <div className="w-[160px]">
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Class</label>
             <Select value={filterClass} onValueChange={setFilterClass}>
@@ -378,14 +388,14 @@ try {
             </Select>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm font-medium border border-green-600 text-white bg-green-400 px-3 py-1.5 rounded-full">
               {filteredSubmissions.length} submission{filteredSubmissions.length !== 1 ? "s" : ""}
             </span>
             {pendingCount > 0 && (
               <Button
                 onClick={handleBulkAiEvaluate}
                 disabled={isBulkEvaluating}
-                className="gap-2 bg-violet-600 hover:bg-violet-700"
+                className="gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 shadow-sm"
                 size="sm"
               >
                 {isBulkEvaluating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
@@ -393,6 +403,7 @@ try {
               </Button>
             )}
           </div>
+        
         </CardContent>
       </Card>
 
@@ -409,7 +420,7 @@ try {
       ) : (
         <div className="space-y-3">
           {filteredSubmissions.map((s) => (
-            <Card key={s.id} className="border border-border/60">
+            <Card key={s.id} className="border border-border/60 hover:-translate-y-2 hover:shadow-2xl hover:border-purple-300">
               <CardContent className="p-4 flex items-center justify-between gap-3 flex-wrap">
                 <div className="flex-1 min-w-[220px]">
                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
@@ -452,7 +463,7 @@ try {
                       AI Review
                     </Button>
                   )}
-                  <Button size="sm" className="gap-1.5" onClick={() => openSubmission(s)}>
+                  <Button size="sm" className="gap-1.5 bg-cyan-600" onClick={() => openSubmission(s)}>
                     <Eye className="h-3.5 w-3.5" /> View Answers
                   </Button>
                 </div>
