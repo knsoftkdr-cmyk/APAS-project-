@@ -77,9 +77,16 @@ const NUM_QUESTIONS_OPTIONS = [5, 10, 15, 20, 25, 30];
 interface MCQQuestion {
   id: number;
   question: string;
-  options: Record<string, string>;
-  correct: string;
+  options?: Record<string, string>;
+  correct?: string;
+  answer?: string;
   explanation: string;
+}
+
+function isAnswerCorrect(q: MCQQuestion, given: string | undefined): boolean {
+  if (!given) return false;
+  if (q.options) return given === q.correct;
+  return given.trim().toLowerCase() === (q.answer || "").trim().toLowerCase();
 }
 
 type Phase = "select" | "loading" | "test" | "result" | "review";
@@ -104,6 +111,7 @@ export default function AcademicTests() {
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [textAnswer, setTextAnswer] = useState("");
   const [showAnswer, setShowAnswer] = useState(false);
   const [score, setScore] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -214,6 +222,7 @@ useEffect(() => {
       setCurrentQ(0);
       setAnswers({});
       setSelectedOption(null);
+      setTextAnswer("");
       setShowAnswer(false);
       setScore(0);
       setElapsedTime(0);
@@ -231,8 +240,17 @@ useEffect(() => {
   };
 
   const handleConfirm = () => {
+    const q = questions[currentQ];
+    if (!q.options) {
+      if (!textAnswer.trim()) return;
+      const isCorrect = isAnswerCorrect(q, textAnswer);
+      if (isCorrect) setScore((s) => s + 1);
+      setAnswers((prev) => ({ ...prev, [currentQ]: textAnswer.trim() }));
+      setShowAnswer(true);
+      return;
+    }
     if (!selectedOption) return;
-    const isCorrect = selectedOption === questions[currentQ].correct;
+    const isCorrect = isAnswerCorrect(q, selectedOption);
     if (isCorrect) setScore((s) => s + 1);
     setAnswers((prev) => ({ ...prev, [currentQ]: selectedOption }));
     setShowAnswer(true);
@@ -242,6 +260,7 @@ useEffect(() => {
     if (currentQ < questions.length - 1) {
       setCurrentQ((q) => q + 1);
       setSelectedOption(null);
+      setTextAnswer("");
       setShowAnswer(false);
     } else {
       // Test complete
@@ -284,7 +303,8 @@ useEffect(() => {
                   payload: {
                     student_id: user!.id,
                     title: "Performance Alert",
-                    body: `${profile?.full_name || "Your child"} requires support in ${subject}. Scored ${score}/${questions.length} (${Math.round(percentage)}%).`,
+                    body: `${profile?.full_name || "Your child"} requires support in ${subject}. Scored ${score}/${questions.length} 
+(${Math.round(percentage)}%).`,
                     data: {
                       type: "low_performance_alert",
                       subject,
@@ -311,6 +331,7 @@ useEffect(() => {
     setQuestions([]);
     setAnswers({});
     setSelectedOption(null);
+    setTextAnswer("");
     setShowAnswer(false);
     setScore(0);
     setCurrentQ(0);
@@ -368,11 +389,14 @@ const subjectColors: Record<string, string> = {
           <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
           <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] 
+border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] 
+border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] 
+border-b-white/80"></div>
 </div>
 
   <div className="max-w-xl">
@@ -425,7 +449,8 @@ const subjectColors: Record<string, string> = {
                   Class <span className="text-red-500">*</span>
                 </label>
                 <Select value={studentClass} onValueChange={handleClassChange} disabled={!!profile?.class_grade}>
-                  <SelectTrigger className={!!profile?.class_grade ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Class" /></SelectTrigger>
+                  <SelectTrigger className={!!profile?.class_grade ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Class" 
+/></SelectTrigger>
                   <SelectContent>
                     {CLASS_OPTIONS.map((c) => (
                       <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
@@ -447,7 +472,8 @@ const subjectColors: Record<string, string> = {
       Section
     </label>
                 <Select value={section} onValueChange={setSection} disabled={!!profile?.section}>
-                  <SelectTrigger className={!!profile?.section ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Section (Optional)" /></SelectTrigger>
+                  <SelectTrigger className={!!profile?.section ? "bg-muted cursor-not-allowed" : ""}><SelectValue placeholder="Select Section (Optional)" 
+/></SelectTrigger>
                   <SelectContent>
                     {SECTION_OPTIONS.map((s) => (
                       <SelectItem key={s} value={s}>Section {s}</SelectItem>
@@ -564,7 +590,8 @@ const subjectColors: Record<string, string> = {
                 </Select>
               </div>
             </div>
-              <Button onClick={handleStartTest} className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white" size="lg" disabled={!studentClass || !subject}>
+              <Button onClick={handleStartTest} className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white" size="lg" disabled={!studentClass || 
+!subject}>
                 <Sparkles className="h-4 w-4" /> Generate & Start Test
               </Button>
             </CardContent>
@@ -580,7 +607,8 @@ const subjectColors: Record<string, string> = {
                 {pastTests.map((test: any) => (
 <Card
   key={test.id}
-  className={`cursor-pointer border-0 bg-gradient-to-br ${subjectColors[test.subject] || "from-blue-50 to-green-50"} hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+  className={`cursor-pointer border-0 bg-gradient-to-br ${subjectColors[test.subject] || "from-blue-50 to-green-50"} hover:shadow-xl hover:-translate-y-1 
+transition-all duration-300`}
   onClick={() => handleOpenReview(test)}
 >
                     <CardContent className="p-4">
@@ -666,7 +694,8 @@ const subjectColors: Record<string, string> = {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {Object.entries(questions[currentQ].options).map(([key, value]) => (
+              {questions[currentQ].options ? (
+                Object.entries(questions[currentQ].options).map(([key, value]) => (
                 <button
                   key={key}
                   onClick={() => handleSelectOption(key)}
@@ -696,19 +725,36 @@ const subjectColors: Record<string, string> = {
                   </span>
                   <span className="text-sm">{value}</span>
                 </button>
-              ))}
+                ))
+              ) : (
+                <Input
+                  value={textAnswer}
+                  onChange={(e) => !showAnswer && setTextAnswer(e.target.value)}
+                  disabled={showAnswer}
+                  placeholder="Type your answer here..."
+                  className={cn(
+                    "text-base p-4 h-auto",
+                    showAnswer && (isAnswerCorrect(questions[currentQ], textAnswer)
+                      ? "border-emerald-500 bg-emerald-50 text-emerald-800"
+                      : "border-red-500 bg-red-50 text-red-800")
+                  )}
+                />
+              )}
 
               {/* Explanation */}
               {showAnswer && (
                 <div className={cn(
                   "mt-4 rounded-lg p-3 text-sm animate-fade-in",
-                  selectedOption === questions[currentQ].correct
+                  isAnswerCorrect(questions[currentQ], questions[currentQ].options ? selectedOption ?? undefined : textAnswer)
                     ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
                     : "bg-amber-50 border border-amber-200 text-amber-800"
                 )}>
                   <p className="font-medium mb-1">
-                    {selectedOption === questions[currentQ].correct ? "✅ Correct!" : "❌ Incorrect"}
+                    {isAnswerCorrect(questions[currentQ], questions[currentQ].options ? selectedOption ?? undefined : textAnswer) ? "✅ Correct!" : "❌ Incorrect"}
                   </p>
+                  {!questions[currentQ].options && !isAnswerCorrect(questions[currentQ], textAnswer) && (
+                    <p className="mb-1">Correct answer: <strong>{questions[currentQ].answer}</strong></p>
+                  )}
                   <p>{questions[currentQ].explanation}</p>
                 </div>
               )}
@@ -716,7 +762,7 @@ const subjectColors: Record<string, string> = {
               {/* Action buttons */}
               <div className="flex justify-end gap-2 pt-2">
                 {!showAnswer ? (
-                  <Button onClick={handleConfirm} disabled={!selectedOption} className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white">
+                  <Button onClick={handleConfirm} disabled={questions[currentQ].options ? !selectedOption : !textAnswer.trim()} className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white">
                     Confirm Answer <CheckCircle2 className="h-4 w-4" />
                   </Button>
                 ) : (
@@ -757,13 +803,13 @@ const subjectColors: Record<string, string> = {
               <div className="grid grid-cols-4 gap-4 mb-6">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-emerald-600">
-                    {Object.entries(answers).filter(([i, a]) => a === questions[Number(i)].correct).length}
+                    {Object.entries(answers).filter(([i, a]) => isAnswerCorrect(questions[Number(i)], a)).length}
                   </div>
                   <div className="text-xs text-muted-foreground">Correct</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-red-500">
-                    {Object.entries(answers).filter(([i, a]) => a !== questions[Number(i)].correct).length}
+                    {Object.entries(answers).filter(([i, a]) => !isAnswerCorrect(questions[Number(i)], a)).length}
                   </div>
                   <div className="text-xs text-muted-foreground">Wrong</div>
                 </div>
@@ -785,7 +831,7 @@ const subjectColors: Record<string, string> = {
               <h3 className="font-semibold text-sm mb-3">Answer Review</h3>
               <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
                 {questions.map((q, i) => {
-                  const isCorrect = answers[i] === q.correct;
+                  const isCorrect = isAnswerCorrect(q, answers[i]);
                   return (
                     <div key={i} className={cn(
                       "rounded-lg border p-3 text-sm",
@@ -801,10 +847,10 @@ const subjectColors: Record<string, string> = {
                           <p className="font-medium">{q.question}</p>
                           <p className="text-xs text-muted-foreground mt-1">
                             Your answer: <span className={isCorrect ? "text-emerald-600 font-medium" : "text-red-600 font-medium"}>
-                              {answers[i]} ({q.options[answers[i]]})
+                              {q.options ? `${answers[i]} (${q.options[answers[i]]})` : answers[i]}
                             </span>
                             {!isCorrect && (
-                              <> • Correct: <span className="text-emerald-600 font-medium">{q.correct} ({q.options[q.correct]})</span></>
+                              <> • Correct: <span className="text-emerald-600 font-medium">{q.options ? `${q.correct} (${q.options[q.correct]})` : q.answer}</span></>
                             )}
                           </p>
                           {q.explanation && (
@@ -884,7 +930,7 @@ const subjectColors: Record<string, string> = {
               <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
                 {(reviewTest.questions as MCQQuestion[]).map((q: MCQQuestion, i: number) => {
                   const studentAnswer = (reviewTest.answers as Record<string, string>)?.[String(i)];
-                  const isCorrect = studentAnswer === q.correct;
+                  const isCorrect = isAnswerCorrect(q, studentAnswer);
                   return (
                     <div key={i} className={cn(
                       "rounded-lg border p-4 text-sm",
@@ -903,25 +949,37 @@ const subjectColors: Record<string, string> = {
                             </span>
                             {q.question}
                           </p>
-                          {/* Show all options */}
-                          <div className="grid gap-1 ml-1">
-                            {Object.entries(q.options).map(([key, value]) => (
-                              <div
-                                key={key}
-                                className={cn(
-                                  "text-xs px-2 py-1 rounded",
-                                  key === q.correct ? "bg-emerald-100 text-emerald-800 font-medium" :
-                                  key === studentAnswer && key !== q.correct ? "bg-red-100 text-red-800 font-medium" :
-                                  "text-muted-foreground"
-                                )}
-                              >
-                                <span className="font-bold mr-1">{key}.</span> {value}
-                                {key === q.correct && " ✓"}
-                                {key === studentAnswer && key !== q.correct && " ✗ (your answer)"}
-                                {key === studentAnswer && key === q.correct && " (your answer)"}
+                          {q.options ? (
+                            <div className="grid gap-1 ml-1">
+                              {Object.entries(q.options).map(([key, value]) => (
+                                <div
+                                  key={key}
+                                  className={cn(
+                                    "text-xs px-2 py-1 rounded",
+                                    key === q.correct ? "bg-emerald-100 text-emerald-800 font-medium" :
+                                    key === studentAnswer && key !== q.correct ? "bg-red-100 text-red-800 font-medium" :
+                                    "text-muted-foreground"
+                                  )}
+                                >
+                                  <span className="font-bold mr-1">{key}.</span> {value}
+                                  {key === q.correct && " ✓"}
+                                  {key === studentAnswer && key !== q.correct && " ✗ (your answer)"}
+                                  {key === studentAnswer && key === q.correct && " (your answer)"}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="ml-1 text-xs space-y-1">
+                              <div className={cn("px-2 py-1 rounded", isCorrect ? "bg-emerald-100 text-emerald-800 font-medium" : "bg-red-100 text-red-800 font-medium")}>
+                                Your answer: {studentAnswer || "(no answer)"}
                               </div>
-                            ))}
-                          </div>
+                              {!isCorrect && (
+                                <div className="px-2 py-1 rounded bg-emerald-100 text-emerald-800 font-medium">
+                                  Correct answer: {q.answer}
+                                </div>
+                              )}
+                            </div>
+                          )}
                           {q.explanation && (
                             <p className="text-xs text-muted-foreground mt-2 italic">💡 {q.explanation}</p>
                           )}

@@ -30,19 +30,19 @@ serve(async (req) => {
 
     const cognitiveTypes: Record<string, string> = {
       recall: "Generate RECALL/KNOWLEDGE questions that test if the student remembers facts, definitions, formulas, dates, and key terms from ${subject}. Use prompts like 'What is...', 'Define...', 'Name the...', 'List the...'.",
-      understanding: "Generate UNDERSTANDING/COMPREHENSION questions that check if the student can explain ideas from ${subject} in their own words. Ask 'Why do we need...', 'Explain the process of...', 'What does ... mean in your own words?'.",
-      application: "Generate APPLICATION questions where the student must use ${subject} knowledge in new real-world situations, word problems, or practical scenarios. Present a situation and ask them to solve, predict, or apply a concept.",
+      understanding: "Generate UNDERSTANDING/COMPREHENSION questions that check if the student truly grasps ideas from ${subject} rather than just memorizing them. Ask 'Why do we need...?', 'Which of the following best explains the process of...?', 'Which statement best explains what ... means?'.",
+      application: "Generate APPLICATION questions where the student must use ${subject} knowledge in new real-world situations, word problems, or practicalscenarios. Present a situation and ask them to solve, predict, or apply a concept.",
       analysis: "Generate ANALYSIS questions that require the student to break down ${subject} concepts into parts and examine relationships. Ask them to 'Compare and contrast...', 'What pattern do you observe...', 'How are ... and ... related?'.",
-      evaluation: "Generate EVALUATION questions that require the student to justify opinions, make judgments, or assess approaches in ${subject}. Ask 'Which method is more efficient and why?', 'Was this decision appropriate? Support your answer.', 'Do you agree? Justify.'.",
-      creation: "Generate CREATION/SYNTHESIS questions that challenge the student to create something new using ${subject} knowledge. Ask them to 'Design a model to demonstrate...', 'Create a story to explain...', 'Propose a solution for...'.",
+      evaluation: "Generate EVALUATION questions that require the student to judge or assess approaches in ${subject}. Ask 'Which method is more efficient?', 'Which of these best justifies whether this decision was appropriate?', 'Which statement best supports or challenges this idea?'.",
+      creation: "Generate CREATION/SYNTHESIS questions that challenge the student to identify the best original idea using ${subject} knowledge. Ask 'Which model would best demonstrate...?', 'Which story best explains...?', 'Which proposed solution would work best for...?'.",
       hots: "Generate HIGHER-ORDER THINKING (HOTS) questions that push students to think deeply about ${subject}. Ask thought experiments like 'How would the world change if...', 'What would happen if...', 'Predict what occurs when...'.",
       diagnostic: "Generate DIAGNOSTIC questions that identify misconceptions or knowledge gaps in ${subject} before teaching. Ask 'When you hear the word ..., what comes to mind?', 'What do you already know about...?', 'Which of these is a common mistake?'.",
       formative: "Generate FORMATIVE ASSESSMENT questions to check understanding of ${subject} during the lesson. Ask 'What is one thing you understood well?', 'Which statement best summarizes...?', 'What confused you about this concept?'.",
       summative: "Generate SUMMATIVE questions to assess learning after completing a ${subject} topic/unit. Include comprehensive problems, chapter summaries, and full-cycle questions that test overall mastery.",
       open_ended: "Generate OPEN-ENDED questions about ${subject} that encourage detailed thinking and expression. Ask 'Explain how you arrived at your answer', 'Describe the impact of...', 'In your opinion, why is ... important?'. Present as MCQ with 4 possible detailed responses.",
       closed_ended: "Generate CLOSED-ENDED questions about ${subject} with one clear correct answer. Quick factual checks like 'What is the value of...?', 'Which of these is correct?'.",
-      probing: "Generate PROBING questions that dig deeper into student thinking about ${subject}. Ask 'Can you explain your reasoning?', 'What made you choose this method?', 'What evidence supports your answer?'.",
-      reflective: "Generate REFLECTIVE questions that encourage self-awareness in learning ${subject}. Ask 'What strategy worked best for you?', 'What would you do differently?', 'How has your understanding changed?'.",
+      probing: "Generate PROBING questions that dig deeper into student thinking about ${subject}. Ask 'Which of the following best explains the reasoning behind...?', 'Which method would most likely be used and why?', 'Which piece of evidence best supports...?'.",
+      reflective: "Generate REFLECTIVE questions that encourage self-awareness in learning ${subject}. Ask 'Which strategy would likely work best when learning about...?', 'Which approach would most improve understanding of...?', 'Which statement best reflects a change in understanding of...?'.",
       real_world: "Generate REAL-WORLD CONNECTION questions that help students see the relevance of ${subject} in daily life. Ask 'Where do you see ... being used around you?', 'How can we apply ... in our school/community?', 'Give a real-life example of...'.",
     };
 
@@ -70,13 +70,12 @@ serve(async (req) => {
   }
 ]`;
     } else if (questionType === "fill_blank") {
-      formatInstruction = "Each question must be a fill-in-the-blank style presented as MCQ with 4 options A, B, C, D. Use '______' in the question to indicate the blank.";
+      formatInstruction = "Each question must be a fill-in-the-blank question requiring the student to TYPE the missing word or short phrase themselves. Use '______' in the question text to indicate exactly where the blank goes. Do NOT provide multiple-choice options. The 'answer' field must contain the single correct word or short phrase (max 2-3 words) that belongs in the blank. Keep the expected answer simple and unambiguous so it can be matched against student text input.";
       formatSchema = `[
   {
     "id": 1,
     "question": "The capital of France is ______.",
-    "options": { "A": "London", "B": "Paris", "C": "Berlin", "D": "Madrid" },
-    "correct": "B",
+    "answer": "Paris",
     "explanation": "Paris is the capital of France."
   }
 ]`;
