@@ -436,7 +436,7 @@ export default function AssessmentEvaluation() {
 return (
   <AppLayout>
   <div
-    className="min-h-screen relative overflow-hidden"
+    className="min-h-screen relative overflow-x-hidden"
     style={{ background: "linear-gradient(135deg, #ffffff, #fff7ed, #fffbeb)", backgroundSize: "cover" }}
   >
     {/* Layered waves at top */}
@@ -447,16 +447,11 @@ return (
       <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#ea580c" />
     </svg>
 
-    {/* Faint wave at bottom */}
-    <svg className="absolute bottom-0 left-0 w-full h-40 opacity-[0.05]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,130 C240,70 480,190 720,150 C960,110 1200,190 1440,140 L1440,220 L0,220 Z" fill="#fb923c" />
-    </svg>
-
     {/* Floating circles */}
-    <div className="absolute top-20 right-10 w-40 h-40 rounded-full bg-amber-300 opacity-[0.06] blur-2xl" />
-    <div className="absolute top-96 left-6 w-56 h-56 rounded-full bg-orange-300 opacity-[0.05] blur-2xl" />
-    <div className="absolute bottom-32 right-1/4 w-32 h-32 rounded-full bg-amber-200 opacity-[0.05] blur-xl" />
-    <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-orange-200 opacity-[0.04] blur-xl" />
+    <div className="absolute top-20 right-10 w-40 h-40 rounded-full bg-amber-300 opacity-20 blur-2xl" />
+    <div className="absolute top-96 left-6 w-56 h-56 rounded-full bg-orange-300 opacity-20 blur-2xl" />
+    <div className="absolute bottom-32 right-1/4 w-32 h-32 rounded-full bg-amber-200 opacity-15 blur-xl" />
+    <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-orange-200 opacity-20 blur-xl" />
 
     <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
 <div className="rounded-2xl p-6 relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg">

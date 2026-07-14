@@ -11,7 +11,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { Users, FileText, Filter, BarChart3, Download, Sparkles } from "lucide-react";
+import { Users, FileText, Filter, BarChart3, Download, Sparkles, Badge } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -138,33 +138,25 @@ const TeacherPanel = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-          <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
+          <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 p-8 relative min-h-[220px] shadow-lg shadow-blue-200/50">
           <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
-          
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
+                    
           <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
           <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
           <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
-
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
 
           <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
 </div>
 
           <div className="max-w-xl">
-            <h1 className="text-5xl font-bold text-slate-900">
+            <h1 className="text-5xl font-bold text-white">
               Reports
             </h1>
 
-            <p className="mt-3 text-slate-700 text-lg">
+            <p className="mt-3 text-white text-lg">
               Manage student and class reports
             </p>
           </div>
@@ -178,21 +170,21 @@ const TeacherPanel = () => {
         </div>
 
       <Tabs value={activeTab} onValueChange={(val) => { setActiveTab(val); setShowClassReport(false); setCurrentPage(1); }} className="w-full">
-        <TabsList className="mb-4 ">
-          <TabsTrigger value="student-reports" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg">Student Reports</TabsTrigger>
-          <TabsTrigger value="class-reports" className=" data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg">Class Reports</TabsTrigger>
-        </TabsList>
+        <TabsList className="mb-4 bg-blue-50 border border-blue-100 p-1">
+  <TabsTrigger value="student-reports" className="rounded-lg text-slate-500 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md">Student Reports</TabsTrigger>
+  <TabsTrigger value="class-reports" className="rounded-lg text-slate-500 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md">Class Reports</TabsTrigger>
+</TabsList>
 
         {/* ─── Shared Filters ─── */}
-        <Card className="mb-6 bg-blue-100 p-1 rounded-xl">
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-xl bg-blue-200 flex items-center justify-center">
-                  <Filter className="h-7 w-7 text-blue-600" />
-                </div>
-                <span className="text- font-semibold text-slate-900">Filters:</span>
-              </div>
+<Card className="mb-6 bg-gradient-to-r from-blue-50 to-cyan-50 p-1 rounded-2xl border border-blue-100 shadow-md shadow-blue-100/50">
+  <CardContent className="p-4">
+<div className="flex flex-wrap items-end gap-3 md:gap-4">
+  <div className="flex items-center gap-2.5 w-full sm:w-auto mb-1 sm:mb-0">
+    <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-blue-600 flex items-center justify-center shadow-sm shadow-blue-300 shrink-0">
+      <Filter className="h-4 w-4 md:h-5 md:w-5 text-white" />
+    </div>
+    <span className="text-sm font-semibold text-slate-900">Filters</span>
+  </div>
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Class</label>
                 <Select value={filterClass} onValueChange={handleClassChange}>
@@ -260,23 +252,25 @@ const TeacherPanel = () => {
 
         {/* ─── Student Reports Tab ─── */}
         <TabsContent value="student-reports">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                <Users className="h-7 w-7 text-green-600" />
+          <Card className="border border-slate-200/80 rounded-2xl shadow-md shadow-slate-200/50 overflow-hidden">
+            <CardHeader className="border-b border-slate-100 bg-white pb-4">
+              <CardTitle className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-sm shadow-green-200">
+                <Users className="h-5 w-5 text-white" />
                 </div>
-                Student Assessments
+                <span className="text-lg">Student Assessments</span>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-5 overflow-x-auto">
               {isLoading ? (
                 <div className="flex justify-center py-12">
                   <LoadingSpinner />
                 </div>
               ) : filteredAssessments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                    <Users className="h-8 w-8 text-slate-400" />
+                  </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">No Assessments Found</h2>
                   <p className="text-muted-foreground max-w-md">
                     {assessments && assessments.length > 0
@@ -286,7 +280,7 @@ const TeacherPanel = () => {
                 </div>
               ) : (
                 <>
-                <Table>
+                <Table className="min-w-[800px] md:min-w-0">
                   <TableHeader>
                     <TableRow>
                       <TableHead>#</TableHead>
@@ -308,20 +302,39 @@ const TeacherPanel = () => {
                       const classLabel = CLASS_OPTIONS.find(c => c.value === assessment.student_class)?.label || assessment.student_class || "—";
                       const globalIndex = (currentPage - 1) * rowsPerPage + index;
                       return (
-                        <TableRow key={assessment.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-l-4 hover:border-l-blue-500">
-                          <TableCell className="font-medium">{globalIndex + 1}</TableCell>
-                          <TableCell className="font-medium">{assessment.student_name}</TableCell>
-                          <TableCell>{assessment.student_age}</TableCell>
-                          <TableCell>{classLabel}</TableCell>
-                          <TableCell>{assessment.section || "—"}</TableCell>
-                          <TableCell>{assessment.age_group}+</TableCell>
-                          <TableCell>{responseCount}</TableCell>
+                        <TableRow key={assessment.id} className="group cursor-pointer transition-all duration-200 odd:bg-slate-50/50 hover:bg-blue-50/60 border-b border-slate-100">
+                          <TableCell className="font-medium text-slate-400">{globalIndex + 1}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                                {assessment.student_name?.charAt(0)?.toUpperCase()}
+                              </div>
+                              <span className="text-slate-800">{assessment.student_name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-slate-600">{assessment.student_age}</TableCell>
+                          <TableCell className="text-slate-600">{classLabel}</TableCell>
+                          <TableCell className="text-slate-600">{assessment.section || "—"}</TableCell>
                           <TableCell>
-                            {assessment.created_at ? new Date(assessment.created_at).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            }) : "�"
+  {assessment.age_group ? (
+    <span className="inline-block px-2 py-0.5 rounded-md border border-slate-200 text-slate-600 text-xs">{assessment.age_group}+</span>
+  ) : (
+    <span className="text-slate-300 text-xs">—</span>
+  )}
+</TableCell>
+                          <TableCell className="text-slate-600">{responseCount}</TableCell>
+                          <TableCell>
+                            {assessment.created_at ? (
+                              <span className="inline-block px-2 py-0.5 rounded-md bg-green-100 text-green-700 text-xs whitespace-nowrap">
+                                {new Date(assessment.created_at).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                })}
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2 py-0.5 rounded-md bg-slate-50 text-slate-400 text-xs border border-slate-100">Not submitted</span>
+                            )
                           }
                           </TableCell>
                           <TableCell>
@@ -330,7 +343,7 @@ const TeacherPanel = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => setSelectedAssessment(assessment)}
-                                className="gap-1"
+                                className="gap-1 border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
                               >
                                 <FileText className="h-3.5 w-3.5" />
                                 View
@@ -353,7 +366,7 @@ const TeacherPanel = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 rounded-full border-slate-200"
                         disabled={currentPage <= 1}
                         onClick={() => setCurrentPage(p => p - 1)}
                       >
@@ -370,11 +383,11 @@ const TeacherPanel = () => {
                           typeof p === "string" ? (
                             <span key={`e${i}`} className="px-1 text-muted-foreground text-sm">…</span>
                           ) : (
-                            <Button
+                           <Button
                               key={p}
                               variant={p === currentPage ? "default" : "outline"}
                               size="icon"
-                              className="h-8 w-8"
+                              className={`h-8 w-8 rounded-full ${p === currentPage ? "bg-gradient-to-r from-blue-600 to-cyan-500 border-none shadow-sm shadow-blue-200" : "border-slate-200"}`}
                               onClick={() => setCurrentPage(p)}
                             >
                               {p}
@@ -384,7 +397,7 @@ const TeacherPanel = () => {
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-8 w-8"
+                        className="h-8 w-8 rounded-full border-slate-200"
                         disabled={currentPage >= totalPages}
                         onClick={() => setCurrentPage(p => p + 1)}
                       >
@@ -402,10 +415,12 @@ const TeacherPanel = () => {
         {/* ─── Class Reports Tab ─── */}
         <TabsContent value="class-reports">
           {filterClass === "all" ? (
-            <Card>
+            <Card className="border border-slate-200/80 rounded-2xl shadow-md shadow-slate-200/50">
               <CardContent className="py-16">
                 <div className="flex flex-col items-center justify-center text-center">
-                  <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
+                    <BarChart3 className="h-8 w-8 text-blue-400" />
+                  </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">Select a Class</h2>
                   <p className="text-muted-foreground max-w-md">
                     Please select a specific class from the filters above to view the class report.
@@ -414,10 +429,12 @@ const TeacherPanel = () => {
               </CardContent>
             </Card>
           ) : filteredAssessments.length === 0 ? (
-            <Card>
+            <Card className="border border-slate-200/80 rounded-2xl shadow-md shadow-slate-200/50">
               <CardContent className="py-16">
                 <div className="flex flex-col items-center justify-center text-center">
-                  <Users className="h-12 w-12 text-muted-foreground mb-4" />
+                  <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                    <Users className="h-8 w-8 text-slate-400" />
+                  </div>
                   <h2 className="text-xl font-semibold text-foreground mb-2">No Assessments Found</h2>
                   <p className="text-muted-foreground max-w-md">
                     No students match the selected filters. Try changing the class or section.
@@ -431,26 +448,30 @@ const TeacherPanel = () => {
               <ClassReport assessments={filteredAssessments} filterClass={filterClass} filterSection={filterSection} teacherName={profile?.full_name || undefined} userRole={profile?.role} />
 
               {/* Individual student reports within class */}
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
-                    Individual Student Reports
+              <Card className="mt-6 border border-slate-200/80 rounded-2xl shadow-md shadow-slate-200/50 overflow-hidden">
+                <CardHeader className="border-b border-slate-100 bg-white pb-4">
+                  <CardTitle className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-sm shadow-blue-200">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <span className="text-lg">Individual Student Reports</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-5">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>#</TableHead>
-                        <TableHead>Student Name</TableHead>
-                        <TableHead>Age</TableHead>
-                        <TableHead>Section</TableHead>
-                        <TableHead>Age Group</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Report</TableHead>
-                      </TableRow>
-                    </TableHeader>
+                    <TableRow className="bg-slate-50 hover:bg-slate-50">
+                      <TableHead className="text-slate-500 font-semibold">#</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Student Name</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Age</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Class</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Section</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Age Group</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Answered</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Submitted</TableHead>
+                      <TableHead className="text-slate-500 font-semibold">Report</TableHead>
+                    </TableRow>
+                  </TableHeader>
                     <TableBody>
                       {paginatedAssessments.map((assessment, index) => {
                         const globalIndex = (currentPage - 1) * rowsPerPage + index;

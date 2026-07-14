@@ -78,7 +78,7 @@ export default function TeacherElectives() {
 return (
   <AppLayout>
     <div
-  className="min-h-screen relative overflow-hidden"
+  className="min-h-screen relative overflow-x-hidden"
   style={{ background: "linear-gradient(135deg, #ffffff, #fdf2f8, #fff1f2)", backgroundSize: "cover" }}
 >
   {/* Layered waves at top */}
@@ -87,11 +87,6 @@ return (
   </svg>
   <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#ec4899" />
-  </svg>
-
-  {/* Faint wave at bottom too, mirrored */}
-  <svg className="absolute bottom-0 left-0 w-full h-40 opacity-[0.05]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M0,130 C240,70 480,190 720,150 C960,110 1200,190 1440,140 L1440,220 L0,220 Z" fill="#fb7185" />
   </svg>
 
   {/* Floating circles, barely visible */}

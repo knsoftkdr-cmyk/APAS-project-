@@ -246,87 +246,129 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
   if (!student) return null;
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[90vh]">
-        <div className="mx-auto w-full max-w-2xl overflow-y-auto px-4 pb-4">
-          <DrawerHeader>
-            <DrawerTitle>
-              {view === "list"
-                ? "Intervention History"
-                : selected
-                  ? (formMode === "edit" ? "Edit Intervention" : "Intervention Details")
-                  : "Create Intervention"}
-            </DrawerTitle>
-          </DrawerHeader>
+    <Drawer open={open} onOpenChange={onOpenChange} direction="right">
+  <DrawerContent className="h-full w-full sm:max-w-lg ml-auto rounded-none sm:rounded-l-2xl p-0 flex flex-col">
+    <div className="w-full flex-1 overflow-y-auto pb-4">
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 md:px-6 pt-5 pb-4 sticky top-0 z-10 sm:rounded-tl-2xl">
+      <DrawerHeader className="p-0">
+        <DrawerTitle className="text-white text-lg md:text-xl">
+          {view === "list"
+            ? "Intervention History"
+            : selected
+              ? (formMode === "edit" ? "Edit Intervention" : "Intervention Details")
+              : "Create Intervention"}
+        </DrawerTitle>
+      </DrawerHeader>
 
-          <div className="space-y-4 px-2">
-            {/* Student — always read-only */}
-            <div>
-              <label className="text-xs font-medium text-muted-foreground">Student</label>
-              <div className="mt-1 flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold">{student.full_name}</p>
-                <span className="text-xs text-muted-foreground">{student.class} - {student.section}</span>
-                {riskLevel && (
-                  <Badge className={PRIORITY_STYLES[riskLevel] || ""}>{riskLevel} risk</Badge>
-                )}
-              </div>
-            </div>
+      {/* Student — always read-only, now inside the colored header */}
+      <div className="mt-3 flex items-center gap-2 flex-wrap bg-white/10 rounded-xl px-3 py-2.5">
+        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 text-white text-xs font-bold">
+          {student.full_name.charAt(0)}
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-white truncate">{student.full_name}</p>
+          <span className="text-xs text-white/70">{student.class} - {student.section}</span>
+        </div>
+        {riskLevel && (
+          <Badge className={`ml-auto ${riskLevel === "high" ? "bg-red-500" : riskLevel === "medium" ? "bg-amber-500" : "bg-green-500"} text-white hover:opacity-90 shrink-0`}>
+            {riskLevel} risk
+          </Badge>
+        )}
+      </div>
+    </div>
+
+    <div className="space-y-4 px-4 md:px-6 pt-4">
 
             {/* ─── HISTORY LIST ─── */}
             {view === "list" && (
-              <div className="space-y-3">
-                {interventions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No interventions recorded yet.</p>
-                ) : (
-                  interventions.map((iv) => (
-                    <div key={iv.id} className="rounded-lg border p-3">
-                      <div className="flex items-center justify-between gap-2 flex-wrap">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className={cn("h-2 w-2 rounded-full", STATUS_DOT[iv.status])} />
-                          <Badge className={STATUS_STYLES[iv.status]}>{iv.status}</Badge>
-                          <Badge variant="outline" className={PRIORITY_STYLES[iv.priority]}>{iv.priority}</Badge>
-                          {iv.tier && <Badge variant="outline" className={TIER_STYLES[iv.tier]}>Tier {iv.tier}</Badge>}
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {iv.status === "completed"
-                            ? `Completed: ${format(new Date(iv.updated_at), "d MMM yyyy")}`
-                            : `Created: ${format(new Date(iv.created_at), "d MMM yyyy")}`}
-                        </span>
-                      </div>
-                      <p className="text-sm mt-2 line-clamp-2 whitespace-pre-line">{iv.reason}</p>
-                      <div className="flex gap-2 mt-3">
-                        {iv.status === "active" ? (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => openDetail(iv, "edit")}>
-                              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
-                            </Button>
-                            <Button size="sm" onClick={() => openDetail(iv, "view")}>
-                              Mark Completed
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button size="sm" variant="outline" onClick={() => openDetail(iv, "view")}>
-                              View
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={openCreateForm}>
-                              <Plus className="h-3.5 w-3.5 mr-1.5" /> New Intervention
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
+  <div className="space-y-3">
+    {interventions.length === 0 ? (
+      <p className="text-sm text-muted-foreground">No interventions recorded yet.</p>
+    ) : (
+      interventions.map((iv) => {
+        const statusBadgeClass =
+          iv.status === "active"
+            ? "bg-blue-500 text-white hover:bg-blue-500"
+            : iv.status === "completed"
+            ? "bg-green-500 text-white hover:bg-green-500"
+            : "bg-gray-400 text-white hover:bg-gray-400";
 
-                {/* Only offer a fresh intervention if none is currently active */}
-                {!activeIntervention && (
-                  <Button className="w-full bg-blue-600" onClick={openCreateForm}>
-                    <Plus className="h-4 w-4 mr-1.5" /> Create New Intervention
-                  </Button>
+        const priorityBadgeClass =
+          iv.priority === "high"
+            ? "bg-red-100 text-red-700 hover:bg-red-100"
+            : iv.priority === "medium"
+            ? "bg-amber-100 text-amber-700 hover:bg-amber-100"
+            : "bg-green-100 text-green-700 hover:bg-green-100";
+
+        const rowClass =
+          iv.status === "active"
+            ? "border-l-blue-500 bg-blue-50/30"
+            : iv.status === "completed"
+            ? "border-l-green-500 bg-green-50/30"
+            : "border-l-gray-400 bg-gray-50/30";
+
+        return (
+          <div
+            key={iv.id}
+            className={"rounded-xl border-l-4 border border-slate-200 p-3.5 shadow-sm " + rowClass}
+          >
+            <div className="flex items-start justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <Badge className={statusBadgeClass}>{iv.status}</Badge>
+                <Badge className={priorityBadgeClass}>{iv.priority}</Badge>
+                {iv.tier && (
+                  <Badge className={TIER_STYLES[iv.tier] + " hover:opacity-90"}>
+                    Tier {iv.tier}
+                  </Badge>
                 )}
               </div>
-            )}
+              <span className="text-xs text-muted-foreground shrink-0">
+                {iv.status === "completed"
+                  ? format(new Date(iv.updated_at), "d MMM yyyy")
+                  : format(new Date(iv.created_at), "d MMM yyyy")}
+              </span>
+            </div>
+
+            <p className="text-sm mt-2 line-clamp-2 whitespace-pre-line text-slate-700">
+              {iv.reason}
+            </p>
+
+            <div className="flex gap-2 mt-3 flex-wrap">
+              {iv.status === "active" ? (
+                <>
+                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => openDetail(iv, "edit")}>
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+                  </Button>
+                  <Button size="sm" className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700" onClick={() => openDetail(iv, "view")}>
+                    Mark Completed
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => openDetail(iv, "view")}>
+                    View
+                  </Button>
+                  <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={openCreateForm}>
+                    <Plus className="h-3.5 w-3.5 mr-1.5" /> New Intervention
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })
+    )}
+
+    {!activeIntervention && (
+      <Button
+        className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
+        onClick={openCreateForm}
+      >
+        <Plus className="h-4 w-4 mr-1.5" /> Create New Intervention
+      </Button>
+    )}
+  </div>
+)}
 
             {/* ─── FORM (create / view / edit a single intervention) ─── */}
             {view === "form" && (
@@ -338,90 +380,107 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                 )}
 
                 {formMode === "view" && selected ? (
-                  <>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Tier</label>
-                        <div className="mt-1"><Badge className={TIER_STYLES[selected.tier]}>{TIER_LABEL[selected.tier]}</Badge></div>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Priority</label>
-                        <div className="mt-1"><Badge className={PRIORITY_STYLES[selected.priority]}>{selected.priority}</Badge></div>
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Status</label>
-                        <div className="mt-1"><Badge className={STATUS_STYLES[selected.status]}>{selected.status}</Badge></div>
-                      </div>
-                    </div>
+  <>
+    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+      <div className="grid grid-cols-3 gap-3">
+        <div>
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Tier</label>
+          <div className="mt-1.5"><Badge className={`${TIER_STYLES[selected.tier]} hover:opacity-90`}>{TIER_LABEL[selected.tier]}</Badge></div>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Priority</label>
+          <div className="mt-1.5">
+            <Badge className={
+              selected.priority === "high" ? "bg-red-500 text-white hover:bg-red-500" :
+              selected.priority === "medium" ? "bg-amber-500 text-white hover:bg-amber-500" :
+              "bg-green-500 text-white hover:bg-green-500"
+            }>{selected.priority}</Badge>
+          </div>
+        </div>
+        <div>
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Status</label>
+          <div className="mt-1.5">
+            <Badge className={
+              selected.status === "active" ? "bg-blue-500 text-white hover:bg-blue-500" :
+              selected.status === "completed" ? "bg-green-500 text-white hover:bg-green-500" :
+              "bg-gray-400 text-white hover:bg-gray-400"
+            }>{selected.status}</Badge>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Reason</label>
-                      <p className="text-sm mt-1 whitespace-pre-line">{selected.reason}</p>
-                    </div>
+    <div className="rounded-xl border border-cyan-100 bg-cyan-50/30 p-3.5">
+      <label className="text-[10px] font-semibold text-cyan-700 uppercase tracking-wide">Reason</label>
+      <p className="text-sm mt-1.5 whitespace-pre-line text-slate-700">{selected.reason}</p>
+    </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Action Plan</label>
-                      <div className="mt-1 flex flex-wrap gap-1.5">
-                        {selected.action_plan.map((a) => <Badge key={a} variant="secondary">{a}</Badge>)}
-                      </div>
-                    </div>
+    <div className="rounded-xl border border-violet-100 bg-violet-50/30 p-3.5">
+      <label className="text-[10px] font-semibold text-violet-700 uppercase tracking-wide">Action Plan</label>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {selected.action_plan.map((a) => <Badge key={a} className="bg-violet-100 text-violet-700 hover:bg-violet-100">{a}</Badge>)}
+      </div>
+    </div>
 
-                    {selected.review_date && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Review Date</label>
-                        <p className="text-sm mt-1">{format(new Date(selected.review_date), "d MMM yyyy")}</p>
-                      </div>
-                    )}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {selected.review_date && (
+        <div className="rounded-xl border border-amber-100 bg-amber-50/30 p-3.5">
+          <label className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide">Review Date</label>
+          <p className="text-sm mt-1.5 text-slate-700">{format(new Date(selected.review_date), "d MMM yyyy")}</p>
+        </div>
+      )}
 
-                    {selected.expected_outcome && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Expected Outcome</label>
-                        <p className="text-sm mt-1">{selected.expected_outcome}</p>
-                      </div>
-                    )}
+      {selected.expected_outcome && (
+        <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-3.5">
+          <label className="text-[10px] font-semibold text-blue-700 uppercase tracking-wide">Expected Outcome</label>
+          <p className="text-sm mt-1.5 text-slate-700">{selected.expected_outcome}</p>
+        </div>
+      )}
+    </div>
 
-                    {selected.outcome && (
-                      <div>
-                        <label className="text-xs font-medium text-muted-foreground">Outcome</label>
-                        <p className="text-sm mt-1">{selected.outcome}</p>
-                      </div>
-                    )}
+    {selected.outcome && (
+      <div className="rounded-xl border border-green-100 bg-green-50/30 p-3.5">
+        <label className="text-[10px] font-semibold text-green-700 uppercase tracking-wide">Outcome</label>
+        <p className="text-sm mt-1.5 text-slate-700">{selected.outcome}</p>
+      </div>
+    )}
 
-                    <p className="text-xs text-muted-foreground">
-                      Created {format(new Date(selected.created_at), "d MMM yyyy")}
-                    </p>
+    <p className="text-xs text-muted-foreground">
+      Created {format(new Date(selected.created_at), "d MMM yyyy")}
+    </p>
 
-                    {selected.status === "active" && (
-                      <div className="border-t pt-3 space-y-2">
-                        <label className="text-xs font-medium text-muted-foreground">Enter Outcome to Complete</label>
-                        <Textarea
-                          placeholder="e.g. Homework completion improved from 30% to 90%."
-                          value={outcome}
-                          onChange={(e) => setOutcome(e.target.value)}
-                          rows={2}
-                        />
-                        <div className="flex gap-2">
-                          <Button onClick={handleMarkCompleted} disabled={saving}>
-                            {saving ? "Saving..." : "Mark as Completed"}
-                          </Button>
-                          <Button variant="outline" onClick={() => setFormMode("edit")}>
-                            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                    {selected.status !== "active" && (
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setFormMode("edit")}>
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
-                        </Button>
-                        <Button onClick={openCreateForm}>
-                          <Plus className="h-3.5 w-3.5 mr-1.5" /> New Intervention
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                ) : (
+    {selected.status === "active" && (
+      <div className="border-t border-slate-200 pt-4 space-y-2">
+        <label className="text-xs font-semibold text-slate-700">Enter Outcome to Complete</label>
+        <Textarea
+          placeholder="e.g. Homework completion improved from 30% to 90%."
+          value={outcome}
+          onChange={(e) => setOutcome(e.target.value)}
+          rows={2}
+          className="border-slate-200 focus-visible:ring-green-400"
+        />
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={handleMarkCompleted} disabled={saving} className="flex-1 sm:flex-none bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
+            {saving ? "Saving..." : "Mark as Completed"}
+          </Button>
+          <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setFormMode("edit")}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+          </Button>
+        </div>
+      </div>
+    )}
+    {selected.status !== "active" && (
+      <div className="flex gap-2 flex-wrap">
+        <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setFormMode("edit")}>
+          <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+        </Button>
+        <Button className="flex-1 sm:flex-none bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700" onClick={openCreateForm}>
+          <Plus className="h-3.5 w-3.5 mr-1.5" /> New Intervention
+        </Button>
+      </div>
+    )}
+  </>
+) : (
                   <>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Reason</label>
@@ -434,16 +493,16 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Tier
                           {suggestedTier && !selected && (
-                            <span className="ml-1 text-[10px] text-cyan-600 font-normal">(suggested from Analytics)</span>
+                            <span className="ml-1 text-[10px] text-cyan-600 font-semibold">(suggested from Analytics)</span>
                           )}
                         </label>
                         <Select value={String(tier)} onValueChange={(v) => setTier(Number(v) as 2 | 3)}>
-                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="mt-1 border-slate-200 focus:ring-cyan-400"><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="2">Tier 2 — Targeted</SelectItem>
                             <SelectItem value="3">Tier 3 — Intensive</SelectItem>
@@ -476,11 +535,11 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                             key={a}
                             type="button"
                             onClick={() => toggleAction(a)}
-                            className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                              actionPlan.includes(a)
-                                ? "bg-primary text-primary-foreground border-primary"
-                                : "bg-background border-border hover:bg-muted"
-                            }`}
+                            className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                            actionPlan.includes(a)
+                              ? "bg-gradient-to-r from-violet-600 to-purple-600 text-white border-transparent shadow-sm"
+                              : "bg-white border-slate-200 text-slate-600 hover:border-violet-300 hover:bg-violet-50"
+                          }`}
                           >
                             {a}
                           </button>
@@ -538,21 +597,21 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
           </div>
 
           {view === "form" && formMode === "edit" && (
-            <DrawerFooter className="px-2">
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? "Saving..." : "Save"}
-              </Button>
-              {interventions.length > 0 ? (
-                <Button variant="outline" onClick={() => (selected ? openDetail(selected, "view") : backToList())}>
-                  Cancel
-                </Button>
-              ) : (
-                <DrawerClose asChild>
-                  <Button variant="outline">Cancel</Button>
-                </DrawerClose>
-              )}
-            </DrawerFooter>
-          )}
+  <DrawerFooter className="px-4 md:px-6 sticky bottom-0 bg-white border-t border-slate-100 pt-3 pb-4 sm:rounded-bl-2xl">
+    <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700">
+      {saving ? "Saving..." : "Save"}
+    </Button>
+    {interventions.length > 0 ? (
+      <Button variant="outline" onClick={() => (selected ? openDetail(selected, "view") : backToList())}>
+        Cancel
+      </Button>
+    ) : (
+      <DrawerClose asChild>
+        <Button variant="outline">Cancel</Button>
+      </DrawerClose>
+    )}
+  </DrawerFooter>
+)}
         </div>
       </DrawerContent>
     </Drawer>
