@@ -149,7 +149,9 @@ serve(async (req) => {
         } else {
           console.warn(`Period ${elective.period_number} not found in timetable rows for grade ${profile.class_grade} section ${profile.section}`);
           return jsonResponse(
-            { error: `Could not verify your timetable for period ${elective.period_number}. Please contact your admin.` },
+            {
+              error: `This elective is scheduled for period ${elective.period_number}, but your class's timetable doesn't have that period defined. This is a setup issue on the school's side — please ask your admin to check the timetable for Class ${profile.class_grade} ${profile.section} or the elective's period assignment.`,
+            },
             409
           );
         }

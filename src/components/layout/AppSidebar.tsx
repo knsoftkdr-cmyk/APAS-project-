@@ -42,6 +42,7 @@ import {
   History,
   RotateCw,
   ShieldAlert,
+  Accessibility,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,6 +64,7 @@ const navItems: Array<{
 }> = [
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
   { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["admin", "principal", "school_admin"], module: "Rotation Schedules" },
+  { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["admin", "principal", "school_admin"], module: "SEN Management" },
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal", "school_admin", "knsoft_admin"] },
   { title: "Dashboard", icon: LayoutDashboard, path: "/teacher-workspace", roles: ["teacher"], tourId: "nav-home", module: "Home" },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },

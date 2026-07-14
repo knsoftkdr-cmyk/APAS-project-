@@ -1,0 +1,1214 @@
+import { useEffect, useState, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Users,
+  Plus,
+  FileText,
+  Accessibility,
+  Stethoscope,
+  Search,
+  ChevronRight,
+  Target,
+  CalendarClock,
+  Pencil,
+  Trash2,
+} from "lucide-react";
+
+// ---------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------
+interface StudentLite {
+  id: string;
+  full_name: string;
+  admission_number: string | null;
+  class: string | null;
+  section: string | null;
+}
+
+interface SenStudent {
+  id: string;
+  category: string;
+  diagnosis_notes: string | null;
+  enrollment_date: string;
+  review_cycle_months: number;
+  status: string;
+  case_manager_id: string | null;
+  student: StudentLite | null;
+  case_manager: { id: string; full_name: string } | null;
+}
+
+interface StaffOption {
+  id: string;
+  full_name: string;
+  role: string;
+}
+
+interface IepGoal {
+  id: string;
+  domain: string;
+  goal_description: string;
+  baseline: string | null;
+  target_criteria: string | null;
+  target_date: string | null;
+  progress_status: string;
+}
+
+interface IepReview {
+  id: string;
+  review_date: string;
+  attendees: string | null;
+  summary: string | null;
+  next_review_date: string | null;
+}
+
+interface IepPlan {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string | null;
+  status: string;
+  goals: IepGoal[];
+  reviews: IepReview[];
+}
+
+interface Accommodation {
+  id: string;
+  accommodation_type: string;
+  applies_to: string;
+  description: string | null;
+  active: boolean;
+  start_date: string;
+  end_date: string | null;
+}
+
+interface TherapySession {
+  id: string;
+  therapy_type: string;
+  therapist_id: string | null;
+  therapist: { full_name: string } | null;
+  session_date: string;
+  duration_minutes: number | null;
+  goals_addressed: string | null;
+  notes: string | null;
+}
+
+const CATEGORIES = [
+  "Autism Spectrum",
+  "ADHD",
+  "Dyslexia / Learning Disability",
+  "Speech-Language",
+  "Physical / Motor",
+  "Intellectual Disability",
+  "Other",
+];
+
+const THERAPY_TYPES = ["Speech", "Occupational", "Behavioral", "Physical", "Counseling"];
+const ACCOMMODATION_TYPES = [
+  "Extra Time",
+  "Preferential Seating",
+  "Assistive Technology",
+  "Reduced Workload",
+  "Scribe",
+  "Other",
+];
+
+export default function SENManagement() {
+  const { profile } = useAuth();
+  const { toast } = useToast();
+  const schoolId = profile?.school_id;
+
+  const [senStudents, setSenStudents] = useState<SenStudent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<SenStudent | null>(null);
+
+  const [staff, setStaff] = useState<StaffOption[]>([]);
+
+  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [eligibleStudents, setEligibleStudents] = useState<StudentLite[]>([]);
+  const [enrollClass, setEnrollClass] = useState("");
+  const [enrollSection, setEnrollSection] = useState("");
+  const [enrollForm, setEnrollForm] = useState({
+    student_id: "",
+    category: CATEGORIES[0],
+    diagnosis_notes: "",
+    case_manager_id: "",
+    review_cycle_months: 6,
+  });
+
+  const [profileEditOpen, setProfileEditOpen] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    category: CATEGORIES[0],
+    diagnosis_notes: "",
+    case_manager_id: "",
+    review_cycle_months: 6,
+    status: "active",
+  });
+
+  const [plans, setPlans] = useState<IepPlan[]>([]);
+  const [accommodations, setAccommodations] = useState<Accommodation[]>([]);
+  const [sessions, setSessions] = useState<TherapySession[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const [planOpen, setPlanOpen] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [planForm, setPlanForm] = useState({ title: "", start_date: "", end_date: "", status: "draft" });
+
+  const [goalOpen, setGoalOpen] = useState<string | null>(null); // plan id (create mode) or open flag while editing
+  const [editingGoal, setEditingGoal] = useState<{ id: string; planId: string } | null>(null);
+  const [goalForm, setGoalForm] = useState({
+    domain: "Academic",
+    goal_description: "",
+    baseline: "",
+    target_criteria: "",
+    target_date: "",
+  });
+
+  const [reviewOpen, setReviewOpen] = useState<string | null>(null); // plan id (create mode)
+  const [editingReview, setEditingReview] = useState<{ id: string; planId: string } | null>(null);
+  const [reviewForm, setReviewForm] = useState({
+    review_date: "",
+    attendees: "",
+    summary: "",
+    next_review_date: "",
+  });
+
+  const [accOpen, setAccOpen] = useState(false);
+  const [editingAccId, setEditingAccId] = useState<string | null>(null);
+  const [accForm, setAccForm] = useState({
+    accommodation_type: ACCOMMODATION_TYPES[0],
+    applies_to: "both",
+    description: "",
+  });
+
+  const [sessionOpen, setSessionOpen] = useState(false);
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [sessionForm, setSessionForm] = useState({
+    therapy_type: THERAPY_TYPES[0],
+    therapist_id: "",
+    session_date: "",
+    duration_minutes: "",
+    goals_addressed: "",
+    notes: "",
+  });
+
+  // -------------------------------------------------------------
+  // Loaders
+  // -------------------------------------------------------------
+  const loadSenStudents = useCallback(async () => {
+    if (!schoolId) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("sen_students")
+      .select(
+        `id, category, diagnosis_notes, enrollment_date, review_cycle_months, status, case_manager_id,
+         student:students!sen_students_student_id_fkey(id, full_name, admission_number, class, section),
+         case_manager:profiles!sen_students_case_manager_id_fkey(id, full_name)`
+      )
+      .eq("school_id", schoolId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({ title: "Error loading SEN students", description: error.message, variant: "destructive" });
+    } else {
+      setSenStudents((data as unknown as SenStudent[]) || []);
+    }
+    setLoading(false);
+  }, [schoolId, toast]);
+
+  const loadStaff = useCallback(async () => {
+    if (!schoolId) return;
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .eq("school_id", schoolId)
+      .in("role", ["teacher", "hod", "admin", "principal", "school_admin"])
+      .order("full_name");
+    if (!error) setStaff((data as StaffOption[]) || []);
+  }, [schoolId]);
+
+  const loadDetail = useCallback(async (senStudentId: string) => {
+    setDetailLoading(true);
+    const [plansRes, accRes, sessRes] = await Promise.all([
+      supabase
+        .from("iep_plans")
+        .select("*, goals:iep_goals(*), reviews:iep_reviews(*)")
+        .eq("sen_student_id", senStudentId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("sen_accommodations")
+        .select("*")
+        .eq("sen_student_id", senStudentId)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("therapy_sessions")
+        .select("*, therapist:profiles!therapy_sessions_therapist_id_fkey(full_name)")
+        .eq("sen_student_id", senStudentId)
+        .order("session_date", { ascending: false }),
+    ]);
+    setPlans((plansRes.data as unknown as IepPlan[]) || []);
+    setAccommodations((accRes.data as Accommodation[]) || []);
+    setSessions((sessRes.data as unknown as TherapySession[]) || []);
+    setDetailLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadSenStudents();
+    loadStaff();
+  }, [loadSenStudents, loadStaff]);
+
+  useEffect(() => {
+    if (selected) loadDetail(selected.id);
+  }, [selected, loadDetail]);
+
+  // -------------------------------------------------------------
+  // Load eligible students (not already enrolled) when the dialog opens
+  // -------------------------------------------------------------
+  useEffect(() => {
+    const run = async () => {
+      if (!schoolId || !enrollOpen) return;
+      const existingIds = senStudents.map((s) => s.student?.id).filter(Boolean);
+      let query = supabase
+        .from("students")
+        .select("id, full_name, admission_number, class, section")
+        .eq("school_id", schoolId)
+        .order("class")
+        .order("section")
+        .order("full_name");
+      if (existingIds.length > 0) {
+        query = query.not("id", "in", `(${existingIds.join(",")})`);
+      }
+      const { data } = await query;
+      setEligibleStudents((data as StudentLite[]) || []);
+    };
+    run();
+  }, [enrollOpen, schoolId, senStudents]);
+
+  const enrollClassOptions = Array.from(
+    new Set(eligibleStudents.map((s) => s.class).filter(Boolean))
+  ).sort() as string[];
+
+  const enrollSectionOptions = Array.from(
+    new Set(
+      eligibleStudents
+        .filter((s) => !enrollClass || s.class === enrollClass)
+        .map((s) => s.section)
+        .filter(Boolean)
+    )
+  ).sort() as string[];
+
+  const enrollStudentOptions = eligibleStudents.filter(
+    (s) => (!enrollClass || s.class === enrollClass) && (!enrollSection || s.section === enrollSection)
+  );
+
+  // -------------------------------------------------------------
+  // Mutations
+  // -------------------------------------------------------------
+  const enrollStudent = async () => {
+    if (!schoolId || !enrollForm.student_id) return;
+    const { error } = await supabase.from("sen_students").insert({
+      school_id: schoolId,
+      student_id: enrollForm.student_id,
+      category: enrollForm.category,
+      diagnosis_notes: enrollForm.diagnosis_notes || null,
+      case_manager_id: enrollForm.case_manager_id || null,
+      review_cycle_months: enrollForm.review_cycle_months,
+    });
+    if (error) {
+      toast({ title: "Could not enroll student", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Student enrolled in SEN program" });
+    setEnrollOpen(false);
+    setEnrollForm({ student_id: "", category: CATEGORIES[0], diagnosis_notes: "", case_manager_id: "", review_cycle_months: 6 });
+    setEnrollClass("");
+    setEnrollSection("");
+    loadSenStudents();
+  };
+
+  const openProfileEdit = () => {
+    if (!selected) return;
+    setProfileForm({
+      category: selected.category,
+      diagnosis_notes: selected.diagnosis_notes || "",
+      case_manager_id: selected.case_manager_id || "",
+      review_cycle_months: selected.review_cycle_months,
+      status: selected.status,
+    });
+    setProfileEditOpen(true);
+  };
+
+  const saveProfileEdit = async () => {
+    if (!selected) return;
+    const { error } = await supabase
+      .from("sen_students")
+      .update({
+        category: profileForm.category,
+        diagnosis_notes: profileForm.diagnosis_notes || null,
+        case_manager_id: profileForm.case_manager_id || null,
+        review_cycle_months: profileForm.review_cycle_months,
+        status: profileForm.status,
+      })
+      .eq("id", selected.id);
+    if (error) {
+      toast({ title: "Could not update SEN profile", description: error.message, variant: "destructive" });
+      return;
+    }
+    setProfileEditOpen(false);
+    toast({ title: "SEN profile updated" });
+    loadSenStudents();
+  };
+
+  const deleteSenStudent = async () => {
+    if (!selected) return;
+    if (!window.confirm(`Remove ${selected.student?.full_name} from the SEN program? This deletes all their IEP plans, accommodations, and therapy sessions permanently.`)) return;
+    const { error } = await supabase.from("sen_students").delete().eq("id", selected.id);
+    if (error) {
+      toast({ title: "Could not remove student", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Student removed from SEN program" });
+    setSelected(null);
+    loadSenStudents();
+  };
+
+  const openPlanEdit = (plan: IepPlan) => {
+    setEditingPlanId(plan.id);
+    setPlanForm({ title: plan.title, start_date: plan.start_date, end_date: plan.end_date || "", status: plan.status });
+    setPlanOpen(true);
+  };
+
+  const addPlan = async () => {
+    if (!selected || !planForm.title || !planForm.start_date) return;
+    if (editingPlanId) {
+      const { error } = await supabase
+        .from("iep_plans")
+        .update({
+          title: planForm.title,
+          start_date: planForm.start_date,
+          end_date: planForm.end_date || null,
+          status: planForm.status,
+        })
+        .eq("id", editingPlanId);
+      if (error) {
+        toast({ title: "Could not update IEP plan", description: error.message, variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("iep_plans").insert({
+        sen_student_id: selected.id,
+        title: planForm.title,
+        start_date: planForm.start_date,
+        end_date: planForm.end_date || null,
+        created_by: profile?.id,
+      });
+      if (error) {
+        toast({ title: "Could not create IEP plan", description: error.message, variant: "destructive" });
+        return;
+      }
+    }
+    setPlanOpen(false);
+    setEditingPlanId(null);
+    setPlanForm({ title: "", start_date: "", end_date: "", status: "draft" });
+    loadDetail(selected.id);
+  };
+
+  const deletePlan = async (planId: string) => {
+    if (!selected) return;
+    if (!window.confirm("Delete this IEP plan? This also deletes its goals and reviews.")) return;
+    const { error } = await supabase.from("iep_plans").delete().eq("id", planId);
+    if (error) {
+      toast({ title: "Could not delete plan", description: error.message, variant: "destructive" });
+      return;
+    }
+    loadDetail(selected.id);
+  };
+
+  const openGoalEdit = (planId: string, goal: IepGoal) => {
+    setEditingGoal({ id: goal.id, planId });
+    setGoalForm({
+      domain: goal.domain,
+      goal_description: goal.goal_description,
+      baseline: goal.baseline || "",
+      target_criteria: goal.target_criteria || "",
+      target_date: goal.target_date || "",
+    });
+    setGoalOpen(planId);
+  };
+
+  const addGoal = async (planId: string) => {
+    if (!selected || !goalForm.goal_description) return;
+    if (editingGoal) {
+      const { error } = await supabase
+        .from("iep_goals")
+        .update({
+          domain: goalForm.domain,
+          goal_description: goalForm.goal_description,
+          baseline: goalForm.baseline || null,
+          target_criteria: goalForm.target_criteria || null,
+          target_date: goalForm.target_date || null,
+        })
+        .eq("id", editingGoal.id);
+      if (error) {
+        toast({ title: "Could not update goal", description: error.message, variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("iep_goals").insert({
+        iep_plan_id: planId,
+        domain: goalForm.domain,
+        goal_description: goalForm.goal_description,
+        baseline: goalForm.baseline || null,
+        target_criteria: goalForm.target_criteria || null,
+        target_date: goalForm.target_date || null,
+      });
+      if (error) {
+        toast({ title: "Could not add goal", description: error.message, variant: "destructive" });
+        return;
+      }
+    }
+    setGoalOpen(null);
+    setEditingGoal(null);
+    setGoalForm({ domain: "Academic", goal_description: "", baseline: "", target_criteria: "", target_date: "" });
+    loadDetail(selected.id);
+  };
+
+  const deleteGoal = async (goalId: string) => {
+    if (!selected) return;
+    if (!window.confirm("Delete this goal?")) return;
+    const { error } = await supabase.from("iep_goals").delete().eq("id", goalId);
+    if (error) {
+      toast({ title: "Could not delete goal", description: error.message, variant: "destructive" });
+      return;
+    }
+    loadDetail(selected.id);
+  };
+
+  const openReviewEdit = (planId: string, review: IepReview) => {
+    setEditingReview({ id: review.id, planId });
+    setReviewForm({
+      review_date: review.review_date,
+      attendees: review.attendees || "",
+      summary: review.summary || "",
+      next_review_date: review.next_review_date || "",
+    });
+    setReviewOpen(planId);
+  };
+
+  const addReview = async (planId: string) => {
+    if (!selected || !reviewForm.review_date) return;
+    if (editingReview) {
+      const { error } = await supabase
+        .from("iep_reviews")
+        .update({
+          review_date: reviewForm.review_date,
+          attendees: reviewForm.attendees || null,
+          summary: reviewForm.summary || null,
+          next_review_date: reviewForm.next_review_date || null,
+        })
+        .eq("id", editingReview.id);
+      if (error) {
+        toast({ title: "Could not update review", description: error.message, variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("iep_reviews").insert({
+        iep_plan_id: planId,
+        review_date: reviewForm.review_date,
+        attendees: reviewForm.attendees || null,
+        summary: reviewForm.summary || null,
+        next_review_date: reviewForm.next_review_date || null,
+        reviewed_by: profile?.id,
+      });
+      if (error) {
+        toast({ title: "Could not add review", description: error.message, variant: "destructive" });
+        return;
+      }
+    }
+    setReviewOpen(null);
+    setEditingReview(null);
+    setReviewForm({ review_date: "", attendees: "", summary: "", next_review_date: "" });
+    loadDetail(selected.id);
+  };
+
+  const deleteReview = async (reviewId: string) => {
+    if (!selected) return;
+    if (!window.confirm("Delete this review?")) return;
+    const { error } = await supabase.from("iep_reviews").delete().eq("id", reviewId);
+    if (error) {
+      toast({ title: "Could not delete review", description: error.message, variant: "destructive" });
+      return;
+    }
+    loadDetail(selected.id);
+  };
+
+  const updateGoalStatus = async (goalId: string, progress_status: string) => {
+    if (!selected) return;
+    const { error } = await supabase.from("iep_goals").update({ progress_status }).eq("id", goalId);
+    if (!error) loadDetail(selected.id);
+  };
+
+  const openAccEdit = (acc: Accommodation) => {
+    setEditingAccId(acc.id);
+    setAccForm({
+      accommodation_type: acc.accommodation_type,
+      applies_to: acc.applies_to,
+      description: acc.description || "",
+    });
+    setAccOpen(true);
+  };
+
+  const addAccommodation = async () => {
+    if (!selected || !accForm.accommodation_type) return;
+    if (editingAccId) {
+      const { error } = await supabase
+        .from("sen_accommodations")
+        .update({
+          accommodation_type: accForm.accommodation_type,
+          applies_to: accForm.applies_to,
+          description: accForm.description || null,
+        })
+        .eq("id", editingAccId);
+      if (error) {
+        toast({ title: "Could not update accommodation", description: error.message, variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("sen_accommodations").insert({
+        sen_student_id: selected.id,
+        accommodation_type: accForm.accommodation_type,
+        applies_to: accForm.applies_to,
+        description: accForm.description || null,
+      });
+      if (error) {
+        toast({ title: "Could not add accommodation", description: error.message, variant: "destructive" });
+        return;
+      }
+    }
+    setAccOpen(false);
+    setEditingAccId(null);
+    setAccForm({ accommodation_type: ACCOMMODATION_TYPES[0], applies_to: "both", description: "" });
+    loadDetail(selected.id);
+  };
+
+  const toggleAccommodation = async (id: string, active: boolean) => {
+    if (!selected) return;
+    const { error } = await supabase.from("sen_accommodations").update({ active: !active }).eq("id", id);
+    if (!error) loadDetail(selected.id);
+  };
+
+  const deleteAccommodation = async (id: string) => {
+    if (!selected) return;
+    if (!window.confirm("Delete this accommodation?")) return;
+    const { error } = await supabase.from("sen_accommodations").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Could not delete accommodation", description: error.message, variant: "destructive" });
+      return;
+    }
+    loadDetail(selected.id);
+  };
+
+  const openSessionEdit = (session: TherapySession) => {
+    setEditingSessionId(session.id);
+    setSessionForm({
+      therapy_type: session.therapy_type,
+      therapist_id: session.therapist_id || "",
+      session_date: session.session_date,
+      duration_minutes: session.duration_minutes ? String(session.duration_minutes) : "",
+      goals_addressed: session.goals_addressed || "",
+      notes: session.notes || "",
+    });
+    setSessionOpen(true);
+  };
+
+  const addSession = async () => {
+    if (!selected || !sessionForm.session_date) return;
+    if (editingSessionId) {
+      const { error } = await supabase
+        .from("therapy_sessions")
+        .update({
+          therapy_type: sessionForm.therapy_type,
+          therapist_id: sessionForm.therapist_id || null,
+          session_date: sessionForm.session_date,
+          duration_minutes: sessionForm.duration_minutes ? Number(sessionForm.duration_minutes) : null,
+          goals_addressed: sessionForm.goals_addressed || null,
+          notes: sessionForm.notes || null,
+        })
+        .eq("id", editingSessionId);
+      if (error) {
+        toast({ title: "Could not update session", description: error.message, variant: "destructive" });
+        return;
+      }
+    } else {
+      const { error } = await supabase.from("therapy_sessions").insert({
+        sen_student_id: selected.id,
+        therapy_type: sessionForm.therapy_type,
+        therapist_id: sessionForm.therapist_id || null,
+        session_date: sessionForm.session_date,
+        duration_minutes: sessionForm.duration_minutes ? Number(sessionForm.duration_minutes) : null,
+        goals_addressed: sessionForm.goals_addressed || null,
+        notes: sessionForm.notes || null,
+      });
+      if (error) {
+        toast({ title: "Could not log session", description: error.message, variant: "destructive" });
+        return;
+      }
+    }
+    setSessionOpen(false);
+    setEditingSessionId(null);
+    setSessionForm({ therapy_type: THERAPY_TYPES[0], therapist_id: "", session_date: "", duration_minutes: "", goals_addressed: "", notes: "" });
+    loadDetail(selected.id);
+  };
+
+  const deleteSession = async (id: string) => {
+    if (!selected) return;
+    if (!window.confirm("Delete this therapy session?")) return;
+    const { error } = await supabase.from("therapy_sessions").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Could not delete session", description: error.message, variant: "destructive" });
+      return;
+    }
+    loadDetail(selected.id);
+  };
+
+  // -------------------------------------------------------------
+  const filteredSenStudents = senStudents.filter((s) =>
+    s.student?.full_name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <AppLayout>
+      <div className="flex flex-col gap-4 p-4 md:p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold flex items-center gap-2">
+              <Accessibility className="h-6 w-6 text-emerald-600" />
+              Special Education (SEN)
+            </h1>
+            <p className="text-sm text-muted-foreground">IEP management, accommodations, and therapy tracking</p>
+          </div>
+          <Button onClick={() => setEnrollOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Enroll Student
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
+          {/* Student list */}
+          <Card className="h-fit">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Users className="h-4 w-4" /> SEN Students ({senStudents.length})
+              </CardTitle>
+              <div className="relative mt-2">
+                <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
+                <Input placeholder="Search..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-1 max-h-[70vh] overflow-y-auto">
+              {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
+              {!loading && filteredSenStudents.length === 0 && (
+                <p className="text-sm text-muted-foreground">No SEN students yet.</p>
+              )}
+              {filteredSenStudents.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setSelected(s)}
+                  className={`w-full text-left p-2 rounded-md border flex items-center justify-between hover:bg-accent transition-colors ${
+                    selected?.id === s.id ? "bg-accent border-emerald-500" : "border-transparent"
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm font-medium">{s.student?.full_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {s.student?.class} {s.student?.section} · {s.category}
+                    </p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Detail panel */}
+          {!selected ? (
+            <Card>
+              <CardContent className="py-16 text-center text-muted-foreground">
+                Select a student to view their SEN record.
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{selected.student?.full_name}</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      {selected.student?.class} {selected.student?.section} · Admission #{selected.student?.admission_number}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <Badge>{selected.category}</Badge>
+                    <p className="text-xs text-muted-foreground">
+                      Case Manager: {selected.case_manager?.full_name || "Unassigned"}
+                    </p>
+                    <div className="flex gap-1 justify-end">
+                      <Button variant="outline" size="sm" onClick={openProfileEdit}>
+                        <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={deleteSenStudent}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                {selected.diagnosis_notes && (
+                  <p className="text-sm text-muted-foreground mt-2">{selected.diagnosis_notes}</p>
+                )}
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="iep">
+                  <TabsList>
+                    <TabsTrigger value="iep"><FileText className="h-4 w-4 mr-1" /> IEP</TabsTrigger>
+                    <TabsTrigger value="accommodations"><Accessibility className="h-4 w-4 mr-1" /> Accommodations</TabsTrigger>
+                    <TabsTrigger value="therapy"><Stethoscope className="h-4 w-4 mr-1" /> Therapy</TabsTrigger>
+                  </TabsList>
+
+                  {/* IEP TAB */}
+                  <TabsContent value="iep" className="space-y-3 mt-3">
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={() => setPlanOpen(true)}>
+                        <Plus className="h-4 w-4 mr-1" /> New IEP Plan
+                      </Button>
+                    </div>
+                    {detailLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+                    {!detailLoading && plans.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No IEP plans yet.</p>
+                    )}
+                    {plans.map((plan) => (
+                      <Card key={plan.id} className="border-l-4 border-l-emerald-500">
+                        <CardHeader className="pb-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-base">{plan.title}</CardTitle>
+                              <p className="text-xs text-muted-foreground">
+                                {plan.start_date} → {plan.end_date || "ongoing"}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline">{plan.status}</Badge>
+                              <Button variant="ghost" size="sm" onClick={() => openPlanEdit(plan)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deletePlan(plan.id)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium flex items-center gap-1"><Target className="h-3.5 w-3.5" /> Goals</p>
+                              <Button variant="ghost" size="sm" onClick={() => { setEditingGoal(null); setGoalForm({ domain: "Academic", goal_description: "", baseline: "", target_criteria: "", target_date: "" }); setGoalOpen(plan.id); }}>
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Goal
+                              </Button>
+                            </div>
+                            {plan.goals?.length === 0 && <p className="text-xs text-muted-foreground">No goals added.</p>}
+                            {plan.goals?.map((g) => (
+                              <div key={g.id} className="text-sm border rounded-md p-2 mb-1 flex items-start justify-between gap-2">
+                                <div>
+                                  <p><span className="font-medium">{g.domain}:</span> {g.goal_description}</p>
+                                  {g.target_criteria && <p className="text-xs text-muted-foreground">Target: {g.target_criteria}</p>}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Select value={g.progress_status} onValueChange={(v) => updateGoalStatus(g.id, v)}>
+                                    <SelectTrigger className="w-[130px] h-7 text-xs"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="not_started">Not Started</SelectItem>
+                                      <SelectItem value="in_progress">In Progress</SelectItem>
+                                      <SelectItem value="achieved">Achieved</SelectItem>
+                                      <SelectItem value="discontinued">Discontinued</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openGoalEdit(plan.id, g)}>
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteGoal(g.id)}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <p className="text-sm font-medium flex items-center gap-1"><CalendarClock className="h-3.5 w-3.5" /> Reviews</p>
+                              <Button variant="ghost" size="sm" onClick={() => { setEditingReview(null); setReviewForm({ review_date: "", attendees: "", summary: "", next_review_date: "" }); setReviewOpen(plan.id); }}>
+                                <Plus className="h-3.5 w-3.5 mr-1" /> Review
+                              </Button>
+                            </div>
+                            {plan.reviews?.length === 0 && <p className="text-xs text-muted-foreground">No reviews logged.</p>}
+                            {plan.reviews?.map((r) => (
+                              <div key={r.id} className="text-sm border rounded-md p-2 mb-1 flex items-start justify-between gap-2">
+                                <div>
+                                  <p className="font-medium">{r.review_date}{r.next_review_date ? ` · next: ${r.next_review_date}` : ""}</p>
+                                  {r.summary && <p className="text-xs text-muted-foreground">{r.summary}</p>}
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openReviewEdit(plan.id, r)}>
+                                    <Pencil className="h-3.5 w-3.5" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteReview(r.id)}>
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </TabsContent>
+
+                  {/* ACCOMMODATIONS TAB */}
+                  <TabsContent value="accommodations" className="space-y-2 mt-3">
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={() => { setEditingAccId(null); setAccForm({ accommodation_type: ACCOMMODATION_TYPES[0], applies_to: "both", description: "" }); setAccOpen(true); }}>
+                        <Plus className="h-4 w-4 mr-1" /> Add Accommodation
+                      </Button>
+                    </div>
+                    {accommodations.length === 0 && <p className="text-sm text-muted-foreground">No accommodations on file.</p>}
+                    {accommodations.map((a) => (
+                      <Card key={a.id}>
+                        <CardContent className="py-3 flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{a.accommodation_type} <Badge variant="outline" className="ml-1">{a.applies_to}</Badge></p>
+                            {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant={a.active ? "outline" : "secondary"} size="sm" onClick={() => toggleAccommodation(a.id, a.active)}>
+                              {a.active ? "Active" : "Inactive"}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => openAccEdit(a)}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteAccommodation(a.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </TabsContent>
+
+                  {/* THERAPY TAB */}
+                  <TabsContent value="therapy" className="space-y-2 mt-3">
+                    <div className="flex justify-end">
+                      <Button size="sm" onClick={() => { setEditingSessionId(null); setSessionForm({ therapy_type: THERAPY_TYPES[0], therapist_id: "", session_date: "", duration_minutes: "", goals_addressed: "", notes: "" }); setSessionOpen(true); }}>
+                        <Plus className="h-4 w-4 mr-1" /> Log Session
+                      </Button>
+                    </div>
+                    {sessions.length === 0 && <p className="text-sm text-muted-foreground">No therapy sessions logged.</p>}
+                    {sessions.map((s) => (
+                      <Card key={s.id}>
+                        <CardContent className="py-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium">{s.therapy_type} · {s.session_date}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs text-muted-foreground">{s.therapist?.full_name || "Unassigned"}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}</p>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openSessionEdit(s)}>
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteSession(s.id)}>
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </div>
+                          {s.goals_addressed && <p className="text-xs mt-1">Goals: {s.goals_addressed}</p>}
+                          {s.notes && <p className="text-xs text-muted-foreground mt-1">{s.notes}</p>}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Enroll Student Dialog */}
+      <Dialog open={enrollOpen} onOpenChange={setEnrollOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Enroll Student in SEN Program</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Class</Label>
+                <Select
+                  value={enrollClass}
+                  onValueChange={(v) => { setEnrollClass(v); setEnrollSection(""); setEnrollForm({ ...enrollForm, student_id: "" }); }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                  <SelectContent>
+                    {enrollClassOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Section</Label>
+                <Select
+                  value={enrollSection}
+                  onValueChange={(v) => { setEnrollSection(v); setEnrollForm({ ...enrollForm, student_id: "" }); }}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                  <SelectContent>
+                    {enrollSectionOptions.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Student</Label>
+              <Select
+                value={enrollForm.student_id}
+                onValueChange={(v) => setEnrollForm({ ...enrollForm, student_id: v })}
+              >
+                <SelectTrigger><SelectValue placeholder={enrollStudentOptions.length ? "Select student" : "No eligible students"} /></SelectTrigger>
+                <SelectContent>
+                  {enrollStudentOptions.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.full_name} {s.admission_number ? `(#${s.admission_number})` : ""} — {s.class} {s.section}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Category</Label>
+              <Select value={enrollForm.category} onValueChange={(v) => setEnrollForm({ ...enrollForm, category: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Case Manager</Label>
+              <Select value={enrollForm.case_manager_id} onValueChange={(v) => setEnrollForm({ ...enrollForm, case_manager_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                <SelectContent>
+                  {staff.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name} ({p.role})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Textarea value={enrollForm.diagnosis_notes} onChange={(e) => setEnrollForm({ ...enrollForm, diagnosis_notes: e.target.value })} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={enrollStudent} disabled={!enrollForm.student_id}>Enroll</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* IEP Plan Dialog */}
+      <Dialog open={profileEditOpen} onOpenChange={setProfileEditOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Edit SEN Profile</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Category</Label>
+              <Select value={profileForm.category} onValueChange={(v) => setProfileForm({ ...profileForm, category: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Case Manager</Label>
+              <Select value={profileForm.case_manager_id} onValueChange={(v) => setProfileForm({ ...profileForm, case_manager_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                <SelectContent>
+                  {staff.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name} ({p.role})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Status</Label>
+              <Select value={profileForm.status} onValueChange={(v) => setProfileForm({ ...profileForm, status: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="graduated">Graduated</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Review Cycle (months)</Label>
+              <Input type="number" value={profileForm.review_cycle_months} onChange={(e) => setProfileForm({ ...profileForm, review_cycle_months: Number(e.target.value) })} />
+            </div>
+            <div><Label>Notes</Label><Textarea value={profileForm.diagnosis_notes} onChange={(e) => setProfileForm({ ...profileForm, diagnosis_notes: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button onClick={saveProfileEdit}>Save Changes</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* IEP Plan Dialog */}
+      <Dialog open={planOpen} onOpenChange={(o) => { setPlanOpen(o); if (!o) { setEditingPlanId(null); setPlanForm({ title: "", start_date: "", end_date: "", status: "draft" }); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingPlanId ? "Edit IEP Plan" : "New IEP Plan"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Title</Label><Input value={planForm.title} onChange={(e) => setPlanForm({ ...planForm, title: e.target.value })} /></div>
+            <div><Label>Start Date</Label><Input type="date" value={planForm.start_date} onChange={(e) => setPlanForm({ ...planForm, start_date: e.target.value })} /></div>
+            <div><Label>End Date (optional)</Label><Input type="date" value={planForm.end_date} onChange={(e) => setPlanForm({ ...planForm, end_date: e.target.value })} /></div>
+            {editingPlanId && (
+              <div>
+                <Label>Status</Label>
+                <Select value={planForm.status} onValueChange={(v) => setPlanForm({ ...planForm, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          <DialogFooter><Button onClick={addPlan}>{editingPlanId ? "Save Changes" : "Create Plan"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Goal Dialog */}
+      <Dialog open={!!goalOpen} onOpenChange={(o) => { if (!o) { setGoalOpen(null); setEditingGoal(null); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingGoal ? "Edit IEP Goal" : "Add IEP Goal"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Domain</Label>
+              <Select value={goalForm.domain} onValueChange={(v) => setGoalForm({ ...goalForm, domain: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["Academic", "Behavioral", "Communication", "Social", "Motor", "Self-Help"].map((d) => (
+                    <SelectItem key={d} value={d}>{d}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Goal Description</Label><Textarea value={goalForm.goal_description} onChange={(e) => setGoalForm({ ...goalForm, goal_description: e.target.value })} /></div>
+            <div><Label>Baseline</Label><Input value={goalForm.baseline} onChange={(e) => setGoalForm({ ...goalForm, baseline: e.target.value })} /></div>
+            <div><Label>Target Criteria</Label><Input value={goalForm.target_criteria} onChange={(e) => setGoalForm({ ...goalForm, target_criteria: e.target.value })} /></div>
+            <div><Label>Target Date</Label><Input type="date" value={goalForm.target_date} onChange={(e) => setGoalForm({ ...goalForm, target_date: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button onClick={() => goalOpen && addGoal(goalOpen)}>{editingGoal ? "Save Changes" : "Add Goal"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={!!reviewOpen} onOpenChange={(o) => { if (!o) { setReviewOpen(null); setEditingReview(null); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingReview ? "Edit IEP Review" : "Log IEP Review"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Review Date</Label><Input type="date" value={reviewForm.review_date} onChange={(e) => setReviewForm({ ...reviewForm, review_date: e.target.value })} /></div>
+            <div><Label>Attendees</Label><Input value={reviewForm.attendees} onChange={(e) => setReviewForm({ ...reviewForm, attendees: e.target.value })} /></div>
+            <div><Label>Summary</Label><Textarea value={reviewForm.summary} onChange={(e) => setReviewForm({ ...reviewForm, summary: e.target.value })} /></div>
+            <div><Label>Next Review Date</Label><Input type="date" value={reviewForm.next_review_date} onChange={(e) => setReviewForm({ ...reviewForm, next_review_date: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button onClick={() => reviewOpen && addReview(reviewOpen)}>{editingReview ? "Save Changes" : "Save Review"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Accommodation Dialog */}
+      <Dialog open={accOpen} onOpenChange={(o) => { setAccOpen(o); if (!o) setEditingAccId(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingAccId ? "Edit Accommodation" : "Add Accommodation"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Type</Label>
+              <Select value={accForm.accommodation_type} onValueChange={(v) => setAccForm({ ...accForm, accommodation_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ACCOMMODATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Applies To</Label>
+              <Select value={accForm.applies_to} onValueChange={(v) => setAccForm({ ...accForm, applies_to: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="classroom">Classroom</SelectItem>
+                  <SelectItem value="exam">Exam</SelectItem>
+                  <SelectItem value="both">Both</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Description</Label><Textarea value={accForm.description} onChange={(e) => setAccForm({ ...accForm, description: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button onClick={addAccommodation}>{editingAccId ? "Save Changes" : "Add"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Therapy Session Dialog */}
+      <Dialog open={sessionOpen} onOpenChange={(o) => { setSessionOpen(o); if (!o) setEditingSessionId(null); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editingSessionId ? "Edit Therapy Session" : "Log Therapy Session"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Therapy Type</Label>
+              <Select value={sessionForm.therapy_type} onValueChange={(v) => setSessionForm({ ...sessionForm, therapy_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {THERAPY_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Therapist</Label>
+              <Select value={sessionForm.therapist_id} onValueChange={(v) => setSessionForm({ ...sessionForm, therapist_id: v })}>
+                <SelectTrigger><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                <SelectContent>
+                  {staff.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Session Date</Label><Input type="date" value={sessionForm.session_date} onChange={(e) => setSessionForm({ ...sessionForm, session_date: e.target.value })} /></div>
+            <div><Label>Duration (minutes)</Label><Input type="number" value={sessionForm.duration_minutes} onChange={(e) => setSessionForm({ ...sessionForm, duration_minutes: e.target.value })} /></div>
+            <div><Label>Goals Addressed</Label><Input value={sessionForm.goals_addressed} onChange={(e) => setSessionForm({ ...sessionForm, goals_addressed: e.target.value })} /></div>
+            <div><Label>Notes</Label><Textarea value={sessionForm.notes} onChange={(e) => setSessionForm({ ...sessionForm, notes: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button onClick={addSession}>{editingSessionId ? "Save Changes" : "Log Session"}</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AppLayout>
+  );
+}

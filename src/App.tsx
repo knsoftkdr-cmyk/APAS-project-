@@ -103,6 +103,7 @@ const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
 const TimetablePage = lazy(() => import("./pages/TimetablePage"));
 const RotationScheduleManagement = lazy(() => import("./pages/RotationScheduleManagement"));
+const SENManagement = lazy(() => import("./pages/SENManagement"));
 const StudentVirtualClassroom = lazy(() => import("./pages/StudentVirtualClassroom"));
 const TeacherSafeguardingReport = lazy(() => import("./pages/TeacherSafeguardingReport"));
 const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
@@ -255,6 +256,7 @@ export default function App() {
                       <Route path="/invigilation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><InvigilationManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/timetable" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "student", "school_admin", "teacher", "hod"]}><TimetablePage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/rotation-schedules" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><RotationScheduleManagement /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/sen-management" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><SENManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/attendance" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "principal", "admin", "student", "parent"]}><AttendanceMarking /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-transfers" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><StudentTransfers /></RoleGuard></ProtectedRoute>} />
                       <Route path="/id-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><IDCardGenerator /></RoleGuard></ProtectedRoute>} />
