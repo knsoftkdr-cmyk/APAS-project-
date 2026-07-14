@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { Plus, Pencil, Trash2, Paperclip } from "lucide-react";
+import { Plus, Pencil, Trash2, Paperclip, ChevronDown } from "lucide-react";
 
 export type FieldDef =
   | { key: string; label: string; type: "text" | "date" | "number"; placeholder?: string }
@@ -34,7 +34,7 @@ interface Props {
   renderRow: (row: Record<string, any>) => { primary: string; secondary?: string; meta?: string; fileUrl?: string | null };
 }
 
-export function TeacherRepeatableList({ title, emptyText, tableName, fields, renderRow }: Props) {
+export function TeacherRepeatableList({ title, emptyText, tableName, fields, renderRow, icon: Icon }: Props & { icon?: React.ElementType }) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -42,6 +42,8 @@ export function TeacherRepeatableList({ title, emptyText, tableName, fields, ren
   const [form, setForm] = useState<Record<string, any>>({});
   const [saving, setSaving] = useState(false);
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
 
   const { data: rows = [], isLoading, refetch } = useQuery({
     queryKey: [tableName, user?.id],
@@ -56,6 +58,12 @@ export function TeacherRepeatableList({ title, emptyText, tableName, fields, ren
     },
     enabled: !!user?.id,
   });
+
+  // Auto-expand once, the first time we learn this section actually has data.
+  if (!isLoading && !hasAutoExpanded) {
+    if (rows.length > 0 && !expanded) setExpanded(true);
+    setHasAutoExpanded(true);
+  }
 
   const defaultsFor = (): Record<string, any> => {
     const d: Record<string, any> = {};
@@ -133,60 +141,98 @@ export function TeacherRepeatableList({ title, emptyText, tableName, fields, ren
     refetch();
   };
 
-  return (
-    <Card className="border border-border/60">
-      <CardContent className="p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">{title}</h3>
-          <Button size="sm" variant="outline" onClick={openAdd}>
-            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add
-          </Button>
+return (
+    <Card className="overflow-hidden border-blue-100 shadow-sm scroll-mt-24">
+      <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 p-4 md:p-5 hover:bg-blue-50/30 transition-colors"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+            {Icon ? <Icon className="h-4 w-4 text-blue-600" /> : <Plus className="h-4 w-4 text-blue-600" />}
+          </div>
+          <h3 className="text-sm font-semibold text-slate-800 truncate">{title}</h3>
+          {!isLoading && (
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+              rows.length > 0 ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-400"
+            }`}>
+              {rows.length}
+            </span>
+          )}
         </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => { e.stopPropagation(); setExpanded(true); openAdd(); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setExpanded(true); openAdd(); } }}
+            className="inline-flex items-center gap-1 text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-2.5 py-1.5 rounded-lg"
+          >
+            <Plus className="h-3 w-3" /> Add
+          </span>
+          <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${expanded ? "rotate-180" : ""}`} />
+        </div>
+      </button>
 
+      {expanded && (
+      <CardContent className="p-4 md:p-5 pt-0 space-y-3">
         {isLoading ? (
           <div className="flex justify-center py-6"><LoadingSpinner /></div>
         ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">{emptyText}</p>
+          <div className="text-center py-6">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-2">
+              <Plus className="h-5 w-5 text-blue-300" />
+            </div>
+            <p className="text-sm text-muted-foreground">{emptyText}</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {rows.map((row) => {
-              const { primary, secondary, meta, fileUrl } = renderRow(row);
-              return (
-                <div key={row.id} className="flex items-center justify-between gap-3 rounded-lg border p-3 group">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{primary}</p>
-                    {secondary && <p className="text-xs text-muted-foreground truncate">{secondary}</p>}
-                    <div className="flex items-center gap-2 mt-1">
-                      {meta && <p className="text-xs text-muted-foreground">{meta}</p>}
-                      {fileUrl && (
-                        <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1">
-                          <Paperclip className="h-3 w-3" /> View file
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                    <button onClick={() => openEdit(row)} className="p-1.5 rounded hover:bg-muted">
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                    <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded hover:bg-muted">
-                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
+  const { primary, secondary, meta, fileUrl } = renderRow(row);
+  return (
+    <div
+      key={row.id}
+      className="flex items-center justify-between gap-3 rounded-xl border-l-4 border-l-blue-400 border border-slate-200 bg-blue-50/20 p-3 group"
+    >
+      <div className="min-w-0">
+        <p className="text-sm font-medium truncate text-slate-800">{primary}</p>
+        {secondary && <p className="text-xs text-muted-foreground truncate">{secondary}</p>}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {meta && <p className="text-xs text-muted-foreground">{meta}</p>}
+          {fileUrl && (
+            <a href={fileUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 font-medium">
+              <Paperclip className="h-3 w-3" /> View file
+            </a>
+          )}
+        </div>
+      </div>
+      <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+        <button onClick={() => openEdit(row)} className="p-1.5 rounded-lg hover:bg-blue-100">
+          <Pencil className="h-3.5 w-3.5 text-blue-600" />
+        </button>
+        <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded-lg hover:bg-red-50">
+          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+        </button>
+      </div>
+    </div>
+  );
+})}
           </div>
         )}
       </CardContent>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingId ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
-          </DialogHeader>
+  <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full rounded-xl p-0 overflow-hidden max-h-[85vh] flex flex-col">
+    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-5 py-4 shrink-0">
+      <DialogHeader>
+        <DialogTitle className="text-white text-base">{editingId ? `Edit ${title}` : `Add ${title}`}</DialogTitle>
+      </DialogHeader>
+    </div>
 
-          <div className="space-y-3">
+    <div className="space-y-3 px-5 py-4 overflow-y-auto">
             {fields.map((f) => (
               <div key={f.key}>
                 {f.type === "checkbox" ? (
@@ -229,20 +275,26 @@ export function TeacherRepeatableList({ title, emptyText, tableName, fields, ren
                       placeholder={f.placeholder}
                       value={form[f.key] || ""}
                       onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
-                      className="mt-1"
+                      className="mt-1 border-slate-200 focus-visible:ring-blue-400"
                     />
                   </>
                 )}
               </div>
-            ))}
-          </div>
+        ))}
+      </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </Card>
+      <DialogFooter className="px-5 py-4 border-t border-slate-100 shrink-0">
+        <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setDialogOpen(false)}>Cancel</Button>
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+        >
+          {saving ? "Saving..." : "Save"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+</Card>
   );
 }

@@ -7,6 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import settingsBanner from "@/assets/settings-banner.png";
+import { TeacherRepeatableList } from "@/components/TeacherRepeatableList";
+import { format } from "date-fns";
+import {
+  GraduationCap as GradIcon, Award, Languages as LangIcon, Target,
+  BookOpen, Laptop, FileBadge, Briefcase as BriefIcon,
+} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -54,7 +60,7 @@ const InfoRow = ({
   value?: string | null;
 }) => (
   <div className="flex items-start gap-3 py-3 border-b border-gray-100 last:border-0">
-    <div className="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg shrink-0" style={{background:"#eef2f8", color:"#1e3a5f"}}>
+    <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl shrink-0 shadow-sm" style={{background:"linear-gradient(135deg, #eef2f8, #dbe6f4)", color:"#1e3a5f"}}>
       <Icon className="h-4 w-4" />
     </div>
     <div className="min-w-0">
@@ -67,6 +73,8 @@ const InfoRow = ({
 );
 
 // ─── Drawer wrapper ───────────────────────────────────────────────────────────
+import { createPortal } from "react-dom";
+
 const EditDrawer = ({
   open,
   title,
@@ -81,51 +89,53 @@ const EditDrawer = ({
   children: React.ReactNode;
   onSave: () => void;
   saving: boolean;
-}) => (
-  <>
-    {/* Backdrop */}
-    <div
-      onClick={onClose}
-      className={cn(
-        "fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300",
-        open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-      )}
-    />
-    {/* Panel */}
-    <div
-      className={cn(
-        "fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
-        open ? "translate-x-0" : "translate-x-full"
-      )}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-        <h2 className="text-xl font-bold text-gray-900">{title}</h2>
-        <button
-          onClick={onClose}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-        >
-          <X className="h-4 w-4 text-gray-600" />
-        </button>
-      </div>
+}) => {
+  return createPortal(
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className={cn(
+          "fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity duration-300 overscroll-contain",
+          open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        )}
+      />
+      {/* Panel */}
+      <div
+        className={cn(
+          "fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+          open ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-white">
+          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+          >
+            <X className="h-4 w-4 text-gray-600" />
+          </button>
+        </div>
 
-      {/* Scrollable content */}
-<div className="flex-1 overflow-y-auto px-6 py-5 pb-24 md:pb-5 space-y-5">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain px-6 py-5 pb-24 md:pb-5 space-y-5">
+          {children}
+        </div>
 
-      {/* Footer */}
-      <div className="border-t border-gray-100 px-6 py-4 pb-20 md:pb-4 bg-white">
-        <Button
-          onClick={onSave}
-          disabled={saving}
-          className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-xl text-base"
-        >
-          {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Save
-        </Button>
+        <div className="border-t border-gray-100 px-6 py-4 pb-20 md:pb-4 bg-white">
+          <Button
+            onClick={onSave}
+            disabled={saving}
+            className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-xl text-base"
+          >
+            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save
+          </Button>
+        </div>
       </div>
-    </div>
-  </>
-);
+    </>,
+    document.body
+  );
+};
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 const Field = ({
@@ -163,16 +173,16 @@ const SectionCard = ({
   onEdit?: () => void;
   children: React.ReactNode;
 }) => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-      <div className="flex items-center gap-2">
-      <div className={`h-1 w-5 rounded-full`} style={{background:"#1e3a5f"}} />
+<div className="bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 overflow-hidden transition-shadow hover:shadow-lg hover:shadow-gray-200/60">
+    <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50/80 to-white">
+      <div className="flex items-center gap-2.5">
+      <div className={`h-6 w-1.5 rounded-full`} style={{background:"linear-gradient(to bottom, #1e3a5f, #3b82c4)"}} />
         <h3 className="font-bold text-gray-800 text-base">{title}</h3>
       </div>
       {onEdit && (
         <button
           onClick={onEdit}
-          className="flex items-center gap-1.5 text-sm font-semibold transition-colors"
+          className="flex items-center gap-1.5 text-sm font-semibold transition-colors px-2.5 py-1 rounded-lg hover:bg-blue-50"
           style={{color:"#1e3a5f"}}
         >
           <Pencil className="h-3.5 w-3.5" />
@@ -193,6 +203,14 @@ const SettingsPage = () => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const [activeDrawer, setActiveDrawer] = useState<DrawerSection>(null);
+
+  useEffect(() => {
+    if (activeDrawer) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = original; };
+    }
+  }, [activeDrawer]);
 
   // Personal info state
   const [fullName, setFullName] = useState(profile?.full_name ?? "");
@@ -222,8 +240,8 @@ const SettingsPage = () => {
   // Language state
   const [langSaving, setLangSaving] = useState(false);
 
-  const isStudent = profile?.role === "student";
-  const isTeacher = !isStudent;
+const isStudent = profile?.role === "student";
+const isTeacher = profile?.role === "teacher";
 
   useEffect(() => {
     const fetchHouse = async () => {
@@ -383,11 +401,209 @@ const SettingsPage = () => {
     principal: "Principal",
     admin: "Administrator",
   };
-
+const [activeCareerTab, setActiveCareerTab] = useState("qualifications");
+const careerTabs = [
+  {
+    id: "qualifications",
+    label: "Qualifications",
+    content: (
+      <TeacherRepeatableList
+        title="Qualifications"
+        icon={GradIcon}
+        emptyText="No qualifications added yet."
+        tableName="teacher_qualifications"
+        fields={[
+          { key: "degree", label: "Degree", type: "text", placeholder: "e.g. B.Ed, M.Sc Mathematics" },
+          { key: "institution", label: "Institution", type: "text" },
+          { key: "year_of_completion", label: "Year of Completion", type: "text", placeholder: "e.g. 2018" },
+        ]}
+        renderRow={(r) => ({ primary: r.degree, secondary: r.institution, meta: r.year_of_completion })}
+      />
+    ),
+  },
+  {
+    id: "certifications",
+    label: "Certifications",
+    content: (
+      <TeacherRepeatableList
+        title="Certifications"
+        icon={FileBadge}
+        emptyText="No certifications added yet."
+        tableName="teacher_certifications"
+        fields={[
+          { key: "certificate_name", label: "Certificate Name", type: "text" },
+          { key: "issuing_organization", label: "Issuing Organization", type: "text" },
+          { key: "issue_date", label: "Issue Date", type: "date" },
+          { key: "certificate_url", label: "Certificate Upload", type: "file", bucket: "teacher-certificates" },
+        ]}
+        renderRow={(r) => ({
+          primary: r.certificate_name,
+          secondary: r.issuing_organization,
+          meta: r.issue_date ? format(new Date(r.issue_date), "d MMM yyyy") : undefined,
+          fileUrl: r.certificate_url,
+        })}
+      />
+    ),
+  },
+  {
+    id: "experience",
+    label: "Experience",
+    content: (
+      <TeacherRepeatableList
+        title="Teaching Experience"
+        icon={BriefIcon}
+        emptyText="No previous experience added yet."
+        tableName="teacher_experience"
+        fields={[
+          { key: "previous_school", label: "Previous School", type: "text" },
+          { key: "position", label: "Position", type: "text", placeholder: "e.g. TGT Science" },
+          { key: "years_of_experience", label: "Years of Experience", type: "text", placeholder: "e.g. 3 years" },
+        ]}
+        renderRow={(r) => ({ primary: r.previous_school, secondary: r.position, meta: r.years_of_experience })}
+      />
+    ),
+  },
+  {
+    id: "expertise",
+    label: "Subject Expertise",
+    content: (
+      <TeacherRepeatableList
+        title="Subject Expertise"
+        icon={BookOpen}
+        emptyText="No subjects added yet."
+        tableName="teacher_subject_expertise"
+        fields={[{ key: "subject", label: "Subject", type: "text", placeholder: "e.g. Mathematics" }]}
+        renderRow={(r) => ({ primary: r.subject })}
+      />
+    ),
+  },
+  {
+    id: "training",
+    label: "Training",
+    content: (
+      <TeacherRepeatableList
+        title="Training History"
+        icon={GradIcon}
+        emptyText="No trainings recorded yet."
+        tableName="teacher_training_history"
+        fields={[
+          { key: "training_name", label: "Training Name", type: "text", placeholder: "e.g. AI in Education" },
+          { key: "completed_date", label: "Completed On", type: "date" },
+        ]}
+        renderRow={(r) => ({ primary: r.training_name, meta: r.completed_date ? format(new Date(r.completed_date), "d MMM yyyy") : undefined })}
+      />
+    ),
+  },
+  {
+    id: "skills",
+    label: "Digital Skills",
+    content: (
+      <TeacherRepeatableList
+        title="Digital Skills"
+        icon={Laptop}
+        emptyText="No digital skills added yet."
+        tableName="teacher_digital_skills"
+        fields={[
+          { key: "skill_name", label: "Skill", type: "text", placeholder: "e.g. Google Classroom, Canva, Smart Board" },
+          {
+            key: "proficiency", label: "Proficiency", type: "select",
+            options: [
+              { value: "beginner", label: "Beginner" },
+              { value: "intermediate", label: "Intermediate" },
+              { value: "advanced", label: "Advanced" },
+            ],
+          },
+        ]}
+        renderRow={(r) => ({ primary: r.skill_name, meta: r.proficiency })}
+      />
+    ),
+  },
+  {
+    id: "goals",
+    label: "Career Goals",
+    content: (
+      <TeacherRepeatableList
+        title="Career Goals"
+        icon={Target}
+        emptyText="No career goals added yet."
+        tableName="teacher_career_goals"
+        fields={[
+          { key: "goal", label: "Goal", type: "text", placeholder: "e.g. Complete AI Certification" },
+          {
+            key: "status", label: "Status", type: "select",
+            options: [
+              { value: "in_progress", label: "In Progress" },
+              { value: "achieved", label: "Achieved" },
+            ],
+          },
+        ]}
+        renderRow={(r) => ({ primary: r.goal, meta: r.status === "achieved" ? "✓ Achieved" : "In Progress" })}
+      />
+    ),
+  },
+  {
+    id: "publications",
+    label: "Publications",
+    content: (
+      <TeacherRepeatableList
+        title="Research Publications"
+        icon={BookOpen}
+        emptyText="No publications added yet."
+        tableName="teacher_publications"
+        fields={[
+          { key: "title", label: "Title", type: "text" },
+          { key: "journal", label: "Journal", type: "text" },
+          { key: "year", label: "Year", type: "text", placeholder: "e.g. 2025" },
+        ]}
+        renderRow={(r) => ({ primary: r.title, secondary: r.journal, meta: r.year })}
+      />
+    ),
+  },
+  {
+    id: "awards",
+    label: "Awards",
+    content: (
+      <TeacherRepeatableList
+        title="Awards & Recognition"
+        icon={Award}
+        emptyText="No awards added yet."
+        tableName="teacher_awards"
+        fields={[
+          { key: "title", label: "Award Title", type: "text", placeholder: "e.g. Best Teacher Award" },
+          { key: "year", label: "Year", type: "text" },
+          { key: "certificate_url", label: "Certificate Upload (optional)", type: "file", bucket: "teacher-certificates" },
+        ]}
+        renderRow={(r) => ({ primary: `🏆 ${r.title}`, meta: r.year, fileUrl: r.certificate_url })}
+      />
+    ),
+  },
+  {
+    id: "languages",
+    label: "Languages",
+    content: (
+      <TeacherRepeatableList
+        title="Languages Known"
+        icon={LangIcon}
+        emptyText="No languages added yet."
+        tableName="teacher_languages"
+        fields={[
+          { key: "language", label: "Language", type: "text", placeholder: "e.g. English, Telugu, Hindi" },
+          { key: "can_read", label: "Can Read", type: "checkbox" },
+          { key: "can_write", label: "Can Write", type: "checkbox" },
+          { key: "can_speak", label: "Can Speak", type: "checkbox" },
+        ]}
+        renderRow={(r) => ({
+          primary: r.language,
+          meta: [r.can_read && "Read", r.can_write && "Write", r.can_speak && "Speak"].filter(Boolean).join(" · "),
+        })}
+      />
+    ),
+  },
+];
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-300 p-8 relative min-h-[220px]">
+        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-300 to-blue-300 p-8 relative min-h-[220px] shadow-lg shadow-blue-200/50">
 
           <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
           <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
@@ -426,24 +642,29 @@ const SettingsPage = () => {
           />
         </div>
 
-      <div className="max-w-3xl space-y-5 pb-16">
+      <div className="w-full max-w-7xl space-y-5 pb-16">
 
         {/* ── Profile Hero Card ─────────────────────────────── */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-navy-800 to-navy-700 relative" style={{background: "linear-gradient(to right, #1e3a5f, #1e4d8c)"}} />
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/60 overflow-hidden">
+          <div className="h-28 relative" style={{background: "linear-gradient(120deg, #1e3a5f 0%, #2563a8 55%, #3b82c4 100%)"}}>
+            <div className="absolute top-4 right-8 w-10 h-10 rounded-full border border-white/25"></div>
+            <div className="absolute bottom-4 right-24 w-6 h-6 rounded-full border border-white/25"></div>
+          </div>
           <div className="px-6 pb-6">
-            <div className="flex items-end justify-between -mt-12 mb-4">
+            <div className="flex items-end justify-between -mt-14 mb-4">
               {/* Avatar */}
               <div className="relative">
-                <div className="h-24 w-24 rounded-2xl border-4 border-white shadow-md bg-blue-50 overflow-hidden flex items-center justify-center">
-                  {avatarUrl ? (
-                    <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-                  ) : (
-                    <span className="text-3xl font-bold text-blue-900">{initials}</span>
-                  )}
+                <div className="h-28 w-28 rounded-2xl p-1 shadow-lg" style={{background: "linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
+                  <div className="h-full w-full rounded-xl border-2 border-white bg-blue-50 overflow-hidden flex items-center justify-center">
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="text-3xl font-bold text-blue-900">{initials}</span>
+                    )}
+                  </div>
                 </div>
                 {/* completion ring hint */}
-                <div className="absolute -bottom-1 -right-1 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow" style={{background:"#1e3a5f"}}>
+                <div className="absolute -bottom-1.5 -right-1.5 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md border-2 border-white" style={{background:"#1e3a5f"}}>
                   100%
                 </div>
               </div>
@@ -463,7 +684,7 @@ const SettingsPage = () => {
             <div className="flex flex-wrap items-center gap-2 mb-3">
               <h2 className="text-xl font-bold text-gray-900">{profile?.full_name || "—"}</h2>
               {employeeId && (
-                <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border" style={{background:"#eef2f8", color:"#1e3a5f", borderColor:"#b8cce4"}}>
+                <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full border shadow-sm" style={{background:"linear-gradient(120deg, #eef2f8, #e0eaf6)", color:"#1e3a5f", borderColor:"#b8cce4"}}>
                   <BadgeCheck className="h-3 w-3" />
                   ID: {employeeId}
                 </span>
@@ -541,39 +762,81 @@ const SettingsPage = () => {
         {/* ── Quick Actions ─────────────────────────────────── */}
         <div className="grid sm:grid-cols-2 gap-4">
           {/* Language */}
-          <button
+         <button
             onClick={() => setActiveDrawer("language")}
-            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 hover:border-blue-900 hover:shadow-md transition-all group text-left"
+            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center" style={{color:"#1e3a5f"}}>
-                <Globe className="h-6 w-6" />
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white shadow-sm" style={{background:"linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
+                <Globe className="h-5.5 w-5.5" />
               </div>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">Language</p>
                 <p className="text-xs text-gray-400 capitalize">{language}</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-900 transition-colors" />
+            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-900 group-hover:translate-x-0.5 transition-all" />
           </button>
 
           {/* Password */}
           <button
             onClick={() => setActiveDrawer("password")}
-            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4 hover:border-blue-900 hover:shadow-md transition-all group text-left"
+            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-orange-50 flex items-center justify-center text-orange-500">
-                <Lock className="h-6 w-6" />
+              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white shadow-sm" style={{background:"linear-gradient(135deg, #f97316, #fb923c)"}}>
+                <Lock className="h-5.5 w-5.5" />
               </div>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">Change Password</p>
                 <p className="text-xs text-gray-400">Update your password</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-900 transition-colors" />
+            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all" />
           </button>
         </div>
+
+{isTeacher && (
+  <div className="pt-2">
+    <div className="flex items-center gap-2.5 mb-4">
+      <div className="h-6 w-1.5 rounded-full" style={{ background: "linear-gradient(to bottom, #1e3a5f, #3b82c4)" }} />
+      <h2 className="text-lg font-bold text-gray-900">Career & Professional Development</h2>
+    </div>
+
+    {/* Tab bar */}
+    <div className="bg-gray-50/80 rounded-2xl p-2 mb-0 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1.5 w-max">
+        {careerTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveCareerTab(tab.id)}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap",
+              activeCareerTab === tab.id
+                ? "text-white shadow-md"
+                : "text-gray-500 hover:text-gray-800 hover:bg-white"
+            )}
+            style={
+              activeCareerTab === tab.id
+                ? { background: "linear-gradient(120deg, #1e3a5f, #3b82c4)" }
+                : undefined
+            }
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {/* Accent underline */}
+    <div className="h-1 rounded-full my-3" style={{ background: "linear-gradient(90deg, #1e3a5f, #3b82c4)" }} />
+
+    {/* Active panel */}
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 overflow-hidden">
+      {careerTabs.find((t) => t.id === activeCareerTab)?.content}
+    </div>
+  </div>
+)}
       </div>
 
       {/* ════════════════════════════════════════════════════
@@ -591,12 +854,14 @@ const SettingsPage = () => {
         {/* Avatar upload */}
         <div className="flex flex-col items-center gap-3 pb-2">
           <div className="relative h-24 w-24">
-            <div className="h-24 w-24 rounded-2xl bg-blue-50 border-2 overflow-hidden flex items-center justify-center shadow-md" style={{borderColor:"#b8cce4"}}>
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-3xl font-bold" style={{color:"#1e3a5f"}}>{initials}</span>
-              )}
+            <div className="h-24 w-24 rounded-2xl p-1 shadow-md" style={{background: "linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
+              <div className="h-full w-full rounded-xl bg-blue-50 border-2 border-white overflow-hidden flex items-center justify-center">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-3xl font-bold" style={{color:"#1e3a5f"}}>{initials}</span>
+                )}
+              </div>
             </div>
             <button
               onClick={() => fileRef.current?.click()}

@@ -23,12 +23,17 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { TeacherRepeatableList } from "@/components/TeacherRepeatableList";
 import { GraduationCap, Camera, User } from "lucide-react";
 import { format } from "date-fns";
-
+import { Navigate } from "react-router-dom";
 export default function TeacherProfessionalDevelopment() {
   const { user, refreshProfile } = useAuth();
   const { data: profile } = useStudentProfile(); // same cache as Settings.tsx
   const { toast } = useToast();
   const qc = useQueryClient();
+  // ── Role guard ──────────────────────────────────────────────
+  if (authProfile && authProfile.role !== "teacher") {
+    return <Navigate to="/settings" replace />;
+    // or: return <Navigate to="/dashboard" replace />;
+  }
 
   const [fullName, setFullName] = useState("");
   const [employeeId, setEmployeeId] = useState("");
@@ -96,78 +101,99 @@ export default function TeacherProfessionalDevelopment() {
 
   return (
     <AppLayout>
-      <div className="space-y-6 pb-10">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-            <GraduationCap className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold">Professional Development</h1>
-            <p className="text-sm text-muted-foreground">Your teaching profile, qualifications, and career record</p>
-          </div>
-        </div>
+      <div className="space-y-4 md:space-y-6 pb-10">
+  <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg">
+    <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+    <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+    <div className="relative flex items-center gap-3 md:gap-4">
+      <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+        <GraduationCap className="h-7 w-7 md:h-6 md:w-6 text-white" />
+      </div>
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold text-white">Professional Development</h1>
+        <p className="text-blue-100 text-xs md:text-sm mt-0.5">Your teaching profile, qualifications, and career record</p>
+      </div>
+    </div>
+  </div>
 
         {/* ── Section 1: Teacher Profile ─────────────────────────────────── */}
-        <Card className="border border-border/60">
-          <CardContent className="p-5 space-y-4">
-            <h3 className="text-sm font-semibold">Teacher Profile</h3>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={avatarUrl} />
-                  <AvatarFallback><User className="h-8 w-8" /></AvatarFallback>
-                </Avatar>
-                <label className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center cursor-pointer">
-                  <Camera className="h-3.5 w-3.5" />
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e.target.files?.[0] || null)} />
-                </label>
-              </div>
-              {uploading && <p className="text-xs text-muted-foreground">Uploading photo...</p>}
-            </div>
+        <Card className="overflow-hidden border-blue-100 shadow-sm">
+  <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+  <CardContent className="p-4 md:p-5 space-y-4">
+    <h3 className="text-sm font-semibold flex items-center gap-2 text-slate-800">
+      <div className="w-6 h-6 rounded-md bg-blue-100 flex items-center justify-center">
+        <User className="h-3.5 w-3.5 text-blue-600" />
+      </div>
+      Teacher Profile
+    </h3>
+    <div className="flex items-center gap-4">
+      <div className="relative shrink-0">
+        <Avatar className="h-20 w-20 ring-4 ring-blue-50">
+          <AvatarImage src={avatarUrl} />
+          <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100"><User className="h-8 w-8 text-blue-400" /></AvatarFallback>
+        </Avatar>
+        <label className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center cursor-pointer shadow-sm hover:scale-105 transition-transform">
+          <Camera className="h-3.5 w-3.5" />
+          <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e.target.files?.[0] || null)} />
+        </label>
+      </div>
+      {uploading && (
+        <p className="text-xs text-blue-600 flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-full border-2 border-blue-300 border-t-blue-600 animate-spin" />
+          Uploading photo...
+        </p>
+      )}
+    </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Name</label>
-                <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Employee ID</label>
-                <Input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="mt-1" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Designation</label>
-                <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. PGT Mathematics" className="mt-1" />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Department</label>
-                <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Science Department" className="mt-1" />
-              </div>
-              <div data-vaul-no-drag>
-                <label className="text-xs font-medium text-muted-foreground">Date of Joining</label>
-                <Input type="date" value={dateOfJoining} onChange={(e) => setDateOfJoining(e.target.value)} className="mt-1" />
-              </div>
-            </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Name</label>
+        <Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1 border-slate-200 focus-visible:ring-blue-400" />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Employee ID</label>
+        <Input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} className="mt-1 border-slate-200 focus-visible:ring-blue-400" />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Designation</label>
+        <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. PGT Mathematics" className="mt-1 border-slate-200 focus-visible:ring-blue-400" />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-muted-foreground">Department</label>
+        <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Science Department" className="mt-1 border-slate-200 focus-visible:ring-blue-400" />
+      </div>
+      <div data-vaul-no-drag>
+        <label className="text-xs font-medium text-muted-foreground">Date of Joining</label>
+        <Input type="date" value={dateOfJoining} onChange={(e) => setDateOfJoining(e.target.value)} className="mt-1 border-slate-200 focus-visible:ring-blue-400" />
+      </div>
+    </div>
 
-            <Button onClick={handleSaveProfile} disabled={savingProfile}>
-              {savingProfile ? "Saving..." : "Save Profile"}
-            </Button>
-          </CardContent>
-        </Card>
+    <Button
+      onClick={handleSaveProfile}
+      disabled={savingProfile}
+      className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+    >
+      {savingProfile ? "Saving..." : "Save Profile"}
+    </Button>
+  </CardContent>
+</Card>
 
         {/* ── Sections 2–10 ──────────────────────────────────────────────── */}
         <Tabs defaultValue="qualifications" className="space-y-4">
-          <TabsList className="flex-wrap h-auto gap-1">
-            <TabsTrigger value="qualifications">Qualifications</TabsTrigger>
-            <TabsTrigger value="certifications">Certifications</TabsTrigger>
-            <TabsTrigger value="experience">Experience</TabsTrigger>
-            <TabsTrigger value="expertise">Subject Expertise</TabsTrigger>
-            <TabsTrigger value="training">Training</TabsTrigger>
-            <TabsTrigger value="skills">Digital Skills</TabsTrigger>
-            <TabsTrigger value="goals">Career Goals</TabsTrigger>
-            <TabsTrigger value="publications">Publications</TabsTrigger>
-            <TabsTrigger value="awards">Awards</TabsTrigger>
-            <TabsTrigger value="languages">Languages</TabsTrigger>
-          </TabsList>
+  <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+    <TabsList className="inline-flex w-max h-auto gap-1 bg-blue-50 border border-blue-100 p-1">
+      <TabsTrigger value="qualifications" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Qualifications</TabsTrigger>
+      <TabsTrigger value="certifications" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Certifications</TabsTrigger>
+      <TabsTrigger value="experience" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Experience</TabsTrigger>
+      <TabsTrigger value="expertise" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Subject Expertise</TabsTrigger>
+      <TabsTrigger value="training" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Training</TabsTrigger>
+      <TabsTrigger value="skills" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Digital Skills</TabsTrigger>
+      <TabsTrigger value="goals" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Career Goals</TabsTrigger>
+      <TabsTrigger value="publications" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Publications</TabsTrigger>
+      <TabsTrigger value="awards" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Awards</TabsTrigger>
+      <TabsTrigger value="languages" className="rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap">Languages</TabsTrigger>
+    </TabsList>
+  </div>
 
           <TabsContent value="qualifications">
             <TeacherRepeatableList
