@@ -65,6 +65,8 @@ const navItems: Array<{
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
   { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["admin", "principal", "school_admin"], module: "Rotation Schedules" },
   { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["admin", "principal", "school_admin"], module: "SEN Management" },
+  { title: "My SEN Students", icon: Accessibility, path: "/my-sen-students", roles: ["teacher", "hod"], module: "SEN Management" },
+  { title: "My Accommodations", icon: Accessibility, path: "/my-accommodations", roles: ["student"], module: "My Accommodations" },
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal", "school_admin", "knsoft_admin"] },
   { title: "Dashboard", icon: LayoutDashboard, path: "/teacher-workspace", roles: ["teacher"], tourId: "nav-home", module: "Home" },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
@@ -231,7 +233,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       if (item.roles && (!profile?.role || !item.roles.includes(profile.role))) return false;
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects", "Courses", "Credentials"];
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects", "Courses", "Credentials", "My Accommodations"];
         const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication", "Safeguarding & Child Protection"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);

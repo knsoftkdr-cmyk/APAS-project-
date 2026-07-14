@@ -325,10 +325,10 @@ export interface DimensionScore {
 
 export function analyzeResponses(
   ageGroup: number,
-  responses: Record<string, number>
+  responses: Record<string, number> | null | undefined
 ): DimensionScore[] | null {
   const config = getReportConfig(ageGroup);
-  if (!config) return null;
+  if (!config || !responses) return null;
 
   const maxPerQuestion = ageGroup <= 5 ? 4 : 5;
 
