@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, Clock, MapPin, Users } from "lucide-react";
+import { Loader2, BookOpen, Clock, MapPin, Users, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -75,74 +75,132 @@ export default function TeacherElectives() {
 
   const loading = electivesLoading || rosterLoading;
 
-  return (
-    <AppLayout>
-      <div className="p-6 space-y-6">
-        <PageHeader
-          title="My Electives"
-          subtitle="Electives you teach and the students enrolled in each."
-        />
+return (
+  <AppLayout>
+    <div
+  className="min-h-screen relative overflow-hidden"
+  style={{ background: "linear-gradient(135deg, #ffffff, #fdf2f8, #fff1f2)", backgroundSize: "cover" }}
+>
+  {/* Layered waves at top */}
+  <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#f43f5e" />
+  </svg>
+  <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#ec4899" />
+  </svg>
+
+  {/* Faint wave at bottom too, mirrored */}
+  <svg className="absolute bottom-0 left-0 w-full h-40 opacity-[0.05]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,130 C240,70 480,190 720,150 C960,110 1200,190 1440,140 L1440,220 L0,220 Z" fill="#fb7185" />
+  </svg>
+
+  {/* Floating circles, barely visible */}
+<div className="absolute top-20 right-10 w-40 h-40 rounded-full bg-rose-400 opacity-30 blur-3xl" />
+<div className="absolute top-96 left-6 w-56 h-56 rounded-full bg-pink-400 opacity-25 blur-3xl" />
+<div className="absolute bottom-32 right-1/4 w-32 h-32 rounded-full bg-rose-300 opacity-20 blur-2xl" />
+<div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-pink-300 opacity-20 blur-2xl" />
+
+  <div className="relative z-10 p-4 md:p-6 space-y-4 md:space-y-6 max-w-5xl mx-auto">
+        <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-rose-500 to-pink-600 shadow-lg">
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="relative flex items-start md:items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">My Electives</h1>
+              <p className="text-rose-100 text-xs md:text-sm mt-0.5">Electives you teach and the students enrolled in each.</p>
+            </div>
+          </div>
+        </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-12 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
-          </div>
-        )}
+  <div className="flex items-center justify-center py-12 text-rose-600">
+    <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
+  </div>
+)}
 
         {!loading && electives.length === 0 && (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">
-            You're not assigned to teach any electives yet.
-          </CardContent></Card>
-        )}
+  <Card className="border-rose-100 bg-white/70 backdrop-blur-sm">
+    <CardContent className="py-12 text-center">
+      <div className="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center mx-auto mb-3">
+        <BookOpen className="h-6 w-6 text-rose-500" />
+      </div>
+      <p className="text-muted-foreground text-sm">You're not assigned to teach any electives yet.</p>
+    </CardContent>
+  </Card>
+)}
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {electives.map((elective) => {
-            const students = roster.filter((r) => r.elective_id === elective.id);
-            return (
-              <Card key={elective.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-base flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-primary" /> {elective.name}
-                      </CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">{elective.subject} · Grade {elective.grade}</p>
-                    </div>
-                    <Badge variant={students.length >= elective.capacity ? "destructive" : "secondary"}>
-                      {students.length}/{elective.capacity}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-                    <span className="flex items-center gap-1 capitalize">
-                      <Clock className="h-3 w-3" /> {elective.day_of_week} · Period {elective.period_number}
-                    </span>
-                    {elective.room && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {elective.room}
-                      </span>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                    <Users className="h-4 w-4" /> Enrolled Students
-                  </div>
-                  {students.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No students enrolled yet.</p>
-                  ) : (
-                    <ul className="space-y-1">
-                      {students.map((s) => (
-                        <li key={s.id} className="text-sm py-1.5 px-2 rounded bg-muted/50">
-                          {studentNames[s.student_profile_id] ?? "Unknown student"}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+        <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+  {electives.map((elective) => {
+    const students = roster.filter((r) => r.elective_id === elective.id);
+    const isFull = students.length >= elective.capacity;
+    return (
+      <Card
+        key={elective.id}
+        className="overflow-hidden border-rose-100 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-300"
+      >
+        <div className="h-1 bg-gradient-to-r from-rose-400 to-pink-500" />
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <CardTitle className="text-sm md:text-base flex items-center gap-2">
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-rose-100 flex items-center justify-center shrink-0">
+                  <BookOpen className="h-3.5 w-3.5 md:h-4 md:w-4 text-rose-600" />
+                </div>
+                <span className="truncate">{elective.name}</span>
+              </CardTitle>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1 ml-9 md:ml-10">{elective.subject} · Grade {elective.grade}</p>
+            </div>
+            <Badge
+              className={`shrink-0 ${
+                isFull
+                  ? "bg-red-100 text-red-700 hover:bg-red-100"
+                  : "bg-emerald-100 text-emerald-700 hover:bg-emerald-100"
+              }`}
+            >
+              {students.length}/{elective.capacity}
+            </Badge>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs text-muted-foreground mt-2 ml-9 md:ml-10">
+            <span className="flex items-center gap-1 capitalize">
+              <Clock className="h-3 w-3 text-rose-400" /> {elective.day_of_week} · Period {elective.period_number}
+            </span>
+            {elective.room && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-rose-400" /> {elective.room}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 text-xs md:text-sm font-medium text-gray-600 mb-2">
+            <Users className="h-4 w-4 text-rose-500" /> Enrolled Students
+          </div>
+          {students.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic">No students enrolled yet.</p>
+          ) : (
+            <ul className="space-y-1.5">
+              {students.map((s, i) => (
+                <li
+                  key={s.id}
+                  className="text-sm py-2 px-3 rounded-lg bg-rose-50/60 border border-rose-100 flex items-center gap-2"
+                >
+                  <span className="w-5 h-5 rounded-full bg-rose-200 text-rose-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                    {i + 1}
+                  </span>
+                  <span className="truncate">{studentNames[s.student_profile_id] ?? "Unknown student"}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+    );
+  })}
+</div>
+</div>
       </div>
     </AppLayout>
   );

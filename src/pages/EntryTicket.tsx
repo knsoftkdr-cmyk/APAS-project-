@@ -368,7 +368,21 @@ export default function EntryTicket() {
 
   return (
     <AppLayout>
-<div className="min-h-screen bg-gray-50 p-6">
+<div className="min-h-screen relative overflow-hidden" style={{ background: "linear-gradient(135deg, #ffffff, #eef2ff, #faf5ff)", backgroundSize: "cover" }}>
+  {/* Faint wave at top */}
+  <svg className="absolute top-0 left-0 w-full h-40 opacity-[0.06]" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,80 C240,140 480,20 720,60 C960,100 1200,20 1440,70 L1440,0 L0,0 Z" fill="#6366f1" />
+  </svg>
+  <svg className="absolute top-0 left-0 w-full h-32 opacity-[0.05]" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M0,40 C320,100 720,0 1440,50 L1440,0 L0,0 Z" fill="#8b5cf6" />
+  </svg>
+
+  {/* Floating circles, barely visible */}
+  <div className="absolute top-24 right-16 w-40 h-40 rounded-full bg-indigo-300 opacity-[0.05] blur-2xl" />
+  <div className="absolute top-96 left-10 w-56 h-56 rounded-full bg-violet-300 opacity-[0.04] blur-2xl" />
+  <div className="absolute bottom-20 right-1/3 w-32 h-32 rounded-full bg-indigo-200 opacity-[0.05] blur-xl" />
+
+  <div className="relative z-10 p-6">
       <div className="max-w-4xl lg:max-w-7xl mx-auto">
 
        {/* Header */}
@@ -695,6 +709,7 @@ export default function EntryTicket() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
     </AppLayout>
