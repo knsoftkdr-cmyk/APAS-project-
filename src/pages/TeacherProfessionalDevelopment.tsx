@@ -29,12 +29,8 @@ export default function TeacherProfessionalDevelopment() {
   const { data: profile } = useStudentProfile(); // same cache as Settings.tsx
   const { toast } = useToast();
   const qc = useQueryClient();
-  // ── Role guard ──────────────────────────────────────────────
-  if (authProfile && authProfile.role !== "teacher") {
-    return <Navigate to="/settings" replace />;
-    // or: return <Navigate to="/dashboard" replace />;
-  }
 
+  
   const [fullName, setFullName] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [designation, setDesignation] = useState("");
