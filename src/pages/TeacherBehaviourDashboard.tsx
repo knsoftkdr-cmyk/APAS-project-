@@ -337,32 +337,43 @@ export default function TeacherBehaviourDashboard() {
           />
 
             {selectedStudent && activeIntervention && (
-              <Card className="border border-blue-200 bg-blue-50/40">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <ClipboardList className="h-4 w-4 text-blue-600" />
-                      <p className="text-sm font-semibold">Active Intervention</p>
-                      <Badge className="bg-amber-100 text-amber-700">{activeIntervention.priority} priority</Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {activeIntervention.review_date
-                        ? `Review by ${format(new Date(activeIntervention.review_date), "d MMM yyyy")}`
-                        : "No review date set"}
-                    </p>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => setInterventionDrawerOpen(true)}>
-                    View Details
-                  </Button>
-                </CardContent>
-              </Card>
+              <Card className="overflow-hidden border-blue-200 shadow-sm">
+  <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
+  <CardContent className="p-4 flex items-center justify-between bg-gradient-to-br from-blue-50/60 to-transparent">
+    <div>
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+          <ClipboardList className="h-4 w-4 text-blue-600" />
+        </div>
+        <p className="text-sm font-semibold">Active Intervention</p>
+        <Badge className="bg-amber-500 text-white hover:bg-amber-500">{activeIntervention.priority} priority</Badge>
+      </div>
+      <p className="text-xs text-muted-foreground ml-9">
+        {activeIntervention.review_date
+          ? `Review by ${format(new Date(activeIntervention.review_date), "d MMM yyyy")}`
+          : "No review date set"}
+      </p>
+    </div>
+    <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white shrink-0" onClick={() => setInterventionDrawerOpen(true)}>
+      View Details
+    </Button>
+  </CardContent>
+</Card>
             )}
 </div>
             <div className="xl:col-span-3 space-y-6">
             {/* Student Notes */}
-            <Card className="overflow-hidden border border-orange-300 shadow-lg rounded-2xl">
-                <CardHeader className="pb-3"><CardTitle className="text-base">Add a Confidential Note</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+            <Card className="overflow-hidden border border-orange-200 shadow-lg rounded-2xl">
+    <div className="h-1 bg-gradient-to-r from-orange-400 to-amber-500" />
+    <CardHeader className="pb-3">
+      <CardTitle className="text-base flex items-center gap-2">
+        <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+          <MessageSquarePlus className="h-6 w-6 text-orange-600" />
+        </div>
+        Add a Confidential Note
+      </CardTitle>
+    </CardHeader>
+    <CardContent className="space-y-3">
                   <div className="flex gap-3">
                     <Select
                       value={selectedClass}
@@ -423,7 +434,7 @@ export default function TeacherBehaviourDashboard() {
                         onChange={(e) => setNoteText(e.target.value)}
                         rows={3}
                       />
-                      <Button onClick={handleSaveNote} disabled={saving}>
+                      <Button onClick={handleSaveNote} disabled={saving} className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white">
                         <MessageSquarePlus className="h-4 w-4 mr-2" />
                         {saving ? "Saving..." : "Save Note"}
                       </Button>
@@ -434,9 +445,15 @@ export default function TeacherBehaviourDashboard() {
           
 
             {selectedStudent && (
-              <Card className="border border-border/60">
+              <Card className="overflow-hidden border-slate-200 shadow-sm">
+                <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-500" />
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Timeline — {selectedStudent.full_name}</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <Clock className="h-4 w-4 text-slate-600" />
+                    </div>
+                    Timeline — {selectedStudent.full_name}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {notesLoading ? (
@@ -446,7 +463,12 @@ export default function TeacherBehaviourDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {notes.map((n) => (
-                        <div key={n.id} className="border-l-2 border-muted pl-3 py-1 relative group">
+                        <div key={n.id} className={`border-l-2 pl-3 py-2 relative group rounded-r-lg ${
+                          n.note_type === "positive" ? "border-l-green-400 bg-green-50/40" :
+                          n.note_type === "concern" ? "border-l-amber-400 bg-amber-50/40" :
+                          n.note_type === "incident" ? "border-l-red-400 bg-red-50/40" :
+                          "border-l-blue-400 bg-blue-50/40"
+                        }`}>
                           <div className="flex items-center gap-2 mb-1">
                             <Badge className={NOTE_TYPE_STYLES[n.note_type]}>{n.note_type}</Badge>
                             <span className="text-xs text-muted-foreground">{format(new Date(n.created_at), "d MMM yyyy, h:mm a")}</span>
@@ -474,15 +496,23 @@ export default function TeacherBehaviourDashboard() {
               </Card>
             )}
 
-            <Card className="border border-border/60">
-              <CardHeader className="pb-2"><CardTitle className="text-base">Follow-Ups Due</CardTitle></CardHeader>
-              <CardContent>
+            <Card className="overflow-hidden border-violet-200 shadow-sm">
+  <div className="h-1 bg-gradient-to-r from-violet-400 to-purple-500" />
+  <CardHeader className="pb-2">
+    <CardTitle className="text-base flex items-center gap-2">
+      <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center">
+        <Clock className="h-6 w-6 text-violet-600" />
+      </div>
+      Follow-Ups Due
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
                 {!allFollowUps.length ? (
                   <p className="text-sm text-muted-foreground py-2 text-center">No pending follow-ups.</p>
                 ) : (
                   <div className="space-y-2">
                     {allFollowUps.map((f) => (
-                      <div key={f.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                      <div key={f.id} className="flex items-center justify-between p-2.5 rounded-lg bg-violet-50/50 border border-violet-100/60">
                         <div>
                           <p className="text-sm font-medium">
                             {f.student_name}
@@ -494,7 +524,7 @@ export default function TeacherBehaviourDashboard() {
                           <Badge variant={isPast(new Date(f.follow_up_date!)) ? "destructive" : "secondary"}>
                             {format(new Date(f.follow_up_date!), "d MMM")}
                           </Badge>
-                          <button onClick={() => markFollowUpDone(f.id)} className="text-xs text-green-600 hover:underline">Done</button>
+                          <button onClick={() => markFollowUpDone(f.id)} className="text-xs font-medium text-white bg-green-600 hover:bg-green-700 px-2.5 py-1 rounded-md transition-colors">Done</button>
                         </div>
                       </div>
                     ))}
@@ -503,20 +533,23 @@ export default function TeacherBehaviourDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border border-border/60">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <CalendarClock className="h-4 w-4 text-blue-600" />
-                  Reviews Due
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+            <Card className="overflow-hidden border-cyan-200 shadow-sm">
+  <div className="h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
+  <CardHeader className="pb-2">
+    <CardTitle className="text-base flex items-center gap-2">
+      <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+        <CalendarClock className="h-6 w-6 text-cyan-600" />
+      </div>
+      Reviews Due
+    </CardTitle>
+  </CardHeader>
+  <CardContent>
                 {!reviewsDue.length ? (
                   <p className="text-sm text-muted-foreground py-2 text-center">No intervention reviews scheduled.</p>
                 ) : (
                   <div className="space-y-2">
                     {reviewsDue.map((iv) => (
-                      <div key={iv.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/40">
+                      <div key={iv.id} className="flex items-center justify-between p-2.5 rounded-lg bg-cyan-50/50 border border-cyan-100/60">
                         <div className="min-w-0">
                           <p className="text-sm font-medium">
                             {iv.student_name}
@@ -528,7 +561,7 @@ export default function TeacherBehaviourDashboard() {
                           <Badge variant={isPast(new Date(iv.review_date!)) ? "destructive" : "secondary"}>
                             {format(new Date(iv.review_date!), "d MMM")}
                           </Badge>
-                          <Button size="sm" variant="outline" onClick={() => handleOpenReview(iv)}>
+                          <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={() => handleOpenReview(iv)}>
                             Review
                           </Button>
                         </div>

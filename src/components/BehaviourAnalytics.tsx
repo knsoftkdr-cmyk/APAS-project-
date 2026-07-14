@@ -170,56 +170,82 @@ export function BehaviourAnalytics({ teacherId, students, onSelectStudent }: Pro
 
   const flaggedCount = stats.filter((s) => s.level !== "none").length;
 
-  return (
-    <Card className="border border-border/60">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-base flex items-center gap-2">
-          <ActivitySquare className="h-4 w-4 text-cyan-600" />
-          Behaviour Analytics
-        </CardTitle>
-        {!loading && (
-          <span className="text-xs text-muted-foreground">
-            {flaggedCount ? `${flaggedCount} student${flaggedCount > 1 ? "s" : ""} flagged` : "No flags right now"}
-          </span>
-        )}
-      </CardHeader>
-      <CardContent>
-        {loading ? (
-          <div className="flex justify-center py-6"><LoadingSpinner /></div>
-        ) : !stats.length ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">
+return (
+  <Card className="overflow-hidden border-cyan-200 shadow-sm">
+    <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500" />
+    <CardHeader className="pb-2 flex flex-row items-center justify-between">
+      <CardTitle className="text-base flex items-center gap-2">
+        <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center">
+          <ActivitySquare className="h-6 w-6 text-cyan-600" />
+        </div>
+        Behaviour Analytics
+      </CardTitle>
+      {!loading && (
+        <Badge className={flaggedCount ? "bg-red-100 text-red-700 hover:bg-red-100" : "bg-slate-100 text-slate-500 hover:bg-slate-100"}>
+          {flaggedCount ? `${flaggedCount} flagged` : "No flags"}
+        </Badge>
+      )}
+    </CardHeader>
+    <CardContent>
+      {loading ? (
+        <div className="flex justify-center py-6"><LoadingSpinner /></div>
+      ) : !stats.length ? (
+        <div className="text-center py-6">
+          <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center mx-auto mb-2">
+            <ActivitySquare className="h-5 w-5 text-cyan-400" />
+          </div>
+          <p className="text-sm text-muted-foreground">
             No notes in the last 60 days yet — analytics will populate as you log notes.
           </p>
-        ) : (
-          <div className="space-y-1.5">
-            {stats.map((s) => (
-              <button
-                key={s.student.id}
-                onClick={() => onSelectStudent(s.student, { level: s.level, breakdown: s.breakdown })}
-                className="w-full flex items-center justify-between p-2.5 rounded-lg bg-muted/40 hover:bg-muted transition-colors text-left"
-              >
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">
-                    {s.student.full_name}
-                    <span className="font-normal text-muted-foreground text-xs">
-                      {" "}· {s.student.class}{s.student.section ? `-${s.student.section}` : ""}
-                    </span>
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {s.last30ConcernIncident} concern/incident{s.last30ConcernIncident === 1 ? "" : "s"} · {s.last30Total} note{s.last30Total === 1 ? "" : "s"} (30d)
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  {s.trend === "up" && <TrendingUp className="h-3.5 w-3.5 text-red-500" />}
-                  {s.trend === "down" && <TrendingDown className="h-3.5 w-3.5 text-green-500" />}
-                  {s.trend === "flat" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
-                  <Badge className={LEVEL_STYLES[s.level]}>{LEVEL_LABEL[s.level]}</Badge>
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
+        </div>
+      ) : (
+        <div className="space-y-1.5">
+          {stats.map((s) => (
+            <button
+              key={s.student.id}
+              onClick={() => onSelectStudent(s.student, { level: s.level, breakdown: s.breakdown })}
+              className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-colors text-left ${
+                s.level === "high"
+                  ? "bg-red-50/60 border-red-100 hover:bg-red-50"
+                  : s.level === "watch"
+                  ? "bg-amber-50/60 border-amber-100 hover:bg-amber-50"
+                  : "bg-slate-50/60 border-slate-100 hover:bg-slate-100/60"
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {s.student.full_name}
+                  <span className="font-normal text-muted-foreground text-xs">
+                    {" "}· {s.student.class}{s.student.section ? `-${s.student.section}` : ""}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {s.last30ConcernIncident} concern/incident{s.last30ConcernIncident === 1 ? "" : "s"} · {s.last30Total} note{s.last30Total === 1 ? "" : "s"} (30d)
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {s.trend === "up" && (
+                  <span className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center">
+                    <TrendingUp className="h-3.5 w-3.5 text-red-600" />
+                  </span>
+                )}
+                {s.trend === "down" && (
+                  <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                    <TrendingDown className="h-3.5 w-3.5 text-green-600" />
+                  </span>
+                )}
+                {s.trend === "flat" && (
+                  <span className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center">
+                    <Minus className="h-3.5 w-3.5 text-slate-400" />
+                  </span>
+                )}
+                <Badge className={LEVEL_STYLES[s.level]}>{LEVEL_LABEL[s.level]}</Badge>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
 }

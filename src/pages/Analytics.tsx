@@ -661,82 +661,106 @@ try {
 
       {/* Review Answers Dialog */}
       <Dialog open={!!reviewing} onOpenChange={(o) => { if (!o) { setReviewing(null); setIndividualSuggestions(null); } }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {reviewing?.student_name} — {reviewing?.assignment?.topic || "Homework"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            {reviewingAnswers.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No answers recorded.</p>
-            ) : (
-              reviewingAnswers.map((a, i) => (
-                <div key={i} className="rounded-lg border p-3 bg-muted/30">
-                  <p className="text-sm font-semibold mb-1">Q{i + 1}. {a.question}</p>
-                  <p className="text-sm text-foreground/85 whitespace-pre-wrap">
-                    <span className="text-muted-foreground">Answer: </span>
-                    {a.answer?.trim() || <em className="text-muted-foreground">No answer</em>}
-                  </p>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-0 gap-0">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 rounded-t-lg sticky top-0 z-10">
+            <DialogHeader>
+              <DialogTitle className="text-white text-lg flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                  <GraduationCap className="h-4 w-4 text-white" />
                 </div>
-              ))
-            )}
+                <span className="truncate">{reviewing?.student_name} — {reviewing?.assignment?.topic || "Homework"}</span>
+              </DialogTitle>
+            </DialogHeader>
           </div>
 
-          <div className="space-y-3 pt-2 border-t">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Score (0–100)</label>
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                value={scoreInput}
-                onChange={(e) => setScoreInput(e.target.value)}
-                placeholder="Enter score"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Feedback (optional)</label>
-              <Textarea
-                value={feedbackInput}
-                onChange={(e) => setFeedbackInput(e.target.value)}
-                placeholder="Comments for the student…"
-                rows={3}
-              />
-            </div>
+          <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
+<p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Questions & Answers</p>
+{reviewingAnswers.length === 0 ? (
+  <p className="text-sm text-muted-foreground">No answers recorded.</p>
+) : (
+  reviewingAnswers.map((a, i) => (
+    <div key={i} className="rounded-xl border border-blue-100 p-3.5 bg-gradient-to-br from-blue-50/50 to-transparent">
+      <div className="flex items-start gap-2 mb-1.5">
+        <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+          {i + 1}
+        </span>
+        <p className="text-sm font-semibold text-slate-800 leading-relaxed">{a.question}</p>
+      </div>
+      <div className="ml-8 rounded-lg bg-white border border-slate-100 px-3 py-2">
+        <p className="text-sm text-foreground/85 whitespace-pre-wrap">
+          <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">Answer </span>
+          <br />
+          {a.answer?.trim() || <em className="text-muted-foreground">No answer</em>}
+        </p>
+      </div>
+    </div>
+  ))
+)}
           </div>
+
+          <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-4">
+  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Your Evaluation</p>
+  <div className="grid sm:grid-cols-2 gap-4">
+    <div>
+      <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-slate-700">
+        <Award className="h-3.5 w-3.5 text-blue-600" /> Score (0–100)
+      </label>
+      <Input
+        type="number"
+        min={0}
+        max={100}
+        value={scoreInput}
+        onChange={(e) => setScoreInput(e.target.value)}
+        placeholder="Enter score"
+        className="bg-white border-blue-200 focus-visible:ring-blue-400"
+      />
+    </div>
+  </div>
+  <div>
+    <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-slate-700">
+      <MessageSquare className="h-3.5 w-3.5 text-indigo-600" /> Feedback (optional)
+    </label>
+    <Textarea
+      value={feedbackInput}
+      onChange={(e) => setFeedbackInput(e.target.value)}
+      placeholder="Comments for the student…"
+      rows={3}
+      className="bg-white border-indigo-200 focus-visible:ring-indigo-400"
+    />
+  </div>
+</div>
 
           {/* AI Suggestions Panel */}
-          <div className="pt-3 border-t space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold">AI Improvement Suggestions</span>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={generateIndividualSuggestions}
-                disabled={individualLoading || !scoreInput}
-                className="gap-1.5"
-              >
+          <div className="rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-purple-50/40 p-4 space-y-3">
+  <div className="flex items-center justify-between flex-wrap gap-2">
+    <div className="flex items-center gap-2">
+      <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
+        <Sparkles className="h-4 w-4 text-violet-600" />
+      </div>
+      <span className="text-sm font-semibold text-slate-800">AI Improvement Suggestions</span>
+    </div>
+    <Button
+      size="sm"
+      onClick={generateIndividualSuggestions}
+      disabled={individualLoading || !scoreInput}
+      className="gap-1.5 bg-violet-600 hover:bg-violet-700 text-white shadow-sm disabled:opacity-50"
+    >
                 {individualLoading ? (
-                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
-                ) : (
-                  <><Sparkles className="h-3.5 w-3.5" /> {individualSuggestions ? "Regenerate" : "Generate"}</>
-                )}
-              </Button>
-            </div>
+      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generating…</>
+    ) : (
+      <><Sparkles className="h-3.5 w-3.5" /> {individualSuggestions ? "Regenerate" : "Generate"}</>
+    )}
+  </Button>
+</div>
 
-            {!individualSuggestions && !individualLoading && (
-              <p className="text-xs text-muted-foreground">
-                Enter a score and (optionally) feedback, then generate personalized suggestions for this student.
-              </p>
-            )}
+{!individualSuggestions && !individualLoading && (
+  <p className="text-xs text-muted-foreground">
+    Enter a score and (optionally) feedback, then generate personalized suggestions for this student.
+  </p>
+)}
 
-            {individualSuggestions && (
-              <div className="rounded-lg border bg-primary/5 p-4 space-y-3">
+{individualSuggestions && (
+  <div className="rounded-lg border border-violet-200 bg-white p-4 space-y-3">
                 <p className="text-sm text-foreground/90">{individualSuggestions.summary}</p>
 
                 {individualSuggestions.strengths?.length > 0 && (
@@ -781,12 +805,12 @@ try {
             )}
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewing(null)}>Cancel</Button>
-            <Button onClick={saveScore} disabled={saving}>
-              {saving ? "Saving…" : "Save Score"}
-            </Button>
-          </DialogFooter>
+          <DialogFooter className="px-5 py-4 border-t border-slate-100 bg-white shrink-0">
+  <Button variant="outline" onClick={() => setReviewing(null)}>Cancel</Button>
+  <Button onClick={saveScore} disabled={saving} className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+    {saving ? "Saving…" : "Save Score"}
+  </Button>
+</DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1185,21 +1209,21 @@ try {
             return (
               <>
                 {/* Gradient header */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-5 rounded-t-lg">
+                <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 text-white p-5 rounded-t-lg">
                   <DialogHeader>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-12 w-12 rounded-full bg-background/20 border border-primary-foreground/30 flex items-center justify-center">
-                          <GraduationCap className="h-6 w-6 text-primary-foreground" />
-                        </div>
-                        <div>
-                          <DialogTitle className="text-primary-foreground text-2xl font-bold text-left">
-                            Hi {studentAnalytics.student_name?.split(" ")[0]}
-                          </DialogTitle>
-                          <p className="text-sm text-primary-foreground/80 mt-0.5">
-                            {getClassLabel(selectedClass)} · Section {selectedSection} · Student Dashboard
-                          </p>
-                        </div>
+                      <div className="h-12 w-12 rounded-full bg-white/20 border border-white/30 flex items-center justify-center">
+                        <GraduationCap className="h-6 w-6 text-white" />
+                      </div>
+                      <div>
+                        <DialogTitle className="text-white text-xl md:text-2xl font-bold text-left">
+                          Hi {studentAnalytics.student_name?.split(" ")[0]}
+                        </DialogTitle>
+                        <p className="text-sm text-white/80 mt-0.5">
+                          {getClassLabel(selectedClass)} · Section {selectedSection} · Student Dashboard
+                        </p>
+                      </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="hidden sm:flex items-center gap-1.5 bg-background/20 border border-primary-foreground/20 rounded-full px-3 py-1.5 text-xs">
@@ -1214,8 +1238,8 @@ try {
                             </span>
                           )}
                         </div>
-                        <Badge className="bg-background/20 text-primary-foreground border-primary-foreground/20 hover:bg-background/30">
-                          Active
+                        <Badge className="bg-emerald-400 text-emerald-950 hover:bg-emerald-400 gap-1 font-semibold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-800 animate-pulse" /> Active
                         </Badge>
                       </div>
                     </div>
@@ -1226,20 +1250,23 @@ try {
                   {/* Top row: Pending Homework + Daily Performance */}
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* Pending Homework */}
-                    <Card className="shadow-sm">
+                    <Card className="shadow-sm border-blue-100 overflow-hidden">
+                      <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base flex items-center gap-2">
-                            <FileText className="h-4 w-4 text-primary" />
+                            <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
+                              <FileText className="h-4 w-4 text-blue-600" />
+                            </div>
                             Pending Homework
                           </CardTitle>
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge className="text-xs bg-amber-100 text-amber-700 hover:bg-amber-100">
                             {pending} pending
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent className="space-y-3">
-                        <div className="rounded-lg border bg-card p-3 flex items-center justify-between">
+                        <div className="rounded-lg border border-blue-100 bg-blue-50/40 p-3 flex items-center justify-between">
                           <div>
                             <p className="text-sm font-semibold">Pending Assignments</p>
                             <p className="text-xs text-muted-foreground">
@@ -1248,8 +1275,7 @@ try {
                           </div>
                           <Button
                             size="sm"
-                            variant="outline"
-                            className="bg-amber-500/15 text-amber-700 border-amber-200 hover:bg-amber-500/25 h-7"
+                            className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white h-7"
                             onClick={() => setShowPendingList((v) => !v)}
                             disabled={pending === 0}
                           >
@@ -1295,21 +1321,24 @@ try {
                     </Card>
 
                     {/* Daily Performance Score */}
-                    <Card className="shadow-sm">
+                    <Card className="shadow-sm border-emerald-100 overflow-hidden">
+                      <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base flex items-center gap-2">
-                            <TrendingUp className="h-4 w-4 text-primary" />
+                            <div className="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center">
+                              <TrendingUp className="h-4 w-4 text-emerald-600" />
+                            </div>
                             Daily Performance Score
                           </CardTitle>
-                          <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 text-xs">
+                          <Badge className="bg-emerald-500 text-white hover:bg-emerald-500 text-xs">
                             {avgScore >= 70 ? "Completed" : "On Track"}
                           </Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-3 mb-2">
-                          <p className="text-4xl font-bold text-primary leading-none">{avgScore}%</p>
+                          <p className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent leading-none">{avgScore}%</p>
                           <div className="text-xs text-muted-foreground">
                             <p>Average across</p>
                             <p className="font-medium">{evaluated} evaluated submission{evaluated !== 1 ? "s" : ""}</p>
@@ -1334,13 +1363,14 @@ try {
                   {/* Bottom row: Homework Completion donut + Weekly Improvement */}
                   <div className="grid md:grid-cols-2 gap-4">
                     {/* Homework Completion */}
-                    <Card className="shadow-sm">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-base">Homework Completion</CardTitle>
-                          <Badge variant="outline" className="text-xs">{totalAssign} total</Badge>
-                        </div>
-                      </CardHeader>
+                    <Card className="shadow-sm border-indigo-100 overflow-hidden">
+  <div className="h-1 bg-gradient-to-r from-indigo-500 to-blue-500" />
+  <CardHeader className="pb-2">
+    <div className="flex items-center justify-between">
+      <CardTitle className="text-base">Homework Completion</CardTitle>
+      <Badge className="text-xs bg-indigo-100 text-indigo-700 hover:bg-indigo-100">{totalAssign} total</Badge>
+    </div>
+  </CardHeader>
                       <CardContent>
                         {pieData.length > 0 ? (
                           <div className="flex items-center gap-4">
@@ -1371,21 +1401,21 @@ try {
                                   <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                                   Completed
                                 </span>
-                                <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200">{submitted}</Badge>
+                                <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">{submitted}</Badge>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="flex items-center gap-2">
                                   <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
                                   Pending
                                 </span>
-                                <Badge className="bg-amber-500/15 text-amber-700 border-amber-200">{pending}</Badge>
+                                <Badge className="bg-amber-500 text-white hover:bg-amber-500">{pending}</Badge>
                               </div>
                               <div className="flex items-center justify-between">
                                 <span className="flex items-center gap-2">
                                   <span className="h-2.5 w-2.5 rounded-full bg-rose-500" />
                                   In Review
                                 </span>
-                                <Badge className="bg-rose-500/15 text-rose-700 border-rose-200">{pendingReview}</Badge>
+                                <Badge className="bg-rose-500 text-white hover:bg-rose-500">{pendingReview}</Badge>
                               </div>
                             </div>
                           </div>
@@ -1396,11 +1426,12 @@ try {
                     </Card>
 
                     {/* Weekly Improvement */}
-                    <Card className="shadow-sm">
+                    <Card className="shadow-sm border-teal-100 overflow-hidden">
+                      <div className="h-1 bg-gradient-to-r from-teal-500 to-emerald-500" />
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base">Weekly Improvement</CardTitle>
-                          <Badge variant="outline" className="text-xs">Score Trend</Badge>
+                          <Badge className="text-xs bg-teal-100 text-teal-700 hover:bg-teal-100">Score Trend</Badge>
                         </div>
                       </CardHeader>
                       <CardContent>
@@ -1434,12 +1465,18 @@ try {
                   </div>
 
                   {/* All Submissions table */}
-                  <Card className="shadow-sm">
+                  <Card className="shadow-sm border-slate-200 overflow-hidden">
+                    <div className="h-1 bg-gradient-to-r from-slate-400 to-slate-500" />
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">All Submissions</CardTitle>
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center">
+                          <FileText className="h-3.5 w-3.5 text-slate-600" />
+                        </div>
+                        All Submissions
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <Table>
+                    <CardContent className="overflow-x-auto">
+                      <Table className="min-w-[600px] md:min-w-0">
                         <TableHeader>
                           <TableRow>
                             <TableHead>Assignment</TableHead>
