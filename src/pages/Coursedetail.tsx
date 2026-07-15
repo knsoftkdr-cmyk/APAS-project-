@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Lock, CheckCircle2 } from "lucide-react";
-import type { Course, CourseModule, StudentCourseProgress, StudentModuleProgress } from "@/types/courseManagement";
+import type { Course, CourseModule, CourseTopic, StudentCourseProgress, StudentModuleProgress, StudentTopicProgress } from "@/types/courseManagement";
 
 export default function CourseDetail() {
   const { courseId } = useParams<{ courseId: string }>();
@@ -34,6 +34,13 @@ export default function CourseDetail() {
         .order("order_index");
       if (modulesErr) throw modulesErr;
 
+      const { data: topics, error: topicsErr } = await supabase
+        .from("course_topics")
+        .select("*")
+        .in("module_id", (modules ?? []).map((m) => m.id))
+        .order("order_index");
+      if (topicsErr) throw topicsErr;
+
       const { data: enrollment, error: enrollErr } = await supabase.rpc(
         "ensure_course_enrollment",
         { p_course_id: courseId }
@@ -46,6 +53,13 @@ export default function CourseDetail() {
         .eq("student_id", profile!.id)
         .in("module_id", (modules ?? []).map((m) => m.id));
       if (mpErr) throw mpErr;
+
+      const { data: topicProgress, error: tpErr } = await supabase
+        .from("student_topic_progress")
+        .select("*")
+        .eq("student_id", profile!.id)
+        .in("topic_id", (topics ?? []).map((t) => t.id));
+      if (tpErr) throw tpErr;
 
       // Prerequisite titles for a friendly locked message
       let prerequisiteTitles: string[] = [];
@@ -60,12 +74,39 @@ export default function CourseDetail() {
       return {
         course: course as Course,
         modules: modules as CourseModule[],
+        topics: (topics ?? []) as CourseTopic[],
+        topicProgress: (topicProgress ?? []) as StudentTopicProgress[],
         enrollment: enrollment as StudentCourseProgress,
         moduleProgress: (moduleProgress ?? []) as StudentModuleProgress[],
         prerequisiteTitles,
       };
     },
   });
+
+  const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
+
+  const toggleTopicExpand = (topicId: string) => {
+    setExpandedTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(topicId)) next.delete(topicId);
+      else next.add(topicId);
+      return next;
+    });
+  };
+
+  const toggleTopicDone = async (topicId: string, completed: boolean) => {
+    if (!profile?.id) return;
+    await supabase.from("student_topic_progress").upsert(
+      {
+        student_id: profile.id,
+        topic_id: topicId,
+        completed,
+        completed_at: completed ? new Date().toISOString() : null,
+      },
+      { onConflict: "student_id,topic_id" }
+    );
+    queryClient.invalidateQueries({ queryKey: ["course-detail", courseId, profile.id] });
+  };
 
   const toggleModule = async (moduleId: string, completed: boolean) => {
     if (!profile?.id || !data) return;
@@ -112,7 +153,14 @@ export default function CourseDetail() {
     return <div className="p-6 text-muted-foreground">Loading course...</div>;
   }
 
-  const { course, modules, enrollment, moduleProgress, prerequisiteTitles } = data;
+  const { course, modules, topics, topicProgress, enrollment, moduleProgress, prerequisiteTitles } = data;
+  const doneTopicIds = new Set(topicProgress.filter((tp) => tp.completed).map((tp) => tp.topic_id));
+  const topicsByModule = new Map<string, CourseTopic[]>();
+  topics.forEach((t) => {
+    const list = topicsByModule.get(t.module_id) ?? [];
+    list.push(t);
+    topicsByModule.set(t.module_id, list);
+  });
   const isLocked = enrollment.status === "locked";
   const doneIds = new Set(moduleProgress.filter((mp) => mp.completed).map((mp) => mp.module_id));
 
@@ -175,6 +223,55 @@ export default function CourseDetail() {
                     // not arbitrary end users, so this is trusted rich-text lesson content.
                     dangerouslySetInnerHTML={{ __html: module.content_body }}
                   />
+                </CardContent>
+              )}
+              {!isLocked && (topicsByModule.get(module.id) ?? []).length > 0 && (
+                <CardContent className="pt-0 pb-3 space-y-2">
+                  {(topicsByModule.get(module.id) ?? []).map((topic) => {
+                    const topicDone = doneTopicIds.has(topic.id);
+                    const isExpanded = expandedTopics.has(topic.id);
+                    return (
+                      <div key={topic.id} className="rounded-md border">
+                        <div
+                          className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/40"
+                          onClick={() => toggleTopicExpand(topic.id)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              checked={topicDone}
+                              onClick={(e) => e.stopPropagation()}
+                              onCheckedChange={(checked) => toggleTopicDone(topic.id, !!checked)}
+                            />
+                            <span className="text-sm font-medium">{topic.title}</span>
+                            <span
+                              className={`text-xs rounded-full px-2 py-0.5 ${
+                                topic.topic_type === "practice"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : "bg-emerald-100 text-emerald-700"
+                              }`}
+                            >
+                              {topic.topic_type}
+                            </span>
+                          </div>
+                          {topicDone && <CheckCircle2 className="h-4 w-4 text-green-600" />}
+                        </div>
+                        {isExpanded && topic.content_body && (
+                          <div className="px-3 pb-3 text-sm text-muted-foreground border-t pt-3">
+                            {topic.content_body}
+                          </div>
+                        )}
+                        {isExpanded && topic.content_url && (
+                          <div className="px-3 pb-3">
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={topic.content_url} target="_blank" rel="noreferrer">
+                                Open attachment
+                              </a>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </CardContent>
               )}
               {module.content_url && !isLocked && (
