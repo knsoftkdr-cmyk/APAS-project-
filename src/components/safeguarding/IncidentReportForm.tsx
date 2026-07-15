@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import type { IncidentCategory, IncidentSeverity } from "@/types/safeguarding";
+import { ShieldAlert } from "lucide-react";
 
 interface StudentOption {
   id: string; // students.id — NOT profiles.id
@@ -156,20 +157,27 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
     return true;
   });
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Report a Safeguarding Concern</CardTitle>
-        <CardDescription>
-          This report goes directly to the Designated Safeguarding Lead. Only submit
-          factual observations — this is not the place for anonymous reports (use the
-          Anonymous Reporting form for that).
-        </CardDescription>
+return (
+    <Card className="w-full max-w-2xl mx-auto border border-slate-200 rounded-2xl shadow-md shadow-slate-200/60 overflow-hidden">
+      <CardHeader className="px-5 py-6 md:px-8 md:py-7" style={{background: "linear-gradient(120deg, #1e3a5f 0%, #2c5282 100%)"}}>
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0 mt-0.5">
+            <ShieldAlert className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <CardTitle className="text-white text-lg md:text-xl">Report a Safeguarding Concern</CardTitle>
+            <CardDescription className="text-blue-100 mt-1.5 text-sm leading-relaxed">
+              This report goes directly to the Designated Safeguarding Lead. Only submit
+              factual observations — this is not the place for anonymous reports (use the
+              Anonymous Reporting form for that).
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+      <CardContent className="space-y-5 p-5 md:p-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Class</Label>
+            <Label className="text-sm font-semibold text-slate-700">Class</Label>
             <Select
               value={selectedClass}
               onValueChange={(v) => {
@@ -178,7 +186,7 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
                 setStudentId("");
               }}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-11 rounded-xl border-slate-200 focus:ring-slate-400">
                 <SelectValue placeholder="Select class" />
               </SelectTrigger>
               <SelectContent>
@@ -192,7 +200,7 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
           </div>
 
           <div className="space-y-2">
-            <Label>Section</Label>
+            <Label className="text-sm font-semibold text-slate-700">Section</Label>
             <Select
               value={selectedSection}
               onValueChange={(v) => {
@@ -201,7 +209,7 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
               }}
               disabled={!selectedClass}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-11 rounded-xl border-slate-200 focus:ring-slate-400 disabled:opacity-50">
                 <SelectValue placeholder="Select section" />
               </SelectTrigger>
               <SelectContent>
@@ -216,9 +224,9 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
         </div>
 
         <div className="space-y-2">
-          <Label>Student (optional)</Label>
+          <Label className="text-sm font-semibold text-slate-700">Student <span className="font-normal text-slate-400">(optional)</span></Label>
           <Select value={studentId} onValueChange={setStudentId}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl border-slate-200 focus:ring-slate-400">
               <SelectValue placeholder="Select a student, if applicable" />
             </SelectTrigger>
             <SelectContent>
@@ -231,11 +239,11 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
           </Select>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Category *</Label>
+            <Label className="text-sm font-semibold text-slate-700">Category <span className="text-red-500">*</span></Label>
             <Select value={category} onValueChange={(v) => setCategory(v as IncidentCategory)}>
-              <SelectTrigger>
+              <SelectTrigger className="h-11 rounded-xl border-slate-200 focus:ring-slate-400">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
@@ -249,15 +257,25 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
           </div>
 
           <div className="space-y-2">
-            <Label>Severity *</Label>
+            <Label className="text-sm font-semibold text-slate-700">Severity <span className="text-red-500">*</span></Label>
             <Select value={severity} onValueChange={(v) => setSeverity(v as IncidentSeverity)}>
-              <SelectTrigger>
+              <SelectTrigger className={`h-11 rounded-xl border-slate-200 focus:ring-slate-400 ${
+                severity === "critical" ? "text-red-700 font-medium" :
+                severity === "high" ? "text-orange-700 font-medium" : ""
+              }`}>
                 <SelectValue placeholder="Select severity" />
               </SelectTrigger>
               <SelectContent>
                 {SEVERITY_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
+                    <span className="flex items-center gap-2">
+                      <span className={`h-2 w-2 rounded-full ${
+                        opt.value === "critical" ? "bg-red-500" :
+                        opt.value === "high" ? "bg-orange-500" :
+                        opt.value === "medium" ? "bg-amber-400" : "bg-slate-300"
+                      }`} />
+                      {opt.label}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -266,16 +284,21 @@ export function IncidentReportForm({ onSubmitted }: { onSubmitted?: () => void }
         </div>
 
         <div className="space-y-2">
-          <Label>Description *</Label>
+          <Label className="text-sm font-semibold text-slate-700">Description <span className="text-red-500">*</span></Label>
           <Textarea
             rows={5}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe what was observed, when, and where. Stick to facts."
+            className="rounded-xl border-slate-200 focus-visible:ring-slate-400 text-sm resize-none min-h-[120px]"
           />
         </div>
 
-        <Button onClick={handleSubmit} disabled={submitting} className="w-full">
+        <Button
+          onClick={handleSubmit}
+          disabled={submitting}
+          className="w-full h-12 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-semibold text-base shadow-sm"
+        >
           {submitting ? "Submitting..." : "Submit Report"}
         </Button>
       </CardContent>

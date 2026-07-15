@@ -112,7 +112,7 @@ const statusColor: Record<string, string> = {
               <Users className="h-7 w-7 text-white" />
             </div>
             <h3 className="text-base font-semibold text-slate-800 mb-1">No group projects yet</h3>
-            <p className="text-sm text-muted-foreground bg-green-500 max-w-sm mx-auto">Click "New Group Project" above to create your first one and start building teams.</p>
+            <p className="text-sm text-muted-foreground max-w-sm mx-auto">Click "New Group Project" above to create your first one and start building teams.</p>
           </CardContent>
         </Card>
       ) : (

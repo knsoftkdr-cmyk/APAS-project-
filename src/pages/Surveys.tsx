@@ -174,39 +174,50 @@ export default function Surveys() {
     qc.invalidateQueries({ queryKey: ["surveys", schoolId] });
   };
 
-  return (
+return (
     <AppLayout>
-      <div className="space-y-6 pb-10">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
-              <ClipboardList className="h-5 w-5" />
+      <div className="relative min-h-screen">
+        <div className="absolute -top-10 right-0 w-72 h-72 rounded-full bg-violet-300 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute top-64 left-0 w-64 h-64 rounded-full bg-fuchsia-200 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-1/3 w-56 h-56 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 space-y-6 pb-10">
+        <div className="rounded-2xl md:rounded-3xl p-5 md:p-7 relative overflow-hidden bg-gradient-to-r from-violet-600 via-indigo-600 to-fuchsia-600 shadow-lg">
+          <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
+          <div className="absolute right-20 top-10 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute bottom-0 left-1/3 w-24 h-24 bg-white/5 rounded-full" />
+          <div className="relative flex items-center gap-3 md:gap-4">
+            <div className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-xl bg-white/20 text-white shrink-0">
+              <ClipboardList className="h-5 w-5 md:h-6 md:w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">Surveys</h1>
-              <p className="text-sm text-muted-foreground">Feedback from parents, students, teachers, and staff</p>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Surveys</h1>
+              <p className="text-xs md:text-sm text-violet-100 mt-0.5">Feedback from parents, students, teachers, and staff</p>
             </div>
           </div>
-          {canCreate && (
-            <Button onClick={() => setBuilderOpen(true)}>
-              <Plus className="h-4 w-4 mr-1.5" /> Create Survey
-            </Button>
-          )}
         </div>
 
-        <div className="flex gap-2 border-b border-border">
+        {canCreate && (
+          <div className="flex justify-end">
+            <Button onClick={() => setBuilderOpen(true)} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shrink-0 w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-1.5" /> Create Survey
+            </Button>
+          </div>
+        )}
+
+        <div className="inline-flex gap-1 rounded-xl bg-violet-50 border border-violet-100 p-1 w-full md:w-auto">
           <button
             onClick={() => setTab("respond")}
-            className={cn("px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-              tab === "respond" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
+            className={cn("flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-all",
+              tab === "respond" ? "bg-white text-violet-700 shadow-sm" : "text-muted-foreground hover:text-violet-600")}
           >
-            To Respond {toRespond.length > 0 && <Badge className="ml-1.5 bg-red-100 text-red-700">{toRespond.length}</Badge>}
+            To Respond {toRespond.length > 0 && <Badge className="ml-1.5 bg-red-500 text-white hover:bg-red-500">{toRespond.length}</Badge>}
           </button>
           {canCreate && (
             <button
               onClick={() => setTab("mine")}
-              className={cn("px-4 py-2 text-sm font-medium border-b-2 transition-colors",
-                tab === "mine" ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
+              className={cn("flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-all",
+                tab === "mine" ? "bg-white text-violet-700 shadow-sm" : "text-muted-foreground hover:text-violet-600")}
             >
               My Surveys
             </button>
@@ -214,23 +225,32 @@ export default function Surveys() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-16"><LoadingSpinner /></div>
+          <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
+            <LoadingSpinner /> Loading surveys...
+          </div>
         ) : tab === "respond" ? (
           <div className="space-y-3">
             {toRespond.length === 0 ? (
               <EmptyState text="No surveys waiting for your response right now." />
             ) : (
               toRespond.map((s) => (
-                <Card key={s.id} className="border border-border/60">
+                <Card key={s.id} className="border-l-4 border-l-violet-400 border-y border-r border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                   <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{s.title}</p>
-                        {s.is_anonymous && <Badge variant="outline" className="gap-1"><Lock className="h-3 w-3" /> Anonymous</Badge>}
+                    <div className="flex items-start gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
+                        <ClipboardList className="h-4.5 w-4.5 text-violet-600" />
                       </div>
-                      {s.description && <p className="text-sm text-muted-foreground mt-0.5">{s.description}</p>}
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-semibold truncate">{s.title}</p>
+                          {s.is_anonymous && <Badge variant="outline" className="gap-1 border-violet-200 text-violet-700"><Lock className="h-3 w-3" /> Anonymous</Badge>}
+                        </div>
+                        {s.description && <p className="text-sm text-muted-foreground mt-0.5">{s.description}</p>}
+                      </div>
                     </div>
-                    <Button size="sm" onClick={() => setRespondSurvey(s)}>Respond</Button>
+                    <Button size="sm" onClick={() => setRespondSurvey(s)} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shrink-0 w-full sm:w-auto">
+                      Respond
+                    </Button>
                   </CardContent>
                 </Card>
               ))
@@ -241,50 +261,62 @@ export default function Surveys() {
             {mySurveys.length === 0 ? (
               <EmptyState text="You haven't created any surveys yet." />
             ) : (
-              mySurveys.map((s) => (
-                <Card key={s.id} className="border border-border/60">
-                  <CardContent className="p-4 space-y-2">
-                    <div className="flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <p className="font-semibold">{s.title}</p>
-                        <Badge className={
-                          s.status === "active" ? "bg-emerald-100 text-emerald-700" :
-                          s.status === "closed" ? "bg-gray-100 text-gray-600" : "bg-amber-100 text-amber-700"
-                        }>{s.status}</Badge>
-                        {s.is_anonymous && <Badge variant="outline" className="gap-1"><Lock className="h-3 w-3" /> Anonymous</Badge>}
-                      </div>
-                      <div className="flex gap-2">
-                        {s.status === "draft" && (
-                          <Button size="sm" variant="outline" onClick={() => updateStatus(s, "active")}>
-                            <Play className="h-3.5 w-3.5 mr-1.5" /> Activate
-                          </Button>
-                        )}
-                        {s.status === "active" && (
-                          <Button size="sm" variant="outline" onClick={() => updateStatus(s, "closed")}>
-                            <Square className="h-3.5 w-3.5 mr-1.5" /> Close
-                          </Button>
-                        )}
-                        <Button size="sm" variant="outline" onClick={() => setResultsSurvey(s)}>
-                          <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Results
-                        </Button>
-                        {s.status === "draft" && (
-                          <Button size="sm" variant="outline" onClick={() => deleteSurvey(s)}>
-                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                          </Button>
-                        )}
+              mySurveys.map((s) => {
+                const statusAccent =
+                  s.status === "active" ? "border-l-emerald-400" :
+                  s.status === "closed" ? "border-l-slate-300" : "border-l-amber-400";
+                return (
+                <Card key={s.id} className={cn("border-l-4 border-y border-r border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden", statusAccent)}>
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start justify-between flex-wrap gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 mt-0.5">
+                          <ClipboardList className="h-4.5 w-4.5 text-indigo-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold truncate">{s.title}</p>
+                            <Badge className={
+                              s.status === "active" ? "bg-emerald-500 text-white hover:bg-emerald-500" :
+                              s.status === "closed" ? "bg-slate-200 text-slate-700 hover:bg-slate-200" : "bg-amber-500 text-white hover:bg-amber-500"
+                            }>{s.status}</Badge>
+                            {s.is_anonymous && <Badge variant="outline" className="gap-1 border-violet-200 text-violet-700"><Lock className="h-3 w-3" /> Anonymous</Badge>}
+                          </div>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                            <Users className="h-3 w-3" /> {TARGET_LABELS[s.target_type as TargetType]}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <Users className="h-3 w-3" /> {TARGET_LABELS[s.target_type as TargetType]}
-                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {s.status === "draft" && (
+                        <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => updateStatus(s, "active")}>
+                          <Play className="h-3.5 w-3.5 mr-1.5" /> Activate
+                        </Button>
+                      )}
+                      {s.status === "active" && (
+                        <Button size="sm" variant="outline" className="border-slate-200 hover:bg-slate-50" onClick={() => updateStatus(s, "closed")}>
+                          <Square className="h-3.5 w-3.5 mr-1.5" /> Close
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => setResultsSurvey(s)}>
+                        <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Results
+                      </Button>
+                      {s.status === "draft" && (
+                        <Button size="sm" variant="outline" className="hover:bg-red-50" onClick={() => deleteSurvey(s)}>
+                          <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                        </Button>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
-              ))
+                );
+              })
             )}
           </div>
         ) : null}
       </div>
-
+</div>
       {builderOpen && (
         <SurveyBuilderDialog
           schoolId={schoolId}
@@ -307,12 +339,22 @@ export default function Surveys() {
       {resultsSurvey && (
         <ResultsDialog survey={resultsSurvey} onClose={() => setResultsSurvey(null)} />
       )}
+      
     </AppLayout>
   );
 }
 
 function EmptyState({ text }: { text: string }) {
-  return <Card><CardContent className="p-8 text-center text-sm text-muted-foreground">{text}</CardContent></Card>;
+  return (
+    <Card className="border-2 border-dashed border-violet-200 bg-violet-50/40">
+      <CardContent className="p-10 flex flex-col items-center text-center gap-2">
+        <div className="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center">
+          <ClipboardList className="h-6 w-6 text-violet-400" />
+        </div>
+        <p className="text-sm text-muted-foreground">{text}</p>
+      </CardContent>
+    </Card>
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -447,23 +489,30 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>Create Survey</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-2xl w-[calc(100%-2rem)] sm:w-full max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shrink-0">
+              <Plus className="h-4 w-4 text-white" />
+            </div>
+            Create Survey
+          </DialogTitle>
+        </DialogHeader>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Title</label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1" />
+            <label className="text-xs font-semibold text-violet-700">Title</label>
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1 focus-visible:ring-violet-400" />
           </div>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Description (optional)</label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1" />
+            <label className="text-xs font-semibold text-violet-700">Description (optional)</label>
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} className="mt-1 focus-visible:ring-violet-400" />
           </div>
 
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Audience</label>
+            <label className="text-xs font-semibold text-violet-700">Audience</label>
             <Select value={targetType} onValueChange={(v: any) => setTargetType(v)}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="mt-1 focus:ring-violet-400"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {availableTargets.map((t) => <SelectItem key={t} value={t}>{TARGET_LABELS[t]}</SelectItem>)}
               </SelectContent>
@@ -471,22 +520,22 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
           </div>
 
           {(targetType === "class_students" || targetType === "class_parents") && (
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 rounded-xl bg-violet-50/60 border border-violet-100 p-3">
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Class</label>
+                <label className="text-xs font-semibold text-violet-700">Class</label>
                 <Select value={selectedClassName} onValueChange={handleClassNameChange}>
-                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select class" /></SelectTrigger>
+                  <SelectTrigger className="mt-1 bg-white focus:ring-violet-400"><SelectValue placeholder="Select class" /></SelectTrigger>
                   <SelectContent>
                     {classNames.map((name: string) => <SelectItem key={name} value={name}>{name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Section(s)</label>
+                <label className="text-xs font-semibold text-violet-700">Section(s)</label>
                 <details className="mt-1 group relative">
                   <summary
                     className={cn(
-                      "flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-sm cursor-pointer select-none list-none",
+                      "flex h-9 w-full items-center justify-between rounded-md border border-input bg-white px-3 py-1 text-sm cursor-pointer select-none list-none",
                       !selectedClassName && "opacity-50 pointer-events-none"
                     )}
                   >
@@ -498,8 +547,8 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
                         : selectedSections.slice().sort().join(", ")}
                     </span>
                   </summary>
-                  <div className="absolute z-20 mt-1 w-full rounded-md border border-input bg-popover p-2 shadow-md space-y-1">
-                    <label className="flex items-center gap-2 text-sm py-1 px-1 border-b mb-1 pb-2 font-medium">
+                  <div className="absolute z-20 mt-1 w-full rounded-md border border-violet-200 bg-popover p-2 shadow-md space-y-1">
+                    <label className="flex items-center gap-2 text-sm py-1 px-1 border-b border-violet-100 mb-1 pb-2 font-medium text-violet-700">
                       <Checkbox checked={allSectionsSelected} onCheckedChange={toggleAllSections} />
                       All sections (whole grade)
                     </label>
@@ -515,17 +564,17 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
             </div>
           )}
 
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm bg-violet-50/60 border border-violet-100 rounded-lg px-3 py-2.5">
             <Checkbox checked={isAnonymous} onCheckedChange={(v) => setIsAnonymous(!!v)} />
             Make this survey anonymous (responses can never be linked back to a person)
           </label>
 
-          <div className="space-y-3 border-t pt-3">
-            <p className="text-sm font-semibold">Questions</p>
+          <div className="space-y-3 border-t border-violet-100 pt-3">
+            <p className="text-sm font-semibold text-violet-900">Questions</p>
             {questions.map((q, i) => (
-              <div key={q.key} className="rounded-lg border p-3 space-y-2">
+              <div key={q.key} className="rounded-xl border border-violet-100 bg-violet-50/30 p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Question {i + 1}</span>
+                  <span className="text-xs font-semibold text-violet-600">Question {i + 1}</span>
                   {questions.length > 1 && (
                     <button onClick={() => removeQuestion(q.key)}><Trash2 className="h-3.5 w-3.5 text-red-500" /></button>
                   )}
@@ -534,9 +583,10 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
                   placeholder="Question text"
                   value={q.question_text}
                   onChange={(e) => updateQuestion(q.key, { question_text: e.target.value })}
+                  className="bg-white focus-visible:ring-violet-400"
                 />
                 <Select value={q.question_type} onValueChange={(v: any) => updateQuestion(q.key, { question_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="bg-white focus:ring-violet-400"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {Object.entries(QUESTION_TYPE_LABELS).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
                   </SelectContent>
@@ -552,20 +602,21 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
                             const opts = [...q.options]; opts[oi] = e.target.value;
                             updateQuestion(q.key, { options: opts });
                           }}
+                          className="bg-white focus-visible:ring-violet-400"
                         />
                         <button onClick={() => updateQuestion(q.key, { options: q.options.filter((_, x) => x !== oi) })}>
                           <Trash2 className="h-3.5 w-3.5 text-red-500" />
                         </button>
                       </div>
                     ))}
-                    <Button size="sm" variant="outline" onClick={() => updateQuestion(q.key, { options: [...q.options, ""] })}>
+                    <Button size="sm" variant="outline" className="border-violet-200 text-violet-700 hover:bg-violet-50" onClick={() => updateQuestion(q.key, { options: [...q.options, ""] })}>
                       <Plus className="h-3 w-3 mr-1" /> Add Option
                     </Button>
                   </div>
                 )}
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={addQuestion}>
+            <Button variant="outline" size="sm" className="border-violet-200 text-violet-700 hover:bg-violet-50" onClick={addQuestion}>
               <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Question
             </Button>
           </div>
@@ -573,7 +624,9 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleCreate} disabled={saving}>{saving ? "Creating..." : "Create Survey"}</Button>
+          <Button onClick={handleCreate} disabled={saving} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white">
+            {saving ? "Creating..." : "Create Survey"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -774,30 +827,55 @@ function ResultsDialog({ survey, onClose }: { survey: any; onClose: () => void }
     URL.revokeObjectURL(url);
   };
 
+const responseRate = data && data.targetCount > 0 ? (data.receiptCount / data.targetCount) * 100 : 0;
+
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader><DialogTitle>{survey.title} — Results</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-2xl w-[calc(100%-2rem)] sm:w-full max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shrink-0">
+              <BarChart3 className="h-4 w-4 text-white" />
+            </div>
+            <span className="truncate">{survey.title} — Results</span>
+          </DialogTitle>
+        </DialogHeader>
         {isLoading || !data ? (
-          <div className="flex justify-center py-8"><LoadingSpinner /></div>
+          <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+            <LoadingSpinner /> Loading results...
+          </div>
         ) : (
           <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span>Response Rate</span>
-                <span className="font-semibold">{data.receiptCount} / {data.targetCount || "?"}</span>
+            <div className="rounded-xl bg-gradient-to-r from-indigo-50 to-violet-50 border border-indigo-100 p-4">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="font-medium text-indigo-900">Response Rate</span>
+                <span className="font-bold text-indigo-700">{data.receiptCount} / {data.targetCount || "?"}</span>
               </div>
-              <Progress value={data.targetCount > 0 ? (data.receiptCount / data.targetCount) * 100 : 0} />
+              <Progress value={responseRate} className="h-2.5" />
+              <p className="text-xs text-indigo-600/70 mt-1.5">{responseRate.toFixed(0)}% responded</p>
             </div>
 
-            <Button size="sm" variant="outline" onClick={exportCsv}><Download className="h-3.5 w-3.5 mr-1.5" /> Export CSV</Button>
+            <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={exportCsv}>
+              <Download className="h-3.5 w-3.5 mr-1.5" /> Export CSV
+            </Button>
 
-            {data.questions.map((q: any) => {
+            {data.questions.map((q: any, qi: number) => {
               const qResponses = data.responses.filter((r: any) => r.question_id === q.id);
+              const palette = [
+                { bg: "bg-violet-100", text: "text-violet-600" },
+                { bg: "bg-indigo-100", text: "text-indigo-600" },
+                { bg: "bg-fuchsia-100", text: "text-fuchsia-600" },
+              ];
+              const c = palette[qi % palette.length];
               return (
-                <Card key={q.id} className="border border-border/60">
-                  <CardContent className="p-4 space-y-2">
-                    <p className="text-sm font-medium">{q.question_text}</p>
+                <Card key={q.id} className="border border-border/60 shadow-sm overflow-hidden">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold", c.bg, c.text)}>
+                        {qi + 1}
+                      </div>
+                      <p className="text-sm font-medium pt-0.5">{q.question_text}</p>
+                    </div>
 
                     {(q.question_type === "single_choice" || q.question_type === "multi_choice" || q.question_type === "yes_no") && (
                       <QuestionBreakdown options={q.question_type === "yes_no" ? ["yes", "no"] : (q.options || [])} responses={qResponses} multi={q.question_type === "multi_choice"} />
@@ -806,10 +884,10 @@ function ResultsDialog({ survey, onClose }: { survey: any; onClose: () => void }
                     {(q.question_type === "text_short" || q.question_type === "text_long") && (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {qResponses.length === 0 ? (
-                          <p className="text-xs text-muted-foreground">No responses yet.</p>
+                          <p className="text-xs text-muted-foreground pl-9">No responses yet.</p>
                         ) : (
                           qResponses.map((r: any, i: number) => (
-                            <p key={i} className="text-sm bg-muted/40 rounded p-2">{r.answer_value}</p>
+                            <p key={i} className="text-sm bg-violet-50/60 border border-violet-100 rounded-lg p-2.5 ml-9">{r.answer_value}</p>
                           ))
                         )}
                       </div>
@@ -832,11 +910,14 @@ function QuestionBreakdown({ options, responses, multi }: { options: string[]; r
   });
   const total = responses.length || 1;
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2 pl-9">
       {counts.map(({ opt, n }) => (
         <div key={opt}>
-          <div className="flex justify-between text-xs mb-0.5"><span>{opt}</span><span>{n}</span></div>
-          <Progress value={(n / total) * 100} className="h-2" />
+          <div className="flex justify-between text-xs mb-1">
+            <span className="font-medium text-foreground">{opt}</span>
+            <span className="text-violet-600 font-semibold">{n}</span>
+          </div>
+          <Progress value={(n / total) * 100} className="h-2 [&>div]:bg-violet-500" />
         </div>
       ))}
     </div>
@@ -848,14 +929,14 @@ function RatingBreakdown({ responses }: { responses: any[] }) {
   const dist = [1, 2, 3, 4, 5].map((n) => responses.filter((r) => Number(r.answer_value) === n).length);
   const total = responses.length || 1;
   return (
-    <div>
-      <p className="text-2xl font-bold mb-2">{avg} <span className="text-sm font-normal text-muted-foreground">/ 5 avg</span></p>
-      <div className="space-y-1">
+    <div className="pl-9">
+      <p className="text-2xl font-bold mb-2 text-violet-700">{avg} <span className="text-sm font-normal text-muted-foreground">/ 5 avg</span></p>
+      <div className="space-y-1.5">
         {dist.map((n, i) => (
           <div key={i} className="flex items-center gap-2">
-            <span className="text-xs w-3">{i + 1}</span>
-            <Progress value={(n / total) * 100} className="h-2 flex-1" />
-            <span className="text-xs w-5 text-right">{n}</span>
+            <span className="text-xs w-3 font-medium text-amber-600">{i + 1}★</span>
+            <Progress value={(n / total) * 100} className="h-2 flex-1 [&>div]:bg-amber-400" />
+            <span className="text-xs w-5 text-right text-muted-foreground">{n}</span>
           </div>
         ))}
       </div>

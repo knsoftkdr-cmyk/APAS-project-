@@ -437,24 +437,20 @@ return (
   <AppLayout>
   <div
     className="min-h-screen relative overflow-x-hidden"
-    style={{ background: "linear-gradient(135deg, #ffffff, #fff7ed, #fffbeb)", backgroundSize: "cover" }}
+    
   >
     {/* Layered waves at top */}
     <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#f59e0b" />
+      <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#3b82f6" />
     </svg>
     <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#ea580c" />
+      <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#2563eb" />
     </svg>
 
-    {/* Floating circles */}
-    <div className="absolute top-20 right-10 w-40 h-40 rounded-full bg-amber-300 opacity-20 blur-2xl" />
-    <div className="absolute top-96 left-6 w-56 h-56 rounded-full bg-orange-300 opacity-20 blur-2xl" />
-    <div className="absolute bottom-32 right-1/4 w-32 h-32 rounded-full bg-amber-200 opacity-15 blur-xl" />
-    <div className="absolute top-1/2 left-1/3 w-24 h-24 rounded-full bg-orange-200 opacity-20 blur-xl" />
+    
 
     <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
-<div className="rounded-2xl p-6 relative overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 shadow-lg">
+<div className="rounded-2xl p-6 relative overflow-hidden bg-gradient-to-r from-blue-500 to-sky-600 shadow-lg">
   <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
   <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
   <div className="relative flex items-center gap-4">
@@ -473,7 +469,7 @@ return (
 <div className="flex justify-end">
   <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetUploadForm(); }}>
     <DialogTrigger asChild>
-      <Button className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+      <Button className="bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700 text-white">
         <Upload className="h-4 w-4 mr-2" />
         Upload Assessment
       </Button>
@@ -579,7 +575,7 @@ return (
               <div>
                 <Label className="mb-2 block">Answer Sheets</Label>
                 <div
-                  className="w-full border-2 border-dashed border-orange-200 rounded-lg p-8 text-center cursor-pointer hover:bg-orange-50 hover:border-orange-300 transition-colors"
+                  className="w-full border-2 border-dashed border-blue-200 rounded-lg p-8 text-center cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => { e.preventDefault(); handleFilesPicked(e.dataTransfer.files); }}
@@ -665,7 +661,7 @@ return (
             <DialogFooter className="pt-4 mt-2 border-t">
               <Button variant="outline" onClick={() => setUploadOpen(false)}>Cancel</Button>
               <Button
-                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700"
+                className="bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700"
                 onClick={handleUpload}
                 disabled={
                   uploading ||
@@ -681,8 +677,8 @@ return (
         </Dialog>
       </div>
     
-      <div className="rounded-xl border border-orange-100 bg-white shadow-sm overflow-hidden">
-        <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+      <div className="rounded-xl border border-blue-100 bg-white shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-blue-400 to-sky-500" />
         <div className="flex items-center gap-3 p-4">
         <Select value={classFilter} onValueChange={setClassFilter}>
           <SelectTrigger className="w-[160px]">
@@ -721,8 +717,8 @@ return (
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabFilter)}>
-        <TabsList className="bg-orange-50 border border-orange-100">
-          <TabsTrigger value="pending" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+        <TabsList className="bg-sky-50 border border-sky-100">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white">
             Pending ({counts.pending})
           </TabsTrigger>
           <TabsTrigger value="ai_reviewed" className="data-[state=active]:bg-violet-500 data-[state=active]:text-white">
@@ -750,7 +746,7 @@ return (
     </div>
     <Button
       size="sm"
-      className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+      className="bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700 text-white"
       disabled={selectedIds.length === 0 || evaluatingIds.length > 0}
       onClick={() => runEvaluation(selectedIds)}
     >

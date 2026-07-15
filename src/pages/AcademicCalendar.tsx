@@ -406,51 +406,62 @@ const notifyCalendarEvent = async (
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 max-w-6xl mx-auto">
+      <div className="relative min-h-screen">
+        <div className="absolute -top-10 right-0 w-72 h-72 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-sky-200 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 right-1/4 w-56 h-56 rounded-full bg-amber-200 opacity-[0.10] blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 p-4 md:p-6 space-y-5 md:space-y-6 max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Academic Calendar</h1>
-            <p className="text-muted-foreground text-sm mt-1">School events, holidays, exams and term dates</p>
-          </div>
-          {isAdmin && (
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => setShowUpload(true)}>
-                <Upload className="h-4 w-4 mr-2" /> Upload Document
-              </Button>
-              <Button onClick={openAdd}>
-                <Plus className="h-4 w-4 mr-2" /> Add Event
-              </Button>
+        <div className="rounded-2xl md:rounded-3xl p-5 md:p-7 relative overflow-hidden bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 shadow-lg">
+          <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
+          <div className="absolute right-24 top-10 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute bottom-0 left-1/3 w-24 h-24 bg-white/5 rounded-full" />
+          <div className="relative flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Academic Calendar</h1>
+              <p className="text-indigo-100 text-xs md:text-sm mt-0.5">School events, holidays, exams and term dates</p>
             </div>
-          )}
+          </div>
         </div>
 
+        {isAdmin && (
+          <div className="flex gap-2 justify-end flex-wrap">
+            <Button variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => setShowUpload(true)}>
+              <Upload className="h-4 w-4 mr-2" /> Upload Document
+            </Button>
+            <Button className="bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white" onClick={openAdd}>
+              <Plus className="h-4 w-4 mr-2" /> Add Event
+            </Button>
+          </div>
+        )}
+
         {/* Legend */}
-        <div className="flex gap-4 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
           {(Object.entries(EVENT_LABELS) as [EventType, string][]).map(([type, label]) => (
-            <div key={type} className="flex items-center gap-1.5">
-              <span className={`h-3 w-3 rounded-full ${EVENT_COLORS[type].dot}`} />
-              <span className="text-xs text-muted-foreground">{label}</span>
+            <div key={type} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${EVENT_COLORS[type].badge}`}>
+              <span className={`h-2 w-2 rounded-full ${EVENT_COLORS[type].dot}`} />
+              <span className="text-xs font-medium">{label}</span>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           {/* Calendar Grid */}
-          <div className="lg:col-span-2 bg-card rounded-xl border border-border shadow-sm p-5">
-            <div className="flex items-center justify-between mb-5">
-              <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <div className="lg:col-span-2 bg-white rounded-2xl border border-indigo-100 shadow-sm p-4 md:p-5">
+            <div className="flex items-center justify-between mb-4 bg-gradient-to-r from-indigo-600 to-sky-600 rounded-xl px-2 py-2.5 shadow-sm">
+              <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <h2 className="text-lg font-semibold">{format(currentMonth, "MMMM yyyy")}</h2>
-              <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-2 rounded-lg hover:bg-muted transition-colors">
+              <h2 className="text-base md:text-lg font-bold text-white">{format(currentMonth, "MMMM yyyy")}</h2>
+              <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="grid grid-cols-7 mb-2">
+            <div className="grid grid-cols-7 mb-1">
               {["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => (
-                <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+                <div key={d} className="text-center text-[11px] font-bold text-indigo-400 py-1.5 uppercase tracking-wide">{d}</div>
               ))}
             </div>
 
@@ -460,27 +471,32 @@ const notifyCalendarEvent = async (
                 const dayEvents = getDayEvents(day);
                 const isToday = isSameDay(day, new Date());
                 const isSelected = selectedDay && isSameDay(day, selectedDay);
+                const isWeekend = day.getDay() === 0 || day.getDay() === 6;
                 return (
                   <button
                     key={day.toISOString()}
                     onClick={() => setSelectedDay(selectedDay && isSameDay(day, selectedDay) ? null : day)}
-                    className={`relative min-h-[64px] p-1.5 rounded-lg text-left transition-all border ${
-                      isSelected ? "border-primary bg-primary/5" :
-                      isToday ? "border-primary/40 bg-primary/5" :
-                      "border-transparent hover:border-border hover:bg-muted/50"
+                    className={`relative min-h-[48px] md:min-h-[58px] p-1 md:p-1.5 rounded-lg text-left transition-all border ${
+                      isSelected ? "border-indigo-400 bg-indigo-50 shadow-sm" :
+                      isToday ? "border-sky-200 bg-sky-50/70" :
+                      isWeekend ? "border-transparent bg-slate-50/60 hover:border-indigo-100 hover:bg-indigo-50/50" :
+                      "border-transparent hover:border-indigo-100 hover:bg-indigo-50/50"
                     }`}
                   >
-                    <span className={`text-xs font-medium block mb-1 ${isToday ? "text-primary font-bold" : "text-foreground"}`}>
+                    <span className={`text-xs font-medium flex items-center justify-center mb-1 h-5 w-5 rounded-full ${
+                      isToday ? "bg-gradient-to-br from-indigo-600 to-sky-600 text-white font-bold shadow-sm" :
+                      isWeekend ? "text-indigo-400" : "text-foreground"
+                    }`}>
                       {format(day, "d")}
                     </span>
                     <div className="space-y-0.5">
                       {dayEvents.slice(0, 2).map(e => (
-                        <div key={e.id} className={`text-[10px] truncate px-1 py-0.5 rounded ${EVENT_COLORS[e.event_type].bg} ${EVENT_COLORS[e.event_type].text} font-medium`}>
+                        <div key={e.id} className={`text-[9px] md:text-[10px] truncate px-1 py-0.5 rounded ${EVENT_COLORS[e.event_type].bg} ${EVENT_COLORS[e.event_type].text} font-medium`}>
                           {e.title}
                         </div>
                       ))}
                       {dayEvents.length > 2 && (
-                        <div className="text-[10px] text-muted-foreground px-1">+{dayEvents.length - 2} more</div>
+                        <div className="text-[9px] text-indigo-400 px-1 font-semibold">+{dayEvents.length - 2} more</div>
                       )}
                     </div>
                   </button>
@@ -490,52 +506,63 @@ const notifyCalendarEvent = async (
           </div>
 
           {/* Side Panel */}
-          <div className="bg-card rounded-xl border border-border shadow-sm p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm">
+          <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-4">
+            <div className="flex items-center justify-between mb-3 pb-3 border-b border-indigo-50">
+              <h3 className="font-bold text-sm text-indigo-900 flex items-center gap-1.5">
+                {selectedDay && <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />}
                 {selectedDay ? format(selectedDay, "EEEE, MMM d") : "Upcoming Events"}
               </h3>
               {selectedDay && (
-                <button onClick={() => setSelectedDay(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                <button onClick={() => setSelectedDay(null)} className="text-xs text-muted-foreground hover:text-indigo-600 transition-colors">
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+              <div className="flex items-center justify-center gap-2 py-8 text-muted-foreground text-xs">
+                <Loader2 className="h-4 w-4 animate-spin text-indigo-400" /> Loading events...
+              </div>
             ) : (
               <div className="space-y-2">
                 {(selectedDay ? selectedDayEvents : upcomingEvents).length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-4 text-center">
-                    {selectedDay ? "No events on this day" : "No upcoming events"}
-                  </p>
+                  <div className="flex flex-col items-center gap-2 py-6 text-center">
+                    <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center">
+                      <X className="h-4 w-4 text-indigo-300" />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedDay ? "No events on this day" : "No upcoming events"}
+                    </p>
+                  </div>
                 ) : (
                   (selectedDay ? selectedDayEvents : upcomingEvents).map(e => (
-                    <div key={e.id} className={`p-2.5 rounded-lg border ${EVENT_COLORS[e.event_type].badge}`}>
-                      <div className="flex items-start justify-between gap-1">
+                    <div key={e.id} className="group p-3 rounded-xl border border-indigo-50 bg-white hover:border-indigo-200 hover:shadow-sm transition-all">
+                      <div className="flex items-start gap-2.5">
+                        <div className={`w-1.5 self-stretch rounded-full shrink-0 ${EVENT_COLORS[e.event_type].dot}`} />
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold truncate">{e.title}</p>
-                          <p className="text-[10px] opacity-70 mt-0.5">
+                          <div className="flex items-start justify-between gap-1">
+                            <p className="text-xs font-semibold text-foreground truncate">{e.title}</p>
+                            {isAdmin && (
+                              <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => openEdit(e)} className="p-1 rounded hover:bg-indigo-50 text-indigo-500 transition-colors">
+                                  <Pencil className="h-3 w-3" />
+                                </button>
+                                <button onClick={() => deleteEvent(e.id)} className="p-1 rounded hover:bg-red-50 text-red-500 transition-colors">
+                                  <Trash2 className="h-3 w-3" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5 font-medium">
                             {e.start_date === e.end_date
                               ? format(parseISO(e.start_date), "MMM d, yyyy")
                               : `${format(parseISO(e.start_date), "MMM d")} – ${format(parseISO(e.end_date), "MMM d, yyyy")}`}
                           </p>
-                          <Badge variant="outline" className="mt-1 text-[9px] py-0 px-1 h-4">
+                          <Badge className={`mt-1.5 text-[9px] py-0 px-1.5 h-4 border ${EVENT_COLORS[e.event_type].badge}`}>
                             {EVENT_LABELS[e.event_type]}
                           </Badge>
-                          {e.description && <p className="text-[10px] opacity-60 mt-1 line-clamp-2">{e.description}</p>}
+                          {e.description && <p className="text-[10px] text-muted-foreground/80 mt-1.5 line-clamp-2">{e.description}</p>}
                         </div>
-                        {isAdmin && (
-                          <div className="flex gap-1 shrink-0 ml-1">
-                            <button onClick={() => openEdit(e)} className="p-1 rounded hover:bg-black/10 transition-colors">
-                              <Pencil className="h-3 w-3" />
-                            </button>
-                            <button onClick={() => deleteEvent(e.id)} className="p-1 rounded hover:bg-black/10 transition-colors text-red-500">
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))
@@ -544,7 +571,7 @@ const notifyCalendarEvent = async (
             )}
 
             {isAdmin && (
-              <Button size="sm" variant="outline" className="w-full mt-4" onClick={openAdd}>
+              <Button size="sm" variant="outline" className="w-full mt-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={openAdd}>
                 <Plus className="h-3.5 w-3.5 mr-1.5" />
                 {selectedDay ? `Add event for ${format(selectedDay, "MMM d")}` : "Add Event"}
               </Button>
@@ -552,22 +579,28 @@ const notifyCalendarEvent = async (
           </div>
         </div>
       </div>
+      </div>
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader>
-            <DialogTitle>{editingEvent ? "Edit Event" : "Add Event"}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-600 flex items-center justify-center shrink-0">
+                <Plus className="h-4 w-4 text-white" />
+              </div>
+              {editingEvent ? "Edit Event" : "Add Event"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
-              <Label>Title *</Label>
-              <Input className="mt-1" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Diwali Holiday" />
+              <Label className="text-sm font-semibold text-indigo-700">Title *</Label>
+              <Input className="mt-1 focus-visible:ring-indigo-400" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} placeholder="e.g. Diwali Holiday" />
             </div>
             <div>
-              <Label>Event Type *</Label>
+              <Label className="text-sm font-semibold text-indigo-700">Event Type *</Label>
               <Select value={form.event_type} onValueChange={v => setForm(f => ({ ...f, event_type: v as EventType }))}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="mt-1 focus:ring-indigo-400"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="holiday">🔴 Holiday</SelectItem>
                   <SelectItem value="exam">🔵 Exam</SelectItem>
@@ -578,21 +611,21 @@ const notifyCalendarEvent = async (
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Start Date *</Label>
-                <Input className="mt-1" type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} />
+                <Label className="text-sm font-semibold text-indigo-700">Start Date *</Label>
+                <Input className="mt-1 focus-visible:ring-indigo-400" type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} />
               </div>
               <div>
-                <Label>End Date *</Label>
-                <Input className="mt-1" type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} />
+                <Label className="text-sm font-semibold text-indigo-700">End Date *</Label>
+                <Input className="mt-1 focus-visible:ring-indigo-400" type="date" value={form.end_date} onChange={e => setForm(f => ({ ...f, end_date: e.target.value }))} />
               </div>
             </div>
             <div>
-              <Label>Description</Label>
-              <Textarea className="mt-1" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." rows={2} />
+              <Label className="text-sm font-semibold text-indigo-700">Description</Label>
+              <Textarea className="mt-1 focus-visible:ring-indigo-400" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Optional details..." rows={2} />
             </div>
             <div className="flex gap-2 justify-end pt-1">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button onClick={saveEvent} disabled={saving}>
+              <Button onClick={saveEvent} disabled={saving} className="bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white">
                 {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 {editingEvent ? "Update Event" : "Save Event"}
               </Button>
@@ -603,31 +636,38 @@ const notifyCalendarEvent = async (
 
       {/* Upload Dialog */}
       <Dialog open={showUpload} onOpenChange={v => { setShowUpload(v); if (!v) { setExtractedEvents([]); setUploadText(""); } }}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[calc(100%-2rem)] sm:w-full max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Upload Academic Calendar Document</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-600 flex items-center justify-center shrink-0">
+                <Upload className="h-4 w-4 text-white" />
+              </div>
+              Upload Academic Calendar Document
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div
-              className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/30 transition-all"
+              className="border-2 border-dashed border-indigo-200 bg-indigo-50/30 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all"
               onDragOver={e => e.preventDefault()}
               onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleFileUpload(f); }}
               onClick={() => document.getElementById("cal-file-input")?.click()}
             >
               {readingFile ? (
-                <Loader2 className="h-8 w-8 mx-auto text-muted-foreground mb-2 animate-spin" />
+                <Loader2 className="h-8 w-8 mx-auto text-indigo-400 mb-2 animate-spin" />
               ) : (
-                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <div className="w-14 h-14 mx-auto rounded-xl bg-indigo-100 flex items-center justify-center mb-2">
+                  <Upload className="h-6 w-6 text-indigo-500" />
+                </div>
               )}
-              <p className="text-sm font-medium">{readingFile ? "Reading document..." : "Drop your document here"}</p>
+              <p className="text-sm font-medium text-indigo-900">{readingFile ? "Reading document..." : "Drop your document here"}</p>
               <p className="text-xs text-muted-foreground mt-1">Supports PDF, Word (.docx), Excel, CSV, TXT</p>
               <input id="cal-file-input" type="file" className="hidden" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />
             </div>
 
             <div>
-              <Label>Or paste document content directly</Label>
+              <Label className="text-sm font-semibold text-indigo-700">Or paste document content directly</Label>
               <Textarea
-                className="mt-1"
+                className="mt-1 focus-visible:ring-indigo-400"
                 value={uploadText}
                 onChange={e => setUploadText(e.target.value)}
                 placeholder={`Paste your academic calendar here, e.g.:
@@ -639,7 +679,7 @@ Term 1: June 1 - October 31`}
               />
             </div>
 
-            <Button className="w-full" onClick={extractEvents} disabled={extracting || !uploadText.trim()}>
+            <Button className="w-full bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white" onClick={extractEvents} disabled={extracting || !uploadText.trim()}>
               {extracting
                 ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Extracting with AI...</>
                 : "✨ Extract Events with AI"}
@@ -648,9 +688,9 @@ Term 1: June 1 - October 31`}
             {extractedEvents.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>{extractedEvents.length} events extracted — review before saving</Label>
+                  <Label className="text-sm font-semibold text-indigo-700">{extractedEvents.length} events extracted — review before saving</Label>
                 </div>
-                <div className="max-h-52 overflow-y-auto space-y-1.5 border border-border rounded-lg p-2 bg-muted/20">
+                <div className="max-h-52 overflow-y-auto space-y-1.5 border border-indigo-100 rounded-lg p-2 bg-indigo-50/30">
                   {extractedEvents.map((e, i) => (
                     <div key={i} className={`p-2 rounded-lg text-xs border flex items-start justify-between gap-2 ${EVENT_COLORS[e.event_type as EventType]?.badge || "bg-muted border-border"}`}>
                       <div className="flex-1 min-w-0">
@@ -666,7 +706,7 @@ Term 1: June 1 - October 31`}
                     </div>
                   ))}
                 </div>
-                <Button className="w-full" onClick={saveExtractedEvents} disabled={saving}>
+                <Button className="w-full bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white" onClick={saveExtractedEvents} disabled={saving}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                   Save {extractedEvents.length} Events to Calendar
                 </Button>

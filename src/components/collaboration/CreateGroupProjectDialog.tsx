@@ -112,43 +112,52 @@ export function CreateGroupProjectDialog({ onCreated }: CreateGroupProjectDialog
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm">
           <Plus className="mr-2 h-4 w-4" />
           New Group Project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Create Group Project</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-lg w-[calc(100%-2rem)] p-0 overflow-hidden max-h-[85vh] flex flex-col">
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-4 shrink-0">
+          <DialogHeader>
+            <DialogTitle className="text-white text-base flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <Plus className="h-4 w-4 text-white" />
+              </div>
+              Create Group Project
+            </DialogTitle>
+          </DialogHeader>
+        </div>
 
-        <div className="space-y-4 py-2">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+        <div className="space-y-4 px-5 py-4 overflow-y-auto flex-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="title" className="text-xs font-semibold text-slate-600">Title *</Label>
             <Input
               id="title"
               placeholder="e.g. Renewable Energy Research"
               value={form.title}
               onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              className="border-slate-200 focus-visible:ring-emerald-400"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="description" className="text-xs font-semibold text-slate-600">Description</Label>
             <Textarea
               id="description"
               placeholder="What should groups produce or investigate?"
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               rows={3}
+              className="border-slate-200 focus-visible:ring-emerald-400"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="class">Class *</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="class" className="text-xs font-semibold text-slate-600">Class *</Label>
               <Select value={form.classId} onValueChange={(v) => setForm((f) => ({ ...f, classId: v }))}>
-                <SelectTrigger id="class">
+                <SelectTrigger id="class" className="border-slate-200 focus:ring-emerald-400">
                   <SelectValue placeholder="Select class" />
                 </SelectTrigger>
                 <SelectContent>
@@ -161,25 +170,26 @@ export function CreateGroupProjectDialog({ onCreated }: CreateGroupProjectDialog
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="subject" className="text-xs font-semibold text-slate-600">Subject</Label>
               <Input
                 id="subject"
                 placeholder="e.g. Science"
                 value={form.subject}
                 onChange={(e) => setForm((f) => ({ ...f, subject: e.target.value }))}
+                className="border-slate-200 focus-visible:ring-emerald-400"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="gradingType">Grading</Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="gradingType" className="text-xs font-semibold text-slate-600">Grading</Label>
               <Select
                 value={form.gradingType}
                 onValueChange={(v) => setForm((f) => ({ ...f, gradingType: v as GradingType }))}
               >
-                <SelectTrigger id="gradingType">
+                <SelectTrigger id="gradingType" className="border-slate-200 focus:ring-emerald-400">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -190,8 +200,8 @@ export function CreateGroupProjectDialog({ onCreated }: CreateGroupProjectDialog
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="maxGroupSize">Max group size</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="maxGroupSize" className="text-xs font-semibold text-slate-600">Max group size</Label>
               <Input
                 id="maxGroupSize"
                 type="number"
@@ -199,30 +209,35 @@ export function CreateGroupProjectDialog({ onCreated }: CreateGroupProjectDialog
                 max={10}
                 value={form.maxGroupSize}
                 onChange={(e) => setForm((f) => ({ ...f, maxGroupSize: Number(e.target.value) }))}
+                className="border-slate-200 focus-visible:ring-emerald-400"
               />
             </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dueDate">Due date</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="dueDate" className="text-xs font-semibold text-slate-600">Due date</Label>
             <Input
               id="dueDate"
               type="date"
               value={form.dueDate}
               onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
+              className="border-slate-200 focus-visible:ring-emerald-400"
             />
           </div>
-        </div>
+          </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} disabled={submitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Create Project
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="px-5 py-4 border-t border-slate-100 shrink-0">
+            <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setOpen(false)} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+            >
+              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Project
+            </Button>
+          </DialogFooter>
       </DialogContent>
     </Dialog>
   );

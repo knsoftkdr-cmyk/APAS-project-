@@ -148,12 +148,12 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="font-semibold">Term-wise Results</h2>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Select value={semId} onValueChange={setSemId}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Select Term" /></SelectTrigger>
+  {/* Filters */}
+  <div className="flex items-center justify-between flex-wrap gap-2">
+    <h2 className="font-semibold text-slate-800">Term-wise Results</h2>
+    <div className="flex items-center gap-2 flex-wrap">
+      <Select value={semId} onValueChange={setSemId}>
+        <SelectTrigger className="w-full sm:w-48 border-indigo-100 focus:ring-indigo-400"><SelectValue placeholder="Select Term" /></SelectTrigger>
             <SelectContent>
               {semesters.map((sem: any) => {
                 const yr = academicYears.find((y: any) => y.id === sem.academic_year_id);
@@ -163,7 +163,7 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
           </Select>
           {isAdmin && (
             <Select value={resultsClassFilter} onValueChange={setResultsClassFilter}>
-              <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
+              <SelectTrigger className="w-36 border-indigo-100 focus:ring-indigo-400"><SelectValue placeholder="All Classes" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Classes</SelectItem>
                 {uniqueClasses.map((cl: string) => (
@@ -172,16 +172,16 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
               </SelectContent>
             </Select>
           )}
-          {isTeacher && <Badge variant="outline">{teacherClassLabel}</Badge>}
+          {isTeacher && <Badge variant="outline" className="border-indigo-200 text-indigo-700">{teacherClassLabel}</Badge>}
         </div>
       </div>
 
       {!semId ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">Select a term above to view results.</CardContent></Card>
+    <Card className="border-indigo-100 bg-indigo-50/20"><CardContent className="py-12 text-center text-muted-foreground">Select a term above to view results.</CardContent></Card>
       ) : loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin text-indigo-500" /> Loading results...</div>
       ) : students.length === 0 ? (
-        <Card><CardContent className="py-12 text-center text-muted-foreground">No students found.</CardContent></Card>
+        <Card className="border-slate-200"><CardContent className="py-12 text-center text-muted-foreground">No students found.</CardContent></Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {students.map((s: any) => {
@@ -191,23 +191,29 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
               ? Math.round(sm.reduce((acc: number, m: any) => acc + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / sm.length)
               : null;
             return (
-              <Card key={s.id} className="cursor-pointer hover:border-primary transition-colors" onClick={() => setViewingStudent({ student: s, gpa, marks: sm })}>
+              <Card key={s.id} className="overflow-hidden cursor-pointer border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all" onClick={() => setViewingStudent({ student: s, gpa, marks: sm })}>
+                <div className={`h-1 ${gpa?.result_status === "pass" ? "bg-emerald-400" : gpa?.result_status === "fail" ? "bg-red-400" : "bg-slate-200"}`} />
                 <CardContent className="py-4 flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{s.full_name ?? "Unnamed"}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{s.class ?? "-"} · Section {s.section ?? "-"} · {sm.length} subjects</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                      {(s.full_name ?? "U")[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate text-slate-800">{s.full_name ?? "Unnamed"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{s.class ?? "-"} · Section {s.section ?? "-"} · {sm.length} subjects</p>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
                     <div className="text-center">
-                      <p className="text-lg font-bold">{gpa?.gpa ?? "-"}</p>
+                      <p className="text-lg font-bold text-indigo-700">{gpa?.gpa ?? "-"}</p>
                       <p className="text-[10px] text-muted-foreground">GPA</p>
                     </div>
                     {gpa ? (
-                      <Badge className={gpa.result_status === "pass" ? "bg-green-100 text-green-700 border-green-200" : gpa.result_status === "fail" ? "bg-red-100 text-red-700 border-red-200" : "bg-gray-100 text-gray-600"}>
+                      <Badge className={gpa.result_status === "pass" ? "bg-emerald-500 text-white hover:bg-emerald-500" : gpa.result_status === "fail" ? "bg-red-500 text-white hover:bg-red-500" : "bg-slate-200 text-slate-600 hover:bg-slate-200"}>
                         {gpa.result_status === "pass" ? "✓ Pass" : gpa.result_status === "fail" ? "✗ Fail" : "Pending"}
                       </Badge>
                     ) : (
-                      <Badge className="bg-gray-100 text-gray-500">No marks</Badge>
+                      <Badge className="bg-slate-100 text-slate-500 hover:bg-slate-100">No marks</Badge>
                     )}
                   </div>
                 </CardContent>
@@ -219,19 +225,21 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
 
       {/* Marks detail dialog */}
       <Dialog open={!!viewingStudent} onOpenChange={(v) => { if (!v) setViewingStudent(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{viewingStudent?.student.full_name} — {selectedSem?.name}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] p-0 overflow-hidden max-h-[85vh] flex flex-col">
+          <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 shrink-0">
+            <DialogHeader>
+              <DialogTitle className="text-white text-base">{viewingStudent?.student.full_name} — {selectedSem?.name}</DialogTitle>
+            </DialogHeader>
+          </div>
           {viewingStudent && (
-            <div className="space-y-4 mt-2">
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+            <div className="space-y-4 px-5 py-4 overflow-y-auto flex-1">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100">
                 <div className="text-center flex-1">
-                  <p className="text-2xl font-bold">{viewingStudent.gpa?.gpa ?? "-"}</p>
+                  <p className="text-2xl font-bold text-indigo-700">{viewingStudent.gpa?.gpa ?? "-"}</p>
                   <p className="text-xs text-muted-foreground">GPA / 10</p>
                 </div>
                 <div className="text-center flex-1">
-                  <p className="text-2xl font-bold">
+                  <p className="text-2xl font-bold text-violet-700">
                     {viewingStudent.marks.length > 0
                       ? `${Math.round(viewingStudent.marks.reduce((a: number, m: any) => a + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / viewingStudent.marks.length)}%`
                       : "-"}
@@ -239,7 +247,7 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
                   <p className="text-xs text-muted-foreground">Overall %</p>
                 </div>
                 {viewingStudent.gpa && (
-                  <Badge className={viewingStudent.gpa.result_status === "pass" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                  <Badge className={viewingStudent.gpa.result_status === "pass" ? "bg-emerald-500 text-white hover:bg-emerald-500" : "bg-red-500 text-white hover:bg-red-500"}>
                     {viewingStudent.gpa.result_status === "pass" ? "Pass" : "Fail"}
                   </Badge>
                 )}
@@ -249,7 +257,7 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-indigo-50/50 hover:bg-indigo-50/50">
                       <TableHead>Subject</TableHead>
                       <TableHead>Marks</TableHead>
                       <TableHead>%</TableHead>
@@ -263,7 +271,7 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
                           <TableCell className="font-medium capitalize">{m.subject}</TableCell>
                           <TableCell>{m.marks_obtained ?? "-"}/{m.max_marks}</TableCell>
                           <TableCell>
-                            <span className={pct !== null ? (pct >= 50 ? "text-green-600 font-medium" : "text-red-500 font-medium") : ""}>
+                            <span className={pct !== null ? (pct >= 50 ? "text-emerald-600 font-semibold" : "text-red-500 font-semibold") : ""}>
                               {pct !== null ? `${pct}%` : "-"}
                             </span>
                           </TableCell>
@@ -326,11 +334,13 @@ function StudentResultsView({ profile, semesters, academicYears, myStudentRecord
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
 
   if (resultList.length === 0) return (
-    <Card>
-      <CardContent className="py-16 text-center text-muted-foreground">
-        <GraduationCap className="h-10 w-10 mx-auto mb-3" />
-        <p className="font-medium">No results yet</p>
-        <p className="text-sm mt-1">Your results will appear here after your teacher publishes them.</p>
+    <Card className="border-2 border-dashed border-indigo-100 bg-indigo-50/20">
+      <CardContent className="py-16 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+          <GraduationCap className="h-7 w-7 text-indigo-400" />
+        </div>
+        <p className="font-medium text-slate-800">No results yet</p>
+        <p className="text-sm text-muted-foreground mt-1">Your results will appear here after your teacher publishes them.</p>
       </CardContent>
     </Card>
   );
@@ -338,11 +348,11 @@ function StudentResultsView({ profile, semesters, academicYears, myStudentRecord
   return (
     <div className="space-y-4">
       {/* Term filter pills */}
-      <div className="flex flex-wrap gap-2">
-        <button onClick={() => setSemFilter("all")} className={"px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all " + (semFilter === "all" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-muted")}>All Terms</button>
+      <div className="flex flex-wrap gap-2 bg-indigo-50/50 border border-indigo-100 p-1.5 rounded-full w-fit max-w-full overflow-x-auto">
+        <button onClick={() => setSemFilter("all")} className={"px-3.5 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap " + (semFilter === "all" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}>All Terms</button>
         {resultList.map((r) => (
           <button key={r.semester.id} onClick={() => setSemFilter(r.semester.id)}
-            className={"px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all " + (semFilter === r.semester.id ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border hover:bg-muted")}>
+            className={"px-3.5 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap " + (semFilter === r.semester.id ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-sm" : "text-slate-500 hover:text-slate-700")}>
             {r.semester.name}
           </button>
         ))}
@@ -351,44 +361,52 @@ function StudentResultsView({ profile, semesters, academicYears, myStudentRecord
       {/* Result cards */}
       <div className="grid gap-4">
         {filtered.map((r) => (
-          <Card key={r.semester.id} className="cursor-pointer hover:border-primary transition-colors" onClick={() => setViewingMarks(r)}>
-            <CardContent className="py-5 flex items-center justify-between flex-wrap gap-4">
+        <Card key={r.semester.id} className="overflow-hidden cursor-pointer border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all" onClick={() => setViewingMarks(r)}>
+          <div className={`h-1 ${r.gpa.result_status === "pass" ? "bg-emerald-400" : r.gpa.result_status === "fail" ? "bg-red-400" : "bg-slate-200"}`} />
+          <CardContent className="py-5 flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shrink-0">
+                <FileText className="h-4.5 w-4.5 text-white" />
+              </div>
               <div>
-                <p className="font-semibold text-base">{r.semester.name}</p>
+                <p className="font-semibold text-base text-slate-800">{r.semester.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">{r.semester.yearName} · Click to view subject marks</p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">{r.gpa.gpa ?? "-"}</p>
-                  <p className="text-xs text-muted-foreground">GPA / 10</p>
-                </div>
-                <Badge className={r.gpa.result_status === "pass" ? "bg-green-100 text-green-700 border-green-200 text-sm px-3 py-1" : r.gpa.result_status === "fail" ? "bg-red-100 text-red-700 border-red-200 text-sm px-3 py-1" : "bg-gray-100 text-gray-600 text-sm px-3 py-1"}>
-                  {r.gpa.result_status === "pass" ? "✓ Pass" : r.gpa.result_status === "fail" ? "✗ Fail" : "Pending"}
-                </Badge>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-indigo-700">{r.gpa.gpa ?? "-"}</p>
+                <p className="text-xs text-muted-foreground">GPA / 10</p>
               </div>
-            </CardContent>
-          </Card>
-        ))}
+              <Badge className={r.gpa.result_status === "pass" ? "bg-emerald-500 text-white hover:bg-emerald-500 text-sm px-3 py-1" : r.gpa.result_status === "fail" ? "bg-red-500 text-white hover:bg-red-500 text-sm px-3 py-1" : "bg-slate-200 text-slate-600 hover:bg-slate-200 text-sm px-3 py-1"}>
+                {r.gpa.result_status === "pass" ? "✓ Pass" : r.gpa.result_status === "fail" ? "✗ Fail" : "Pending"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
       </div>
 
       {/* Marks detail dialog */}
       <Dialog open={!!viewingMarks} onOpenChange={(v) => { if (!v) setViewingMarks(null); }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{viewingMarks?.semester.name} — Subject Marks</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] p-0 overflow-hidden max-h-[85vh] flex flex-col">
+          <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 shrink-0">
+            <DialogHeader>
+              <DialogTitle className="text-white text-base">{viewingMarks?.semester.name} — Subject Marks</DialogTitle>
+            </DialogHeader>
+          </div>
           {viewingMarks && (
-            <div className="space-y-4 mt-2">
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+            <div className="space-y-4 px-5 py-4 overflow-y-auto flex-1">
+              <div className="flex items-center gap-3 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100">
                 <div className="text-center flex-1">
-                  <p className="text-2xl font-bold">{viewingMarks.gpa.gpa ?? "-"}</p>
+                  <p className="text-2xl font-bold text-indigo-700">{viewingMarks.gpa.gpa ?? "-"}</p>
                   <p className="text-xs text-muted-foreground">GPA / 10</p>
                 </div>
                 <div className="text-center flex-1">
-                  <p className="text-2xl font-bold">{viewingMarks.gpa.combined_score !== null ? `${Math.round(viewingMarks.gpa.combined_score ?? 0)}%` : "-"}</p>
+                  <p className="text-2xl font-bold text-violet-700">{viewingMarks.gpa.combined_score !== null ? `${Math.round(viewingMarks.gpa.combined_score ?? 0)}%` : "-"}</p>
                   <p className="text-xs text-muted-foreground">Overall %</p>
                 </div>
-                <Badge className={viewingMarks.gpa.result_status === "pass" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
+                <Badge className={viewingMarks.gpa.result_status === "pass" ? "bg-emerald-500 text-white hover:bg-emerald-500" : "bg-red-500 text-white hover:bg-red-500"}>
                   {viewingMarks.gpa.result_status === "pass" ? "Pass" : "Fail"}
                 </Badge>
               </div>
@@ -397,7 +415,7 @@ function StudentResultsView({ profile, semesters, academicYears, myStudentRecord
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-indigo-50/50 hover:bg-indigo-50/50">
                       <TableHead>Subject</TableHead>
                       <TableHead>Marks</TableHead>
                       <TableHead>%</TableHead>
@@ -877,45 +895,61 @@ export default function SemesterEngine() {
     );
   }
 
-  return (
-    <AppLayout>
-      <div className="p-6 space-y-6 max-w-7xl mx-auto">
-        <div>
-          <h1 className="text-2xl font-bold">Semester Engine</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage academic years, semesters, marks, GPA, and student promotion</p>
+return (
+  <AppLayout>
+    <div className="min-h-screen relative overflow-x-hidden">
+      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
+      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
+      <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
+
+      <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
+        <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="relative flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Semester Engine</h1>
+              <p className="text-indigo-100 text-xs md:text-sm mt-0.5">Manage academic years, semesters, marks, GPA, and student promotion</p>
+            </div>
+          </div>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
         ) : (
           <Tabs defaultValue={isAdmin ? "years" : isTeacher ? "marks" : "results"}>
-            <TabsList className="flex flex-wrap gap-1 h-auto bg-muted p-1 rounded-xl">
-              {isAdmin && <TabsTrigger value="years" className="gap-1"><BookOpen className="h-4 w-4" /> Academic Years</TabsTrigger>}
-              {isAdmin && <TabsTrigger value="semesters" className="gap-1"><Clock className="h-4 w-4" /> Semesters</TabsTrigger>}
-              {(isAdmin || isTeacher) && <TabsTrigger value="marks" className="gap-1"><BarChart3 className="h-4 w-4" /> Marks & GPA</TabsTrigger>}
-              <TabsTrigger value="results" className="gap-1"><FileText className="h-4 w-4" /> {isStudent ? "My Results" : "Results"}</TabsTrigger>
-              {isAdmin && <TabsTrigger value="promotion" className="gap-1"><GraduationCap className="h-4 w-4" /> Promotion</TabsTrigger>}
-              {isAdmin && <TabsTrigger value="rollover" className="gap-1"><RotateCcw className="h-4 w-4" /> Year Rollover</TabsTrigger>}
+            <div className="overflow-x-auto scrollbar-hide -mx-1 px-1 pb-1">
+            <TabsList className="inline-flex w-max flex-nowrap gap-1 h-auto bg-indigo-50 border border-indigo-100 p-1 rounded-xl">
+              {isAdmin && <TabsTrigger value="years" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-indigo-600 data-[state=active]:text-white"><BookOpen className="h-4 w-4" /> Academic Years</TabsTrigger>}
+              {isAdmin && <TabsTrigger value="semesters" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-indigo-600 data-[state=active]:text-white"><Clock className="h-4 w-4" /> Semesters</TabsTrigger>}
+              {(isAdmin || isTeacher) && <TabsTrigger value="marks" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-indigo-600 data-[state=active]:text-white"><BarChart3 className="h-4 w-4" /> Marks & GPA</TabsTrigger>}
+              <TabsTrigger value="results" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-indigo-600 data-[state=active]:text-white"><FileText className="h-4 w-4" /> {isStudent ? "My Results" : "Results"}</TabsTrigger>
+              {isAdmin && <TabsTrigger value="promotion" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-indigo-600 data-[state=active]:text-white"><GraduationCap className="h-4 w-4" /> Promotion</TabsTrigger>}
+              {isAdmin && <TabsTrigger value="rollover" className="gap-1.5 whitespace-nowrap data-[state=active]:bg-indigo-600 data-[state=active]:text-white"><RotateCcw className="h-4 w-4" /> Year Rollover</TabsTrigger>}
             </TabsList>
+            </div>
 
             {/* ACADEMIC YEARS */}
             <TabsContent value="years" className="space-y-4 mt-4">
-              <div className="flex justify-between items-center">
-                <h2 className="font-semibold">Academic Years</h2>
-                <Button size="sm" onClick={() => setShowYearForm(true)}><Plus className="h-4 w-4 mr-1" />New Year</Button>
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <h2 className="font-semibold text-slate-800">Academic Years</h2>
+                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={() => setShowYearForm(true)}><Plus className="h-4 w-4 mr-1" />New Year</Button>
               </div>
               {academicYears.length === 0 ? (
                 <Card><CardContent className="py-12 text-center text-muted-foreground">No academic years yet. Create one to get started.</CardContent></Card>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {academicYears.map((y) => (
-                    <Card key={y.id} className={y.is_active ? "border-primary" : ""}>
+                    <Card key={y.id} className={`overflow-hidden shadow-sm ${y.is_active ? "border-indigo-300 ring-1 ring-indigo-200" : "border-slate-200"}`}>
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base flex items-center gap-2">
                             {y.name}
-                            {y.is_active && <Badge className="bg-green-100 text-green-700 border-green-200">Active</Badge>}
-                            {y.is_completed && <Badge className="bg-blue-100 text-blue-700 border-blue-200">Completed</Badge>}
+                            {y.is_active && <Badge className="bg-emerald-500 text-white hover:bg-emerald-500">Active</Badge>}
+                            {y.is_completed && <Badge className="bg-blue-500 text-white hover:bg-blue-500">Completed</Badge>}
                           </CardTitle>
                           <div className="flex items-center gap-1.5">
                             {!y.is_active && <Button size="sm" variant="outline" onClick={() => setYearActive(y.id)}>Set Active</Button>}
@@ -950,7 +984,7 @@ export default function SemesterEngine() {
                   <h2 className="font-semibold">Semesters / Terms</h2>
                   {activeYear && <Badge variant="outline">{activeYear.name}</Badge>}
                 </div>
-                <Button size="sm" onClick={() => { setSemForm((f) => ({ ...f, year_id: activeYear?.id ?? "" })); setShowSemForm(true); }}>
+                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={() => { setSemForm((f) => ({ ...f, year_id: activeYear?.id ?? "" })); setShowSemForm(true); }}>
                   <Plus className="h-4 w-4 mr-1" />New Semester
                 </Button>
               </div>
@@ -959,7 +993,11 @@ export default function SemesterEngine() {
               ) : (
                 <div className="space-y-3">
                   {yearSemesters.map((sem) => (
-                    <Card key={sem.id} className={activeSemester?.id === sem.id ? "border-primary" : ""}>
+                    <Card key={sem.id} className={`overflow-hidden shadow-sm border-l-4 ${
+  sem.status === 'active' ? 'border-l-emerald-400' :
+  sem.status === 'closed' ? 'border-l-red-400' :
+  sem.status === 'assessment' ? 'border-l-blue-400' : 'border-l-slate-300'
+} ${activeSemester?.id === sem.id ? "border-indigo-300 ring-1 ring-indigo-200" : "border-slate-200"}`}>
                       <CardContent className="py-4 flex items-center justify-between flex-wrap gap-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
@@ -971,7 +1009,7 @@ export default function SemesterEngine() {
                         </div>
                         <div className="flex items-center gap-2">
                           {!sem.locked && STATUS_NEXT[sem.status] && (
-                            <Button size="sm" onClick={() => advanceSemesterStatus(sem)}>
+                            <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700" onClick={() => advanceSemesterStatus(sem)}>
                               {sem.status === "planning" ? "Activate" : `→ ${STATUS_LABELS[STATUS_NEXT[sem.status]!]}`}
                             </Button>
                           )}
@@ -1019,7 +1057,7 @@ export default function SemesterEngine() {
                     <Badge variant="outline">{teacherClassLabel || "No class assigned"}</Badge>
                   )}
                   {isAdmin && (
-                    <Button size="sm" onClick={calculateGPAs} disabled={saving || !activeSemester}>
+                    <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={calculateGPAs} disabled={saving || !activeSemester}>
                       {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />} Calculate GPA
                     </Button>
                   )}
@@ -1033,10 +1071,12 @@ export default function SemesterEngine() {
                   {activeSemester.status === "planning" ? "This term hasn't been activated yet. Ask an admin to activate it before entering marks." : "This term is closed. Marks are locked."}
                 </CardContent></Card>
               ) : (
-                <Card>
-                  <Table>
+                <Card className="overflow-hidden border-indigo-100 shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+                  <div className="overflow-x-auto">
+                  <Table className="min-w-[700px] md:min-w-0">
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="bg-indigo-50/50 hover:bg-indigo-50/50">
                         <TableHead>Student</TableHead>
                         <TableHead>Class</TableHead>
                         <TableHead>Subjects</TableHead>
@@ -1066,7 +1106,7 @@ export default function SemesterEngine() {
                               ) : "-"}
                             </TableCell>
                             <TableCell>
-                              <Button size="sm" variant="outline" onClick={() => openMarksDialog(s)}>
+                              <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => openMarksDialog(s)}>
                                 {sm.length > 0 ? "Edit" : "Enter"} Marks
                               </Button>
                             </TableCell>
@@ -1075,6 +1115,7 @@ export default function SemesterEngine() {
                       })}
                     </TableBody>
                   </Table>
+                  </div>
                 </Card>
               )}
             </TabsContent>
@@ -1136,10 +1177,12 @@ export default function SemesterEngine() {
                   </CardContent>
                 </Card>
               ) : (
-                <Card>
-                  <Table>
+                <Card className="overflow-hidden border-indigo-100 shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+                  <div className="overflow-x-auto">
+                  <Table className="min-w-[700px] md:min-w-0">
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="bg-indigo-50/50 hover:bg-indigo-50/50">
                         <TableHead>Student</TableHead>
                         <TableHead>Class</TableHead>
                         <TableHead>GPA</TableHead>
@@ -1184,6 +1227,7 @@ export default function SemesterEngine() {
                       })}
                     </TableBody>
                   </Table>
+                  </div>
                 </Card>
               )}
             </TabsContent>
@@ -1206,20 +1250,20 @@ export default function SemesterEngine() {
               ) : (
               <Card>
                 <CardContent className="py-8 space-y-4">
-                  <div className="flex items-center gap-4 flex-wrap">
-                    <div className="p-4 bg-green-50 rounded-lg text-center min-w-[80px]">
-                      <p className="font-bold text-2xl text-green-700">{Object.values(progressions).filter((p) => p.promotion_status === "promoted").length}</p>
-                      <p className="text-xs text-green-600 mt-1">Promoted</p>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center min-w-[90px] flex-1 sm:flex-none">
+                      <p className="font-bold text-2xl text-emerald-700">{Object.values(progressions).filter((p) => p.promotion_status === "promoted").length}</p>
+                      <p className="text-xs text-emerald-600 mt-1 font-medium">Promoted</p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                    <div className="p-4 bg-red-50 rounded-lg text-center min-w-[80px]">
+                    <ArrowRight className="h-5 w-5 text-indigo-300 hidden sm:block" />
+                    <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-center min-w-[90px] flex-1 sm:flex-none">
                       <p className="font-bold text-2xl text-red-700">{Object.values(progressions).filter((p) => p.promotion_status === "retained").length}</p>
-                      <p className="text-xs text-red-600 mt-1">Retained</p>
+                      <p className="text-xs text-red-600 mt-1 font-medium">Retained</p>
                     </div>
-                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                    <div className="p-4 bg-gray-50 rounded-lg text-center min-w-[80px]">
-                      <p className="font-bold text-2xl text-gray-700">{filteredStudents.length - Object.values(progressions).length}</p>
-                      <p className="text-xs text-gray-500 mt-1">Pending</p>
+                    <ArrowRight className="h-5 w-5 text-indigo-300 hidden sm:block" />
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl text-center min-w-[90px] flex-1 sm:flex-none">
+                      <p className="font-bold text-2xl text-slate-700">{filteredStudents.length - Object.values(progressions).length}</p>
+                      <p className="text-xs text-slate-500 mt-1 font-medium">Pending</p>
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground max-w-lg">
@@ -1244,8 +1288,8 @@ export default function SemesterEngine() {
 
       {/* Year Dialog */}
       <Dialog open={showYearForm} onOpenChange={setShowYearForm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>New Academic Year</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)]">
+  <DialogHeader><DialogTitle className="flex items-center gap-2"><BookOpen className="h-4 w-4 text-indigo-600" /> New Academic Year</DialogTitle></DialogHeader>
           <div className="space-y-3 mt-2">
             <div><Label>Year Name *</Label><Input className="mt-1" placeholder="e.g. 2026-27" value={yearForm.name} onChange={(e) => setYearForm((f) => ({ ...f, name: e.target.value }))} /></div>
             <div className="grid grid-cols-2 gap-3">
@@ -1264,7 +1308,7 @@ export default function SemesterEngine() {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowYearForm(false)}>Cancel</Button>
-              <Button onClick={saveYear} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveYear} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button>
             </div>
           </div>
         </DialogContent>
@@ -1272,8 +1316,8 @@ export default function SemesterEngine() {
 
       {/* Semester Dialog */}
       <Dialog open={showSemForm} onOpenChange={setShowSemForm}>
-        <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>New Semester / Term</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)]">
+  <DialogHeader><DialogTitle className="flex items-center gap-2"><Clock className="h-4 w-4 text-indigo-600" /> New Semester / Term</DialogTitle></DialogHeader>
           <div className="space-y-3 mt-2">
             <div>
               <Label>Academic Year *</Label>
@@ -1291,7 +1335,7 @@ export default function SemesterEngine() {
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowSemForm(false)}>Cancel</Button>
-              <Button onClick={saveSemester} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveSemester} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button>
             </div>
           </div>
         </DialogContent>
@@ -1299,8 +1343,8 @@ export default function SemesterEngine() {
 
       {/* Marks Dialog */}
       <Dialog open={showMarksDialog} onOpenChange={setShowMarksDialog}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Marks — {selectedStudent?.full_name}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg w-[calc(100%-2rem)] max-h-[80vh] overflow-y-auto">
+  <DialogHeader><DialogTitle className="flex items-center gap-2"><BarChart3 className="h-4 w-4 text-indigo-600" /> Marks — {selectedStudent?.full_name}</DialogTitle></DialogHeader>
           <div className="space-y-3 mt-2">
             {marksForm.map((m, i) => (
               <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
@@ -1317,11 +1361,13 @@ export default function SemesterEngine() {
             </Button>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowMarksDialog(false)}>Cancel</Button>
-              <Button onClick={saveMarks} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save Marks</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveMarks} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save Marks</Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+      </div>
+      
     </AppLayout>
   );
 }

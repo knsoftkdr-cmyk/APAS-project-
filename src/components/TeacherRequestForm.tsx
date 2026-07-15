@@ -18,7 +18,7 @@ import {
   Languages,
   Brain,
   Music,
-  Dumbbell,
+  Dumbbell, 
   Users,
   UserCircle,
   Leaf,
@@ -200,7 +200,7 @@ if (error) {
     }
   };
 
-  const statusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
+const statusVariant = (status: string): "default" | "secondary" | "destructive" | "outline" => {
     switch (status) {
       case "pending": return "secondary";
       case "approved": return "default";
@@ -208,6 +208,17 @@ if (error) {
       case "assigned": return "outline";
       case "completed": return "default";
       default: return "secondary";
+    }
+  };
+
+  const statusColorClass = (status: string) => {
+    switch (status) {
+      case "pending": return "bg-amber-100 text-amber-800 hover:bg-amber-100";
+      case "approved": return "bg-emerald-500 text-white hover:bg-emerald-500";
+      case "rejected": return "bg-red-100 text-red-700 hover:bg-red-100";
+      case "assigned": return "bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100";
+      case "completed": return "bg-indigo-500 text-white hover:bg-indigo-500";
+      default: return "";
     }
   };
 const categoryIcons: Record<string, any> = {
@@ -224,30 +235,44 @@ const categoryIcons: Record<string, any> = {
 };
 
 
-  return (
-    <div className="space-y-6">
+return (
+    <div className="relative">
+      <div className="absolute -top-4 right-0 w-40 h-40 rounded-full bg-blue-200 opacity-[0.15] blur-3xl pointer-events-none" />
+      <div className="absolute top-40 left-0 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.12] blur-3xl pointer-events-none" />
+      <div className="relative z-10 space-y-6">
       {!showForm ? (
-        <Button onClick={() => setShowForm(true)} className="gap-1.5">
-          <Send className="h-4 w-4" /> New Request
-        </Button>
+        <Card className="border-2 border-dashed border-blue-200 bg-blue-50/40">
+          <CardContent className="py-10 flex flex-col items-center text-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+              <Send className="h-6 w-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="font-medium text-foreground">Ready for a new diagnostic request?</p>
+              <p className="text-sm text-muted-foreground mt-0.5">Submitting a new request will replace any existing request for the same class & section.</p>
+            </div>
+            <Button onClick={() => setShowForm(true)} className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white mt-1">
+              <Send className="h-4 w-4" /> New Request
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
       /* Request Form */
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-            <Send className="h-6 w-6 text-red-600" />
+      <Card className="border-blue-100 shadow-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-sm">
+            <Send className="h-5 w-5 md:h-6 md:w-6 text-white" />
             </div>
-            Request Diagnostic Questionnaire
+            <span className="text-base md:text-lg">Request Diagnostic Questionnaire</span>
           </CardTitle>
           <CardDescription>
             Submit a request for diagnostic questions to the School Admin. Specify the number of questions per intelligence category.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-5 pt-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <Label>Class</Label>
+              <Label className="text-sm font-semibold text-foreground">Class</Label>
               <Select value={className} onValueChange={setClassName}>
                 <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
                 <SelectContent>
@@ -258,61 +283,77 @@ const categoryIcons: Record<string, any> = {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Section</Label>
-              <Input value={section} onChange={(e) => setSection(e.target.value)} placeholder="e.g. A, B, C" />
+              <Label className="text-sm font-semibold text-foreground">Section</Label>
+              <Input value={section} onChange={(e) => setSection(e.target.value)} placeholder="e.g. A, B, C" className="focus-visible:ring-blue-400" />
             </div>
             <div className="space-y-1.5">
-              <Label>Type</Label>
+              <Label className="text-sm font-semibold text-foreground">Type</Label>
               <Input value="Diagnostic Test" disabled className="bg-muted" />
             </div>
           </div>
 
           {/* Question Distribution */}
-          <div className="space-y-2">
-            <Label>Question Distribution by Category</Label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {MI_CATEGORIES.map((category) => (
-                <div key={category} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
-                  <div className="flex items-center gap-2">
-  {(() => {
-    const Icon = categoryIcons[category];
-    return Icon ? (
-      <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-        <Icon className="w-6 h-6 text-blue-600" />
-      </div>
-    ) : null;
-  })()}
-  <span className="text-sm font-medium text-foreground">
-    {category}
-  </span>
-</div>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={20}
-                    value={distribution[category]}
-                    onChange={(e) => updateCategory(category, e.target.value)}
-                    className="w-20 text-center"
-                  />
-                </div>
-              ))}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <Label className="text-sm font-semibold text-foreground">Question Distribution by Category</Label>
+              <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${totalQuestions < 5 || totalQuestions > 200 ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
+                {totalQuestions} / 200 questions
+              </span>
             </div>
-            <p className="text-sm font-medium text-foreground">
-              Total Questions: <span className="text-primary">{totalQuestions}</span>
-            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {MI_CATEGORIES.map((category, idx) => {
+                const palette = [
+                  "bg-blue-100 text-blue-600",
+                  "bg-indigo-100 text-indigo-600",
+                  "bg-cyan-100 text-cyan-600",
+                  "bg-sky-100 text-sky-600",
+                ];
+                const colorClass = palette[idx % palette.length];
+                return (
+                  <div key={category} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white p-3 hover:border-blue-200 hover:shadow-sm transition-all">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      {(() => {
+                        const Icon = categoryIcons[category];
+                        return Icon ? (
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${colorClass}`}>
+                            <Icon className="w-5 h-5" />
+                          </div>
+                        ) : null;
+                      })()}
+                      <span className="text-sm font-medium text-foreground truncate">
+                        {category}
+                      </span>
+                    </div>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={distribution[category]}
+                      onChange={(e) => updateCategory(category, e.target.value)}
+                      className="w-16 md:w-20 text-center shrink-0 focus-visible:ring-blue-400"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-2.5 flex items-center justify-between">
+              <span className="text-sm text-blue-900">Total Questions</span>
+              <span className="text-base font-bold text-blue-700">{totalQuestions}</span>
+            </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Purpose / Rationale</Label>
+            <Label className="text-sm font-semibold text-foreground">Purpose / Rationale</Label>
             <Textarea
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
               placeholder="Describe why this diagnostic is needed, target learning outcomes, etc."
               rows={3}
+              className="focus-visible:ring-blue-400"
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={submitting} className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white">
+          <Button onClick={handleSubmit} disabled={submitting} className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm">
             {submitting ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4 mr-1" />}
             Submit Request
           </Button>
@@ -321,37 +362,51 @@ const categoryIcons: Record<string, any> = {
       )}
 
       {/* My Requests */}
-      <Card>
-        <CardHeader>
-          <CardTitle>My Diagnostic Requests</CardTitle>
+      <Card className="border-blue-100 shadow-sm overflow-hidden">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm border border-blue-100">
+              <ClipboardList className="h-5 w-5 text-blue-600" />
+            </div>
+            <span className="text-base md:text-lg">My Diagnostic Requests</span>
+          </CardTitle>
           <CardDescription>Track the status of your submitted requests</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-5">
           {isLoading ? (
-            <div className="flex justify-center py-8"><LoadingSpinner /></div>
+            <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground">
+              <LoadingSpinner /> Loading your requests...
+            </div>
           ) : !requests || requests.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No requests submitted yet.</p>
+            <div className="flex flex-col items-center text-center gap-2 py-10">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <ClipboardList className="h-6 w-6 text-blue-300" />
+              </div>
+              <p className="text-sm text-muted-foreground">No requests submitted yet.</p>
+            </div>
           ) : (
+            <>
+            <div className="hidden md:block">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Total Questions</TableHead>
-                  <TableHead>Approved</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Admin Notes</TableHead>
-                  <TableHead>Submitted</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="text-blue-900/70">Class</TableHead>
+                  <TableHead className="text-blue-900/70">Total Questions</TableHead>
+                  <TableHead className="text-blue-900/70">Approved</TableHead>
+                  <TableHead className="text-blue-900/70">Status</TableHead>
+                  <TableHead className="text-blue-900/70">Admin Notes</TableHead>
+                  <TableHead className="text-blue-900/70">Submitted</TableHead>
                   <TableHead className="w-12"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow key={r.id} className="hover:bg-blue-50/50">
                     <TableCell className="font-medium">{r.class_name} - {r.section}</TableCell>
                     <TableCell>{r.suggested_count}</TableCell>
                     <TableCell>{r.approved_count ?? "—"}</TableCell>
                     <TableCell>
-                      <Badge variant={statusVariant(r.status)} className="gap-1 capitalize">
+                      <Badge variant={statusVariant(r.status)} className={`gap-1 capitalize ${statusColorClass(r.status)}`}>
                         {statusIcon(r.status)} {r.status}
                       </Badge>
                     </TableCell>
@@ -370,15 +425,51 @@ const categoryIcons: Record<string, any> = {
                 ))}
               </TableBody>
             </Table>
+            </div>
+
+            {/* Mobile card list */}
+            <div className="md:hidden space-y-3">
+              {requests.map((r) => (
+                <div key={r.id} className="rounded-xl border border-border p-3.5 space-y-2.5 bg-white">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="font-medium text-foreground text-sm">{r.class_name} - {r.section}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Submitted {new Date(r.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <Badge variant={statusVariant(r.status)} className={`gap-1 capitalize shrink-0 ${statusColorClass(r.status)}`}>
+                      {statusIcon(r.status)} {r.status}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>Requested: <span className="font-medium text-foreground">{r.suggested_count}</span></span>
+                    <span>Approved: <span className="font-medium text-foreground">{r.approved_count ?? "—"}</span></span>
+                  </div>
+                  {r.admin_notes && (
+                    <p className="text-xs text-muted-foreground truncate">Note: {r.admin_notes}</p>
+                  )}
+                  <Button variant="outline" size="sm" className="w-full gap-1.5" onClick={() => setViewRequest(r)}>
+                    <Eye className="h-3.5 w-3.5" /> View Details
+                  </Button>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
 
       {/* View Details Dialog */}
       <Dialog open={!!viewRequest} onOpenChange={(open) => !open && setViewRequest(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg w-[calc(100%-2rem)] sm:w-full max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Request Details</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                <ClipboardList className="h-4 w-4 text-blue-600" />
+              </div>
+              Request Details
+            </DialogTitle>
           </DialogHeader>
           {viewRequest && (
             <div className="space-y-4">
@@ -390,7 +481,7 @@ const categoryIcons: Record<string, any> = {
                 <div>
                   <span className="text-muted-foreground">Status:</span>
                   <div className="mt-0.5">
-                    <Badge variant={statusVariant(viewRequest.status)} className="gap-1 capitalize">
+                    <Badge variant={statusVariant(viewRequest.status)} className={`gap-1 capitalize ${statusColorClass(viewRequest.status)}`}>
                       {statusIcon(viewRequest.status)} {viewRequest.status}
                     </Badge>
                   </div>
@@ -410,11 +501,11 @@ const categoryIcons: Record<string, any> = {
               {viewRequest.question_distribution && (
                 <div>
                   <span className="text-sm text-muted-foreground">Question Distribution:</span>
-                  <div className="mt-1 grid grid-cols-1 gap-1">
+                  <div className="mt-1.5 grid grid-cols-1 gap-1.5">
                     {Object.entries(viewRequest.question_distribution as QuestionDistribution).map(([cat, count]) => (
-                      <div key={cat} className="flex justify-between text-sm bg-muted/50 rounded px-3 py-1.5">
+                      <div key={cat} className="flex justify-between text-sm bg-blue-50 border border-blue-100 rounded-lg px-3 py-1.5">
                         <span className="text-foreground">{cat}</span>
-                        <span className="font-medium text-foreground">{count} Qs</span>
+                        <span className="font-semibold text-blue-700">{count} Qs</span>
                       </div>
                     ))}
                   </div>
@@ -442,6 +533,7 @@ const categoryIcons: Record<string, any> = {
           )}
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 };
