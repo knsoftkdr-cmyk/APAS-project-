@@ -200,7 +200,7 @@ export default function TeacherAppointmentsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-violet-500 to-indigo-500 p-6 md:p-8 text-white">
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-1">
@@ -214,37 +214,40 @@ export default function TeacherAppointmentsPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 border-b border-border">
-          {(
-            [
-              { key: "book", label: "Book New" },
-              { key: "upcoming", label: `Pending & Upcoming${upcoming.length ? ` (${upcoming.length})` : ""}` },
-              { key: "history", label: "History" },
-            ] as { key: TabKey; label: string }[]
-          ).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
-                activeTab === tab.key
-                  ? "bg-violet-600 text-white"
-                  : "text-muted-foreground hover:bg-muted"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+        {/* Tabs */}
+<div className="flex gap-1 bg-violet-50 border border-violet-100 p-1 rounded-full w-full sm:w-fit overflow-x-auto scrollbar-hide">
+  {(
+    [
+      { key: "book", label: "Book New" },
+      { key: "upcoming", label: `Pending & Upcoming${upcoming.length ? ` (${upcoming.length})` : ""}` },
+      { key: "history", label: "History" },
+    ] as { key: TabKey; label: string }[]
+  ).map((tab) => (
+    <button
+      key={tab.key}
+      onClick={() => setActiveTab(tab.key)}
+      className={`px-4 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
+        activeTab === tab.key
+          ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm"
+          : "text-slate-500 hover:text-slate-700"
+      }`}
+    >
+      {tab.label}
+    </button>
+  ))}
+</div>
 
         {/* BOOK NEW TAB */}
-        {activeTab === "book" && (
-          <div className="rounded-xl border border-border bg-card p-5 space-y-5">
-            {navState.parentName && (
-              <p className="text-sm text-muted-foreground">
-                Prefilled from Communication — talking with <strong>{navState.parentName}</strong>
-                {navState.context ? ` (${navState.context})` : ""}. Change below if needed.
-              </p>
-            )}
+{activeTab === "book" && (
+  <div className="rounded-xl border-violet-100 bg-card shadow-sm overflow-hidden">
+    <div className="h-1 bg-gradient-to-r from-violet-500 to-indigo-500" />
+    <div className="p-4 md:p-5 space-y-5">
+    {navState.parentName && (
+  <div className="text-sm bg-violet-50 border border-violet-100 text-violet-800 rounded-lg px-3 py-2.5">
+    Prefilled from Communication — talking with <strong>{navState.parentName}</strong>
+    {navState.context ? ` (${navState.context})` : ""}. Change below if needed.
+  </div>
+)}
 
             {/* Parent selector */}
             <div className="space-y-1.5">
@@ -255,7 +258,7 @@ export default function TeacherAppointmentsPage() {
                 <EmptyState text="No parents found for your classes yet." />
               ) : (
                 <Select value={selectedParentId} onValueChange={setSelectedParentId}>
-                  <SelectTrigger>
+                  <SelectTrigger className="border-slate-200 focus:ring-violet-400 focus:border-violet-400">
                     <SelectValue placeholder="Select parent" />
                   </SelectTrigger>
                   <SelectContent>
@@ -284,7 +287,7 @@ export default function TeacherAppointmentsPage() {
                       setSelectedChild(children.find((c) => c.studentId === id) ?? null)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-slate-200 focus:ring-violet-400 focus:border-violet-400">
                       <SelectValue placeholder="Select child" />
                     </SelectTrigger>
                     <SelectContent>
@@ -309,26 +312,28 @@ export default function TeacherAppointmentsPage() {
                   <EmptyState text="You have no open slots in the next 14 days. Add availability first." />
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1">
-                    {slots.map((slot) => {
-                      const isSelected =
-                        selectedSlot?.date === slot.date &&
-                        selectedSlot?.startTime === slot.startTime;
-                      return (
-                        <button
-                          key={`${slot.date}_${slot.startTime}`}
-                          onClick={() => setSelectedSlot(slot)}
-                          className={`rounded-lg border px-2 py-2 text-xs text-left transition-colors ${
-                            isSelected
-                              ? "border-violet-500 bg-violet-50 text-violet-900"
-                              : "border-border hover:border-violet-300 hover:bg-violet-50/50"
-                          }`}
-                        >
-                          <div className="font-medium">{formatDateShort(slot.date)}</div>
-                          <div className="text-muted-foreground">{slot.startTime}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
+  {slots.map((slot) => {
+    const isSelected =
+      selectedSlot?.date === slot.date &&
+      selectedSlot?.startTime === slot.startTime;
+    return (
+      <button
+        key={`${slot.date}_${slot.startTime}`}
+        onClick={() => setSelectedSlot(slot)}
+        className={`rounded-xl border-2 px-2.5 py-2.5 text-xs text-left transition-all ${
+          isSelected
+            ? "border-violet-500 bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm"
+            : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
+        }`}
+      >
+        <div className={`font-semibold ${isSelected ? "text-white" : "text-slate-700"}`}>{formatDateShort(slot.date)}</div>
+        <div className={`flex items-center gap-1 mt-0.5 ${isSelected ? "text-violet-100" : "text-muted-foreground"}`}>
+          <Clock className="h-3 w-3" /> {slot.startTime}
+        </div>
+      </button>
+    );
+  })}
+</div>
                 )}
               </div>
             )}
@@ -365,27 +370,27 @@ export default function TeacherAppointmentsPage() {
                 <div className="space-y-1.5">
                   <Label>Meeting mode</Label>
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => setMeetingMode("in_person")}
-                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
-                        meetingMode === "in_person"
-                          ? "border-violet-500 bg-violet-50 text-violet-900"
-                          : "border-border"
-                      }`}
-                    >
-                      <MapPin className="h-4 w-4" /> In person
-                    </button>
-                    <button
-                      onClick={() => setMeetingMode("virtual")}
-                      className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
-                        meetingMode === "virtual"
-                          ? "border-violet-500 bg-violet-50 text-violet-900"
-                          : "border-border"
-                      }`}
-                    >
-                      <Video className="h-4 w-4" /> Virtual
-                    </button>
-                  </div>
+  <button
+    onClick={() => setMeetingMode("in_person")}
+    className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all ${
+      meetingMode === "in_person"
+        ? "border-violet-500 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-sm"
+        : "border-slate-200 text-slate-600 hover:border-violet-300"
+    }`}
+  >
+    <MapPin className="h-4 w-4" /> In person
+  </button>
+  <button
+    onClick={() => setMeetingMode("virtual")}
+    className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all ${
+      meetingMode === "virtual"
+        ? "border-violet-500 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-sm"
+        : "border-slate-200 text-slate-600 hover:border-violet-300"
+    }`}
+  >
+    <Video className="h-4 w-4" /> Virtual
+  </button>
+</div>
                 </div>
 
                 {meetingMode === "virtual" && (
@@ -401,10 +406,10 @@ export default function TeacherAppointmentsPage() {
                 )}
 
                 <Button
-                  onClick={handleBookWithParent}
-                  disabled={submitting}
-                  className="w-full bg-violet-600 hover:bg-violet-700"
-                >
+  onClick={handleBookWithParent}
+  disabled={submitting}
+  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm"
+>
                   {submitting ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending request...
@@ -416,6 +421,7 @@ export default function TeacherAppointmentsPage() {
               </div>
             )}
           </div>
+          </div>
         )}
 
         {/* PENDING & UPCOMING TAB */}
@@ -423,51 +429,58 @@ export default function TeacherAppointmentsPage() {
           loading ? (
             <div className="p-6 text-center">Loading appointments...</div>
           ) : upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground border border-dashed p-6 rounded-lg bg-card text-center">
-              No active appointment requests right now.
+  <EmptyState text="No active appointment requests right now." />
+) : (
+  <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
+    {upcoming.map((appt) => {
+      const awaitingParent = appt.requestedBy === "teacher" && appt.status === "pending";
+      const awaitingTeacher = appt.requestedBy === "parent" && appt.status === "pending";
+      return (
+        <div
+          key={appt.id}
+          className={`p-4 border-l-4 ${
+            appt.status === "confirmed" ? "border-l-emerald-400" : "border-l-amber-400"
+          } border border-slate-200 rounded-xl shadow-sm bg-card flex flex-col justify-between`}
+        >
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2.5 gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-violet-100 text-violet-800 px-2.5 py-1 rounded-full">
+                <div className="w-4 h-4 rounded-full bg-violet-300 flex items-center justify-center text-[9px] text-violet-900">
+                  {(appt.parentName || "P")[0]}
+                </div>
+                {appt.parentName || `Parent ID: ${appt.parentId?.slice(0, 8)}...`}
+              </span>
+              <span
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                  appt.status === "confirmed"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {appt.status}
+              </span>
+            </div>
+            <h3 className="font-semibold text-base text-slate-800">{appt.studentName || "Linked Student"}</h3>
+            <p className="text-sm text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="flex items-center gap-1"><CalendarCheck className="h-3.5 w-3.5 text-violet-400" /> {appt.appointmentDate}</span>
+              <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-violet-400" /> {appt.startTime?.slice(0, 5)}–{appt.endTime?.slice(0, 5)}</span>
             </p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {upcoming.map((appt) => {
-                const awaitingParent = appt.requestedBy === "teacher" && appt.status === "pending";
-                const awaitingTeacher = appt.requestedBy === "parent" && appt.status === "pending";
-                return (
-                  <div key={appt.id} className="p-4 border rounded-xl shadow-sm bg-card flex flex-col justify-between">
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase bg-purple-100 text-purple-800 px-2 py-0.5 rounded">
-                          {appt.parentName || `Parent ID: ${appt.parentId?.slice(0, 8)}...`}
-                        </span>
-                        <span
-                          className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${
-                            appt.status === "confirmed"
-                              ? "bg-green-100 text-green-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {appt.status}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-base">Student: {appt.studentName || "Linked Student"}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        📅 {appt.appointmentDate} | ⏰ {appt.startTime?.slice(0, 5)} - {appt.endTime?.slice(0, 5)}
-                      </p>
-                      <p className="text-xs mt-2 bg-muted p-2 border rounded italic">
-                        <strong>Reason:</strong> {appt.reasonCategory?.replace("_", " ")}
-                        {appt.reasonNote && ` — "${appt.reasonNote}"`}
-                      </p>
-                      {awaitingParent && (
-                        <p className="text-xs mt-2 text-amber-700">
-                          You requested this meeting — waiting for the parent to confirm.
-                        </p>
-                      )}
-                    </div>
+            <p className="text-xs mt-2.5 bg-violet-50/60 p-2.5 border border-violet-100 rounded-lg italic text-slate-600">
+              <strong className="text-slate-700 not-italic">Reason:</strong> {appt.reasonCategory?.replace("_", " ")}
+              {appt.reasonNote && ` — "${appt.reasonNote}"`}
+            </p>
+            {awaitingParent && (
+              <p className="text-xs mt-2.5 text-amber-700 flex items-center gap-1">
+                <Clock className="h-3 w-3" /> You requested this meeting — waiting for the parent to confirm.
+              </p>
+            )}
+          </div>
 
                     {awaitingTeacher && decliningId !== appt.id && (
-                      <div className="flex gap-2 border-t pt-3 mt-2">
+                      <div className="flex gap-2 border-t border-slate-100 pt-3 mt-2">
                         <button
                           onClick={() => handleAccept(appt.id)}
-                          className="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-2 px-3 rounded-lg"
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-xs font-semibold py-2.5 px-3 rounded-lg shadow-sm"
                         >
                           <Check className="h-3.5 w-3.5" /> Accept
                         </button>
@@ -476,7 +489,7 @@ export default function TeacherAppointmentsPage() {
                             setDecliningId(appt.id);
                             setDeclineReason("");
                           }}
-                          className="flex-1 flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-medium py-2 px-3 rounded-lg"
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-semibold py-2.5 px-3 rounded-lg"
                         >
                           <X className="h-3.5 w-3.5" /> Decline
                         </button>
@@ -523,29 +536,33 @@ export default function TeacherAppointmentsPage() {
         {/* HISTORY TAB */}
         {activeTab === "history" && (
           loading ? (
-            <div className="p-6 text-center">Loading history...</div>
+            <LoadingRow label="Loading history..." />
           ) : history.length === 0 ? (
-            <p className="text-xs text-muted-foreground">No historical logs found.</p>
+            <EmptyState text="No historical logs found." />
           ) : (
-            <div className="grid gap-2 bg-muted border rounded-xl p-4">
+            <div className="space-y-2">
               {history.map((appt) => (
-                <div key={appt.id} className="flex flex-col text-xs py-2 border-b last:border-none text-muted-foreground">
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="font-medium text-foreground">{appt.studentName || "Student"}</span> •{" "}
-                      {appt.appointmentDate} at {appt.startTime?.slice(0, 5)}
-                    </div>
-                    <span
-                      className={`font-semibold uppercase text-[10px] px-2 py-0.5 rounded ${
-                        appt.status === "completed" ? "bg-gray-200 text-gray-700" : "bg-red-50 text-red-700"
-                      }`}
-                    >
-                      {appt.status}
-                    </span>
+                <div
+                  key={appt.id}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs p-3 rounded-xl border-l-4 ${
+                    appt.status === "completed" ? "border-l-blue-300 bg-blue-50/30" : "border-l-red-300 bg-red-50/30"
+                  } border border-slate-100`}
+                >
+                  <div className="text-slate-600">
+                    <span className="font-semibold text-slate-800">{appt.studentName || "Student"}</span>
+                    <span className="mx-1.5 text-slate-300">•</span>
+                    {appt.appointmentDate} at {appt.startTime?.slice(0, 5)}
+                    {appt.status === "rejected" && appt.rejectionReason && (
+                      <p className="mt-1 italic text-red-600">Reason given: "{appt.rejectionReason}"</p>
+                    )}
                   </div>
-                  {appt.status === "rejected" && appt.rejectionReason && (
-                    <p className="mt-1 italic text-red-600">Reason given: "{appt.rejectionReason}"</p>
-                  )}
+                  <span
+                    className={`font-bold uppercase text-[10px] px-2.5 py-1 rounded-full self-start sm:self-auto shrink-0 ${
+                      appt.status === "completed" ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {appt.status}
+                  </span>
                 </div>
               ))}
             </div>

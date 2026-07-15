@@ -206,7 +206,7 @@ export default function AppointmentBooking() {
 
   return (
     <AppLayout>
-    <div className="max-w-5xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
       {/* Gradient banner header, matching Student 360 style */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-violet-500 to-indigo-500 p-6 md:p-8 text-white">
         <div className="relative z-10">
@@ -221,32 +221,34 @@ export default function AppointmentBooking() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-border">
-        {(
-          [
-            { key: "book", label: "Book New" },
-            { key: "upcoming", label: `Upcoming${upcoming.length ? ` (${upcoming.length})` : ""}` },
-            { key: "history", label: "History" },
-          ] as { key: TabKey; label: string }[]
-        ).map((tab) => (
-          <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 text-sm font-medium rounded-t-lg transition-colors ${
-              activeTab === tab.key
-                ? "bg-violet-600 text-white"
-                : "text-muted-foreground hover:bg-muted"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <div className="flex gap-1 bg-violet-50 border border-violet-100 p-1 rounded-full w-full sm:w-fit overflow-x-auto scrollbar-hide">
+          {(
+            [
+              { key: "book", label: "Book New" },
+              { key: "upcoming", label: `Upcoming${upcoming.length ? ` (${upcoming.length})` : ""}` },
+              { key: "history", label: "History" },
+            ] as { key: TabKey; label: string }[]
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2 text-sm font-medium rounded-full transition-all whitespace-nowrap ${
+                activeTab === tab.key
+                  ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-sm"
+                  : "text-slate-500 hover:text-slate-700"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
       {/* BOOK NEW TAB */}
       {activeTab === "book" && (
-        <div className="rounded-xl border border-border bg-card p-5 space-y-5">
-          {loadingChildren ? (
+        <div className="rounded-xl border-violet-100 bg-card shadow-sm overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-violet-500 to-indigo-500" />
+        <div className="p-5 space-y-5">
+        {loadingChildren ? (
             <LoadingRow label="Loading your children..." />
           ) : children.length === 0 ? (
             <EmptyState text="No student profile is linked to your account yet. Contact your school admin." />
@@ -261,7 +263,7 @@ export default function AppointmentBooking() {
                     setSelectedChild(children.find((c) => c.studentId === id) ?? null)
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-slate-200 focus:ring-violet-400 focus:border-violet-400">
                     <SelectValue placeholder="Select child" />
                   </SelectTrigger>
                   <SelectContent>
@@ -288,7 +290,7 @@ export default function AppointmentBooking() {
                       setSelectedTeacher(teachers.find((t) => t.teacherId === id) ?? null)
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-slate-200 focus:ring-violet-400 focus:border-violet-400">
                       <SelectValue placeholder="Select teacher" />
                     </SelectTrigger>
                     <SelectContent>
@@ -322,16 +324,18 @@ export default function AppointmentBooking() {
                           <button
                             key={`${slot.date}_${slot.startTime}`}
                             onClick={() => setSelectedSlot(slot)}
-                            className={`rounded-lg border px-2 py-2 text-xs text-left transition-colors ${
+                            className={`rounded-xl border-2 px-2.5 py-2.5 text-xs text-left transition-all ${
                               isSelected
-                                ? "border-violet-500 bg-violet-50 text-violet-900"
-                                : "border-border hover:border-violet-300 hover:bg-violet-50/50"
+                                ? "border-violet-500 bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm"
+                                : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
                             }`}
                           >
-                            <div className="font-medium">
+                            <div className={`font-semibold ${isSelected ? "text-white" : "text-slate-700"}`}>
                               {formatDateShort(slot.date)}
                             </div>
-                            <div className="text-muted-foreground">{slot.startTime}</div>
+                            <div className={`flex items-center gap-1 mt-0.5 ${isSelected ? "text-violet-100" : "text-muted-foreground"}`}>
+                              <Clock className="h-3 w-3" /> {slot.startTime}
+                            </div>
                           </button>
                         );
                       })}
@@ -377,20 +381,20 @@ export default function AppointmentBooking() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setMeetingMode("in_person")}
-                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all ${
                           meetingMode === "in_person"
-                            ? "border-violet-500 bg-violet-50 text-violet-900"
-                            : "border-border"
+                            ? "border-violet-500 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-sm"
+                            : "border-slate-200 text-slate-600 hover:border-violet-300"
                         }`}
                       >
                         <MapPin className="h-4 w-4" /> In person
                       </button>
                       <button
                         onClick={() => setMeetingMode("virtual")}
-                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm ${
+                        className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 rounded-xl border-2 px-4 py-2.5 text-sm font-medium transition-all ${
                           meetingMode === "virtual"
-                            ? "border-violet-500 bg-violet-50 text-violet-900"
-                            : "border-border"
+                            ? "border-violet-500 bg-gradient-to-r from-violet-500 to-indigo-500 text-white shadow-sm"
+                            : "border-slate-200 text-slate-600 hover:border-violet-300"
                         }`}
                       >
                         <Video className="h-4 w-4" /> Virtual
@@ -411,10 +415,10 @@ export default function AppointmentBooking() {
                   )}
 
                   <Button
-                    onClick={handleBook}
-                    disabled={submitting}
-                    className="w-full bg-violet-600 hover:bg-violet-700"
-                  >
+  onClick={handleBook}
+  disabled={submitting}
+  className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm"
+>
                     {submitting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Requesting...
@@ -427,6 +431,7 @@ export default function AppointmentBooking() {
               )}
             </>
           )}
+          </div>
         </div>
       )}
 
@@ -504,16 +509,28 @@ function AppointmentCard({
   const needsMyResponse = appt.requestedBy === "teacher" && appt.status === "pending";
   const isDeclining = decliningId === appt.id;
 
-  return (
-    <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{appt.teacherName ?? "Teacher"}</span>
-            <Badge variant="outline" className={STATUS_STYLES[appt.status]}>
-              {appt.status.replace("_", " ")}
-            </Badge>
+const statusBorder: Record<string, string> = {
+  pending: "border-l-amber-400",
+  confirmed: "border-l-emerald-400",
+  rejected: "border-l-red-400",
+  cancelled: "border-l-slate-300",
+  completed: "border-l-blue-400",
+  no_show: "border-l-red-400",
+};
+
+return (
+  <div className={`rounded-xl border-l-4 ${statusBorder[appt.status] || "border-l-slate-300"} border border-slate-200 bg-card shadow-sm p-4 flex flex-col gap-3`}>
+    <div className="flex items-start justify-between gap-4">
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+            {(appt.teacherName ?? "T")[0]}
           </div>
+          <span className="font-semibold text-slate-800">{appt.teacherName ?? "Teacher"}</span>
+          <Badge variant="outline" className={STATUS_STYLES[appt.status]}>
+            {appt.status.replace("_", " ")}
+          </Badge>
+        </div>
           <div className="text-sm text-muted-foreground flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
             {formatDateShort(appt.appointmentDate)} · {appt.startTime}–{appt.endTime}
@@ -555,20 +572,20 @@ function AppointmentCard({
       </div>
 
       {needsMyResponse && !isDeclining && onAccept && onStartDecline && (
-        <div className="flex gap-2 border-t border-border pt-3">
-          <button
-            onClick={() => onAccept(appt.id)}
-            className="flex-1 flex items-center justify-center gap-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium py-2 px-3 rounded-lg"
-          >
-            <Check className="h-3.5 w-3.5" /> Confirm
-          </button>
-          <button
-            onClick={() => onStartDecline(appt.id)}
-            className="flex-1 flex items-center justify-center gap-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-medium py-2 px-3 rounded-lg"
-          >
-            <X className="h-3.5 w-3.5" /> Decline
-          </button>
-        </div>
+        <div className="flex gap-2 border-t border-slate-100 pt-3">
+  <button
+    onClick={() => onAccept(appt.id)}
+    className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white text-xs font-semibold py-2.5 px-3 rounded-lg shadow-sm"
+  >
+    <Check className="h-3.5 w-3.5" /> Confirm
+  </button>
+  <button
+    onClick={() => onStartDecline(appt.id)}
+    className="flex-1 flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 text-xs font-semibold py-2.5 px-3 rounded-lg"
+  >
+    <X className="h-3.5 w-3.5" /> Decline
+  </button>
+</div>
       )}
 
       {isDeclining && onDeclineReasonChange && onDeclineConfirm && onDeclineCancel && (
@@ -605,15 +622,18 @@ function AppointmentCard({
 function LoadingRow({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground py-3">
-      <Loader2 className="h-4 w-4 animate-spin" /> {label}
+      <Loader2 className="h-4 w-4 animate-spin text-violet-500" /> {label}
     </div>
   );
 }
 
 function EmptyState({ text }: { text: string }) {
   return (
-    <div className="text-sm text-muted-foreground py-6 text-center border border-dashed border-border rounded-lg">
-      {text}
+    <div className="py-8 text-center border-2 border-dashed border-violet-100 rounded-xl bg-violet-50/30">
+      <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center mx-auto mb-2">
+        <CalendarCheck className="h-5 w-5 text-violet-400" />
+      </div>
+      <p className="text-sm text-muted-foreground">{text}</p>
     </div>
   );
 }
