@@ -681,7 +681,7 @@ try {
           </div>
         </div>
         {viewingTimetable ? (
-          <Card className="border-2 border-blue-100">
+          <Card className="border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-blue-700">
                 <CalendarDays className="h-5 w-5" />{viewingLabel}
@@ -720,7 +720,7 @@ try {
           </div>
         </div>
         {teacherRotationDuties.length > 0 && (
-          <Card className="border-2 border-indigo-100">
+          <Card className="border-indigo-100 bg-white/80 backdrop-blur-sm shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-indigo-700">
                 <CalendarDays className="h-5 w-5" />Today's Rotation Duties
@@ -748,7 +748,7 @@ try {
           </Card>
         )}
         {viewingTimetable ? (
-          <Card className="border-2 border-green-100">
+          <Card className="border-green-100 bg-white/80 backdrop-blur-sm shadow-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-green-700">
                 <User className="h-5 w-5" />{viewingLabel}
@@ -790,7 +790,7 @@ try {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Left - list */}
           <div className="lg:col-span-1">
-            <Card className="border-2 border-slate-200">
+            <Card className="border-slate-100 bg-white/80 backdrop-blur-sm shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />All Timetables
@@ -845,7 +845,7 @@ try {
 
           {/* Right - viewer */}
           <div className="lg:col-span-2">
-            <Card className="border-2 border-slate-200 min-h-[500px]">
+            <Card className="border-slate-100 bg-white/80 backdrop-blur-sm shadow-sm min-h-[500px]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-purple-600" />
@@ -875,7 +875,14 @@ try {
   // ── Principal / Admin view ─────────────────────────────────────────────────
   return (
     <AppLayout>
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      <div className="min-h-screen relative overflow-x-hidden">
+        <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#3b82f6" />
+        </svg>
+        <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#4f46e5" />
+        </svg>
+      <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-8 text-white">
           <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
@@ -936,17 +943,17 @@ try {
         )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-                <TabsTrigger value="class" className="flex-1 gap-1.5">
+          <TabsList className="w-full bg-slate-100 rounded-full p-1 h-11">
+                <TabsTrigger value="class" className="flex-1 gap-1.5 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
                   <BookOpen className="h-4 w-4" />Class
                 </TabsTrigger>
-                <TabsTrigger value="teacher" className="flex-1 gap-1.5">
+                <TabsTrigger value="teacher" className="flex-1 gap-1.5 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
                   <Users className="h-4 w-4" />Teacher
                 </TabsTrigger>
-                <TabsTrigger value="whatif" className="flex-1 gap-1.5">
+                <TabsTrigger value="whatif" className="flex-1 gap-1.5 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
                   <Users className="h-4 w-4" />What-If
                 </TabsTrigger>
-                <TabsTrigger value="substitutes" className="flex-1 gap-1.5">
+                <TabsTrigger value="substitutes" className="flex-1 gap-1.5 rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
                   <Users className="h-4 w-4" />Substitutes
                 </TabsTrigger>
           </TabsList>
@@ -957,7 +964,8 @@ try {
 
               {/* Class upload tab */}
               <TabsContent value="class">
-                <Card className="border-2 border-blue-100">
+                <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-blue-700 text-base">
                       <Upload className="h-4 w-4" />Upload Class Timetable
@@ -993,9 +1001,10 @@ try {
 
               {/* Teacher upload tab */}
               <TabsContent value="teacher">
-                <Card className="border-2 border-green-100">
+                <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm">
+                  <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-700 text-base">
+                    <CardTitle className="flex items-center gap-2 text-blue-700 text-base">
                       <Upload className="h-4 w-4" />Upload Teacher Timetable
                     </CardTitle>
                   </CardHeader>
@@ -1029,7 +1038,7 @@ try {
                       </div>
                       <input ref={teacherFileRef} type="file" accept=".xlsx" className="hidden" onChange={e => setTeacherFile(e.target.files?.[0] ?? null)} />
                     </div>
-                    <Button className="w-full bg-green-600 hover:bg-green-700" onClick={handleUploadTeacher} disabled={uploadingTeacher}>
+                    <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleUploadTeacher} disabled={uploadingTeacher}>
                       {uploadingTeacher ? <LoadingSpinner size="sm" /> : <><Upload className="h-4 w-4 mr-2" />Upload</>}
                     </Button>
                   </CardContent>
@@ -1037,14 +1046,20 @@ try {
               </TabsContent>
               {/* What-If tab */}
               <TabsContent value="whatif">
-                <Card className="border-2 border-amber-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold text-amber-700 flex items-center gap-2">
-                      <Users className="h-4 w-4" />What-If: Teacher Absence
-                    </CardTitle>
-                    <CardDescription className="text-xs">See which classes are affected and who's free to substitute</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm p-0">
+                  <div className="p-5 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600">
+                    <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+                    <div className="relative flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                        <Users className="h-4.5 w-4.5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-white">What-If: Teacher Absence</h3>
+                        <p className="text-blue-50 text-xs mt-1">See which classes are affected and who's free to substitute.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <CardContent className="space-y-3 pt-5">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Teacher</Label>
                       <Select value={absenceTeacherId} onValueChange={setAbsenceTeacherId}>
@@ -1072,7 +1087,7 @@ try {
                       </Select>
                     </div>
                     <Button
-                      className="w-full bg-amber-600 hover:bg-amber-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700"
                       onClick={handleSimulateAbsence}
                       disabled={checkingAbsence || !absenceTeacherId}
                     >
@@ -1084,9 +1099,9 @@ try {
                           <p className="text-sm text-muted-foreground">{absenceResults.teacherName} has no classes on {absenceResults.day}.</p>
                         ) : (
                           absenceResults.impact.map((imp, i) => (
-                            <div key={i} className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-sm">
-                              <p className="font-semibold text-amber-800">{imp.className}-{imp.section}, {imp.period} ({imp.subject})</p>
-                              <p className="text-xs text-amber-700 mt-1">
+                            <div key={i} className="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-sm">
+                              <p className="font-semibold text-blue-800">{imp.className}-{imp.section}, {imp.period} ({imp.subject})</p>
+                              <p className="text-xs text-blue-700 mt-1">
                                 Free to substitute: {imp.candidateSubstitutes.length > 0 ? imp.candidateSubstitutes.join(", ") : "No one free — reschedule needed"}
                               </p>
                             </div>
@@ -1099,14 +1114,20 @@ try {
               </TabsContent>
               {/* Substitute Automation tab */}
               <TabsContent value="substitutes">
-                <Card className="border-2 border-rose-200">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-semibold text-rose-700 flex items-center gap-2">
-                      <Users className="h-4 w-4" />Substitute Automation
-                    </CardTitle>
-                    <CardDescription className="text-xs">Automatically assign and save substitutes for an absent teacher</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
+                <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm p-0">
+                  <div className="p-5 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600">
+                    <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+                    <div className="relative flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
+                        <Users className="h-4.5 w-4.5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-white">Substitute Automation</h3>
+                        <p className="text-blue-50 text-xs mt-1">Automatically assign and save substitutes for an absent teacher.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <CardContent className="space-y-3 pt-5">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Absent Teacher</Label>
                       <Select value={substituteTeacherId} onValueChange={setSubstituteTeacherId}>
@@ -1134,7 +1155,7 @@ try {
                       </Select>
                     </div>
                     <Button
-                      className="w-full bg-rose-600 hover:bg-rose-700"
+                      className="w-full bg-blue-600 hover:bg-blue-700"
                       onClick={async () => { await handleAssignSubstitutes(); await fetchSubstituteAssignments(); }}
                       disabled={assigningSubstitutes || !substituteTeacherId}
                     >
@@ -1162,12 +1183,13 @@ try {
                 </Card>
 
                 {/* Persistent substitute assignments table - visible to all, approve restricted to principal/admin */}
-                <Card className="border-2 border-rose-100 mt-4">
+                <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm mt-4">
+                  <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm font-semibold text-rose-700 flex items-center gap-2">
+                      <CardTitle className="text-sm font-semibold text-blue-700 flex items-center gap-2">
                         <Users className="h-4 w-4" />Substitute Assignments
-                        <Badge className="bg-rose-100 text-rose-700 ml-1">{substituteAssignments.length}</Badge>
+                        <Badge className="bg-blue-100 text-blue-700 ml-1">{substituteAssignments.length}</Badge>
                       </CardTitle>
                       <Button variant="ghost" size="icon" onClick={fetchSubstituteAssignments} className="h-7 w-7">
                         <RefreshCw className="h-3.5 w-3.5" />
@@ -1277,7 +1299,8 @@ try {
               </TabsContent>
             {/* Timetables list */}
             {activeTab !== "whatif" && activeTab !== "substitutes" && (
-            <Card className="border-2 border-slate-200">
+            <Card className="overflow-hidden border-slate-100 bg-white/80 backdrop-blur-sm shadow-sm">
+              <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
@@ -1357,7 +1380,8 @@ try {
           {/* Viewer */}
           {activeTab !== "whatif" && activeTab !== "substitutes" && (
           <div className="lg:col-span-3">
-            <Card className="border-2 border-slate-200 min-h-[500px]">
+            <Card className="overflow-hidden border-slate-100 bg-white/80 backdrop-blur-sm shadow-sm min-h-[500px]">
+              <div className="h-1 bg-gradient-to-r from-blue-400 to-indigo-500" />
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GraduationCap className="h-5 w-5 text-blue-600" />
@@ -1372,7 +1396,9 @@ try {
                   <div className="flex items-center justify-center py-20"><LoadingSpinner size="lg" /></div>
                 ) : viewingTimetable ? renderTimetable() : (
                   <div className="flex flex-col items-center justify-center py-20 text-center">
-                    <CalendarDays className="h-16 w-16 text-slate-200 mb-4" />
+                    <div className="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mb-4">
+                      <CalendarDays className="h-8 w-8 text-blue-300" />
+                    </div>
                     <p className="text-slate-400 font-medium">No timetable selected</p>
                     <p className="text-slate-300 text-sm mt-1">Upload or click a timetable to preview</p>
                   </div>
@@ -1383,6 +1409,7 @@ try {
           )}
         </div>
       </Tabs>
+      </div>
       </div>
     </AppLayout>
   );

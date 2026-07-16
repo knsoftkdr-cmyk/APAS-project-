@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { GraduationCap, Plus, Trash2, Pencil, Users } from "lucide-react";
+import { GraduationCap, Plus, Trash2, Pencil, Users, BookOpen, Clock, MapPin, Sparkles } from "lucide-react";
 
 interface Teacher {
   id: string;
@@ -76,8 +76,6 @@ export default function AdminElectivesPage() {
     const [electivesRes, teachersRes, gradesRes] = await Promise.all([
       supabase.from("electives").select("*").eq("school_id", schoolId).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, full_name").eq("role", "teacher").eq("school_id", schoolId),
-      // Pull real class_grade values in use at this school so the grade dropdown can't
-      // typo-mismatch against what students actually have on their profile.
       supabase.from("profiles").select("class_grade").eq("role", "student").eq("school_id", schoolId),
     ]);
 
@@ -114,7 +112,6 @@ export default function AdminElectivesPage() {
     }));
     setElectives(merged);
     setLoading(false);
-    // Keep selectedElective in sync with fresh data (e.g. after an edit)
     setSelectedElective((prev) => (prev ? merged.find((e) => e.id === prev.id) ?? prev : prev));
   }, [schoolId]);
 
@@ -264,252 +261,235 @@ export default function AdminElectivesPage() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <GraduationCap className="h-6 w-6" /> Electives
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Create and manage elective offerings for students to choose from.
-            </p>
-          </div>
-          <Dialog
-            open={formOpen}
-            onOpenChange={(open) => {
-              setFormOpen(open);
-              if (!open) { resetForm(); setEditingId(null); }
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button onClick={openCreateDialog}>
-                <Plus className="h-4 w-4 mr-1" /> Create Elective
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingId ? "Edit Elective" : "Create New Elective"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label>Name</Label>
-                  <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Robotics Club" />
+      <div className="min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
+
+        <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 md:gap-4">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                  <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-white" />
                 </div>
                 <div>
-                  <Label>Subject</Label>
-                  <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Robotics" />
+                  <h1 className="text-xl md:text-2xl font-bold text-white">Electives</h1>
+                  <p className="text-blue-100 text-xs md:text-sm mt-0.5">Create and manage elective offerings for students to choose from</p>
                 </div>
-                <div>
-                  <Label>Grade</Label>
-                  <Select value={grade} onValueChange={setGrade}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={availableGrades.length ? "Select grade" : "No student grades found"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableGrades.map((g) => (
-                        <SelectItem key={g} value={g}>
-                          Class {g}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Teacher</Label>
-                  <Select value={teacherId} onValueChange={setTeacherId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select teacher" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teachers.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.full_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Day</Label>
-                    <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select day" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {DAYS.map((d) => (
-                          <SelectItem key={d} value={d}>
-                            {d}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Period</Label>
-                    <Input
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={periodNumber}
-                      onChange={(e) => setPeriodNumber(e.target.value)}
-                      placeholder="e.g. 7"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Capacity</Label>
-                    <Input type="number" min="1" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
-                  </div>
-                  <div>
-                    <Label>Room</Label>
-                    <Input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="e.g. Room 101" />
-                  </div>
-                </div>
-                <Button className="w-full" onClick={handleSave} disabled={saving}>
-                  {saving ? "Saving..." : editingId ? "Save Changes" : "Create Elective"}
-                </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Elective list */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-base">Electives</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
-              {!loading && electives.length === 0 && (
-                <p className="text-sm text-muted-foreground">No electives yet. Create one to get started.</p>
-              )}
-              {electives.map((e) => (
-                <div
-                  key={e.id}
-                  onClick={() => setSelectedElective(e)}
-                  className={`p-3 rounded-lg border cursor-pointer transition ${
-                    selectedElective?.id === e.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-sm">{e.name}</span>
-                    <div className="flex items-center gap-1">
-                      <Badge variant={e.is_active ? "default" : "secondary"}>
-                        {e.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={(ev) => { ev.stopPropagation(); openEditDialog(e); }}
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Class {e.grade} · {e.day_of_week}, Period {e.period_number} · {e.chosen_count}/{e.capacity} filled
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Elective detail */}
-          <div className="lg:col-span-2 space-y-6">
-            {!selectedElective && (
-              <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  Select an elective to view details and enrolled students.
-                </CardContent>
-              </Card>
-            )}
-            {selectedElective && (
-              <>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
+              <Dialog
+                open={formOpen}
+                onOpenChange={(open) => {
+                  setFormOpen(open);
+                  if (!open) { resetForm(); setEditingId(null); }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button onClick={openCreateDialog} className="bg-white text-blue-700 hover:bg-blue-50">
+                    <Plus className="h-4 w-4 mr-1" /> Create Elective
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{editingId ? "Edit Elective" : "Create New Elective"}</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
                     <div>
-                      <CardTitle className="text-base">{selectedElective.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground mt-1">{selectedElective.subject}</p>
+                      <Label>Name</Label>
+                      <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Robotics Club" />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">Active</span>
-                        <Switch
-                          checked={selectedElective.is_active}
-                          onCheckedChange={() => toggleActive(selectedElective)}
+                    <div>
+                      <Label>Subject</Label>
+                      <Input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="e.g. Robotics" />
+                    </div>
+                    <div>
+                      <Label>Grade</Label>
+                      <Select value={grade} onValueChange={setGrade}>
+                        <SelectTrigger>
+                          <SelectValue placeholder={availableGrades.length ? "Select grade" : "No student grades found"} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableGrades.map((g) => (
+                            <SelectItem key={g} value={g}>
+                              Class {g}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Teacher</Label>
+                      <Select value={teacherId} onValueChange={setTeacherId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select teacher" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teachers.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.full_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Day</Label>
+                        <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select day" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DAYS.map((d) => (
+                              <SelectItem key={d} value={d}>
+                                {d}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Period</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          max="10"
+                          value={periodNumber}
+                          onChange={(e) => setPeriodNumber(e.target.value)}
+                          placeholder="e.g. 7"
                         />
                       </div>
-                      <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => openEditDialog(selectedElective)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(selectedElective)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
                     </div>
-                  </CardHeader>
-                  <CardContent className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">Grade</p>
-                      <p className="font-medium">Class {selectedElective.grade}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Teacher</p>
-                      <p className="font-medium">{selectedElective.teacher_name}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Slot</p>
-                      <p className="font-medium">
-                        {selectedElective.day_of_week}, Period {selectedElective.period_number}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Room</p>
-                      <p className="font-medium">{selectedElective.room}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground">Capacity</p>
-                      <p className="font-medium">
-                        {selectedElective.chosen_count}/{selectedElective.capacity} filled
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <Users className="h-4 w-4" /> Enrolled Students
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {loadingEnrolled && <p className="text-sm text-muted-foreground">Loading...</p>}
-                    {!loadingEnrolled && enrolledStudents.length === 0 && (
-                      <p className="text-sm text-muted-foreground">No students have chosen this elective yet.</p>
-                    )}
-                    {!loadingEnrolled && enrolledStudents.length > 0 && (
-                      <div className="space-y-2">
-                        {enrolledStudents.map((s) => (
-                          <div
-                            key={s.student_profile_id}
-                            className="flex items-center justify-between p-2 rounded border border-border"
-                          >
-                            <span className="text-sm">{s.full_name}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(s.chosen_at).toLocaleDateString()}
-                            </span>
-                          </div>
-                        ))}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label>Capacity</Label>
+                        <Input type="number" min="1" value={capacity} onChange={(e) => setCapacity(e.target.value)} />
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </>
-            )}
+                      <div>
+                        <Label>Room</Label>
+                        <Input value={room} onChange={(e) => setRoom(e.target.value)} placeholder="e.g. Room 101" />
+                      </div>
+                    </div>
+                    <Button className="w-full bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700" onClick={handleSave} disabled={saving}>
+                      {saving ? "Saving..." : editingId ? "Save Changes" : "Create Elective"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
+
+          {loading ? (
+            <p className="text-sm text-muted-foreground py-8 text-center">Loading electives...</p>
+          ) : electives.length === 0 ? (
+            <Card className="border-2 border-dashed border-blue-200 bg-gradient-to-b from-blue-50/50 to-white rounded-2xl">
+              <CardContent className="py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-sky-500 flex items-center justify-center mx-auto mb-4 shadow-md shadow-blue-200">
+                  <GraduationCap className="h-7 w-7 text-white" />
+                </div>
+                <h3 className="text-base font-semibold text-slate-800 mb-1">No electives yet</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">Click "Create Elective" above to add your first one.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {electives.map((e) => {
+                const isSelected = selectedElective?.id === e.id;
+                return (
+                  <Card
+                    key={e.id}
+                    onClick={() => setSelectedElective(e)}
+                    className={`overflow-hidden border-t-4 cursor-pointer shadow-sm hover:shadow-md transition-shadow ${
+                      isSelected ? "border-t-blue-500 ring-1 ring-blue-200" : "border-t-sky-300 border-slate-200"
+                    }`}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                            <BookOpen className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <CardTitle className="text-base truncate">{e.name}</CardTitle>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Badge className={e.is_active ? "bg-emerald-100 text-emerald-700 hover:opacity-90" : "bg-slate-100 text-slate-500 hover:opacity-90"}>
+                            {e.chosen_count}/{e.capacity}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:bg-blue-50 hover:text-blue-700 rounded-full"
+                            onClick={(ev) => { ev.stopPropagation(); openEditDialog(e); }}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground pl-11.5 mt-1">
+                        {e.subject} · Grade {e.grade}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground pl-11.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {e.day_of_week} · Period {e.period_number}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {e.room}
+                        </span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-1">
+                      <div className="flex items-center gap-1.5 text-sm font-medium text-slate-700 mb-2">
+                        <Users className="h-3.5 w-3.5 text-blue-500" /> Enrolled Students
+                      </div>
+                      {isSelected && loadingEnrolled ? (
+                        <p className="text-sm text-muted-foreground italic">Loading...</p>
+                      ) : isSelected && enrolledStudents.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {enrolledStudents.map((s, i) => (
+                            <div key={s.student_profile_id} className="flex items-center gap-2.5 rounded-lg bg-blue-50/50 border border-blue-100 px-3 py-2">
+                              <div className="w-5 h-5 rounded-full bg-blue-200 text-blue-800 text-[11px] font-bold flex items-center justify-center shrink-0">
+                                {i + 1}
+                              </div>
+                              <span className="text-sm text-slate-700 truncate">{s.full_name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">
+                          {isSelected ? "No students enrolled yet." : e.chosen_count === 0 ? "No students enrolled yet." : `Click to view ${e.chosen_count} enrolled student${e.chosen_count === 1 ? "" : "s"}`}
+                        </p>
+                      )}
+                      {isSelected && (
+                        <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Active</span>
+                            <Switch
+                              checked={e.is_active}
+                              onCheckedChange={(ev) => { toggleActive(e); }}
+                              onClick={(ev) => ev.stopPropagation()}
+                            />
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 text-destructive hover:bg-red-50"
+                            onClick={(ev) => { ev.stopPropagation(); handleDelete(e); }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
