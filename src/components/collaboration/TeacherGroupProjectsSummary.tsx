@@ -63,29 +63,36 @@ export function TeacherGroupProjectsSummary() {
   const totalPending = rows.reduce((sum, r) => sum + r.pending_submissions, 0);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Users2 className="h-4 w-4" /> Group Projects
-        </CardTitle>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to={GROUP_PROJECTS_ROUTE}>
-            View all <ArrowRight className="ml-1 h-3 w-3" />
+    <Card className="group overflow-hidden border border-emerald-100 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-sm shadow-emerald-200 transition-transform duration-300 group-hover:scale-110">
+              <Users2 className="h-5 w-5 text-white" />
+            </div>
+            <h3 className="text-sm font-semibold text-foreground">Group Projects</h3>
+          </div>
+          <Link to={GROUP_PROJECTS_ROUTE} className="text-xs text-muted-foreground hover:text-emerald-600 font-medium inline-flex items-center gap-0.5 transition-colors">
+            View all <ArrowRight className="h-3 w-3" />
           </Link>
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {loading ? (
+        </div>
+{loading ? (
           <div className="flex justify-center py-6">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <Loader2 className="h-5 w-5 animate-spin text-emerald-500" />
           </div>
         ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-2">No active group projects.</p>
+          <div className="py-8 text-center">
+            <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mx-auto mb-3">
+              <Users2 className="h-6 w-6 text-emerald-300" />
+            </div>
+            <p className="text-xs text-muted-foreground">No active group projects.</p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {totalPending > 0 && (
-              <div className="flex items-center gap-2 text-sm text-amber-700 bg-amber-50 rounded-md px-2 py-1.5 mb-2">
-                <ClipboardCheck className="h-4 w-4" />
+              <div className="flex items-center gap-2 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-1">
+                <ClipboardCheck className="h-3.5 w-3.5 shrink-0" />
                 {totalPending} submission{totalPending === 1 ? '' : 's'} awaiting grading
               </div>
             )}
@@ -93,18 +100,30 @@ export function TeacherGroupProjectsSummary() {
               <Link
                 key={r.id}
                 to={GROUP_PROJECTS_ROUTE}
-                className="flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50 text-sm"
+                className="flex items-center justify-between gap-2 rounded-xl bg-white border border-emerald-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-emerald-300 transition-all duration-300"
               >
-                <div>
-                  <p className="font-medium">{r.title}</p>
-                  <p className="text-xs text-muted-foreground">{r.class_name} · {r.group_count} groups</p>
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                    <Users2 className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{r.title}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-slate-50 text-slate-600 text-[10px] font-medium">
+                        {r.class_name}
+                      </span>
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-medium">
+                        {r.group_count} group{r.group_count === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end gap-1 shrink-0">
                   {r.pending_submissions > 0 && (
-                    <Badge variant="destructive" className="text-[10px]">{r.pending_submissions} to grade</Badge>
+                    <Badge variant="destructive" className="text-[10px] rounded-full">{r.pending_submissions} to grade</Badge>
                   )}
                   {r.due_date && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-[10px] text-muted-foreground font-medium">
                       {new Date(r.due_date).toLocaleDateString()}
                     </span>
                   )}

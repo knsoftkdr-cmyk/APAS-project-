@@ -88,14 +88,27 @@ export default function AttendanceMarking() {
 
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto space-y-4">
+      <div className="relative min-h-screen overflow-x-hidden">
+        <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 max-w-6xl mx-auto space-y-4 p-3 md:p-4">
+          {activeTab !== 'mine' && (
+            <div className="rounded-2xl p-4 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-lg">
+              <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+              <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+              <h1 className="relative text-lg md:text-2xl font-bold text-white">Attendance</h1>
+              <p className="relative text-emerald-100 text-xs md:text-sm mt-0.5">Mark and review attendance records</p>
+            </div>
+          )}
+
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            {canMark && <TabsTrigger value="mark">Student Attendance</TabsTrigger>}
-            {canMark && <TabsTrigger value="view">Student Attendance View</TabsTrigger>}
-            {isSelfView && <TabsTrigger value="mine">My Attendance</TabsTrigger>}
-            {canManageTeacherAttendance && <TabsTrigger value="teacher-mark">Teacher Attendance</TabsTrigger>}
-            {canManageTeacherAttendance && <TabsTrigger value="teacher-view">Teacher Attendance View</TabsTrigger>}
+          <TabsList className="w-full overflow-x-auto flex-nowrap justify-start bg-white border border-emerald-100 shadow-sm rounded-xl p-1 h-auto">
+            {canMark && <TabsTrigger value="mark" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Student Attendance</TabsTrigger>}
+            {canMark && <TabsTrigger value="view" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Attendance View</TabsTrigger>}
+            {isSelfView && <TabsTrigger value="mine" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">My Attendance</TabsTrigger>}
+            {canManageTeacherAttendance && <TabsTrigger value="teacher-mark" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Teacher Attendance</TabsTrigger>}
+            {canManageTeacherAttendance && <TabsTrigger value="teacher-view" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Teacher View</TabsTrigger>}
           </TabsList>
           {canMark && (
             <TabsContent value="mark">
@@ -123,6 +136,7 @@ export default function AttendanceMarking() {
             </TabsContent>
           )}
         </Tabs>
+        </div>
       </div>
     </AppLayout>
   );
@@ -559,14 +573,14 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mark Attendance</CardTitle>
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Mark Attendance</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-3 items-center">
+      <CardContent className="space-y-4 pt-5">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
           <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48 rounded-xl border-emerald-100">
               <SelectValue placeholder="Select class" />
             </SelectTrigger>
             <SelectContent>
@@ -582,12 +596,12 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
+            className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
           />
 
           {settings?.mode === 'period' && (
             <Select value={String(selectedPeriod)} onValueChange={(v) => setSelectedPeriod(Number(v))}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32 rounded-xl border-emerald-100">
                 <SelectValue placeholder="Period" />
               </SelectTrigger>
               <SelectContent>
@@ -601,16 +615,16 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
           )}
 
           {students.length > 0 && (
-            <Button variant="outline" size="sm" onClick={markAllPresent}>
+            <Button variant="outline" size="sm" onClick={markAllPresent} className="rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50 w-full sm:w-auto">
               Mark all present
             </Button>
           )}
 
           {students.length > 0 && (
-            <div className={`flex items-center gap-2 text-sm font-medium px-4 py-2.5 bg-white ${CARD_SHADOW} border border-gray-100`}>
-              <span className="text-green-600">{presentCount} present</span>
+            <div className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 w-full sm:w-auto">
+              <span className="text-green-600 font-semibold">{presentCount} present</span>
               <span className="text-muted-foreground">/ {students.length} total</span>
-              {unmarkedCount > 0 && <span className="text-amber-600">· {unmarkedCount} unmarked</span>}
+              {unmarkedCount > 0 && <span className="text-amber-600 font-semibold">· {unmarkedCount} unmarked</span>}
             </div>
           )}
         </div>
@@ -626,22 +640,27 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
         )}
 
         {!loadingRoster && students.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {students.map((s) => (
-              <div key={s.id} className="flex items-center justify-between border rounded-md px-3 py-2">
-                <div>
-                  <div className="font-medium text-sm">{s.full_name}</div>
-                  {s.roll_number && (
-                    <div className="text-xs text-muted-foreground">Roll No. {s.roll_number}</div>
-                  )}
+              <div key={s.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border border-emerald-100 rounded-xl px-4 py-3 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700 shrink-0">
+                    {s.full_name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-slate-800">{s.full_name}</div>
+                    {s.roll_number && (
+                      <div className="text-xs text-muted-foreground">Roll No. {s.roll_number}</div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1.5 flex-wrap">
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => setStatus(s.id, opt.value)}
-                      className={`text-xs px-2 py-1 rounded-md border transition-colors ${
-                        marks[s.id] === opt.value ? opt.color : 'bg-transparent text-muted-foreground'
+                      className={`text-xs font-medium px-2.5 py-1.5 rounded-full border transition-all ${
+                        marks[s.id] === opt.value ? `${opt.color} border-transparent shadow-sm` : 'bg-white text-muted-foreground border-slate-200 hover:border-emerald-300'
                       }`}
                     >
                       {opt.label}
@@ -654,8 +673,8 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
         )}
 
         {students.length > 0 && (
-          <div className="flex items-center gap-3 pt-2">
-            <Button onClick={handleSubmit} disabled={saving}>
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
+            <Button onClick={handleSubmit} disabled={saving} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl">
               {saving ? 'Saving...' : 'Save Attendance'}
             </Button>
             {saveMessage && <span className="text-sm text-muted-foreground">{saveMessage}</span>}
@@ -722,14 +741,14 @@ function ViewAttendanceTab({ schoolId, classes }: { schoolId: string | null; cla
   const notMarked = rows.filter((r) => r.status === null).length;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>View Attendance</CardTitle>
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">View Attendance</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-3 items-center">
+      <CardContent className="space-y-4 pt-5">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
           <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-full sm:w-48 rounded-xl border-emerald-100">
               <SelectValue placeholder="Select class" />
             </SelectTrigger>
             <SelectContent>
@@ -745,7 +764,7 @@ function ViewAttendanceTab({ schoolId, classes }: { schoolId: string | null; cla
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
+            className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
           />
         </div>
 
@@ -761,14 +780,14 @@ function ViewAttendanceTab({ schoolId, classes }: { schoolId: string | null; cla
 
         {!loading && rows.length > 0 && (
           <>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {STATUS_OPTIONS.map((opt) => (
-                <div key={opt.value} className={`text-sm font-semibold px-4 py-2.5 ${CARD_SHADOW} ${opt.soft}`}>
+                <div key={opt.value} className={`text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm ${opt.soft}`}>
                   {counts[opt.value]} {opt.label}
                 </div>
               ))}
               {notMarked > 0 && (
-                <div className={`text-sm font-semibold px-4 py-2.5 ${CARD_SHADOW} bg-gray-50 text-gray-500 border border-gray-200`}>
+                <div className="text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm bg-gray-50 text-gray-500 border border-gray-200">
                   {notMarked} Not marked
                 </div>
               )}
@@ -778,14 +797,19 @@ function ViewAttendanceTab({ schoolId, classes }: { schoolId: string | null; cla
               {rows.map((r) => {
                 const opt = STATUS_OPTIONS.find((o) => o.value === r.status);
                 return (
-                  <div key={r.student_id} className={`flex items-center justify-between px-4 py-3 bg-white border border-gray-100 ${CARD_SHADOW}`}>
-                    <div>
-                      <div className="font-medium text-sm">{r.full_name}</div>
-                      {r.roll_number && (
-                        <div className="text-xs text-muted-foreground">Roll No. {r.roll_number}</div>
-                      )}
+                  <div key={r.student_id} className="flex items-center justify-between gap-2 px-4 py-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center text-sm font-bold text-emerald-700 shrink-0">
+                        {r.full_name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm text-slate-800 truncate">{r.full_name}</div>
+                        {r.roll_number && (
+                          <div className="text-xs text-muted-foreground">Roll No. {r.roll_number}</div>
+                        )}
+                      </div>
                     </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${opt ? opt.soft : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full shrink-0 ${opt ? opt.soft : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
                       {opt ? opt.label : 'Not marked'}
                     </span>
                   </div>
@@ -798,7 +822,6 @@ function ViewAttendanceTab({ schoolId, classes }: { schoolId: string | null; cla
     </Card>
   );
 }
-
 
 function MarkTeacherAttendanceTab({ schoolId, userId }: { schoolId: string | null; userId: string | null; }) {
   const [teachers, setTeachers] = useState<TeacherRow[]>([]);
@@ -901,21 +924,21 @@ function MarkTeacherAttendanceTab({ schoolId, userId }: { schoolId: string | nul
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Teacher Attendance</CardTitle>
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Teacher Attendance</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-3 items-center">
+      <CardContent className="space-y-4 pt-5">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
           <input
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
+            className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
           />
           {teachers.length > 0 && (
-            <div className={`flex items-center gap-2 text-sm font-medium px-4 py-2.5 bg-white ${CARD_SHADOW} border border-gray-100`}>
-              <span className="text-green-600">{presentCount} present</span>
+            <div className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 w-full sm:w-auto">
+              <span className="text-green-600 font-semibold">{presentCount} present</span>
               <span className="text-muted-foreground">/ {teachers.length} total</span>
             </div>
           )}
@@ -932,24 +955,29 @@ function MarkTeacherAttendanceTab({ schoolId, userId }: { schoolId: string | nul
         )}
 
         {!loading && teachers.length > 0 && (
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             {teachers.map((t) => (
-              <div key={t.id} className="flex items-center justify-between border rounded-md px-3 py-2">
-                <div>
-                  <div className="font-medium text-sm">{t.full_name}</div>
-                  {(t.employee_id || t.designation) && (
-                    <div className="text-xs text-muted-foreground">
-                      {t.employee_id ? `ID ${t.employee_id}` : ''}{t.employee_id && t.designation ? ' · ' : ''}{t.designation ?? ''}
-                    </div>
-                  )}
+              <div key={t.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border border-emerald-100 rounded-xl px-4 py-3 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                    {t.full_name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-slate-800">{t.full_name}</div>
+                    {(t.employee_id || t.designation) && (
+                      <div className="text-xs text-muted-foreground">
+                        {t.employee_id ? `ID ${t.employee_id}` : ''}{t.employee_id && t.designation ? ' · ' : ''}{t.designation ?? ''}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1.5 flex-wrap">
                   {STATUS_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       onClick={() => setStatus(t.id, opt.value)}
-                      className={`text-xs px-2 py-1 rounded-md border transition-colors ${
-                        marks[t.id] === opt.value ? opt.color : 'bg-transparent text-muted-foreground'
+                      className={`text-xs font-medium px-2.5 py-1.5 rounded-full border transition-all ${
+                        marks[t.id] === opt.value ? `${opt.color} border-transparent shadow-sm` : 'bg-white text-muted-foreground border-slate-200 hover:border-emerald-300'
                       }`}
                     >
                       {opt.label}
@@ -962,8 +990,8 @@ function MarkTeacherAttendanceTab({ schoolId, userId }: { schoolId: string | nul
         )}
 
         {teachers.length > 0 && (
-          <div className="flex items-center gap-3 pt-2">
-            <Button onClick={handleSubmit} disabled={saving}>
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
+            <Button onClick={handleSubmit} disabled={saving} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl">
               {saving ? 'Saving...' : 'Save Attendance'}
             </Button>
             {saveMessage && <span className="text-sm text-muted-foreground">{saveMessage}</span>}
@@ -1023,16 +1051,16 @@ function ViewTeacherAttendanceTab({ schoolId }: { schoolId: string | null; }) {
   const notMarked = rows.filter((r) => r.status === null).length;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Teacher Attendance View</CardTitle>
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Teacher Attendance View</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pt-5">
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="border rounded-md px-3 py-2 text-sm"
+          className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
         />
 
         {loading && (
@@ -1047,14 +1075,14 @@ function ViewTeacherAttendanceTab({ schoolId }: { schoolId: string | null; }) {
 
         {!loading && rows.length > 0 && (
           <>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
               {STATUS_OPTIONS.map((opt) => (
-                <div key={opt.value} className={`text-sm font-semibold px-4 py-2.5 ${CARD_SHADOW} ${opt.soft}`}>
+                <div key={opt.value} className={`text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm ${opt.soft}`}>
                   {counts[opt.value]} {opt.label}
                 </div>
               ))}
               {notMarked > 0 && (
-                <div className={`text-sm font-semibold px-4 py-2.5 ${CARD_SHADOW} bg-gray-50 text-gray-500 border border-gray-200`}>
+                <div className="text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm bg-gray-50 text-gray-500 border border-gray-200">
                   {notMarked} Not marked
                 </div>
               )}
@@ -1064,14 +1092,19 @@ function ViewTeacherAttendanceTab({ schoolId }: { schoolId: string | null; }) {
               {rows.map((r) => {
                 const opt = STATUS_OPTIONS.find((o) => o.value === r.status);
                 return (
-                  <div key={r.teacher_id} className={`flex items-center justify-between px-4 py-3 bg-white border border-gray-100 ${CARD_SHADOW}`}>
-                    <div>
-                      <div className="font-medium text-sm">{r.full_name}</div>
-                      {r.employee_id && (
-                        <div className="text-xs text-muted-foreground">ID {r.employee_id}</div>
-                      )}
+                  <div key={r.teacher_id} className="flex items-center justify-between gap-2 px-4 py-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                        {r.full_name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm text-slate-800 truncate">{r.full_name}</div>
+                        {r.employee_id && (
+                          <div className="text-xs text-muted-foreground">ID {r.employee_id}</div>
+                        )}
+                      </div>
                     </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${opt ? opt.soft : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full shrink-0 ${opt ? opt.soft : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
                       {opt ? opt.label : 'Not marked'}
                     </span>
                   </div>

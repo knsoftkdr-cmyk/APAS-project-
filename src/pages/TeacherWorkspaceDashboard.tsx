@@ -112,51 +112,64 @@ const DashStatCard = ({
 }) => {
   const tones = {
     blue: {
-      bar: "bg-gradient-to-b from-blue-500 to-indigo-500",
+      bar: "bg-gradient-to-r from-blue-500 to-indigo-500",
       chip: "bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm shadow-blue-200",
       link: "text-blue-600",
-      glow: "bg-blue-400/10",
+      glow: "bg-blue-400/15",
+      wash: "bg-gradient-to-br from-blue-50/80 via-white to-white",
+      border: "border-blue-200 group-hover:border-blue-300",
     },
     orange: {
-      bar: "bg-gradient-to-b from-orange-500 to-amber-500",
+      bar: "bg-gradient-to-r from-orange-500 to-amber-500",
       chip: "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-200",
       link: "text-orange-600",
-      glow: "bg-orange-400/10",
+      glow: "bg-orange-400/15",
+      wash: "bg-gradient-to-br from-orange-50/80 via-white to-white",
+      border: "border-orange-200 group-hover:border-orange-300",
     },
     purple: {
-      bar: "bg-gradient-to-b from-purple-500 to-violet-500",
+      bar: "bg-gradient-to-r from-purple-500 to-violet-500",
       chip: "bg-gradient-to-br from-purple-500 to-violet-500 text-white shadow-sm shadow-purple-200",
       link: "text-purple-600",
-      glow: "bg-purple-400/10",
+      glow: "bg-purple-400/15",
+      wash: "bg-gradient-to-br from-purple-50/80 via-white to-white",
+      border: "border-purple-200 group-hover:border-purple-300",
     },
   }[accent];
 
   return (
-    <Card className="group relative overflow-hidden border border-border/60 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all duration-300">
-      <div className={cn("absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
-      <div className={cn("absolute inset-y-0 left-0 w-1.5", tones.bar)} />
-      <CardContent className="relative p-5 pl-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className={cn("rounded-xl p-2.5 transition-transform duration-300 group-hover:scale-110", tones.chip)}>
-            <Icon className="h-5 w-5" />
+    <Card className={cn(
+      "group relative overflow-hidden border-[4px] shadow-card hover:shadow-2xl hover:-translate-y-1.5 transition-all duration-300 rounded-2xl",
+      tones.wash,
+      tones.border
+    )}>
+      <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
+      <div className={cn("absolute -bottom-10 -left-10 w-28 h-28 rounded-full blur-3xl opacity-60 transition-transform duration-500 group-hover:scale-110", tones.glow)} />
+      <CardContent className="relative p-5">
+        <div className="flex items-start justify-between gap-2 mb-5">
+          <div className="relative">
+            <div className={cn("absolute inset-0 rounded-2xl blur-md opacity-60 scale-90 transition-transform duration-300 group-hover:scale-100", tones.chip)} />
+            <div className={cn("relative rounded-2xl p-3 transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3", tones.chip)}>
+              <Icon className="h-5 w-5" />
+            </div>
           </div>
+          {linkTo ? (
+            <Link
+              to={linkTo}
+              className={cn("text-xs font-semibold inline-flex items-center gap-1 hover:gap-1.5 transition-all shrink-0 mt-1.5 bg-white/70 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm", tones.link)}
+            >
+              {linkLabel} <ArrowRight className="h-3 w-3" />
+            </Link>
+          ) : (
+            <span className={cn("text-xs font-semibold inline-flex items-center gap-1 opacity-70 shrink-0 mt-1.5 bg-white/70 backdrop-blur-sm px-2.5 py-1 rounded-full shadow-sm", tones.link)}>
+              {linkLabel} <ArrowRight className="h-3 w-3" />
+            </span>
+          )}
         </div>
-        <p className="text-4xl font-extrabold tracking-tight text-foreground mb-1">
+        <p className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground mb-1">
           {loading ? <LoadingSpinner size="sm" /> : value}
         </p>
-        <p className="text-xs text-muted-foreground mb-3 font-medium">{label}</p>
-        {linkTo ? (
-          <Link
-            to={linkTo}
-            className={cn("text-xs font-semibold inline-flex items-center gap-1 hover:gap-1.5 transition-all", tones.link)}
-          >
-            {linkLabel} <ArrowRight className="h-3 w-3" />
-          </Link>
-        ) : (
-          <span className={cn("text-xs font-semibold inline-flex items-center gap-1 opacity-70", tones.link)}>
-            {linkLabel} <ArrowRight className="h-3 w-3" />
-          </span>
-        )}
+        <p className="text-xs text-muted-foreground font-medium">{label}</p>
       </CardContent>
     </Card>
   );
@@ -208,7 +221,7 @@ const TeacherWorkspaceDashboard = () => {
     enabled: !!user?.id,
   });
 
-  // ── Attendance pending (students in teacher's classes without attendance today) ─
+// ── Attendance pending (students in teacher's classes NOT yet marked today) ─
   const { data: attendancePending, isLoading: attLoading } = useQuery({
     queryKey: ["attendance-pending", user?.id],
     queryFn: async () => {
@@ -216,13 +229,30 @@ const TeacherWorkspaceDashboard = () => {
         .from("class_teachers")
         .select("class_id")
         .eq("teacher_id", user!.id);
-      const classIds = (classTeachers || []).map((c: any) => c.class_id);
+      const classIds = [...new Set((classTeachers || []).map((c: any) => c.class_id))];
       if (!classIds.length) return 0;
-      const { count } = await supabase
+
+      // Every student across this teacher's classes
+      const { data: classStudents } = await supabase
         .from("class_students")
-        .select("id", { count: "exact", head: true })
+        .select("student_id, class_id")
         .in("class_id", classIds);
-      return count || 0;
+      const links = classStudents || [];
+      if (links.length === 0) return 0;
+
+      // Students who already have an attendance row for today, in these classes
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { data: markedRows } = await supabase
+        .from("attendance_records")
+        .select("student_id, class_id")
+        .in("class_id", classIds)
+        .eq("date", today);
+
+      const markedSet = new Set(
+        (markedRows || []).map((r: any) => `${r.class_id}_${r.student_id}`)
+      );
+
+      return links.filter((l: any) => !markedSet.has(`${l.class_id}_${l.student_id}`)).length;
     },
     enabled: !!user?.id,
   });
@@ -495,7 +525,7 @@ const TeacherWorkspaceDashboard = () => {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               At a Glance
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               <DashStatCard
                 label="Today's Classes"
                 value={classCount ?? 0}
@@ -510,7 +540,7 @@ const TeacherWorkspaceDashboard = () => {
                 value={attendancePending ?? 0}
                 icon={ClipboardCheck}
                 accent="orange"
-                linkTo=""
+                linkTo="/attendance"
                 linkLabel="Mark Attendance"
                 loading={attLoading}
               />

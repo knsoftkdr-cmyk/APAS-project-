@@ -104,7 +104,7 @@ function normalizeClass(cls: string | null): string {
 
 
 // ── Admin/Teacher results card view ─────────────────────────────
-function AdminResultsView({ profile, semesters, academicYears, students, isAdmin, isTeacher, uniqueClasses, resultsClassFilter, setResultsClassFilter, teacherClassLabel }: {
+function AdminResultsView({ profile, semesters, academicYears, students, isAdmin, isTeacher, uniqueClasses, teacherUniqueClasses, resultsClassFilter, setResultsClassFilter, teacherClassLabel }: {
   profile: any;
   semesters: any[];
   academicYears: any[];
@@ -112,6 +112,7 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
   isAdmin: boolean;
   isTeacher: boolean;
   uniqueClasses: string[];
+  teacherUniqueClasses: string[];
   resultsClassFilter: string;
   setResultsClassFilter: (v: string) => void;
   teacherClassLabel: string;
@@ -172,7 +173,17 @@ function AdminResultsView({ profile, semesters, academicYears, students, isAdmin
               </SelectContent>
             </Select>
           )}
-          {isTeacher && <Badge variant="outline" className="border-indigo-200 text-indigo-700">{teacherClassLabel}</Badge>}
+          {isTeacher && (
+            <Select value={resultsClassFilter} onValueChange={setResultsClassFilter}>
+              <SelectTrigger className="w-36 border-indigo-100 focus:ring-indigo-400"><SelectValue placeholder="All Classes" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Classes</SelectItem>
+                {teacherUniqueClasses.map((cl: string) => (
+                  <SelectItem key={cl} value={cl}>{/^\d+$/.test(cl) ? `Class ${cl}` : cl.charAt(0).toUpperCase() + cl.slice(1)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 
@@ -863,16 +874,28 @@ export default function SemesterEngine() {
   };
 
   const uniqueClasses = Array.from(new Set(students.map((s) => normalizeClass(s.class)).filter(Boolean))).sort();
+  const teacherUniqueClasses = Array.from(
+  new Set(
+    students
+      .filter((s) => teacherStudentIds?.has(s.id))
+      .map((s) => normalizeClass(s.class))
+      .filter(Boolean)
+  )
+).sort();
   const myStudentRecord = isStudent ? students.find((s) => s.profile_id === profile?.id) ?? null : null;
-  const filteredStudents = isTeacher
-    ? students.filter((s) => teacherStudentIds?.has(s.id))
-    : students.filter((s) => classFilter === "all" || normalizeClass(s.class) === classFilter);
+const filteredStudents = isTeacher
+  ? students.filter(
+      (s) => teacherStudentIds?.has(s.id) && (classFilter === "all" || normalizeClass(s.class) === classFilter)
+    )
+  : students.filter((s) => classFilter === "all" || normalizeClass(s.class) === classFilter);
   const yearSemesters = semesters.filter((s) => s.academic_year_id === activeYear?.id);
 
   const resultsFilteredStudents = isStudent
     ? students.filter((s) => s.id === myStudentRecord?.id)
     : isTeacher
-    ? students.filter((s) => teacherStudentIds?.has(s.id))
+    ? students.filter(
+        (s) => teacherStudentIds?.has(s.id) && (resultsClassFilter === "all" || normalizeClass(s.class) === resultsClassFilter)
+      )
     : students.filter((s) =>
         (resultsClassFilter === "all" || normalizeClass(s.class) === resultsClassFilter) &&
         (resultsSectionFilter === "all" || (s.section ?? "").toLowerCase() === resultsSectionFilter.toLowerCase())
@@ -1054,7 +1077,15 @@ return (
                       </SelectContent>
                     </Select>
                   ) : (
-                    <Badge variant="outline">{teacherClassLabel || "No class assigned"}</Badge>
+                    <Select value={classFilter} onValueChange={setClassFilter}>
+                      <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Classes</SelectItem>
+                        {teacherUniqueClasses.map((c) => (
+                          <SelectItem key={c} value={c}>{/^\d+$/.test(c) ? `Class ${c}` : c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                   {isAdmin && (
                     <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={calculateGPAs} disabled={saving || !activeSemester}>
@@ -1139,6 +1170,7 @@ return (
                   isAdmin={isAdmin}
                   isTeacher={isTeacher}
                   uniqueClasses={uniqueClasses}
+                  teacherUniqueClasses={teacherUniqueClasses}
                   resultsClassFilter={resultsClassFilter}
                   setResultsClassFilter={setResultsClassFilter}
                   teacherClassLabel={(isTeacher && profile) ? `Class ${(profile as any).class_grade || "-"}` : ""}
