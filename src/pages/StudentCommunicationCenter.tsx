@@ -22,7 +22,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { getTeachersForChild } from "@/lib/appointments";
 import { useNotifications } from "@/contexts/NotificationContext";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────
 
 interface TeacherContact {
   id: string; // teacher profile id
@@ -50,7 +50,7 @@ const QUICK_EMOJIS = [
   "❤️", "💯", "🔥", "📚", "✏️", "📝", "📌", "⏰", "📅", "🏆",
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
 const dayLabel = (dateStr: string) => {
   const d = new Date(dateStr);
@@ -292,24 +292,33 @@ export default function StudentCommunicationCenter() {
   return (
     <AppLayout>
       <div className="h-[calc(100vh-100px)] flex flex-col">
-        <div className="mb-4 flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-blue-600" />
-          <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
+        <div className="rounded-2xl p-5 md:p-6 mb-4 relative overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 shadow-lg shrink-0">
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="relative flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Communication Center</h1>
+              <p className="text-green-100 text-xs md:text-sm mt-0.5">Message your teachers in one place</p>
+            </div>
+          </div>
         </div>
 
-        <Card className="flex-1 overflow-hidden border border-border/60 min-h-0">
+        <Card className="flex-1 overflow-hidden border border-slate-200/70 rounded-2xl shadow-lg shadow-slate-200/50 min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`border-r border-border/60 flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
-              <div className="p-3 border-b border-border/60">
+            <div className={`border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
+              <div className="p-3 border-b border-slate-100">
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search teacher"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-8 h-9 text-sm"
+                    className="pl-9 h-10 text-sm rounded-full bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-green-300"
                   />
                 </div>
               </div>
@@ -325,26 +334,36 @@ export default function StudentCommunicationCenter() {
                   currentContacts.map(c => {
                     const isSelected = selectedContact?.id === c.id;
                     const last = lastMessages.get(c.id);
+                    const isUnread = !!last && !last.is_read && last.recipient_id === user?.id;
                     return (
                       <button
                         key={c.id}
                         onClick={() => openContact(c)}
-                        className={`w-full text-left p-2.5 rounded-lg flex items-center gap-2.5 transition-colors ${
-                          isSelected ? "bg-blue-50 border border-blue-200" : "hover:bg-muted/50"
+                        className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                          isSelected ? "bg-green-50" : "hover:bg-slate-50"
                         }`}
                       >
-                        <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-xs font-bold text-blue-700">
+                        <div className="h-11 w-11 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center shrink-0 text-xs font-bold text-white shadow-sm">
                           {c.name[0]}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold truncate">{c.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {c.subtitle}
-                          </p>
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`text-sm truncate ${isUnread ? "font-bold text-slate-900" : "font-semibold text-slate-800"}`}>{c.name}</p>
+                            {last && (
+                              <span className={`text-[10px] shrink-0 ${isUnread ? "text-green-600 font-semibold" : "text-muted-foreground"}`}>
+                                {format(new Date(last.created_at), "h:mm a")}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between gap-2 mt-0.5">
+                            <p className={`text-xs truncate ${isUnread ? "text-slate-700 font-medium" : "text-muted-foreground"}`}>
+                              {last ? last.message : c.subtitle}
+                            </p>
+                            {isUnread && (
+                              <span className="h-2.5 w-2.5 rounded-full bg-green-600 shrink-0" />
+                            )}
+                          </div>
                         </div>
-                        {last && !last.is_read && last.recipient_id === user?.id && (
-                          <span className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />
-                        )}
                       </button>
                     );
                   })
@@ -355,30 +374,35 @@ export default function StudentCommunicationCenter() {
             {/* ── Chat Panel ── */}
             <div className={`min-h-0 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
               {!selectedContact ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-50/50">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-4">
+                    <MessageSquare className="h-9 w-9 text-green-500" />
+                  </div>
+                  <p className="text-sm font-medium text-slate-600">
                     Select a teacher to start messaging
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your conversations with teachers will appear here.
                   </p>
                 </div>
               ) : (
                 <>
                   {/* Chat header */}
-                  <div className="p-3 border-b border-border/60 flex items-center gap-2.5">
-                    <button className="md:hidden p-1" onClick={() => setShowMobileChat(false)}>
+                  <div className="p-3 border-b border-slate-100 flex items-center gap-2.5 bg-gradient-to-r from-green-600 to-green-500">
+                    <button className="md:hidden p-1 text-white" onClick={() => setShowMobileChat(false)}>
                       <ChevronLeft className="h-5 w-5" />
                     </button>
-                    <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold bg-blue-100 text-blue-700">
+                    <div className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-xs font-bold bg-white/20 text-white backdrop-blur-sm">
                       {selectedContact.name[0]}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate">{selectedContact.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{selectedContact.subtitle}</p>
+                      <p className="text-sm font-semibold truncate text-white">{selectedContact.name}</p>
+                      <p className="text-xs text-white/75 truncate">{selectedContact.subtitle}</p>
                     </div>
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[radial-gradient(circle,_#e2e8f0_1px,_transparent_1px)] [background-size:20px_20px] bg-green-50/30">
                     {threadLoading ? (
                       <div className="flex justify-center py-8"><LoadingSpinner /></div>
                     ) : messages.length === 0 ? (
@@ -402,7 +426,7 @@ export default function StudentCommunicationCenter() {
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
                                   isMine
-                                    ? "bg-blue-600 text-white rounded-br-sm"
+                                    ? "bg-green-600 text-white rounded-br-sm"
                                     : "bg-white border border-border/60 rounded-bl-sm"
                                 }`}
                               >
@@ -412,20 +436,20 @@ export default function StudentCommunicationCenter() {
                                     href={m.attachment_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={`flex items-center gap-1.5 mt-1.5 text-xs underline ${isMine ? "text-blue-100" : "text-blue-600"}`}
+                                    className={`flex items-center gap-1.5 mt-1.5 text-xs underline ${isMine ? "text-green-100" : "text-green-700"}`}
                                   >
                                     <FileText className="h-3.5 w-3.5" />
                                     {m.attachment_name || "Attachment"}
                                   </a>
                                 )}
                                 <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
-                                  <span className={`text-[10px] ${isMine ? "text-blue-100" : "text-muted-foreground"}`}>
+                                  <span className={`text-[10px] ${isMine ? "text-green-100" : "text-muted-foreground"}`}>
                                     {format(new Date(m.created_at), "h:mm a")}
                                   </span>
                                   {isMine && (
                                     m.is_read
-                                      ? <CheckCheck className="h-3 w-3 text-blue-100" />
-                                      : <Check className="h-3 w-3 text-blue-100" />
+                                      ? <CheckCheck className="h-3 w-3 text-sky-300" />
+                                      : <Check className="h-3 w-3 text-green-100" />
                                   )}
                                 </div>
                               </div>
@@ -470,7 +494,7 @@ export default function StudentCommunicationCenter() {
 
                   {/* Compose bar — students can only reply to teachers, not admin/principal/school_admin/hod broadcasts */}
                   {selectedContact.role === "teacher" ? (
-                    <div className="p-3 border-t border-border/60 flex items-end gap-2">
+                    <div className="p-3 border-t border-slate-100 bg-white flex items-end gap-2">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -484,7 +508,7 @@ export default function StudentCommunicationCenter() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0"
+                        className="shrink-0 rounded-full text-slate-500 hover:bg-slate-100"
                         onClick={() => fileInputRef.current?.click()}
                         title="Attach file"
                       >
@@ -493,7 +517,7 @@ export default function StudentCommunicationCenter() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="shrink-0"
+                        className="shrink-0 rounded-full text-slate-500 hover:bg-slate-100"
                         onClick={() => setShowEmojiPicker(v => !v)}
                         title="Insert emoji"
                       >
@@ -510,18 +534,18 @@ export default function StudentCommunicationCenter() {
                           }
                         }}
                         rows={1}
-                        className="resize-none min-h-[40px] max-h-32 text-sm"
+                        className="resize-none min-h-[40px] max-h-32 text-sm rounded-2xl bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-green-300 px-4 py-2.5"
                       />
                       <Button
                         onClick={handleSend}
                         disabled={sending || uploadingFile}
-                        className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700"
+                        className="shrink-0 gap-1.5 rounded-full h-10 w-10 p-0 bg-gradient-to-br from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 shadow-sm shadow-green-200"
                       >
                         {sending || uploadingFile ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4" />}
                       </Button>
                     </div>
                   ) : (
-                    <div className="p-3 border-t border-border/60 text-center text-xs text-muted-foreground bg-muted/30">
+                    <div className="p-3 border-t border-slate-100 text-center text-xs text-muted-foreground bg-muted/30">
                       This is a notice from {selectedContact.subtitle || "the school"} — replies aren't available here.
                     </div>
                   )}

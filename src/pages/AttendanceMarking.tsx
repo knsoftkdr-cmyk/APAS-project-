@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'half_day' | 'excused';
 
@@ -131,9 +133,10 @@ function MyAttendanceTab({ schoolId, role, userId }: { schoolId: string | null; 
   const [linkedChildren, setLinkedChildren] = useState<ChildRow[]>([]);
   const [selectedChildId, setSelectedChildId] = useState<string>('');
   const [myStudentRow, setMyStudentRow] = useState<ChildRow | null>(null);
-  const [month, setMonth] = useState<string>(new Date().toISOString().slice(0, 7)); // YYYY-MM
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
   const [records, setRecords] = useState<{ date: string; status: AttendanceStatus }[]>([]);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!schoolId || !userId || !role) return;
@@ -164,20 +167,20 @@ function MyAttendanceTab({ schoolId, role, userId }: { schoolId: string | null; 
   const activeStudentId = role === 'student' ? myStudentRow?.id : selectedChildId;
 
   useEffect(() => {
-    if (!schoolId || !month) return;
+    if (!schoolId) return;
+    const start = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
+    const end = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
+
     if (role === 'teacher') {
       if (!userId) return;
       setLoading(true);
-      const start = `${month}-01`;
-      const [y, m] = month.split('-').map(Number);
-      const endDate = new Date(y, m, 0).toISOString().slice(0, 10);
       supabase
         .from('teacher_attendance')
         .select('date, status')
         .eq('school_id', schoolId)
         .eq('teacher_id', userId)
         .gte('date', start)
-        .lte('date', endDate)
+        .lte('date', end)
         .then(({ data }) => {
           setRecords((data || []) as { date: string; status: AttendanceStatus }[]);
           setLoading(false);
@@ -186,22 +189,23 @@ function MyAttendanceTab({ schoolId, role, userId }: { schoolId: string | null; 
     }
     if (!activeStudentId) return;
     setLoading(true);
-    const start = `${month}-01`;
-    const [y, m] = month.split('-').map(Number);
-    const endDate = new Date(y, m, 0).toISOString().slice(0, 10); // last day of month
-
     supabase
       .from('attendance_records')
       .select('date, status')
       .eq('school_id', schoolId)
       .eq('student_id', activeStudentId)
       .gte('date', start)
-      .lte('date', endDate)
+      .lte('date', end)
       .then(({ data }) => {
         setRecords((data || []) as { date: string; status: AttendanceStatus }[]);
         setLoading(false);
       });
-  }, [schoolId, activeStudentId, month, role, userId]);
+  }, [schoolId, activeStudentId, currentMonth, role, userId]);
+
+  const recordsByDate = records.reduce((acc, r) => {
+    acc[r.date] = r.status;
+    return acc;
+  }, {} as Record<string, AttendanceStatus>);
 
   const counts = STATUS_OPTIONS.reduce((acc, opt) => {
     acc[opt.value] = records.filter((r) => r.status === opt.value).length;
@@ -211,94 +215,166 @@ function MyAttendanceTab({ schoolId, role, userId }: { schoolId: string | null; 
   const presentLike = counts.present + counts.late + counts.half_day;
   const attendancePct = totalMarked > 0 ? Math.round((presentLike / totalMarked) * 100) : null;
 
+  const daysInMonth = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
+  const startDayOfWeek = startOfMonth(currentMonth).getDay();
+  const getStatusForDay = (day: Date) => recordsByDate[format(day, 'yyyy-MM-dd')];
+  const selectedDayStatus = selectedDay ? getStatusForDay(selectedDay) : undefined;
+  const selectedDayOpt = selectedDayStatus ? STATUS_OPTIONS.find((o) => o.value === selectedDayStatus) : undefined;
+  const showContent = role === 'teacher' || !!activeStudentId;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>My Attendance</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-3 items-center">
-          {role === 'parent' && (
-            <Select value={selectedChildId} onValueChange={setSelectedChildId}>
-              <SelectTrigger className="w-56">
-                <SelectValue placeholder="Select child" />
-              </SelectTrigger>
-              <SelectContent>
-                {linkedChildren.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.full_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-          <input
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-            className="border rounded-md px-3 py-2 text-sm"
-          />
+    <div className="relative">
+      <div className="absolute -top-10 right-0 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl pointer-events-none" />
+      <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.12] blur-3xl pointer-events-none" />
+
+      <div className="relative z-10 space-y-5">
+        <div className="rounded-2xl md:rounded-3xl p-5 md:p-7 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-lg">
+          <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
+          <div className="absolute right-24 top-10 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="relative">
+            <h1 className="text-xl md:text-2xl font-bold text-white">My Attendance</h1>
+            <p className="text-emerald-100 text-xs md:text-sm mt-0.5">Your day-by-day attendance record</p>
+          </div>
         </div>
 
-        {loading && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
-          </div>
+        {role === 'parent' && (
+          <Select value={selectedChildId} onValueChange={setSelectedChildId}>
+            <SelectTrigger className="w-56">
+              <SelectValue placeholder="Select child" />
+            </SelectTrigger>
+            <SelectContent>
+              {linkedChildren.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.full_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
 
         {role === 'parent' && linkedChildren.length === 0 && !loading && (
           <p className="text-sm text-muted-foreground">No linked children found.</p>
         )}
 
-        {!loading && (role === 'teacher' || activeStudentId) && (
-          <>
-            {totalMarked > 0 && (
-              <div className={`flex flex-col md:flex-row items-center gap-6 p-5 bg-white border border-gray-100 ${CARD_SHADOW}`}>
-                <div className="w-full md:w-56 h-56 shrink-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={STATUS_OPTIONS.map((opt) => ({ name: opt.label, value: counts[opt.value] })).filter((d) => d.value > 0)}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={50}
-                        outerRadius={80}
-                        paddingAngle={2}
-                      >
-                        {STATUS_OPTIONS.filter((opt) => counts[opt.value] > 0).map((opt) => (
-                          <Cell key={opt.value} fill={opt.hex} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex-1 space-y-3 text-center md:text-left">
-                  {attendancePct !== null && (
-                    <div className="text-3xl font-bold text-gray-800">
-                      {attendancePct}%
-                      <span className="text-sm font-normal text-muted-foreground ml-2">
-                        attendance ({totalMarked} days marked this month)
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                    {STATUS_OPTIONS.map((opt) => (
-                      <div key={opt.value} className={`text-sm font-semibold px-4 py-2 ${CARD_SHADOW} ${opt.soft}`}>
-                        {counts[opt.value]} {opt.label}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        <div className="flex gap-2 flex-wrap">
+          {STATUS_OPTIONS.map((opt) => (
+            <div key={opt.value} className={`flex items-center gap-1.5 rounded-full border px-3 py-1 ${opt.soft}`}>
+              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: opt.hex }} />
+              <span className="text-xs font-medium">{opt.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {showContent && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 md:p-5">
+              <div className="flex items-center justify-between mb-4 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl px-2 py-2.5 shadow-sm">
+                <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white">
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <h2 className="text-base md:text-lg font-bold text-white">{format(currentMonth, 'MMMM yyyy')}</h2>
+                <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="p-1.5 rounded-lg hover:bg-white/20 transition-colors text-white">
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
-            )}
-            {totalMarked === 0 && (
-              <p className="text-sm text-muted-foreground">No attendance records for this month yet.</p>
-            )}
-          </>
+
+              <div className="grid grid-cols-7 mb-1">
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d) => (
+                  <div key={d} className="text-center text-[11px] font-bold text-emerald-400 py-1.5 uppercase tracking-wide">{d}</div>
+                ))}
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center gap-2 py-10 text-muted-foreground text-sm">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+                </div>
+              ) : (
+                <div className="grid grid-cols-7 gap-1">
+                  {Array.from({ length: startDayOfWeek }).map((_, i) => <div key={`e-${i}`} />)}
+                  {daysInMonth.map((day) => {
+                    const status = getStatusForDay(day);
+                    const opt = status ? STATUS_OPTIONS.find((o) => o.value === status) : undefined;
+                    const isToday = isSameDay(day, new Date());
+                    const isSelected = selectedDay && isSameDay(day, selectedDay);
+                    return (
+                      <button
+                        key={day.toISOString()}
+                        onClick={() => setSelectedDay(selectedDay && isSameDay(day, selectedDay) ? null : day)}
+                        className={`relative min-h-[48px] md:min-h-[58px] p-1 md:p-1.5 rounded-lg text-left transition-all border ${
+                          isSelected ? 'border-emerald-400 bg-emerald-50 shadow-sm' :
+                          isToday ? 'border-teal-200 bg-teal-50/70' :
+                          'border-transparent hover:border-emerald-100 hover:bg-emerald-50/50'
+                        }`}
+                      >
+                        <span className={`text-xs font-medium flex items-center justify-center mb-1 h-5 w-5 rounded-full ${
+                          isToday ? 'bg-gradient-to-br from-emerald-600 to-teal-600 text-white font-bold shadow-sm' : 'text-foreground'
+                        }`}>
+                          {format(day, 'd')}
+                        </span>
+                        {opt && (
+                          <div className={`text-[9px] md:text-[10px] truncate px-1 py-0.5 rounded ${opt.soft} font-medium`}>
+                            {opt.label}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4">
+              <div className="flex items-center justify-between mb-3 pb-3 border-b border-emerald-50">
+                <h3 className="font-bold text-sm text-emerald-900 flex items-center gap-1.5">
+                  {selectedDay && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
+                  {selectedDay ? format(selectedDay, 'EEEE, MMM d') : 'Monthly Summary'}
+                </h3>
+                {selectedDay && (
+                  <button onClick={() => setSelectedDay(null)} className="text-xs text-muted-foreground hover:text-emerald-600 transition-colors">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {selectedDay ? (
+                selectedDayOpt ? (
+                  <div className={`p-3 rounded-xl border ${selectedDayOpt.soft}`}>
+                    <p className="text-sm font-semibold">{selectedDayOpt.label}</p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">No attendance marked on this day.</p>
+                )
+              ) : (
+                <>
+                  {totalMarked > 0 ? (
+                    <div className="space-y-3">
+                      {attendancePct !== null && (
+                        <div className="text-3xl font-bold text-gray-800">
+                          {attendancePct}%
+                          <span className="text-xs font-normal text-muted-foreground ml-2 block mt-1">
+                            attendance ({totalMarked} days marked this month)
+                          </span>
+                        </div>
+                      )}
+                      <div className="space-y-1.5">
+                        {STATUS_OPTIONS.map((opt) => (
+                          <div key={opt.value} className={`flex items-center justify-between text-xs font-semibold px-3 py-2 rounded-lg ${opt.soft}`}>
+                            <span>{opt.label}</span>
+                            <span>{counts[opt.value]}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">No attendance records for this month yet.</p>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 
