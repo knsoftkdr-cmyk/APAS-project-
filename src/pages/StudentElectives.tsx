@@ -1,9 +1,8 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/PageHeader";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, BookOpen, Clock, MapPin, User, CheckCircle2, XCircle } from "lucide-react";
+import { Loader2, BookOpen, Clock, MapPin, User, CheckCircle2, XCircle, Sparkles } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -92,10 +91,6 @@ export default function StudentElectives() {
         body: { elective_id: electiveId },
       });
       if (error) {
-        // Supabase wraps non-2xx responses in a generic FunctionsHttpError whose
-        // .message is just "Edge Function returned a non-2xx status code" — the
-        // actual { error: "..." } body our function sends is on error.context,
-        // which is the raw Response object and needs to be read/parsed explicitly.
         let serverMessage: string | null = null;
         try {
           const ctx = (error as any)?.context;
@@ -140,108 +135,161 @@ export default function StudentElectives() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6">
-        <PageHeader
-          title="Electives"
-          subtitle="Browse and choose your elective subjects. You can pick one elective per day/period slot."
-        />
+      <div className="min-h-screen relative overflow-x-hidden">
+        {/* Layered waves at top */}
+        <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#3b82f6" />
+        </svg>
+        <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#2563eb" />
+        </svg>
 
-        {/* My current choices */}
-        {myChoices.length > 0 && (
-          <Card>
-            <CardContent className="pt-6">
-              <h2 className="font-semibold text-sm text-muted-foreground mb-3">Your Choices</h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="relative z-10 p-4 md:p-6 space-y-4 md:space-y-6 max-w-5xl mx-auto">
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex items-start md:items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Electives</h1>
+                <p className="text-sky-100 text-xs md:text-sm mt-0.5">Browse and choose your elective subjects. You can pick one elective per day/period slot.</p>
+              </div>
+            </div>
+          </div>
+
+          {/* My current choices */}
+          {myChoices.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                <h2 className="font-semibold text-sm text-gray-700">Your Choices</h2>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {myChoices.map((choice) => (
-                  <div key={choice.id} className="border rounded-lg p-3 bg-primary/5 border-primary/20">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="font-medium text-sm">{choice.electives?.name}</p>
-                        <p className="text-xs text-muted-foreground">{choice.electives?.subject}</p>
+                  <Card
+                    key={choice.id}
+                    className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-300"
+                  >
+                    <div className="h-1 bg-gradient-to-r from-blue-400 to-cyan-500" />
+                    <CardContent className="pt-4 space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate">{choice.electives?.name}</p>
+                          <p className="text-xs text-muted-foreground">{choice.electives?.subject}</p>
+                        </div>
+                        <Badge className="shrink-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> Enrolled
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="text-xs">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Enrolled
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2 capitalize">
-                      {choice.day_of_week} · Period {choice.period_number}
-                    </p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="mt-2 h-7 text-xs text-destructive hover:text-destructive"
-                      disabled={actingOn === choice.id}
-                      onClick={() => handleDrop(choice.id)}
-                    >
-                      {actingOn === choice.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
-                      Drop
-                    </Button>
-                  </div>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground capitalize">
+                        <Clock className="h-3 w-3 text-blue-400" />
+                        {choice.day_of_week} · Period {choice.period_number}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-destructive hover:text-destructive px-0"
+                        disabled={actingOn === choice.id}
+                        onClick={() => handleDrop(choice.id)}
+                      >
+                        {actingOn === choice.id ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
+                        Drop
+                      </Button>
+                    </CardContent>
+                  </Card>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Available electives */}
-        <div>
-          <h2 className="font-semibold text-sm text-muted-foreground mb-3">Available Electives</h2>
-          {loading && (
-            <div className="flex items-center justify-center py-12 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading electives...
             </div>
           )}
-          {!loading && electives.length === 0 && (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">
-              No electives available for your grade yet.
-            </CardContent></Card>
-          )}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {electives.map((elective) => {
-              const alreadyChosen = chosenElectiveIds.has(elective.id);
-              return (
-                <Card key={elective.id} className={alreadyChosen ? "border-primary/40" : ""}>
-                  <CardContent className="pt-6 space-y-3">
-                    <div>
-                      <h3 className="font-semibold flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-primary" /> {elective.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{elective.subject}</p>
-                    </div>
-                    <div className="space-y-1.5 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span className="capitalize">{elective.day_of_week} · Period {elective.period_number}</span>
+
+          {/* Available electives */}
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="h-4 w-4 text-blue-500" />
+              <h2 className="font-semibold text-sm text-gray-700">Available Electives</h2>
+            </div>
+
+            {loading && (
+              <div className="flex items-center justify-center py-12 text-sky-600">
+                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading electives...
+              </div>
+            )}
+
+            {!loading && electives.length === 0 && (
+              <Card className="border-blue-100 bg-white/70 backdrop-blur-sm">
+                <CardContent className="py-12 text-center">
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mx-auto mb-3">
+                    <BookOpen className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <p className="text-muted-foreground text-sm">No electives available for your grade yet.</p>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {electives.map((elective) => {
+                const alreadyChosen = chosenElectiveIds.has(elective.id);
+                return (
+                  <Card
+                    key={elective.id}
+                    className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow duration-300"
+                  >
+                    <div className="h-1 bg-gradient-to-r from-blue-400 to-cyan-500" />
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <CardTitle className="text-sm md:text-base flex items-center gap-2">
+                            <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                              <BookOpen className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600" />
+                            </div>
+                            <span className="truncate">{elective.name}</span>
+                          </CardTitle>
+                          <p className="text-xs md:text-sm text-muted-foreground mt-1 ml-9 md:ml-10">{elective.subject}</p>
+                        </div>
+                        {alreadyChosen && (
+                          <Badge className="shrink-0 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> Chosen
+                          </Badge>
+                        )}
                       </div>
-                      {elective.room && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-3.5 w-3.5" /> {elective.room}
-                        </div>
-                      )}
-                      {elective.teacher_id && teacherNames[elective.teacher_id] && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5" /> {teacherNames[elective.teacher_id]}
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      className="w-full"
-                      size="sm"
-                      variant={alreadyChosen ? "secondary" : "default"}
-                      disabled={alreadyChosen || actingOn === elective.id}
-                      onClick={() => handleChoose(elective.id)}
-                    >
-                      {actingOn === elective.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                      ) : alreadyChosen ? (
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                      ) : null}
-                      {alreadyChosen ? "Chosen" : "Choose"}
-                    </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                      <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs text-muted-foreground mt-2 ml-9 md:ml-10">
+                        <span className="flex items-center gap-1 capitalize">
+                          <Clock className="h-3 w-3 text-blue-400" /> {elective.day_of_week} · Period {elective.period_number}
+                        </span>
+                        {elective.room && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-sky-400" /> {elective.room}
+                          </span>
+                        )}
+                        {elective.teacher_id && teacherNames[elective.teacher_id] && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3 text-sky-400" /> {teacherNames[elective.teacher_id]}
+                          </span>
+                        )}
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <Button
+                        className={`w-full ${alreadyChosen ? "" : "bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white"}`}
+                        size="sm"
+                        variant={alreadyChosen ? "secondary" : "default"}
+                        disabled={alreadyChosen || actingOn === elective.id}
+                        onClick={() => handleChoose(elective.id)}
+                      >
+                        {actingOn === elective.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        ) : alreadyChosen ? (
+                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                        ) : null}
+                        {alreadyChosen ? "Chosen" : "Choose"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

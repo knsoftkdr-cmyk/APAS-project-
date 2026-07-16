@@ -15,7 +15,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2, ArrowLeft, Upload, FileText, Trash2, Plus,
-  CalendarDays, Send, CheckCircle2, Users2, Download,
+  CalendarDays, Send, CheckCircle2, Users2, Users, Download,
 } from 'lucide-react';
 import type {
   ProjectGroupFile, ProjectGroupTask, ProjectGroupMember,
@@ -60,7 +60,6 @@ export default function StudentGroupWorkspacePage() {
     if (!groupId || !user) return;
     setLoading(true);
 
-    // Resolve this user's students.id (different from auth.uid()/profiles.id)
     const { data: studentRow } = await supabase
       .from('students')
       .select('id')
@@ -121,7 +120,6 @@ export default function StudentGroupWorkspacePage() {
 
   useEffect(() => { load(); }, [load]);
 
-  // ── Files ──────────────────────────────────────────────────────────────
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !groupId || !user) return;
@@ -173,7 +171,6 @@ export default function StudentGroupWorkspacePage() {
     load();
   };
 
-  // ── Tasks ──────────────────────────────────────────────────────────────
   const handleAddTask = async () => {
     if (!newTaskTitle.trim() || !groupId || !user) return;
     const { error } = await supabase.from('project_group_tasks').insert({
@@ -210,7 +207,6 @@ export default function StudentGroupWorkspacePage() {
     load();
   };
 
-  // ── Submission ────────────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!groupId || !user || !groupProjectId) return;
     setSubmitting(true);
@@ -238,8 +234,8 @@ export default function StudentGroupWorkspacePage() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <div className="flex items-center justify-center gap-2 py-24 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin text-emerald-500" /> Loading...
         </div>
       </AppLayout>
     );
@@ -247,197 +243,261 @@ export default function StudentGroupWorkspacePage() {
 
   return (
     <AppLayout>
-      <div className="space-y-6">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/student/group-projects')} className="gap-1 -ml-2">
-          <ArrowLeft className="h-4 w-4" /> Back to Group Projects
-        </Button>
+      <div className="min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
 
-        <div className="flex items-start justify-between flex-wrap gap-2">
-          <div>
-            <h1 className="text-2xl font-semibold">{projectTitle}</h1>
-            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-1">
-              <Users2 className="h-3.5 w-3.5" /> {groupName}
-              {dueDate && (
-                <>
-                  <span>·</span>
-                  <CalendarDays className="h-3.5 w-3.5" /> Due {new Date(dueDate).toLocaleDateString()}
-                </>
-              )}
-            </p>
+        <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/student/group-projects')}
+            className="gap-1 -ml-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back to Group Projects
+          </Button>
+
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold text-white truncate">{projectTitle}</h1>
+                <p className="text-emerald-100 text-xs md:text-sm mt-0.5 flex items-center gap-1.5 flex-wrap">
+                  <Users2 className="h-3.5 w-3.5" /> {groupName}
+                  {dueDate && (
+                    <>
+                      <span>·</span>
+                      <CalendarDays className="h-3.5 w-3.5" /> Due {new Date(dueDate).toLocaleDateString()}
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        {projectDescription && (
-          <Card><CardContent className="pt-4 text-sm text-muted-foreground">{projectDescription}</CardContent></Card>
-        )}
+          {projectDescription && (
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="pt-4 text-sm text-muted-foreground">{projectDescription}</CardContent>
+            </Card>
+          )}
 
-        {/* Members */}
-        <div className="flex flex-wrap gap-2">
-          {members.map((m) => (
-            <Badge key={m.id} variant="secondary">
-              {m.student_name}{m.is_leader ? ' (Leader)' : ''}
-            </Badge>
-          ))}
-        </div>
+          {/* Members */}
+          <div className="flex flex-wrap gap-2">
+            {members.map((m) => (
+              <Badge
+                key={m.id}
+                variant="outline"
+                className="border-emerald-200 text-emerald-700 bg-emerald-50/50 font-medium"
+              >
+                {m.student_name}{m.is_leader ? ' (Leader)' : ''}
+              </Badge>
+            ))}
+          </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Shared Files */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-base">Shared Files</CardTitle>
-              <div>
-                <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
-                <Button size="sm" variant="outline" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
-                  {uploading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-2 h-3.5 w-3.5" />}
-                  Upload
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {files.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No files shared yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {files.map((f) => (
-                    <div key={f.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-                      <button onClick={() => handleFileDownload(f)} className="flex items-center gap-2 hover:underline text-left min-w-0">
-                        <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{f.file_name}</span>
-                      </button>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <button onClick={() => handleFileDownload(f)} className="text-muted-foreground hover:text-foreground">
-                          <Download className="h-3.5 w-3.5" />
+          <div className="grid gap-4 lg:grid-cols-2">
+            {/* Shared Files */}
+            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden border-l-4 border-l-emerald-400">
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                    <FileText className="h-4 w-4 text-white" />
+                  </div>
+                  <CardTitle className="text-base">Shared Files</CardTitle>
+                </div>
+                <div>
+                  <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileUpload} />
+                  <Button
+                    size="sm"
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+                  >
+                    {uploading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-2 h-3.5 w-3.5" />}
+                    Upload
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {files.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center mx-auto mb-3">
+                      <FileText className="h-6 w-6 text-emerald-400" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No files shared yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {files.map((f) => (
+                      <div key={f.id} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm bg-slate-50/50">
+                        <button onClick={() => handleFileDownload(f)} className="flex items-center gap-2 hover:underline text-left min-w-0">
+                          <FileText className="h-4 w-4 shrink-0 text-emerald-500" />
+                          <span className="truncate">{f.file_name}</span>
                         </button>
-                        {f.uploaded_by === user?.id && (
-                          <button onClick={() => handleFileDelete(f)} className="text-muted-foreground hover:text-destructive">
-                            <Trash2 className="h-3.5 w-3.5" />
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button onClick={() => handleFileDownload(f)} className="text-muted-foreground hover:text-emerald-700">
+                            <Download className="h-3.5 w-3.5" />
                           </button>
-                        )}
+                          {f.uploaded_by === user?.id && (
+                            <button onClick={() => handleFileDelete(f)} className="text-muted-foreground hover:text-destructive">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Tasks */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Tasks</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex gap-2">
-                <Input
-                  placeholder="New task..."
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  className="h-8 text-sm"
-                />
-                <Select value={newTaskAssignee} onValueChange={setNewTaskAssignee}>
-                  <SelectTrigger className="h-8 w-32 text-xs shrink-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="group">Whole group</SelectItem>
-                    {members.map((m) => (
-                      <SelectItem key={m.student_id} value={m.student_id}>{m.student_name}</SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-                <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleAddTask}>
-                  <Plus className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-
-              {tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">No tasks yet.</p>
-              ) : (
-                <div className="space-y-2">
-                  {tasks.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between rounded-md border px-3 py-2 text-sm gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium">{t.title}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {t.assigned_to ? nameById.get(t.assigned_to) ?? 'Unknown' : 'Whole group'}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Select value={t.status} onValueChange={(v) => handleTaskStatusChange(t.id, v as TaskStatus)}>
-                          <SelectTrigger className="h-7 w-28 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {(['todo', 'in_progress', 'done'] as TaskStatus[]).map((s) => (
-                              <SelectItem key={s} value={s} className="text-xs">{TASK_STATUS_LABEL[s]}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <button onClick={() => handleDeleteTask(t.id)} className="text-muted-foreground hover:text-destructive">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Submission */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Group Submission</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {submission ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-md px-3 py-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Submitted on {new Date(submission.submitted_at).toLocaleString()}
-                  {submission.status === 'graded' && <Badge className="ml-auto">Graded</Badge>}
-                </div>
-                {submission.note && <p className="text-sm text-muted-foreground">{submission.note}</p>}
-
-                {(groupGrade || myGrade) && (
-                  <div className="space-y-2 pt-2 border-t">
-                    {groupGrade && (
-                      <div className="text-sm">
-                        <span className="font-medium">Group grade: </span>
-                        {groupGrade.score ?? '—'} / {groupGrade.max_score}
-                        {groupGrade.feedback && <p className="text-xs text-muted-foreground mt-1">{groupGrade.feedback}</p>}
-                      </div>
-                    )}
-                    {myGrade && (
-                      <div className="text-sm">
-                        <span className="font-medium">Your individual grade: </span>
-                        {myGrade.score ?? '—'} / {myGrade.max_score}
-                        {myGrade.feedback && <p className="text-xs text-muted-foreground mt-1">{myGrade.feedback}</p>}
-                      </div>
-                    )}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Tasks */}
+            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden border-l-4 border-l-teal-400">
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                    <CheckCircle2 className="h-4 w-4 text-white" />
+                  </div>
+                  <CardTitle className="text-base">Tasks</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="New task..."
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    className="h-8 text-sm"
+                  />
+                  <Select value={newTaskAssignee} onValueChange={setNewTaskAssignee}>
+                    <SelectTrigger className="h-8 w-32 text-xs shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group">Whole group</SelectItem>
+                      {members.map((m) => (
+                        <SelectItem key={m.student_id} value={m.student_id}>{m.student_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="icon"
+                    className="h-8 w-8 shrink-0 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+                    onClick={handleAddTask}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                {tasks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center mx-auto mb-3">
+                      <CheckCircle2 className="h-6 w-6 text-teal-400" />
+                    </div>
+                    <p className="text-sm text-muted-foreground">No tasks yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {tasks.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm gap-2 bg-slate-50/50">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{t.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {t.assigned_to ? nameById.get(t.assigned_to) ?? 'Unknown' : 'Whole group'}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Select value={t.status} onValueChange={(v) => handleTaskStatusChange(t.id, v as TaskStatus)}>
+                            <SelectTrigger className="h-7 w-28 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {(['todo', 'in_progress', 'done'] as TaskStatus[]).map((s) => (
+                                <SelectItem key={s} value={s} className="text-xs">{TASK_STATUS_LABEL[s]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <button onClick={() => handleDeleteTask(t.id)} className="text-muted-foreground hover:text-destructive">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Submission */}
+          <Card className="border-slate-200 shadow-sm overflow-hidden border-l-4 border-l-emerald-400">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                  <Send className="h-4 w-4 text-white" />
+                </div>
+                <CardTitle className="text-base">Group Submission</CardTitle>
               </div>
-            ) : (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Upload your files above, then submit when your group's work is ready for grading.
-                </p>
-                <Textarea
-                  placeholder="Add a note for your teacher (optional)"
-                  value={submissionNote}
-                  onChange={(e) => setSubmissionNote(e.target.value)}
-                  rows={3}
-                />
-                <Button onClick={handleSubmit} disabled={submitting} className="gap-2">
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Submit Project
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {submission ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm text-emerald-700 bg-emerald-50 rounded-lg px-3 py-2 border border-emerald-100">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Submitted on {new Date(submission.submitted_at).toLocaleString()}
+                    {submission.status === 'graded' && (
+                      <Badge className="ml-auto bg-emerald-500 text-white hover:opacity-90">Graded</Badge>
+                    )}
+                  </div>
+                  {submission.note && <p className="text-sm text-muted-foreground">{submission.note}</p>}
+
+                  {(groupGrade || myGrade) && (
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      {groupGrade && (
+                        <div className="text-sm">
+                          <span className="font-medium">Group grade: </span>
+                          {groupGrade.score ?? '—'} / {groupGrade.max_score}
+                          {groupGrade.feedback && <p className="text-xs text-muted-foreground mt-1">{groupGrade.feedback}</p>}
+                        </div>
+                      )}
+                      {myGrade && (
+                        <div className="text-sm">
+                          <span className="font-medium">Your individual grade: </span>
+                          {myGrade.score ?? '—'} / {myGrade.max_score}
+                          {myGrade.feedback && <p className="text-xs text-muted-foreground mt-1">{myGrade.feedback}</p>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Upload your files above, then submit when your group's work is ready for grading.
+                  </p>
+                  <Textarea
+                    placeholder="Add a note for your teacher (optional)"
+                    value={submissionNote}
+                    onChange={(e) => setSubmissionNote(e.target.value)}
+                    rows={3}
+                  />
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    Submit Project
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );

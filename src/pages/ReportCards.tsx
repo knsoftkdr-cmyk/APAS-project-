@@ -272,95 +272,121 @@ export default function ReportCards() {
     toast.success("Report card opened — use Print → Save as PDF");
   };
 
-  if (loading) return (
-    <AppLayout>
-      <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-    </AppLayout>
-  );
+if (loading) return (
+  <AppLayout>
+    <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
+      <Loader2 className="h-5 w-5 animate-spin text-indigo-500" /> Loading report cards...
+    </div>
+  </AppLayout>
+);
 
-  return (
-    <AppLayout>
-      <div className="p-6 space-y-6 max-w-6xl mx-auto">
+return (
+  <AppLayout>
+    <div className="min-h-screen relative overflow-x-hidden">
+      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
+      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
+      <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
+
+      <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold">Report Cards</h1>
-            {schoolName && <p className="text-sm font-medium text-foreground/80 mt-0.5">{schoolName}</p>}
-            <p className="text-muted-foreground text-sm mt-1">
-              {isStudent ? "Download your report card" : "View gradebook and generate student report cards"}
-            </p>
+        <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="relative flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <FileText className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Report Cards</h1>
+              {schoolName && <p className="text-indigo-100 text-sm font-medium mt-0.5">{schoolName}</p>}
+              <p className="text-indigo-100 text-xs md:text-sm mt-0.5">
+                {isStudent ? "Download your report card" : "View gradebook and generate student report cards"}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Select value={selectedSemId} onValueChange={setSelectedSemId}>
-            <SelectTrigger className="w-52"><SelectValue placeholder="Select Term / Semester" /></SelectTrigger>
-            <SelectContent>
-              {semesters.map((sem) => {
-                const yr = academicYears.find((y) => y.id === sem.academic_year_id);
-                return <SelectItem key={sem.id} value={sem.id}>{yr ? `${yr.name} — ${sem.name}` : sem.name}</SelectItem>;
-              })}
-            </SelectContent>
-          </Select>
+        <Card className="overflow-hidden border-indigo-100 shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+          <CardContent className="p-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <Select value={selectedSemId} onValueChange={setSelectedSemId}>
+                <SelectTrigger className="w-full sm:w-52 border-slate-200 focus:ring-indigo-400"><SelectValue placeholder="Select Term / Semester" /></SelectTrigger>
+                <SelectContent>
+                  {semesters.map((sem) => {
+                    const yr = academicYears.find((y) => y.id === sem.academic_year_id);
+                    return <SelectItem key={sem.id} value={sem.id}>{yr ? `${yr.name} — ${sem.name}` : sem.name}</SelectItem>;
+                  })}
+                </SelectContent>
+              </Select>
 
-          {isParent && linkedChildren.length > 1 && (
-            <Select value={selectedChildId} onValueChange={setSelectedChildId}>
-              <SelectTrigger className="w-48"><SelectValue placeholder="Select Child" /></SelectTrigger>
-              <SelectContent>
-                {linkedChildren.map((child) => (
-                  <SelectItem key={child.id} value={child.id}>{child.full_name ?? "Unnamed"}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+              {isParent && linkedChildren.length > 1 && (
+                <Select value={selectedChildId} onValueChange={setSelectedChildId}>
+                  <SelectTrigger className="w-full sm:w-48 border-slate-200 focus:ring-indigo-400"><SelectValue placeholder="Select Child" /></SelectTrigger>
+                  <SelectContent>
+                    {linkedChildren.map((child) => (
+                      <SelectItem key={child.id} value={child.id}>{child.full_name ?? "Unnamed"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
-          {isAdmin && (
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-36"><SelectValue placeholder="All Classes" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Classes</SelectItem>
-                {uniqueClasses.map((c) => (
-                  <SelectItem key={c} value={c}>{/^\d+$/.test(c) ? `Class ${c}` : c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+              {isAdmin && (
+                <Select value={classFilter} onValueChange={setClassFilter}>
+                  <SelectTrigger className="w-full sm:w-36 border-slate-200 focus:ring-indigo-400"><SelectValue placeholder="All Classes" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Classes</SelectItem>
+                    {uniqueClasses.map((c) => (
+                      <SelectItem key={c} value={c}>{/^\d+$/.test(c) ? `Class ${c}` : c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
 
-          {isTeacher && (
-            <Badge variant="outline" className="px-3 py-1.5">
-              Class {normalizeClass((profile as any)?.class_grade ?? "") || "-"}
-            </Badge>
-          )}
-        </div>
+              {isTeacher && (
+                <Badge variant="outline" className="px-3 py-1.5 border-indigo-200 text-indigo-700 bg-indigo-50/50">
+                  Class {normalizeClass((profile as any)?.class_grade ?? "") || "-"}
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {!selectedSemId ? (
-          <Card>
-            <CardContent className="py-16 text-center text-muted-foreground">
-              <FileText className="h-10 w-10 mx-auto mb-3" />
-              <p className="font-medium">Select a term to view report cards</p>
+          <Card className="border-2 border-dashed border-indigo-100 bg-indigo-50/20">
+            <CardContent className="py-16 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                <FileText className="h-7 w-7 text-indigo-400" />
+              </div>
+              <p className="font-medium text-slate-800">Select a term to view report cards</p>
             </CardContent>
           </Card>
         ) : semLoading ? (
-          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          <div className="flex items-center justify-center gap-2 py-12 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin text-indigo-500" /> Loading marks...
+          </div>
         ) : (isStudent || isParent) ? (
           /* Student or Parent: show the linked student report card directly */
           activeChild ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <GraduationCap className="h-5 w-5" />
-                  {activeChild.full_name} — {selectedSem?.name}
+            <Card className="overflow-hidden border-indigo-100 shadow-sm">
+              <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center shrink-0">
+                    <GraduationCap className="h-4.5 w-4.5 text-indigo-600" />
+                  </div>
+                  <span className="truncate">{activeChild.full_name} — {selectedSem?.name}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-4 p-4 bg-muted rounded-lg flex-wrap">
+                <div className="flex items-center gap-4 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 flex-wrap">
                   <div className="text-center">
-                    <p className="text-3xl font-bold">{gpaMap[activeChild.id]?.gpa ?? "-"}</p>
+                    <p className="text-3xl font-bold text-indigo-700">{gpaMap[activeChild.id]?.gpa ?? "-"}</p>
                     <p className="text-xs text-muted-foreground">GPA / 10</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-3xl font-bold">
+                    <p className="text-3xl font-bold text-violet-700">
                       {(marksMap[activeChild.id] || []).length > 0
                         ? `${Math.round((marksMap[activeChild.id] || []).reduce((a, m) => a + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / (marksMap[activeChild.id] || []).length)}%`
                         : "-"}
@@ -368,19 +394,24 @@ export default function ReportCards() {
                     <p className="text-xs text-muted-foreground">Overall %</p>
                   </div>
                   {gpaMap[activeChild.id] && (
-                    <Badge className={gpaMap[activeChild.id].result_status === "pass" ? "bg-green-100 text-green-700 text-sm px-3 py-1" : "bg-red-100 text-red-700 text-sm px-3 py-1"}>
+                    <Badge className={gpaMap[activeChild.id].result_status === "pass" ? "bg-emerald-500 text-white hover:bg-emerald-500 text-sm px-3 py-1" : "bg-red-500 text-white hover:bg-red-500 text-sm px-3 py-1"}>
                       {gpaMap[activeChild.id].result_status === "pass" ? "✓ Pass" : "✗ Fail"}
                     </Badge>
                   )}
-                  <Button className="ml-auto" onClick={() => generatePDF(activeChild)} disabled={generatingPdf === activeChild.id}>
+                  <Button
+                    className="ml-auto w-full sm:w-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+                    onClick={() => generatePDF(activeChild)}
+                    disabled={generatingPdf === activeChild.id}
+                  >
                     {generatingPdf === activeChild.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
                     Download Report Card
                   </Button>
                 </div>
                 {(marksMap[activeChild.id] || []).length > 0 && (
-                  <Table>
+                  <div className="overflow-x-auto">
+                  <Table className="min-w-[520px] md:min-w-0">
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="bg-indigo-50/50 hover:bg-indigo-50/50">
                         <TableHead>Subject</TableHead>
                         <TableHead className="text-center">Marks</TableHead>
                         <TableHead className="text-center">%</TableHead>
@@ -392,39 +423,52 @@ export default function ReportCards() {
                         const pct = m.marks_obtained !== null ? Math.round(((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100) : null;
                         return (
                           <TableRow key={i}>
-                            <TableCell className="font-medium capitalize">{m.subject}</TableCell>
+                            <TableCell className="font-medium capitalize text-slate-800">{m.subject}</TableCell>
                             <TableCell className="text-center">{m.marks_obtained ?? "-"}/{m.max_marks}</TableCell>
                             <TableCell className="text-center">{pct !== null ? `${pct}%` : "-"}</TableCell>
                             <TableCell className="text-center">
-                              <span className={pct !== null ? (pct >= 50 ? "text-green-600 font-semibold" : "text-red-500 font-semibold") : ""}>{pct !== null ? getGrade(pct) : "-"}</span>
+                              <span className={pct !== null ? (pct >= 50 ? "text-emerald-600 font-semibold" : "text-red-500 font-semibold") : ""}>{pct !== null ? getGrade(pct) : "-"}</span>
                             </TableCell>
                           </TableRow>
                         );
                       })}
                     </TableBody>
                   </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
           ) : (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">Could not find the linked student record. Contact your school admin.</CardContent></Card>
+            <Card className="border-slate-200">
+              <CardContent className="py-12 text-center text-muted-foreground">Could not find the linked student record. Contact your school admin.</CardContent>
+            </Card>
           )
         ) : (
           /* Admin/Teacher: gradebook grid */
           displayStudents.length === 0 ? (
-            <Card><CardContent className="py-12 text-center text-muted-foreground">No students found for this filter.</CardContent></Card>
+            <Card className="border-slate-200">
+              <CardContent className="py-12 text-center text-muted-foreground">No students found for this filter.</CardContent>
+            </Card>
           ) : (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="text-sm text-muted-foreground">{displayStudents.length} students</p>
-                <Button variant="outline" size="sm" onClick={() => displayStudents.forEach((s) => generatePDF(s))} disabled={!!generatingPdf}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  onClick={() => displayStudents.forEach((s) => generatePDF(s))}
+                  disabled={!!generatingPdf}
+                >
                   <Download className="h-4 w-4 mr-2" /> Generate All PDFs
                 </Button>
               </div>
-              <Card>
-                <Table>
+              <Card className="overflow-hidden border-indigo-100 shadow-sm">
+                <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+                <div className="overflow-x-auto">
+                <Table className="min-w-[800px] md:min-w-0">
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="bg-indigo-50/50 hover:bg-indigo-50/50">
                       <TableHead>Student</TableHead>
                       <TableHead>Class</TableHead>
                       <TableHead>Section</TableHead>
@@ -441,22 +485,35 @@ export default function ReportCards() {
                       const sm = marksMap[s.id] || [];
                       const avgPct = sm.length > 0 ? Math.round(sm.reduce((a, m) => a + ((m.marks_obtained ?? 0) / (m.max_marks || 100)) * 100, 0) / sm.length) : null;
                       return (
-                        <TableRow key={s.id}>
-                          <TableCell className="font-medium">{s.full_name ?? "Unnamed"}</TableCell>
+                        <TableRow key={s.id} className="hover:bg-indigo-50/30">
+                          <TableCell className="font-medium text-slate-800">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+                                {(s.full_name ?? "U")[0]}
+                              </div>
+                              {s.full_name ?? "Unnamed"}
+                            </div>
+                          </TableCell>
                           <TableCell className="text-sm text-muted-foreground">{s.class ?? "-"}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{s.section ?? "-"}</TableCell>
-                          <TableCell className="text-center font-semibold">{gpa?.gpa ?? "-"}</TableCell>
+                          <TableCell className="text-center font-semibold text-indigo-700">{gpa?.gpa ?? "-"}</TableCell>
                           <TableCell className="text-center">{avgPct !== null ? `${avgPct}%` : "-"}</TableCell>
                           <TableCell className="text-center">
                             {gpa ? (
-                              <Badge className={gpa.result_status === "pass" ? "bg-green-100 text-green-700" : gpa.result_status === "fail" ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600"}>
+                              <Badge className={gpa.result_status === "pass" ? "bg-emerald-500 text-white hover:bg-emerald-500" : gpa.result_status === "fail" ? "bg-red-500 text-white hover:bg-red-500" : "bg-slate-200 text-slate-600 hover:bg-slate-200"}>
                                 {gpa.result_status === "pass" ? "Pass" : gpa.result_status === "fail" ? "Fail" : "Pending"}
                               </Badge>
                             ) : <span className="text-xs text-muted-foreground">—</span>}
                           </TableCell>
                           <TableCell className="text-center text-sm text-muted-foreground">{sm.length}</TableCell>
                           <TableCell>
-                            <Button size="sm" variant="outline" onClick={() => generatePDF(s)} disabled={generatingPdf === s.id}>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                              onClick={() => generatePDF(s)}
+                              disabled={generatingPdf === s.id}
+                            >
                               {generatingPdf === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
                               PDF
                             </Button>
@@ -466,11 +523,13 @@ export default function ReportCards() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               </Card>
             </div>
           )
         )}
       </div>
-    </AppLayout>
-  );
+    </div>
+  </AppLayout>
+);
 }
