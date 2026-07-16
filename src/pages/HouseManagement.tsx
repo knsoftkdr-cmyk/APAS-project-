@@ -223,138 +223,165 @@ export default function HouseManagement() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">House Management</h1>
-            <p className="text-muted-foreground text-sm mt-1">Manage houses, captains, and points for your school</p>
+  <div className="min-h-screen relative overflow-x-hidden">
+    <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-violet-300 opacity-[0.10] blur-3xl" />
+    <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-200 opacity-[0.08] blur-3xl" />
+
+    <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-violet-500 to-violet-600 shadow-lg">
+        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+        <div className="relative flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <Trophy className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">House Management</h1>
+              <p className="text-amber-100 text-xs md:text-sm mt-0.5">Manage houses, captains, and points for your school</p>
+            </div>
           </div>
           {isAdmin && (
-            <Button onClick={openAdd}>
+            <Button onClick={openAdd} className="bg-white text-amber-700 hover:bg-amber-50 shrink-0">
               <Plus className="h-4 w-4 mr-2" /> Add House
             </Button>
           )}
         </div>
+      </div>
 
         {loading ? (
-          <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-        ) : houses.length === 0 ? (
-          <Card>
-            <CardContent className="py-16 text-center">
-              <Trophy className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-              <p className="font-medium">No houses set up yet</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                {isAdmin ? "Create your school's first house to get started." : "Your school admin hasn't set up houses yet."}
-              </p>
-              {isAdmin && (
-                <Button className="mt-4" onClick={openAdd}>
-                  <Plus className="h-4 w-4 mr-2" /> Add House
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
+  <div className="flex items-center justify-center gap-2 py-16 text-muted-foreground">
+    <Loader2 className="h-5 w-5 animate-spin text-amber-500" /> Loading houses...
+  </div>
+) : houses.length === 0 ? (
+  <Card className="border-2 border-dashed border-amber-100 bg-amber-50/20">
+    <CardContent className="py-16 text-center">
+      <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-3">
+        <Trophy className="h-7 w-7 text-amber-500" />
+      </div>
+      <p className="font-medium text-slate-800">No houses set up yet</p>
+      <p className="text-sm text-muted-foreground mt-1">
+        {isAdmin ? "Create your school's first house to get started." : "Your school admin hasn't set up houses yet."}
+      </p>
+      {isAdmin && (
+        <Button className="mt-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={openAdd}>
+          <Plus className="h-4 w-4 mr-2" /> Add House
+        </Button>
+      )}
+    </CardContent>
+  </Card>
+) : (
           <>
             {/* Leaderboard */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Trophy className="h-5 w-5 text-amber-500" /> House Leaderboard
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {[...leaderboard].sort((a, b) => b.total_points - a.total_points).map((row, idx) => (
-                  <div key={row.house_id} className="flex items-center gap-3">
-                    <span className="text-sm font-semibold w-6 text-muted-foreground">#{idx + 1}</span>
-                    <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
-                    <span className="text-sm font-medium w-28 truncate">{row.name}</span>
-                    <div className="flex-1 h-2.5 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${(row.total_points / maxPoints) * 100}%`, backgroundColor: row.color }}
-                      />
-                    </div>
-                    <span className="text-sm font-semibold w-16 text-right">{row.total_points} pts</span>
-                    <span className="text-xs text-muted-foreground w-20 text-right">{row.student_count} students</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <Card className="overflow-hidden border-amber-100 shadow-sm">
+  <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-500" />
+  <CardHeader className="pb-3">
+    <CardTitle className="flex items-center gap-2.5 text-base">
+      <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+        <Trophy className="h-4 w-4 text-amber-600" />
+      </div>
+      House Leaderboard
+    </CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-3">
+    {[...leaderboard].sort((a, b) => b.total_points - a.total_points).map((row, idx) => (
+      <div key={row.house_id} className="flex items-center gap-3 flex-wrap sm:flex-nowrap p-2.5 rounded-xl hover:bg-amber-50/40 transition-colors">
+        <span className={cn(
+          "text-xs font-bold w-7 h-7 rounded-full flex items-center justify-center shrink-0",
+          idx === 0 ? "bg-amber-400 text-white" : idx === 1 ? "bg-slate-300 text-white" : "bg-slate-100 text-slate-500"
+        )}>
+          {idx + 1}
+        </span>
+        <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: row.color }} />
+        <span className="text-sm font-semibold w-full sm:w-28 truncate order-1 sm:order-none capitalize">{row.name}</span>
+        <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden min-w-[100px] order-3 sm:order-none">
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{ width: `${(row.total_points / maxPoints) * 100}%`, backgroundColor: row.color }}
+          />
+        </div>
+        <span className="text-sm font-bold w-16 text-right shrink-0 order-2 sm:order-none">{row.total_points} pts</span>
+        <span className="text-xs text-muted-foreground w-20 text-right shrink-0 hidden sm:block">{row.student_count} students</span>
+      </div>
+    ))}
+  </CardContent>
+</Card>
 
             {/* House Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {houses.map(h => (
                 <Card
-                  key={h.id}
-                  className={cn("overflow-hidden", canManageHouse(h) && "cursor-pointer hover:shadow-md transition-shadow")}
-                  onClick={() => { if (canManageHouse(h)) setViewHouse(h); }}
-                >
-                  <div className="h-1.5" style={{ backgroundColor: h.color }} />
-                  <CardHeader className="pb-2">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base flex items-center gap-2">
-                          <span className="h-3 w-3 rounded-full" style={{ backgroundColor: h.color }} />
-                          {h.name}
-                          {h.code && <Badge variant="outline" className="text-[10px]">{h.code}</Badge>}
-                        </CardTitle>
-                        {h.description && <p className="text-xs text-muted-foreground mt-1">{h.description}</p>}
-                      </div>
-                      <div className="flex gap-1 shrink-0" onClick={e => e.stopPropagation()}>
-                        {canManageHouse(h) && (
-                          <button onClick={() => openAssign(h)} className="p-1.5 rounded hover:bg-muted transition-colors text-blue-600" title="Assign students">
-                            <UserPlus className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                        {canAwardPoints(h) && (
-                          <button onClick={() => setPointsHouse(h)} className="p-1.5 rounded hover:bg-muted transition-colors text-amber-600" title="Award points">
-                            <Award className="h-3.5 w-3.5" />
-                          </button>
-                        )}
-                        {isAdmin && (
-                          <>
-                            <button onClick={() => openEdit(h)} className="p-1.5 rounded hover:bg-muted transition-colors">
-                              <Pencil className="h-3.5 w-3.5" />
-                            </button>
-                            <button onClick={() => deleteHouse(h)} className="p-1.5 rounded hover:bg-muted transition-colors text-red-500">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-1.5 text-sm">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Crown className="h-3.5 w-3.5" />
-                      <span>Captain: {getName(h.house_captain, students) ?? <span className="italic">Not assigned</span>}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Shield className="h-3.5 w-3.5" />
-                      <span>Vice Captain: {getName(h.vice_captain, students) ?? <span className="italic">Not assigned</span>}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Users className="h-3.5 w-3.5" />
-                      <span>Teacher In-charge: {getName(h.teacher_incharge, teachers) ?? <span className="italic">Not assigned</span>}</span>
-                    </div>
-                  </CardContent>
-                </Card>
+  key={h.id}
+  className={cn("overflow-hidden border-slate-200 shadow-sm", canManageHouse(h) && "cursor-pointer hover:shadow-md hover:-translate-y-0.5 transition-all")}
+  onClick={() => { if (canManageHouse(h)) setViewHouse(h); }}
+>
+  <div className="h-1.5" style={{ backgroundColor: h.color }} />
+  <CardHeader className="pb-2">
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0">
+        <CardTitle className="text-base flex items-center gap-2 flex-wrap capitalize">
+          <span className="h-3.5 w-3.5 rounded-full shrink-0" style={{ backgroundColor: h.color }} />
+          <span className="truncate">{h.name}</span>
+          {h.code && <Badge variant="outline" className="text-[10px] uppercase">{h.code}</Badge>}
+        </CardTitle>
+        {h.description && <p className="text-xs text-muted-foreground mt-1">{h.description}</p>}
+      </div>
+      <div className="flex gap-0.5 shrink-0" onClick={e => e.stopPropagation()}>
+        {canManageHouse(h) && (
+          <button onClick={() => openAssign(h)} className="p-2 rounded-lg hover:bg-blue-50 transition-colors text-blue-600" title="Assign students">
+            <UserPlus className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {canAwardPoints(h) && (
+          <button onClick={() => setPointsHouse(h)} className="p-2 rounded-lg hover:bg-amber-50 transition-colors text-amber-600" title="Award points">
+            <Award className="h-3.5 w-3.5" />
+          </button>
+        )}
+        {isAdmin && (
+          <>
+            <button onClick={() => openEdit(h)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors text-slate-500" title="Edit">
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+            <button onClick={() => deleteHouse(h)} className="p-2 rounded-lg hover:bg-red-50 transition-colors text-red-500" title="Delete">
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  </CardHeader>
+  <CardContent className="space-y-2 text-sm pt-1">
+    <div className="flex items-center gap-2.5 text-slate-600 bg-slate-50/60 rounded-lg px-2.5 py-1.5">
+      <Crown className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+      <span className="truncate">Captain: {getName(h.house_captain, students) ?? <span className="italic text-slate-400">Not assigned</span>}</span>
+    </div>
+    <div className="flex items-center gap-2.5 text-slate-600 bg-slate-50/60 rounded-lg px-2.5 py-1.5">
+      <Shield className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+      <span className="truncate">Vice Captain: {getName(h.vice_captain, students) ?? <span className="italic text-slate-400">Not assigned</span>}</span>
+    </div>
+    <div className="flex items-center gap-2.5 text-slate-600 bg-slate-50/60 rounded-lg px-2.5 py-1.5">
+      <Users className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+      <span className="truncate">Teacher In-charge: {getName(h.teacher_incharge, teachers) ?? <span className="italic text-slate-400">Not assigned</span>}</span>
+    </div>
+  </CardContent>
+</Card>
               ))}
             </div>
           </>
         )}
       </div>
+      </div>
 
       {/* View Students Dialog */}
       <Dialog open={!!viewHouse} onOpenChange={(open) => !open && setViewHouse(null)}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full" style={{ backgroundColor: viewHouse?.color }} />
-              {viewHouse?.name} — Students
-            </DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[80vh] overflow-y-auto">
+  <DialogHeader>
+    <DialogTitle className="flex items-center gap-2 capitalize">
+      <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: viewHouse?.color }} />
+      <span className="truncate">{viewHouse?.name} — Students</span>
+    </DialogTitle>
+  </DialogHeader>
           <div className="mt-2">
             {(() => {
               const houseStudents = students
@@ -383,10 +410,12 @@ export default function HouseManagement() {
 
       {/* Assign Students Dialog */}
       <Dialog open={!!assignHouse} onOpenChange={(open) => !open && setAssignHouse(null)}>
-        <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Assign Students — {assignHouse?.name}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[80vh] overflow-y-auto">
+  <DialogHeader>
+    <DialogTitle className="flex items-center gap-2 capitalize truncate">
+      <UserPlus className="h-4 w-4 text-blue-600 shrink-0" /> Assign Students — {assignHouse?.name}
+    </DialogTitle>
+  </DialogHeader>
           <div className="space-y-3 mt-2">
             <div>
               <Label>Filter by Class</Label>
@@ -423,23 +452,25 @@ export default function HouseManagement() {
               )}
             </div>
             <p className="text-xs text-muted-foreground">{selectedStudentIds.size} selected</p>
-            <div className="flex gap-2 justify-end pt-1">
-              <Button variant="outline" onClick={() => setAssignHouse(null)}>Cancel</Button>
-              <Button onClick={saveAssignment} disabled={savingAssign || selectedStudentIds.size === 0}>
-                {savingAssign && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Assign to {assignHouse?.name}
-              </Button>
-            </div>
+            <div className="flex gap-2 justify-end pt-1 flex-wrap">
+  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setAssignHouse(null)}>Cancel</Button>
+  <Button className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" onClick={saveAssignment} disabled={savingAssign || selectedStudentIds.size === 0}>
+    {savingAssign && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+    Assign to {assignHouse?.name}
+  </Button>
+</div>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Award Points Dialog */}
       <Dialog open={!!pointsHouse} onOpenChange={(open) => !open && setPointsHouse(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Award Points — {pointsHouse?.name}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-sm w-[calc(100%-2rem)]">
+  <DialogHeader>
+    <DialogTitle className="flex items-center gap-2 capitalize truncate">
+      <Award className="h-4 w-4 text-amber-600 shrink-0" /> Award Points — {pointsHouse?.name}
+    </DialogTitle>
+  </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
               <Label>Points (use negative to deduct)</Label>
@@ -449,23 +480,25 @@ export default function HouseManagement() {
               <Label>Remarks (optional)</Label>
               <Textarea className="mt-1" rows={2} value={pointsRemark} onChange={e => setPointsRemark(e.target.value)} placeholder="e.g. Won inter-house quiz" />
             </div>
-            <div className="flex gap-2 justify-end pt-1">
-              <Button variant="outline" onClick={() => setPointsHouse(null)}>Cancel</Button>
-              <Button onClick={savePoints} disabled={savingPoints}>
-                {savingPoints && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                Award Points
-              </Button>
-            </div>
+            <div className="flex gap-2 justify-end pt-1 flex-wrap">
+  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setPointsHouse(null)}>Cancel</Button>
+  <Button className="flex-1 sm:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={savePoints} disabled={savingPoints}>
+    {savingPoints && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+    Award Points
+  </Button>
+</div>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingHouse ? "Edit House" : "Add House"}</DialogTitle>
-          </DialogHeader>
+        <DialogContent className="max-w-md w-[calc(100%-2rem)] max-h-[85vh] overflow-y-auto">
+  <DialogHeader>
+    <DialogTitle className="flex items-center gap-2">
+      <Trophy className="h-4 w-4 text-amber-600" /> {editingHouse ? "Edit House" : "Add House"}
+    </DialogTitle>
+  </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
               <Label>House Name *</Label>
@@ -549,16 +582,17 @@ export default function HouseManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2 justify-end pt-1">
-              <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
-              <Button onClick={saveHouse} disabled={saving}>
-                {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                {editingHouse ? "Update House" : "Create House"}
-              </Button>
-            </div>
+            <div className="flex gap-2 justify-end pt-1 flex-wrap">
+  <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setShowForm(false)}>Cancel</Button>
+  <Button className="flex-1 sm:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={saveHouse} disabled={saving}>
+    {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+    {editingHouse ? "Update House" : "Create House"}
+  </Button>
+</div>
           </div>
         </DialogContent>
       </Dialog>
+      
     </AppLayout>
   );
 }
