@@ -586,7 +586,7 @@ useEffect(() => {
           <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
+            <div className={`min-h-0 border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
               <div className="p-3 border-b border-slate-100">
                 <div className="relative">
                   <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />

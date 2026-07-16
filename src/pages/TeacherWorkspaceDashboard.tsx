@@ -79,6 +79,13 @@ const eventDotColor: Record<string, string> = {
   event: "bg-amber-400",
 };
 
+const eventTypeBg: Record<string, string> = {
+  holiday: "bg-red-50",
+  exam: "bg-blue-50",
+  class_period: "bg-emerald-50",
+  event: "bg-amber-50",
+};
+
 const formatEventDate = (dateStr: string) => {
   const d = parseISO(dateStr);
   if (isToday(d)) return "Today";
@@ -104,33 +111,49 @@ const DashStatCard = ({
   linkTo: string; linkLabel: string; loading?: boolean;
 }) => {
   const tones = {
-    blue: { bar: "bg-blue-500", chip: "bg-blue-50 text-blue-600", link: "text-blue-600" },
-    orange: { bar: "bg-orange-500", chip: "bg-orange-50 text-orange-600", link: "text-orange-600" },
-    purple: { bar: "bg-purple-500", chip: "bg-purple-50 text-purple-600", link: "text-purple-600" },
+    blue: {
+      bar: "bg-gradient-to-b from-blue-500 to-indigo-500",
+      chip: "bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm shadow-blue-200",
+      link: "text-blue-600",
+      glow: "bg-blue-400/10",
+    },
+    orange: {
+      bar: "bg-gradient-to-b from-orange-500 to-amber-500",
+      chip: "bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-200",
+      link: "text-orange-600",
+      glow: "bg-orange-400/10",
+    },
+    purple: {
+      bar: "bg-gradient-to-b from-purple-500 to-violet-500",
+      chip: "bg-gradient-to-br from-purple-500 to-violet-500 text-white shadow-sm shadow-purple-200",
+      link: "text-purple-600",
+      glow: "bg-purple-400/10",
+    },
   }[accent];
 
   return (
-    <Card className="relative overflow-hidden border border-border/60 shadow-card hover:shadow-elevated hover:-translate-y-0.5 transition-all duration-300">
-      <div className={cn("absolute inset-y-0 left-0 w-1", tones.bar)} />
-      <CardContent className="p-5 pl-6">
+    <Card className="group relative overflow-hidden border border-border/60 shadow-card hover:shadow-elevated hover:-translate-y-1 transition-all duration-300">
+      <div className={cn("absolute -top-6 -right-6 w-24 h-24 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
+      <div className={cn("absolute inset-y-0 left-0 w-1.5", tones.bar)} />
+      <CardContent className="relative p-5 pl-6">
         <div className="flex items-start justify-between mb-4">
-          <div className={cn("rounded-xl p-2.5", tones.chip)}>
+          <div className={cn("rounded-xl p-2.5 transition-transform duration-300 group-hover:scale-110", tones.chip)}>
             <Icon className="h-5 w-5" />
           </div>
         </div>
-        <p className="text-3xl font-bold tracking-tight text-foreground mb-1">
+        <p className="text-4xl font-extrabold tracking-tight text-foreground mb-1">
           {loading ? <LoadingSpinner size="sm" /> : value}
         </p>
-        <p className="text-xs text-muted-foreground mb-3">{label}</p>
+        <p className="text-xs text-muted-foreground mb-3 font-medium">{label}</p>
         {linkTo ? (
           <Link
             to={linkTo}
-            className={cn("text-xs font-medium inline-flex items-center gap-1 hover:gap-1.5 transition-all", tones.link)}
+            className={cn("text-xs font-semibold inline-flex items-center gap-1 hover:gap-1.5 transition-all", tones.link)}
           >
             {linkLabel} <ArrowRight className="h-3 w-3" />
           </Link>
         ) : (
-          <span className={cn("text-xs font-medium inline-flex items-center gap-1 opacity-70", tones.link)}>
+          <span className={cn("text-xs font-semibold inline-flex items-center gap-1 opacity-70", tones.link)}>
             {linkLabel} <ArrowRight className="h-3 w-3" />
           </span>
         )}
@@ -416,378 +439,387 @@ const TeacherWorkspaceDashboard = () => {
 
   return (
     <AppLayout>
-      <div className="space-y-6 pb-10">
+      <div className="min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-24 right-10 w-72 h-72 rounded-full bg-blue-300 opacity-[0.08] blur-3xl" />
+        <div className="absolute top-[500px] left-6 w-80 h-80 rounded-full bg-emerald-200 opacity-[0.07] blur-3xl" />
+        <div className="absolute bottom-24 right-1/4 w-60 h-60 rounded-full bg-purple-200 opacity-[0.06] blur-3xl" />
 
-        {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-cyan-500 to-emerald-500 px-7 py-8 md:px-9 md:py-10 text-white shadow-elevated">
-          {/* decorative constellation, echoes the banner motif used elsewhere in the app */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
-            <div className="absolute -top-10 -right-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
-            <div className="absolute bottom-0 right-24 h-32 w-32 rounded-full bg-indigo-300/10 blur-xl" />
-            <div className="absolute top-10 right-72 h-2 w-2 rounded-full bg-white/40" />
-            <div className="absolute top-24 right-52 h-1.5 w-1.5 rounded-full bg-white/30" />
-            <div className="absolute bottom-14 right-96 h-1.5 w-1.5 rounded-full bg-white/30" />
-          </div>
+        <div className="relative z-10 space-y-6 pb-10 p-4 md:p-6">
 
-          <div className="relative flex items-start justify-between flex-wrap gap-6">
-            <div className="max-w-xl">
-              <div className="flex items-center gap-2 mb-3">
-                <GraduationCap className="h-4 w-4 text-blue-300" />
-                <span className="text-[11px] font-semibold text-blue-200 uppercase tracking-[0.15em]">
-                  Teacher Workspace
-                </span>
+          {/* ── Hero ────────────────────────────────────────────────────────── */}
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500 px-5 py-6 md:px-9 md:py-10 text-white shadow-elevated">
+            {/* decorative constellation, echoes the banner motif used elsewhere in the app */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
+              <div className="absolute -top-10 -right-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
+              <div className="absolute bottom-0 right-24 h-32 w-32 rounded-full bg-indigo-300/10 blur-xl" />
+              <div className="absolute top-10 right-72 h-2 w-2 rounded-full bg-white/40" />
+              <div className="absolute top-24 right-52 h-1.5 w-1.5 rounded-full bg-white/30" />
+              <div className="absolute bottom-14 right-96 h-1.5 w-1.5 rounded-full bg-white/30" />
+            </div>
+
+            <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-5 md:gap-6">
+              <div className="max-w-xl">
+                <div className="flex items-center gap-2 mb-2.5 md:mb-3">
+                  <div className="w-6 h-6 rounded-md bg-white/15 flex items-center justify-center">
+                    <GraduationCap className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="text-[11px] font-semibold text-blue-200 uppercase tracking-[0.15em]">
+                    Teacher Workspace
+                  </span>
+                </div>
+                <h1 className="text-2xl md:text-[2.25rem] font-bold tracking-tight leading-tight">
+                  {getGreeting()}, {profile?.full_name?.split(" ")[0] || "Teacher"}
+                </h1>
+                <p className="text-sm text-blue-100/80 mt-1.5">{today}</p>
               </div>
-              <h1 className="text-3xl md:text-[2.25rem] font-bold tracking-tight leading-tight">
-                {getGreeting()}, {profile?.full_name?.split(" ")[0] || "Teacher"}
-              </h1>
-              <p className="text-sm text-blue-100/80 mt-1.5">{today}</p>
 
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Link to="/academic-calendar">
-                <Button variant="secondary" size="sm" className="gap-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20">
-                  <CalendarDays className="h-4 w-4" />
-                  Calendar
-                </Button>
-              </Link>
-              <Link to="/curative">
-                <Button size="sm" className="gap-1.5 bg-white text-[hsl(213,38%,26%)] hover:bg-blue-50">
-                  <Sparkles className="h-4 w-4" />
-                  Generate Lesson
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* ── At a Glance Stats ──────────────────────────────────────────── */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            At a Glance
-          </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <DashStatCard
-              label="Today's Classes"
-              value={classCount ?? 0}
-              icon={Users}
-              accent="blue"
-              linkTo="/timetable"
-              linkLabel="View Schedule"
-              loading={classLoading}
-            />
-            <DashStatCard
-              label="Attendance Pending"
-              value={attendancePending ?? 0}
-              icon={ClipboardCheck}
-              accent="orange"
-              linkTo=""
-              linkLabel="Mark Attendance"
-              loading={attLoading}
-            />
-            <DashStatCard
-              label="Homework Pending Evaluation"
-              value={pendingEvals?.count ?? 0}
-              icon={BookOpen}
-              accent="purple"
-              linkTo="/analytics"
-              linkLabel="Evaluate Now"
-              loading={evalLoading}
-            />
-          </div>
-        </div>
-
-        {/* ── My Tasks ───────────────────────────────────────────────────── */}
-        <MyTasksWidget />
-
-        {/* ── Main Grid ─────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-
-          {/* Left column: At-Risk + Behaviour */}
-          <div className="lg:col-span-1 space-y-5">
-
-            {/* At-Risk Students */}
-            <Card className="group relative overflow-hidden border border-red-400 shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ">
-              <CardContent className="p-5">
-                <SectionHeader
-                  title="At-Risk Students"
-                  linkTo="/teacher-at-risk"
-                  icon={AlertTriangle}
-                  iconClass="bg-red-50 text-red-600"
-                />
-                {riskLoading ? (
-                  <div className="flex justify-center py-6"><LoadingSpinner /></div>
-                ) : !atRiskStudents?.length ? (
-                  <EmptyState text="No at-risk students — great work!" />
-                ) : (
-                  <div className="space-y-2">
-                    {atRiskStudents.map((s) => {
-                      const colors = riskColor(s.risk_level);
-                      return (
-                        <div
-                          key={s.student_id}
-                          className="flex items-center justify-between rounded-xl bg-white border border-red-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-red-300 transition-all duration-300"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={cn(
-                                "h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0",
-                                colors.solid
-                              )}
-                            >
-                              {(s.student_name || "?")[0]}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">
-                                {s.student_name}
-                              </p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {s.subject}
-                              </p>
-                            </div>
-                          </div>
-                          <Badge
-                            className={cn(
-                              "text-xs font-medium px-3 py-1 rounded-full border shrink-0",
-                              colors.badge
-                            )}
-                          >
-                            {riskLabel(s.risk_level)}
-                          </Badge>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Behaviour Alerts */}
-            <Card className="group border border-cyan-400 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ">
-              <CardContent className="p-5">
-                <SectionHeader
-                  title="Behaviour Alerts" 
-                  linkTo="/teacher-behaviour"
-                  icon={Bell}
-                  iconClass="bg-cyan-100 text-cyan-500"
-                />
-                {alertLoading ? (
-                  <div className="flex justify-center py-6"><LoadingSpinner /></div>
-                ) : !behaviourAlerts?.length ? (
-                  <EmptyState text="No behaviour alerts" />
-                ) : (
-                <div className="space-y-3">
-                  {behaviourAlerts.map((a) => (
-                    <div
-                      key={a.id}
-                      className="flex items-center justify-between rounded-xl bg-white border border-cyan-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-cyan-300 transition-all duration-300"
-                    >
-                      {/* Left Side */}
-                      <div className="flex items-center gap-3">
-
-                        <div
-                          className={cn(
-                            "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-                            a.kind === "followup"
-                              ? "bg-cyan-100"
-                              : "bg-orange-100"
-                          )}
-                        >
-                          {a.kind === "followup" ? (
-                            <Clock className="h-5 w-5 text-cyan-600" />
-                          ) : (
-                            <Bell className="h-5 w-5 text-orange-600" />
-                          )}
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">
-                            {a.title}
-                            {(a as any).classInfo && (
-                              <span className="font-normal text-muted-foreground">
-                                {" "}· {(a as any).classInfo}
-                              </span>
-                            )}
-                          </p>
-
-                          <p className="text-xs text-muted-foreground truncate">
-                            {a.subtitle}
-                          </p>
-                        </div>
-
-                      </div>
-
-                      {/* Right Side */}
-                      <span className="text-xs font-medium text-cyan-600 shrink-0">
-                        {isToday(new Date(a.date))
-                          ? "Today"
-                          : isTomorrow(new Date(a.date))
-                          ? "Tomorrow"
-                          : format(new Date(a.date), "d MMM")}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                )}
-              </CardContent>
-            </Card>
-
-          </div>
-
-          {/* Middle column: AI Recommendations + Pending Evaluations */}
-          <div className="lg:col-span-1 space-y-5">
-
-            {/* AI Recommendations */}
-            <Card className="group relative overflow-hidden border border-blue-300 shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-[hsl(217,91%,53%)]/[0.08] to-[hsl(217,91%,53%)]/[0.02]">
-              <div className="absolute inset-0 border border-blue-200/50 rounded-xl pointer-events-none" />
-              <CardContent className="p-5 relative">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
-                      <Sparkles className="h-3.5 w-3.5 text-white" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-foreground">AI Recommendations</h3>
-                  </div>
-                  <Link to="/ai-teacher-assistant" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                    View All
-                  </Link>
-                </div>
-                <div className="space-y-2.5">
-                  {aiRecs.map((rec, i) => (
-                    <div key={i} className="flex items-start gap-2 bg-white/90 rounded-xl p-3 border border-blue-100/70 shadow-sm">
-                      {recIconMap[rec.icon]}
-                      <p className="text-xs text-foreground leading-relaxed">{rec.text}</p>
-                    </div>
-                  ))}
-                </div>
-                <Link to="/ai-teacher-assistant">
-                  <Button size="sm" className="w-full mt-3.5 gap-1.5 bg-blue-600 hover:bg-blue-700">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    View AI Suggestions
+              <div className="flex items-center gap-2 shrink-0 w-full md:w-auto">
+                <Link to="/academic-calendar" className="flex-1 md:flex-none">
+                  <Button variant="secondary" size="sm" className="w-full gap-1.5 bg-white/10 text-white border border-white/20 hover:bg-white/20">
+                    <CalendarDays className="h-4 w-4" />
+                    Calendar
                   </Button>
                 </Link>
-              </CardContent>
-            </Card>
-
-            {/* Pending Evaluations */}
-            <Card className="group border border-purple-400 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ">
-              <CardContent className="p-5">
-                <SectionHeader
-                  title="Recent Submissions"
-                  linkTo="/analytics"
-                  linkLabel="Evaluate All"
-                  icon={BookOpen}
-                  iconClass="bg-purple-50 text-purple-600"
-                />
-                {evalLoading ? (
-                  <div className="flex justify-center py-6"><LoadingSpinner /></div>
-                ) : !pendingEvals?.list?.length ? (
-                  <EmptyState text="All caught up on evaluations!" />
-                ) : (
-<div className="space-y-3">
-  {pendingEvals.list.map((ev) => (
-    <div
-      key={ev.id}
-      className="flex items-center justify-between rounded-xl bg-white border border-purple-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-purple-300 transition-all duration-300"
-    >
-      {/* Left Side */}
-      <div className="flex items-center gap-3">
-
-        <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-purple-700 shrink-0">
-          {(ev.student_name || "?")[0]}
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">
-            {ev.student_name || "Unknown"}
-          </p>
-
-          <p className="text-xs text-muted-foreground">
-            Submitted{" "}
-            {ev.submitted_at
-              ? format(new Date(ev.submitted_at), "d MMM, h:mm a")
-              : "—"}
-          </p>
-        </div>
-
-      </div>
-
-      {/* Right Side */}
-      <Badge
-        className="bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1 rounded-full text-xs font-medium"
-      >
-        Pending
-      </Badge>
-    </div>
-  ))}
-</div>
-                )}
-              </CardContent>
-            </Card>
+                <Link to="/curative" className="flex-1 md:flex-none">
+                  <Button size="sm" className="w-full gap-1.5 bg-white text-indigo-700 hover:bg-blue-50 shadow-sm">
+                    <Sparkles className="h-4 w-4" />
+                    Generate Lesson
+                  </Button>
+                </Link>
+              </div>
+            </div>
           </div>
 
-          {/* Right column: Group Projects + Upcoming Events */}
-          <div className="lg:col-span-1 space-y-5">
+          {/* ── At a Glance Stats ──────────────────────────────────────────── */}
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              At a Glance
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <DashStatCard
+                label="Today's Classes"
+                value={classCount ?? 0}
+                icon={Users}
+                accent="blue"
+                linkTo="/timetable"
+                linkLabel="View Schedule"
+                loading={classLoading}
+              />
+              <DashStatCard
+                label="Attendance Pending"
+                value={attendancePending ?? 0}
+                icon={ClipboardCheck}
+                accent="orange"
+                linkTo=""
+                linkLabel="Mark Attendance"
+                loading={attLoading}
+              />
+              <DashStatCard
+                label="Homework Pending Evaluation"
+                value={pendingEvals?.count ?? 0}
+                icon={BookOpen}
+                accent="purple"
+                linkTo="/analytics"
+                linkLabel="Evaluate Now"
+                loading={evalLoading}
+              />
+            </div>
+          </div>
 
-            {/* Group Projects */}
-            <TeacherGroupProjectsSummary />
+          {/* ── My Tasks ───────────────────────────────────────────────────── */}
+          <MyTasksWidget />
 
-            <Card className="group border border-green-400 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ">
-              <CardContent className="p-5">
-                <SectionHeader
-                  title="Upcoming Events"
-                  linkTo="/academic-calendar"
-                  linkLabel="View Calendar"
-                  icon={CalendarDays}
-                  iconClass="bg-emerald-50 text-emerald-600"
-                />
-                {eventsLoading ? (
-                  <div className="flex justify-center py-6"><LoadingSpinner /></div>
-                ) : !upcomingEvents?.length ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">No upcoming events</p>
-                ) : (
+          {/* ── Main Grid ─────────────────────────────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+
+            {/* Left column: At-Risk + Behaviour */}
+            <div className="lg:col-span-1 space-y-5">
+
+              {/* At-Risk Students */}
+              <Card className="group relative overflow-hidden border border-red-100 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className="h-1 bg-gradient-to-r from-red-400 to-orange-400" />
+                <CardContent className="p-5">
+                  <SectionHeader
+                    title="At-Risk Students"
+                    linkTo="/teacher-at-risk"
+                    icon={AlertTriangle}
+                    iconClass="bg-red-50 text-red-600"
+                  />
+                  {riskLoading ? (
+                    <div className="flex justify-center py-6"><LoadingSpinner /></div>
+                  ) : !atRiskStudents?.length ? (
+                    <EmptyState text="No at-risk students — great work!" />
+                  ) : (
+                    <div className="space-y-2">
+                      {atRiskStudents.map((s) => {
+                        const colors = riskColor(s.risk_level);
+                        return (
+                          <div
+                            key={s.student_id}
+                            className="flex items-center justify-between rounded-xl bg-white border border-red-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-red-300 transition-all duration-300"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn(
+                                  "h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0",
+                                  colors.solid
+                                )}
+                              >
+                                {(s.student_name || "?")[0]}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                  {s.student_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {s.subject}
+                                </p>
+                              </div>
+                            </div>
+                            <Badge
+                              className={cn(
+                                "text-xs font-medium px-3 py-1 rounded-full border shrink-0",
+                                colors.badge
+                              )}
+                            >
+                              {riskLabel(s.risk_level)}
+                            </Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Behaviour Alerts */}
+              <Card className="group overflow-hidden border border-cyan-100 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className="h-1 bg-gradient-to-r from-cyan-400 to-blue-400" />
+                <CardContent className="p-5">
+                  <SectionHeader
+                    title="Behaviour Alerts" 
+                    linkTo="/teacher-behaviour"
+                    icon={Bell}
+                    iconClass="bg-cyan-100 text-cyan-500"
+                  />
+                  {alertLoading ? (
+                    <div className="flex justify-center py-6"><LoadingSpinner /></div>
+                  ) : !behaviourAlerts?.length ? (
+                    <EmptyState text="No behaviour alerts" />
+                  ) : (
                   <div className="space-y-3">
-                    {upcomingEvents.map((ev) => (
+                    {behaviourAlerts.map((a) => (
                       <div
-                        key={ev.id}
-                        className="flex items-center justify-between rounded-xl bg-white border shadow-sm px-4 py-3 transition-all duration-300 hover:shadow-md hover:border-emerald-300">
+                        key={a.id}
+                        className="flex items-center justify-between rounded-xl bg-white border border-cyan-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-cyan-300 transition-all duration-300"
+                      >
+                        {/* Left Side */}
                         <div className="flex items-center gap-3">
+
                           <div
                             className={cn(
-                              "h-10 w-10 rounded-full flex items-center justify-center",
-                              eventDotColor[ev.event_type]
-                                ? `${eventDotColor[ev.event_type]}/10`
-                                : "bg-gray-100"
+                              "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
+                              a.kind === "followup"
+                                ? "bg-cyan-100"
+                                : "bg-orange-100"
                             )}
                           >
-                            <div
-                              className={cn(
-                                "h-3 w-3 rounded-full",
-                                eventDotColor[ev.event_type] || "bg-gray-400"
+                            {a.kind === "followup" ? (
+                              <Clock className="h-5 w-5 text-cyan-600" />
+                            ) : (
+                              <Bell className="h-5 w-5 text-orange-600" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-foreground truncate">
+                              {a.title}
+                              {(a as any).classInfo && (
+                                <span className="font-normal text-muted-foreground">
+                                  {" "}· {(a as any).classInfo}
+                                </span>
                               )}
-                            />
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">
-                              {ev.title}
                             </p>
-                            <p className="text-xs text-muted-foreground">
-                              {ev.event_type}
+
+                            <p className="text-xs text-muted-foreground truncate">
+                              {a.subtitle}
                             </p>
                           </div>
+
                         </div>
-                        <div className="text-right">
-                          <p className="text-xs font-semibold text-emerald-600">
-                            {formatEventDate(ev.start_date)}
-                          </p>
-                        </div>
+
+                        {/* Right Side */}
+                        <span className="text-xs font-medium text-cyan-600 shrink-0">
+                          {isToday(new Date(a.date))
+                            ? "Today"
+                            : isTomorrow(new Date(a.date))
+                            ? "Tomorrow"
+                            : format(new Date(a.date), "d MMM")}
+                        </span>
                       </div>
                     ))}
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  )}
+                </CardContent>
+              </Card>
 
+            </div>
+
+            {/* Middle column: AI Recommendations + Pending Evaluations */}
+            <div className="lg:col-span-1 space-y-5">
+
+              {/* AI Recommendations */}
+              <Card className="group relative overflow-hidden border border-blue-100 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl bg-gradient-to-br from-blue-50/60 to-transparent">
+                <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+                <CardContent className="p-5 relative">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center">
+                        <Sparkles className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground">AI Recommendations</h3>
+                    </div>
+                    <Link to="/ai-teacher-assistant" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                      View All
+                    </Link>
+                  </div>
+                  <div className="space-y-2.5">
+                    {aiRecs.map((rec, i) => (
+                      <div key={i} className="flex items-start gap-2 bg-white/90 rounded-xl p-3 border border-blue-100/70 shadow-sm">
+                        {recIconMap[rec.icon]}
+                        <p className="text-xs text-foreground leading-relaxed">{rec.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <Link to="/ai-teacher-assistant">
+                    <Button size="sm" className="w-full mt-3.5 gap-1.5 bg-blue-600 hover:bg-blue-700">
+                      <Sparkles className="h-3.5 w-3.5" />
+                      View AI Suggestions
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+
+              {/* Pending Evaluations */}
+              <Card className="group overflow-hidden border border-purple-100 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className="h-1 bg-gradient-to-r from-purple-400 to-violet-400" />
+                <CardContent className="p-5">
+                  <SectionHeader
+                    title="Recent Submissions"
+                    linkTo="/analytics"
+                    linkLabel="Evaluate All"
+                    icon={BookOpen}
+                    iconClass="bg-purple-50 text-purple-600"
+                  />
+                  {evalLoading ? (
+                    <div className="flex justify-center py-6"><LoadingSpinner /></div>
+                  ) : !pendingEvals?.list?.length ? (
+                    <EmptyState text="All caught up on evaluations!" />
+                  ) : (
+  <div className="space-y-3">
+    {pendingEvals.list.map((ev) => (
+      <div
+        key={ev.id}
+        className="flex items-center justify-between rounded-xl bg-white border border-purple-100 shadow-sm px-4 py-3 hover:shadow-md hover:border-purple-300 transition-all duration-300"
+      >
+        {/* Left Side */}
+        <div className="flex items-center gap-3">
+
+          <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center text-sm font-bold text-purple-700 shrink-0">
+            {(ev.student_name || "?")[0]}
+          </div>
+
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {ev.student_name || "Unknown"}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Submitted{" "}
+              {ev.submitted_at
+                ? format(new Date(ev.submitted_at), "d MMM, h:mm a")
+                : "—"}
+            </p>
+          </div>
+
+        </div>
+
+        {/* Right Side */}
+        <Badge
+          className="bg-purple-100 text-purple-700 border border-purple-200 px-3 py-1 rounded-full text-xs font-medium"
+        >
+          Pending
+        </Badge>
+      </div>
+    ))}
+  </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right column: Group Projects + Upcoming Events */}
+            <div className="lg:col-span-1 space-y-5">
+
+              {/* Group Projects */}
+              <TeacherGroupProjectsSummary />
+
+              <Card className="group overflow-hidden border border-emerald-100 shadow-card transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+                <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
+                <CardContent className="p-5">
+                  <SectionHeader
+                    title="Upcoming Events"
+                    linkTo="/academic-calendar"
+                    linkLabel="View Calendar"
+                    icon={CalendarDays}
+                    iconClass="bg-emerald-50 text-emerald-600"
+                  />
+                  {eventsLoading ? (
+                    <div className="flex justify-center py-6"><LoadingSpinner /></div>
+                  ) : !upcomingEvents?.length ? (
+                    <p className="text-xs text-muted-foreground text-center py-8">No upcoming events</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {upcomingEvents.map((ev) => (
+                        <div
+                          key={ev.id}
+                          className="flex items-center justify-between rounded-xl bg-white border shadow-sm px-4 py-3 transition-all duration-300 hover:shadow-md hover:border-emerald-300">
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={cn(
+                                "h-10 w-10 rounded-full flex items-center justify-center",
+                                eventTypeBg[ev.event_type] || "bg-gray-100"
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  "h-3 w-3 rounded-full",
+                                  eventDotColor[ev.event_type] || "bg-gray-400"
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-foreground">
+                                {ev.title}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {ev.event_type}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-semibold text-emerald-600">
+                              {formatEventDate(ev.start_date)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+            </div>
           </div>
         </div>
       </div>
