@@ -77,6 +77,7 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
           muted: "hsl(var(--sidebar-muted))",
           hover: "hsl(var(--sidebar-hover))",
+          icon: "hsl(var(--sidebar-icon))",
         },
       },
       borderRadius: {

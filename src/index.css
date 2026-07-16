@@ -59,16 +59,17 @@
     --sidebar-collapsed: 64px;
     --header-height: 80px;
 
-    --sidebar-background: 216 40% 17%;
+    --sidebar-background: 222 45% 9%;
     --sidebar-foreground: 215 16% 47%;
     --sidebar-primary: 217 91% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 213 39% 22%;
+    --sidebar-accent: 222 35% 14%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 216 39% 22%;
+    --sidebar-border: 222 40% 14%;
     --sidebar-ring: 217 91% 53%;
     --sidebar-muted: 215 16% 47%;
-    --sidebar-hover: 213 35% 25%;
+    --sidebar-hover: 222 35% 17%;
+    --sidebar-icon: 142 30% 45%;
   }
 
   .dark {
@@ -106,6 +107,7 @@
     --sidebar-border: 216 39% 14%;
     --sidebar-ring: 217 91% 53%;
     --sidebar-muted: 216 30% 22%;
+    --sidebar-icon: 142 30% 45%;
   }
 }
 
@@ -305,4 +307,15 @@
 
 .animate-bus {
   animation: busMove 3s linear infinite;
+}
+
+/* Hide scrollbar visually but keep scroll functionality */
+.scrollbar-hide {
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* IE and Edge */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;              /* Chrome, Safari, Edge Chromium */
+  width: 0;
+  height: 0;
 }

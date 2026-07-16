@@ -297,7 +297,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           )}
         </div>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
             const isSubActive =
@@ -310,7 +310,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   to={item.path}
                   data-tour-id={item.tourId}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                     isActive && !isSubActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
                       : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1 hover:shadow-sm"
@@ -319,7 +319,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   {isActive && !isSubActive && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full animate-[scale-in_0.2s_ease-out]" />
                   )}
-                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
+                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "text-sidebar-icon group-hover:scale-110 group-hover:rotate-3")} />
                   {!collapsed && (
                     <span className="transition-all duration-200">{getItemLabel(item)}</span>
                   )}
@@ -328,7 +328,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   <NavLink
                     to={item.subItem.path}
                     className={cn(
-                      "group relative flex items-center gap-2 rounded-button py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                      "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
                       isSubActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                         : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
@@ -368,7 +368,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-button px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             {!collapsed && <span>Logout</span>}
@@ -376,7 +376,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
           <button
             onClick={onToggle}
-            className="flex w-full items-center justify-center rounded-button p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-hover"
+            className="flex w-full items-center justify-center rounded-xl p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-hover"
           >
             <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
           </button>
@@ -392,7 +392,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
         <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
           <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
         </div>
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
           {visibleItems.map((item) => {
             const isActive = location.pathname === item.path;
             const isSubActive =
@@ -405,7 +405,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   to={item.path}
                   onClick={onMobileClose}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-button px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                     isActive && !isSubActive
                       ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
                       : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
@@ -414,7 +414,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   {isActive && !isSubActive && (
                     <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full" />
                   )}
-                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "group-hover:scale-110 group-hover:rotate-3")} />
+                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "text-sidebar-icon group-hover:scale-110 group-hover:rotate-3")} />
                   <span>{getItemLabel(item)}</span>
                 </NavLink>
                 {item.subItem && isActive && (
@@ -422,7 +422,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     to={item.subItem.path}
                     onClick={onMobileClose}
                     className={cn(
-                      "group relative flex items-center gap-2 rounded-button py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                      "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
                       isSubActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
                         : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
