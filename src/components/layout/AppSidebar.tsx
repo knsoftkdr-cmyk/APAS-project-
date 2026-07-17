@@ -85,10 +85,10 @@ const navItems: Array<{
   { title: "Communication", icon: MessageSquare, path: "/teacher-communication", roles: ["teacher"] },
   { title: "Appointments", icon: CalendarCheck, path: "/teacher/appointments", roles: ["teacher"] },
   { title: "Report Cards", icon: FileText, path: "/report-cards", roles: ["teacher"], module: "Report Cards" },
-  { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["admin", "principal", "school_admin"], module: "Rotation Schedules" },
-  { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["admin", "principal", "school_admin"], module: "SEN Management" },
+  { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["admin", "principal"], module: "Rotation Schedules" },
+  { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["admin", "principal"], module: "SEN Management" },
   { title: "My SEN Students", icon: Accessibility, path: "/my-sen-students", roles: ["teacher", "hod"], module: "SEN Management" },
-  { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal", "school_admin", "knsoft_admin"] },
+  { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal", "knsoft_admin"] },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
   { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
@@ -171,6 +171,9 @@ const navItems: Array<{
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["admin"], module: "Attendance" },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["admin", "hod", "school_admin"], module: "Home" },
   { title: "My Accommodations", icon: Accessibility, path: "/my-accommodations", roles: ["student"], module: "My Accommodations" },
+  { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["school_admin"], module: "Rotation Schedules" },
+  { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["school_admin"], module: "SEN Management" },
+  { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["school_admin"] },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 

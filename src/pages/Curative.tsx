@@ -3851,6 +3851,9 @@ const GeneratedLessonsTab = ({ user, getClassLabel }: GeneratedLessonsTabProps) 
   const [filterClass, setFilterClass] = useState("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editedContent, setEditedContent] = useState<string>("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const queryClient = useQueryClient();
 
   const handleDownloadLessonPDF = async (lesson: GeneratedLessonRow) => {
@@ -4056,6 +4059,34 @@ try {
     }
   };
 
+  const handleStartEdit = (lesson: GeneratedLessonRow) => {
+    setEditingId(lesson.id);
+    setEditedContent(lesson.lesson_content || "");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditedContent("");
+  };
+
+  const handleSaveEdit = async (lesson: GeneratedLessonRow) => {
+    setIsSavingEdit(true);
+    try {
+      const { error } = await supabase
+        .from("lessons")
+        .update({ lesson_content: editedContent })
+        .eq("id", lesson.id);
+      if (error) throw new Error(error.message);
+      queryClient.invalidateQueries({ queryKey: ["generated-lessons-list", user?.id] });
+      toast.success("Lesson plan updated");
+      setEditingId(null);
+    } catch (err: any) {
+      toast.error(`Failed to save changes: ${err.message || "Unknown error"}`);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
   const uniqueClasses = [...new Set(lessonsList.map((l) => l.class_level).filter(Boolean))];
 
   return (
@@ -4136,6 +4167,14 @@ try {
                     size="sm"
                     variant="outline"
                     className="gap-1.5"
+                    onClick={() => { setExpandedId(lesson.id); setEditingId(lesson.id); setEditedContent(lesson.lesson_content || ""); }}
+                  >
+                    <Wand2 className="h-3.5 w-3.5" /> Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
                     onClick={() => setExpandedId(expandedId === lesson.id ? null : lesson.id)}
                   >
                     <Eye className="h-3.5 w-3.5" /> {expandedId === lesson.id ? "Hide" : "View"}
@@ -4168,11 +4207,37 @@ try {
               </div>
               {expandedId === lesson.id && (
                 <div className="border-t border-border/50 p-5 max-h-[500px] overflow-y-auto">
-                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
-                      {lesson.lesson_content || "No content available for this lesson."}
-                    </ReactMarkdown>
-                  </div>
+                  {editingId === lesson.id ? (
+                    <div className="space-y-3">
+                      <Textarea
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        className="min-h-[400px] font-mono text-xs leading-relaxed"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSavingEdit}>
+                          Cancel
+                        </Button>
+                        <Button size="sm" onClick={() => handleSaveEdit(lesson)} disabled={isSavingEdit} className="gap-1.5">
+                          {isSavingEdit ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                          Save Changes
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-end mb-3">
+                        <Button size="sm" variant="outline" className="gap-1.5" onClick={() => handleStartEdit(lesson)}>
+                          <Wand2 className="h-3.5 w-3.5" /> Edit Lesson Plan
+                        </Button>
+                      </div>
+                      <div className="prose prose-sm dark:prose-invert max-w-none">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                          {lesson.lesson_content || "No content available for this lesson."}
+                        </ReactMarkdown>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </Card>

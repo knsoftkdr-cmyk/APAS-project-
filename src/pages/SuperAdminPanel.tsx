@@ -495,7 +495,6 @@ const SuperAdminPanel = () => {
           <TabsList className="flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="overview" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><BarChart3 className="h-5 w-5" />Overview</TabsTrigger>
             <TabsTrigger value="accounts" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Users className="h-5 w-5" />Accounts</TabsTrigger>
-            <TabsTrigger value="performance" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><TrendingUp className="h-5 w-5" />Performance</TabsTrigger>
             <TabsTrigger value="permissions" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Lock className="h-5 w-5" />Permissions</TabsTrigger>
             <TabsTrigger value="school" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><School className="h-5 w-5" />School Info</TabsTrigger>
           </TabsList>
@@ -768,83 +767,6 @@ const SuperAdminPanel = () => {
                 </div>
               </DialogContent>
             </Dialog>
-          </TabsContent>
-
-          {/* ══════════════════════════════════════════ PERFORMANCE */}
-          <TabsContent value="performance" className="space-y-4">
-            <Card className="border-2 border-slate-200 hover:border-blue-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><GraduationCap className="h-7 w-7 text-cyan-600" />Student Performance</CardTitle>
-                <CardDescription>Average diagnostic scores</CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                {studentPerf.length === 0
-                  ? <p className="p-6 text-center text-muted-foreground text-sm">No diagnostic data yet.</p>
-                  : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Student</TableHead>
-                          <TableHead className="text-center">Tests</TableHead>
-                          <TableHead className="text-center">Avg Score</TableHead>
-                          <TableHead className="text-center">Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {studentPerf.map((s) => (
-                          <TableRow key={s.student_id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
-                            <TableCell className="font-medium">{s.full_name ?? "Unknown"}</TableCell>
-                            <TableCell className="text-center">{s.tests_taken}</TableCell>
-                            <TableCell className={`text-center ${scoreColor(s.avg_score)}`}>
-                              {s.avg_score !== null ? `${s.avg_score}%` : "—"}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              {s.avg_score === null ? <Badge variant="outline">No data</Badge>
-                                : s.avg_score >= 75 ? <Badge className="bg-green-100 text-green-800 hover:bg-green-100">On Track</Badge>
-                                : s.avg_score >= 50 ? <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Needs Attention</Badge>
-                                : <Badge className="bg-red-100 text-red-800 hover:bg-red-100">At Risk</Badge>}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-slate-200 hover:border-green-400 hover:shadow-xl transition-all duration-500 overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><BookOpen className="h-7 w-7 text-green-600" />Teacher Overview</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {teacherPerf.length === 0
-                  ? <p className="p-6 text-center text-muted-foreground text-sm">No class data yet.</p>
-                  : (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Teacher</TableHead>
-                          <TableHead className="text-center">Students</TableHead>
-                          <TableHead className="text-center">Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {teacherPerf.map((t) => (
-                          <TableRow key={t.teacher_id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
-                            <TableCell className="font-medium">{t.full_name ?? "Unknown"}</TableCell>
-                            <TableCell className="text-center">{t.students_taught}</TableCell>
-                            <TableCell className="text-center">
-                              {t.students_taught > 0
-                                ? <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>
-                                : <Badge variant="outline">No class</Badge>}
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  )}
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* ══════════════════════════════════════════ PERMISSIONS */}
