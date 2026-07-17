@@ -54,11 +54,19 @@ const QUICK_EMOJIS = [
   "❤️", "💯", "🔥", "📚", "✏️", "📝", "📌", "⏰", "📅", "🏆",
 ];
 
-// Ink navy + ochre — a "school register" palette, kept out of the render
-// tree so it's easy to retint later without touching markup.
-const INK = "#1B2A4A";
-const INK_SOFT = "#243B63";
-const OCHRE = "#C17817";
+// ─── Palette ──────────────────────────────────────────────────────────────────
+// A vivid "indigo-to-blue" identity — an indigo→cobalt gradient chrome with
+// a bright sky-blue accent for actions/unread, and a matching indigo-blue
+// gradient for the parent's own messages. Kept off the templated
+// cream+terracotta/near-black+neon defaults, and off flat single-tone blue.
+const INDIGO_DEEP = "#4338CA"; // header gradient start
+const BLUE_MID = "#2563EB";    // header gradient end / selected accents
+const SKY_ACCENT = "#0EA5E9";  // bright accent — CTAs, unread, send button
+const SKY_SOFT = "#93D8F7";
+const SEA_DEEP = "#4338CA";    // sent bubble start
+const SEA_BRIGHT = "#2563EB";  // sent bubble end
+const MIST = "#F3F7FF";        // chat canvas
+const OCHRE = "#B8842A";       // notice accents
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -185,8 +193,8 @@ export default function ParentCommunicationCenter() {
 
   useEffect(() => { fetchContacts(); }, [fetchContacts]);
   useEffect(() => {
-  return () => setActiveMessageThreadId(null);
-}, []);
+    return () => setActiveMessageThreadId(null);
+  }, []);
 
   // ── Fetch thread for selected teacher ───────────────────────────────────────
   const fetchThread = useCallback(async (contact: TeacherContact) => {
@@ -225,7 +233,7 @@ export default function ParentCommunicationCenter() {
     if (selectedContact) fetchThread(selectedContact);
   }, [selectedContact, fetchThread]);
 
-useEffect(() => {
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ block: "end" });
   }, [messages, selectedContact]);
 
@@ -314,36 +322,51 @@ useEffect(() => {
     <AppLayout>
       <div className="h-[calc(100vh-100px)] flex flex-col">
         {/* Page header */}
-        <div className="mb-4 flex items-center gap-3">
+        <div
+          className="rounded-2xl p-5 md:p-6 mb-4 relative overflow-hidden shadow-lg shrink-0"
+          style={{ backgroundImage: `linear-gradient(120deg, ${INDIGO_DEEP}, ${BLUE_MID})` }}
+        >
           <div
-            className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
-            style={{ backgroundColor: `${INK}14` }}
-          >
-            <MessageSquare className="h-4.5 w-4.5" style={{ color: INK }} />
-          </div>
-          <div>
-            <h1 className="text-xl font-serif font-semibold tracking-tight text-foreground">
-              Communication Center
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Messages with your child's teachers
-            </p>
+            className="absolute inset-0 opacity-[0.07]"
+            style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "16px 16px" }}
+          />
+          <div className="absolute -right-8 -top-10 w-40 h-40 rounded-full" style={{ backgroundColor: `${SKY_ACCENT}26` }} />
+          <div className="absolute right-20 top-10 w-16 h-16 rounded-full" style={{ backgroundColor: "#ffffff14" }} />
+          <div className="relative flex items-center gap-3 md:gap-4">
+            <div
+              className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md"
+              style={{ backgroundImage: `linear-gradient(135deg, ${SKY_ACCENT}, #38BDF8)` }}
+            >
+              <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-serif font-semibold text-white tracking-tight">
+                Communication Center
+              </h1>
+              <p className="text-xs md:text-sm mt-0.5" style={{ color: "#CBDBF2" }}>
+                Messages with your child's teachers
+              </p>
+            </div>
           </div>
         </div>
 
-        <Card className="flex-1 overflow-hidden border border-border/60 rounded-2xl shadow-sm min-h-0">
-          <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full min-h-0">
+        <Card
+          className="flex-1 overflow-hidden rounded-2xl shadow-xl min-h-0 border-0"
+          style={{ boxShadow: `0 20px 45px -20px ${INDIGO_DEEP}55` }}
+        >
+          <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`border-r border-border/60 flex flex-col bg-background ${showMobileChat ? "hidden md:flex" : "flex"}`}>
-              <div className="p-3 border-b border-border/60">
+            <div className={`min-h-0 border-r flex flex-col bg-white ${showMobileChat ? "hidden md:flex" : "flex"}`} style={{ borderColor: "#DCE7F5" }}>
+              <div className="p-3 border-b" style={{ borderColor: "#DCE7F5" }}>
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute left-3.5 top-2.5 h-4 w-4" style={{ color: `${BLUE_MID}99` }} />
                   <Input
                     placeholder="Search teachers"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-8 h-9 text-sm rounded-full"
+                    className="pl-9 h-10 text-sm rounded-full border-none focus-visible:ring-2"
+                    style={{ backgroundColor: "#EAF1FA", boxShadow: "none" } as React.CSSProperties}
                   />
                 </div>
               </div>
@@ -363,44 +386,58 @@ useEffect(() => {
                     const isSelected = selectedContact?.id === c.id;
                     const last = lastMessages.get(c.id);
                     const isNotice = NOTICE_ROLES.has(c.role);
-                    const hasUnread = !!(last && !last.is_read && last.recipient_id === user?.id);
+                    const isUnread = !!(last && !last.is_read && last.recipient_id === user?.id);
                     return (
                       <button
                         key={c.id}
                         onClick={() => openContact(c)}
-                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-2.5 transition-colors"
-                        style={isSelected ? { backgroundColor: `${INK}0D`, boxShadow: `inset 0 0 0 1px ${INK}33` } : undefined}
-                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = "hsl(var(--muted) / 0.5)"; }}
+                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors relative"
+                        style={isSelected ? { backgroundColor: "#E7EFFA" } : undefined}
+                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = "#F1F6FC"; }}
                         onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = ""; }}
                       >
+                        {isSelected && (
+                          <span
+                            className="absolute left-0 top-2 bottom-2 w-1 rounded-full"
+                            style={{ backgroundColor: SKY_ACCENT }}
+                          />
+                        )}
                         <div
-                          className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-serif font-bold ring-1"
-                          style={{ backgroundColor: `${INK}14`, color: INK, boxShadow: `0 0 0 1px ${INK}22` }}
+                          className="h-11 w-11 rounded-full flex items-center justify-center shrink-0 text-xs font-serif font-bold text-white shadow-sm"
+                          style={{ backgroundImage: `linear-gradient(135deg, ${BLUE_MID}, ${SKY_ACCENT})` }}
                         >
                           {c.name[0]}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-sm font-serif font-semibold truncate">{c.name}</p>
-                            {isNotice && (
-                              <span
-                                className="shrink-0 text-[9px] uppercase tracking-wide font-medium px-1.5 py-0.5 rounded-full"
-                                style={{ backgroundColor: `${OCHRE}1A`, color: OCHRE }}
-                              >
-                                Notice
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <p className={`text-sm truncate font-serif ${isUnread ? "font-bold" : "font-semibold"}`} style={{ color: isUnread ? INDIGO_DEEP : "#132B4C" }}>
+                                {c.name}
+                              </p>
+                              {isNotice && (
+                                <span
+                                  className="shrink-0 text-[9px] uppercase tracking-wide font-medium px-1.5 py-0.5 rounded-full"
+                                  style={{ backgroundColor: `${OCHRE}1F`, color: OCHRE }}
+                                >
+                                  Notice
+                                </span>
+                              )}
+                            </div>
+                            {last && (
+                              <span className="text-[10px] shrink-0" style={{ color: isUnread ? SKY_ACCENT : "#7C93B5", fontWeight: isUnread ? 600 : 400 }}>
+                                {format(new Date(last.created_at), "h:mm a")}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {c.subtitle}
-                          </p>
+                          <div className="flex items-center justify-between gap-2 mt-0.5">
+                            <p className="text-xs truncate" style={{ color: isUnread ? "#33507A" : "#7C93B5", fontWeight: isUnread ? 500 : 400 }}>
+                              {last ? last.message : c.subtitle}
+                            </p>
+                            {isUnread && (
+                              <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: SKY_ACCENT }} />
+                            )}
+                          </div>
                         </div>
-                        {hasUnread && (
-                          <span
-                            className="h-2 w-2 rounded-full shrink-0 animate-pulse"
-                            style={{ backgroundColor: OCHRE }}
-                          />
-                        )}
                       </button>
                     );
                   })
@@ -411,39 +448,45 @@ useEffect(() => {
             {/* ── Chat Panel ── */}
             <div className={`min-h-0 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
               {!selectedContact ? (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-6" style={{ backgroundColor: "#F7FAFD" }}>
                   <div
-                    className="h-14 w-14 rounded-full flex items-center justify-center mb-3"
-                    style={{ backgroundColor: `${INK}0D` }}
+                    className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+                    style={{ backgroundImage: `linear-gradient(135deg, ${BLUE_MID}22, ${SKY_ACCENT}22)` }}
                   >
-                    <MessageSquare className="h-6 w-6" style={{ color: `${INK}66` }} />
+                    <MessageSquare className="h-9 w-9" style={{ color: BLUE_MID }} />
                   </div>
-                  <p className="text-sm font-serif text-foreground/80">
+                  <p className="text-sm font-serif font-medium" style={{ color: "#33507A" }}>
                     Choose a teacher to see your conversation
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your messages with your child's teachers will appear here.
                   </p>
                 </div>
               ) : (
                 <>
                   {/* Chat header */}
-                  <div className="p-3 border-b border-border/60 flex items-center gap-2.5 bg-background">
-                    <button className="md:hidden p-1" onClick={() => setShowMobileChat(false)}>
+                  <div
+                    className="p-3 border-b flex items-center gap-2.5"
+                    style={{ backgroundImage: `linear-gradient(120deg, ${INDIGO_DEEP}, ${BLUE_MID})`, borderColor: "transparent" }}
+                  >
+                    <button className="md:hidden p-1 text-white" onClick={() => setShowMobileChat(false)}>
                       <ChevronLeft className="h-5 w-5" />
                     </button>
                     <div
-                      className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-serif font-bold"
-                      style={{ backgroundColor: `${INK}14`, color: INK, boxShadow: `0 0 0 1px ${INK}22` }}
+                      className="h-10 w-10 rounded-full flex items-center justify-center shrink-0 text-xs font-serif font-bold text-white"
+                      style={{ backgroundColor: "#ffffff26" }}
                     >
                       {selectedContact.name[0]}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-serif font-semibold truncate">{selectedContact.name}</p>
-                      <p className="text-xs text-muted-foreground truncate">{selectedContact.subtitle}</p>
+                      <p className="text-sm font-serif font-semibold truncate text-white">{selectedContact.name}</p>
+                      <p className="text-xs truncate" style={{ color: "#CBDBF2" }}>{selectedContact.subtitle}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="gap-1.5 text-xs rounded-full"
-                      style={{ borderColor: `${INK}33`, color: INK }}
+                      className="gap-1.5 text-xs text-white hover:text-white"
+                      style={{ backgroundColor: "#ffffff1A", borderColor: "#ffffff4D" }}
                       onClick={() => navigate("/appointments")}
                     >
                       <CalendarIcon className="h-3.5 w-3.5" />
@@ -455,8 +498,9 @@ useEffect(() => {
                   <div
                     className="flex-1 overflow-y-auto p-4 space-y-3"
                     style={{
-                      backgroundColor: "hsl(var(--muted) / 0.2)",
-                      backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent 27px, ${INK}0A 28px)`,
+                      backgroundColor: MIST,
+                      backgroundImage: `radial-gradient(circle, ${BLUE_MID}14 1px, transparent 1px)`,
+                      backgroundSize: "20px 20px",
                     }}
                   >
                     {threadLoading ? (
@@ -474,8 +518,8 @@ useEffect(() => {
                             {showDateSep && (
                               <div className="flex justify-center my-3">
                                 <span
-                                  className="text-[10px] font-serif uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm bg-background"
-                                  style={{ color: INK, borderColor: `${INK}26` }}
+                                  className="text-[10px] font-serif uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm bg-white"
+                                  style={{ color: BLUE_MID, borderColor: `${BLUE_MID}33` }}
                                 >
                                   {dayLabel(m.created_at)}
                                 </span>
@@ -493,11 +537,13 @@ useEffect(() => {
                               )}
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm ${
-                                  isMine
-                                    ? "text-white rounded-br-sm"
-                                    : "bg-white border border-border/60 rounded-bl-sm"
+                                  isMine ? "text-white rounded-br-sm" : "bg-white rounded-bl-sm border"
                                 }`}
-                                style={isMine ? { backgroundImage: `linear-gradient(135deg, ${INK}, ${INK_SOFT})` } : undefined}
+                                style={
+                                  isMine
+                                    ? { backgroundImage: `linear-gradient(135deg, ${SEA_DEEP}, ${SEA_BRIGHT})` }
+                                    : { borderColor: "#DCE7F5" }
+                                }
                               >
                                 <p className="text-sm whitespace-pre-line">{m.message}</p>
                                 {m.attachment_url && (
@@ -506,7 +552,7 @@ useEffect(() => {
                                     target="_blank"
                                     rel="noreferrer"
                                     className="flex items-center gap-1.5 mt-1.5 text-xs underline"
-                                    style={{ color: isMine ? "#F4C97A" : INK }}
+                                    style={{ color: isMine ? SKY_SOFT : BLUE_MID }}
                                   >
                                     <FileText className="h-3.5 w-3.5" />
                                     {m.attachment_name || "Attachment"}
@@ -514,15 +560,15 @@ useEffect(() => {
                                 )}
                                 <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
                                   <span
-                                    className={`text-[10px] font-mono tracking-wide ${isMine ? "" : "text-muted-foreground"}`}
-                                    style={isMine ? { color: "#C9D3E5" } : undefined}
+                                    className="text-[10px] font-mono tracking-wide"
+                                    style={{ color: isMine ? "#BBD3F0" : "#7C93B5" }}
                                   >
                                     {format(new Date(m.created_at), "h:mm a")}
                                   </span>
                                   {isMine && (
                                     m.is_read
-                                      ? <CheckCheck className="h-3 w-3" style={{ color: "#F4C97A" }} />
-                                      : <Check className="h-3 w-3" style={{ color: "#C9D3E5" }} />
+                                      ? <CheckCheck className="h-3 w-3" style={{ color: SKY_SOFT }} />
+                                      : <Check className="h-3 w-3" style={{ color: "#BBD3F0" }} />
                                   )}
                                 </div>
                               </div>
@@ -537,13 +583,18 @@ useEffect(() => {
                   {/* Emoji picker */}
                   {showEmojiPicker && (
                     <div className="px-3 pb-2">
-                      <div className="flex flex-wrap gap-1.5 border border-border/60 rounded-xl p-2.5 bg-background max-w-xs shadow-sm">
+                      <div
+                        className="flex flex-wrap gap-1.5 rounded-xl p-2.5 bg-white max-w-xs shadow-sm border"
+                        style={{ borderColor: "#DCE7F5" }}
+                      >
                         {QUICK_EMOJIS.map((emoji) => (
                           <button
                             key={emoji}
                             type="button"
                             onClick={() => setMessageText((prev) => prev + emoji)}
-                            className="text-lg hover:bg-muted rounded p-1 transition-colors"
+                            className="text-lg rounded p-1 transition-colors"
+                            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#EAF1FA")}
+                            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}
                           >
                             {emoji}
                           </button>
@@ -557,7 +608,7 @@ useEffect(() => {
                     <div className="px-3 pb-2">
                       <div
                         className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
-                        style={{ backgroundColor: `${INK}0D`, color: INK }}
+                        style={{ backgroundColor: "#E7EFFA", color: BLUE_MID }}
                       >
                         <FileText className="h-3.5 w-3.5" />
                         {attachedFile.name}
@@ -570,66 +621,64 @@ useEffect(() => {
 
                   {/* Compose bar — students can only reply to teachers, not admin/principal/school_admin/hod broadcasts */}
                   {selectedContact.role === "teacher" ? (
-                    <div className="p-3 border-t border-border/60 bg-background">
-                      <div className="flex items-end gap-1.5 rounded-2xl border border-border/60 bg-muted/20 px-2 py-1.5 focus-within:border-[color:var(--ink-focus)]">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          className="hidden"
-                          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                          onChange={e => {
-                            const f = e.target.files?.[0];
-                            if (f) setAttachedFile(f);
-                          }}
-                        />
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0 rounded-full"
-                          style={{ color: INK }}
-                          onClick={() => fileInputRef.current?.click()}
-                          title="Attach file"
-                        >
-                          <Paperclip className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0 rounded-full"
-                          style={{ color: INK }}
-                          onClick={() => setShowEmojiPicker(v => !v)}
-                          title="Insert emoji"
-                        >
-                          <Smile className="h-4 w-4" />
-                        </Button>
-                        <Textarea
-                          placeholder="Type a message..."
-                          value={messageText}
-                          onChange={e => setMessageText(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSend();
-                            }
-                          }}
-                          rows={1}
-                          className="resize-none min-h-[36px] max-h-32 text-sm border-0 bg-transparent shadow-none focus-visible:ring-0 px-1"
-                        />
-                        <Button
-                          onClick={handleSend}
-                          disabled={sending || uploadingFile}
-                          size="icon"
-                          className="shrink-0 rounded-full text-white"
-                          style={{ backgroundColor: INK }}
-                        >
-                          {sending || uploadingFile ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4" />}
-                        </Button>
-                      </div>
+                    <div className="p-3 border-t bg-white flex items-end gap-2" style={{ borderColor: "#DCE7F5" }}>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f) setAttachedFile(f);
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 rounded-full"
+                        style={{ color: BLUE_MID }}
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Attach file"
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 rounded-full"
+                        style={{ color: BLUE_MID }}
+                        onClick={() => setShowEmojiPicker(v => !v)}
+                        title="Insert emoji"
+                      >
+                        <Smile className="h-4 w-4" />
+                      </Button>
+                      <Textarea
+                        placeholder="Type a message..."
+                        value={messageText}
+                        onChange={e => setMessageText(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSend();
+                          }
+                        }}
+                        rows={1}
+                        className="resize-none min-h-[40px] max-h-32 text-sm rounded-2xl border-none focus-visible:ring-2 px-4 py-2.5"
+                        style={{ backgroundColor: "#EAF1FA" } as React.CSSProperties}
+                      />
+                      <Button
+                        onClick={() => handleSend()}
+                        disabled={sending || uploadingFile}
+                        className="shrink-0 gap-1.5 rounded-full h-10 w-10 p-0 text-white shadow-sm border-0"
+                        style={{ backgroundImage: `linear-gradient(135deg, ${SKY_ACCENT}, #38BDF8)` }}
+                      >
+                        {sending || uploadingFile ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4" />}
+                      </Button>
                     </div>
                   ) : (
                     <div
-                      className="p-3 border-t border-border/60 flex items-center justify-center gap-1.5 text-center text-xs"
-                      style={{ backgroundColor: `${OCHRE}0D`, color: `${INK}CC` }}
+                      className="p-3 border-t flex items-center justify-center gap-1.5 text-center text-xs"
+                      style={{ backgroundColor: `${OCHRE}12`, color: "#33507A", borderColor: "#DCE7F5" }}
                     >
                       <Megaphone className="h-3.5 w-3.5 shrink-0" style={{ color: OCHRE }} />
                       This is a notice from {selectedContact.subtitle || "the school"} — replies aren't available here.
