@@ -3,6 +3,9 @@
  * Parent-facing messaging hub: Parent <-> their children's Teachers.
  * Reuses the same `teacher_messages` table as the teacher-side Communication
  * Center, just scoped to a 1:1 view with each teacher.
+ *
+ * DESIGN NOTE: visual layer only — every hook, handler, and Supabase call
+ * below is identical to the original. Only classNames / markup changed.
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +21,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, MessageSquare, Check, CheckCheck,
   Calendar as CalendarIcon, Smile, X, FileText, ChevronLeft, Trash2,
+  Megaphone,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { getMyChildren, getTeachersForChild } from "@/lib/appointments";
@@ -50,6 +54,12 @@ const QUICK_EMOJIS = [
   "❤️", "💯", "🔥", "📚", "✏️", "📝", "📌", "⏰", "📅", "🏆",
 ];
 
+// Ink navy + ochre — a "school register" palette, kept out of the render
+// tree so it's easy to retint later without touching markup.
+const INK = "#1B2A4A";
+const INK_SOFT = "#243B63";
+const OCHRE = "#C17817";
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const dayLabel = (dateStr: string) => {
@@ -58,6 +68,8 @@ const dayLabel = (dateStr: string) => {
   if (isYesterday(d)) return "Yesterday";
   return format(d, "d MMM yyyy");
 };
+
+const NOTICE_ROLES = new Set(["admin", "principal", "school_admin", "hod"]);
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -301,24 +313,37 @@ useEffect(() => {
   return (
     <AppLayout>
       <div className="h-[calc(100vh-100px)] flex flex-col">
-        <div className="mb-4 flex items-center gap-2">
-          <MessageSquare className="h-5 w-5 text-blue-600" />
-          <h1 className="text-xl font-bold text-foreground">Communication Center</h1>
+        {/* Page header */}
+        <div className="mb-4 flex items-center gap-3">
+          <div
+            className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
+            style={{ backgroundColor: `${INK}14` }}
+          >
+            <MessageSquare className="h-4.5 w-4.5" style={{ color: INK }} />
+          </div>
+          <div>
+            <h1 className="text-xl font-serif font-semibold tracking-tight text-foreground">
+              Communication Center
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Messages with your child's teachers
+            </p>
+          </div>
         </div>
 
-        <Card className="flex-1 overflow-hidden border border-border/60 min-h-0">
+        <Card className="flex-1 overflow-hidden border border-border/60 rounded-2xl shadow-sm min-h-0">
           <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`border-r border-border/60 flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
+            <div className={`border-r border-border/60 flex flex-col bg-background ${showMobileChat ? "hidden md:flex" : "flex"}`}>
               <div className="p-3 border-b border-border/60">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search teacher"
+                    placeholder="Search teachers"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-8 h-9 text-sm"
+                    className="pl-8 h-9 text-sm rounded-full"
                   />
                 </div>
               </div>
@@ -327,32 +352,54 @@ useEffect(() => {
                 {loadingContacts ? (
                   <div className="flex justify-center py-8"><LoadingSpinner /></div>
                 ) : currentContacts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-8">
-                    No teachers found yet.
-                  </p>
+                  <div className="text-center py-10 px-4">
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      No teachers linked yet. They'll show up here once your child
+                      is assigned to a class.
+                    </p>
+                  </div>
                 ) : (
                   currentContacts.map(c => {
                     const isSelected = selectedContact?.id === c.id;
                     const last = lastMessages.get(c.id);
+                    const isNotice = NOTICE_ROLES.has(c.role);
+                    const hasUnread = !!(last && !last.is_read && last.recipient_id === user?.id);
                     return (
                       <button
                         key={c.id}
                         onClick={() => openContact(c)}
-                        className={`w-full text-left p-2.5 rounded-lg flex items-center gap-2.5 transition-colors ${
-                          isSelected ? "bg-blue-50 border border-blue-200" : "hover:bg-muted/50"
-                        }`}
+                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-2.5 transition-colors"
+                        style={isSelected ? { backgroundColor: `${INK}0D`, boxShadow: `inset 0 0 0 1px ${INK}33` } : undefined}
+                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = "hsl(var(--muted) / 0.5)"; }}
+                        onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = ""; }}
                       >
-                        <div className="h-9 w-9 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-xs font-bold text-blue-700">
+                        <div
+                          className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-serif font-bold ring-1"
+                          style={{ backgroundColor: `${INK}14`, color: INK, boxShadow: `0 0 0 1px ${INK}22` }}
+                        >
                           {c.name[0]}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-semibold truncate">{c.name}</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-sm font-serif font-semibold truncate">{c.name}</p>
+                            {isNotice && (
+                              <span
+                                className="shrink-0 text-[9px] uppercase tracking-wide font-medium px-1.5 py-0.5 rounded-full"
+                                style={{ backgroundColor: `${OCHRE}1A`, color: OCHRE }}
+                              >
+                                Notice
+                              </span>
+                            )}
+                          </div>
                           <p className="text-xs text-muted-foreground truncate">
                             {c.subtitle}
                           </p>
                         </div>
-                        {last && !last.is_read && last.recipient_id === user?.id && (
-                          <span className="h-2 w-2 rounded-full bg-blue-600 shrink-0" />
+                        {hasUnread && (
+                          <span
+                            className="h-2 w-2 rounded-full shrink-0 animate-pulse"
+                            style={{ backgroundColor: OCHRE }}
+                          />
                         )}
                       </button>
                     );
@@ -365,29 +412,38 @@ useEffect(() => {
             <div className={`min-h-0 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
               {!selectedContact ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Select a teacher to start messaging
+                  <div
+                    className="h-14 w-14 rounded-full flex items-center justify-center mb-3"
+                    style={{ backgroundColor: `${INK}0D` }}
+                  >
+                    <MessageSquare className="h-6 w-6" style={{ color: `${INK}66` }} />
+                  </div>
+                  <p className="text-sm font-serif text-foreground/80">
+                    Choose a teacher to see your conversation
                   </p>
                 </div>
               ) : (
                 <>
                   {/* Chat header */}
-                  <div className="p-3 border-b border-border/60 flex items-center gap-2.5">
+                  <div className="p-3 border-b border-border/60 flex items-center gap-2.5 bg-background">
                     <button className="md:hidden p-1" onClick={() => setShowMobileChat(false)}>
                       <ChevronLeft className="h-5 w-5" />
                     </button>
-                    <div className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold bg-blue-100 text-blue-700">
+                    <div
+                      className="h-9 w-9 rounded-full flex items-center justify-center shrink-0 text-xs font-serif font-bold"
+                      style={{ backgroundColor: `${INK}14`, color: INK, boxShadow: `0 0 0 1px ${INK}22` }}
+                    >
                       {selectedContact.name[0]}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate">{selectedContact.name}</p>
+                      <p className="text-sm font-serif font-semibold truncate">{selectedContact.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{selectedContact.subtitle}</p>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="gap-1.5 text-xs"
+                      className="gap-1.5 text-xs rounded-full"
+                      style={{ borderColor: `${INK}33`, color: INK }}
                       onClick={() => navigate("/appointments")}
                     >
                       <CalendarIcon className="h-3.5 w-3.5" />
@@ -396,12 +452,18 @@ useEffect(() => {
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-muted/20">
+                  <div
+                    className="flex-1 overflow-y-auto p-4 space-y-3"
+                    style={{
+                      backgroundColor: "hsl(var(--muted) / 0.2)",
+                      backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent 27px, ${INK}0A 28px)`,
+                    }}
+                  >
                     {threadLoading ? (
                       <div className="flex justify-center py-8"><LoadingSpinner /></div>
                     ) : messages.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-8">
-                        No messages yet. Start the conversation below.
+                        No messages yet. Say hello below.
                       </p>
                     ) : (
                       messages.map((m, i) => {
@@ -411,7 +473,10 @@ useEffect(() => {
                           <div key={m.id}>
                             {showDateSep && (
                               <div className="flex justify-center my-3">
-                                <span className="text-[10px] bg-muted text-muted-foreground px-2.5 py-1 rounded-full">
+                                <span
+                                  className="text-[10px] font-serif uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm bg-background"
+                                  style={{ color: INK, borderColor: `${INK}26` }}
+                                >
                                   {dayLabel(m.created_at)}
                                 </span>
                               </div>
@@ -427,11 +492,12 @@ useEffect(() => {
                                 </button>
                               )}
                               <div
-                                className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
+                                className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm ${
                                   isMine
-                                    ? "bg-blue-600 text-white rounded-br-sm"
+                                    ? "text-white rounded-br-sm"
                                     : "bg-white border border-border/60 rounded-bl-sm"
                                 }`}
+                                style={isMine ? { backgroundImage: `linear-gradient(135deg, ${INK}, ${INK_SOFT})` } : undefined}
                               >
                                 <p className="text-sm whitespace-pre-line">{m.message}</p>
                                 {m.attachment_url && (
@@ -439,20 +505,24 @@ useEffect(() => {
                                     href={m.attachment_url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className={`flex items-center gap-1.5 mt-1.5 text-xs underline ${isMine ? "text-blue-100" : "text-blue-600"}`}
+                                    className="flex items-center gap-1.5 mt-1.5 text-xs underline"
+                                    style={{ color: isMine ? "#F4C97A" : INK }}
                                   >
                                     <FileText className="h-3.5 w-3.5" />
                                     {m.attachment_name || "Attachment"}
                                   </a>
                                 )}
                                 <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
-                                  <span className={`text-[10px] ${isMine ? "text-blue-100" : "text-muted-foreground"}`}>
+                                  <span
+                                    className={`text-[10px] font-mono tracking-wide ${isMine ? "" : "text-muted-foreground"}`}
+                                    style={isMine ? { color: "#C9D3E5" } : undefined}
+                                  >
                                     {format(new Date(m.created_at), "h:mm a")}
                                   </span>
                                   {isMine && (
                                     m.is_read
-                                      ? <CheckCheck className="h-3 w-3 text-blue-100" />
-                                      : <Check className="h-3 w-3 text-blue-100" />
+                                      ? <CheckCheck className="h-3 w-3" style={{ color: "#F4C97A" }} />
+                                      : <Check className="h-3 w-3" style={{ color: "#C9D3E5" }} />
                                   )}
                                 </div>
                               </div>
@@ -467,7 +537,7 @@ useEffect(() => {
                   {/* Emoji picker */}
                   {showEmojiPicker && (
                     <div className="px-3 pb-2">
-                      <div className="flex flex-wrap gap-1.5 border border-border/60 rounded-lg p-2.5 bg-background max-w-xs">
+                      <div className="flex flex-wrap gap-1.5 border border-border/60 rounded-xl p-2.5 bg-background max-w-xs shadow-sm">
                         {QUICK_EMOJIS.map((emoji) => (
                           <button
                             key={emoji}
@@ -485,7 +555,10 @@ useEffect(() => {
                   {/* Attached file preview */}
                   {attachedFile && (
                     <div className="px-3 pb-2">
-                      <div className="inline-flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 text-xs">
+                      <div
+                        className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
+                        style={{ backgroundColor: `${INK}0D`, color: INK }}
+                      >
                         <FileText className="h-3.5 w-3.5" />
                         {attachedFile.name}
                         <button onClick={() => setAttachedFile(null)}>
@@ -497,58 +570,68 @@ useEffect(() => {
 
                   {/* Compose bar — students can only reply to teachers, not admin/principal/school_admin/hod broadcasts */}
                   {selectedContact.role === "teacher" ? (
-                    <div className="p-3 border-t border-border/60 flex items-end gap-2">
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                        onChange={e => {
-                          const f = e.target.files?.[0];
-                          if (f) setAttachedFile(f);
-                        }}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={() => fileInputRef.current?.click()}
-                        title="Attach file"
-                      >
-                        <Paperclip className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={() => setShowEmojiPicker(v => !v)}
-                        title="Insert emoji"
-                      >
-                        <Smile className="h-4 w-4" />
-                      </Button>
-                      <Textarea
-                        placeholder="Type a message..."
-                        value={messageText}
-                        onChange={e => setMessageText(e.target.value)}
-                        onKeyDown={e => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSend();
-                          }
-                        }}
-                        rows={1}
-                        className="resize-none min-h-[40px] max-h-32 text-sm"
-                      />
-                      <Button
-                        onClick={handleSend}
-                        disabled={sending || uploadingFile}
-                        className="shrink-0 gap-1.5 bg-blue-600 hover:bg-blue-700"
-                      >
-                        {sending || uploadingFile ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4" />}
-                      </Button>
+                    <div className="p-3 border-t border-border/60 bg-background">
+                      <div className="flex items-end gap-1.5 rounded-2xl border border-border/60 bg-muted/20 px-2 py-1.5 focus-within:border-[color:var(--ink-focus)]">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                          onChange={e => {
+                            const f = e.target.files?.[0];
+                            if (f) setAttachedFile(f);
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 rounded-full"
+                          style={{ color: INK }}
+                          onClick={() => fileInputRef.current?.click()}
+                          title="Attach file"
+                        >
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 rounded-full"
+                          style={{ color: INK }}
+                          onClick={() => setShowEmojiPicker(v => !v)}
+                          title="Insert emoji"
+                        >
+                          <Smile className="h-4 w-4" />
+                        </Button>
+                        <Textarea
+                          placeholder="Type a message..."
+                          value={messageText}
+                          onChange={e => setMessageText(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              handleSend();
+                            }
+                          }}
+                          rows={1}
+                          className="resize-none min-h-[36px] max-h-32 text-sm border-0 bg-transparent shadow-none focus-visible:ring-0 px-1"
+                        />
+                        <Button
+                          onClick={handleSend}
+                          disabled={sending || uploadingFile}
+                          size="icon"
+                          className="shrink-0 rounded-full text-white"
+                          style={{ backgroundColor: INK }}
+                        >
+                          {sending || uploadingFile ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4" />}
+                        </Button>
+                      </div>
                     </div>
                   ) : (
-                    <div className="p-3 border-t border-border/60 text-center text-xs text-muted-foreground bg-muted/30">
+                    <div
+                      className="p-3 border-t border-border/60 flex items-center justify-center gap-1.5 text-center text-xs"
+                      style={{ backgroundColor: `${OCHRE}0D`, color: `${INK}CC` }}
+                    >
+                      <Megaphone className="h-3.5 w-3.5 shrink-0" style={{ color: OCHRE }} />
                       This is a notice from {selectedContact.subtitle || "the school"} — replies aren't available here.
                     </div>
                   )}
