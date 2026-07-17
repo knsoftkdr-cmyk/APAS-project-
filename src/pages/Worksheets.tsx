@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { PageHeader } from "@/components/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -401,130 +400,156 @@ export default function Worksheets() {
 
   return (
     <AppLayout>
-      <PageHeader title="Worksheets" subtitle="Download, view, or practice your assigned worksheets" />
+      <div className="min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.10] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl pointer-events-none" />
 
-      {worksheetsLoading ? (
-        <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading worksheets...
-        </div>
-      ) : assignedWorksheets.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-center border-2 border-dashed border-border rounded-xl">
-          <FileText className="h-10 w-10 text-muted-foreground/50 mb-3" />
-          <p className="text-sm font-medium text-foreground">No worksheets assigned</p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Worksheets assigned by your teacher will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {assignedWorksheets.map((ws) => (
-            <Card key={ws.id} className="border border-border/60 hover:border-border transition-colors">
-              <CardContent className="p-4 flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-4 flex-wrap">
-                  <div className="flex-1 min-w-[250px]">
-                    <div className="flex items-center gap-2 flex-wrap mb-2">
-                      <h3 className="font-semibold text-foreground">
-                        {ws.worksheets?.topic || ws.worksheets?.chapter || "Worksheet"}
-                      </h3>
-                      {ws.worksheets?.subject && (
-                        <Badge variant="outline" className="text-xs">{ws.worksheets.subject}</Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
-                      {ws.worksheets?.chapter && <span>Chapter: {ws.worksheets.chapter}</span>}
-                      {ws.worksheets?.subtopic && <span>Subtopic: {ws.worksheets.subtopic}</span>}
-                      {ws.due_date && <span>Due: {new Date(ws.due_date).toLocaleDateString()}</span>}
-                    </div>
-                  </div>
+        <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <FileText className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Worksheets</h1>
+                <p className="text-indigo-100 text-xs md:text-sm mt-0.5">Download, view, or practice your assigned worksheets</p>
+              </div>
+            </div>
+          </div>
+
+          {worksheetsLoading ? (
+            <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading worksheets...
+            </div>
+          ) : assignedWorksheets.length === 0 ? (
+            <Card className="border-2 border-dashed border-indigo-200 bg-gradient-to-b from-indigo-50/50 to-white rounded-2xl">
+              <CardContent className="py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center mx-auto mb-4 shadow-md shadow-indigo-200">
+                  <FileText className="h-7 w-7 text-white" />
                 </div>
-
-                {/* Four action buttons, directly on the card */}
-                <div className="flex gap-2 flex-wrap pt-2 border-t border-border/40">
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-green-600 hover:bg-green-700"
-                    onClick={() => downloadWorksheetPDF(ws, profile)}
-                  >
-                    <Download className="h-4 w-4" /> Download PDF
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-purple-600 hover:bg-purple-700"
-                    disabled={!ws.worksheets?.image_url}
-                    onClick={() => downloadWorksheetImage(ws)}
-                  >
-                    <ImageIcon className="h-4 w-4" />
-                    {ws.worksheets?.image_url ? "Download Worksheet Image" : "Image generating..."}
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="gap-2 bg-blue-600 hover:bg-blue-700"
-                    onClick={() => setPracticeWorksheet(ws)}
-                  >
-                    <PenLine className="h-4 w-4" /> Practice Worksheet
-                  </Button>
-
-                  <input
-                    type="file"
-                    id={`answer-file-${ws.id}`}
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileUpload(ws, file);
-                      e.target.value = ""; // allow re-uploading the same filename later
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    disabled={uploadingId === ws.id}
-                    onClick={() => document.getElementById(`answer-file-${ws.id}`)?.click()}
-                  >
-                    {uploadingId === ws.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Upload className="h-4 w-4" />
-                    )}
-                    Upload Answer File
-                  </Button>
-
-                  {getSubmissionFor(ws.worksheets?.id)?.answer_file_url && (
-                    <Badge variant="outline" className="text-xs gap-1.5 self-center pr-1">
-                      <Paperclip className="h-3 w-3" />
-                      {getSubmissionFor(ws.worksheets?.id)?.answer_file_name || "File uploaded"}
-                      <Check className="h-3 w-3 text-emerald-600" />
-                      {getSubmissionFor(ws.worksheets?.id)?.status !== "reviewed" && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(ws)}
-                          disabled={removingId === ws.id}
-                          className="ml-1 rounded-full hover:bg-destructive/10 p-0.5 text-muted-foreground hover:text-destructive transition-colors"
-                          aria-label="Remove uploaded file"
-                        >
-                          {removingId === ws.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <X className="h-3 w-3" />
-                          )}
-                        </button>
-                      )}
-                    </Badge>
-                  )}
-                </div>
-
+                <h3 className="text-base font-semibold text-slate-800 mb-1">No worksheets assigned</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Worksheets assigned by your teacher will appear here.
+                </p>
               </CardContent>
             </Card>
-          ))}
+          ) : (
+            <div className="space-y-3">
+              {assignedWorksheets.map((ws) => (
+                <Card key={ws.id} className="border border-indigo-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="h-1 bg-gradient-to-r from-indigo-400 to-violet-400" />
+                  <CardContent className="p-4 flex flex-col gap-3">
+                    <div className="flex items-center justify-between gap-4 flex-wrap">
+                      <div className="flex-1 min-w-[250px]">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <h3 className="font-semibold text-foreground">
+                            {ws.worksheets?.topic || ws.worksheets?.chapter || "Worksheet"}
+                          </h3>
+                          {ws.worksheets?.subject && (
+                            <Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 bg-indigo-50/50">{ws.worksheets.subject}</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+                          {ws.worksheets?.chapter && <span>Chapter: {ws.worksheets.chapter}</span>}
+                          {ws.worksheets?.subtopic && <span>Subtopic: {ws.worksheets.subtopic}</span>}
+                          {ws.due_date && <span>Due: {new Date(ws.due_date).toLocaleDateString()}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Four action buttons, directly on the card */}
+                    <div className="flex gap-2 flex-wrap pt-3 border-t border-indigo-50">
+                      <Button
+                        size="sm"
+                        className="gap-2 bg-green-600 hover:bg-green-700 rounded-xl"
+                        onClick={() => downloadWorksheetPDF(ws, profile)}
+                      >
+                        <Download className="h-4 w-4" /> Download PDF
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="gap-2 bg-purple-600 hover:bg-purple-700 rounded-xl"
+                        disabled={!ws.worksheets?.image_url}
+                        onClick={() => downloadWorksheetImage(ws)}
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        {ws.worksheets?.image_url ? "Download Worksheet Image" : "Image generating..."}
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="gap-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl"
+                        onClick={() => setPracticeWorksheet(ws)}
+                      >
+                        <PenLine className="h-4 w-4" /> Practice Worksheet
+                      </Button>
+
+                      <input
+                        type="file"
+                        id={`answer-file-${ws.id}`}
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleFileUpload(ws, file);
+                          e.target.value = ""; // allow re-uploading the same filename later
+                        }}
+                      />
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 rounded-xl border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                        disabled={uploadingId === ws.id}
+                        onClick={() => document.getElementById(`answer-file-${ws.id}`)?.click()}
+                      >
+                        {uploadingId === ws.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Upload className="h-4 w-4" />
+                        )}
+                        Upload Answer File
+                      </Button>
+
+                      {getSubmissionFor(ws.worksheets?.id)?.answer_file_url && (
+                        <Badge variant="outline" className="text-xs gap-1.5 self-center pr-1 border-indigo-200 bg-indigo-50/50">
+                          <Paperclip className="h-3 w-3" />
+                          {getSubmissionFor(ws.worksheets?.id)?.answer_file_name || "File uploaded"}
+                          <Check className="h-3 w-3 text-emerald-600" />
+                          {getSubmissionFor(ws.worksheets?.id)?.status !== "reviewed" && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveFile(ws)}
+                              disabled={removingId === ws.id}
+                              className="ml-1 rounded-full hover:bg-destructive/10 p-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                              aria-label="Remove uploaded file"
+                            >
+                              {removingId === ws.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <X className="h-3 w-3" />
+                              )}
+                            </button>
+                          )}
+                        </Badge>
+                      )}
+                    </div>
+
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Practice Worksheet Dialog — answer boxes only, nothing else */}
       <Dialog open={!!practiceWorksheet} onOpenChange={(open) => !open && setPracticeWorksheet(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <PenLine className="h-5 w-5 text-blue-600" />
+              <PenLine className="h-5 w-5 text-indigo-600" />
               {practiceWorksheet?.worksheets?.topic || practiceWorksheet?.worksheets?.chapter || "Practice Worksheet"}
             </DialogTitle>
           </DialogHeader>
@@ -532,30 +557,30 @@ export default function Worksheets() {
           {practiceWorksheet && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 flex-wrap text-sm">
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 bg-indigo-50/50">
                   {practiceWorksheet.class_level} · Section {practiceWorksheet.section}
                 </Badge>
                 {practiceWorksheet.worksheets?.subject && (
-                  <Badge variant="outline" className="text-xs">{practiceWorksheet.worksheets.subject}</Badge>
+                  <Badge variant="outline" className="text-xs border-indigo-200 text-indigo-700 bg-indigo-50/50">{practiceWorksheet.worksheets.subject}</Badge>
                 )}
                 {existingSubmission?.status === "reviewed" ? (
                   <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-xs gap-1">
                     <Check className="h-3 w-3" /> Reviewed by teacher
                   </Badge>
                 ) : existingSubmission?.status === "submitted" ? (
-                  <Badge className="bg-blue-100 text-blue-700 border-blue-200 text-xs">Submitted — pending review</Badge>
+                  <Badge className="bg-indigo-100 text-indigo-700 border-indigo-200 text-xs">Submitted — pending review</Badge>
                 ) : null}
               </div>
 
               {existingSubmission?.answer_file_url && (
-                <div className="p-3 rounded-lg bg-muted/40 border flex items-center gap-2 text-sm">
+                <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 flex items-center gap-2 text-sm">
                   <Paperclip className="h-4 w-4 text-muted-foreground" />
                   <span>You've also uploaded a file: </span>
                   <a
                     href={existingSubmission.answer_file_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline font-medium"
+                    className="text-indigo-600 underline font-medium"
                   >
                     {existingSubmission.answer_file_name || "View file"}
                   </a>
@@ -573,7 +598,7 @@ export default function Worksheets() {
               )}
 
               {existingSubmission?.status === "reviewed" && existingSubmission?.teacher_feedback && (
-                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-sm text-emerald-800">
                   <p className="font-semibold mb-1">Teacher feedback:</p>
                   <p>{existingSubmission.teacher_feedback}</p>
                 </div>
@@ -587,7 +612,7 @@ export default function Worksheets() {
                 <p className="text-sm text-muted-foreground">Could not load worksheet activities.</p>
               ) : (
                 activities.map((activity, idx) => (
-                  <div key={idx} className="border rounded-xl p-4 bg-card space-y-3">
+                  <div key={idx} className="border border-indigo-100 rounded-xl p-4 bg-card space-y-3">
                     <div className="prose prose-sm max-w-none">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{activity}</ReactMarkdown>
                     </div>
@@ -602,7 +627,7 @@ export default function Worksheets() {
                         }
                         placeholder="Write your answer here..."
                         rows={4}
-                        className="bg-background"
+                        className="bg-background rounded-xl"
                       />
                     </div>
                   </div>
@@ -612,13 +637,13 @@ export default function Worksheets() {
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPracticeWorksheet(null)} disabled={isSubmittingWorksheet}>
+            <Button variant="outline" className="rounded-xl" onClick={() => setPracticeWorksheet(null)} disabled={isSubmittingWorksheet}>
               Cancel
             </Button>
             <Button
               onClick={handleSubmitWorksheetAnswers}
               disabled={isSubmittingWorksheet || activities.length === 0}
-              className="gap-2 bg-blue-600 hover:bg-blue-700"
+              className="gap-2 bg-indigo-600 hover:bg-indigo-700 rounded-xl"
             >
               {isSubmittingWorksheet ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               {existingSubmission ? "Update Answers" : "Submit Worksheet"}
