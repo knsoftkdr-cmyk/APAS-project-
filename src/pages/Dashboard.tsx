@@ -31,6 +31,8 @@ import StudentHomework from "@/components/StudentHomework";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 import studentBanner from "@/assets/student-home-banner.png";
 import teacherhomebanner from "@/assets/teacherhome-banner.png";
+import { DashboardHero, HeroCalendarButton, HeroPrimaryButton } from "@/components/dashboard/DashboardHero";
+import { DashStatCard } from "@/components/dashboard/DashStatCard";
 
 interface LessonContent {
   lesson_objectives?: string[];
@@ -291,99 +293,40 @@ const TeacherHome = () => {
 
   return (
     <AppLayout>
-      {/* Hero Section */}
-      <div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-2xl">
-        <div
-          className="relative px-8 py-12 md:py-16"
-          style={{
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        >
-<div
-  className="absolute inset-0 bg-gradient-to-r
-  from-[#2563EB]/80
-  to-[#60A5FA]/100"
-/>
-<div className="hidden md:block">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
-          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/50"></div>
-    {/* Stars */}
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
-          
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+      <DashboardHero
+        eyebrow="APAS Teacher Portal"
+        greeting="Welcome back"
+        name={profile?.full_name || "Teacher"}
+        dateLabel={today}
+        description="Adaptive Personalised Assessment System - empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."
+        actions={
+          <>
+            <HeroCalendarButton />
+            {profile?.role !== "hod" && <HeroPrimaryButton to="/curative" label="Generate Lesson" />}
+          </>
+        }
+      />
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
-
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/40"></div>
-</div>
-             <img
-    src={teacherhomebanner}
-    alt="Teacher Home Dashboard"
-    /* className="absolute right-8 -bottom-14 h-[405px] object-contain" */
-    className="hidden md:block absolute right-0 bottom-6 w-[450px]"
-  />
-          <div className="relative z-10 max-w-2xl">
-            <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="h-7 w-7 text-black/80" />
-              <span className="text-sm font-medium text-black/70 uppercase tracking-wider">{profile?.role === "school_admin" ? "APAS School Admin Portal" : profile?.role === "knsoft_admin" ? "APAS Platform Admin" : "APAS Teacher Portal"}</span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-black mb-2">
-              Welcome back, {profile?.full_name || (profile?.role === "school_admin" ? "School Admin" : profile?.role === "knsoft_admin" ? "KNSoft Admin" : "Teacher")}
-            </h1>
-            <p className="text-base text-black/90 mb-1">{today}</p>
-            <p className="text-sm text-black/80 max-w-lg mt-3 leading-relaxed">
-              {profile?.role === "school_admin" ? "Manage your school - create accounts, monitor student and teacher performance, and oversee school-wide operations." : profile?.role === "knsoft_admin" ? "KNSOFT Platform Admin - manage all schools, assign school admins, monitor platform-wide usage and billing." : "Adaptive Personalised Assessment System - empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-500 to-amber-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 shadow-lg shadow-blue-300/50">
-              <CheckCircle className="h-7 w-7 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {countLoading ? "-" : assessmentCount}
-              </p>
-              <p className="text-sm text-white text-muted-foreground">Assessments Completed</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-green-600 to-green-600 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 shadow-lg shadow-blue-300/50">
-              <BookOpen className="h-7 w-7 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-foreground">{lessonCount ?? "-"}</p>
-              <p className="text-sm text-white text-muted-foreground">Lesson Plans Created</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-violet-500 to-purple-500 hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 shadow-lg shadow-blue-300/50">
-              <Lightbulb className="h-7 w-7 text-violet-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">AI-Powered</p>
-              <p className="text-sm text-white text-muted-foreground">Personalised Learning</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        <DashStatCard
+          label="Assessments Completed"
+          value={assessmentCount ?? 0}
+          icon={CheckCircle}
+          accent="amber"
+          loading={countLoading}
+        />
+        <DashStatCard
+          label="Lesson Plans Created"
+          value={lessonCount ?? 0}
+          icon={BookOpen}
+          accent="emerald"
+        />
+        <DashStatCard
+          label="Personalised Learning"
+          value="AI-Powered"
+          icon={Lightbulb}
+          accent="purple"
+        />
       </div>
 
       {/* Syllabus Tracker */}
@@ -540,120 +483,20 @@ const AdminHome = () => {
 
   return (
     <AppLayout>
-      {/* Hero Section */}
-{/* Hero Section */}
-<div className="relative -mx-6 -mt-6 mb-8 overflow-hidden rounded-b-2xl">
-  <div className="relative px-8 py-12 md:py-16 min-h-[300px]">
+      <DashboardHero
+        eyebrow="APAS Admin Portal"
+        greeting="Welcome"
+        name={profile?.full_name || "Master User"}
+        dateLabel={today}
+        description="APAS (Adaptive Pedagogy & Analytics System) is a futuristic AI Operating System designed to personalise learning at scale. As an admin, you oversee classes, teachers, students, diagnostics, and system-wide analytics from one place."
+      />
 
-    {/* Background Gradient */}
-<div
-  className="absolute inset-0 bg-gradient-to-r
-  from-[#2563EB]/80
-  to-[#60A5FA]/100"
-/>
-    {/* Decorative Circles */}
-    <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-    <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
-    <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
-<div className="hidden md:block">
-    {/* Stars */}
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
-          
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
-
-    {/* Triangles */}
-    <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-
-    <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
-
-    <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-</div>
-    {/* Banner Image */}
-    <img
-      src={teacherhomebanner}
-      alt="Teacher Home Dashboard"
-      /* className="absolute right-8 bottom-0 h-[320px] object-contain z-10" */
-      className="hidden md:block absolute right-0 bottom-0 w-[500px] z-10"
-    />
-
-    {/* Content */}
-    <div className="relative z-20 max-w-2xl">
-      <h1 className="text-4xl md:text-5xl font-bold text-slate-900 mb-3">
-        Welcome, {profile?.full_name || "Master User"}
-      </h1>
-
-      <p className="text-bold text-slate-900 mb-2">
-        {today}
-      </p>
-
-      <p className="text-lg text-slate-800 leading-relaxed max-w-xl">
-        APAS (Adaptive Pedagogy & Analytics System) is a futuristic AI
-        Operating System designed to personalise learning at scale. As an
-        admin, you oversee classes, teachers, students, diagnostics, and
-        system-wide analytics from one place.
-      </p>
-    </div>
-
-  </div>
-</div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
-        {[
-  {
-    label: "Classes",
-    value: stats?.classes,
-    icon: Book,
-    bg: "from-blue-500 to-cyan-500",
-    iconBg: "bg-white/20",
-  },
-  {
-    label: "Students",
-    value: stats?.students,
-    icon: Users,
-    bg: "from-purple-500 to-pink-500",
-    iconBg: "bg-white/20",
-  },
-  {
-    label: "Teachers",
-    value: stats?.teachers,
-    icon: GraduationCap,
-    bg: "from-emerald-500 to-green-500",
-    iconBg: "bg-white/20",
-  },
-  {
-    label: "Assessments",
-    value: stats?.assessments,
-    icon: CheckCircle,
-    bg: "from-orange-500 to-red-500",
-    iconBg: "bg-white/20",
-  },
-  {
-    label: "Active Alerts",
-    value: stats?.activeAlerts,
-    icon: AlertTriangle,
-    bg: "from-yellow-500 to-amber-500",
-    iconBg: "bg-white/20",
-  },
-].map((stat) => (
-                    <Card key={stat.label} className={`bg-gradient-to-r ${stat.bg} border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 overflow-hidden relative`}>
-            <div className="absolute top-0 right-0 w-24 h-24 rounded-full bg-white/10 blur-2xl" />
-            <CardContent className="flex items-center justify-between p-5 relative z-10">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${stat.iconBg} backdrop-blur-sm`}>
-                <stat.icon className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-white">{isLoading ? "-" : stat.value}</p>
-                <p className="text-xs text-white">{stat.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+        <DashStatCard label="Classes" value={stats?.classes ?? 0} icon={Book} accent="blue" loading={isLoading} />
+        <DashStatCard label="Students" value={stats?.students ?? 0} icon={Users} accent="pink" loading={isLoading} />
+        <DashStatCard label="Teachers" value={stats?.teachers ?? 0} icon={GraduationCap} accent="emerald" loading={isLoading} />
+        <DashStatCard label="Assessments" value={stats?.assessments ?? 0} icon={CheckCircle} accent="orange" loading={isLoading} />
+        <DashStatCard label="Active Alerts" value={stats?.activeAlerts ?? 0} icon={AlertTriangle} accent="amber" loading={isLoading} />
       </div>
 
       {/* At-Risk Students Widget */}

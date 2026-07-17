@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Loader2, Plus, Shuffle, Building2, Trash2, Printer, Download } from "lucide-react";
+import { Loader2, Plus, Shuffle, Building2, Trash2, Printer, Download, ClipboardList } from "lucide-react";
 
 interface ExamHall {
   id: string;
@@ -56,6 +56,11 @@ function normalizeClass(cls: string | null): string {
   if (!cls) return "";
   return cls.toLowerCase().replace(/^class\s*/i, "").trim();
 }
+
+// Shared style helpers (indigo/violet theme, matching Electives page structure)
+const sectionHeaderClass =
+  "bg-gradient-to-r from-indigo-50 to-violet-50/50 border-b border-indigo-100 flex flex-row items-center justify-between";
+const sectionTitleClass = "text-base font-bold text-indigo-900 flex items-center gap-2";
 
 export default function ExamSeating() {
   const { profile } = useAuth();
@@ -440,224 +445,251 @@ export default function ExamSeating() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 max-w-6xl mx-auto">
-        <div>
-          <h1 className="text-2xl font-bold">Exam Seating</h1>
-          <p className="text-muted-foreground text-sm mt-1">Manage exam halls, schedules, and generate seating arrangements</p>
-        </div>
+      <div className="min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl" />
 
-        {/* Halls */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2"><Building2 className="h-4 w-4" /> Exam Halls</CardTitle>
-            <Dialog open={hallDialogOpen} onOpenChange={setHallDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Add Hall</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Add Exam Hall</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div><Label>Hall Name</Label><Input value={newHallName} onChange={(e) => setNewHallName(e.target.value)} placeholder="e.g. Hall A" /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Rows (optional)</Label><Input type="number" value={newHallRows} onChange={(e) => setNewHallRows(e.target.value)} /></div>
-                    <div><Label>Columns (optional)</Label><Input type="number" value={newHallCols} onChange={(e) => setNewHallCols(e.target.value)} /></div>
-                  </div>
-                  <div><Label>Capacity (required if no rows/columns)</Label><Input type="number" value={newHallCapacity} onChange={(e) => setNewHallCapacity(e.target.value)} placeholder="Total seats" /></div>
-                  <Button onClick={saveHall} disabled={savingHall} className="w-full">
-                    {savingHall ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save Hall
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            {halls.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No exam halls yet. Add one to get started.</p>
-            ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Layout</TableHead><TableHead className="text-center">Capacity</TableHead><TableHead></TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {halls.map((h) => (
-                    <TableRow key={h.id}>
-                      <TableCell className="font-medium">{h.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{h.rows && h.columns ? `${h.rows} × ${h.columns} grid` : "Flat capacity"}</TableCell>
-                      <TableCell className="text-center">{h.capacity}</TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="ghost" onClick={() => deleteHall(h.id)} disabled={deletingId === h.id}>
-                          {deletingId === h.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Exam Schedules */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Exam Schedules</CardTitle>
-            <Dialog open={schedDialogOpen} onOpenChange={setSchedDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Add Exam</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Add Exam Schedule</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div><Label>Subject</Label><Input value={newSubject} onChange={(e) => setNewSubject(e.target.value)} placeholder="e.g. Mathematics" /></div>
-                  <div><Label>Date</Label><Input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Start Time</Label><Input type="time" value={newStart} onChange={(e) => setNewStart(e.target.value)} /></div>
-                    <div><Label>End Time</Label><Input type="time" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} /></div>
-                  </div>
-                  <div><Label>Classes (comma-separated)</Label><Input value={newClasses} onChange={(e) => setNewClasses(e.target.value)} placeholder="e.g. 9, 10" /></div>
-                  <Button onClick={saveSchedule} disabled={savingSched} className="w-full">
-                    {savingSched ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save Exam Schedule
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            {schedules.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No exam schedules yet.</p>
-            ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Subject</TableHead><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead>Classes</TableHead><TableHead></TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {schedules.map((s) => (
-                    <TableRow key={s.id}>
-                      <TableCell className="font-medium">{s.subject}</TableCell>
-                      <TableCell className="text-sm">{s.exam_date}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{s.start_time} - {s.end_time}</TableCell>
-                      <TableCell>{s.classes.map((c) => <Badge key={c} variant="outline" className="mr-1">{c}</Badge>)}</TableCell>
-                      <TableCell>
-                        <Button size="sm" variant="ghost" onClick={() => deleteSchedule(s.id)} disabled={deletingId === s.id}>
-                          {deletingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Generate Seating */}
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Shuffle className="h-4 w-4" /> Generate Seating</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap gap-3 items-center">
-              <Select value={selectedScheduleId} onValueChange={setSelectedScheduleId}>
-                <SelectTrigger className="w-64"><SelectValue placeholder="Select Exam" /></SelectTrigger>
-                <SelectContent>
-                  {schedules.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.subject} — {s.exam_date}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={generateSeating} disabled={generating || !selectedScheduleId || selectedHallIds.length === 0}>
-                {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shuffle className="h-4 w-4 mr-2" />}
-                Generate Seating
-              </Button>
-            </div>
-
-            <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Select Halls to Use</Label>
-              <div className="flex flex-wrap gap-2">
-                {halls.map((h) => (
-                  <Badge
-                    key={h.id}
-                    variant={selectedHallIds.includes(h.id) ? "default" : "outline"}
-                    className="cursor-pointer px-3 py-1.5"
-                    onClick={() => toggleHallSelection(h.id)}
-                  >
-                    {h.name} ({h.capacity})
-                  </Badge>
-                ))}
+        <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <ClipboardList className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Exam Seating</h1>
+                <p className="text-indigo-100 text-xs md:text-sm mt-0.5">Manage exam halls, schedules, and generate seating arrangements</p>
               </div>
             </div>
+          </div>
 
-            {Object.keys(seatingResult).length > 0 && (
-              <div className="space-y-4 pt-2">
-                {Object.entries(seatingResult).map(([hallId, assignments]) => {
-                  const hall = halls.find((h) => h.id === hallId);
-                  return (
-                    <div key={hallId}>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-semibold">{hall?.name}</h3>
-                        <Button size="sm" variant="outline" onClick={() => generateLayoutPDF(hallId)}>
-                          <Printer className="h-3.5 w-3.5 mr-1.5" /> Layout
-                        </Button>
-                      </div>
-                      <Table>
-                        <TableHeader><TableRow><TableHead>Seat #</TableHead><TableHead>Student</TableHead><TableHead>Class</TableHead><TableHead>Roll No.</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                          {assignments.sort((a, b) => a.seat_number - b.seat_number).map((a) => {
-                            const student = studentsById[a.student_id];
-                            return (
-                              <TableRow key={a.student_id}>
-                                <TableCell>{a.seat_row && a.seat_col ? `R${a.seat_row}C${a.seat_col}` : a.seat_number}</TableCell>
-                                <TableCell className="font-medium">{student?.full_name ?? "-"}</TableCell>
-                                <TableCell className="text-sm text-muted-foreground">{student?.class} {student?.section}</TableCell>
-                                <TableCell className="text-sm text-muted-foreground">{student?.roll_number ?? "-"}</TableCell>
-                              </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
+          {/* Halls */}
+          <Card className="overflow-hidden py-0 gap-0 rounded-2xl border-indigo-100 shadow-sm">
+            <CardHeader className={sectionHeaderClass}>
+              <CardTitle className={sectionTitleClass}><Building2 className="h-4 w-4" /> Exam Halls</CardTitle>
+              <Dialog open={hallDialogOpen} onOpenChange={setHallDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"><Plus className="h-4 w-4 mr-1" /> Add Hall</Button>
+                </DialogTrigger>
+                <DialogContent className="rounded-2xl">
+                  <DialogHeader><DialogTitle>Add Exam Hall</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    <div><Label>Hall Name</Label><Input className="rounded-xl mt-1" value={newHallName} onChange={(e) => setNewHallName(e.target.value)} placeholder="e.g. Hall A" /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>Rows (optional)</Label><Input type="number" className="rounded-xl mt-1" value={newHallRows} onChange={(e) => setNewHallRows(e.target.value)} /></div>
+                      <div><Label>Columns (optional)</Label><Input type="number" className="rounded-xl mt-1" value={newHallCols} onChange={(e) => setNewHallCols(e.target.value)} /></div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Saved Layouts - persisted, visible across sessions */}
-        <Card>
-          <CardHeader><CardTitle className="text-base">Saved Seating Layouts</CardTitle></CardHeader>
-          <CardContent>
-            {savedLayouts.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-6 text-center">No saved layouts yet. Generate seating above to create one.</p>
-            ) : (
-              <Table>
-                <TableHeader><TableRow><TableHead>Exam</TableHead><TableHead>Hall</TableHead><TableHead className="text-center">Seats Assigned</TableHead><TableHead></TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {savedLayouts.map((l) => {
-                    const sched = schedules.find((s) => s.id === l.exam_schedule_id);
-                    const hall = halls.find((h) => h.id === l.hall_id);
-                    const viewKey = `${l.exam_schedule_id}::${l.hall_id}::view`;
-                    const downloadKey = `${l.exam_schedule_id}::${l.hall_id}::download`;
-                    return (
-                      <TableRow key={`${l.exam_schedule_id}-${l.hall_id}`}>
-                        <TableCell className="font-medium">{sched ? `${sched.subject} — ${sched.exam_date}` : "Unknown exam"}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{hall?.name ?? "Unknown hall"}</TableCell>
-                        <TableCell className="text-center">{l.seat_count}</TableCell>
-                        <TableCell className="flex gap-2 justify-end">
-                          <Button size="sm" variant="outline" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "view")} disabled={layoutActionKey === viewKey}>
-                            {layoutActionKey === viewKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5 mr-1.5" />}
-                            View
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "download")} disabled={layoutActionKey === downloadKey}>
-                            {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
-                            Download
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => deleteSavedLayout(l.exam_schedule_id, l.hall_id)} disabled={layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete`}>
-                            {layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
+                    <div><Label>Capacity (required if no rows/columns)</Label><Input type="number" className="rounded-xl mt-1" value={newHallCapacity} onChange={(e) => setNewHallCapacity(e.target.value)} placeholder="Total seats" /></div>
+                    <Button onClick={saveHall} disabled={savingHall} className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-xl">
+                      {savingHall ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save Hall
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="pt-4 pb-5">
+              {halls.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">No exam halls yet. Add one to get started.</p>
+              ) : (
+                <Table>
+                  <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Layout</TableHead><TableHead className="text-center">Capacity</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {halls.map((h) => (
+                      <TableRow key={h.id}>
+                        <TableCell className="font-medium">{h.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{h.rows && h.columns ? `${h.rows} × ${h.columns} grid` : "Flat capacity"}</TableCell>
+                        <TableCell className="text-center">{h.capacity}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" className="rounded-full hover:bg-red-50" onClick={() => deleteHall(h.id)} disabled={deletingId === h.id}>
+                            {deletingId === h.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
                           </Button>
                         </TableCell>
                       </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Exam Schedules */}
+          <Card className="overflow-hidden py-0 gap-0 rounded-2xl border-indigo-100 shadow-sm">
+            <CardHeader className={sectionHeaderClass}>
+              <CardTitle className={sectionTitleClass}>Exam Schedules</CardTitle>
+              <Dialog open={schedDialogOpen} onOpenChange={setSchedDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"><Plus className="h-4 w-4 mr-1" /> Add Exam</Button>
+                </DialogTrigger>
+                <DialogContent className="rounded-2xl">
+                  <DialogHeader><DialogTitle>Add Exam Schedule</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    <div><Label>Subject</Label><Input className="rounded-xl mt-1" value={newSubject} onChange={(e) => setNewSubject(e.target.value)} placeholder="e.g. Mathematics" /></div>
+                    <div><Label>Date</Label><Input type="date" className="rounded-xl mt-1" value={newDate} onChange={(e) => setNewDate(e.target.value)} /></div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div><Label>Start Time</Label><Input type="time" className="rounded-xl mt-1" value={newStart} onChange={(e) => setNewStart(e.target.value)} /></div>
+                      <div><Label>End Time</Label><Input type="time" className="rounded-xl mt-1" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} /></div>
+                    </div>
+                    <div><Label>Classes (comma-separated)</Label><Input className="rounded-xl mt-1" value={newClasses} onChange={(e) => setNewClasses(e.target.value)} placeholder="e.g. 9, 10" /></div>
+                    <Button onClick={saveSchedule} disabled={savingSched} className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-xl">
+                      {savingSched ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save Exam Schedule
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent className="pt-4 pb-5">
+              {schedules.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">No exam schedules yet.</p>
+              ) : (
+                <Table>
+                  <TableHeader><TableRow><TableHead>Subject</TableHead><TableHead>Date</TableHead><TableHead>Time</TableHead><TableHead>Classes</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {schedules.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-medium">{s.subject}</TableCell>
+                        <TableCell className="text-sm">{s.exam_date}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{s.start_time} - {s.end_time}</TableCell>
+                        <TableCell>{s.classes.map((c) => <Badge key={c} variant="outline" className="mr-1 border-indigo-200 text-indigo-700 bg-indigo-50/50">{c}</Badge>)}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" className="rounded-full hover:bg-red-50" onClick={() => deleteSchedule(s.id)} disabled={deletingId === s.id}>
+                            {deletingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Generate Seating */}
+          <Card className="overflow-hidden py-0 gap-0 rounded-2xl border-indigo-100 shadow-sm">
+            <CardHeader className={sectionHeaderClass}>
+              <CardTitle className={sectionTitleClass}><Shuffle className="h-4 w-4" /> Generate Seating</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-4 pb-5">
+              <div className="flex flex-wrap gap-3 items-center">
+                <Select value={selectedScheduleId} onValueChange={setSelectedScheduleId}>
+                  <SelectTrigger className="w-64 rounded-xl"><SelectValue placeholder="Select Exam" /></SelectTrigger>
+                  <SelectContent>
+                    {schedules.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.subject} — {s.exam_date}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={generateSeating}
+                  disabled={generating || !selectedScheduleId || selectedHallIds.length === 0}
+                  className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-xl"
+                >
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shuffle className="h-4 w-4 mr-2" />}
+                  Generate Seating
+                </Button>
+              </div>
+
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Select Halls to Use</Label>
+                <div className="flex flex-wrap gap-2">
+                  {halls.map((h) => (
+                    <Badge
+                      key={h.id}
+                      className={`cursor-pointer px-3 py-1.5 ${
+                        selectedHallIds.includes(h.id)
+                          ? "bg-indigo-600 hover:bg-indigo-600 text-white border-transparent"
+                          : "bg-transparent border border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                      }`}
+                      onClick={() => toggleHallSelection(h.id)}
+                    >
+                      {h.name} ({h.capacity})
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {Object.keys(seatingResult).length > 0 && (
+                <div className="space-y-4 pt-2">
+                  {Object.entries(seatingResult).map(([hallId, assignments]) => {
+                    const hall = halls.find((h) => h.id === hallId);
+                    return (
+                      <div key={hallId} className="border border-indigo-100 rounded-xl overflow-hidden">
+                        <div className="flex items-center justify-between mb-0 px-3 py-2.5 bg-gradient-to-r from-indigo-50 to-violet-50/50 border-b border-indigo-100">
+                          <h3 className="text-sm font-semibold text-indigo-900">{hall?.name}</h3>
+                          <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => generateLayoutPDF(hallId)}>
+                            <Printer className="h-3.5 w-3.5 mr-1.5" /> Layout
+                          </Button>
+                        </div>
+                        <Table>
+                          <TableHeader><TableRow><TableHead>Seat #</TableHead><TableHead>Student</TableHead><TableHead>Class</TableHead><TableHead>Roll No.</TableHead></TableRow></TableHeader>
+                          <TableBody>
+                            {assignments.sort((a, b) => a.seat_number - b.seat_number).map((a) => {
+                              const student = studentsById[a.student_id];
+                              return (
+                                <TableRow key={a.student_id}>
+                                  <TableCell>{a.seat_row && a.seat_col ? `R${a.seat_row}C${a.seat_col}` : a.seat_number}</TableCell>
+                                  <TableCell className="font-medium">{student?.full_name ?? "-"}</TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">{student?.class} {student?.section}</TableCell>
+                                  <TableCell className="text-sm text-muted-foreground">{student?.roll_number ?? "-"}</TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
                     );
                   })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Saved Layouts - persisted, visible across sessions */}
+          <Card className="overflow-hidden py-0 gap-0 rounded-2xl border-indigo-100 shadow-sm">
+            <CardHeader className={sectionHeaderClass}>
+              <CardTitle className={sectionTitleClass}>Saved Seating Layouts</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 pb-5">
+              {savedLayouts.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">No saved layouts yet. Generate seating above to create one.</p>
+              ) : (
+                <Table>
+                  <TableHeader><TableRow><TableHead>Exam</TableHead><TableHead>Hall</TableHead><TableHead className="text-center">Seats Assigned</TableHead><TableHead></TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {savedLayouts.map((l) => {
+                      const sched = schedules.find((s) => s.id === l.exam_schedule_id);
+                      const hall = halls.find((h) => h.id === l.hall_id);
+                      const viewKey = `${l.exam_schedule_id}::${l.hall_id}::view`;
+                      const downloadKey = `${l.exam_schedule_id}::${l.hall_id}::download`;
+                      return (
+                        <TableRow key={`${l.exam_schedule_id}-${l.hall_id}`}>
+                          <TableCell className="font-medium">{sched ? `${sched.subject} — ${sched.exam_date}` : "Unknown exam"}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{hall?.name ?? "Unknown hall"}</TableCell>
+                          <TableCell className="text-center">{l.seat_count}</TableCell>
+                          <TableCell className="flex gap-2 justify-end">
+                            <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "view")} disabled={layoutActionKey === viewKey}>
+                              {layoutActionKey === viewKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5 mr-1.5" />}
+                              View
+                            </Button>
+                            <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "download")} disabled={layoutActionKey === downloadKey}>
+                              {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
+                              Download
+                            </Button>
+                            <Button size="sm" variant="ghost" className="rounded-full hover:bg-red-50" onClick={() => deleteSavedLayout(l.exam_schedule_id, l.hall_id)} disabled={layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete`}>
+                              {layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );

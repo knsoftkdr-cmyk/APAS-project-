@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import studentBanner from "@/assets/student-dashboard-banner.png";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { BarChart3 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
@@ -419,46 +420,14 @@ const subjectColors: Record<string, string> = {
 };
   return (
     <AppLayout>
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
+      <DashboardHero
+        eyebrow="APAS Student Portal"
+        greeting="Welcome back"
+        name={firstName}
+        dateLabel={new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        description="Your personal learning dashboard - track homework, scores and weekly progress."
+      />
 
-  {/* Decorative circles */}
-<div className="hidden md:block">
-  <div className="absolute top-8 right-20 w-16 h-16 rounded-full border border-white/40"></div>
-  <div className="absolute bottom-10 right-40 w-10 h-10 rounded-full border border-white/60"></div>
-  <div className="absolute top-20 left-[45%] w-8 h-8 rounded-full border border-white/60"></div>
-
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
-
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
-
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
-
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-</div>
-  <div className="max-w-xl">
-    <h1 className="text-4xl font-bold">
-      Welcome Back, {firstName} 👋
-    </h1>
-
-    <p className="mt-5 text-slate-650">
-      Your personal learning dashboard - track homework, scores and weekly progress
-    </p>
-  </div>
-
-  <img
-    src={studentBanner}
-    alt="Student Learning"
-    /* className="absolute right-10 bottom-[-15px] h-[340px] object-contain" */
-    className="hidden md:block absolute right-10 bottom-3 w-80"
-  />
-</div>
 
       <ProfileCompletionBar percent={profilePct} missing={profileMissing} />
 
@@ -519,11 +488,12 @@ const subjectColors: Record<string, string> = {
 <div className="grid lg:grid-cols-2 gap-6 mb-6">
 
   {/* Assessment Results */}
-  <Card>
+  <Card className="overflow-hidden rounded-2xl border border-emerald-100 shadow-card">
+    <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
     <CardHeader>
       <div className="flex items-center gap-3">
-  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-    <BarChart3 className="h-5 w-5 text-emerald-600" />
+  <div className="rounded-xl p-2.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm">
+    <BarChart3 className="h-5 w-5" />
   </div>
 
   <div>
@@ -608,11 +578,12 @@ const subjectColors: Record<string, string> = {
   </Card>
 
   {/* Homework Overview */}
-  <Card>
+  <Card className="overflow-hidden rounded-2xl border border-blue-100 shadow-card">
+    <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
     <CardHeader>
       <div className="flex items-center gap-3 ">
-        <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-          <ClipboardList className="h-7 w-7 text-blue-600" />
+        <div className="rounded-xl p-2.5 bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm">
+          <ClipboardList className="h-5 w-5" />
         </div>
         <div>
           <h3 className="text-xl font-bold text-slate-800">
@@ -744,11 +715,12 @@ const subjectColors: Record<string, string> = {
       {/* Main grid */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Pending Homework list */}
-        <Card>
+        <Card className="overflow-hidden rounded-2xl border border-red-100 shadow-card">
+          <div className="h-1 bg-gradient-to-r from-red-500 to-orange-400" />
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center">
-              <ClipboardList className="h-7 w-7 text-red-600" />
+            <CardTitle className="flex items-center gap-3">
+            <div className="rounded-xl p-2.5 bg-gradient-to-br from-red-500 to-orange-400 text-white shadow-sm">
+              <ClipboardList className="h-5 w-5" />
             </div>
               Pending Homework
             </CardTitle>
@@ -828,11 +800,12 @@ const subjectColors: Record<string, string> = {
         </Card>
 
         {/* Assigned Worksheets */}
-        <Card>
+        <Card className="overflow-hidden rounded-2xl border border-purple-100 shadow-card">
+          <div className="h-1 bg-gradient-to-r from-purple-500 to-violet-500" />
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                <FileText className="h-7 w-7 text-purple-600" />
+            <CardTitle className="flex items-center gap-3">
+              <div className="rounded-xl p-2.5 bg-gradient-to-br from-purple-500 to-violet-500 text-white shadow-sm">
+                <FileText className="h-5 w-5" />
               </div>
               Your Worksheets
             </CardTitle>
@@ -893,11 +866,12 @@ const subjectColors: Record<string, string> = {
         </Card>
 
         {/* Daily Performance */}
-        <Card>
+        <Card className="overflow-hidden rounded-2xl border border-blue-100 shadow-card">
+          <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-              <Target className="h-7 w-7 text-blue-600" />
+            <CardTitle className="flex items-center gap-3">
+            <div className="rounded-xl p-2.5 bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm">
+              <Target className="h-5 w-5" />
             </div>
               Daily Performance Score
             </CardTitle>
@@ -936,11 +910,12 @@ const subjectColors: Record<string, string> = {
         </Card>
 
         {/* Homework Completion Pie */}
-        <Card>
+        <Card className="overflow-hidden rounded-2xl border border-emerald-100 shadow-card">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="h-7 w-7 text-green-600" />
+            <CardTitle className="flex items-center gap-3">
+            <div className="rounded-xl p-2.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm">
+              <CheckCircle2 className="h-5 w-5" />
             </div>
               Homework Completion
             </CardTitle>

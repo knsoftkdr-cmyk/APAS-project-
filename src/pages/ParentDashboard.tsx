@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { GraduationCap, BookOpen, BarChart3, TrendingUp } from "lucide-react";
 import parentBanner from "@/assets/parent-banner.png";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
 
 interface Child { id: string; full_name: string | null; class_grade: string | null; }
 interface HomeworkRow { id: string; title: string; due_date: string | null; status: string; score: number | null; feedback: string | null; answers: any[]; }
@@ -123,35 +124,14 @@ export default function ParentDashboard() {
   return (
     <AppLayout>
       {/* Banner */}
-      <div className="relative w-full overflow-hidden rounded-2xl mb-6" style={{ background: "linear-gradient(135deg, #2563EB 0%, #60A5FA 100%, #BFDBFE 100%)" }}>
-                  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
-          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+      <DashboardHero
+        eyebrow="APAS Parent Portal"
+        greeting="Welcome"
+        name={profile?.full_name ?? "Parent"}
+        dateLabel={new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        description="Monitor your child's academic progress, homework, assessments and performance — all in one place."
+      />
 
-<div className="hidden md:block">
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
-          
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
-
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
-
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-</div>
-        <div className="px-8 py-8 relative z-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Welcome, {profile?.full_name ?? "Parent"}</h1>
-          <p className="text-black-900 text-sm">{new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</p>
-          <p className="text-black-900 text-sm mt-1">Monitor your child's academic progress, homework, assessments and performance — all in one place.</p>
-        </div>
-        <img src={parentBanner} alt="" 
-        className="hidden md:block absolute right-10 bottom-0 w-32" />
-      </div>
 
       <div className="container mx-auto px-4 space-y-6">
 

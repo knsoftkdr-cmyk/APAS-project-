@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Users, BookOpen, BarChart3, GraduationCap, TrendingUp, UserCheck } from "lucide-react";
 import hodbanner from "@/assets/hod-banner.png";
+import { DashboardHero } from "@/components/dashboard/DashboardHero";
+import { DashStatCard } from "@/components/dashboard/DashStatCard";
 interface TeacherRow { id: string; full_name: string | null; class_grade: string | null; avg_score?: number | null; class_teachers?: any[]; }
 interface StudentPerf { id: string; full_name: string | null; avg_score: number | null; tests: number; }
 interface LessonRow { id: string; title: string; subject?: string; class_level?: string; section?: string; created_at: string; teacher_name: string | null; }
@@ -138,66 +140,23 @@ export default function HODDashboard() {
   return (
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-300 p-8 text-white mb-6">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
-          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+        <DashboardHero
+          eyebrow="APAS HOD Portal"
+          greeting="Welcome"
+          name={profile?.full_name || "Head of Department"}
+          dateLabel="Head of Department"
+          description="Oversee your department's teachers, students, and lesson activity from one place."
+        />
 
-<div className="hidden md:block">
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
-          
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
-
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
-
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
-
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-</div>
-      <h1 className="text-3xl font-bold">
-        HOD Dashboard
-      </h1>
-    <p className="text-sm text-white">Welcome, {profile?.full_name} — Head of Department</p>
-<img
-              src={hodbanner}
-              alt="HOD Dashboard Banner"
-              className="hidden md:block absolute right-10 bottom-5 w-20"
-            />
-</div>
-      <div className="flex items-center gap-3">
-
-
-        </div>
-
-        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[
-            { label: "Teachers", value: teachers.length, icon: Users, color: "text-blue-600" },
-            { label: "Students", value: students.length, icon: GraduationCap, color: "text-green-600" },
-            { label: "Avg Score", value: avgScore !== null ? `${avgScore}%` : "—", icon: TrendingUp, color: "text-blue-600" },
-            { label: "Lessons", value: lessons.length, icon: BookOpen, color: "text-orange-600" },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <Card key={label} className={`group border-0 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 ${label === "Teachers"
-        ? "bg-gradient-to-r from-blue-400 to-cyan-400" : label === "Students" ? "bg-gradient-to-r from-green-400 to-emerald-400"
-        : label === "Avg Score" ? "bg-gradient-to-r from-violet-400 to-purple-400" : "bg-gradient-to-r from-orange-400 to-red-400"}`}>
-              <CardContent className="pt-6 pb-4 flex items-center gap-4">
-                <div className={`rounded-lg bg-muted p-2 ${color}`}><Icon className="h-7 w-7" /></div>
-                <div>
-                  <p className="text-2xl font-bold text-black">{value}</p>
-                  <p className="text-sm text-white">{label}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          <DashStatCard label="Teachers" value={teachers.length} icon={Users} accent="blue" />
+          <DashStatCard label="Students" value={students.length} icon={GraduationCap} accent="emerald" />
+          <DashStatCard label="Avg Score" value={avgScore !== null ? `${avgScore}%` : "—"} icon={TrendingUp} accent="purple" />
+          <DashStatCard label="Lessons" value={lessons.length} icon={BookOpen} accent="orange" />
         </div>
 
         <Tabs defaultValue="teachers" className="space-y-4">
-          <TabsList>
+          <TabsList className="bg-muted/60 p-1 rounded-xl">
             <TabsTrigger value="teachers" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><Users className="h-5 w-5" /> Teachers</TabsTrigger>
             
             <TabsTrigger value="lessons" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><BookOpen className="h-5 w-5" /> Lessons</TabsTrigger>
@@ -205,8 +164,17 @@ export default function HODDashboard() {
 
           {/* Teachers Tab */}
           <TabsContent value="teachers">
-            <Card>
-              <CardHeader><CardTitle>Department Teachers</CardTitle><CardDescription>All teachers in your school</CardDescription></CardHeader>
+            <Card className="group relative overflow-hidden border border-blue-100 shadow-card rounded-2xl">
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                <div className="rounded-xl p-2.5 bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm">
+                  <Users className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle>Department Teachers</CardTitle>
+                  <CardDescription>All teachers in your school</CardDescription>
+                </div>
+              </CardHeader>
               <CardContent className="p-0">
                 {teachers.length === 0 ? (
                   <p className="p-6 text-center text-muted-foreground text-sm">No teachers found.</p>
@@ -230,8 +198,14 @@ export default function HODDashboard() {
 
           {/* Students Tab */}
           <TabsContent value="students">
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Student Performance</CardTitle></CardHeader>
+            <Card className="group relative overflow-hidden border border-emerald-100 shadow-card rounded-2xl">
+              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                <div className="rounded-xl p-2.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm">
+                  <BarChart3 className="h-5 w-5" />
+                </div>
+                <CardTitle>Student Performance</CardTitle>
+              </CardHeader>
               <CardContent className="p-0">
                 {students.length === 0 ? (
                   <p className="p-6 text-center text-muted-foreground text-sm">No students found.</p>
@@ -261,8 +235,17 @@ export default function HODDashboard() {
 
           {/* Lessons Tab */}
           <TabsContent value="lessons">
-            <Card>
-              <CardHeader><CardTitle>Recent Lesson Plans</CardTitle><CardDescription>Latest lessons submitted by teachers</CardDescription></CardHeader>
+            <Card className="group relative overflow-hidden border border-orange-100 shadow-card rounded-2xl">
+              <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-500" />
+              <CardHeader className="flex flex-row items-center gap-3 space-y-0">
+                <div className="rounded-xl p-2.5 bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle>Recent Lesson Plans</CardTitle>
+                  <CardDescription>Latest lessons submitted by teachers</CardDescription>
+                </div>
+              </CardHeader>
               <CardContent className="p-0">
                 {lessons.length === 0 ? (
                   <p className="p-6 text-center text-muted-foreground text-sm">No lessons yet.</p>
