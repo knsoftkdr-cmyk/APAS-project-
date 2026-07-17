@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, TrendingUp, AlertCircle } from "lucide-react";
+import { normalizeSubject } from "@/lib/subjectUtils";
 
 interface ClassSyllabus {
   classId: string;
@@ -50,8 +51,9 @@ export default function SyllabusTracker() {
         const rawName = cls.name as string;
         const className = rawName.replace(/\b\w/g, (c) => c.toUpperCase());
         const section = cls.section;
-        const subject = assignment.subject || profile?.department || "";
-        if (!subject) continue;
+        const rawSubject = assignment.subject || profile?.department || "";
+        if (!rawSubject) continue;
+        const subject = normalizeSubject(rawSubject.replace(/\s*department\s*$/i, "").trim());
 
         const { data: chaptersData } = await supabase
           .from("curriculum_chapters")

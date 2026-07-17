@@ -36,6 +36,7 @@ import {
   CalendarClock,
   Pencil,
   Trash2,
+  ArrowLeft,
 } from "lucide-react";
 
 // ---------------------------------------------------------------------
@@ -136,6 +137,20 @@ const ACCOMMODATION_TYPES = [
   "Other",
 ];
 
+const PLAN_STATUS_STYLE: Record<string, string> = {
+  draft: "bg-slate-100 text-slate-600 border-slate-200",
+  active: "bg-emerald-500 text-white border-transparent",
+  completed: "bg-blue-100 text-blue-700 border-blue-200",
+  archived: "bg-slate-100 text-slate-500 border-slate-200",
+};
+
+const GOAL_STATUS_STYLE: Record<string, string> = {
+  not_started: "bg-slate-100 text-slate-600 border-slate-200",
+  in_progress: "bg-amber-50 text-amber-700 border-amber-200",
+  achieved: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  discontinued: "bg-red-50 text-red-600 border-red-200",
+};
+
 export default function SENManagement() {
   const { profile } = useAuth();
   const { toast } = useToast();
@@ -145,6 +160,7 @@ export default function SENManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<SenStudent | null>(null);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
 
   const [staff, setStaff] = useState<StaffOption[]>([]);
 
@@ -178,7 +194,7 @@ export default function SENManagement() {
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planForm, setPlanForm] = useState({ title: "", start_date: "", end_date: "", status: "draft" });
 
-  const [goalOpen, setGoalOpen] = useState<string | null>(null); // plan id (create mode) or open flag while editing
+  const [goalOpen, setGoalOpen] = useState<string | null>(null);
   const [editingGoal, setEditingGoal] = useState<{ id: string; planId: string } | null>(null);
   const [goalForm, setGoalForm] = useState({
     domain: "Academic",
@@ -188,7 +204,7 @@ export default function SENManagement() {
     target_date: "",
   });
 
-  const [reviewOpen, setReviewOpen] = useState<string | null>(null); // plan id (create mode)
+  const [reviewOpen, setReviewOpen] = useState<string | null>(null);
   const [editingReview, setEditingReview] = useState<{ id: string; planId: string } | null>(null);
   const [reviewForm, setReviewForm] = useState({
     review_date: "",
@@ -700,270 +716,326 @@ export default function SENManagement() {
     s.student?.full_name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const selectStudent = (s: SenStudent) => {
+    setSelected(s);
+    setShowMobileDetail(true);
+  };
+
   return (
     <AppLayout>
-      <div className="flex flex-col gap-4 p-4 md:p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <Accessibility className="h-6 w-6 text-emerald-600" />
-              Special Education (SEN)
-            </h1>
-            <p className="text-sm text-muted-foreground">IEP management, accommodations, and therapy tracking</p>
-          </div>
-          <Button onClick={() => setEnrollOpen(true)}>
-            <Plus className="h-4 w-4 mr-1" /> Enroll Student
-          </Button>
-        </div>
+      <div className="relative min-h-screen overflow-x-hidden">
+        <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
 
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
-          {/* Student list */}
-          <Card className="h-fit">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4" /> SEN Students ({senStudents.length})
-              </CardTitle>
-              <div className="relative mt-2">
-                <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
-                <Input placeholder="Search..." className="pl-8" value={search} onChange={(e) => setSearch(e.target.value)} />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-1 max-h-[70vh] overflow-y-auto">
-              {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
-              {!loading && filteredSenStudents.length === 0 && (
-                <p className="text-sm text-muted-foreground">No SEN students yet.</p>
-              )}
-              {filteredSenStudents.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSelected(s)}
-                  className={`w-full text-left p-2 rounded-md border flex items-center justify-between hover:bg-accent transition-colors ${
-                    selected?.id === s.id ? "bg-accent border-emerald-500" : "border-transparent"
-                  }`}
-                >
-                  <div>
-                    <p className="text-sm font-medium">{s.student?.full_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {s.student?.class} {s.student?.section} · {s.category}
-                    </p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </button>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Detail panel */}
-          {!selected ? (
-            <Card>
-              <CardContent className="py-16 text-center text-muted-foreground">
-                Select a student to view their SEN record.
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>{selected.student?.full_name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {selected.student?.class} {selected.student?.section} · Admission #{selected.student?.admission_number}
-                    </p>
-                  </div>
-                  <div className="text-right space-y-1">
-                    <Badge>{selected.category}</Badge>
-                    <p className="text-xs text-muted-foreground">
-                      Case Manager: {selected.case_manager?.full_name || "Unassigned"}
-                    </p>
-                    <div className="flex gap-1 justify-end">
-                      <Button variant="outline" size="sm" onClick={openProfileEdit}>
-                        <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={deleteSenStudent}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
+        <div className="relative z-10 flex flex-col gap-4 p-3 md:p-6">
+          {/* ── Hero ─────────────────────────────────────────── */}
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <Accessibility className="h-6 w-6 text-white" />
                 </div>
-                {selected.diagnosis_notes && (
-                  <p className="text-sm text-muted-foreground mt-2">{selected.diagnosis_notes}</p>
-                )}
+                <div>
+                  <h1 className="text-xl md:text-2xl font-bold text-white">Special Education (SEN)</h1>
+                  <p className="text-emerald-100 text-xs md:text-sm mt-0.5">
+                    IEP management, accommodations, and therapy tracking
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => setEnrollOpen(true)}
+                className="bg-white text-emerald-700 hover:bg-white/90 rounded-xl shadow-sm w-full md:w-auto"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Enroll Student
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4">
+            {/* ── Student list panel ──────────────────────────── */}
+            <Card className={`h-fit border border-emerald-100 rounded-2xl shadow-sm overflow-hidden ${showMobileDetail ? "hidden lg:block" : "block"}`}>
+              <CardHeader className="pb-3 bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+                <CardTitle className="text-base flex items-center gap-2 text-emerald-900">
+                  <Users className="h-4 w-4" /> SEN Students ({senStudents.length})
+                </CardTitle>
+                <div className="relative mt-2">
+                  <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-emerald-400" />
+                  <Input
+                    placeholder="Search..."
+                    className="pl-8 rounded-xl border-emerald-100 h-9"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </div>
               </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="iep">
-                  <TabsList>
-                    <TabsTrigger value="iep"><FileText className="h-4 w-4 mr-1" /> IEP</TabsTrigger>
-                    <TabsTrigger value="accommodations"><Accessibility className="h-4 w-4 mr-1" /> Accommodations</TabsTrigger>
-                    <TabsTrigger value="therapy"><Stethoscope className="h-4 w-4 mr-1" /> Therapy</TabsTrigger>
-                  </TabsList>
-
-                  {/* IEP TAB */}
-                  <TabsContent value="iep" className="space-y-3 mt-3">
-                    <div className="flex justify-end">
-                      <Button size="sm" onClick={() => setPlanOpen(true)}>
-                        <Plus className="h-4 w-4 mr-1" /> New IEP Plan
-                      </Button>
+              <CardContent className="space-y-1.5 max-h-[70vh] overflow-y-auto p-3">
+                {loading && <p className="text-sm text-muted-foreground py-4 text-center">Loading...</p>}
+                {!loading && filteredSenStudents.length === 0 && (
+                  <p className="text-sm text-muted-foreground py-8 text-center">No SEN students yet.</p>
+                )}
+                {filteredSenStudents.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => selectStudent(s)}
+                    className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all ${
+                      selected?.id === s.id ? "bg-emerald-50 border border-emerald-300 shadow-sm" : "border border-transparent hover:bg-slate-50 hover:border-slate-200"
+                    }`}
+                  >
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
+                      {(s.student?.full_name || "?")[0]}
                     </div>
-                    {detailLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
-                    {!detailLoading && plans.length === 0 && (
-                      <p className="text-sm text-muted-foreground">No IEP plans yet.</p>
-                    )}
-                    {plans.map((plan) => (
-                      <Card key={plan.id} className="border-l-4 border-l-emerald-500">
-                        <CardHeader className="pb-2">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-base">{plan.title}</CardTitle>
-                              <p className="text-xs text-muted-foreground">
-                                {plan.start_date} → {plan.end_date || "ongoing"}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">{plan.status}</Badge>
-                              <Button variant="ghost" size="sm" onClick={() => openPlanEdit(plan)}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deletePlan(plan.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium flex items-center gap-1"><Target className="h-3.5 w-3.5" /> Goals</p>
-                              <Button variant="ghost" size="sm" onClick={() => { setEditingGoal(null); setGoalForm({ domain: "Academic", goal_description: "", baseline: "", target_criteria: "", target_date: "" }); setGoalOpen(plan.id); }}>
-                                <Plus className="h-3.5 w-3.5 mr-1" /> Goal
-                              </Button>
-                            </div>
-                            {plan.goals?.length === 0 && <p className="text-xs text-muted-foreground">No goals added.</p>}
-                            {plan.goals?.map((g) => (
-                              <div key={g.id} className="text-sm border rounded-md p-2 mb-1 flex items-start justify-between gap-2">
-                                <div>
-                                  <p><span className="font-medium">{g.domain}:</span> {g.goal_description}</p>
-                                  {g.target_criteria && <p className="text-xs text-muted-foreground">Target: {g.target_criteria}</p>}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Select value={g.progress_status} onValueChange={(v) => updateGoalStatus(g.id, v)}>
-                                    <SelectTrigger className="w-[130px] h-7 text-xs"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="not_started">Not Started</SelectItem>
-                                      <SelectItem value="in_progress">In Progress</SelectItem>
-                                      <SelectItem value="achieved">Achieved</SelectItem>
-                                      <SelectItem value="discontinued">Discontinued</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openGoalEdit(plan.id, g)}>
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteGoal(g.id)}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <div>
-                            <div className="flex items-center justify-between mb-1">
-                              <p className="text-sm font-medium flex items-center gap-1"><CalendarClock className="h-3.5 w-3.5" /> Reviews</p>
-                              <Button variant="ghost" size="sm" onClick={() => { setEditingReview(null); setReviewForm({ review_date: "", attendees: "", summary: "", next_review_date: "" }); setReviewOpen(plan.id); }}>
-                                <Plus className="h-3.5 w-3.5 mr-1" /> Review
-                              </Button>
-                            </div>
-                            {plan.reviews?.length === 0 && <p className="text-xs text-muted-foreground">No reviews logged.</p>}
-                            {plan.reviews?.map((r) => (
-                              <div key={r.id} className="text-sm border rounded-md p-2 mb-1 flex items-start justify-between gap-2">
-                                <div>
-                                  <p className="font-medium">{r.review_date}{r.next_review_date ? ` · next: ${r.next_review_date}` : ""}</p>
-                                  {r.summary && <p className="text-xs text-muted-foreground">{r.summary}</p>}
-                                </div>
-                                <div className="flex items-center gap-1 shrink-0">
-                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openReviewEdit(plan.id, r)}>
-                                    <Pencil className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteReview(r.id)}>
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </TabsContent>
-
-                  {/* ACCOMMODATIONS TAB */}
-                  <TabsContent value="accommodations" className="space-y-2 mt-3">
-                    <div className="flex justify-end">
-                      <Button size="sm" onClick={() => { setEditingAccId(null); setAccForm({ accommodation_type: ACCOMMODATION_TYPES[0], applies_to: "both", description: "" }); setAccOpen(true); }}>
-                        <Plus className="h-4 w-4 mr-1" /> Add Accommodation
-                      </Button>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate text-slate-800">{s.student?.full_name}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {s.student?.class} {s.student?.section} · {s.category}
+                      </p>
                     </div>
-                    {accommodations.length === 0 && <p className="text-sm text-muted-foreground">No accommodations on file.</p>}
-                    {accommodations.map((a) => (
-                      <Card key={a.id}>
-                        <CardContent className="py-3 flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium">{a.accommodation_type} <Badge variant="outline" className="ml-1">{a.applies_to}</Badge></p>
-                            {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Button variant={a.active ? "outline" : "secondary"} size="sm" onClick={() => toggleAccommodation(a.id, a.active)}>
-                              {a.active ? "Active" : "Inactive"}
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => openAccEdit(a)}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteAccommodation(a.id)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </TabsContent>
-
-                  {/* THERAPY TAB */}
-                  <TabsContent value="therapy" className="space-y-2 mt-3">
-                    <div className="flex justify-end">
-                      <Button size="sm" onClick={() => { setEditingSessionId(null); setSessionForm({ therapy_type: THERAPY_TYPES[0], therapist_id: "", session_date: "", duration_minutes: "", goals_addressed: "", notes: "" }); setSessionOpen(true); }}>
-                        <Plus className="h-4 w-4 mr-1" /> Log Session
-                      </Button>
-                    </div>
-                    {sessions.length === 0 && <p className="text-sm text-muted-foreground">No therapy sessions logged.</p>}
-                    {sessions.map((s) => (
-                      <Card key={s.id}>
-                        <CardContent className="py-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium">{s.therapy_type} · {s.session_date}</p>
-                            <div className="flex items-center gap-2">
-                              <p className="text-xs text-muted-foreground">{s.therapist?.full_name || "Unassigned"}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}</p>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openSessionEdit(s)}>
-                                <Pencil className="h-3.5 w-3.5" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => deleteSession(s.id)}>
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </div>
-                          </div>
-                          {s.goals_addressed && <p className="text-xs mt-1">Goals: {s.goals_addressed}</p>}
-                          {s.notes && <p className="text-xs text-muted-foreground mt-1">{s.notes}</p>}
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </TabsContent>
-                </Tabs>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
               </CardContent>
             </Card>
-          )}
+
+            {/* ── Detail panel ─────────────────────────────────── */}
+            {!selected ? (
+              <Card className="hidden lg:flex border border-emerald-100 rounded-2xl shadow-sm">
+                <CardContent className="py-16 text-center text-muted-foreground w-full">
+                  <Accessibility className="h-10 w-10 text-emerald-200 mx-auto mb-3" />
+                  Select a student to view their SEN record.
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className={`border border-emerald-100 rounded-2xl shadow-sm overflow-hidden ${showMobileDetail ? "block" : "hidden lg:block"}`}>
+                <CardHeader className="pb-3 bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+                  <button
+                    onClick={() => setShowMobileDetail(false)}
+                    className="lg:hidden inline-flex items-center gap-1 text-xs font-medium text-emerald-700 mb-2"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5" /> Back to students
+                  </button>
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-11 w-11 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white text-base font-bold shrink-0">
+                        {(selected.student?.full_name || "?")[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <CardTitle className="text-base md:text-lg truncate">{selected.student?.full_name}</CardTitle>
+                        <p className="text-sm text-muted-foreground">
+                          {selected.student?.class} {selected.student?.section} · Admission #{selected.student?.admission_number}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0 space-y-1">
+                      <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">{selected.category}</Badge>
+                      <p className="text-xs text-muted-foreground">
+                        Case Manager: {selected.case_manager?.full_name || "Unassigned"}
+                      </p>
+                      <div className="flex gap-1.5 justify-end">
+                        <Button variant="outline" size="sm" className="rounded-lg" onClick={openProfileEdit}>
+                          <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                        </Button>
+                        <Button variant="outline" size="sm" className="rounded-lg text-destructive hover:text-destructive" onClick={deleteSenStudent}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  {selected.diagnosis_notes && (
+                    <p className="text-sm text-muted-foreground mt-2 bg-white/70 rounded-lg p-2.5 border border-emerald-100">{selected.diagnosis_notes}</p>
+                  )}
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <Tabs defaultValue="iep">
+                    <TabsList className="w-full overflow-x-auto flex-nowrap justify-start bg-slate-100 rounded-xl p-1 h-auto">
+                      <TabsTrigger value="iep" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">
+                        <FileText className="h-3.5 w-3.5 mr-1" /> IEP
+                      </TabsTrigger>
+                      <TabsTrigger value="accommodations" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">
+                        <Accessibility className="h-3.5 w-3.5 mr-1" /> Accommodations
+                      </TabsTrigger>
+                      <TabsTrigger value="therapy" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">
+                        <Stethoscope className="h-3.5 w-3.5 mr-1" /> Therapy
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* IEP TAB */}
+                    <TabsContent value="iep" className="space-y-3 mt-4">
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
+                          onClick={() => setPlanOpen(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> New IEP Plan
+                        </Button>
+                      </div>
+                      {detailLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
+                      {!detailLoading && plans.length === 0 && (
+                        <p className="text-sm text-muted-foreground py-6 text-center">No IEP plans yet.</p>
+                      )}
+                      {plans.map((plan) => (
+                        <Card key={plan.id} className="border border-emerald-100 rounded-xl shadow-sm overflow-hidden">
+                          <div className="h-1 bg-gradient-to-r from-emerald-400 to-teal-400" />
+                          <CardHeader className="pb-2 pt-3">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                              <div className="min-w-0">
+                                <CardTitle className="text-base truncate">{plan.title}</CardTitle>
+                                <p className="text-xs text-muted-foreground">{plan.start_date} → {plan.end_date || "ongoing"}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                <Badge className={`${PLAN_STATUS_STYLE[plan.status] || ""} capitalize`}>{plan.status}</Badge>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full hover:bg-emerald-50" onClick={() => openPlanEdit(plan)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full text-destructive hover:text-destructive hover:bg-red-50" onClick={() => deletePlan(plan.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                              </div>
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-semibold flex items-center gap-1.5 text-slate-700"><Target className="h-3.5 w-3.5 text-emerald-500" /> Goals</p>
+                                <Button variant="ghost" size="sm" className="text-emerald-700 hover:bg-emerald-50 rounded-lg" onClick={() => { setEditingGoal(null); setGoalForm({ domain: "Academic", goal_description: "", baseline: "", target_criteria: "", target_date: "" }); setGoalOpen(plan.id); }}>
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Goal
+                                </Button>
+                              </div>
+                              {plan.goals?.length === 0 && <p className="text-xs text-muted-foreground">No goals added.</p>}
+                              <div className="space-y-1.5">
+                                {plan.goals?.map((g) => (
+                                  <div key={g.id} className="text-sm border border-slate-100 bg-slate-50/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="text-slate-800"><span className="font-semibold">{g.domain}:</span> {g.goal_description}</p>
+                                      {g.target_criteria && <p className="text-xs text-muted-foreground mt-0.5">Target: {g.target_criteria}</p>}
+                                    </div>
+                                    <div className="flex items-center gap-1 flex-wrap">
+                                      <Select value={g.progress_status} onValueChange={(v) => updateGoalStatus(g.id, v)}>
+                                        <SelectTrigger className="w-[130px] h-7 text-xs rounded-lg"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="not_started">Not Started</SelectItem>
+                                          <SelectItem value="in_progress">In Progress</SelectItem>
+                                          <SelectItem value="achieved">Achieved</SelectItem>
+                                          <SelectItem value="discontinued">Discontinued</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full hover:bg-emerald-50" onClick={() => openGoalEdit(plan.id, g)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full text-destructive hover:text-destructive hover:bg-red-50" onClick={() => deleteGoal(g.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-sm font-semibold flex items-center gap-1.5 text-slate-700"><CalendarClock className="h-3.5 w-3.5 text-emerald-500" /> Reviews</p>
+                                <Button variant="ghost" size="sm" className="text-emerald-700 hover:bg-emerald-50 rounded-lg" onClick={() => { setEditingReview(null); setReviewForm({ review_date: "", attendees: "", summary: "", next_review_date: "" }); setReviewOpen(plan.id); }}>
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Review
+                                </Button>
+                              </div>
+                              {plan.reviews?.length === 0 && <p className="text-xs text-muted-foreground">No reviews logged.</p>}
+                              <div className="space-y-1.5">
+                                {plan.reviews?.map((r) => (
+                                  <div key={r.id} className="text-sm border border-slate-100 bg-slate-50/50 rounded-xl p-3 flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                                    <div className="min-w-0">
+                                      <p className="font-semibold text-slate-800">{r.review_date}{r.next_review_date ? ` · next: ${r.next_review_date}` : ""}</p>
+                                      {r.summary && <p className="text-xs text-muted-foreground mt-0.5">{r.summary}</p>}
+                                    </div>
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full hover:bg-emerald-50" onClick={() => openReviewEdit(plan.id, r)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full text-destructive hover:text-destructive hover:bg-red-50" onClick={() => deleteReview(r.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </TabsContent>
+
+                    {/* ACCOMMODATIONS TAB */}
+                    <TabsContent value="accommodations" className="space-y-2.5 mt-4">
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
+                          onClick={() => { setEditingAccId(null); setAccForm({ accommodation_type: ACCOMMODATION_TYPES[0], applies_to: "both", description: "" }); setAccOpen(true); }}
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> Add Accommodation
+                        </Button>
+                      </div>
+                      {accommodations.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No accommodations on file.</p>}
+                      {accommodations.map((a) => (
+                        <Card key={a.id} className="border border-emerald-100 rounded-xl shadow-sm">
+                          <CardContent className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-slate-800 flex items-center gap-2 flex-wrap">
+                                {a.accommodation_type}
+                                <Badge variant="outline" className="border-emerald-200 text-emerald-700 bg-emerald-50/50 font-normal">{a.applies_to}</Badge>
+                              </p>
+                              {a.description && <p className="text-xs text-muted-foreground mt-1">{a.description}</p>}
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <Button
+                                variant={a.active ? "outline" : "secondary"}
+                                size="sm"
+                                className={`rounded-lg ${a.active ? "border-emerald-200 text-emerald-700" : ""}`}
+                                onClick={() => toggleAccommodation(a.id, a.active)}
+                              >
+                                {a.active ? "Active" : "Inactive"}
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full hover:bg-emerald-50" onClick={() => openAccEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-full text-destructive hover:text-destructive hover:bg-red-50" onClick={() => deleteAccommodation(a.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </TabsContent>
+
+                    {/* THERAPY TAB */}
+                    <TabsContent value="therapy" className="space-y-2.5 mt-4">
+                      <div className="flex justify-end">
+                        <Button
+                          size="sm"
+                          className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
+                          onClick={() => { setEditingSessionId(null); setSessionForm({ therapy_type: THERAPY_TYPES[0], therapist_id: "", session_date: "", duration_minutes: "", goals_addressed: "", notes: "" }); setSessionOpen(true); }}
+                        >
+                          <Plus className="h-4 w-4 mr-1" /> Log Session
+                        </Button>
+                      </div>
+                      {sessions.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No therapy sessions logged.</p>}
+                      {sessions.map((s) => (
+                        <Card key={s.id} className="border border-emerald-100 rounded-xl shadow-sm">
+                          <CardContent className="py-3">
+                            <div className="flex items-start justify-between gap-2 flex-wrap">
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="h-8 w-8 rounded-full bg-teal-100 flex items-center justify-center shrink-0">
+                                  <Stethoscope className="h-4 w-4 text-teal-600" />
+                                </div>
+                                <p className="text-sm font-semibold text-slate-800">{s.therapy_type} · {s.session_date}</p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <p className="text-xs text-muted-foreground">{s.therapist?.full_name || "Unassigned"}{s.duration_minutes ? ` · ${s.duration_minutes} min` : ""}</p>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full hover:bg-emerald-50" onClick={() => openSessionEdit(s)}><Pencil className="h-3.5 w-3.5" /></Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-full text-destructive hover:text-destructive hover:bg-red-50" onClick={() => deleteSession(s.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                              </div>
+                            </div>
+                            {s.goals_addressed && <p className="text-xs mt-2 ml-10 text-slate-600">Goals: {s.goals_addressed}</p>}
+                            {s.notes && <p className="text-xs text-muted-foreground mt-1 ml-10">{s.notes}</p>}
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </TabsContent>
+                  </Tabs>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Enroll Student Dialog */}
       <Dialog open={enrollOpen} onOpenChange={setEnrollOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>Enroll Student in SEN Program</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
@@ -973,7 +1045,7 @@ export default function SENManagement() {
                   value={enrollClass}
                   onValueChange={(v) => { setEnrollClass(v); setEnrollSection(""); setEnrollForm({ ...enrollForm, student_id: "" }); }}
                 >
-                  <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder="Select class" /></SelectTrigger>
                   <SelectContent>
                     {enrollClassOptions.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
@@ -985,7 +1057,7 @@ export default function SENManagement() {
                   value={enrollSection}
                   onValueChange={(v) => { setEnrollSection(v); setEnrollForm({ ...enrollForm, student_id: "" }); }}
                 >
-                  <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder="Select section" /></SelectTrigger>
                   <SelectContent>
                     {enrollSectionOptions.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
@@ -998,7 +1070,7 @@ export default function SENManagement() {
                 value={enrollForm.student_id}
                 onValueChange={(v) => setEnrollForm({ ...enrollForm, student_id: v })}
               >
-                <SelectTrigger><SelectValue placeholder={enrollStudentOptions.length ? "Select student" : "No eligible students"} /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder={enrollStudentOptions.length ? "Select student" : "No eligible students"} /></SelectTrigger>
                 <SelectContent>
                   {enrollStudentOptions.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
@@ -1011,7 +1083,7 @@ export default function SENManagement() {
             <div>
               <Label>Category</Label>
               <Select value={enrollForm.category} onValueChange={(v) => setEnrollForm({ ...enrollForm, category: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -1020,7 +1092,7 @@ export default function SENManagement() {
             <div>
               <Label>Case Manager</Label>
               <Select value={enrollForm.case_manager_id} onValueChange={(v) => setEnrollForm({ ...enrollForm, case_manager_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder="Select staff member" /></SelectTrigger>
                 <SelectContent>
                   {staff.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name} ({p.role})</SelectItem>)}
                 </SelectContent>
@@ -1028,24 +1100,24 @@ export default function SENManagement() {
             </div>
             <div>
               <Label>Notes</Label>
-              <Textarea value={enrollForm.diagnosis_notes} onChange={(e) => setEnrollForm({ ...enrollForm, diagnosis_notes: e.target.value })} />
+              <Textarea className="rounded-xl mt-1" value={enrollForm.diagnosis_notes} onChange={(e) => setEnrollForm({ ...enrollForm, diagnosis_notes: e.target.value })} />
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={enrollStudent} disabled={!enrollForm.student_id}>Enroll</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={enrollStudent} disabled={!enrollForm.student_id}>Enroll</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* IEP Plan Dialog */}
+      {/* Edit SEN Profile Dialog */}
       <Dialog open={profileEditOpen} onOpenChange={setProfileEditOpen}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>Edit SEN Profile</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Category</Label>
               <Select value={profileForm.category} onValueChange={(v) => setProfileForm({ ...profileForm, category: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -1054,7 +1126,7 @@ export default function SENManagement() {
             <div>
               <Label>Case Manager</Label>
               <Select value={profileForm.case_manager_id} onValueChange={(v) => setProfileForm({ ...profileForm, case_manager_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder="Select staff member" /></SelectTrigger>
                 <SelectContent>
                   {staff.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name} ({p.role})</SelectItem>)}
                 </SelectContent>
@@ -1063,7 +1135,7 @@ export default function SENManagement() {
             <div>
               <Label>Status</Label>
               <Select value={profileForm.status} onValueChange={(v) => setProfileForm({ ...profileForm, status: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="graduated">Graduated</SelectItem>
@@ -1073,27 +1145,27 @@ export default function SENManagement() {
             </div>
             <div>
               <Label>Review Cycle (months)</Label>
-              <Input type="number" value={profileForm.review_cycle_months} onChange={(e) => setProfileForm({ ...profileForm, review_cycle_months: Number(e.target.value) })} />
+              <Input type="number" className="rounded-xl mt-1" value={profileForm.review_cycle_months} onChange={(e) => setProfileForm({ ...profileForm, review_cycle_months: Number(e.target.value) })} />
             </div>
-            <div><Label>Notes</Label><Textarea value={profileForm.diagnosis_notes} onChange={(e) => setProfileForm({ ...profileForm, diagnosis_notes: e.target.value })} /></div>
+            <div><Label>Notes</Label><Textarea className="rounded-xl mt-1" value={profileForm.diagnosis_notes} onChange={(e) => setProfileForm({ ...profileForm, diagnosis_notes: e.target.value })} /></div>
           </div>
-          <DialogFooter><Button onClick={saveProfileEdit}>Save Changes</Button></DialogFooter>
+          <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={saveProfileEdit}>Save Changes</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* IEP Plan Dialog */}
       <Dialog open={planOpen} onOpenChange={(o) => { setPlanOpen(o); if (!o) { setEditingPlanId(null); setPlanForm({ title: "", start_date: "", end_date: "", status: "draft" }); } }}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>{editingPlanId ? "Edit IEP Plan" : "New IEP Plan"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Title</Label><Input value={planForm.title} onChange={(e) => setPlanForm({ ...planForm, title: e.target.value })} /></div>
-            <div><Label>Start Date</Label><Input type="date" value={planForm.start_date} onChange={(e) => setPlanForm({ ...planForm, start_date: e.target.value })} /></div>
-            <div><Label>End Date (optional)</Label><Input type="date" value={planForm.end_date} onChange={(e) => setPlanForm({ ...planForm, end_date: e.target.value })} /></div>
+            <div><Label>Title</Label><Input className="rounded-xl mt-1" value={planForm.title} onChange={(e) => setPlanForm({ ...planForm, title: e.target.value })} /></div>
+            <div><Label>Start Date</Label><Input type="date" className="rounded-xl mt-1" value={planForm.start_date} onChange={(e) => setPlanForm({ ...planForm, start_date: e.target.value })} /></div>
+            <div><Label>End Date (optional)</Label><Input type="date" className="rounded-xl mt-1" value={planForm.end_date} onChange={(e) => setPlanForm({ ...planForm, end_date: e.target.value })} /></div>
             {editingPlanId && (
               <div>
                 <Label>Status</Label>
                 <Select value={planForm.status} onValueChange={(v) => setPlanForm({ ...planForm, status: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
@@ -1104,19 +1176,19 @@ export default function SENManagement() {
               </div>
             )}
           </div>
-          <DialogFooter><Button onClick={addPlan}>{editingPlanId ? "Save Changes" : "Create Plan"}</Button></DialogFooter>
+          <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={addPlan}>{editingPlanId ? "Save Changes" : "Create Plan"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Goal Dialog */}
       <Dialog open={!!goalOpen} onOpenChange={(o) => { if (!o) { setGoalOpen(null); setEditingGoal(null); } }}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>{editingGoal ? "Edit IEP Goal" : "Add IEP Goal"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Domain</Label>
               <Select value={goalForm.domain} onValueChange={(v) => setGoalForm({ ...goalForm, domain: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {["Academic", "Behavioral", "Communication", "Social", "Motor", "Self-Help"].map((d) => (
                     <SelectItem key={d} value={d}>{d}</SelectItem>
@@ -1124,38 +1196,38 @@ export default function SENManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Goal Description</Label><Textarea value={goalForm.goal_description} onChange={(e) => setGoalForm({ ...goalForm, goal_description: e.target.value })} /></div>
-            <div><Label>Baseline</Label><Input value={goalForm.baseline} onChange={(e) => setGoalForm({ ...goalForm, baseline: e.target.value })} /></div>
-            <div><Label>Target Criteria</Label><Input value={goalForm.target_criteria} onChange={(e) => setGoalForm({ ...goalForm, target_criteria: e.target.value })} /></div>
-            <div><Label>Target Date</Label><Input type="date" value={goalForm.target_date} onChange={(e) => setGoalForm({ ...goalForm, target_date: e.target.value })} /></div>
+            <div><Label>Goal Description</Label><Textarea className="rounded-xl mt-1" value={goalForm.goal_description} onChange={(e) => setGoalForm({ ...goalForm, goal_description: e.target.value })} /></div>
+            <div><Label>Baseline</Label><Input className="rounded-xl mt-1" value={goalForm.baseline} onChange={(e) => setGoalForm({ ...goalForm, baseline: e.target.value })} /></div>
+            <div><Label>Target Criteria</Label><Input className="rounded-xl mt-1" value={goalForm.target_criteria} onChange={(e) => setGoalForm({ ...goalForm, target_criteria: e.target.value })} /></div>
+            <div><Label>Target Date</Label><Input type="date" className="rounded-xl mt-1" value={goalForm.target_date} onChange={(e) => setGoalForm({ ...goalForm, target_date: e.target.value })} /></div>
           </div>
-          <DialogFooter><Button onClick={() => goalOpen && addGoal(goalOpen)}>{editingGoal ? "Save Changes" : "Add Goal"}</Button></DialogFooter>
+          <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={() => goalOpen && addGoal(goalOpen)}>{editingGoal ? "Save Changes" : "Add Goal"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Review Dialog */}
       <Dialog open={!!reviewOpen} onOpenChange={(o) => { if (!o) { setReviewOpen(null); setEditingReview(null); } }}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>{editingReview ? "Edit IEP Review" : "Log IEP Review"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <div><Label>Review Date</Label><Input type="date" value={reviewForm.review_date} onChange={(e) => setReviewForm({ ...reviewForm, review_date: e.target.value })} /></div>
-            <div><Label>Attendees</Label><Input value={reviewForm.attendees} onChange={(e) => setReviewForm({ ...reviewForm, attendees: e.target.value })} /></div>
-            <div><Label>Summary</Label><Textarea value={reviewForm.summary} onChange={(e) => setReviewForm({ ...reviewForm, summary: e.target.value })} /></div>
-            <div><Label>Next Review Date</Label><Input type="date" value={reviewForm.next_review_date} onChange={(e) => setReviewForm({ ...reviewForm, next_review_date: e.target.value })} /></div>
+            <div><Label>Review Date</Label><Input type="date" className="rounded-xl mt-1" value={reviewForm.review_date} onChange={(e) => setReviewForm({ ...reviewForm, review_date: e.target.value })} /></div>
+            <div><Label>Attendees</Label><Input className="rounded-xl mt-1" value={reviewForm.attendees} onChange={(e) => setReviewForm({ ...reviewForm, attendees: e.target.value })} /></div>
+            <div><Label>Summary</Label><Textarea className="rounded-xl mt-1" value={reviewForm.summary} onChange={(e) => setReviewForm({ ...reviewForm, summary: e.target.value })} /></div>
+            <div><Label>Next Review Date</Label><Input type="date" className="rounded-xl mt-1" value={reviewForm.next_review_date} onChange={(e) => setReviewForm({ ...reviewForm, next_review_date: e.target.value })} /></div>
           </div>
-          <DialogFooter><Button onClick={() => reviewOpen && addReview(reviewOpen)}>{editingReview ? "Save Changes" : "Save Review"}</Button></DialogFooter>
+          <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={() => reviewOpen && addReview(reviewOpen)}>{editingReview ? "Save Changes" : "Save Review"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Accommodation Dialog */}
       <Dialog open={accOpen} onOpenChange={(o) => { setAccOpen(o); if (!o) setEditingAccId(null); }}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>{editingAccId ? "Edit Accommodation" : "Add Accommodation"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Type</Label>
               <Select value={accForm.accommodation_type} onValueChange={(v) => setAccForm({ ...accForm, accommodation_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ACCOMMODATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
@@ -1164,7 +1236,7 @@ export default function SENManagement() {
             <div>
               <Label>Applies To</Label>
               <Select value={accForm.applies_to} onValueChange={(v) => setAccForm({ ...accForm, applies_to: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="classroom">Classroom</SelectItem>
                   <SelectItem value="exam">Exam</SelectItem>
@@ -1172,21 +1244,21 @@ export default function SENManagement() {
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Description</Label><Textarea value={accForm.description} onChange={(e) => setAccForm({ ...accForm, description: e.target.value })} /></div>
+            <div><Label>Description</Label><Textarea className="rounded-xl mt-1" value={accForm.description} onChange={(e) => setAccForm({ ...accForm, description: e.target.value })} /></div>
           </div>
-          <DialogFooter><Button onClick={addAccommodation}>{editingAccId ? "Save Changes" : "Add"}</Button></DialogFooter>
+          <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={addAccommodation}>{editingAccId ? "Save Changes" : "Add"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Therapy Session Dialog */}
       <Dialog open={sessionOpen} onOpenChange={(o) => { setSessionOpen(o); if (!o) setEditingSessionId(null); }}>
-        <DialogContent>
+        <DialogContent className="rounded-2xl w-[calc(100%-2rem)] sm:w-full">
           <DialogHeader><DialogTitle>{editingSessionId ? "Edit Therapy Session" : "Log Therapy Session"}</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div>
               <Label>Therapy Type</Label>
               <Select value={sessionForm.therapy_type} onValueChange={(v) => setSessionForm({ ...sessionForm, therapy_type: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {THERAPY_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
@@ -1195,18 +1267,18 @@ export default function SENManagement() {
             <div>
               <Label>Therapist</Label>
               <Select value={sessionForm.therapist_id} onValueChange={(v) => setSessionForm({ ...sessionForm, therapist_id: v })}>
-                <SelectTrigger><SelectValue placeholder="Select staff member" /></SelectTrigger>
+                <SelectTrigger className="rounded-xl mt-1"><SelectValue placeholder="Select staff member" /></SelectTrigger>
                 <SelectContent>
                   {staff.map((p) => <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div><Label>Session Date</Label><Input type="date" value={sessionForm.session_date} onChange={(e) => setSessionForm({ ...sessionForm, session_date: e.target.value })} /></div>
-            <div><Label>Duration (minutes)</Label><Input type="number" value={sessionForm.duration_minutes} onChange={(e) => setSessionForm({ ...sessionForm, duration_minutes: e.target.value })} /></div>
-            <div><Label>Goals Addressed</Label><Input value={sessionForm.goals_addressed} onChange={(e) => setSessionForm({ ...sessionForm, goals_addressed: e.target.value })} /></div>
-            <div><Label>Notes</Label><Textarea value={sessionForm.notes} onChange={(e) => setSessionForm({ ...sessionForm, notes: e.target.value })} /></div>
+            <div><Label>Session Date</Label><Input type="date" className="rounded-xl mt-1" value={sessionForm.session_date} onChange={(e) => setSessionForm({ ...sessionForm, session_date: e.target.value })} /></div>
+            <div><Label>Duration (minutes)</Label><Input type="number" className="rounded-xl mt-1" value={sessionForm.duration_minutes} onChange={(e) => setSessionForm({ ...sessionForm, duration_minutes: e.target.value })} /></div>
+            <div><Label>Goals Addressed</Label><Input className="rounded-xl mt-1" value={sessionForm.goals_addressed} onChange={(e) => setSessionForm({ ...sessionForm, goals_addressed: e.target.value })} /></div>
+            <div><Label>Notes</Label><Textarea className="rounded-xl mt-1" value={sessionForm.notes} onChange={(e) => setSessionForm({ ...sessionForm, notes: e.target.value })} /></div>
           </div>
-          <DialogFooter><Button onClick={addSession}>{editingSessionId ? "Save Changes" : "Log Session"}</Button></DialogFooter>
+          <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={addSession}>{editingSessionId ? "Save Changes" : "Log Session"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </AppLayout>

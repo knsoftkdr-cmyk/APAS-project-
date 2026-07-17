@@ -91,6 +91,11 @@ const emptyBlockForm = { block_name: "", subject: "", teacher_id: "", room: "" }
 const emptyGroupForm = { class_grade: "", section: "", group_name: "" };
 const emptySlotForm = { day_of_week: "monday", period_number: 1 };
 
+// ---------- Shared style helpers (mirrors Attendance page theme) ----------
+const sectionHeaderClass =
+  "bg-emerald-50 border-b border-emerald-100 rounded-t-xl px-5 py-4 flex flex-row items-center justify-between";
+const sectionTitleClass = "text-base font-bold text-emerald-900 flex items-center gap-2";
+
 export default function RotationScheduleManagement() {
   const { profile } = useAuth(); // expects { school_id, role, id }
   const schoolId = profile?.school_id;
@@ -430,95 +435,105 @@ export default function RotationScheduleManagement() {
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <RotateCw className="h-6 w-6" /> Rotation Schedules
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Configure teacher/subject/class rotations for specials, elective-in-blocks, and circuits.
-            </p>
-          </div>
-          <Dialog open={cycleDialogOpen} onOpenChange={(open) => { setCycleDialogOpen(open); if (!open) setEditingCycleId(null); }}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreateCycleDialog}>
-                <Plus className="h-4 w-4 mr-1" /> New Cycle
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{editingCycleId ? "Edit Rotation Cycle" : "Create Rotation Cycle"}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3">
-                <div>
-                  <Label>Name</Label>
-                  <Input
-                    value={cycleForm.name}
-                    onChange={(e) => setCycleForm({ ...cycleForm, name: e.target.value })}
-                    placeholder="e.g. Specials Rotation - Term 1"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
+        {/* Gradient hero banner — matches Attendance page theme */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-7 md:px-8 md:py-8 shadow-sm">
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+          <div className="absolute right-24 -bottom-10 h-28 w-28 rounded-full bg-white/10" />
+          <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                <RotateCw className="h-6 w-6" /> Rotation Schedules
+              </h1>
+              <p className="text-white/90 text-sm mt-1">
+                Configure teacher/subject/class rotations for specials, elective-in-blocks, and circuits.
+              </p>
+            </div>
+            <Dialog open={cycleDialogOpen} onOpenChange={(open) => { setCycleDialogOpen(open); if (!open) setEditingCycleId(null); }}>
+              <DialogTrigger asChild>
+                <Button
+                  onClick={openCreateCycleDialog}
+                  className="bg-white text-emerald-700 hover:bg-white/90 shadow-sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> New Cycle
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingCycleId ? "Edit Rotation Cycle" : "Create Rotation Cycle"}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3">
                   <div>
-                    <Label>Cadence</Label>
+                    <Label>Name</Label>
+                    <Input
+                      value={cycleForm.name}
+                      onChange={(e) => setCycleForm({ ...cycleForm, name: e.target.value })}
+                      placeholder="e.g. Specials Rotation - Term 1"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Cadence</Label>
+                      <Select
+                        value={cycleForm.cadence_type}
+                        onValueChange={(v) => setCycleForm({ ...cycleForm, cadence_type: v as RotationCycle["cadence_type"] })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="weekly">Weekly</SelectItem>
+                          <SelectItem value="termly">Termly</SelectItem>
+                          <SelectItem value="custom">Custom</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label>Cycle length (days)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        value={cycleForm.cycle_length_days}
+                        onChange={(e) => setCycleForm({ ...cycleForm, cycle_length_days: Number(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Split mode</Label>
                     <Select
-                      value={cycleForm.cadence_type}
-                      onValueChange={(v) => setCycleForm({ ...cycleForm, cadence_type: v as RotationCycle["cadence_type"] })}
+                      value={cycleForm.split_mode}
+                      onValueChange={(v) => setCycleForm({ ...cycleForm, split_mode: v as RotationCycle["split_mode"] })}
                     >
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="weekly">Weekly</SelectItem>
-                        <SelectItem value="termly">Termly</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
+                        <SelectItem value="whole_class">Whole class moves together</SelectItem>
+                        <SelectItem value="sub_group">Class splits into sub-groups</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label>Cycle length (days)</Label>
+                    <Label>Start date</Label>
                     <Input
-                      type="number"
-                      min={1}
-                      value={cycleForm.cycle_length_days}
-                      onChange={(e) => setCycleForm({ ...cycleForm, cycle_length_days: Number(e.target.value) })}
+                      type="date"
+                      value={cycleForm.start_date}
+                      onChange={(e) => setCycleForm({ ...cycleForm, start_date: e.target.value })}
                     />
                   </div>
                 </div>
-                <div>
-                  <Label>Split mode</Label>
-                  <Select
-                    value={cycleForm.split_mode}
-                    onValueChange={(v) => setCycleForm({ ...cycleForm, split_mode: v as RotationCycle["split_mode"] })}
-                  >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="whole_class">Whole class moves together</SelectItem>
-                      <SelectItem value="sub_group">Class splits into sub-groups</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Start date</Label>
-                  <Input
-                    type="date"
-                    value={cycleForm.start_date}
-                    onChange={(e) => setCycleForm({ ...cycleForm, start_date: e.target.value })}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={saveCycle}>{editingCycleId ? "Save" : "Create"}</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button onClick={saveCycle}>{editingCycleId ? "Save" : "Create"}</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Cycle list */}
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle className="text-base">Cycles</CardTitle>
+          <Card className="lg:col-span-1 overflow-hidden py-0 gap-0">
+            <CardHeader className={sectionHeaderClass}>
+              <CardTitle className={sectionTitleClass}>
+                <RotateCw className="h-4 w-4" /> Cycles
+              </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className="space-y-2 pt-4 pb-5">
               {loading && <p className="text-sm text-muted-foreground">Loading...</p>}
               {!loading && cycles.length === 0 && (
                 <p className="text-sm text-muted-foreground">No rotation cycles yet. Create one to get started.</p>
@@ -528,13 +543,22 @@ export default function RotationScheduleManagement() {
                   key={cycle.id}
                   onClick={() => setSelectedCycle(cycle)}
                   className={`p-3 rounded-lg border cursor-pointer transition ${
-                    selectedCycle?.id === cycle.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                    selectedCycle?.id === cycle.id
+                      ? "border-emerald-400 bg-emerald-50"
+                      : "border-border hover:bg-muted/50"
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{cycle.name}</span>
                     <div className="flex items-center gap-1">
-                      <Badge variant={cycle.is_active ? "default" : "secondary"}>
+                      <Badge
+                        className={
+                          cycle.is_active
+                            ? "bg-emerald-600 hover:bg-emerald-600 text-white border-transparent"
+                            : ""
+                        }
+                        variant={cycle.is_active ? "default" : "secondary"}
+                      >
                         {cycle.is_active ? "Active" : "Inactive"}
                       </Badge>
                       <Button
@@ -567,16 +591,16 @@ export default function RotationScheduleManagement() {
 
             {selectedCycle && (
               <>
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base">{selectedCycle.name}</CardTitle>
+                <Card className="overflow-hidden py-0 gap-0">
+                  <CardHeader className={`${sectionHeaderClass} flex-row`}>
+                    <CardTitle className={sectionTitleClass}>{selectedCycle.name}</CardTitle>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">
                         <Switch
                           checked={selectedCycle.is_active}
                           onCheckedChange={() => toggleCycleActive(selectedCycle)}
                         />
-                        <span className="text-sm">Active</span>
+                        <span className="text-sm text-emerald-900">Active</span>
                       </div>
                       <Button variant="outline" size="sm" onClick={() => openEditCycleDialog(selectedCycle)}>
                         <Pencil className="h-4 w-4" />
@@ -589,14 +613,16 @@ export default function RotationScheduleManagement() {
                 </Card>
 
                 {/* Blocks */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
+                <Card className="overflow-hidden py-0 gap-0">
+                  <CardHeader className={sectionHeaderClass}>
+                    <CardTitle className={sectionTitleClass}>
                       <Layers className="h-4 w-4" /> Blocks (the stations in the circuit)
                     </CardTitle>
                     <Dialog open={blockDialogOpen} onOpenChange={(open) => { setBlockDialogOpen(open); if (!open) setEditingBlockId(null); }}>
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" onClick={openCreateBlockDialog}><Plus className="h-4 w-4 mr-1" /> Add Block</Button>
+                        <Button size="sm" variant="outline" onClick={openCreateBlockDialog} className="bg-white">
+                          <Plus className="h-4 w-4 mr-1" /> Add Block
+                        </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader><DialogTitle>{editingBlockId ? "Edit Block" : "Add Block"}</DialogTitle></DialogHeader>
@@ -629,7 +655,7 @@ export default function RotationScheduleManagement() {
                       </DialogContent>
                     </Dialog>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-4 pb-5">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -670,14 +696,16 @@ export default function RotationScheduleManagement() {
                 </Card>
 
                 {/* Groups */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
+                <Card className="overflow-hidden py-0 gap-0">
+                  <CardHeader className={sectionHeaderClass}>
+                    <CardTitle className={sectionTitleClass}>
                       <Users className="h-4 w-4" /> Groups (who rotates through the circuit)
                     </CardTitle>
                     <Dialog open={groupDialogOpen} onOpenChange={(open) => { setGroupDialogOpen(open); if (!open) setEditingGroupId(null); }}>
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" onClick={openCreateGroupDialog}><Plus className="h-4 w-4 mr-1" /> Add Group</Button>
+                        <Button size="sm" variant="outline" onClick={openCreateGroupDialog} className="bg-white">
+                          <Plus className="h-4 w-4 mr-1" /> Add Group
+                        </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader><DialogTitle>{editingGroupId ? "Edit Group" : "Add Group"}</DialogTitle></DialogHeader>
@@ -701,7 +729,7 @@ export default function RotationScheduleManagement() {
                       </DialogContent>
                     </Dialog>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-4 pb-5">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -743,14 +771,16 @@ export default function RotationScheduleManagement() {
                 </Card>
 
                 {/* Slots */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle className="text-base flex items-center gap-2">
+                <Card className="overflow-hidden py-0 gap-0">
+                  <CardHeader className={sectionHeaderClass}>
+                    <CardTitle className={sectionTitleClass}>
                       <Clock3 className="h-4 w-4" /> Slots (when this rotation occupies the timetable)
                     </CardTitle>
                     <Dialog open={slotDialogOpen} onOpenChange={(open) => { setSlotDialogOpen(open); if (!open) setEditingSlotId(null); }}>
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" onClick={openCreateSlotDialog}><Plus className="h-4 w-4 mr-1" /> Add Slot</Button>
+                        <Button size="sm" variant="outline" onClick={openCreateSlotDialog} className="bg-white">
+                          <Plus className="h-4 w-4 mr-1" /> Add Slot
+                        </Button>
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader><DialogTitle>{editingSlotId ? "Edit Slot" : "Add Slot"}</DialogTitle></DialogHeader>
@@ -773,7 +803,7 @@ export default function RotationScheduleManagement() {
                       </DialogContent>
                     </Dialog>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-4 pb-5">
                     <div className="flex flex-wrap gap-2">
                       {slots.map((s) => (
                         <Badge key={s.id} variant="outline" className="flex items-center gap-2 py-1.5 px-3">
