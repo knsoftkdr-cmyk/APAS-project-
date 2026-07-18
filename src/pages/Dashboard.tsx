@@ -141,63 +141,83 @@ const StudentDashboard = () => {
   const reportConfig = myAssessment ? getReportConfig(myAssessment.age_group) : null;
   const scores = myAssessment ? analyzeResponses(myAssessment.age_group, myAssessment.responses as Record<string, number>) : null;
 
-  return (
-    <AppLayout>
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
+return (
+  <AppLayout>
+    <div className="min-h-screen relative overflow-x-hidden">
+      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.10] blur-3xl" />
+      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-cyan-200 opacity-[0.08] blur-3xl" />
+      <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
 
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
-          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
-<div className="hidden md:block">
+      <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-8xl mx-auto">
 
+        {/* Hero */}
+        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-5 md:p-8 relative min-h-[180px] md:min-h-[220px] shadow-lg">
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+  {/* Soft glow blobs, layered above the gradient for extra depth */}
+  <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-2xl"></div>
+  <div className="absolute bottom-0 right-1/3 w-32 h-32 rounded-full bg-cyan-300/20 blur-2xl"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/30 hidden sm:block"></div>
+  <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/30 hidden sm:block"></div>
+  <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/40 hidden sm:block"></div>
+  
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
-</div>
-    
-  <h1 className="text-4xl font-bold">
-    Welcome Back, {profile?.full_name}
-  </h1>
-
-  <p className="mt-2 text-black/80">
-    {today}
-  </p>
-
-  <p className="mt-6 text-lg text-black/90">
-    Continue your learning journey and complete today's homework.
-  </p>
-   <img
-    src={studentBanner}
-    alt="Student Learning"
-    className="hidden md:block absolute right-0 bottom-0 w-80"
-  />
-</div>
-
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-          <PenLine className="h-5 w-5 text-primary" /> Your Homework
-        </h2>
-        <StudentHomework />
+  <div className="relative z-10 max-w-xl">
+    <div className="inline-flex items-center gap-2 mb-3 bg-white/10 backdrop-blur-sm rounded-full pl-1.5 pr-3 py-1.5">
+      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+        <GraduationCap className="h-3.5 w-3.5 text-white" />
       </div>
+      <span className="text-[11px] font-semibold text-white uppercase tracking-[0.15em]">
+        Student Dashboard
+      </span>
+    </div>
+    <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
+      Welcome Back, {profile?.full_name}
+    </h1>
 
-      {myAssessment && (
-        <StudentReport
-          open={reportOpen}
-          onOpenChange={setReportOpen}
-          studentName={myAssessment.student_name}
-          studentAge={myAssessment.student_age}
-          ageGroup={myAssessment.age_group}
-          responses={myAssessment.responses as Record<string, any>}
-          submittedAt={myAssessment.created_at}
-          studentClass={myAssessment.student_class || undefined}
-          teacherName={teacherProfile?.full_name || undefined}
-        />
-      )}
-    </AppLayout>
-  );
+    <p className="mt-1.5 md:mt-2 text-blue-100 text-sm md:text-base">
+      {today}
+    </p>
+
+    <p className="mt-4 md:mt-6 text-sm md:text-lg text-white/90 max-w-md">
+      Continue your learning journey and complete today's homework.
+    </p>
+  </div>
+</div>
+
+        {/* Homework Section */}
+        <Card className="group relative overflow-hidden border-blue-100 shadow-sm hover:shadow-md transition-all duration-300">
+  <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-blue-100 opacity-40 blur-2xl transition-transform duration-500 group-hover:scale-125" />
+  <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500 relative z-10" />
+  <CardContent className="p-4 md:p-5 relative z-10">
+    <h2 className="text-base md:text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2.5">
+      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shrink-0 shadow-sm shadow-blue-200">
+        <PenLine className="h-4 w-4 text-white" />
+      </div>
+      Your Homework
+    </h2>
+    <StudentHomework />
+  </CardContent>
+</Card>
+
+      </div>
+    </div>
+
+    {myAssessment && (
+      <StudentReport
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        studentName={myAssessment.student_name}
+        studentAge={myAssessment.student_age}
+        ageGroup={myAssessment.age_group}
+        responses={myAssessment.responses as Record<string, any>}
+        submittedAt={myAssessment.created_at}
+        studentClass={myAssessment.student_class || undefined}
+        teacherName={teacherProfile?.full_name || undefined}
+      />
+    )}
+  </AppLayout>
+);
 };
 
 /* ------------------------------------------ TEACHER HOME ------------------------------------------- */

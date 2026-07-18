@@ -361,35 +361,41 @@ try {
     return (
       <div className="space-y-4">
         <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="all" className="gap-2">
-              All <Badge variant="secondary" className="ml-1">{assignments.length}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="pending" className="gap-2">
-              <Clock className="h-3.5 w-3.5" /> Pending
-              <Badge variant="secondary" className="ml-1">{pendingCount}</Badge>
-            </TabsTrigger>
-            <TabsTrigger value="submitted" className="gap-2">
-              <CheckCircle className="h-3.5 w-3.5" /> Submitted
-              <Badge variant="secondary" className="ml-1">{submittedCount}</Badge>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+  <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1">
+    <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+      All <Badge className="ml-1 bg-white/20 text-current border-none">{assignments.length}</Badge>
+    </TabsTrigger>
+    <TabsTrigger value="pending" className="gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+      <Clock className="h-3.5 w-3.5" /> Pending
+      <Badge className="ml-1 bg-white/20 text-current border-none">{pendingCount}</Badge>
+    </TabsTrigger>
+    <TabsTrigger value="submitted" className="gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
+      <CheckCircle className="h-3.5 w-3.5" /> Submitted
+      <Badge className="ml-1 bg-white/20 text-current border-none">{submittedCount}</Badge>
+    </TabsTrigger>
+  </TabsList>
+</Tabs>
 
         {filteredAssignments.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <ClipboardCheck className="h-10 w-10 text-muted-foreground mb-3" />
-              <p className="text-sm text-muted-foreground">
-                {statusFilter === "pending"
-                  ? "Great! No pending homework."
-                  : statusFilter === "submitted"
-                  ? "You haven't submitted any homework yet."
-                  : "No homework available."}
-              </p>
-            </CardContent>
-          </Card>
-        ) : null}
+  <Card className={statusFilter === "pending" ? "border-amber-100 bg-amber-50/20" : statusFilter === "submitted" ? "border-emerald-100 bg-emerald-50/20" : ""}>
+    <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-3 ${
+        statusFilter === "pending" ? "bg-amber-100" : statusFilter === "submitted" ? "bg-emerald-100" : "bg-slate-100"
+      }`}>
+        <ClipboardCheck className={`h-7 w-7 ${
+          statusFilter === "pending" ? "text-amber-400" : statusFilter === "submitted" ? "text-emerald-400" : "text-slate-400"
+        }`} />
+      </div>
+      <p className="text-sm text-muted-foreground">
+        {statusFilter === "pending"
+          ? "Great! No pending homework."
+          : statusFilter === "submitted"
+          ? "You haven't submitted any homework yet."
+          : "No homework available."}
+      </p>
+    </CardContent>
+  </Card>
+) : null}
 
         {filteredAssignments.map((assignment: any) => {
           let questionsArray: HomeworkQuestion[] = [];
@@ -405,148 +411,157 @@ try {
           const submission = (submissions || []).find((s: any) => s.assignment_id === assignment.id);
 
           return (
-            <Card 
-              key={assignment.id} 
-              className={`border-2 transition-all ${isSubmitted ? 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10' : 'border-primary/10 hover:border-primary/30'}`}
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-base flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      {assignment.period_title || assignment.title || "Homework"}
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground mt-2 space-y-1">
-                      <div className="flex flex-wrap gap-2">
-                        {assignment.subject && (
-                          <Badge variant="secondary" className="text-xs">
-                            {assignment.subject}
-                          </Badge>
-                        )}
-                        {assignment.topic && (
-                          <Badge variant="outline" className="text-xs">
-                            {assignment.topic}
-                          </Badge>
-                        )}
-                        {questionsArray.length > 0 && (
-                          <Badge variant="outline" className="text-xs">
-                            {questionsArray.length} Questions
-                          </Badge>
-                        )}
-                      </div>
-                    </p>
-                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                      {assignment.period_number && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          Period {assignment.period_number}
-                        </span>
-                      )}
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {new Date(assignment.created_at).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                  {isSubmitted ? (
-                    <Badge className="bg-emerald-500/15 text-emerald-700 border-emerald-200 gap-1 whitespace-nowrap">
-                      <CheckCircle className="h-3 w-3" /> Submitted
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="gap-1 whitespace-nowrap">
-                      <Clock className="h-3 w-3" /> Pending
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
+<Card 
+  key={assignment.id} 
+  className={`group overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 ${isSubmitted ? 'border-emerald-100 hover:-translate-y-0.5' : 'border-amber-100 hover:-translate-y-0.5'}`}
+>
+  <div className={`h-1.5 bg-gradient-to-r ${isSubmitted ? 'from-emerald-400 to-teal-400' : 'from-rose-400 to-pink-400'}`} />
+  <CardHeader className="pb-3">
+    <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+      <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 ${
+          isSubmitted ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-sm shadow-emerald-200' : 'bg-gradient-to-br from-rose-500 to-pink-500 shadow-sm shadow-rose-200'
+        }`}>
+          <BookOpen className="h-5 w-5 text-white" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <CardTitle className="text-base text-slate-800 truncate">
+            {assignment.period_title || assignment.title || "Homework"}
+          </CardTitle>
+          <div className="flex flex-wrap gap-1.5 mt-2">
+            {assignment.subject && (
+              <Badge className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-100">
+                {assignment.subject}
+              </Badge>
+            )}
+            {assignment.topic && (
+              <Badge variant="outline" className="text-xs border-slate-200 text-slate-600">
+                {assignment.topic}
+              </Badge>
+            )}
+            {questionsArray.length > 0 && (
+              <Badge variant="outline" className="text-xs border-slate-200 text-slate-600">
+                {questionsArray.length} Questions
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
+            {assignment.period_number && (
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                Period {assignment.period_number}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              {new Date(assignment.created_at).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
+      </div>
+      {isSubmitted ? (
+        <Badge className="bg-emerald-500 text-white hover:bg-emerald-500 gap-1 whitespace-nowrap shrink-0">
+          <CheckCircle className="h-3 w-3" /> Submitted
+        </Badge>
+      ) : (
+        <Badge className="bg-amber-500 text-white hover:bg-amber-500 gap-1 whitespace-nowrap shrink-0">
+          <Clock className="h-3 w-3" /> Pending
+        </Badge>
+      )}
+    </div>
+  </CardHeader>
 
               <CardContent className="space-y-4">
                 {isSubmitted ? (
-                  <div className="space-y-3">
-                    <div className="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Award className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                        <h4 className="font-semibold text-emerald-900 dark:text-emerald-100">
-                          Submission: {submission?.submission_percentage || 0}%
-                        </h4>
-                      </div>
-                      <p className="text-sm text-emerald-800 dark:text-emerald-200">
-                        Submitted on {new Date(submission?.submitted_at || submission?.updated_at || submission?.created_at).toLocaleString()}
-                      </p>
-                    </div>
+  <div className="space-y-3">
+    <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-100 flex items-center gap-4 flex-wrap">
+      <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0">
+        <Award className="h-5 w-5 text-white" />
+      </div>
+      <div>
+        <h4 className="font-bold text-emerald-800 text-lg">
+          {submission?.submission_percentage || 0}% <span className="text-sm font-medium text-emerald-600">Complete</span>
+        </h4>
+        <p className="text-xs text-emerald-700/80">
+          Submitted {new Date(submission?.submitted_at || submission?.updated_at || submission?.created_at).toLocaleString()}
+        </p>
+      </div>
+    </div>
 
-                    {/* Teacher's review (score + feedback) */}
-                    {(submission?.teacher_score != null || submission?.teacher_feedback) && (
-                      <div className="p-4 bg-primary/5 border-2 border-primary/30 rounded-lg space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Award className="h-5 w-5 text-primary" />
-                            <h4 className="font-semibold text-foreground">Teacher's Review</h4>
-                          </div>
-                          {submission?.teacher_score != null && (
-                            <Badge className="bg-primary text-primary-foreground text-base px-3 py-1">
-                              Score: {submission.teacher_score}/100
-                            </Badge>
-                          )}
-                        </div>
-                        {submission?.teacher_feedback && (
-                          <div className="pt-2 border-t border-primary/20">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Feedback:</p>
-                            <p className="text-sm text-foreground whitespace-pre-wrap">{submission.teacher_feedback}</p>
-                          </div>
-                        )}
-                        {submission?.evaluated_at && (
-                          <p className="text-xs text-muted-foreground">
-                            Reviewed on {new Date(submission.evaluated_at).toLocaleString()}
-                          </p>
-                        )}
-                      </div>
-                    )}
+    {/* Teacher's review (score + feedback) */}
+    {(submission?.teacher_score != null || submission?.teacher_feedback) && (
+      <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-50 to-violet-50/50 border border-indigo-100 space-y-2.5">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+              <Award className="h-4 w-4 text-indigo-600" />
+            </div>
+            <h4 className="font-semibold text-slate-800">Teacher's Review</h4>
+          </div>
+          {submission?.teacher_score != null && (
+            <Badge className="bg-indigo-600 text-white hover:bg-indigo-600 text-sm px-3 py-1">
+              Score: {submission.teacher_score}/100
+            </Badge>
+          )}
+        </div>
+        {submission?.teacher_feedback && (
+          <div className="pt-2.5 border-t border-indigo-100">
+            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-1">Feedback</p>
+            <p className="text-sm text-slate-700 whitespace-pre-wrap">{submission.teacher_feedback}</p>
+          </div>
+        )}
+        {submission?.evaluated_at && (
+          <p className="text-xs text-muted-foreground">
+            Reviewed on {new Date(submission.evaluated_at).toLocaleString()}
+          </p>
+        )}
+      </div>
+    )}
 
-                    {/* Show submitted answers */}
-                    <div className="space-y-3">
-                      {questionsArray.map((q, idx) => (
-                        <div key={idx} className="space-y-2">
-                          <div className="flex items-start gap-2">
-                            <span className="text-xs bg-primary/10 text-primary rounded-full w-6 h-6 flex items-center justify-center shrink-0 mt-0.5 font-semibold">
-                              {idx + 1}
-                            </span>
-                            <p className="text-sm font-medium text-foreground">{q.question}</p>
-                          </div>
-                          <div className="ml-8 p-3 bg-muted/50 rounded-lg border border-border">
-                            <p className="text-sm text-foreground/80">
-                              {(submission?.answers as any)?.[idx]?.answer || "—"}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
+    {/* Show submitted answers */}
+    <div className="space-y-2.5">
+      {questionsArray.map((q, idx) => (
+        <div key={idx} className="rounded-xl border border-slate-100 bg-slate-50/50 p-3.5">
+          <div className="flex items-start gap-2.5 mb-2">
+            <span className="text-xs bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center shrink-0 font-bold">
+              {idx + 1}
+            </span>
+            <p className="text-sm font-medium text-slate-800 pt-0.5">{q.question}</p>
+          </div>
+          <div className="ml-8 p-3 bg-white rounded-lg border border-slate-100">
+            <p className="text-sm text-slate-600">
+              {(submission?.answers as any)?.[idx]?.answer || "—"}
+            </p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+) : (
                   <>
-                    {/* Show preview of questions */}
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {questionsArray.slice(0, 2).map((q, idx) => (
-                        <div key={idx} className="flex items-start gap-2 text-xs text-muted-foreground">
-                          <span className="font-semibold min-w-fit">{idx + 1}.</span>
-                          <p>{q.question}</p>
-                        </div>
-                      ))}
-                      {questionsArray.length > 2 && (
-                        <p className="text-xs text-muted-foreground italic">
-                          +{questionsArray.length - 2} more questions...
-                        </p>
-                      )}
-                    </div>
+  {/* Show preview of questions */}
+  <div className="rounded-xl bg-amber-50/40 border border-amber-100 p-3.5 space-y-2 max-h-32 overflow-y-auto">
+    {questionsArray.slice(0, 2).map((q, idx) => (
+      <div key={idx} className="flex items-start gap-2 text-xs text-slate-600">
+        <span className="font-bold text-amber-600 min-w-fit">{idx + 1}.</span>
+        <p>{q.question}</p>
+      </div>
+    ))}
+    {questionsArray.length > 2 && (
+      <p className="text-xs text-amber-600 font-medium italic">
+        +{questionsArray.length - 2} more questions...
+      </p>
+    )}
+  </div>
 
-                    {/* Start Button */}
-                    <Button
-                      onClick={() => handleStartHomework(assignment.id)}
-                      className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
-                    >
-                      <Play className="h-4 w-4" /> Start Homework
-                    </Button>
-                  </>
+  {/* Start Button */}
+  <Button
+    onClick={() => handleStartHomework(assignment.id)}
+    className="w-full sm:w-auto flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-sm"
+  >
+    <Play className="h-4 w-4" /> Start Homework
+  </Button>
+</>
                 )}
               </CardContent>
             </Card>
@@ -630,21 +645,19 @@ try {
 
       {/* ─── VIEW MODE TOGGLE ─── */}
       <div className="flex gap-2">
-        <Button
-          variant={!showAllQuestions ? "default" : "outline"}
-          onClick={() => setShowAllQuestions(false)}
-          className="flex-1 bg-blue-500 hover:bg-blue-700 text-white"
-        >
-          One at a Time
-        </Button>
-        <Button
-          variant={showAllQuestions ? "default" : "outline"}
-          onClick={() => setShowAllQuestions(true)}
-          className="flex-1 bg-blue-500 hover:bg-blue-700 text-white"
-        >
-          All Questions
-        </Button>
-      </div>
+  <Button
+    onClick={() => setShowAllQuestions(false)}
+    className={`flex-1 ${!showAllQuestions ? "bg-gradient-to-r from-rose-400 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+  >
+    One at a Time
+  </Button>
+  <Button
+    onClick={() => setShowAllQuestions(true)}
+    className={`flex-1 ${showAllQuestions ? "bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-600 hover:to-orange-600 text-white" : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"}`}
+  >
+    All Questions
+  </Button>
+</div>
 
       {/* ─── QUESTIONS VIEW ─── */}
       {!showAllQuestions ? (
@@ -698,12 +711,12 @@ try {
               </div>
 
               <Button
-                onClick={() => setCurrentQuestionIndex((q) => Math.min(questionsArray.length - 1, q + 1))}
-                disabled={currentQuestionIndex === questionsArray.length - 1}
-                className="gap-2 flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </Button>
+  onClick={() => setCurrentQuestionIndex((q) => Math.min(questionsArray.length - 1, q + 1))}
+  disabled={currentQuestionIndex === questionsArray.length - 1}
+  className="gap-2 flex-shrink-0 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+>
+  Next <ChevronRight className="h-4 w-4" />
+</Button>
             </div>
           </CardContent>
         </Card>
