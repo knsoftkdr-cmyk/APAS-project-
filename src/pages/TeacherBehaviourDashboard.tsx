@@ -26,7 +26,7 @@ import { MessageSquarePlus, Clock, Trash2, ClipboardList, CalendarClock } from "
 import { InterventionDrawer, Intervention } from "@/components/InterventionDrawer";
 import { BehaviourAnalytics, AnalyticsMeta } from "@/components/BehaviourAnalytics";
 import { TierOnePositiveRecognition } from "@/components/TierOnePositiveRecognition.tsx";
-
+import { createBehaviourRecord } from "@/lib/studentProfile";
 interface Student {
   id: string;
   full_name: string;
@@ -85,9 +85,10 @@ export default function TeacherBehaviourDashboard() {
 
   const [reviewsDue, setReviewsDue] = useState<ReviewDueItem[]>([]);
 
-  const [noteType, setNoteType] = useState("observation");
+const [noteType, setNoteType] = useState("observation");
   const [noteText, setNoteText] = useState("");
   const [followUpDate, setFollowUpDate] = useState("");
+  const [shareWithFamily, setShareWithFamily] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // ---- All students in the school (notes can be added for anyone) ----
@@ -220,10 +221,34 @@ export default function TeacherBehaviourDashboard() {
         follow_up_date: followUpDate || null,
       });
       if (error) throw error;
-      toast({ title: "Note saved" });
+
+      if (shareWithFamily) {
+        const categoryMap: Record<string, "positive" | "negative" | "neutral"> = {
+          positive: "positive",
+          concern: "neutral",
+          incident: "negative",
+          observation: "neutral",
+        };
+        await createBehaviourRecord({
+          school_id: profile?.school_id!,
+          student_id: selectedStudent.id,
+          category: categoryMap[noteType] ?? "neutral",
+          title: noteType === "positive" ? "Positive recognition" : "Behaviour note from teacher",
+          description: noteText.trim(),
+          points: noteType === "positive" ? 5 : noteType === "incident" ? -5 : 0,
+          recorded_date: new Date().toISOString().slice(0, 10),
+          action_taken: "",
+        });
+      }
+
+      toast({
+        title: "Note saved",
+        description: shareWithFamily ? "Visible to student & parent." : "Private — visible only to you.",
+      });
       setNoteText("");
       setFollowUpDate("");
       setNoteType("observation");
+      setShareWithFamily(false);
       if (selectedStudent) fetchNotesForStudent(selectedStudent.id);
       fetchFollowUps();
     } catch (e: any) {
@@ -434,6 +459,14 @@ export default function TeacherBehaviourDashboard() {
                         onChange={(e) => setNoteText(e.target.value)}
                         rows={3}
                       />
+                      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <input
+                          type="checkbox"
+                          checked={shareWithFamily}
+                          onChange={(e) => setShareWithFamily(e.target.checked)}
+                        />
+                        Share this as a behaviour record visible to the student & parent
+                      </label>
                       <Button onClick={handleSaveNote} disabled={saving} className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white">
                         <MessageSquarePlus className="h-4 w-4 mr-2" />
                         {saving ? "Saving..." : "Save Note"}

@@ -600,49 +600,47 @@ const careerTabs = [
     ),
   },
 ];
-  return (
-    <AppLayout>
-      <div className="space-y-6">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-300 to-blue-300 p-8 relative min-h-[220px] shadow-lg shadow-blue-200/50">
+return (
+  <AppLayout>
+    <div className="min-h-screen relative overflow-x-hidden">
+      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.08] blur-3xl" />
+      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-cyan-200 opacity-[0.07] blur-3xl" />
 
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
-          <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
+      <div className="relative z-10 space-y-6 p-4 md:p-6">
+      <div className="mb-4 md:mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-300 to-blue-300 p-5 md:p-8 relative min-h-[160px] md:min-h-[220px] shadow-lg shadow-blue-200/50">
+          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60 hidden sm:block"></div>
+<div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80 hidden sm:block"></div>
+<div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80 hidden sm:block"></div>
 
 <div className="hidden md:block">
           <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
           <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
           <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
-
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
 
           <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
 
           <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
 </div>
-          <div className="max-w-xl">
-            <h1 className="text-5xl font-bold text-slate-900">
-              {t.settings}
-            </h1>
+          <div className="max-w-xl relative z-10">
+  <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900">
+    {t.settings}
+  </h1>
 
-            <p className="mt-3 text-slate-700 text-lg">
-              Manage your account and preferences
-            </p>
-          </div>
+  <p className="mt-2 md:mt-3 text-slate-700 text-sm md:text-lg">
+    Manage your account and preferences
+  </p>
+</div>
 
-          <img
-            src={settingsBanner}
-            alt="Settings Banner"
-            className="hidden md:block absolute right-10 bottom-6 w-32"
-          />
-        </div>
+<img
+  src={settingsBanner}
+  alt="Settings Banner"
+  className="hidden md:block absolute right-10 bottom-6 w-32"
+/>
+</div>
 
-      <div className="w-full max-w-7xl space-y-5 pb-16">
+<div className="w-full max-w-7xl mx-auto space-y-5 pb-16">
 
         {/* ── Profile Hero Card ─────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/60 overflow-hidden">
@@ -650,10 +648,10 @@ const careerTabs = [
             <div className="absolute top-4 right-8 w-10 h-10 rounded-full border border-white/25"></div>
             <div className="absolute bottom-4 right-24 w-6 h-6 rounded-full border border-white/25"></div>
           </div>
-          <div className="px-6 pb-6">
-            <div className="flex items-end justify-between -mt-14 mb-4">
-              {/* Avatar */}
-              <div className="relative">
+          <div className="px-4 md:px-6 pb-6">
+  <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-14 mb-4 gap-3">
+    {/* Avatar */}
+    <div className="relative">
                 <div className="h-28 w-28 rounded-2xl p-1 shadow-lg" style={{background: "linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
                   <div className="h-full w-full rounded-xl border-2 border-white bg-blue-50 overflow-hidden flex items-center justify-center">
                     {avatarUrl ? (
@@ -669,15 +667,15 @@ const careerTabs = [
                 </div>
               </div>
               <button
-                onClick={() => setActiveDrawer("personal")}
-                className="flex items-center gap-1.5 text-sm font-semibold border px-3 py-1.5 rounded-lg transition-all"
-                style={{color:"#1e3a5f", borderColor:"#b8cce4"}}
-                onMouseEnter={e => (e.currentTarget.style.borderColor="#1e3a5f")}
-                onMouseLeave={e => (e.currentTarget.style.borderColor="#b8cce4")}
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                Edit
-              </button>
+  onClick={() => setActiveDrawer("personal")}
+  className="flex items-center justify-center gap-1.5 text-sm font-semibold border px-3 py-1.5 rounded-lg transition-all self-start sm:self-auto bg-white shadow-sm"
+  style={{color:"#1e3a5f", borderColor:"#b8cce4"}}
+  onMouseEnter={e => (e.currentTarget.style.borderColor="#1e3a5f")}
+  onMouseLeave={e => (e.currentTarget.style.borderColor="#b8cce4")}
+>
+  <Pencil className="h-3.5 w-3.5" />
+  Edit
+</button>
             </div>
 
             {/* Name + ID badge */}
@@ -692,7 +690,7 @@ const careerTabs = [
             </div>
 
             {/* Info pills row */}
-            <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-500">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs sm:text-sm text-gray-500">
               <span className="flex items-center gap-1.5">
                 <Mail className="h-4 w-4 text-gray-400" />
                 {user?.email}
@@ -767,9 +765,9 @@ const careerTabs = [
             className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white shadow-sm" style={{background:"linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
-                <Globe className="h-5.5 w-5.5" />
-              </div>
+              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0" style={{background:"linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
+  <Globe className="h-5 w-5" />
+</div>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">Language</p>
                 <p className="text-xs text-gray-400 capitalize">{language}</p>
@@ -784,9 +782,9 @@ const careerTabs = [
             className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl flex items-center justify-center text-white shadow-sm" style={{background:"linear-gradient(135deg, #f97316, #fb923c)"}}>
-                <Lock className="h-5.5 w-5.5" />
-              </div>
+              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0" style={{background:"linear-gradient(135deg, #f97316, #fb923c)"}}>
+  <Lock className="h-5 w-5" />
+</div>
               <div>
                 <p className="font-semibold text-gray-800 text-sm">Change Password</p>
                 <p className="text-xs text-gray-400">Update your password</p>
@@ -798,10 +796,10 @@ const careerTabs = [
 
 {isTeacher && (
   <div className="pt-2">
-    <div className="flex items-center gap-2.5 mb-4">
-      <div className="h-6 w-1.5 rounded-full" style={{ background: "linear-gradient(to bottom, #1e3a5f, #3b82c4)" }} />
-      <h2 className="text-lg font-bold text-gray-900">Career & Professional Development</h2>
-    </div>
+  <div className="flex items-center gap-2.5 mb-4">
+    <div className="h-6 w-1.5 rounded-full shrink-0" style={{ background: "linear-gradient(to bottom, #1e3a5f, #3b82c4)" }} />
+    <h2 className="text-base sm:text-lg font-bold text-gray-900">Career & Professional Development</h2>
+  </div>
 
     {/* Tab bar */}
     <div className="bg-gray-50/80 rounded-2xl p-2 mb-0 overflow-x-auto scrollbar-hide">
@@ -1070,6 +1068,7 @@ const careerTabs = [
           This changes the display language across the entire application.
         </p>
       </EditDrawer>
+      </div>
       </div>
     </AppLayout>
   );

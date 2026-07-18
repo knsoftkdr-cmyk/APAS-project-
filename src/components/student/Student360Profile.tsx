@@ -147,7 +147,12 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
         </div>
 
         <TabsContent value="overview" className="mt-4">
-          <OverviewTab data={data} canEdit={canEdit} studentId={studentId} />
+          <OverviewTab
+            data={data}
+            canEdit={canEdit}
+            studentId={studentId}
+            onNavigateToTab={() => setActiveTab("behaviour")}
+          />
         </TabsContent>
 
         <TabsContent value="parents" className="mt-4">
@@ -189,8 +194,8 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
           <BehaviourTab
             studentId={studentId}
             schoolId={data.core.school_id ?? ""}
-            canEdit={canEdit}
-            canDelete={canDelete}
+            canEdit={false}
+            canDelete={false}
           />
         </TabsContent>
         <TabsContent value="learning-support" className="mt-4">
@@ -275,10 +280,12 @@ function OverviewTab({
   data,
   canEdit,
   studentId,
+  onNavigateToTab,
 }: {
   data: Awaited<ReturnType<typeof getStudentOverview>>;
   canEdit: boolean;
   studentId: string;
+  onNavigateToTab: () => void;
 }) {
   const { core, behaviourScore, attendancePercentage, attendanceRecords, gpa, recentAssessments, behaviourRecords, aiInsights } = data;
 
@@ -405,7 +412,10 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card className="border-2 border-yellow-200 hover:border-yellow-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-yellow-100">
+      <Card
+        onClick={onNavigateToTab}
+        className="cursor-pointer border-2 border-yellow-200 hover:border-yellow-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-yellow-100"
+      >
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-yellow-50">
@@ -413,13 +423,14 @@ function OverviewTab({
             </span>
             Recent Behaviour Records
           </CardTitle>
+          <span className="text-xs text-yellow-700 font-medium">View all →</span>
         </CardHeader>
         <CardContent className="space-y-2">
           {behaviourRecords.length === 0 ? (
             <EmptyState message="No behaviour records yet." />
           ) : (
             behaviourRecords.map((record) => (
-              <div key={record.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
+              <div key={record.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0 hover:bg-yellow-50/50 rounded px-1 -mx-1">
                 <div>
                   <p className="font-medium">{record.title}</p>
                   <p className="text-muted-foreground text-xs">{record.recorded_date}</p>
