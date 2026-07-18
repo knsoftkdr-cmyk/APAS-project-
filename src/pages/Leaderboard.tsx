@@ -31,8 +31,9 @@ export default function Leaderboard() {
       if (!profile?.school_id) return [];
       const { data, error } = await supabase
         .from("user_gamification")
-        .select("user_id, total_xp, level, profiles!inner(full_name, avatar_url, school_id)")
+        .select("user_id, total_xp, level, profiles!inner(full_name, avatar_url, school_id, role)")
         .eq("profiles.school_id", profile.school_id)
+        .eq("profiles.role", "student")
         .order("total_xp", { ascending: false })
         .limit(100);
       if (error) throw error;
