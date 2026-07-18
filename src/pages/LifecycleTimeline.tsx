@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, History, LogIn, ArrowUpCircle, ArrowRightLeft, LogOut, GraduationCap } from "lucide-react";
+import { Loader2, History, LogIn, ArrowUpCircle, ArrowRightLeft, LogOut, GraduationCap, Search } from "lucide-react";
 
 interface Student {
   id: string;
@@ -29,13 +29,13 @@ interface LifecycleEvent {
   created_at: string;
 }
 
-const EVENT_META: Record<string, { label: string; icon: any; color: string }> = {
-  admission: { label: "Admitted", icon: LogIn, color: "text-blue-600 bg-blue-50" },
-  promotion: { label: "Promoted", icon: ArrowUpCircle, color: "text-green-600 bg-green-50" },
-  transfer_internal: { label: "Transferred (Internal)", icon: ArrowRightLeft, color: "text-purple-600 bg-purple-50" },
-  transfer_external_in: { label: "Joined (External Transfer)", icon: LogIn, color: "text-blue-600 bg-blue-50" },
-  transfer_external_out: { label: "Left (External Transfer)", icon: LogOut, color: "text-orange-600 bg-orange-50" },
-  alumni_conversion: { label: "Graduated", icon: GraduationCap, color: "text-indigo-600 bg-indigo-50" },
+const EVENT_META: Record<string, { label: string; icon: any; color: string; ring: string }> = {
+  admission: { label: "Admitted", icon: LogIn, color: "text-cyan-600 bg-cyan-50", ring: "ring-cyan-100" },
+  promotion: { label: "Promoted", icon: ArrowUpCircle, color: "text-teal-600 bg-teal-50", ring: "ring-teal-100" },
+  transfer_internal: { label: "Transferred (Internal)", icon: ArrowRightLeft, color: "text-purple-600 bg-purple-50", ring: "ring-purple-100" },
+  transfer_external_in: { label: "Joined (External Transfer)", icon: LogIn, color: "text-cyan-600 bg-cyan-50", ring: "ring-cyan-100" },
+  transfer_external_out: { label: "Left (External Transfer)", icon: LogOut, color: "text-orange-600 bg-orange-50", ring: "ring-orange-100" },
+  alumni_conversion: { label: "Graduated", icon: GraduationCap, color: "text-indigo-600 bg-indigo-50", ring: "ring-indigo-100" },
 };
 
 function describeEvent(e: LifecycleEvent): string {
@@ -118,27 +118,38 @@ export default function LifecycleTimeline() {
 
   return (
     <AppLayout>
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <History className="h-6 w-6 text-muted-foreground" />
-          <div>
-            <h1 className="text-2xl font-semibold">Student Lifecycle Timeline</h1>
-            <p className="text-sm text-muted-foreground">Track a student's journey — promotions, transfers, and graduation</p>
+      <div className="max-w-5xl mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="rounded-2xl bg-gradient-to-r from-teal-500 to-cyan-500 p-6 text-white shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-11 w-11 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-sm">
+              <History className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-semibold">Student Lifecycle Timeline</h1>
+              <p className="text-sm text-white/80">Track a student's journey — promotions, transfers, and graduation</p>
+            </div>
           </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          <Card className="md:col-span-1">
+          {/* Students list */}
+          <Card className="md:col-span-1 border-l-4 border-l-teal-500 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">Students</CardTitle>
-              <Input
-                placeholder="Search by name..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="mt-2"
-              />
+              <CardTitle className="text-base flex items-center gap-2 text-teal-700">
+                Students
+              </CardTitle>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-9 rounded-full border-teal-100 focus-visible:ring-teal-400"
+                />
+              </div>
               <Select value={classFilter} onValueChange={setClassFilter}>
-                <SelectTrigger className="mt-2">
+                <SelectTrigger className="mt-2 rounded-full border-teal-100">
                   <SelectValue placeholder="All classes" />
                 </SelectTrigger>
                 <SelectContent>
@@ -152,34 +163,42 @@ export default function LifecycleTimeline() {
             <CardContent className="p-0">
               {loadingStudents ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-5 w-5 animate-spin text-teal-500" />
                 </div>
               ) : filteredStudents.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No students found.</p>
               ) : (
-                <div className="max-h-[500px] overflow-y-auto divide-y">
-                  {filteredStudents.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => selectStudent(s)}
-                      className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors ${
-                        selectedStudent?.id === s.id ? "bg-muted" : ""
-                      }`}
-                    >
-                      <div className="text-sm font-medium">{s.full_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {classLabel(s.class)}{s.section ? ` - ${s.section}` : ""}
-                      </div>
-                    </button>
-                  ))}
+                <div className="max-h-[500px] overflow-y-auto divide-y px-2 pb-2">
+                  {filteredStudents.map((s) => {
+                    const isSelected = selectedStudent?.id === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        onClick={() => selectStudent(s)}
+                        className={`w-full text-left px-4 py-3 my-1 rounded-xl transition-colors ${
+                          isSelected
+                            ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-sm"
+                            : "hover:bg-teal-50"
+                        }`}
+                      >
+                        <div className={`text-sm font-medium ${isSelected ? "text-white" : "text-foreground"}`}>
+                          {s.full_name}
+                        </div>
+                        <div className={`text-xs ${isSelected ? "text-white/80" : "text-muted-foreground"}`}>
+                          {classLabel(s.class)}{s.section ? ` - ${s.section}` : ""}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
           </Card>
 
-          <Card className="md:col-span-2">
+          {/* Timeline */}
+          <Card className="md:col-span-2 border-l-4 border-l-cyan-500 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base text-cyan-700">
                 {selectedStudent ? `${selectedStudent.full_name}'s Timeline` : "Select a student"}
               </CardTitle>
               <CardDescription>
@@ -188,10 +207,15 @@ export default function LifecycleTimeline() {
             </CardHeader>
             <CardContent>
               {!selectedStudent ? (
-                <p className="text-sm text-muted-foreground text-center py-16">No student selected yet.</p>
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="h-12 w-12 rounded-full bg-teal-50 flex items-center justify-center">
+                    <History className="h-6 w-6 text-teal-400" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No student selected yet.</p>
+                </div>
               ) : loadingEvents ? (
                 <div className="flex justify-center py-16">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-5 w-5 animate-spin text-cyan-500" />
                 </div>
               ) : events.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-16">
@@ -199,17 +223,17 @@ export default function LifecycleTimeline() {
                 </p>
               ) : (
                 <div className="relative pl-6">
-                  <div className="absolute left-[9px] top-2 bottom-2 w-px bg-border" />
+                  <div className="absolute left-[9px] top-2 bottom-2 w-px bg-gradient-to-b from-teal-300 via-cyan-300 to-transparent" />
                   <div className="space-y-6">
                     {events.map((e) => {
-                      const meta = EVENT_META[e.event_type] ?? { label: e.event_type, icon: History, color: "text-gray-600 bg-gray-50" };
+                      const meta = EVENT_META[e.event_type] ?? { label: e.event_type, icon: History, color: "text-gray-600 bg-gray-50", ring: "ring-gray-100" };
                       const Icon = meta.icon;
                       return (
                         <div key={e.id} className="relative flex gap-3">
-                          <div className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center ${meta.color}`}>
+                          <div className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center ring-4 ${meta.color} ${meta.ring}`}>
                             <Icon className="h-3 w-3" />
                           </div>
-                          <div className="ml-2">
+                          <div className="ml-2 rounded-xl bg-teal-50/40 border border-teal-100 px-4 py-3 flex-1">
                             <div className="text-sm font-medium">{meta.label}</div>
                             <div className="text-xs text-muted-foreground">
                               {new Date(e.event_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}

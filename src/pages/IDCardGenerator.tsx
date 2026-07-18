@@ -181,7 +181,7 @@ export default function IDCardGenerator() {
   .id-card.front { justify-content: flex-start; }
   .card-header { display: flex; flex-direction: column; align-items: center; margin-bottom: 3mm; }
   .school-logo { width: 10mm; height: 10mm; object-fit: contain; margin-bottom: 1mm; }
-  .school-name { font-size: 3mm; font-weight: 700; color: #1e3a8a; line-height: 1.2; }
+  .school-name { font-size: 3mm; font-weight: 700; color: #4338ca; line-height: 1.2; }
   .photo { width: 22mm; height: 22mm; border-radius: 50%; object-fit: cover; border: 1px solid #d1d5db; margin-bottom: 3mm; }
   .photo-placeholder { display: flex; align-items: center; justify-content: center; background: #e5e7eb; color: #6b7280; font-size: 8mm; font-weight: 600; }
   .student-name { font-size: 3.4mm; font-weight: 700; color: #111827; margin-bottom: 1mm; }
@@ -189,7 +189,7 @@ export default function IDCardGenerator() {
   .adm-no { font-size: 2.4mm; color: #6b7280; }
   .card-footer { margin-top: auto; font-size: 2mm; color: #9ca3af; padding-top: 2mm; border-top: 1px solid #e5e7eb; width: 100%; }
   .id-card.back { justify-content: flex-start; }
-  .back-title { font-size: 2.8mm; font-weight: 700; color: #1e3a8a; margin-bottom: 3mm; }
+  .back-title { font-size: 2.8mm; font-weight: 700; color: #4338ca; margin-bottom: 3mm; }
   .back-row { font-size: 2.4mm; color: #374151; margin-bottom: 1.5mm; width: 100%; text-align: left; }
   .back-label { font-weight: 600; color: #111827; }
   @media print {
@@ -221,78 +221,121 @@ export default function IDCardGenerator() {
     toast({ title: "ID cards generated", description: "Use Print → Save as PDF, or check your downloads." });
   }
 
+  if (loading) return (
+    <AppLayout>
+      <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
+        <Loader2 className="h-5 w-5 animate-spin text-indigo-500" /> Loading students...
+      </div>
+    </AppLayout>
+  );
+
   return (
     <AppLayout>
-      <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <IdCard className="h-6 w-6 text-muted-foreground" />
-          <div>
-            <h1 className="text-2xl font-semibold">Digital ID Cards</h1>
-            <p className="text-sm text-muted-foreground">Generate printable student ID cards with QR verification</p>
-          </div>
-        </div>
+      <div className="min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
+        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Select students</CardTitle>
-            <CardDescription>Filter by class, then choose who to generate cards for.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Select value={classFilter} onValueChange={(v) => { setClassFilter(v); setSelectedIds(new Set()); }}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="All classes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All classes</SelectItem>
-                  {uniqueClasses.map((c) => (
-                    <SelectItem key={c} value={c}>{classLabel(c)}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Button variant="outline" size="sm" onClick={toggleSelectAll} disabled={loading || filteredStudents.length === 0}>
-                {selectedIds.size === filteredStudents.length && filteredStudents.length > 0 ? "Deselect all" : "Select all"}
-              </Button>
-
-              <div className="ml-auto">
-                <Button onClick={generateCards} disabled={generating || selectedIds.size === 0}>
-                  {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Printer className="h-4 w-4 mr-2" />}
-                  Generate {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
-                </Button>
+        <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+          {/* Header */}
+          <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
+            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="relative flex items-center gap-3 md:gap-4">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                <IdCard className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Digital ID Cards</h1>
+                <p className="text-indigo-100 text-xs md:text-sm mt-0.5">Generate printable student ID cards with QR verification</p>
               </div>
             </div>
+          </div>
 
-            {loading ? (
-              <div className="flex justify-center py-10">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          {/* Filters + student list */}
+          <Card className="overflow-hidden border-indigo-100 shadow-sm">
+            <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500" />
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Select students</CardTitle>
+              <CardDescription>Filter by class, then choose who to generate cards for.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <Select value={classFilter} onValueChange={(v) => { setClassFilter(v); setSelectedIds(new Set()); }}>
+                  <SelectTrigger className="w-full sm:w-48 border-slate-200 focus:ring-indigo-400">
+                    <SelectValue placeholder="All classes" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All classes</SelectItem>
+                    {uniqueClasses.map((c) => (
+                      <SelectItem key={c} value={c}>{classLabel(c)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-indigo-200 text-indigo-700 hover:bg-indigo-50"
+                  onClick={toggleSelectAll}
+                  disabled={loading || filteredStudents.length === 0}
+                >
+                  {selectedIds.size === filteredStudents.length && filteredStudents.length > 0 ? "Deselect all" : "Select all"}
+                </Button>
+
+                <div className="ml-auto">
+                  <Button
+                    className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+                    onClick={generateCards}
+                    disabled={generating || selectedIds.size === 0}
+                  >
+                    {generating ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Printer className="h-4 w-4 mr-2" />}
+                    Generate {selectedIds.size > 0 ? `(${selectedIds.size})` : ""}
+                  </Button>
+                </div>
               </div>
-            ) : filteredStudents.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-10">No students found.</p>
-            ) : (
-              <div className="border rounded-lg divide-y max-h-[420px] overflow-y-auto">
-                {filteredStudents.map((s) => (
-                  <label key={s.id} className="flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/50">
-                    <Checkbox checked={selectedIds.has(s.id)} onCheckedChange={() => toggleSelected(s.id)} />
-                    {s.photo_url ? (
-                      <img src={s.photo_url} className="w-8 h-8 rounded-full object-cover" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-                        {s.full_name?.charAt(0) ?? "?"}
-                      </div>
-                    )}
-                    <div>
-                      <div className="text-sm font-medium">{s.full_name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {classLabel(s.class)}{s.section ? ` - ${s.section}` : ""}
-                      </div>
+
+              {filteredStudents.length === 0 ? (
+                <Card className="border-2 border-dashed border-indigo-100 bg-indigo-50/20">
+                  <CardContent className="py-16 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center mx-auto mb-3">
+                      <IdCard className="h-7 w-7 text-indigo-400" />
                     </div>
-                  </label>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    <p className="font-medium text-slate-800">No students found.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="border border-indigo-100 rounded-xl divide-y divide-indigo-50 max-h-[460px] overflow-y-auto">
+                  {filteredStudents.map((s) => (
+                    <label
+                      key={s.id}
+                      className="flex items-center gap-3 p-3 cursor-pointer hover:bg-indigo-50/30 transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedIds.has(s.id)}
+                        onCheckedChange={() => toggleSelected(s.id)}
+                        className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                      />
+                      {s.photo_url ? (
+                        <img src={s.photo_url} className="w-8 h-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          {s.full_name?.charAt(0) ?? "?"}
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-sm font-medium text-slate-800">{s.full_name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {classLabel(s.class)}{s.section ? ` - ${s.section}` : ""}
+                        </div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   );

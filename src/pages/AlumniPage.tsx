@@ -185,21 +185,27 @@ export default function AlumniPage() {
   return (
     <AppLayout>
       <div className="p-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <Users className="h-6 w-6" /> Alumni
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Track graduated students, their achievements, and contact details
-            </p>
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openAdd} className="gap-1">
-                <Plus className="h-4 w-4" /> Add Alumni
-              </Button>
-            </DialogTrigger>
+        <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg">
+          <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.15] blur-3xl" />
+          <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-teal-200 opacity-[0.12] blur-3xl" />
+          <div className="relative flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm text-white">
+                <Users className="h-5 w-5" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Alumni</h1>
+                <p className="text-emerald-50 text-xs md:text-sm mt-0.5">
+                  Track graduated students, their achievements, and contact details
+                </p>
+              </div>
+            </div>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openAdd} className="gap-1 bg-white text-emerald-700 hover:bg-emerald-50">
+                  <Plus className="h-4 w-4" /> Add Alumni
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingId ? "Edit Alumni Record" : "Add Alumni"}</DialogTitle>
@@ -268,15 +274,16 @@ export default function AlumniPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave} disabled={saving}>
+                <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editingId ? "Save Changes" : "Add Alumni"}
                 </Button>
               </DialogFooter>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         </div>
 
-        <Card>
+        <Card className="border-2 border-emerald-100 rounded-2xl">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-base">All Alumni ({filteredAlumni.length})</CardTitle>

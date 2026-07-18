@@ -33,7 +33,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line,
 } from "recharts";
-import { BarChart3, TrendingUp, TrendingDown, Sparkles, Target, Settings2 } from "lucide-react";
+import { BarChart3, TrendingUp, TrendingDown, Sparkles, Target, Settings2, Users } from "lucide-react";
 import { format, subMonths, startOfMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -338,7 +338,7 @@ const last6MonthsChart = useMemo(() => {
       <div className="space-y-6 pb-10">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-sm shadow-emerald-200">
               <BarChart3 className="h-5 w-5" />
             </div>
             <div>
@@ -387,9 +387,10 @@ const last6MonthsChart = useMemo(() => {
           <BenchmarkCard label="Dropout Risk" value={avgDropoutRisk} target={targets.dropout_risk} lowerIsBetter />
         </div>
 
-        <Card className="border border-border/60">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-semibold mb-3">School Target vs Actual</h3>
+        <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
+          <CardContent className="p-5 relative">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><Target className="h-3.5 w-3.5" /></div>School Target vs Actual</h3>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b">
@@ -411,9 +412,10 @@ const last6MonthsChart = useMemo(() => {
           <TrendCard label="Assessment Average" last={trend.assessment.last} current={trend.assessment.current} />
         </div>
 
-        <Card className="border border-border/60">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-semibold mb-3">Grade-wise Benchmark</h3>
+        <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
+          <CardContent className="p-5 relative">
+            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><BarChart3 className="h-3.5 w-3.5" /></div>Grade-wise Benchmark</h3>
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs text-muted-foreground border-b">
@@ -433,9 +435,10 @@ const last6MonthsChart = useMemo(() => {
           </CardContent>
         </Card>
 
-        <Card className="border border-border/60">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-semibold mb-1">Teacher Performance Benchmark</h3>
+        <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
+          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
+          <CardContent className="p-5 relative">
+            <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><Users className="h-3.5 w-3.5" /></div>Teacher Performance Benchmark</h3>
             <p className="text-xs text-muted-foreground mb-3">A comparison to spot where support may help — not a ranking.</p>
             <table className="w-full text-sm">
               <thead>
@@ -472,8 +475,9 @@ function ScoreItem({ label, value }: { label: string; value: number }) {
 function BenchmarkCard({ label, value, target, lowerIsBetter }: { label: string; value: number; target: number; lowerIsBetter?: boolean }) {
   const onTarget = lowerIsBetter ? value <= target : value >= target;
   return (
-    <Card className="border border-border/60">
-      <CardContent className="p-4">
+    <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl transition-transform duration-500 group-hover:scale-125" />
+      <CardContent className="p-4 relative">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         <p className={cn("text-2xl font-bold", onTarget ? "text-emerald-600" : "text-amber-600")}>{value}%</p>
         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
@@ -504,8 +508,9 @@ function TrendCard({ label, last, current }: { label: string; last: number; curr
   const delta = current - last;
   const up = delta >= 0;
   return (
-    <Card className="border border-border/60">
-      <CardContent className="p-4">
+    <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+      <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl transition-transform duration-500 group-hover:scale-125" />
+      <CardContent className="p-4 relative">
         <p className="text-xs text-muted-foreground mb-2">{label}</p>
         <div className="flex items-end justify-between">
           <div>
