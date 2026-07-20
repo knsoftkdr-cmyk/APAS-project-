@@ -299,6 +299,22 @@ export default function Worksheets() {
       toast.error(`File is too large (${(file.size / (1024 * 1024)).toFixed(1)}MB). Max allowed size is 50MB.`);
       return;
     }
+    const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx", ".jpg", ".jpeg", ".png", ".tiff", ".tif"];
+    const ALLOWED_MIME_TYPES = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/png",
+      "image/tiff",
+    ];
+    const fileExt = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    const isAllowedExt = ALLOWED_EXTENSIONS.includes(fileExt);
+    const isAllowedMime = !file.type || ALLOWED_MIME_TYPES.includes(file.type);
+    if (!isAllowedExt || !isAllowedMime) {
+      toast.error("Unsupported file type. Please upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or TIFF file.");
+      return;
+    }
     setUploadingId(ws.id);
     try {
       const existing = getSubmissionFor(ws.worksheets?.id);
@@ -490,6 +506,7 @@ export default function Worksheets() {
                       <input
                         type="file"
                         id={`answer-file-${ws.id}`}
+                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.tiff,.tif"
                         className="hidden"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
