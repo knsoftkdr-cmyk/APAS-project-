@@ -127,16 +127,42 @@ async function downloadWorksheetImage(ws: WorksheetAssignment) {
   try {
     const topic = ws.worksheets?.topic || "Worksheet";
     const ext = imageUrl.split(".").pop()?.split("?")[0] ?? "jpg";
+    const filename = `Illustrated-Worksheet-${topic}.${ext}`;
+
     const response = await fetch(imageUrl);
     const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Illustrated-Worksheet-${topic}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    if (!Capacitor.isNativePlatform()) {
+      // Browser: normal anchor-download flow
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Image downloaded!");
+    } else {
+      // Native app: convert blob -> base64, then write via Capacitor Filesystem
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]); // strip the data: prefix
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      toast.success("Image saved successfully!");
+    }
   } catch (err) {
     console.error("Failed to download image", err);
     toast.error("Failed to download image");
