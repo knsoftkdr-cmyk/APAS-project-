@@ -240,8 +240,11 @@ interface AppSidebarProps {
 /**
  * Decorative wavy blue→green background used behind the floating white
  * sidebar card. Purely visual — no functional/interactive elements live here.
+ * Skipped in the collapsed rail: at that width there's almost no white card
+ * left to peek through, so it just reads as noisy stripes instead of a wave.
  */
-function SidebarWaveBackground() {
+function SidebarWaveBackground({ collapsed }: { collapsed?: boolean }) {
+  if (collapsed) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-[#1E3A8A] via-[#2E6B5E] to-[#4CAF50]" />
@@ -316,19 +319,30 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           collapsed ? "w-[var(--sidebar-collapsed)]" : "w-[var(--sidebar-width)]"
         )}
       >
-        <SidebarWaveBackground />
+        <SidebarWaveBackground collapsed={collapsed} />
 
-        {/* Floating white content card — same structure/order/logic as before, just inset over the wave */}
-        <div className="relative z-10 m-2.5 flex flex-1 flex-col overflow-hidden rounded-[26px] bg-white shadow-xl">
-          <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
+        {/* Floating white content card when expanded; plain full-bleed white rail when collapsed
+            (the margin/rounded-card treatment has no room to breathe at collapsed width) */}
+        <div
+          className={cn(
+            "relative z-10 flex flex-1 flex-col overflow-hidden bg-white",
+            collapsed ? "" : "m-2.5 rounded-[26px] shadow-xl"
+          )}
+        >
+          <div
+            className={cn(
+              "flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border",
+              collapsed ? "px-2" : "px-4"
+            )}
+          >
             {collapsed ? (
-              <img src={apasLogo} alt="APAS" className="h-12 w-12 object-contain" />
+              <img src={apasLogo} alt="APAS" className="h-10 w-10 object-contain" />
             ) : (
               <img src={apasLogo} alt="APAS" className="h-20 w-auto object-contain" />
             )}
           </div>
 
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
+          <nav className={cn("flex-1 overflow-y-auto py-4 scrollbar-hide", collapsed ? "px-2 space-y-2" : "px-3 space-y-1")}>
             {visibleItems.map((item) => {
               const isActive = location.pathname === item.path;
               const isSubActive =
@@ -340,14 +354,18 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   <NavLink
                     to={item.path}
                     data-tour-id={item.tourId}
+                    title={collapsed ? getItemLabel(item) : undefined}
                     className={cn(
-                      "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                      "group relative flex items-center transition-all duration-300 ease-out",
+                      collapsed
+                        ? "mx-auto h-11 w-11 justify-center rounded-xl"
+                        : "gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium",
                       isActive && !isSubActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
-                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:translate-x-1"
+                        ? cn("bg-sidebar-primary text-sidebar-primary-foreground shadow-md", !collapsed && "scale-[1.02]")
+                        : cn("text-sidebar-foreground hover:bg-sidebar-hover", !collapsed && "hover:translate-x-1")
                     )}
                   >
-                    {isActive && !isSubActive && (
+                    {isActive && !isSubActive && !collapsed && (
                       <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-r-full animate-[scale-in_0.2s_ease-out]" />
                     )}
                     <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110 text-sidebar-primary-foreground" : "text-sidebar-icon group-hover:scale-110")} />
@@ -374,9 +392,14 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             })}
           </nav>
 
-          <div className="border-t border-sidebar-border p-3 space-y-2">
+          <div className={cn("border-t border-sidebar-border space-y-2", collapsed ? "px-2 py-3" : "p-3")}>
             {profile && (
-              <div className="flex items-center gap-3 rounded-2xl border border-sidebar-border bg-sidebar-hover/60 px-3 py-2">
+              <div
+                className={cn(
+                  "flex items-center rounded-2xl border border-sidebar-border bg-sidebar-hover/60",
+                  collapsed ? "justify-center p-2" : "gap-3 px-3 py-2"
+                )}
+              >
                 <div className="relative shrink-0">
                   {profile.avatar_url ? (
                     <img src={profile.avatar_url} alt={profile.full_name || "User"} className="h-8 w-8 rounded-full object-cover" />
@@ -402,7 +425,11 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
             <button
               onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-2xl border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-accent transition-colors hover:bg-sidebar-hover"
+              title={collapsed ? "Logout" : undefined}
+              className={cn(
+                "flex w-full items-center rounded-2xl border border-sidebar-border text-sm font-medium text-sidebar-accent transition-colors hover:bg-sidebar-hover",
+                collapsed ? "justify-center p-2" : "gap-3 px-3 py-2"
+              )}
             >
               <LogOut className="h-4 w-4 shrink-0" />
               {!collapsed && <span>Logout</span>}
