@@ -237,6 +237,32 @@ interface AppSidebarProps {
   onMobileClose: () => void;
 }
 
+/**
+ * Decorative wavy blue→green background used behind the floating white
+ * sidebar card. Purely visual — no functional/interactive elements live here.
+ */
+function SidebarWaveBackground() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-[#1E3A8A] via-[#2E6B5E] to-[#4CAF50]" />
+      <svg
+        className="absolute inset-0 h-full w-full opacity-70"
+        viewBox="0 0 200 900"
+        preserveAspectRatio="none"
+      >
+        <path
+          d="M0,0 C90,60 20,140 100,190 C180,240 10,320 90,390 C170,460 20,540 100,610 C180,680 10,760 90,830 C140,865 170,885 200,900 L200,0 Z"
+          fill="rgba(255,255,255,0.08)"
+        />
+        <path
+          d="M200,0 C120,90 190,170 100,230 C10,290 170,370 90,450 C10,530 190,610 100,690 C40,750 150,830 200,880 L200,0 Z"
+          fill="rgba(0,0,0,0.06)"
+        />
+      </svg>
+    </div>
+  );
+}
+
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const { profile, signOut } = useAuth();
   const { can, loading: permsLoading } = usePermissions();
@@ -286,157 +312,169 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 hidden h-screen flex-col bg-sidebar transition-all duration-300 md:flex",
+          "fixed left-0 top-0 z-40 hidden h-screen flex-col transition-all duration-300 md:flex",
           collapsed ? "w-[var(--sidebar-collapsed)]" : "w-[var(--sidebar-width)]"
         )}
       >
-        <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
-          {collapsed ? (
-            <img src={apasLogo} alt="APAS" className="h-12 w-12 object-contain" />
-          ) : (
-            <img src={apasLogo} alt="APAS" className="h-20 w-auto object-contain" />
-          )}
-        </div>
+        <SidebarWaveBackground />
 
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
-          {visibleItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const isSubActive =
-              item.subItem &&
-              location.pathname === "/ai-tutor" &&
-              new URLSearchParams(location.search).get("mode") === "career";
-            return (
-              <div key={item.path}>
-                <NavLink
-                  to={item.path}
-                  data-tour-id={item.tourId}
-                  className={cn(
-                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
-                    isActive && !isSubActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
-                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1 hover:shadow-sm"
-                  )}
-                >
-                  {isActive && !isSubActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full animate-[scale-in_0.2s_ease-out]" />
-                  )}
-                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "text-sidebar-icon group-hover:scale-110 group-hover:rotate-3")} />
-                  {!collapsed && (
-                    <span className="transition-all duration-200">{getItemLabel(item)}</span>
-                  )}
-                </NavLink>
-                {item.subItem && !collapsed && isActive && (
+        {/* Floating white content card — same structure/order/logic as before, just inset over the wave */}
+        <div className="relative z-10 m-2.5 flex flex-1 flex-col overflow-hidden rounded-[26px] bg-white shadow-xl">
+          <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
+            {collapsed ? (
+              <img src={apasLogo} alt="APAS" className="h-12 w-12 object-contain" />
+            ) : (
+              <img src={apasLogo} alt="APAS" className="h-20 w-auto object-contain" />
+            )}
+          </div>
+
+          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
+            {visibleItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              const isSubActive =
+                item.subItem &&
+                location.pathname === "/ai-tutor" &&
+                new URLSearchParams(location.search).get("mode") === "career";
+              return (
+                <div key={item.path}>
                   <NavLink
-                    to={item.subItem.path}
+                    to={item.path}
+                    data-tour-id={item.tourId}
                     className={cn(
-                      "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
-                      isSubActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
+                      "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                      isActive && !isSubActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
+                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:translate-x-1"
                     )}
                   >
-                    <item.subItem.icon className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-300", isSubActive ? "scale-110" : "group-hover:scale-110")} />
-                    <span>{item.subItem.title}</span>
+                    {isActive && !isSubActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-r-full animate-[scale-in_0.2s_ease-out]" />
+                    )}
+                    <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110 text-sidebar-primary-foreground" : "text-sidebar-icon group-hover:scale-110")} />
+                    {!collapsed && (
+                      <span className="transition-all duration-200">{getItemLabel(item)}</span>
+                    )}
                   </NavLink>
+                  {item.subItem && !collapsed && isActive && (
+                    <NavLink
+                      to={item.subItem.path}
+                      className={cn(
+                        "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                        isSubActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:translate-x-1"
+                      )}
+                    >
+                      <item.subItem.icon className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-300", isSubActive ? "scale-110" : "group-hover:scale-110")} />
+                      <span>{item.subItem.title}</span>
+                    </NavLink>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+
+          <div className="border-t border-sidebar-border p-3 space-y-2">
+            {profile && (
+              <div className="flex items-center gap-3 rounded-2xl border border-sidebar-border bg-sidebar-hover/60 px-3 py-2">
+                <div className="relative shrink-0">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.full_name || "User"} className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+                      {(profile.full_name || "U").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sidebar-accent" />
+                </div>
+                {!collapsed && (
+                  <div className="overflow-hidden">
+                    <p className="truncate text-sm font-medium text-sidebar-foreground">
+                      {profile.full_name || "User"}
+                    </p>
+                    <p className="truncate text-[11px] capitalize text-sidebar-muted">
+                      {profile.role === "admin" || profile.role === "principal" ? "Principal" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
+                    </p>
+                  </div>
                 )}
               </div>
-            );
-          })}
-        </nav>
+            )}
 
-        <div className="border-t border-sidebar-border p-3 space-y-2">
-          {profile && (
-            <div className="flex items-center gap-3 px-2 py-1">
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt={profile.full_name || "User"} className="h-8 w-8 shrink-0 rounded-full object-cover" />
-              ) : (
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
-                  {(profile.full_name || "U").charAt(0).toUpperCase()}
-                </div>
-              )}
-              {!collapsed && (
-                <div className="overflow-hidden">
-                  <p className="truncate text-sm font-medium text-sidebar-accent-foreground">
-                    {profile.full_name || "User"}
-                  </p>
-                  <p className="truncate text-[11px] capitalize text-sidebar-foreground">
-                    {profile.role === "admin" || profile.role === "principal" ? "Principal" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center gap-3 rounded-2xl border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-accent transition-colors hover:bg-sidebar-hover"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>Logout</span>}
+            </button>
 
-          <button
-            onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {!collapsed && <span>Logout</span>}
-          </button>
-
-          <button
-            onClick={onToggle}
-            className="flex w-full items-center justify-center rounded-xl p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-hover"
-          >
-            <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
-          </button>
+            <button
+              onClick={onToggle}
+              className="flex w-full items-center justify-center rounded-xl p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-hover"
+            >
+              <ChevronLeft className={cn("h-4 w-4 transition-transform", collapsed && "rotate-180")} />
+            </button>
+          </div>
         </div>
       </aside>
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen w-[var(--sidebar-width)] flex-col bg-sidebar transition-transform duration-300 md:hidden",
+          "fixed left-0 top-0 z-40 flex h-screen w-[var(--sidebar-width)] flex-col transition-transform duration-300 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
-          <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
-        </div>
-        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
-          {visibleItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            const isSubActive =
-              item.subItem &&
-              location.pathname === "/ai-tutor" &&
-              new URLSearchParams(location.search).get("mode") === "career";
-            return (
-              <div key={item.path}>
-                <NavLink
-                  to={item.path}
-                  onClick={onMobileClose}
-                  className={cn(
-                    "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
-                    isActive && !isSubActive
-                      ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
-                      : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
-                  )}
-                >
-                  {isActive && !isSubActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-3/5 bg-sidebar-primary-foreground rounded-r-full" />
-                  )}
-                  <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110" : "text-sidebar-icon group-hover:scale-110 group-hover:rotate-3")} />
-                  <span>{getItemLabel(item)}</span>
-                </NavLink>
-                {item.subItem && isActive && (
+        <SidebarWaveBackground />
+
+        <div className="relative z-10 m-2.5 flex flex-1 flex-col overflow-hidden rounded-[26px] bg-white shadow-xl">
+          <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
+            <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
+          </div>
+          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
+            {visibleItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              const isSubActive =
+                item.subItem &&
+                location.pathname === "/ai-tutor" &&
+                new URLSearchParams(location.search).get("mode") === "career";
+              return (
+                <div key={item.path}>
                   <NavLink
-                    to={item.subItem.path}
+                    to={item.path}
                     onClick={onMobileClose}
                     className={cn(
-                      "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
-                      isSubActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:text-sidebar-accent-foreground hover:translate-x-1"
+                      "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
+                      isActive && !isSubActive
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
+                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:translate-x-1"
                     )}
                   >
-                    <item.subItem.icon className="h-3.5 w-3.5 shrink-0" />
-                    <span>{item.subItem.title}</span>
+                    {isActive && !isSubActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-r-full" />
+                    )}
+                    <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110 text-sidebar-primary-foreground" : "text-sidebar-icon group-hover:scale-110")} />
+                    <span>{getItemLabel(item)}</span>
                   </NavLink>
-                )}
-              </div>
-            );
-          })}
-        </nav>
+                  {item.subItem && isActive && (
+                    <NavLink
+                      to={item.subItem.path}
+                      onClick={onMobileClose}
+                      className={cn(
+                        "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                        isSubActive
+                          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:translate-x-1"
+                      )}
+                    >
+                      <item.subItem.icon className="h-3.5 w-3.5 shrink-0" />
+                      <span>{item.subItem.title}</span>
+                    </NavLink>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </div>
       </aside>
 
       {profile?.role !== "parent" && (

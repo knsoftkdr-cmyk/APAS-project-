@@ -59,17 +59,18 @@
     --sidebar-collapsed: 64px;
     --header-height: 80px;
 
-    --sidebar-background: 222 45% 9%;
-    --sidebar-foreground: 215 16% 47%;
-    --sidebar-primary: 217 91% 53%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 30% 25%;
+    --sidebar-primary: 224 64% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 35% 14%;
+    --sidebar-accent: 122 39% 49%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 222 40% 14%;
-    --sidebar-ring: 217 91% 53%;
-    --sidebar-muted: 215 16% 47%;
-    --sidebar-hover: 222 35% 17%;
-    --sidebar-icon: 142 30% 45%;
+    --sidebar-border: 210 20% 91%;
+    --sidebar-ring: 224 64% 33%;
+    --sidebar-muted: 220 15% 55%;
+    --sidebar-hover: 213 100% 96%;
+    --sidebar-icon: 224 64% 33%;
+    --sidebar-danger: 1 77% 55%;
   }
 
   .dark {
@@ -98,16 +99,18 @@
     --input: 217 33% 17%;
     --ring: 217 91% 53%;
 
-    --sidebar-background: 216 39% 10%;
-    --sidebar-foreground: 210 20% 85%;
-    --sidebar-primary: 217 91% 53%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 30% 25%;
+    --sidebar-primary: 224 64% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 216 39% 16%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 216 39% 14%;
-    --sidebar-ring: 217 91% 53%;
-    --sidebar-muted: 216 30% 22%;
-    --sidebar-icon: 142 30% 45%;
+    --sidebar-accent: 122 39% 49%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 210 20% 91%;
+    --sidebar-ring: 224 64% 33%;
+    --sidebar-muted: 220 15% 55%;
+    --sidebar-hover: 213 100% 96%;
+    --sidebar-icon: 224 64% 33%;
+    --sidebar-danger: 1 77% 55%;
   }
 }
 
@@ -136,6 +139,8 @@
     animation: bounceSlow 3s ease-in-out infinite;
   }
 }
+
+/* ── Sidebar (APAS blue/green palette) ── */
 
 @keyframes fadeInUp {
   from {
