@@ -319,12 +319,7 @@ const TeacherHome = () => {
         name={profile?.full_name || "Teacher"}
         dateLabel={today}
         description="Adaptive Personalised Assessment System - empowering you with AI-driven diagnostics, personalised lesson plans, and actionable learning analytics."
-        actions={
-          <>
-            <HeroCalendarButton />
-            {profile?.role !== "hod" && <HeroPrimaryButton to="/curative" label="Generate Lesson" />}
-          </>
-        }
+        actions={<HeroCalendarButton />}
       />
 
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
@@ -520,7 +515,7 @@ const AdminHome = () => {
       </div>
 
       {/* At-Risk Students Widget */}
-      {atRiskStudents && atRiskStudents.length > 0 && (
+      {profile?.role !== "school_admin" && atRiskStudents && atRiskStudents.length > 0 && (
         <div className="mb-10">
           <h2 className="text-xl font-bold text-foreground mb-1 flex items-center gap-2">
             <AlertTriangle className="h-8 w-8 text-red-600 text-destructive" />
@@ -593,10 +588,6 @@ const AdminHome = () => {
         </Card>
       </div>
 
-      {/* Syllabus Tracker */}
-      <div className="mb-10">
-        <SyllabusTracker />
-      </div>
 
       {/* What You Can Do */}
       <div className="mb-10">
@@ -702,14 +693,11 @@ const Dashboard = () => {
   if (profile?.role === "knsoft_admin") {
     return <Navigate to="/knsoft-admin" replace />;
   }
-  if (profile?.role === "school_admin") {
-    return <Navigate to="/super-admin" replace />;
-  }
   if (profile?.role === "student") {
     return <StudentDashboard />;
   }
 
-  if (profile?.role === "admin" || profile?.role === "principal") {
+  if (profile?.role === "admin" || profile?.role === "principal" || profile?.role === "school_admin") {
     return <AdminHome />;
   }
 

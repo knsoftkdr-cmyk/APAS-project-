@@ -361,17 +361,36 @@ try {
     return (
       <div className="space-y-4">
         <Tabs value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
-  <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1">
-    <TabsTrigger value="all" className="gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-      All <Badge className="ml-1 bg-white/20 text-current border-none">{assignments.length}</Badge>
+  <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 gap-1">
+    <TabsTrigger
+      value="all"
+      className="flex items-center justify-center gap-1 px-1 sm:px-3 text-xs sm:text-sm data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+    >
+      <span>All</span>
+      <Badge className="px-1.5 py-0 text-[10px] sm:text-xs bg-white/20 text-current border-none shrink-0">
+        {assignments.length}
+      </Badge>
     </TabsTrigger>
-    <TabsTrigger value="pending" className="gap-2 data-[state=active]:bg-amber-500 data-[state=active]:text-white">
-      <Clock className="h-3.5 w-3.5" /> Pending
-      <Badge className="ml-1 bg-white/20 text-current border-none">{pendingCount}</Badge>
+    <TabsTrigger
+      value="pending"
+      className="flex items-center justify-center gap-1 px-1 sm:px-3 text-xs sm:text-sm data-[state=active]:bg-amber-500 data-[state=active]:text-white"
+    >
+      <Clock className="h-3 w-3 shrink-0" />
+      <span className="truncate">Pending</span>
+      <Badge className="px-1.5 py-0 text-[10px] sm:text-xs bg-white/20 text-current border-none shrink-0">
+        {pendingCount}
+      </Badge>
     </TabsTrigger>
-    <TabsTrigger value="submitted" className="gap-2 data-[state=active]:bg-emerald-500 data-[state=active]:text-white">
-      <CheckCircle className="h-3.5 w-3.5" /> Submitted
-      <Badge className="ml-1 bg-white/20 text-current border-none">{submittedCount}</Badge>
+    <TabsTrigger
+      value="submitted"
+      className="flex items-center justify-center gap-1 px-1 sm:px-3 text-xs sm:text-sm data-[state=active]:bg-emerald-500 data-[state=active]:text-white"
+    >
+      <CheckCircle className="h-3 w-3 shrink-0" />
+      <span className="hidden sm:inline">Submitted</span>
+      <span className="inline sm:hidden">Done</span>
+      <Badge className="px-1.5 py-0 text-[10px] sm:text-xs bg-white/20 text-current border-none shrink-0">
+        {submittedCount}
+      </Badge>
     </TabsTrigger>
   </TabsList>
 </Tabs>
@@ -417,57 +436,63 @@ try {
 >
   <div className={`h-1.5 bg-gradient-to-r ${isSubmitted ? 'from-emerald-400 to-teal-400' : 'from-rose-400 to-pink-400'}`} />
   <CardHeader className="pb-3">
-    <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
-      <div className="flex items-start gap-3 min-w-0 flex-1">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 ${
-          isSubmitted ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-sm shadow-emerald-200' : 'bg-gradient-to-br from-rose-500 to-pink-500 shadow-sm shadow-rose-200'
-        }`}>
-          <BookOpen className="h-5 w-5 text-white" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <CardTitle className="text-base text-slate-800 truncate">
+    <div className="flex flex-col gap-2.5">
+      {/* Top row: icon + title + status badge (all on one line, title wraps instead of truncating) */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2.5 min-w-0 flex-1">
+          <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105 ${
+            isSubmitted ? 'bg-gradient-to-br from-emerald-500 to-teal-500 shadow-sm shadow-emerald-200' : 'bg-gradient-to-br from-rose-500 to-pink-500 shadow-sm shadow-rose-200'
+          }`}>
+            <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+          </div>
+          <CardTitle className="text-sm sm:text-base text-slate-800 leading-snug break-words">
             {assignment.period_title || assignment.title || "Homework"}
           </CardTitle>
-          <div className="flex flex-wrap gap-1.5 mt-2">
-            {assignment.subject && (
-              <Badge className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-100">
-                {assignment.subject}
-              </Badge>
-            )}
-            {assignment.topic && (
-              <Badge variant="outline" className="text-xs border-slate-200 text-slate-600">
-                {assignment.topic}
-              </Badge>
-            )}
-            {questionsArray.length > 0 && (
-              <Badge variant="outline" className="text-xs border-slate-200 text-slate-600">
-                {questionsArray.length} Questions
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
-            {assignment.period_number && (
-              <span className="flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                Period {assignment.period_number}
-              </span>
-            )}
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {new Date(assignment.created_at).toLocaleDateString()}
-            </span>
-          </div>
         </div>
+
+        {isSubmitted ? (
+          <Badge className="bg-emerald-500 text-white hover:bg-emerald-500 gap-1 whitespace-nowrap shrink-0 text-[10px] sm:text-xs px-2 py-1">
+            <CheckCircle className="h-3 w-3" /> Submitted
+          </Badge>
+        ) : (
+          <Badge className="bg-amber-500 text-white hover:bg-amber-500 gap-1 whitespace-nowrap shrink-0 text-[10px] sm:text-xs px-2 py-1">
+            <Clock className="h-3 w-3" /> Pending
+          </Badge>
+        )}
       </div>
-      {isSubmitted ? (
-        <Badge className="bg-emerald-500 text-white hover:bg-emerald-500 gap-1 whitespace-nowrap shrink-0">
-          <CheckCircle className="h-3 w-3" /> Submitted
-        </Badge>
-      ) : (
-        <Badge className="bg-amber-500 text-white hover:bg-amber-500 gap-1 whitespace-nowrap shrink-0">
-          <Clock className="h-3 w-3" /> Pending
-        </Badge>
-      )}
+
+      {/* Pills row */}
+      <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-[52px]">
+        {assignment.subject && (
+          <Badge className="text-[10px] sm:text-xs bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-100">
+            {assignment.subject}
+          </Badge>
+        )}
+        {assignment.topic && (
+          <Badge variant="outline" className="text-[10px] sm:text-xs border-slate-200 text-slate-600">
+            {assignment.topic}
+          </Badge>
+        )}
+        {questionsArray.length > 0 && (
+          <Badge variant="outline" className="text-[10px] sm:text-xs border-slate-200 text-slate-600">
+            {questionsArray.length} Questions
+          </Badge>
+        )}
+      </div>
+
+      {/* Period / date row */}
+      <div className="flex items-center gap-3 text-[11px] sm:text-xs text-muted-foreground flex-wrap pl-0 sm:pl-[52px]">
+        {assignment.period_number && (
+          <span className="flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            Period {assignment.period_number}
+          </span>
+        )}
+        <span className="flex items-center gap-1">
+          <Clock className="h-3 w-3" />
+          {new Date(assignment.created_at).toLocaleDateString()}
+        </span>
+      </div>
     </div>
   </CardHeader>
 

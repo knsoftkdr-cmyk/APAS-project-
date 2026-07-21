@@ -1238,9 +1238,8 @@ const Curative = () => {
 
       let dupQuery = supabase
         .from("lessons")
-        .select("id, title, lesson_content, created_at")
+        .select("id, title, lesson_content, created_at, section")
         .eq("class_level", selectedClass.match(/^\d+$/) ? `Class ${selectedClass}` : selectedClass.charAt(0).toUpperCase() + selectedClass.slice(1))
-        .eq("section", selectedSection)
         .eq("subject", subjectName)
         .eq("curriculum", selectedCurriculum || "")
         .eq("periods_count", periods);
@@ -1266,8 +1265,11 @@ const Curative = () => {
             { role: "assistant", content: existingLesson.lesson_content },
           ]);
           setHasGeneratedContent(true);
+          const sourceSection = existingLesson.section && existingLesson.section !== selectedSection
+            ? ` (originally generated for Section ${existingLesson.section})`
+            : "";
           toast.success(
-            `Loaded existing lesson plan for ${getClassLabel(selectedClass)}-${selectedSection} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""}. Change topic, periods, or curriculum to generate a new one.`,
+            `Loaded existing lesson plan for ${getClassLabel(selectedClass)} • ${subjectName}${topicTrimmed ? ` • "${topicTrimmed}"` : ""}${sourceSection}. Change topic, periods, or curriculum to generate a new one.`,
             { duration: 6000 }
           );
         } else {
