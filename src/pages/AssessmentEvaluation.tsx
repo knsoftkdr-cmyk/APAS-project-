@@ -346,6 +346,15 @@ export default function AssessmentEvaluation() {
     }
     setUploading(true);
     try {
+      for (const file of pendingFiles) {
+        const clarity = await assessFileClarity(file);
+        if (!clarity.ok) {
+          toast.error(`${file.name}: ${clarity.reason || "This file looks unclear. Please upload a clearer copy."}`);
+          setUploading(false);
+          return;
+        }
+      }
+
       const { data: userData, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userData?.user) throw new Error("Not authenticated");
       const teacherId = userData.user.id;

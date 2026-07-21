@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { assessFileClarity } from "@/lib/fileClarity";
 interface WorksheetAssignment {
   id: string;
   worksheet_id: string;
@@ -341,6 +342,12 @@ export default function Worksheets() {
       toast.error("Unsupported file type. Please upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or TIFF file.");
       return;
     }
+    const clarity = await assessFileClarity(file);
+    if (!clarity.ok) {
+      toast.error(clarity.reason || "This file looks unclear. Please upload a clearer copy.");
+      return;
+    }
+
     setUploadingId(ws.id);
     try {
       const existing = getSubmissionFor(ws.worksheets?.id);
