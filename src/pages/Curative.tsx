@@ -3601,17 +3601,41 @@ if (!Capacitor.isNativePlatform()) {
       toast.info("Downloading illustrated worksheet...");
       const ext = ws.image_url.split(".").pop()?.split("?")[0] ?? "jpg";
       const filename = `illustrated-worksheet-${ws.subject}-${ws.class_level}-${ws.section}.${ext}`;
+
       const response = await fetch(ws.image_url);
       const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Illustrated worksheet downloaded!");
+
+      if (!Capacitor.isNativePlatform()) {
+        // Browser: normal anchor-download flow
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        toast.success("Illustrated worksheet downloaded!");
+      } else {
+        // Native app: convert blob -> base64, then write via Capacitor Filesystem
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const result = reader.result as string;
+            resolve(result.split(",")[1]); // strip the data: prefix
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        await Filesystem.writeFile({
+          path: filename,
+          data: base64,
+          directory: Directory.Documents,
+        });
+
+        toast.success("Illustrated worksheet saved successfully!");
+      }
     } catch (err: any) {
       toast.error("Failed to download: " + err.message);
     }

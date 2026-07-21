@@ -247,8 +247,8 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-  <DrawerContent className="h-full w-full sm:max-w-lg ml-auto rounded-none sm:rounded-l-2xl p-0 flex flex-col">
-    <div className="w-full flex-1 overflow-y-auto pb-4">
+  <DrawerContent className="h-[100dvh] w-full sm:max-w-lg ml-auto rounded-none sm:rounded-l-2xl p-0 flex flex-col">
+    <div className="w-full flex-1 min-h-0 overflow-y-auto pb-4">
     <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 md:px-6 pt-5 pb-4 sticky top-0 z-10 sm:rounded-tl-2xl">
       <DrawerHeader className="p-0">
         <DrawerTitle className="text-white text-lg md:text-xl">
@@ -261,23 +261,25 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
       </DrawerHeader>
 
       {/* Student — always read-only, now inside the colored header */}
-      <div className="mt-3 flex items-center gap-2 flex-wrap bg-white/10 rounded-xl px-3 py-2.5">
-        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 text-white text-xs font-bold">
-          {student.full_name.charAt(0)}
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-white truncate">{student.full_name}</p>
-          <span className="text-xs text-white/70">{student.class} - {student.section}</span>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 bg-white/10 rounded-xl px-3 py-2.5">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0 text-white text-xs font-bold">
+            {student.full_name.charAt(0)}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-white truncate">{student.full_name}</p>
+            <span className="text-xs text-white/70">{student.class} - {student.section}</span>
+          </div>
         </div>
         {riskLevel && (
-          <Badge className={`ml-auto ${riskLevel === "high" ? "bg-red-500" : riskLevel === "medium" ? "bg-amber-500" : "bg-green-500"} text-white hover:opacity-90 shrink-0`}>
+          <Badge className={`${riskLevel === "high" ? "bg-red-500" : riskLevel === "medium" ? "bg-amber-500" : "bg-green-500"} text-white hover:opacity-90 shrink-0`}>
             {riskLevel} risk
           </Badge>
         )}
       </div>
     </div>
 
-    <div className="space-y-4 px-4 md:px-6 pt-4">
+    <div className="space-y-4 px-4 md:px-6 py-4 pb-8">
 
             {/* ─── HISTORY LIST ─── */}
             {view === "list" && (
@@ -482,18 +484,18 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
   </>
 ) : (
                   <>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Reason</label>
+                    <div className="rounded-xl border border-cyan-100 bg-cyan-50/30 p-3.5">
+                      <label className="text-xs font-semibold text-cyan-700 uppercase tracking-wide">Reason</label>
                       <Textarea
                         placeholder="e.g. Poor attendance, low homework completion, behaviour concerns..."
                         value={reason}
                         onChange={(e) => setReason(e.target.value)}
                         rows={2}
-                        className="mt-1"
+                        className="mt-1.5 bg-white"
                       />
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label className="text-xs font-medium text-muted-foreground">
                           Tier
@@ -522,13 +524,13 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                       </div>
                     </div>
 
-                    <div data-vaul-no-drag>
-                      <label className="text-xs font-medium text-muted-foreground">Review Date</label>
-                      <Input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="mt-1" />
+                    <div data-vaul-no-drag className="rounded-xl border border-amber-100 bg-amber-50/30 p-3.5">
+                      <label className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Review Date</label>
+                      <Input type="date" value={reviewDate} onChange={(e) => setReviewDate(e.target.value)} className="mt-1.5 bg-white" />
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Action Plan</label>
+                    <div className="rounded-xl border border-violet-100 bg-violet-50/30 p-3.5">
+                      <label className="text-xs font-semibold text-violet-700 uppercase tracking-wide">Action Plan</label>
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         {PRESET_ACTIONS.map((a) => (
                           <button
@@ -566,14 +568,14 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                       )}
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Expected Outcome</label>
+                    <div className="rounded-xl border border-blue-100 bg-blue-50/30 p-3.5">
+                      <label className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Expected Outcome</label>
                       <Textarea
                         placeholder="e.g. Improve homework completion, increase attendance..."
                         value={expectedOutcome}
                         onChange={(e) => setExpectedOutcome(e.target.value)}
                         rows={2}
-                        className="mt-1"
+                        className="mt-1.5 bg-white"
                       />
                     </div>
 

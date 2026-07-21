@@ -71,6 +71,7 @@ export default function AssessmentEvaluation() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string>("");
+  const [previewPdfPages, setPreviewPdfPages] = useState<string[] | null>(null);
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -218,6 +219,7 @@ export default function AssessmentEvaluation() {
       URL.revokeObjectURL(previewUrl);
     }
     setPreviewUrl(null);
+    setPreviewPdfPages(null);
   };
 
   const openPreview = async (row: EvaluationRow) => {
@@ -226,6 +228,7 @@ export default function AssessmentEvaluation() {
     setPreviewError(null);
     setPreviewHtml(null);
     setPreviewUrl(null);
+    setPreviewPdfPages(null);
     setPreviewFileName(row.file_name);
     try {
       const { data, error } = await supabase.storage
@@ -236,9 +239,24 @@ export default function AssessmentEvaluation() {
       const lowerName = row.file_name.toLowerCase();
       if (lowerName.endsWith(".pdf") || row.file_type === "application/pdf") {
         setPreviewKind("pdf");
-        const blob = new Blob([data], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        setPreviewUrl(`${url}#toolbar=0&navpanes=0&scrollbar=0`);
+        // Render via pdf.js to canvas/images instead of an iframe blob URL —
+        // most mobile browsers and the native app WebView have no built-in
+        // PDF viewer plugin, so an <iframe src="blob:...pdf"> just shows blank.
+        const arrayBuffer = await data.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        const pageImages: string[] = [];
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) continue;
+          await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+          pageImages.push(canvas.toDataURL("image/png"));
+        }
+        setPreviewPdfPages(pageImages);
       } else if (
         lowerName.endsWith(".docx") ||
         row.file_type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -856,8 +874,17 @@ return (
               <div className="flex items-center justify-center h-full py-16 text-destructive text-sm px-4 text-center">
                 {previewError}
               </div>
-            ) : previewKind === "pdf" && previewUrl ? (
-              <iframe src={previewUrl} className="w-full h-[70vh]" title={previewFileName} />
+            ) : previewKind === "pdf" && previewPdfPages ? (
+              <div className="flex flex-col items-center gap-3 p-3 bg-muted/20">
+                {previewPdfPages.map((src, i) => (
+                  <img
+                    key={i}
+                    src={src}
+                    alt={`Page ${i + 1}`}
+                    className="w-full max-w-full rounded-md border bg-white shadow-sm"
+                  />
+                ))}
+              </div>
             ) : previewKind === "docx" && previewHtml ? (
               <div
                 className="prose prose-sm max-w-none p-4 bg-white"

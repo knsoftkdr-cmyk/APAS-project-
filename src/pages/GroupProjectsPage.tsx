@@ -125,51 +125,59 @@ const statusColor: Record<string, string> = {
               project.status === 'archived' ? 'border-l-slate-300' :
               'border-l-slate-200';
             return (
-              <Card key={project.id} className={`overflow-hidden border-l-4 ${statusAccent} border-slate-200 shadow-sm hover:shadow-md transition-shadow`}>
+              <Card key={project.id} className={`overflow-hidden border-l-4 ${statusAccent} border-emerald-300 shadow-sm hover:shadow-md transition-shadow`}>
                 <CardHeader
                   className="cursor-pointer pb-4"
                   onClick={() => setExpandedId(isExpanded ? null : project.id)}
                 >
-                  <div className="flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200 mt-0.5">
-                        <Users className="h-4.5 w-4.5 text-white" />
+                  <div className="flex flex-col gap-3">
+                    {/* Top row: icon + title, action icons pinned to the right */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                          <Users className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-white" />
+                        </div>
+                        <CardTitle className="text-sm sm:text-base md:text-lg leading-snug break-words pt-1">
+                          {project.title}
+                        </CardTitle>
                       </div>
-                      <div className="space-y-2 min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <CardTitle className="text-base md:text-lg truncate">{project.title}</CardTitle>
-                          <Badge className={`${statusColor[project.status]} hover:opacity-90 capitalize`}>{project.status}</Badge>
-                          {project.subject && <Badge variant="outline" className="border-emerald-200 text-emerald-700 bg-emerald-50/50">{project.subject}</Badge>}
-                        </div>
-                        {project.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-                        )}
-                        <div className="flex items-center gap-3 text-xs pt-1 flex-wrap">
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-600 font-medium">
-                            {project.class_name}
-                          </span>
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 font-medium">
-                            <Users className="h-3 w-3" /> {project.group_count} group{project.group_count === 1 ? '' : 's'}
-                          </span>
-                          {project.due_date && (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 font-medium">
-                              <CalendarDays className="h-3 w-3" />
-                              Due {new Date(project.due_date).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-emerald-50 hover:text-emerald-700 rounded-full" onClick={(e) => { e.stopPropagation(); setEditingProject(project); }}>
+                          <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50 rounded-full" onClick={(e) => { e.stopPropagation(); setDeletingProject(project); }}>
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-destructive" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className={`h-8 w-8 rounded-full transition-all ${isExpanded ? "bg-emerald-100 text-emerald-700" : "hover:bg-emerald-50 hover:text-emerald-700"}`} onClick={() => setExpandedId(isExpanded ? null : project.id)}>
+                          {isExpanded ? <ChevronUp className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : <ChevronDown className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button variant="ghost" size="icon" className="hover:bg-emerald-50 hover:text-emerald-700 rounded-full" onClick={(e) => { e.stopPropagation(); setEditingProject(project); }}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="hover:bg-red-50 rounded-full" onClick={(e) => { e.stopPropagation(); setDeletingProject(project); }}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className={`rounded-full transition-all ${isExpanded ? "bg-emerald-100 text-emerald-700" : "hover:bg-emerald-50 hover:text-emerald-700"}`} onClick={() => setExpandedId(isExpanded ? null : project.id)}>
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                      </Button>
+
+                    {/* Badges row */}
+                    <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-[52px]">
+                      <Badge className={`${statusColor[project.status]} hover:opacity-90 capitalize text-xs`}>{project.status}</Badge>
+                      {project.subject && <Badge variant="outline" className="text-xs border-emerald-200 text-emerald-700 bg-emerald-50/50">{project.subject}</Badge>}
+                    </div>
+
+                    {project.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2 pl-0 sm:pl-[52px]">{project.description}</p>
+                    )}
+
+                    {/* Meta chips row */}
+                    <div className="flex items-center gap-2 text-xs flex-wrap pl-0 sm:pl-[52px]">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-600 font-medium">
+                        {project.class_name}
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 font-medium">
+                        <Users className="h-3 w-3" /> {project.group_count} group{project.group_count === 1 ? '' : 's'}
+                      </span>
+                      {project.due_date && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-amber-50 text-amber-700 font-medium">
+                          <CalendarDays className="h-3 w-3" />
+                          Due {new Date(project.due_date).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </CardHeader>

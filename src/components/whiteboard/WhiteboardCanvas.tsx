@@ -67,6 +67,25 @@ export function WhiteboardCanvas({
       }
       if (data?.mode) setMode(data.mode);
       initialSceneLoaded.current = true;
+
+      // Zoom out on open so the full board (and toolbar) is visible at a glance,
+      // especially on small mobile screens.
+      requestAnimationFrame(() => {
+        const elements = excalidrawAPI.getSceneElements();
+        const isMobile = window.innerWidth < 640;
+        if (elements.length > 0) {
+          // Fit existing content into view
+          excalidrawAPI.scrollToContent(elements, {
+            fitToViewport: true,
+            viewportZoomFactor: isMobile ? 0.85 : 1,
+          });
+        } else {
+          // Empty board: just set a comfortable default zoom
+          excalidrawAPI.updateScene({
+            appState: { zoom: { value: (isMobile ? 0.6 : 0.8) as any } },
+          });
+        }
+      });
     })();
   }, [excalidrawAPI, whiteboardId]);
 
@@ -150,23 +169,38 @@ export function WhiteboardCanvas({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-background">
-        <div className="flex items-center gap-2">
-          <Badge variant={mode === "student_editable" ? "default" : "secondary"}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 sm:px-4 py-2 border-b bg-background">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
+          <Badge variant={mode === "student_editable" ? "default" : "secondary"} className="shrink-0">
             {mode === "student_editable" ? "Students can draw" : "Teacher only"}
           </Badge>
-          {!canEdit && <span className="text-sm text-muted-foreground">View only</span>}
+          {!canEdit && <span className="text-xs sm:text-sm text-muted-foreground">View only</span>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {isOwner && (
-            <Button size="sm" variant="outline" onClick={toggleMode}>
-              {mode === "student_editable" ? <Lock className="h-4 w-4 mr-1" /> : <Unlock className="h-4 w-4 mr-1" />}
-              {mode === "student_editable" ? "Lock to teacher" : "Allow students"}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={toggleMode}
+              title={mode === "student_editable" ? "Lock to teacher" : "Allow students"}
+              className="px-2 sm:px-3"
+            >
+              {mode === "student_editable" ? <Lock className="h-4 w-4 sm:mr-1" /> : <Unlock className="h-4 w-4 sm:mr-1" />}
+              <span className="hidden sm:inline">
+                {mode === "student_editable" ? "Lock to teacher" : "Allow students"}
+              </span>
             </Button>
           )}
-          <Button size="sm" onClick={handleSaveSnapshot} disabled={saving}>
-            <Save className="h-4 w-4 mr-1" />
-            {saving ? "Saving..." : "Save to Lesson"}
+          <Button
+            size="sm"
+            onClick={handleSaveSnapshot}
+            disabled={saving}
+            title="Save to Lesson"
+            className="px-2 sm:px-3"
+          >
+            <Save className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">{saving ? "Saving..." : "Save to Lesson"}</span>
+            <span className="sm:hidden">{saving ? "..." : ""}</span>
           </Button>
         </div>
       </div>

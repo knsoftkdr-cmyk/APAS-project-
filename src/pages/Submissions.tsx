@@ -16,6 +16,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import html2pdf from "html2pdf.js";
 import { AssessmentReport } from "@/components/report/AssessmentReport";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 
 const STATIC_CLASSES = Array.from({ length: 10 }, (_, i) => `Class ${i + 1}`);
 
@@ -306,17 +308,33 @@ try {
     setIsGeneratingPdf(true);
     try {
       const filename = `${(selectedSubmission.student_name || "student").replace(/\s+/g, "_")}-assessment-report.pdf`;
-      await html2pdf()
-        .set({
-          margin: 0,
-          filename,
-          image: { type: "jpeg", quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-          jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
-          pagebreak: { mode: ["css", "legacy"] },
-        })
-        .from(reportRef.current)
-        .save();
+      const opt = {
+        margin: 0,
+        filename,
+        image: { type: "jpeg" as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "pt" as const, format: "a4" as const, orientation: "portrait" as const },
+        pagebreak: { mode: ["css", "legacy"] },
+      };
+
+      if (!Capacitor.isNativePlatform()) {
+        // Browser
+        await html2pdf().set(opt).from(reportRef.current).save();
+        toast.success("Report downloaded!");
+      } else {
+        // Native app (Android/iOS)
+        const worker = html2pdf().set(opt).from(reportRef.current);
+        const pdfData = await worker.outputPdf("datauristring");
+        const base64 = pdfData.split(",")[1];
+
+        await Filesystem.writeFile({
+          path: filename,
+          data: base64,
+          directory: Directory.Documents,
+        });
+
+        toast.success("Report saved successfully!");
+      }
     } catch (err: any) {
       toast.error(`Failed to generate PDF: ${err.message || "Unknown error"}`);
     } finally {

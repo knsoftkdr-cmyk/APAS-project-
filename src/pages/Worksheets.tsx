@@ -16,6 +16,9 @@ import { useNotifications } from "@/contexts/NotificationContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { assessFileClarity } from "@/lib/fileClarity";
+import * as pdfjsLib from "pdfjs-dist";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 interface WorksheetAssignment {
   id: string;
   worksheet_id: string;
@@ -269,6 +272,69 @@ export default function Worksheets() {
   const [isSubmittingWorksheet, setIsSubmittingWorksheet] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const [answerPreviewOpen, setAnswerPreviewOpen] = useState(false);
+  const [answerPreviewLoading, setAnswerPreviewLoading] = useState(false);
+  const [answerPreviewError, setAnswerPreviewError] = useState<string | null>(null);
+  const [answerPreviewKind, setAnswerPreviewKind] = useState<"pdf" | "image" | "unsupported" | null>(null);
+  const [answerPreviewPdfPages, setAnswerPreviewPdfPages] = useState<string[] | null>(null);
+  const [answerPreviewImageUrl, setAnswerPreviewImageUrl] = useState<string | null>(null);
+  const [answerPreviewFileName, setAnswerPreviewFileName] = useState<string>("");
+
+  const openAnswerFilePreview = async (url: string, name: string) => {
+    setAnswerPreviewOpen(true);
+    setAnswerPreviewLoading(true);
+    setAnswerPreviewError(null);
+    setAnswerPreviewKind(null);
+    setAnswerPreviewPdfPages(null);
+    setAnswerPreviewImageUrl(null);
+    setAnswerPreviewFileName(name);
+    try {
+      const lowerName = name.toLowerCase();
+      const isPdf = lowerName.endsWith(".pdf");
+      const isImage = /\.(jpe?g|png|tiff?|gif|webp)$/i.test(lowerName);
+
+      if (isImage) {
+        // Images render fine natively everywhere — no special handling needed.
+        setAnswerPreviewKind("image");
+        setAnswerPreviewImageUrl(url);
+        return;
+      }
+
+      if (!isPdf) {
+        // .doc/.docx — no in-app renderer available, fall back to a download link.
+        setAnswerPreviewKind("unsupported");
+        return;
+      }
+
+      // Same fix as the evaluations page: mobile browsers and the native
+      // WebView have no built-in PDF viewer, so we rasterize with pdf.js
+      // instead of opening the raw URL in a new tab.
+      setAnswerPreviewKind("pdf");
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Could not fetch file");
+      const arrayBuffer = await response.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pageImages: string[] = [];
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement("canvas");
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) continue;
+        await page.render({ canvasContext: ctx, viewport, canvas }).promise;
+        pageImages.push(canvas.toDataURL("image/png"));
+      }
+      setAnswerPreviewPdfPages(pageImages);
+    } catch (err) {
+      console.error("Failed to preview answer file:", err);
+      setAnswerPreviewError("Could not load a preview of this file.");
+    } finally {
+      setAnswerPreviewLoading(false);
+    }
+  };
 
   // ── Assigned Worksheets
   const { data: assignedWorksheets = [], isLoading: worksheetsLoading } = useQuery({
@@ -626,13 +692,19 @@ export default function Worksheets() {
                 <div className="p-3 rounded-xl bg-indigo-50/50 border border-indigo-100 flex items-center gap-2 text-sm">
                   <Paperclip className="h-4 w-4 text-muted-foreground" />
                   <span>You've also uploaded a file: </span>
-                  <a
-                    href={existingSubmission.answer_file_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <a>
+                    <button
+                    type="button"
+                    onClick={() =>
+                      openAnswerFilePreview(
+                        existingSubmission.answer_file_url!,
+                        existingSubmission.answer_file_name || "answer file"
+                      )
+                    }
                     className="text-indigo-600 underline font-medium"
                   >
                     {existingSubmission.answer_file_name || "View file"}
+                  </button>
                   </a>
                   {existingSubmission.status !== "reviewed" && practiceWorksheet && (
                     <button
@@ -699,6 +771,66 @@ export default function Worksheets() {
               {existingSubmission ? "Update Answers" : "Submit Worksheet"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Answer file preview — renders PDFs/images inline instead of relying on the browser's native viewer */}
+      <Dialog
+        open={answerPreviewOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAnswerPreviewOpen(false);
+            setAnswerPreviewPdfPages(null);
+            setAnswerPreviewImageUrl(null);
+            setAnswerPreviewError(null);
+            setAnswerPreviewKind(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Paperclip className="h-5 w-5 text-indigo-600" />
+              {answerPreviewFileName}
+            </DialogTitle>
+          </DialogHeader>
+
+          {answerPreviewLoading ? (
+            <div className="flex items-center justify-center py-16 text-muted-foreground gap-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Loading preview...
+            </div>
+          ) : answerPreviewError ? (
+            <p className="text-sm text-destructive py-6 text-center">{answerPreviewError}</p>
+          ) : answerPreviewKind === "pdf" && answerPreviewPdfPages ? (
+            <div className="flex flex-col items-center gap-3 p-3 bg-muted/20">
+              {answerPreviewPdfPages.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`Page ${i + 1}`}
+                  className="w-full max-w-full rounded-md border bg-white shadow-sm"
+                />
+              ))}
+            </div>
+          ) : answerPreviewKind === "image" && answerPreviewImageUrl ? (
+            <img
+              src={answerPreviewImageUrl}
+              alt={answerPreviewFileName}
+              className="w-full max-w-full rounded-md border bg-white shadow-sm"
+            />
+          ) : answerPreviewKind === "unsupported" ? (
+            <div className="text-center py-8 space-y-3">
+              <p className="text-sm text-muted-foreground">Preview isn't available for this file type.</p>
+              <a
+                href={answerPreviewImageUrl || undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-indigo-600 underline text-sm font-medium"
+              >
+                Download instead
+              </a>
+            </div>
+          ) : null}
         </DialogContent>
       </Dialog>
     </AppLayout>

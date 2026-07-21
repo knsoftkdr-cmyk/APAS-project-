@@ -22,7 +22,9 @@ import { deriveVarkScores } from "@/data/varkMapping";
 import { ClassReportView } from "@/components/ClassReportView";
 import { CurativeLessonPlanView } from "@/components/CurativeLessonPlanView";
 import reportsBanner from "@/assets/reports-banner.png";
-
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { toast } from "sonner";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -568,9 +570,7 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
   const reportDate = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
   const reportId = `APD-CLS-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 9999)).padStart(4, "0")}`;
 
-  const handleDownloadClassReport = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+  const handleDownloadClassReport = async () => {
     const html = generateClassReportHtml({
       assessments,
       classLabel,
@@ -579,35 +579,142 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
       reportDate,
       reportId,
     });
-    printWindow.document.write(html);
-    printWindow.document.close();
-    // Wait for Chart.js CDN to load and render charts before printing
-    const waitForCharts = () => {
-      const canvases = printWindow.document.querySelectorAll("canvas");
-      const allRendered = canvases.length > 0 && Array.from(canvases).every(
-        (c: HTMLCanvasElement) => c.width > 0 && c.height > 0
-      );
-      if (allRendered) {
-        setTimeout(() => printWindow.print(), 500);
-      } else {
-        setTimeout(waitForCharts, 200);
-      }
-    };
-    setTimeout(waitForCharts, 500);
+
+    if (!Capacitor.isNativePlatform()) {
+      // Browser: existing print-to-PDF flow
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+      printWindow.document.write(html);
+      printWindow.document.close();
+      const waitForCharts = () => {
+        const canvases = printWindow.document.querySelectorAll("canvas");
+        const allRendered = canvases.length > 0 && Array.from(canvases).every(
+          (c: HTMLCanvasElement) => c.width > 0 && c.height > 0
+        );
+        if (allRendered) {
+          setTimeout(() => printWindow.print(), 500);
+        } else {
+          setTimeout(waitForCharts, 200);
+        }
+      };
+      setTimeout(waitForCharts, 500);
+      return;
+    }
+
+    // Native app: render into a hidden same-origin iframe so the Chart.js
+    // <script> tag in the HTML can actually execute and draw the canvases,
+    // then snapshot the rendered page to PDF and save via Filesystem.
+    toast.info("Preparing report for download...");
+    const iframe = document.createElement("iframe");
+    iframe.style.position = "fixed";
+    iframe.style.left = "-9999px";
+    iframe.style.top = "0";
+    iframe.style.width = "820px";
+    iframe.style.height = "1400px";
+    iframe.style.border = "none";
+    document.body.appendChild(iframe);
+    iframe.srcdoc = html;
+
+    try {
+      await new Promise<void>((resolve) => { iframe.onload = () => resolve(); });
+
+      await new Promise<void>((resolve) => {
+        const waitForCharts = () => {
+          const doc = iframe.contentDocument;
+          const canvases = doc?.querySelectorAll("canvas") || ([] as any);
+          const allRendered = canvases.length > 0 && Array.from(canvases).every(
+            (c: any) => c.width > 0 && c.height > 0
+          );
+          if (allRendered) resolve();
+          else setTimeout(waitForCharts, 200);
+        };
+        setTimeout(waitForCharts, 800);
+      });
+
+      const bodyEl = iframe.contentDocument?.body;
+      if (!bodyEl) throw new Error("Could not access report content");
+
+      const filename = `APAS-ClassReport-${classLabel}-${Date.now()}.pdf`;
+      const html2pdf = (await import("html2pdf.js")).default;
+      const worker = html2pdf().set({
+        margin: 0,
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+      }).from(bodyEl);
+
+      const pdfData = await worker.outputPdf("datauristring");
+      const base64 = pdfData.split(",")[1];
+
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      toast.success("Class report downloaded!");
+    } catch (err) {
+      console.error("Failed to generate class report PDF:", err);
+      toast.error("Failed to download report. Please try again.");
+    } finally {
+      document.body.removeChild(iframe);
+    }
   };
 
-  const handleDownloadLessonPlan = () => {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
+  const handleDownloadLessonPlan = async () => {
     const html = generateLessonPlanHtml({
       assessments,
       classLabel,
       filterSection,
       teacherName: teacherName || "N/A",
     });
-    printWindow.document.write(html);
-    printWindow.document.close();
-    setTimeout(() => printWindow.print(), 600);
+
+    if (!Capacitor.isNativePlatform()) {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) return;
+      printWindow.document.write(html);
+      printWindow.document.close();
+      setTimeout(() => printWindow.print(), 600);
+      return;
+    }
+
+    // Native app: render off-screen, then export as PDF via Filesystem
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "0";
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    const bodyEl = (container.querySelector("body") as HTMLElement) || container;
+
+    try {
+      const filename = `APAS-LessonPlan-${classLabel}-${Date.now()}.pdf`;
+      const html2pdf = (await import("html2pdf.js")).default;
+      const worker = html2pdf().set({
+        margin: 0,
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+      }).from(bodyEl);
+
+      const pdfData = await worker.outputPdf("datauristring");
+      const base64 = pdfData.split(",")[1];
+
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      toast.success("Lesson plan downloaded!");
+    } catch (err) {
+      console.error("Failed to generate lesson plan PDF:", err);
+      toast.error("Failed to download lesson plan. Please try again.");
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
   return (
@@ -661,7 +768,7 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
       {/* Full Report Dialog */}
       <Dialog open={showFullReport} onOpenChange={setShowFullReport}>
         <DialogContent className="max-w-5xl max-h-[92vh] p-0 overflow-hidden border-0 bg-[#f6f5f2]">
-          <div className="flex items-center justify-end p-3 pb-0">
+          <div className="flex items-center justify-end p-3 pb-0 pr-14">
             <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
               <Download className="h-4 w-4" />
               Download Report

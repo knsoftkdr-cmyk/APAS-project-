@@ -86,6 +86,7 @@ export default function TeacherCommunicationCenter() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [loadingContacts, setLoadingContacts] = useState(true);
   const [contactTab, setContactTab] = useState<RecipientRole>("parent");
@@ -539,6 +540,17 @@ useEffect(() => {
     }));
   }, [classGroups, contactTab]);
 
+
+const roleBadgeColor: Record<RecipientRole, string> = {
+  parent: "bg-blue-100 text-blue-700 border-blue-200",
+  student: "bg-green-100 text-green-700 border-green-200",
+  admin: "bg-purple-100 text-purple-700 border-purple-200",
+}; 
+const isImageFile = (name?: string | null) =>
+  !!name && /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(name);
+const isVideoFile = (name?: string | null) =>
+  !!name && /\.(mp4|mov|webm|m4v|avi|3gp)$/i.test(name);
+
   return (
     <AppLayout>
 <div className="h-[calc(100vh-100px)] flex flex-col">
@@ -793,8 +805,24 @@ useEffect(() => {
                                     <span className="text-[10px] font-semibold uppercase tracking-wide">Meeting Request</span>
                                   </div>
                                 )}
-                                <p className="text-sm whitespace-pre-line">{m.message}</p>
-                                {m.attachment_url && (
+                                {m.attachment_url && isImageFile(m.attachment_name) && (
+                                  <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mb-1.5">
+                                    <img
+                                      src={m.attachment_url}
+                                      alt={m.attachment_name || "Photo"}
+                                      className="max-w-full max-h-64 rounded-lg object-cover"
+                                    />
+                                  </a>
+                                )}
+                                {m.attachment_url && isVideoFile(m.attachment_name) && (
+                                  <video
+                                    src={m.attachment_url}
+                                    controls
+                                    className="max-w-full max-h-64 rounded-lg mb-1.5"
+                                  />
+                                )}
+                                {m.message && <p className="text-sm whitespace-pre-line">{m.message}</p>}
+                                {m.attachment_url && !isImageFile(m.attachment_name) && !isVideoFile(m.attachment_name) && (
                                   <a
                                     href={m.attachment_url}
                                     target="_blank"
@@ -845,13 +873,43 @@ useEffect(() => {
                   {/* Attached file preview */}
                   {attachedFile && (
                     <div className="px-3 pb-2">
-                      <div className="inline-flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 text-xs">
-                        <FileText className="h-3.5 w-3.5" />
-                        {attachedFile.name}
-                        <button onClick={() => setAttachedFile(null)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
+                      {isImageFile(attachedFile.name) ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={URL.createObjectURL(attachedFile)}
+                            alt={attachedFile.name}
+                            className="h-24 w-24 object-cover rounded-lg border border-border/60"
+                          />
+                          <button
+                            onClick={() => setAttachedFile(null)}
+                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : isVideoFile(attachedFile.name) ? (
+                        <div className="relative inline-block">
+                          <video
+                            src={URL.createObjectURL(attachedFile)}
+                            className="h-24 w-24 object-cover rounded-lg border border-border/60"
+                            muted
+                          />
+                          <button
+                            onClick={() => setAttachedFile(null)}
+                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 text-xs">
+                          <FileText className="h-3.5 w-3.5" />
+                          {attachedFile.name}
+                          <button onClick={() => setAttachedFile(null)}>
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -865,8 +923,29 @@ useEffect(() => {
                       onChange={e => {
                         const f = e.target.files?.[0];
                         if (f) setAttachedFile(f);
+                        e.target.value = "";
                       }}
                     />
+                    <input
+                      ref={mediaInputRef}
+                      type="file"
+                      className="hidden"
+                      accept="image/*,video/*"
+                      onChange={e => {
+                        const f = e.target.files?.[0];
+                        if (f) setAttachedFile(f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 rounded-full text-slate-500 hover:bg-slate-100"
+                      onClick={() => mediaInputRef.current?.click()}
+                      title="Photo or video"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="icon"

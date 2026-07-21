@@ -607,7 +607,7 @@ export default function TeacherVirtualClassroom() {
     s.status === "completed" ? "bg-slate-100 text-slate-600" :
     "bg-teal-100 text-teal-700";
   return (
-  <Card key={s.id} className={`overflow-hidden border-l-4 ${statusAccent} border-slate-200 shadow-sm hover:shadow-md transition-shadow`}>
+  <Card key={s.id} className={`overflow-hidden border-l-4 ${statusAccent} border-teal-300 shadow-sm hover:shadow-md transition-shadow`}>
     <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
       <CardTitle className="text-base md:text-lg flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center shrink-0">
@@ -793,12 +793,14 @@ export default function TeacherVirtualClassroom() {
 
       {/* Whiteboard dialog */}
       <Dialog open={whiteboardOpen} onOpenChange={(open) => { setWhiteboardOpen(open); if (!open) setActiveWhiteboardId(null); }}>
-        <DialogContent className="max-w-6xl w-[calc(100%-2rem)] sm:w-full h-[85vh] p-0 overflow-hidden flex flex-col">
+        <DialogContent className="max-w-6xl w-full sm:w-[calc(100%-2rem)] h-[100dvh] sm:h-[85vh] max-h-[100dvh] sm:max-h-[85vh] rounded-none sm:rounded-lg p-0 overflow-hidden flex flex-col">
   <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 shrink-0">
     <DialogHeader>
-      <DialogTitle className="text-white text-base flex items-center gap-2">
-        <PenLine className="h-4 w-4" />
-        Whiteboard{activeSessionForWhiteboard ? ` — ${activeSessionForWhiteboard.title || activeSessionForWhiteboard.subject}` : ""}
+      <DialogTitle className="text-white text-sm sm:text-base flex items-center gap-2 min-w-0">
+        <PenLine className="h-4 w-4 shrink-0" />
+        <span className="truncate">
+          Whiteboard{activeSessionForWhiteboard ? ` — ${activeSessionForWhiteboard.title || activeSessionForWhiteboard.subject}` : ""}
+        </span>
       </DialogTitle>
     </DialogHeader>
   </div>

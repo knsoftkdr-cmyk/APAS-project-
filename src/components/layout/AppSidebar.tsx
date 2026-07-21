@@ -342,7 +342,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             )}
           </div>
 
-          <nav className={cn("flex-1 overflow-y-auto py-4 scrollbar-hide", collapsed ? "px-2 space-y-2" : "px-3 space-y-1")}>
+          <nav className={cn("flex-1 min-h-0 overflow-y-auto py-4 scrollbar-hide", collapsed ? "px-2 space-y-2" : "px-3 space-y-1")}>
             {visibleItems.map((item) => {
               const isActive = location.pathname === item.path;
               const isSubActive =
@@ -457,7 +457,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
             <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
           </div>
-          <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
+          <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
             {visibleItems.map((item) => {
               const isActive = location.pathname === item.path;
               const isSubActive =

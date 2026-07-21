@@ -129,17 +129,17 @@ export default function AITeacherAssistant() {
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6 max-w-4xl">
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shrink-0">
               <Sparkles className="h-5 w-5" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">AI Teacher Assistant</h1>
-              <p className="text-sm text-muted-foreground">Actionable suggestions based on your students, classes, and workload</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-bold">AI Teacher Assistant</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Actionable suggestions based on your students, classes, and workload</p>
             </div>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchAssistant}>
+          <Button variant="outline" size="sm" onClick={fetchAssistant} className="w-full sm:w-auto shrink-0 bg-blue-600 text-white">
             <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
           </Button>
         </div>
@@ -155,14 +155,14 @@ export default function AITeacherAssistant() {
             ) : (
               <div className="space-y-3">
                 {remedial.map((r, i) => (
-                  <div key={i} className="rounded-lg border p-3 flex items-center justify-between gap-3">
-                    <div>
+                  <div key={i} className="rounded-lg border p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
                       <p className="text-sm font-semibold">{r.student_name}</p>
                       <p className="text-xs text-muted-foreground">Weak in {r.subject}</p>
                       <p className="text-sm mt-1">{r.activity}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">Estimated time: {r.estimated_minutes} minutes</p>
                     </div>
-                    <Button size="sm" onClick={() => goGenerateWorksheet(r)}>Generate Worksheet</Button>
+                    <Button size="sm" onClick={() => goGenerateWorksheet(r)} className="w-full sm:w-auto shrink-0 bg-cyan-600">Generate Worksheet</Button>
                   </div>
                 ))}
               </div>
@@ -200,7 +200,7 @@ export default function AITeacherAssistant() {
                           Suggested: {PRESET_INTERVENTION_ACTIONS.join(" · ")}
                         </div>
                       )}
-                      <Button size="sm" variant={existing ? "outline" : "default"} onClick={() => openInterventionFor(s)}>
+                      <Button size="sm" variant={existing ? "outline" : "default"} onClick={() => openInterventionFor(s)} className="w-full sm:w-auto bg-emerald-600 text-white">
                         {existing ? "View Intervention" : "Create Intervention"}
                       </Button>
                     </div>
@@ -251,7 +251,7 @@ export default function AITeacherAssistant() {
                     <p className="text-xs text-muted-foreground">Estimated time: {workload.estimated_minutes} minutes</p>
                   </>
                 )}
-                <Button size="sm" className="mt-2" onClick={() => navigate("/submissions")}>Start Evaluation</Button>
+                <Button size="sm" className="mt-2 bg-blue-600" onClick={() => navigate("/submissions")}>Start Evaluation</Button>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground py-2">All caught up — no pending homework to evaluate.</p>
@@ -275,7 +275,7 @@ export default function AITeacherAssistant() {
                   {concernStudents.map((s: any) => s.name).join(", ")}.
                 </p>
                 {behaviourInsight && <p className="text-xs text-blue-600 mt-1.5">Suggested action: {behaviourInsight.suggested_action}</p>}
-                <Button size="sm" variant="outline" className="mt-2" onClick={() => navigate("/teacher-behaviour")}>Open Behaviour Dashboard</Button>
+                <Button size="sm" variant="outline" className="mt-2 bg-green-600 text-white" onClick={() => navigate("/teacher-behaviour")}>Open Behaviour Dashboard</Button>
               </div>
             )}
           </CardContent>
