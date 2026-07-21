@@ -150,40 +150,20 @@ return (
 
       <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-8xl mx-auto">
 
-        {/* Hero */}
-        <div className="overflow-hidden rounded-3xl bg-gradient-to-br from-blue-600 via-blue-500 to-cyan-500 p-5 md:p-8 relative min-h-[180px] md:min-h-[220px] shadow-lg">
-
-  {/* Soft glow blobs, layered above the gradient for extra depth */}
-  <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-2xl"></div>
-  <div className="absolute bottom-0 right-1/3 w-32 h-32 rounded-full bg-cyan-300/20 blur-2xl"></div>
-
-  <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/30 hidden sm:block"></div>
-  <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/30 hidden sm:block"></div>
-  <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/40 hidden sm:block"></div>
-  
-
-  <div className="relative z-10 max-w-xl">
-    <div className="inline-flex items-center gap-2 mb-3 bg-white/10 backdrop-blur-sm rounded-full pl-1.5 pr-3 py-1.5">
-      <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-        <GraduationCap className="h-3.5 w-3.5 text-white" />
-      </div>
-      <span className="text-[11px] font-semibold text-white uppercase tracking-[0.15em]">
-        Student Dashboard
-      </span>
-    </div>
-    <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
-      Welcome Back, {profile?.full_name}
-    </h1>
-
-    <p className="mt-1.5 md:mt-2 text-blue-100 text-sm md:text-base">
-      {today}
-    </p>
-
-    <p className="mt-4 md:mt-6 text-sm md:text-lg text-white/90 max-w-md">
-      Continue your learning journey and complete today's homework.
-    </p>
-  </div>
-</div>
+        {/* Header */}
+        <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg">
+          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="relative flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+              <PenLine className="h-5 w-5 md:h-6 md:w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">Homework</h1>
+              <p className="text-blue-100 text-xs md:text-sm mt-0.5">Continue your learning journey and complete today's homework</p>
+            </div>
+          </div>
+        </div>
 
         {/* Homework Section */}
         <Card className="group relative overflow-hidden border-blue-100 shadow-sm hover:shadow-md transition-all duration-300">
