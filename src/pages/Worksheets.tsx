@@ -143,6 +143,47 @@ async function downloadWorksheetImage(ws: WorksheetAssignment) {
   }
 }
 
+async function verifyFileIntegrity(file: File): Promise<boolean> {
+  // Reads the first bytes of the file and checks them against known
+  // file-signature ("magic number") headers. Catches corrupted files,
+  // truncated uploads, and files renamed to a different extension.
+  const SIGNATURES: { ext: string[]; check: (bytes: Uint8Array) => boolean }[] = [
+    { ext: [".pdf"], check: (b) => b[0] === 0x25 && b[1] === 0x50 && b[2] === 0x44 && b[3] === 0x46 }, // %PDF
+    { ext: [".png"], check: (b) => b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 },
+    { ext: [".jpg", ".jpeg"], check: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+    {
+      ext: [".tiff", ".tif"],
+      check: (b) =>
+        (b[0] === 0x49 && b[1] === 0x49 && b[2] === 0x2a && b[3] === 0x00) || // little-endian
+        (b[0] === 0x4d && b[1] === 0x4d && b[2] === 0x00 && b[3] === 0x2a), // big-endian
+    },
+    { ext: [".docx"], check: (b) => b[0] === 0x50 && b[1] === 0x4b && (b[2] === 0x03 || b[2] === 0x05 || b[2] === 0x07) }, // PK zip
+    { ext: [".doc"], check: (b) => b[0] === 0xd0 && b[1] === 0xcf && b[2] === 0x11 && b[3] === 0xe0 }, // OLE compound file
+  ];
+
+  if (file.size === 0) return false;
+
+  const headerBlob = file.slice(0, 12);
+  const buffer = await new Promise<ArrayBuffer | null>((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => resolve(null);
+    reader.readAsArrayBuffer(headerBlob);
+  });
+  if (!buffer) return false;
+
+  const bytes = new Uint8Array(buffer);
+  const fileExt = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+  const rule = SIGNATURES.find((s) => s.ext.includes(fileExt));
+  if (!rule) return false; // unknown extension, treat as failed integrity check
+
+  try {
+    return rule.check(bytes);
+  } catch {
+    return false;
+  }
+}
+
 async function uploadAnswerFile(
   ws: WorksheetAssignment,
   file: File,
@@ -313,6 +354,11 @@ export default function Worksheets() {
     const isAllowedMime = !file.type || ALLOWED_MIME_TYPES.includes(file.type);
     if (!isAllowedExt || !isAllowedMime) {
       toast.error("Unsupported file type. Please upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or TIFF file.");
+      return;
+    }
+    const isIntact = await verifyFileIntegrity(file);
+    if (!isIntact) {
+      toast.error("This file appears to be corrupted or doesn't match its file type. Please choose a different file.");
       return;
     }
     setUploadingId(ws.id);
