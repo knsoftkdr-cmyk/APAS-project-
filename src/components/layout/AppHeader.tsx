@@ -243,7 +243,12 @@ console.log("Bell Unread Count:", unreadCount);
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 w-48 rounded-card border border-border bg-card py-1 shadow-elevated z-50">
               <button
-                onClick={() => { setMenuOpen(false); navigate("/settings"); }}
+                onClick={() => {
+                  setMenuOpen(false);
+                  const isStudentOrParent = profile?.role === "student" || profile?.role === "parent";
+                  const isTeacher = profile?.role === "teacher";
+                  navigate(isStudentOrParent ? "/student-profile" : isTeacher ? "/teacher-professional-development" : "/settings");
+                }}
                 className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
               >
                 <User className="h-4 w-4 text-muted-foreground" />

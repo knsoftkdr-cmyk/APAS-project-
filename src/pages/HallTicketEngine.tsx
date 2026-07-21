@@ -9,7 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Loader2, Download, Ticket } from "lucide-react";
-
+import html2pdf from "html2pdf.js";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Capacitor } from "@capacitor/core";
 interface ExamSchedule {
   id: string;
   subject: string;
@@ -208,25 +210,58 @@ export default function HallTicketEngine() {
 </html>`;
   };
 
-  const generateTicket = (student: Student) => {
+  const generateTicket = async (student: Student) => {
     const sched = schedules.find((s) => s.id === selectedScheduleId);
     if (!sched) return;
     setGeneratingId(student.id);
+
     const html = buildTicketHtml(student, sched, seatByStudent[student.id]);
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, "_blank");
-    if (win) {
-      setTimeout(() => { win.print(); }, 800);
-    } else {
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `HallTicket_${student.full_name?.replace(/\s+/g, "_")}_${sched.subject.replace(/\s+/g, "_")}.html`;
-      a.click();
+
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "0";
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    const ticketEl = (container.querySelector(".ticket") as HTMLElement) || container;
+
+    const filename = `HallTicket_${student.full_name?.replace(/\s+/g, "_")}_${sched.subject.replace(/\s+/g, "_")}.pdf`;
+
+    try {
+      const worker = html2pdf()
+        .set({
+          margin: 0,
+          filename,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true },
+          jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+        })
+        .from(ticketEl);
+
+      if (!Capacitor.isNativePlatform()) {
+        // Browser
+        await worker.save();
+        toast.success("Hall ticket downloaded!");
+      } else {
+        // Native app (Android/iOS)
+        const pdfData = await worker.outputPdf("datauristring");
+        const base64 = pdfData.split(",")[1];
+
+        await Filesystem.writeFile({
+          path: filename,
+          data: base64,
+          directory: Directory.Documents,
+        });
+
+        toast.success("Hall ticket saved successfully!");
+      }
+    } catch (err) {
+      console.error("Hall ticket generation failed:", err);
+      toast.error("Failed to generate hall ticket. Please try again.");
+    } finally {
+      document.body.removeChild(container);
+      setGeneratingId(null);
     }
-    URL.revokeObjectURL(url);
-    setGeneratingId(null);
-    toast.success("Hall ticket opened — use Print → Save as PDF");
   };
 
   const generateAllTickets = async () => {

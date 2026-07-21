@@ -444,23 +444,21 @@ const subjectColors: Record<string, string> = {
       {/* Diagnostic Assessment CTA */}
       <Card className="mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent hover:border-primary/40 transition-all">
         <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              
-                <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                  <Lightbulb className="h-6 w-6" />
-                </div>
-              
-              <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white shrink-0">
+                <Lightbulb className="h-6 w-6" />
+              </div>
+              <div className="min-w-0">
                 <h3 className="font-semibold text-foreground">Write Your Diagnostic Assessment</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   Take the diagnostic test to help us understand your learning needs better
                 </p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={() => navigate("/diagnostic")}
-              className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
+              className="w-full sm:w-auto shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
             >
               Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
@@ -777,9 +775,9 @@ const subjectColors: Record<string, string> = {
                     <Badge
                       variant="outline"
                       className={
-                        hw.status === "overdue"
+                        (hw.status === "overdue"
                           ? "border-red-300 bg-red-50 text-red-700"
-                          : "border-amber-300 bg-amber-50 text-amber-700"
+                          : "border-amber-300 bg-amber-50 text-amber-700") + " shrink-0 whitespace-nowrap"
                       }
                     >
                       {hw.status === "overdue" ? (
@@ -1043,7 +1041,7 @@ const subjectColors: Record<string, string> = {
                 {selectedWorksheet.worksheets?.topic || selectedWorksheet.worksheets?.chapter || "Worksheet"}
               </DialogTitle>
             </DialogHeader>
-            <div className="flex gap-2 mb-4">
+            <div className="flex flex-wrap gap-2 mb-4">
               <Button
                 size="sm"
                 className="gap-2 bg-green-600 hover:bg-green-700"

@@ -15,6 +15,7 @@ import remarkGfm from "remark-gfm";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { assessFileClarity } from "@/lib/fileClarity";
 interface WorksheetAssignment {
   id: string;
   worksheet_id: string;
@@ -127,16 +128,42 @@ async function downloadWorksheetImage(ws: WorksheetAssignment) {
   try {
     const topic = ws.worksheets?.topic || "Worksheet";
     const ext = imageUrl.split(".").pop()?.split("?")[0] ?? "jpg";
+    const filename = `Illustrated-Worksheet-${topic}.${ext}`;
+
     const response = await fetch(imageUrl);
     const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Illustrated-Worksheet-${topic}.${ext}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    if (!Capacitor.isNativePlatform()) {
+      // Browser: normal anchor-download flow
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Image downloaded!");
+    } else {
+      // Native app: convert blob -> base64, then write via Capacitor Filesystem
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const result = reader.result as string;
+          resolve(result.split(",")[1]); // strip the data: prefix
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      toast.success("Image saved successfully!");
+    }
   } catch (err) {
     console.error("Failed to download image", err);
     toast.error("Failed to download image");
@@ -354,11 +381,6 @@ export default function Worksheets() {
     const isAllowedMime = !file.type || ALLOWED_MIME_TYPES.includes(file.type);
     if (!isAllowedExt || !isAllowedMime) {
       toast.error("Unsupported file type. Please upload a PDF, DOC, DOCX, JPG, JPEG, PNG, or TIFF file.");
-      return;
-    }
-    const isIntact = await verifyFileIntegrity(file);
-    if (!isIntact) {
-      toast.error("This file appears to be corrupted or doesn't match its file type. Please choose a different file.");
       return;
     }
     setUploadingId(ws.id);

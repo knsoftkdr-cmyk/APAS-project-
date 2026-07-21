@@ -72,46 +72,48 @@ const fetchProfile = async (userId: string) => {
   };
 
   useEffect(() => {
-    const loadingTimeout = setTimeout(() => {
-      setLoading(false);
-    }, 10000);
+  let isMounted = true;
+  const loadingTimeout = setTimeout(() => {
+    if (isMounted) setLoading(false);
+  }, 10000);
 
-    const initializeAuth = async () => {
-      try {
-        if (!isSupabaseInitialized) {
-          setLoading(false);
-          return;
-        }
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (_event, session) => {
-            setSession(session);
-            if (session?.user) {
-              setTimeout(() => fetchProfile(session.user.id), 0);
-            } else {
-              setProfile(null);
-            }
-            setLoading(false);
-          }
-        );
-
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        }
-        setLoading(false);
-
-        return () => subscription.unsubscribe();
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-        setLoading(false);
-      }
+  if (!isSupabaseInitialized) {
+    setLoading(false);
+    return () => {
+      isMounted = false;
+      clearTimeout(loadingTimeout);
     };
+  }
 
-    initializeAuth();
-    return () => clearTimeout(loadingTimeout);
-  }, [isSupabaseInitialized]);
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      if (!isMounted) return;
+      setSession(session);
+      if (session?.user) {
+        setTimeout(() => fetchProfile(session.user.id), 0);
+      } else {
+        setProfile(null);
+      }
+      setLoading(false);
+    }
+  );
+
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!isMounted) return;
+    setSession(session);
+    if (session?.user) fetchProfile(session.user.id);
+    setLoading(false);
+  }).catch((error) => {
+    console.error("Auth initialization error:", error);
+    if (isMounted) setLoading(false);
+  });
+
+  return () => {
+    isMounted = false;
+    clearTimeout(loadingTimeout);
+    subscription.unsubscribe(); // ✅ actually runs now
+  };
+}, [isSupabaseInitialized]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
