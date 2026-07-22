@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, MessageSquare, Check, CheckCheck,
-  Smile, X, FileText, ChevronLeft,
+  Smile, X, FileText, ChevronLeft, Image as ImageIcon,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { getTeachersForChild } from "@/lib/appointments";
@@ -59,6 +59,11 @@ const dayLabel = (dateStr: string) => {
   return format(d, "d MMM yyyy");
 };
 
+const isImageFile = (name?: string | null) =>
+  !!name && /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(name);
+const isVideoFile = (name?: string | null) =>
+  !!name && /\.(mp4|mov|webm|m4v|avi|3gp)$/i.test(name);
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function StudentCommunicationCenter() {
@@ -66,6 +71,7 @@ export default function StudentCommunicationCenter() {
   const { markMessageNotificationsAsRead, setActiveMessageThreadId } = useNotifications();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [loadingContacts, setLoadingContacts] = useState(true);
@@ -342,7 +348,7 @@ export default function StudentCommunicationCenter() {
                         className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
                           isSelected ? "bg-green-50" : "hover:bg-slate-50"
                         }`}
-                      >
+                      > 
                         <div className="h-11 w-11 rounded-full bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center shrink-0 text-xs font-bold text-white shadow-sm">
                           {c.name[0]}
                         </div>
@@ -430,8 +436,24 @@ export default function StudentCommunicationCenter() {
                                     : "bg-white border border-border/60 rounded-bl-sm"
                                 }`}
                               >
-                                <p className="text-sm whitespace-pre-line">{m.message}</p>
-                                {m.attachment_url && (
+                                {m.attachment_url && isImageFile(m.attachment_name) && (
+                                  <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mb-1.5">
+                                    <img
+                                      src={m.attachment_url}
+                                      alt={m.attachment_name || "Photo"}
+                                      className="max-w-full max-h-64 rounded-lg object-cover"
+                                    />
+                                  </a>
+                                )}
+                                {m.attachment_url && isVideoFile(m.attachment_name) && (
+                                  <video
+                                    src={m.attachment_url}
+                                    controls
+                                    className="max-w-full max-h-64 rounded-lg mb-1.5"
+                                  />
+                                )}
+                                {m.message && <p className="text-sm whitespace-pre-line">{m.message}</p>}
+                                {m.attachment_url && !isImageFile(m.attachment_name) && !isVideoFile(m.attachment_name) && (
                                   <a
                                     href={m.attachment_url}
                                     target="_blank"
@@ -482,13 +504,43 @@ export default function StudentCommunicationCenter() {
                   {/* Attached file preview */}
                   {attachedFile && (
                     <div className="px-3 pb-2">
-                      <div className="inline-flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 text-xs">
-                        <FileText className="h-3.5 w-3.5" />
-                        {attachedFile.name}
-                        <button onClick={() => setAttachedFile(null)}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
+                      {isImageFile(attachedFile.name) ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={URL.createObjectURL(attachedFile)}
+                            alt={attachedFile.name}
+                            className="h-24 w-24 object-cover rounded-lg border border-border/60"
+                          />
+                          <button
+                            onClick={() => setAttachedFile(null)}
+                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : isVideoFile(attachedFile.name) ? (
+                        <div className="relative inline-block">
+                          <video
+                            src={URL.createObjectURL(attachedFile)}
+                            className="h-24 w-24 object-cover rounded-lg border border-border/60"
+                            muted
+                          />
+                          <button
+                            onClick={() => setAttachedFile(null)}
+                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 text-xs">
+                          <FileText className="h-3.5 w-3.5" />
+                          {attachedFile.name}
+                          <button onClick={() => setAttachedFile(null)}>
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -503,8 +555,29 @@ export default function StudentCommunicationCenter() {
                         onChange={e => {
                           const f = e.target.files?.[0];
                           if (f) setAttachedFile(f);
+                          e.target.value = "";
                         }}
                       />
+                      <input
+                        ref={mediaInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/*,video/*"
+                        onChange={e => {
+                          const f = e.target.files?.[0];
+                          if (f) setAttachedFile(f);
+                          e.target.value = "";
+                        }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 rounded-full text-slate-500 hover:bg-slate-100"
+                        onClick={() => mediaInputRef.current?.click()}
+                        title="Photo or video"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"

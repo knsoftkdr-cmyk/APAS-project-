@@ -120,7 +120,6 @@ const navItems: Array<{
   { title: "Communication", icon: MessageSquare, path: "/student-communication", roles: ["student"] },
   { title: "Communication", icon: MessageSquare, path: "/admin-communication", roles: ["admin", "hod", "school_admin"] },
 
-  { title: "Professional Development", icon: Award, path: "/teacher-professional-development", roles: ["teacher"] },
   { title: "Virtual Classroom", icon: Video, path: "/virtual-classrooms", roles: ["teacher"] },
   { title: "Virtual Classroom", icon: Video, path: "/virtual-classroom", roles: ["student"], module: "Virtual Classroom" },
   { title: "Group Projects", icon: Users2, path: "/teacher/group-projects", roles: ["teacher"] },
@@ -447,14 +446,14 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen w-[var(--sidebar-width)] flex-col transition-transform duration-300 md:hidden",
+          "fixed left-0 top-0 z-50 flex h-screen w-[var(--sidebar-width)] flex-col transition-transform duration-300 md:hidden",
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <SidebarWaveBackground />
 
         <div className="relative z-10 m-2.5 flex flex-1 flex-col overflow-hidden rounded-[26px] bg-white shadow-xl">
-          <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4">
+          <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4 shrink-0">
             <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
           </div>
           <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
@@ -501,10 +500,44 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               );
             })}
           </nav>
+
+          {/* Profile + Logout footer — mirrors the desktop sidebar's footer */}
+          <div className="shrink-0 border-t border-sidebar-border p-3 space-y-2 pb-6">
+            {profile && (
+              <div className="flex items-center gap-3 rounded-2xl border border-sidebar-border bg-sidebar-hover/60 px-3 py-2">
+                <div className="relative shrink-0">
+                  {profile.avatar_url ? (
+                    <img src={profile.avatar_url} alt={profile.full_name || "User"} className="h-8 w-8 rounded-full object-cover" />
+                  ) : (
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-xs font-bold text-sidebar-primary-foreground">
+                      {(profile.full_name || "U").charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sidebar-accent" />
+                </div>
+                <div className="overflow-hidden">
+                  <p className="truncate text-sm font-medium text-sidebar-foreground">
+                    {profile.full_name || "User"}
+                  </p>
+                  <p className="truncate text-[11px] capitalize text-sidebar-muted">
+                    {profile.role === "admin" || profile.role === "principal" ? "Principal" : profile.role === "school_admin" ? "School Admin" : profile.role === "knsoft_admin" ? "KNSoft Admin" : profile.role === "hod" ? "Head of Dept" : profile.role === "parent" ? "Parent" : profile.role}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={async () => { await signOut(); onMobileClose(); }}
+              className="flex w-full items-center gap-3 rounded-2xl border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-accent transition-colors hover:bg-sidebar-hover"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
-      {profile?.role !== "parent" && (
+      {profile?.role !== "parent" && !mobileOpen && (
         <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
           {mobileNavItems.map((item) => {
             const isActive = location.pathname === item.path;

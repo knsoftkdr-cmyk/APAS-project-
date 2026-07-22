@@ -488,8 +488,8 @@ export default function EntryTicket() {
     </div>
     <h2 className="font-semibold text-gray-800">Create Entry Ticket</h2>
   </div>
-  <div className="p-6">
-            <div className="grid grid-cols-2 gap-4 mb-4">
+  <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
   <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
     <GraduationCap className="h-3.5 w-3.5 text-indigo-500" /> Class
@@ -503,7 +503,7 @@ export default function EntryTicket() {
                 <label className="flex items-center gap-1.5 text-sm font-medium text-gray-700 mb-1.5">
     <User className="h-3.5 w-3.5 text-indigo-500" /> Section
   </label>
-                <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)} className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                <select value={selectedSection} onChange={e => setSelectedSection(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-colors hover:border-indigo-300">
                   <option value="">Select Section</option>
                   {SECTION_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>

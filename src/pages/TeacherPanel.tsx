@@ -743,10 +743,12 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
                   Generate Lesson Plan
                 </Button>
               )}
-              <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
-                <Download className="h-4 w-4" />
-                Download
-              </Button>
+              {!Capacitor.isNativePlatform() && (
+                <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
+                  <Download className="h-4 w-4" />
+                  Download
+                </Button>
+              )}
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -768,12 +770,14 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
       {/* Full Report Dialog */}
       <Dialog open={showFullReport} onOpenChange={setShowFullReport}>
         <DialogContent className="max-w-5xl max-h-[92vh] p-0 overflow-hidden border-0 bg-[#f6f5f2]">
-          <div className="flex items-center justify-end p-3 pb-0 pr-14">
-            <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
-              <Download className="h-4 w-4" />
-              Download Report
-            </Button>
-          </div>
+          {!Capacitor.isNativePlatform() && (
+            <div className="flex items-center justify-end p-3 pb-0 pr-14">
+              <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
+                <Download className="h-4 w-4" />
+                Download Report
+              </Button>
+            </div>
+          )}
           <ScrollArea className="max-h-[84vh] px-6 pb-6">
             <ClassReportView
               assessments={assessments}
