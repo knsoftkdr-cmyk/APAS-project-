@@ -113,13 +113,14 @@ const SchoolAnalytics = () => {
 
 return (
   <AppLayout>
+    <div className="min-h-screen relative overflow-x-hidden">
     <div className="space-y-6">
 
       {/* Hero Banner */}
-      <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-500 p-8 relative min-h-[220px]">
+      <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-500 p-6 sm:p-8 relative min-h-[220px]">
         {/* Decorative Circles */}
-        <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-        <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+        <div className="hidden sm:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
+        <div className="hidden sm:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
         <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
         {/* Stars */}
@@ -231,11 +232,13 @@ return (
         </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="overview" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Overview</TabsTrigger>
-            <TabsTrigger value="predictions" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Predictions</TabsTrigger>
-            <TabsTrigger value="alerts" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
-          </TabsList>
+          <div className="w-full overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <TabsList className="flex w-max">
+              <TabsTrigger value="overview" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Overview</TabsTrigger>
+              <TabsTrigger value="predictions" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Predictions</TabsTrigger>
+              <TabsTrigger value="alerts" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
@@ -382,6 +385,7 @@ return (
             )}
           </TabsContent>
         </Tabs>
+      </div>
       </div>
     </AppLayout>
   );

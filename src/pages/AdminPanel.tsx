@@ -540,16 +540,18 @@ const AdminPanel = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className={cn("grid w-full lg:w-auto lg:inline-grid bg-blue-50 p-1 rounded-xl", isMasterAdmin ? "grid-cols-8" : isPrincipalRole ? "grid-cols-6" : isSchoolAdmin ? "grid-cols-3" : "grid-cols-1")}>
-            <TabsTrigger value="classes" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Classes</TabsTrigger>
-            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="notifications" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>}
-            {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="lesson-plans" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><BookOpen className="h-4 w-4" /> Lesson Plans</TabsTrigger>}
-            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="students" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Students</TabsTrigger>}
-            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="teachers" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Teachers</TabsTrigger>}
-            {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="approvals" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Approvals</TabsTrigger>}
-            {isMasterAdmin && <TabsTrigger value="questions">Questions</TabsTrigger>}
-            {isMasterAdmin && <TabsTrigger value="config">Config</TabsTrigger>}
-          </TabsList>
+          <div className="w-full overflow-x-auto scrollbar-hide -mx-1 px-1">
+            <TabsList className="flex w-max lg:w-auto gap-1 bg-blue-50 p-1 rounded-xl">
+              <TabsTrigger value="classes" className="shrink-0 whitespace-nowrap text-xs sm:text-sm px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Classes</TabsTrigger>
+              {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="notifications" className="shrink-0 whitespace-nowrap gap-1 text-xs sm:text-sm px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>}
+              {(isMasterAdmin || isSchoolAdmin || isPrincipalRole) && <TabsTrigger value="lesson-plans" className="shrink-0 whitespace-nowrap gap-1 text-xs sm:text-sm px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300"><BookOpen className="h-4 w-4" /> Lesson Plans</TabsTrigger>}
+              {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="students" className="shrink-0 whitespace-nowrap text-xs sm:text-sm px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Students</TabsTrigger>}
+              {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="teachers" className="shrink-0 whitespace-nowrap text-xs sm:text-sm px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Teachers</TabsTrigger>}
+              {(isMasterAdmin || isPrincipalRole) && <TabsTrigger value="approvals" className="shrink-0 whitespace-nowrap text-xs sm:text-sm px-3 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Approvals</TabsTrigger>}
+              {isMasterAdmin && <TabsTrigger value="questions" className="shrink-0 whitespace-nowrap text-xs sm:text-sm px-3">Questions</TabsTrigger>}
+              {isMasterAdmin && <TabsTrigger value="config" className="shrink-0 whitespace-nowrap text-xs sm:text-sm px-3">Config</TabsTrigger>}
+            </TabsList>
+          </div>
 
           {/* ===== CLASSES TAB ===== */}
           <TabsContent value="classes">

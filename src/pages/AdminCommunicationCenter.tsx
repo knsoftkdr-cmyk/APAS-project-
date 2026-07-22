@@ -414,7 +414,7 @@ export default function AdminCommunicationCenter() {
           <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`min-h-0 border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
+            <div className={`min-h-0 border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
               <div className="p-3 border-b border-slate-100 space-y-2">
                 <button
                   onClick={() => openContact(wholeSchoolContact)}

@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Loader2, Plus, Shuffle, Building2, Trash2, Printer, Download, ClipboardList } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 
 interface ExamHall {
   id: string;
@@ -92,6 +94,12 @@ export default function ExamSeating() {
 
   const [savedLayouts, setSavedLayouts] = useState<SavedLayout[]>([]);
   const [layoutActionKey, setLayoutActionKey] = useState<string | null>(null);
+
+  // In-app layout preview — used on native instead of generating/downloading
+  // a PDF, so "View" just renders the layout directly with nothing to fail.
+  const [layoutPreviewOpen, setLayoutPreviewOpen] = useState(false);
+  const [layoutPreviewHtml, setLayoutPreviewHtml] = useState<string>("");
+  const [layoutPreviewTitle, setLayoutPreviewTitle] = useState<string>("");
 
   const fetchAll = async () => {
     if (!profile?.school_id) return;
@@ -354,25 +362,97 @@ export default function ExamSeating() {
 </html>`;
   };
 
-  const openLayoutPrint = (hall: ExamHall, sched: ExamSchedule | undefined, assignments: SeatAssignment[], studentsMap: Record<string, Student>) => {
+  const viewLayoutInApp = (hall: ExamHall, sched: ExamSchedule | undefined, assignments: SeatAssignment[], studentsMap: Record<string, Student>) => {
     const html = buildLayoutHtml(hall, sched, assignments, studentsMap);
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, "_blank");
-    if (win) setTimeout(() => win.print(), 800);
-    URL.revokeObjectURL(url);
+    // Pull the <style> and <body> content out of the full HTML document
+    // string and render them directly inside our own Dialog. No PDF
+    // conversion, no Filesystem write — nothing to fail on native, and
+    // nothing gets downloaded; it just opens.
+    const styleMatch = html.match(/<style>([\s\S]*?)<\/style>/);
+    const bodyMatch = html.match(/<body>([\s\S]*)<\/body>/);
+    const combined = `<style>${styleMatch ? styleMatch[1] : ""}</style>${bodyMatch ? bodyMatch[1] : html}`;
+    setLayoutPreviewHtml(combined);
+    setLayoutPreviewTitle(`${hall.name} — Seating Layout`);
+    setLayoutPreviewOpen(true);
   };
 
-  const downloadLayoutHtml = (hall: ExamHall, sched: ExamSchedule | undefined, assignments: SeatAssignment[], studentsMap: Record<string, Student>) => {
+  const openLayoutPrint = async (hall: ExamHall, sched: ExamSchedule | undefined, assignments: SeatAssignment[], studentsMap: Record<string, Student>) => {
     const html = buildLayoutHtml(hall, sched, assignments, studentsMap);
-    const blob = new Blob([html], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `SeatingLayout_${hall.name.replace(/\s+/g, "_")}_${sched?.subject?.replace(/\s+/g, "_") ?? "exam"}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("Layout downloaded");
+
+    if (!Capacitor.isNativePlatform()) {
+      // Browser: existing print-to-PDF flow
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, "_blank");
+      if (win) setTimeout(() => win.print(), 800);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // Native app: render off-screen, then export as PDF via Filesystem
+    const container = document.createElement("div");
+    container.style.position = "fixed";
+    container.style.left = "-9999px";
+    container.style.top = "0";
+    container.style.width = "800px";
+    container.style.background = "#ffffff";
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    const bodyEl = (container.querySelector("body") as HTMLElement) || container;
+    // Ensure the actual content node also has a real width to render against
+    bodyEl.style.width = "800px";
+
+    // Give the browser a paint frame before snapshotting, so the injected
+    // HTML (table layout, fonts) is fully laid out — avoids a blank capture.
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+    const filename = `SeatingLayout_${hall.name.replace(/\s+/g, "_")}_${sched?.subject?.replace(/\s+/g, "_") ?? "exam"}.pdf`;
+
+    try {
+      const html2pdf = (await import("html2pdf.js")).default;
+      const worker = html2pdf().set({
+        margin: 10,
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 800 },
+        jsPDF: { unit: "pt", format: "a4", orientation: "portrait" },
+      }).from(bodyEl);
+
+      const pdfData = await worker.outputPdf("datauristring");
+      const base64 = pdfData.split(",")[1];
+
+      await Filesystem.writeFile({
+        path: filename,
+        data: base64,
+        directory: Directory.Documents,
+      });
+
+      toast.success("Seating layout saved!");
+    } catch (err) {
+      console.error("Failed to generate seating layout PDF:", err);
+      toast.error("Failed to generate layout. Please try again.");
+    } finally {
+      document.body.removeChild(container);
+    }
+  };
+
+  const downloadLayoutHtml = async (hall: ExamHall, sched: ExamSchedule | undefined, assignments: SeatAssignment[], studentsMap: Record<string, Student>) => {
+    if (!Capacitor.isNativePlatform()) {
+      // Browser: existing anchor-download flow
+      const html = buildLayoutHtml(hall, sched, assignments, studentsMap);
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `SeatingLayout_${hall.name.replace(/\s+/g, "_")}_${sched?.subject?.replace(/\s+/g, "_") ?? "exam"}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Layout downloaded");
+      return;
+    }
+
+    // Native app: reuse the same PDF export path as openLayoutPrint
+    await openLayoutPrint(hall, sched, assignments, studentsMap);
   };
 
   // For layouts generated earlier in this session (data already in memory)
@@ -381,7 +461,11 @@ export default function ExamSeating() {
     const assignments = seatingResult[hallId] || [];
     const sched = schedules.find((s) => s.id === selectedScheduleId);
     if (!hall || assignments.length === 0) return;
-    openLayoutPrint(hall, sched, assignments, studentsById);
+    if (Capacitor.isNativePlatform()) {
+      viewLayoutInApp(hall, sched, assignments, studentsById);
+    } else {
+      openLayoutPrint(hall, sched, assignments, studentsById);
+    }
   };
 
   const deleteSavedLayout = async (examScheduleId: string, hallId: string) => {
@@ -430,7 +514,11 @@ export default function ExamSeating() {
     for (const s of (studentRows as Student[]) || []) studentsMap[s.id] = s;
 
     if (action === "view") {
-      openLayoutPrint(hall, sched, assignments, studentsMap);
+      if (Capacitor.isNativePlatform()) {
+        viewLayoutInApp(hall, sched, assignments, studentsMap);
+      } else {
+        openLayoutPrint(hall, sched, assignments, studentsMap);
+      }
     } else {
       downloadLayoutHtml(hall, sched, assignments, studentsMap);
     }
@@ -673,10 +761,12 @@ export default function ExamSeating() {
                               {layoutActionKey === viewKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5 mr-1.5" />}
                               View
                             </Button>
-                            <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "download")} disabled={layoutActionKey === downloadKey}>
-                              {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
-                              Download
-                            </Button>
+                            {!Capacitor.isNativePlatform() && (
+                              <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "download")} disabled={layoutActionKey === downloadKey}>
+                                {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
+                                Download
+                              </Button>
+                            )}
                             <Button size="sm" variant="ghost" className="rounded-full hover:bg-red-50" onClick={() => deleteSavedLayout(l.exam_schedule_id, l.hall_id)} disabled={layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete`}>
                               {layoutActionKey === `${l.exam_schedule_id}::${l.hall_id}::delete` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
                             </Button>
@@ -691,6 +781,17 @@ export default function ExamSeating() {
           </Card>
         </div>
       </div>
+
+      {/* In-app seating layout preview — used on native so "View" just
+          opens the layout with no PDF conversion and nothing to download */}
+      <Dialog open={layoutPreviewOpen} onOpenChange={setLayoutPreviewOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto rounded-2xl p-0">
+          <DialogHeader className="p-4 pb-0">
+            <DialogTitle>{layoutPreviewTitle}</DialogTitle>
+          </DialogHeader>
+          <div className="p-4" dangerouslySetInnerHTML={{ __html: layoutPreviewHtml }} />
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

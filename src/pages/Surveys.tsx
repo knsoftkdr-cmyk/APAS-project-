@@ -855,9 +855,7 @@ const responseRate = data && data.targetCount > 0 ? (data.receiptCount / data.ta
               <p className="text-xs text-indigo-600/70 mt-1.5">{responseRate.toFixed(0)}% responded</p>
             </div>
 
-            <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={exportCsv}>
-              <Download className="h-3.5 w-3.5 mr-1.5" /> Export CSV
-            </Button>
+            
 
             {data.questions.map((q: any, qi: number) => {
               const qResponses = data.responses.filter((r: any) => r.question_id === q.id);
