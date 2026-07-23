@@ -10,7 +10,6 @@
  * (e.g. homework gets graded), the task simply stops appearing.
  *
  * Deliberately excluded per product decision:
- * - Attendance (no attendance module yet)
  * - Assessments (auto-evaluated, no teacher action needed)
  */
 import { useState, useMemo } from "react";
@@ -98,6 +97,40 @@ export function MyTasksWidget() {
   const [customDate, setCustomDate] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // ── Automatic: attendance not yet marked today, per class ───────────────
+  const { data: attendanceTasks } = useQuery({
+    queryKey: ["auto-task-attendance", user?.id],
+    queryFn: async (): Promise<AutoTask[]> => {
+      const { data: assigned } = await supabase
+        .from("class_teachers")
+        .select("class_id, classes(name, section)")
+        .eq("teacher_id", user!.id);
+      const classRows = (assigned || []).filter((r: any) => r.classes);
+      if (classRows.length === 0) return [];
+
+      const today = format(new Date(), "yyyy-MM-dd");
+      const classIds = classRows.map((r: any) => r.class_id);
+      const { data: marked } = await supabase
+        .from("attendance_records")
+        .select("class_id")
+        .in("class_id", classIds)
+        .eq("date", today);
+      const markedIds = new Set((marked || []).map((r: any) => r.class_id));
+
+      return classRows
+        .filter((r: any) => !markedIds.has(r.class_id))
+        .map((r: any) => ({
+          id: `auto-attendance-${r.class_id}`,
+          title: "Mark Attendance",
+          subtitle: `${r.classes.name} - ${r.classes.section}`,
+          urgencyLabel: "Due Today",
+          urgencyColor: "red" as const,
+          link: "/attendance-marking",
+        }));
+    },
+    enabled: !!user?.id,
+  });
+
   // ── Automatic: homework pending evaluation ──────────────────────────────
   const { data: homeworkTask } = useQuery({
     queryKey: ["auto-task-homework", user?.id],
@@ -178,10 +211,11 @@ export function MyTasksWidget() {
   });
 
   const automaticTasks: AutoTask[] = useMemo(() => [
+    ...(attendanceTasks || []),
     ...(homeworkTask ? [homeworkTask] : []),
     ...(interventionTasks || []),
     ...(followUpTasks || []),
-  ], [homeworkTask, interventionTasks, followUpTasks]);
+  ], [attendanceTasks, homeworkTask, interventionTasks, followUpTasks]);
 
   // ── Manual tasks ──────────────────────────────────────────────────────────
   const { data: manualTasks = [], refetch: refetchManual } = useQuery({
@@ -303,12 +337,11 @@ export function MyTasksWidget() {
   const showManualCompleted = filter === "all" || filter === "manual" || filter === "completed";
 
   return (
-    <Card className="border border-emerald-500">
+    <Card className="border border-border/60">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-green-100 shadow-lg shadow-green-300/50">
-              <ListChecks className="h-6 w-6 text-emerald-500" /></div> My Tasks
+            <ListChecks className="h-4 w-4 text-primary" /> My Tasks
           </CardTitle>
           <div className="flex gap-1.5 flex-wrap">
             {(["all", "automatic", "manual", "completed"] as Filter[]).map((f) => (
@@ -318,7 +351,7 @@ export function MyTasksWidget() {
                 className={cn(
                   "text-xs px-2.5 py-1 rounded-full border transition-colors capitalize",
                   filter === f
-                    ? "bg-blue-500 text-blue-100 border-blue-500"
+                    ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background border-border hover:bg-muted text-muted-foreground"
                 )}
               >
@@ -331,18 +364,18 @@ export function MyTasksWidget() {
 
       <CardContent className="space-y-4">
         {/* Summary cards */}
-        <div className="grid grid-cols-3 gap-3 ">
-          <div className="rounded-lg border border-red-100 border-l-4 border-l-red-500 p-3 text-center shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-            <p className="text-xl font-bold text-red-600">{todayCount}</p>
-            <p className="text-xs text-black">Today's Tasks</p>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-lg border p-3 text-center">
+            <p className="text-xl font-bold">{todayCount}</p>
+            <p className="text-xs text-muted-foreground">Today's Tasks</p>
           </div>
-          <div className="rounded-lg border border-amber-100 border-l-4 border-l-amber-500 p-3 text-center shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+          <div className="rounded-lg border p-3 text-center">
             <p className="text-xl font-bold text-amber-600">{pendingCount}</p>
-            <p className="text-xs text-black">Pending</p>
+            <p className="text-xs text-muted-foreground">Pending</p>
           </div>
-          <div className="rounded-lg border border-green-100 border-l-4 border-l-green-500 p-3 text-center shadow-elevated transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+          <div className="rounded-lg border p-3 text-center">
             <p className="text-xl font-bold text-green-600">{completedCount}</p>
-            <p className="text-xs text-black">Completed</p>
+            <p className="text-xs text-muted-foreground">Completed</p>
           </div>
         </div>
 
@@ -425,8 +458,8 @@ export function MyTasksWidget() {
           </div>
         )}
 
-        <Button variant="outline" className="w-full bg-blue-500 text-white" onClick={openAddDialog}>
-          <Plus className="h-5 w-5 mr-1.5 text-white" /> Add Task
+        <Button variant="outline" className="w-full" onClick={openAddDialog}>
+          <Plus className="h-4 w-4 mr-1.5" /> Add Task
         </Button>
       </CardContent>
 
@@ -482,7 +515,7 @@ export function MyTasksWidget() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-            <Button className="bg-blue-500 text-white" onClick={handleSaveTask} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
+            <Button onClick={handleSaveTask} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

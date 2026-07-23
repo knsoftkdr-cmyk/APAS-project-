@@ -391,19 +391,21 @@ const last6MonthsChart = useMemo(() => {
           <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
           <CardContent className="p-5 relative">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><Target className="h-3.5 w-3.5" /></div>School Target vs Actual</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-muted-foreground border-b">
-                  <th className="pb-2">Metric</th><th className="pb-2">Target</th><th className="pb-2">Actual</th><th className="pb-2">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                <TargetRow label="Homework Completion" target={targets.homework_completion} actual={homeworkCompletion} />
-                <TargetRow label="Assessment Average" target={targets.assessment_average} actual={assessmentAverage} />
-                <TargetRow label="Dropout Risk" target={targets.dropout_risk} actual={avgDropoutRisk} lowerIsBetter />
-                <TargetRow label="Intervention Success Rate" target={targets.intervention_success} actual={interventionSuccess} />
-              </tbody>
-            </table>
+            <div className="overflow-x-auto -mx-1 px-1">
+              <table className="w-full min-w-[480px] text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b">
+                    <th className="pb-2 pr-3">Metric</th><th className="pb-2 pr-3">Target</th><th className="pb-2 pr-3">Actual</th><th className="pb-2">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <TargetRow label="Homework Completion" target={targets.homework_completion} actual={homeworkCompletion} />
+                  <TargetRow label="Assessment Average" target={targets.assessment_average} actual={assessmentAverage} />
+                  <TargetRow label="Dropout Risk" target={targets.dropout_risk} actual={avgDropoutRisk} lowerIsBetter />
+                  <TargetRow label="Intervention Success Rate" target={targets.intervention_success} actual={interventionSuccess} />
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
@@ -416,22 +418,24 @@ const last6MonthsChart = useMemo(() => {
           <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
           <CardContent className="p-5 relative">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><BarChart3 className="h-3.5 w-3.5" /></div>Grade-wise Benchmark</h3>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-muted-foreground border-b">
-                  <th className="pb-2">Grade</th><th className="pb-2">Average Score</th><th className="pb-2">Homework Completion</th>
-                </tr>
-              </thead>
-              <tbody>
-                {gradeRows.map((g) => (
-                  <tr key={g.grade} className="border-b last:border-0">
-                    <td className="py-2 font-medium">{g.grade}</td>
-                    <td className="py-2">{g.score}%</td>
-                    <td className="py-2">{g.homework}%</td>
+            <div className="overflow-x-auto -mx-1 px-1">
+              <table className="w-full min-w-[420px] text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b">
+                    <th className="pb-2 pr-3 whitespace-nowrap">Grade</th><th className="pb-2 pr-3 whitespace-nowrap">Average Score</th><th className="pb-2 whitespace-nowrap">Homework Completion</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {gradeRows.map((g) => (
+                    <tr key={g.grade} className="border-b last:border-0">
+                      <td className="py-2 pr-3 font-medium whitespace-nowrap">{g.grade}</td>
+                      <td className="py-2 pr-3">{g.score}%</td>
+                      <td className="py-2">{g.homework}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
 
@@ -440,23 +444,25 @@ const last6MonthsChart = useMemo(() => {
           <CardContent className="p-5 relative">
             <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><Users className="h-3.5 w-3.5" /></div>Teacher Performance Benchmark</h3>
             <p className="text-xs text-muted-foreground mb-3">A comparison to spot where support may help — not a ranking.</p>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs text-muted-foreground border-b">
-                  <th className="pb-2">Teacher</th><th className="pb-2">Homework Reviewed</th><th className="pb-2">Avg Homework Score</th><th className="pb-2">Active Interventions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {teacherRows.map((t) => (
-                  <tr key={t.name} className="border-b last:border-0">
-                    <td className="py-2 font-medium">{t.name}</td>
-                    <td className="py-2">{t.homeworkReviewed}</td>
-                    <td className="py-2">{t.avgScore ?? "—"}</td>
-                    <td className="py-2">{t.activeInterventions}</td>
+            <div className="overflow-x-auto -mx-1 px-1">
+              <table className="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b">
+                    <th className="pb-2 pr-3 whitespace-nowrap">Teacher</th><th className="pb-2 pr-3 whitespace-nowrap">Homework Reviewed</th><th className="pb-2 pr-3 whitespace-nowrap">Avg Homework Score</th><th className="pb-2 whitespace-nowrap">Active Interventions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {teacherRows.map((t) => (
+                    <tr key={t.name} className="border-b last:border-0">
+                      <td className="py-2 pr-3 font-medium whitespace-nowrap">{t.name}</td>
+                      <td className="py-2 pr-3">{t.homeworkReviewed}</td>
+                      <td className="py-2 pr-3">{t.avgScore ?? "—"}</td>
+                      <td className="py-2">{t.activeInterventions}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </CardContent>
         </Card>
       </div>

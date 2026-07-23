@@ -268,16 +268,26 @@ return (
                 <CardHeader><CardTitle className="text-base">Student Risk Distribution</CardTitle></CardHeader>
                 <CardContent>
                   {riskPieData.length > 0 ? (
-                    <ChartContainer config={{ risk: { label: "Risk" } }} className="h-[250px]">
-                      <PieChart>
-                        <Pie data={riskPieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} dataKey="value" label={({ name, value }) => `${name}: ${value}`}>
-                          {riskPieData.map((entry, i) => (
-                            <Cell key={i} fill={entry.fill} />
-                          ))}
-                        </Pie>
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </PieChart>
-                    </ChartContainer>
+                    <>
+                      <ChartContainer config={{ risk: { label: "Risk" } }} className="h-[220px]">
+                        <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
+                          <Pie data={riskPieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value">
+                            {riskPieData.map((entry, i) => (
+                              <Cell key={i} fill={entry.fill} />
+                            ))}
+                          </Pie>
+                          <ChartTooltip content={<ChartTooltipContent />} />
+                        </PieChart>
+                      </ChartContainer>
+                      <div className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 mt-3">
+                        {riskPieData.map((entry, i) => (
+                          <div key={i} className="flex items-center gap-1.5 text-xs">
+                            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: entry.fill }} />
+                            <span className="text-muted-foreground">{entry.name}: <span className="font-semibold text-foreground">{entry.value}</span></span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-8">No predictions yet. Run Predictions to analyze students.</p>
                   )}
