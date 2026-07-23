@@ -32,6 +32,7 @@ const MODEL_RULES: Record<string, string> = {
   generate_mcq: "google/gemini-2.5-flash",
   generate_homework: "google/gemini-2.5-flash",
   analyze_results: "google/gemini-2.5-flash",
+  generate_improvement_plan: "google/gemini-2.5-flash",
 
   // Heavy reasoning / long-form authoring
   generate_lesson: "google/gemini-2.5-pro",

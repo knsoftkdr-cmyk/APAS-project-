@@ -10,6 +10,7 @@ import { Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from 'date-fns';
+import AttendanceRiskView from '@/components/attendance/AttendanceRiskView';
 
 type AttendanceStatus = 'present' | 'absent' | 'late' | 'half_day' | 'excused';
 
@@ -79,6 +80,7 @@ export default function AttendanceMarking() {
   const canMark = role === 'teacher' || role === 'principal' || role === 'admin';
   const isSelfView = role === 'student' || role === 'parent' || role === 'teacher';
   const canManageTeacherAttendance = role === 'principal' || role === 'admin';
+  const canViewRisk = role === 'teacher' || role === 'admin';
 
   const [activeTab, setActiveTab] = useState<string>('mark');
   useEffect(() => {
@@ -109,6 +111,7 @@ export default function AttendanceMarking() {
             {isSelfView && <TabsTrigger value="mine" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">My Attendance</TabsTrigger>}
             {canManageTeacherAttendance && <TabsTrigger value="teacher-mark" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Teacher Attendance</TabsTrigger>}
             {canManageTeacherAttendance && <TabsTrigger value="teacher-view" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Teacher View</TabsTrigger>}
+            {canViewRisk && <TabsTrigger value="risk" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Attendance Risk</TabsTrigger>}
           </TabsList>
           {canMark && (
             <TabsContent value="mark">
@@ -133,6 +136,11 @@ export default function AttendanceMarking() {
           {canManageTeacherAttendance && (
             <TabsContent value="teacher-view">
               <ViewTeacherAttendanceTab schoolId={schoolId} />
+            </TabsContent>
+          )}
+          {canViewRisk && (
+            <TabsContent value="risk">
+              <AttendanceRiskView schoolId={schoolId} role={role} classes={classes} />
             </TabsContent>
           )}
         </Tabs>

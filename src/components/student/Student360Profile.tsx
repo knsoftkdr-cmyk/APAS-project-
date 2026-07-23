@@ -74,6 +74,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 
 import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
+import { getImprovementPlan, type ImprovementPlan } from "@/lib/improvementPlan";
 
 export type ProfileRole = "student" | "parent" | "staff";
 
@@ -90,6 +91,7 @@ const TABS = [
   { value: "transport", label: "Transport", icon: Bus, color: "text-amber-600", hint: "Bus, route, pickup/drop details" },
   { value: "documents", label: "Documents", icon: FileText, color: "text-violet-600", hint: "Uploaded certificates & files" },
   { value: "behaviour", label: "Behaviour", icon: Star, color: "text-yellow-600", hint: "Behaviour records & score" },
+  { value: "improvement-plan", label: "Improvement Plan", icon: GoalIcon, color: "text-teal-600", hint: "Personalized growth plan from predictions, attendance & competencies" },
   { value: "learning-support", label: "Learning Support", icon: HeartHandshake, color: "text-pink-600", hint: "IEP / support plans & accommodations" },
   { value: "emergency", label: "Emergency", icon: Phone, color: "text-red-600", hint: "Emergency contact numbers" },
 ] as const;
@@ -197,6 +199,9 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
             canEdit={false}
             canDelete={false}
           />
+        </TabsContent>
+        <TabsContent value="improvement-plan" className="mt-4">
+          <ImprovementPlanTab studentId={studentId} />
         </TabsContent>
         <TabsContent value="learning-support" className="mt-4">
           <LearningSupportTab
@@ -2787,4 +2792,124 @@ function toMonthlyTrend(records: { date: string; status: string }[]) {
     month,
     percentage: total > 0 ? Math.round((present / total) * 100) : 0,
   }));
+}
+// ============================================================
+// Improvement Plan tab — read-only view for student/parent
+// ============================================================
+
+function ImprovementPlanTab({ studentId }: { studentId: string }) {
+  const { data: plan, isLoading } = useQuery({
+    queryKey: ["improvement-plan", studentId],
+    queryFn: () => getImprovementPlan(studentId),
+    enabled: !!studentId,
+  });
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+
+  if (!plan) {
+    return (
+      <Card className="border-t-4 border-t-teal-400">
+        <CardContent className="py-10">
+          <EmptyState message="No improvement plan has been shared yet. Check back once your teacher has published one." />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { content } = plan;
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-t-4 border-t-teal-400">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-50">
+              <GoalIcon className="h-4 w-4 text-teal-600" />
+            </span>
+            Improvement Plan
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-700">{content.summary}</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            Last updated {new Date(plan.updated_at).toLocaleDateString()}
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border-t-4 border-t-emerald-400">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600" /> Strengths
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {content.strengths.length === 0 ? (
+              <EmptyState message="None listed." />
+            ) : (
+              content.strengths.map((s, i) => (
+                <div key={i} className="text-sm flex items-start gap-2">
+                  <span className="text-emerald-500 mt-0.5">•</span> {s}
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-t-4 border-t-amber-400">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" /> Focus Areas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1.5">
+            {content.focus_areas.length === 0 ? (
+              <EmptyState message="None listed." />
+            ) : (
+              content.focus_areas.map((f, i) => (
+                <div key={i} className="text-sm flex items-start gap-2">
+                  <span className="text-amber-500 mt-0.5">•</span> {f}
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-t-4 border-t-indigo-400">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <GoalIcon className="h-4 w-4 text-indigo-600" /> Goals
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {content.goals.length === 0 ? (
+            <EmptyState message="No goals set yet." />
+          ) : (
+            content.goals.map((g, i) => (
+              <div key={i} className="border-b pb-2 last:border-0">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-sm">{g.title}</p>
+                  <Badge variant="secondary">{g.timeframe}</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{g.description}</p>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {plan.teacher_notes && (
+        <Card className="border-t-4 border-t-slate-400">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Teacher Notes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-700">{plan.teacher_notes}</p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }

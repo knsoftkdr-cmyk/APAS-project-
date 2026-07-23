@@ -27,6 +27,7 @@ import { InterventionDrawer, Intervention } from "@/components/InterventionDrawe
 import { BehaviourAnalytics, AnalyticsMeta } from "@/components/BehaviourAnalytics";
 import { TierOnePositiveRecognition } from "@/components/TierOnePositiveRecognition.tsx";
 import { createBehaviourRecord } from "@/lib/studentProfile";
+import { getImprovementPlan, generateImprovementPlan, updateImprovementPlan, type ImprovementPlan } from "@/lib/improvementPlan";
 interface Student {
   id: string;
   full_name: string;
@@ -529,6 +530,10 @@ const [noteType, setNoteType] = useState("observation");
               </Card>
             )}
 
+            {selectedStudent && (
+              <ImprovementPlanEditorCard studentId={selectedStudent.id} schoolId={profile?.school_id ?? ""} />
+            )}
+
             <Card className="overflow-hidden border-violet-200 shadow-sm">
   <div className="h-1 bg-gradient-to-r from-violet-400 to-purple-500" />
   <CardHeader className="pb-2">
@@ -623,5 +628,188 @@ const [noteType, setNoteType] = useState("observation");
         />
       )}
     </AppLayout>
+  );
+}
+
+// ============================================================
+// Improvement Plan editor — teacher can generate, edit notes,
+// and publish/unpublish visibility to the student.
+// ============================================================
+
+function ImprovementPlanEditorCard({ studentId, schoolId }: { studentId: string; schoolId: string }) {
+  const { toast } = useToast();
+  const [plan, setPlan] = useState<ImprovementPlan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [notesDraft, setNotesDraft] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState(false);
+
+  const fetchPlan = useCallback(async () => {
+    setLoading(true);
+    try {
+      const p = await getImprovementPlan(studentId);
+      setPlan(p);
+      setNotesDraft(p?.teacher_notes ?? "");
+    } catch (e: any) {
+      toast({ title: "Error loading plan", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  }, [studentId, toast]);
+
+  useEffect(() => {
+    fetchPlan();
+  }, [fetchPlan]);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    try {
+      await generateImprovementPlan(studentId);
+      await fetchPlan();
+      toast({ title: "Plan generated", description: "Improvement plan refreshed from latest data." });
+    } catch (e: any) {
+      toast({ title: "Error generating plan", description: e.message, variant: "destructive" });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const handleSaveNotes = async () => {
+    if (!plan) return;
+    setSavingNotes(true);
+    try {
+      await updateImprovementPlan(plan.id, { teacher_notes: notesDraft });
+      await fetchPlan();
+      toast({ title: "Notes saved" });
+    } catch (e: any) {
+      toast({ title: "Error saving notes", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
+  const handleToggleVisibility = async () => {
+    if (!plan) return;
+    setTogglingVisibility(true);
+    try {
+      await updateImprovementPlan(plan.id, { is_visible_to_student: !plan.is_visible_to_student });
+      await fetchPlan();
+      toast({
+        title: plan.is_visible_to_student ? "Hidden from student" : "Published to student",
+      });
+    } catch (e: any) {
+      toast({ title: "Error updating visibility", description: e.message, variant: "destructive" });
+    } finally {
+      setTogglingVisibility(false);
+    }
+  };
+
+  return (
+    <Card className="overflow-hidden border-teal-200 shadow-sm">
+      <div className="h-1 bg-gradient-to-r from-teal-400 to-emerald-500" />
+      <CardHeader className="pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-base flex items-center gap-2">
+          <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+            <ClipboardList className="h-6 w-6 text-teal-600" />
+          </div>
+          Improvement Plan
+        </CardTitle>
+        <Button
+          size="sm"
+          className="bg-teal-600 hover:bg-teal-700 text-white"
+          onClick={handleGenerate}
+          disabled={generating}
+        >
+          {generating ? "Generating..." : plan ? "Regenerate" : "Generate Plan"}
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <div className="flex justify-center py-6"><LoadingSpinner /></div>
+        ) : !plan ? (
+          <p className="text-sm text-muted-foreground py-4 text-center">
+            No plan generated yet for this student. Click "Generate Plan" to build one from their predictions, attendance, GPA and competency data.
+          </p>
+        ) : (
+          <>
+            <div className="flex items-center justify-between">
+              <Badge variant={plan.is_visible_to_student ? "default" : "secondary"}>
+                {plan.is_visible_to_student ? "Visible to student" : "Hidden from student"}
+              </Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleToggleVisibility}
+                disabled={togglingVisibility}
+              >
+                {togglingVisibility ? "Updating..." : plan.is_visible_to_student ? "Unpublish" : "Publish to student"}
+              </Button>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium mb-1">Summary</p>
+              <p className="text-sm text-slate-700">{plan.content.summary}</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Strengths</p>
+                <div className="space-y-1">
+                  {plan.content.strengths.map((s, i) => (
+                    <p key={i} className="text-xs text-slate-600">• {s}</p>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-1">Focus Areas</p>
+                <div className="space-y-1">
+                  {plan.content.focus_areas.map((f, i) => (
+                    <p key={i} className="text-xs text-slate-600">• {f}</p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Goals</p>
+              <div className="space-y-1.5">
+                {plan.content.goals.map((g, i) => (
+                  <div key={i} className="text-xs">
+                    <span className="font-medium">{g.title}</span> — {g.description} ({g.timeframe})
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium text-muted-foreground mb-1">Action Items</p>
+              <div className="space-y-1">
+                {plan.content.action_items.map((a, i) => (
+                  <p key={i} className="text-xs text-slate-600">• {a.item} <span className="text-muted-foreground">({a.category})</span></p>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Teacher Notes (private additions to the plan)</label>
+              <Textarea
+                value={notesDraft}
+                onChange={(e) => setNotesDraft(e.target.value)}
+                rows={3}
+                placeholder="Add your own observations or adjustments to this plan..."
+              />
+              <Button
+                size="sm"
+                onClick={handleSaveNotes}
+                disabled={savingNotes || notesDraft === (plan.teacher_notes ?? "")}
+              >
+                {savingNotes ? "Saving..." : "Save Notes"}
+              </Button>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }
