@@ -40,6 +40,7 @@ import {
   UserPlus,
   Lightbulb,
   Rocket,
+  CheckCircle2,
 } from "lucide-react";
 
 const features = [
@@ -156,7 +157,7 @@ const Landing = () => {
             <a href="#platform" className="hover:text-blue-600 transition-colors">Platform</a>
             <a href="#solutions" className="hover:text-blue-600 transition-colors">Solutions</a>
             <a href="#aifeatures" className="hover:text-blue-600 transition-colors">AI Features</a>
-            <a href="#schools" className="hover:text-blue-600 transition-colors">Schools</a>
+            <a href="#how" className="hover:text-blue-600 transition-colors">How it Works</a>
             <a href="#resources" className="hover:text-blue-600 transition-colors">Resources</a>
             <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
@@ -975,115 +976,49 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* SECTION 4 — Faculty & Analytics */}
-      <section id="schools" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white">
-        <div className="max-w-7xl mx-auto">
-          <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-16">
+      {/* SECTION 4 — How It Works */}
+      <section id="how" className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/40 to-white">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          <div data-reveal className="reveal relative rounded-2xl overflow-hidden shadow-2xl shadow-blue-200 aspect-video">
+            <iframe
+              className="w-full h-full"
+              src="https://www.youtube.com/embed/PGN_RAv3Ow4"
+              title="How APAS Works"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowFullScreen
+            />
+          </div>
+
+          <div data-reveal className="reveal">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 mb-4">
-              For Educators
+              How It Works
             </div>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
-              Teacher {" "}
+              Three Pillars of{" "}
               <span className="bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                Intelligence
+                Personalization
               </span>
             </h2>
             <p className="mt-4 text-slate-600">
-              Track student engagement, identify weak areas, and improve outcomes using AI-powered analytics.
+              From diagnosis to delivery to measurable growth — APAS adapts to every learner, every step of the way.
             </p>
-          </div>
 
-          {/* Real teacher photo banner */}
-          <div data-reveal className="reveal relative mb-16 rounded-3xl overflow-hidden shadow-2xl shadow-blue-200">
-            <img
-              src={teacherPhoto}
-              alt="Educator using APAS analytics"
-              loading="lazy"
-              className="w-full h-64 md:h-80 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-l from-blue-900/75 via-slate-800/40 to-transparent flex items-center justify-end">
-              <div className="px-8 md:px-14 max-w-xl text-right text-white">
-                <div className="text-xs font-semibold uppercase tracking-widest text-blue-200">For Educators</div>
-                <div className="mt-2 text-2xl md:text-3xl font-extrabold leading-tight drop-shadow-lg">
-                  Teach smarter with real-time AI analytics
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
-            <div data-reveal className="reveal grid sm:grid-cols-2 gap-4">
+            <div className="mt-6 space-y-4">
               {[
-                { icon: LineChart, title: "Class Performance", desc: "Monitor every class & section in real time.", color: "from-blue-500 to-blue-500" },
-                { icon: Activity, title: "Engagement Heatmaps", desc: "See where students light up — or fall off.", color: "from-blue-500 to-green-500" },
-                { icon: FileText, title: "AI-Generated Reports", desc: "Auto-built insights, ready to share with parents.", color: "from-green-500 to-green-500" },
-                { icon: Users, title: "Student Insights", desc: "Drill into each learner's profile and growth.", color: "from-blue-500 to-blue-500" },
-                { icon: BookOpen,title: "AI Lesson Plans",desc: "Generate curriculum-aligned lesson plans instantly with AI assistance.", color: "from-blue-500 to-green-500"},
-              ].map((f) => (
-                <div key={f.title} className="rounded-2xl bg-white border border-slate-100 p-5 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-100 transition-all">
-                  <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shadow-md`}>
-                    <f.icon className="w-5 h-5 text-white" />
+                { title: "Diagnostic Phase", desc: "AI-driven gamified assessments map VARK learning styles, Zone of Proximal Development, and multiple intelligences." },
+                { title: "Curative Phase", desc: "Generates lesson templates tailored to the curriculum — inquiry-based, structured mastery, and more." },
+                { title: "Analytics Phase", desc: "Tracks mastery vs. effort to reveal whether a gap is instructional or content-based, using a normalised gain formula." },
+                { title: "Strategic Curriculum Integration", desc: "Aligns to CBSE, IB, and Cambridge frameworks with the right pedagogy, data metrics, and teacher tools for each." },
+              ].map((p) => (
+                <div key={p.title} className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-semibold text-slate-800">{p.title}</div>
+                    <p className="text-sm text-slate-600">{p.desc}</p>
                   </div>
-                  <div className="mt-4 font-bold">{f.title}</div>
-                  <p className="text-sm text-slate-600 mt-1">{f.desc}</p>
                 </div>
               ))}
-            </div>
-
-            <div data-reveal className="reveal relative h-[520px]">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-blue-100 via-blue-100 to-green-100 p-6 shadow-xl floaty">
-                <div className="bg-white rounded-2xl h-full p-5 flex flex-col gap-4 shadow-inner">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-bold">Class 8-A Overview</div>
-                      <div className="text-xs text-slate-500">42 students · Last 30 days</div>
-                    </div>
-                    <div className="px-2 py-1 rounded-md bg-emerald-100 text-emerald-700 text-xs font-semibold">+14% growth</div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { l: "Engagement", v: "92%", c: "text-blue-600" },
-                      { l: "Avg Score", v: "78", c: "text-blue-800" },
-                      { l: "At Risk", v: "4", c: "text-green-600" },
-                    ].map((k) => (
-                      <div key={k.l} className="rounded-lg bg-slate-50 p-2 text-center">
-                        <div className="text-[10px] text-slate-500">{k.l}</div>
-                        <div className={`text-lg font-extrabold ${k.c}`}>{k.v}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div>
-                    <div className="text-xs font-semibold text-slate-700 mb-2">Engagement Heatmap</div>
-                    <div className="grid grid-cols-12 gap-1">
-                      {Array.from({ length: 84 }).map((_, i) => {
-                        const intensity = Math.abs(Math.sin(i * 0.7)) * 0.85 + 0.12;
-                        return (
-                          <div key={i} className="aspect-square rounded-sm" style={{ background: `rgba(99, 102, 241, ${intensity.toFixed(2)})` }} />
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="mt-auto rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-blue-50 p-3 flex items-start gap-2">
-                    <FileText className="w-4 h-4 text-blue-600 mt-0.5" />
-                    <div className="text-xs text-slate-700">
-                      <b>AI Report:</b> 3 students need extra support in <i>fractions</i>. Recommended: targeted practice set.
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute -top-4 -right-3 rounded-2xl bg-white shadow-xl p-3 flex items-center gap-2 floaty floaty-2 z-10">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center">
-                  <TrendingUp className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <div className="text-[10px] text-slate-500">Outcomes</div>
-                  <div className="font-bold text-xs text-emerald-600">Improving</div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -1867,7 +1802,7 @@ duration-300
               unlock potential through adaptive, AI-powered learning.
             </p>
             <div className="mt-8 flex flex-wrap gap-4 justify-center relative">
-              <Link to="/login">
+              <Link to="/request-demo">
                 <Button size="lg" className="rounded-full px-8 h-12 bg-white text-blue-700 hover:bg-white/90 font-semibold shadow-xl">
                   Get Started Free <ArrowRight className="ml-1" />
                 </Button>
