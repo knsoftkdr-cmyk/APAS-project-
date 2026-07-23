@@ -1,9 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,8 +12,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Users, GraduationCap, TrendingUp, AlertTriangle, BookOpen,
-  Heart, ClipboardList, RefreshCw, Sparkles, Activity,
+  Heart, ClipboardList, RefreshCw, Sparkles, Activity, CalendarCheck,
 } from "lucide-react";
+import { format, startOfMonth } from "date-fns";
 import { DashStatCard } from "@/components/dashboard/DashStatCard";
 import { PredictiveAnalyticsContent } from "@/pages/PredictiveAnalytics";
 import { SchoolBenchmarkingContent } from "@/pages/SchoolBenchmarking";
@@ -46,6 +48,48 @@ export default function ExecutiveReporting() {
   }, [profile?.school_id, toast]);
 
   useEffect(() => { fetchReport(); }, [fetchReport]);
+
+  // Fetched directly here, independent of the executive-report edge function,
+  // since attendance now exists but the edge function hasn't been updated to
+  // include it yet. Scoped to the current month, same cadence as the rest of
+  // this report.
+  const { data: attendanceStats } = useQuery({
+    queryKey: ["executive-attendance", profile?.school_id],
+    queryFn: async () => {
+      const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
+      const PRESENT_LIKE = new Set(["present", "late", "half_day"]);
+
+      const { data: studentRecords } = await supabase
+        .from("attendance_records")
+        .select("status")
+        .eq("school_id", profile!.school_id)
+        .gte("date", monthStart);
+      const studentTotal = studentRecords?.length || 0;
+      const studentPresent = (studentRecords || []).filter((r: any) => PRESENT_LIKE.has(r.status)).length;
+
+      const { data: teacherRecords } = await supabase
+        .from("teacher_attendance")
+        .select("status")
+        .eq("school_id", profile!.school_id)
+        .gte("date", monthStart);
+      const teacherTotal = teacherRecords?.length || 0;
+      const teacherPresent = (teacherRecords || []).filter((r: any) => PRESENT_LIKE.has(r.status)).length;
+
+      return {
+        studentPct: studentTotal > 0 ? Math.round((studentPresent / studentTotal) * 100) : null,
+        teacherPct: teacherTotal > 0 ? Math.round((teacherPresent / teacherTotal) * 100) : null,
+      };
+    },
+    enabled: !!profile?.school_id,
+  });
+
+  // The edge function's "unavailable" list was written before attendance
+  // existed — filter those two lines out now that we have real data for them.
+  const unavailable = useMemo(() => {
+    return (data?.unavailable || []).filter(
+      (item: string) => !/student attendance|teacher attendance/i.test(item)
+    );
+  }, [data?.unavailable]);
 
   if (loading) {
     return (
@@ -122,6 +166,8 @@ export default function ExecutiveReporting() {
           <DashStatCard label="At-Risk Students" value={data.summary.at_risk_count} icon={AlertTriangle} accent="pink" />
           <DashStatCard label="Homework Completion" value={na(data.summary.homework_completion_pct)} icon={BookOpen} accent="amber" />
           <DashStatCard label="School Health" value={data.health_score !== null ? `${data.health_score}/100` : "N/A"} icon={Activity} accent="orange" />
+          <DashStatCard label="Student Attendance (This Month)" value={na(attendanceStats?.studentPct ?? null)} icon={CalendarCheck} accent="emerald" />
+          <DashStatCard label="Teacher Attendance (This Month)" value={na(attendanceStats?.teacherPct ?? null)} icon={CalendarCheck} accent="blue" />
         </div>
 
         {/* 11. School Health Score breakdown */}
@@ -133,7 +179,7 @@ export default function ExecutiveReporting() {
               {data.health_components.map((c: any) => (
                 <span key={c.label}>{c.label}: <span className="font-semibold text-foreground">{c.value}%</span></span>
               ))}
-              <span className="italic">Note: attendance isn't included — no attendance module exists yet.</span>
+              <span className="italic">Note: attendance isn't factored into this score yet — see the Student/Teacher Attendance cards above for current attendance.</span>
             </CardContent>
           </Card>
         )}
@@ -270,9 +316,7 @@ export default function ExecutiveReporting() {
           </Card>
         )}
 
-        <p className="text-xs text-muted-foreground text-center pb-4">
-          Not available yet: {data.unavailable?.join(" · ")}
-        </p>
+        
         </>
         )}
       </div>

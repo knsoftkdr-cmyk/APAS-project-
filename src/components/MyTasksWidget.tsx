@@ -56,7 +56,7 @@ interface AutoTask {
   link: string;
 }
 
-type Filter = "all" | "automatic" | "manual" | "completed";
+type Filter = "all" | "suggested" | "personal" | "completed";
 
 const URGENCY_DOT: Record<string, string> = {
   red: "bg-red-500",
@@ -125,7 +125,7 @@ export function MyTasksWidget() {
           subtitle: `${r.classes.name} - ${r.classes.section}`,
           urgencyLabel: "Due Today",
           urgencyColor: "red" as const,
-          link: "/attendance-marking",
+          link: "/attendance",
         }));
     },
     enabled: !!user?.id,
@@ -332,9 +332,9 @@ export function MyTasksWidget() {
     refetchManual();
   };
 
-  const showAutomatic = filter === "all" || filter === "automatic";
-  const showManualPending = filter === "all" || filter === "manual";
-  const showManualCompleted = filter === "all" || filter === "manual" || filter === "completed";
+  const showAutomatic = filter === "all" || filter === "suggested";
+  const showManualPending = filter === "all" || filter === "personal";
+  const showManualCompleted = filter === "all" || filter === "personal" || filter === "completed";
 
   return (
     <Card className="border border-border/60">
@@ -344,7 +344,7 @@ export function MyTasksWidget() {
             <ListChecks className="h-4 w-4 text-primary" /> My Tasks
           </CardTitle>
           <div className="flex gap-1.5 flex-wrap">
-            {(["all", "automatic", "manual", "completed"] as Filter[]).map((f) => (
+            {(["all", "suggested", "personal", "completed"] as Filter[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}
@@ -382,7 +382,7 @@ export function MyTasksWidget() {
         {/* Automatic tasks */}
         {showAutomatic && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Automatic Tasks</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Suggested Tasks</p>
             {automaticTasks.length === 0 ? (
               <p className="text-sm text-muted-foreground py-2">Nothing pending — you're all caught up.</p>
             ) : (
@@ -409,7 +409,7 @@ export function MyTasksWidget() {
         {/* Manual tasks */}
         {(showManualPending || showManualCompleted) && (
           <div className="space-y-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">My Personal Tasks</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Personal Tasks</p>
 
             {showManualPending && pendingManual.map((t) => {
               const due = dueDateLabel(t.due_date);

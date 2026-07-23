@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TestAnalysis } from "@/components/TestAnalysis";
-
+import AcademicQuizLoader from "@/components/AcademicQuizLoader";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -370,24 +370,24 @@ const subjectColors: Record<string, string> = {
   Chemistry: "bg-emerald-500 text-white",
   Biology: "bg-lime-500 text-white",
 };
+
+if (phase === "loading") {
+    return <AcademicQuizLoader subject={subject} questionCount={numQuestions} />;
+  }
+
+
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
+        <div className="mb-8 overflow-hidden rounded-xl bg-gradient-to-r from-sky-600 via-sky-500 to-sky-400 p-8 relative min-h-[160px]">
 <div className="hidden md:block">
           <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
-
-
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
           <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
           
           <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
           <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
           <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
 
           <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] 
 border-b-white/40"></div>
@@ -400,11 +400,11 @@ border-b-white/80"></div>
 </div>
 
   <div className="max-w-xl">
-    <h1 className="text-5xl font-bold text-slate-900">
+    <h1 className="text-4xl font-bold text-white">
       Academic Tests
     </h1>
 
-    <p className="mt-3 text-slate-700 text-lg">
+    <p className="mt-3 text-white text-lg">
       Test your knowledge with AI-generated questions
     </p>
   </div>
@@ -413,7 +413,7 @@ border-b-white/80"></div>
     src={academictests}
     alt="Academic tests Banner"
     /* className="absolute right-10 bottom-5 h-[150px]" */
-    className="hidden md:block absolute right-10 bottom-6 w-40"
+    className="hidden md:block absolute right-10 bottom-6 h-[130px]"
   />
 </div>
 
@@ -645,22 +645,7 @@ transition-all duration-300`}
         </div>
       )}
 
-      {/* ─── LOADING PHASE ─── */}
-      {phase === "loading" && (
-        <Card className="animate-fade-in">
-          <CardContent className="flex flex-col items-center justify-center py-20">
-            <div className="relative mb-6">
-              <div className="h-20 w-20 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
-              <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-8 w-8 text-primary animate-pulse" />
-            </div>
-            <h3 className="text-lg font-semibold mb-1">Generating Your Questions...</h3>
-            <p className="text-sm text-muted-foreground">
-              AI is crafting {numQuestions} {QUESTION_TYPE_OPTIONS.find(t => t.value === questionType)?.label} questions
-              {topic ? ` on "${topic}"` : ""} for {CLASS_OPTIONS.find(c => c.value === studentClass)?.label} - {subject}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      
 
       {/* ─── TEST PHASE ─── */}
       {phase === "test" && questions.length > 0 && (
