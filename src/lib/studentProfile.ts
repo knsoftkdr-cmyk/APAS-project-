@@ -863,6 +863,172 @@ export async function getRecentAssessments(studentId: string, limit = 10) {
 }
 
 // ============================================================
+// Confidence Index & Motivation Score (Overview "Summary Analytics")
+//
+// Confidence Index = 35% academic performance + 20% academic trend
+//   + 20% attendance rate + 25% competency rating level
+// Motivation Score = 30% attendance rate + 40% homework
+//   (60% completion rate + 40% avg submission quality)
+//   + 30% competency trend (improvement between assessments)
+//
+// Each component is optional — if a data source is empty, that
+// weight drops out and the remaining weights renormalize. Returns
+// nulls (not 0) when there's no usable data at all, so the UI can
+// show "No data" instead of a misleading score.
+// ============================================================
+
+const INDEX_ATTENDANCE_WEIGHT: Record<string, number> = {
+  present: 1,
+  late: 0.75,
+  half_day: 0.5,
+  absent: 0,
+};
+
+const INDEX_PROFICIENCY_NUM: Record<string, number> = {
+  beginner: 25,
+  developing: 50,
+  proficient: 75,
+  advanced: 100,
+};
+
+export async function calculateStudentIndices(studentId: string): Promise<{
+  confidenceIndex: number | null;
+  motivationScore: number | null;
+}> {
+  const ninetyDaysAgo = new Date();
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+  const sinceDate = ninetyDaysAgo.toISOString().slice(0, 10);
+
+  const [attendanceRes, marksRes, homeworkRes, competencyRes] = await Promise.all([
+    supabase
+      .from("attendance_records")
+      .select("status, date")
+      .eq("student_id", studentId)
+      .gte("date", sinceDate),
+    supabase
+      .from("student_marks")
+      .select("marks_obtained, max_marks, exam_date")
+      .eq("student_id", studentId)
+      .order("exam_date", { ascending: false }),
+    supabase
+      .from("homework_submissions")
+      .select("completed, submission_percentage")
+      .eq("student_id", studentId),
+    supabase
+      .from("competency_assessments")
+      .select("competency_id, proficiency, assessed_date")
+      .eq("student_id", studentId)
+      .order("assessed_date", { ascending: false }),
+  ]);
+
+  // --- Attendance rate (excused days excluded entirely) ---
+  let attendanceRate: number | null = null;
+  const attendanceRows = (attendanceRes.data || []).filter((r: any) => r.status !== "excused");
+  if (attendanceRows.length > 0) {
+    const weightedSum = attendanceRows.reduce(
+      (sum: number, r: any) => sum + (INDEX_ATTENDANCE_WEIGHT[r.status] ?? 0),
+      0
+    );
+    attendanceRate = (weightedSum / attendanceRows.length) * 100;
+  }
+
+  // --- Academic performance + trend (recent half vs older half of exams) ---
+  let academicPerf: number | null = null;
+  let academicTrendScore: number | null = null;
+  const marksRows = (marksRes.data || []).filter((m: any) => m.max_marks > 0);
+  if (marksRows.length > 0) {
+    const pctOf = (m: any) => (m.marks_obtained / m.max_marks) * 100;
+    academicPerf = marksRows.reduce((sum: number, m: any) => sum + pctOf(m), 0) / marksRows.length;
+
+    if (marksRows.length >= 2) {
+      const mid = Math.max(1, Math.floor(marksRows.length / 2));
+      const recentHalf = marksRows.slice(0, mid);
+      const olderHalf = marksRows.slice(mid);
+      const recentAvg = recentHalf.reduce((s: number, m: any) => s + pctOf(m), 0) / recentHalf.length;
+      const olderAvg = olderHalf.reduce((s: number, m: any) => s + pctOf(m), 0) / olderHalf.length;
+      academicTrendScore = Math.min(100, Math.max(0, 50 + (recentAvg - olderAvg)));
+    } else {
+      academicTrendScore = 50; // neutral, not enough history for a trend
+    }
+  }
+
+  // --- Homework completion rate + quality ---
+  let homeworkComponent: number | null = null;
+  const hwRows = homeworkRes.data || [];
+  if (hwRows.length > 0) {
+    const completedCount = hwRows.filter((h: any) => h.completed).length;
+    const completionRate = (completedCount / hwRows.length) * 100;
+    const scored = hwRows.filter((h: any) => h.submission_percentage !== null);
+    const avgQuality =
+      scored.length > 0
+        ? scored.reduce((s: number, h: any) => s + Number(h.submission_percentage), 0) / scored.length
+        : completionRate;
+    homeworkComponent = 0.6 * completionRate + 0.4 * avgQuality;
+  }
+
+  // --- Competency level + trend (latest vs previous assessment per competency) ---
+  let competencyScore: number | null = null;
+  let competencyTrendScore: number | null = null;
+  const compHistory = competencyRes.data || [];
+  if (compHistory.length > 0) {
+    const byCompetency: Record<string, any[]> = {};
+    compHistory.forEach((a: any) => {
+      if (!byCompetency[a.competency_id]) byCompetency[a.competency_id] = [];
+      byCompetency[a.competency_id].push(a); // already sorted desc by assessed_date
+    });
+
+    const latestScores = Object.values(byCompetency).map(
+      (rows) => INDEX_PROFICIENCY_NUM[rows[0].proficiency] ?? 50
+    );
+    competencyScore = latestScores.reduce((s, v) => s + v, 0) / latestScores.length;
+
+    const trendDeltas: number[] = [];
+    Object.values(byCompetency).forEach((rows) => {
+      if (rows.length >= 2) {
+        const latestNum = INDEX_PROFICIENCY_NUM[rows[0].proficiency] ?? 50;
+        const prevNum = INDEX_PROFICIENCY_NUM[rows[1].proficiency] ?? 50;
+        trendDeltas.push(latestNum - prevNum);
+      }
+    });
+    competencyTrendScore =
+      trendDeltas.length > 0
+        ? Math.min(100, Math.max(0, 50 + trendDeltas.reduce((s, v) => s + v, 0) / trendDeltas.length))
+        : 50;
+  }
+
+  // --- Confidence Index ---
+  const confidenceParts: { value: number; weight: number }[] = [];
+  if (academicPerf !== null) confidenceParts.push({ value: academicPerf, weight: 0.35 });
+  if (academicTrendScore !== null) confidenceParts.push({ value: academicTrendScore, weight: 0.2 });
+  if (attendanceRate !== null) confidenceParts.push({ value: attendanceRate, weight: 0.2 });
+  if (competencyScore !== null) confidenceParts.push({ value: competencyScore, weight: 0.25 });
+
+  const confidenceIndex =
+    confidenceParts.length > 0
+      ? Math.round(
+          confidenceParts.reduce((s, p) => s + p.value * p.weight, 0) /
+            confidenceParts.reduce((s, p) => s + p.weight, 0)
+        )
+      : null;
+
+  // --- Motivation Score ---
+  const motivationParts: { value: number; weight: number }[] = [];
+  if (attendanceRate !== null) motivationParts.push({ value: attendanceRate, weight: 0.3 });
+  if (homeworkComponent !== null) motivationParts.push({ value: homeworkComponent, weight: 0.4 });
+  if (competencyTrendScore !== null) motivationParts.push({ value: competencyTrendScore, weight: 0.3 });
+
+  const motivationScore =
+    motivationParts.length > 0
+      ? Math.round(
+          motivationParts.reduce((s, p) => s + p.value * p.weight, 0) /
+            motivationParts.reduce((s, p) => s + p.weight, 0)
+        )
+      : null;
+
+  return { confidenceIndex, motivationScore };
+}
+
+// ============================================================
 // One-shot loader for the whole Overview tab
 // ============================================================
 
@@ -878,6 +1044,7 @@ export async function getStudentOverview(studentId: string) {
     aiInsights,
     gpa,
     subjectPerformance,
+    studentIndices,
   ] = await Promise.all([
     getStudentCore(studentId),
     getParentProfiles(studentId),
@@ -889,6 +1056,7 @@ export async function getStudentOverview(studentId: string) {
     getAIInsights(studentId),
     calculateGPA(studentId),
     getSubjectPerformance(studentId),
+    calculateStudentIndices(studentId),
   ]);
 
   return {
@@ -902,5 +1070,7 @@ export async function getStudentOverview(studentId: string) {
     aiInsights,
     gpa,
     subjectPerformance,
+    confidenceIndex: studentIndices.confidenceIndex,
+    motivationScore: studentIndices.motivationScore,
   };
 }

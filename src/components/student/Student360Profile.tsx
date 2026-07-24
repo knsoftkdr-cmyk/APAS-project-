@@ -292,7 +292,7 @@ function OverviewTab({
   studentId: string;
   onNavigateToTab: () => void;
 }) {
-  const { core, behaviourScore, attendancePercentage, attendanceRecords, gpa, recentAssessments, behaviourRecords, aiInsights } = data;
+  const { core, behaviourScore, attendancePercentage, attendanceRecords, gpa, recentAssessments, behaviourRecords, aiInsights, confidenceIndex, motivationScore } = data;
 
   const personalFields: EditableField[] = [
     { key: "full_name", label: "Full Name", value: core.full_name },
@@ -358,6 +358,16 @@ function OverviewTab({
             status={gpa === null ? undefined : gpa >= 3.0 ? "good" : "warning"}
           />
           <StatBox label="Behaviour Score" value={`${behaviourScore} / 100`} status={behaviourScore >= 70 ? "good" : "warning"} />
+          <StatBox
+            label="Confidence Index"
+            value={`${confidenceIndex ?? 0} / 100`}
+            status={(confidenceIndex ?? 0) >= 70 ? "good" : "warning"}
+          />
+          <StatBox
+            label="Motivation Score"
+            value={`${motivationScore ?? 0} / 100`}
+            status={(motivationScore ?? 0) >= 70 ? "good" : "warning"}
+          />
         </CardContent>
       </Card>
 
