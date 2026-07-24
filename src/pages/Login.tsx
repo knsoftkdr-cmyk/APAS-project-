@@ -128,7 +128,7 @@ setLoading(false);
           Student: ["student"],
           Parent: ["parent"],
           Teacher: ["teacher"],
-          Admin: ["admin", "principal"],
+          Principal: ["admin", "principal"],
           "School Admin": ["school_admin"],
           HOD: ["hod"],
           "KNSOFT Admin": ["knsoft_admin"],
@@ -256,7 +256,7 @@ return (
     <option>Student</option>
     <option>Parent</option>
     <option>Teacher</option>
-    <option>Admin</option>
+    <option>Principal</option>
     <option>HOD</option>
     <option>School Admin</option>
   </select>
