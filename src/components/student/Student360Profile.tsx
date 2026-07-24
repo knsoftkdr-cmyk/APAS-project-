@@ -73,7 +73,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
+import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, getStudentGoals, createStudentGoal, updateStudentGoal, deleteStudentGoal, type StudentGoal, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
 import { getImprovementPlan, type ImprovementPlan } from "@/lib/improvementPlan";
 
 export type ProfileRole = "student" | "parent" | "staff";
@@ -94,6 +94,7 @@ const TABS = [
   { value: "improvement-plan", label: "Improvement Plan", icon: GoalIcon, color: "text-teal-600", hint: "Personalized growth plan from predictions, attendance & competencies" },
   { value: "learning-support", label: "Learning Support", icon: HeartHandshake, color: "text-pink-600", hint: "IEP / support plans & accommodations" },
   { value: "emergency", label: "Emergency", icon: Phone, color: "text-red-600", hint: "Emergency contact numbers" },
+  { value: "goals", label: "Goals", icon: Target, color: "text-purple-600", hint: "Student goals & progress tracking" },
 ] as const;
 
 
@@ -205,6 +206,14 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
         </TabsContent>
         <TabsContent value="learning-support" className="mt-4">
           <LearningSupportTab
+            studentId={studentId}
+            schoolId={data.core.school_id ?? ""}
+            canEdit={canEdit}
+            canDelete={canDelete}
+          />
+        </TabsContent>
+        <TabsContent value="goals" className="mt-4">
+          <GoalsTab
             studentId={studentId}
             schoolId={data.core.school_id ?? ""}
             canEdit={canEdit}
@@ -2735,6 +2744,7 @@ const TAB_HEADING_THEME: Record<string, { bg: string; text: string }> = {
   behaviour: { bg: "bg-yellow-50", text: "text-yellow-700" },
   "learning-support": { bg: "bg-pink-50", text: "text-pink-700" },
   emergency: { bg: "bg-red-50", text: "text-red-700" },
+  goals: { bg: "bg-purple-50", text: "text-purple-700" },
 };
 
 function TabActiveHeading({ activeTab }: { activeTab: string }) {
@@ -2920,6 +2930,274 @@ function ImprovementPlanTab({ studentId }: { studentId: string }) {
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+// ============================================================
+// Goals tab
+// ============================================================
+
+function GoalsTab({
+  studentId,
+  schoolId,
+  canEdit,
+  canDelete,
+}: {
+  studentId: string;
+  schoolId: string;
+  canEdit: boolean;
+  canDelete: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const [isAdding, setIsAdding] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({
+    title: "",
+    description: "",
+    category: "academic",
+    target_date: "",
+    status: "not_started" as StudentGoal["status"],
+    progress_percent: 0,
+  });
+
+  const { data: goals, isLoading } = useQuery({
+    queryKey: ["student-goals", studentId],
+    queryFn: () => getStudentGoals(studentId),
+    enabled: !!studentId,
+  });
+
+  function resetForm() {
+    setForm({
+      title: "",
+      description: "",
+      category: "academic",
+      target_date: "",
+      status: "not_started",
+      progress_percent: 0,
+    });
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (editingId) {
+        return updateStudentGoal(editingId, {
+          title: form.title,
+          description: form.description || null,
+          category: form.category,
+          target_date: form.target_date || null,
+          status: form.status,
+          progress_percent: form.progress_percent,
+        });
+      }
+      return createStudentGoal({
+        school_id: schoolId,
+        student_id: studentId,
+        title: form.title,
+        description: form.description || null,
+        category: form.category,
+        target_date: form.target_date || null,
+        status: form.status,
+        progress_percent: form.progress_percent,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-goals", studentId] });
+      setIsAdding(false);
+      setEditingId(null);
+      resetForm();
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteStudentGoal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["student-goals", studentId] });
+    },
+  });
+
+  function openEdit(goal: StudentGoal) {
+    setEditingId(goal.id);
+    setForm({
+      title: goal.title,
+      description: goal.description ?? "",
+      category: goal.category ?? "academic",
+      target_date: goal.target_date ?? "",
+      status: goal.status,
+      progress_percent: goal.progress_percent,
+    });
+    setIsAdding(true);
+  }
+
+  if (isLoading) return <Skeleton className="h-64 w-full" />;
+
+  const statusStyles: Record<StudentGoal["status"], string> = {
+    not_started: "bg-slate-100 text-slate-700",
+    in_progress: "bg-blue-100 text-blue-700",
+    achieved: "bg-emerald-100 text-emerald-700",
+    missed: "bg-red-100 text-red-700",
+  };
+  const statusLabels: Record<StudentGoal["status"], string> = {
+    not_started: "Not Started",
+    in_progress: "In Progress",
+    achieved: "Achieved",
+    missed: "Missed",
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card className="border-t-4 border-t-purple-400">
+        <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50">
+              <Target className="h-4 w-4 text-purple-600" />
+            </span>
+            Goals
+          </CardTitle>
+          {canEdit && !isAdding && (
+            <Button
+              size="sm"
+              onClick={() => {
+                setEditingId(null);
+                resetForm();
+                setIsAdding(true);
+              }}
+            >
+              + Add Goal
+            </Button>
+          )}
+        </CardHeader>
+        <CardContent>
+          {(!goals || goals.length === 0) && !isAdding ? (
+            <EmptyState message="No goals set yet." />
+          ) : (
+            <div className="space-y-3">
+              {goals?.map((goal) => (
+                <div key={goal.id} className="border-b pb-3 last:border-0">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-sm">{goal.title}</p>
+                      {goal.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{goal.description}</p>
+                      )}
+                    </div>
+                    <Badge className={statusStyles[goal.status]}>{statusLabels[goal.status]}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-purple-500"
+                        style={{ width: `${goal.progress_percent}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground">{goal.progress_percent}%</span>
+                  </div>
+                  <div className="flex items-center justify-between mt-1.5">
+                    <span className="text-xs text-muted-foreground">
+                      {goal.target_date
+                        ? `Target: ${new Date(goal.target_date).toLocaleDateString()}`
+                        : "No target date"}
+                    </span>
+                    {canEdit && (
+                      <div className="flex gap-3">
+                        <button
+                          className="text-xs text-blue-600 hover:underline"
+                          onClick={() => openEdit(goal)}
+                        >
+                          Edit
+                        </button>
+                        {canDelete && (
+                          <button
+                            className="text-xs text-red-600 hover:underline"
+                            onClick={() => deleteMutation.mutate(goal.id)}
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isAdding && (
+            <div className="mt-4 space-y-3 border rounded-lg p-4 bg-slate-50">
+              <Input
+                placeholder="Goal title"
+                value={form.title}
+                onChange={(e) => setForm({ ...form, title: e.target.value })}
+              />
+              <textarea
+                className="w-full border rounded-md px-3 py-2 text-sm bg-white"
+                placeholder="Description (optional)"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-3">
+                <select
+                  className="border rounded-md px-3 py-2 text-sm bg-white"
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                >
+                  <option value="academic">Academic</option>
+                  <option value="behavioural">Behavioural</option>
+                  <option value="attendance">Attendance</option>
+                  <option value="other">Other</option>
+                </select>
+                <Input
+                  type="date"
+                  value={form.target_date}
+                  onChange={(e) => setForm({ ...form, target_date: e.target.value })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <select
+                  className="border rounded-md px-3 py-2 text-sm bg-white"
+                  value={form.status}
+                  onChange={(e) =>
+                    setForm({ ...form, status: e.target.value as StudentGoal["status"] })
+                  }
+                >
+                  <option value="not_started">Not Started</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="achieved">Achieved</option>
+                  <option value="missed">Missed</option>
+                </select>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="Progress %"
+                  value={form.progress_percent}
+                  onChange={(e) => setForm({ ...form, progress_percent: Number(e.target.value) })}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  disabled={!form.title || saveMutation.isPending}
+                  onClick={() => saveMutation.mutate()}
+                >
+                  {editingId ? "Save Changes" : "Create Goal"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setIsAdding(false);
+                    setEditingId(null);
+                    resetForm();
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

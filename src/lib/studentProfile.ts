@@ -618,6 +618,72 @@ export async function deleteEmergencyContact(id: string) {
   if (error) throw error;
 }
 
+export interface StudentGoal {
+  id: string;
+  school_id: string;
+  student_id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  target_date: string | null;
+  status: "not_started" | "in_progress" | "achieved" | "missed";
+  progress_percent: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getStudentGoals(studentId: string) {
+  const { data, error } = await supabase
+    .from("student_goals")
+    .select("*")
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as StudentGoal[];
+}
+
+export async function createStudentGoal(payload: {
+  school_id: string;
+  student_id: string;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  target_date?: string | null;
+  status?: string;
+  progress_percent?: number;
+}) {
+  const { data, error } = await supabase
+    .from("student_goals")
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as StudentGoal;
+}
+
+export async function updateStudentGoal(id: string, payload: Partial<StudentGoal>) {
+  const { data, error } = await supabase
+    .from("student_goals")
+    .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as StudentGoal;
+}
+
+export async function deleteStudentGoal(id: string) {
+  const { error } = await supabase
+    .from("student_goals")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
 export async function getSiblingStudentIds(parentUserId: string, excludeStudentId: string) {
   const { data: links, error } = await supabase
     .from("parent_students")
