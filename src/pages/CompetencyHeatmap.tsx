@@ -121,12 +121,16 @@ export default function CompetencyHeatmap() {
     load();
   }, [schoolId]);
 
-  // Default subject selection once the master list arrives
+  // Default subject selection once the master list arrives — prefer a subject
+  // that actually has competencies defined, so the heatmap isn't defaulted
+  // into an empty subject just because it's alphabetically first school-wide.
   useEffect(() => {
-    if (subjectMasterList.length > 0 && !subjectFilter) {
-      setSubjectFilter(subjectMasterList[0]);
+    if ((subjectMasterList.length > 0 || allCompetencies.length > 0) && !subjectFilter) {
+      const subjectsWithCompetencies = new Set(allCompetencies.map((c) => c.subject));
+      const preferred = subjectMasterList.find((s) => subjectsWithCompetencies.has(s));
+      setSubjectFilter(preferred || subjectMasterList[0] || allCompetencies[0]?.subject || "");
     }
-  }, [subjectMasterList, subjectFilter]);
+  }, [subjectMasterList, allCompetencies, subjectFilter]);
 
   const subjects = subjectMasterList;
 
@@ -239,21 +243,23 @@ export default function CompetencyHeatmap() {
     };
     aggregate();
   }, [schoolId, visibleCompetencies, classes]);
-
   const chartData = classDistributions.filter((c) => c.total > 0);
   const hasAnyData = chartData.length > 0;
 
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <Flame className="h-6 w-6 text-primary" />
-            Competency Heatmap
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Average proficiency by class, across every competency in a subject.
-          </p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 p-8 text-white">
+          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <Flame className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Competency Heatmap</h1>
+              <p className="text-purple-100 mt-1">Average proficiency by class, across every competency in a subject.</p>
+            </div>
+          </div>
         </div>
 
         <div className="flex gap-3 flex-wrap">

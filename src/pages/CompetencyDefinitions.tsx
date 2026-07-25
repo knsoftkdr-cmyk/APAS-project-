@@ -222,19 +222,19 @@ export default function CompetencyDefinitions() {
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-primary" />
-              Competency & Outcomes Management
-            </h1>
-            <p className="text-muted-foreground text-sm mt-1">
-              Define the competencies teachers assess students against.
-            </p>
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreate}>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-8 text-white">
+          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
+              <BookOpen className="h-6 w-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold">Competency & Outcomes Management</h1>
+              <p className="text-emerald-100 mt-1">Define the competencies teachers assess students against.</p>
+            </div>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button onClick={openCreate} variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
                 <Plus className="h-4 w-4 mr-2" />
                 Add competency
               </Button>
@@ -324,6 +324,7 @@ export default function CompetencyDefinitions() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <div className="flex gap-3">
