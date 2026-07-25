@@ -844,7 +844,7 @@ try {
           </div>
 
           {/* Right - viewer */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <Card className="border-slate-100 bg-white/80 backdrop-blur-sm shadow-sm min-h-[500px]">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

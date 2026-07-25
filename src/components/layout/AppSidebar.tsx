@@ -62,7 +62,8 @@ const navItems: Array<{
   module?: string;
   subItem?: { title: string; path: string; icon: any };
 }> = [
-  { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "hod", "school_admin"], tourId: "nav-home", module: "Home" },
+  { title: "Home", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
+  { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "school_admin"], tourId: "nav-home", module: "Home" },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["principal"], module: "Admin Panel" },
   { title: "Reports", icon: Users, path: "/teacher", roles: ["principal"], module: "Reports" },
   { title: "Communication", icon: MessageSquare, path: "/admin-communication", roles: ["principal"] },
@@ -138,7 +139,6 @@ const navItems: Array<{
   { title: "Security Center", icon: Lock, path: "/security", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Security Center" },
   { title: "Billing", icon: CreditCard, path: "/billing", roles: ["admin", "principal", "hod", "teacher", "student", "parent"], module: "Billing" },
   { title: "School Admin", icon: Shield, path: "/super-admin", roles: ["school_admin"] },
-  { title: "HOD Dashboard", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
 { title: "Analytics", icon: BarChart3, path: "/executive-reporting", roles: ["school_admin"] },
 { title: "Surveys", icon: ClipboardList, path: "/surveys", roles: ["teacher", "admin", "school_admin", "hod", "student"] },
   { title: "Platform Admin", icon: Shield, path: "/knsoft-admin", roles: ["knsoft_admin"] },
