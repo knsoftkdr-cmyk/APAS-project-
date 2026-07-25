@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { BookOpen, TrendingUp, AlertCircle, GraduationCap, Loader2 } from "lucide-react";
+import { normalizeSubject } from "@/lib/subjectUtils";
 
 interface ClassSyllabus {
   classId: string;
@@ -11,6 +12,7 @@ interface ClassSyllabus {
   totalChapters: number;
   coveredChapters: number;
   percentage: number;
+  missingSubject?: boolean;
 }
 
 interface TeacherSyllabus {
@@ -66,6 +68,7 @@ export default function SchoolSyllabusOverview() {
         className: string;
         section: string;
         subject: string;
+        missingSubject?: boolean;
       };
       const flatRows: FlatRow[] = [];
       for (const [teacherId, { name, rows }] of teacherMap.entries()) {
@@ -75,40 +78,56 @@ export default function SchoolSyllabusOverview() {
           const rawName = cls.name as string;
           const className = rawName.replace(/\b\w/g, (c: string) => c.toUpperCase());
           const subject = row.subject || "";
-          if (!subject) continue;
           flatRows.push({
             teacherId,
             teacherName: name,
             classId: row.class_id,
             className,
             section: cls.section,
-            subject,
+            subject: subject || "(subject not set)",
+            missingSubject: !subject,
           });
         }
       }
 
       const flatResults = await Promise.all(
         flatRows.map(async (r) => {
+          if (r.missingSubject) {
+            return {
+              teacherId: r.teacherId,
+              teacherName: r.teacherName,
+              classSyllabus: {
+                classId: r.classId,
+                className: r.className,
+                section: r.section,
+                subject: r.subject,
+                totalChapters: 0,
+                coveredChapters: 0,
+                percentage: 0,
+                missingSubject: true,
+              } as ClassSyllabus,
+            };
+          }
           const [{ data: chaptersData }, { count: covered }, { count: coveredNoSchool }] = await Promise.all([
             supabase
               .from("curriculum_chapters")
               .select(`id, books!inner(class_name, subject, school_id)`)
               .ilike("books.class_name", r.className)
-              .ilike("books.subject", r.subject)
+              .ilike("books.subject", normalizeSubject(r.subject))
               .eq("books.school_id", profile!.school_id),
             supabase
               .from("lessons")
               .select("id", { count: "exact", head: true })
               .eq("teacher_id", r.teacherId)
               .ilike("class_level", r.className)
-              .ilike("subject", r.subject)
+              .ilike("subject", normalizeSubject(r.subject))
               .eq("school_id", profile!.school_id),
             supabase
               .from("lessons")
               .select("id", { count: "exact", head: true })
               .eq("teacher_id", r.teacherId)
               .ilike("class_level", r.className)
-              .ilike("subject", r.subject)
+              .ilike("subject", normalizeSubject(r.subject))
               .is("school_id", null),
           ]);
 
@@ -127,6 +146,7 @@ export default function SchoolSyllabusOverview() {
               totalChapters: total,
               coveredChapters: coveredCount,
               percentage,
+              missingSubject: false,
             } as ClassSyllabus,
           };
         })
@@ -231,24 +251,40 @@ export default function SchoolSyllabusOverview() {
                       <span className="text-sm font-medium text-gray-800">
                         {item.className} – Sec {item.section}
                       </span>
-                      <span className="text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md px-1.5 py-0.5">
-                        {item.subject}
-                      </span>
+                      {item.missingSubject ? (
+                        <span className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-md px-1.5 py-0.5">
+                          Subject not assigned
+                        </span>
+                      ) : (
+                        <span className="text-xs text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md px-1.5 py-0.5">
+                          {normalizeSubject(item.subject)}
+                        </span>
+                      )}
                     </div>
-                    <span className="text-sm font-semibold text-gray-700">{item.percentage}%</span>
-                  </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-700 ${getBarColor(item.percentage)}`}
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {item.coveredChapters} of {item.totalChapters} chapter{item.totalChapters !== 1 ? "s" : ""} covered
-                    {item.totalChapters === 0 && (
-                      <span className="ml-1 text-amber-500">(no chapters found in curriculum)</span>
+                    {!item.missingSubject && (
+                      <span className="text-sm font-semibold text-gray-700">{item.percentage}%</span>
                     )}
-                  </p>
+                  </div>
+                  {item.missingSubject ? (
+                    <p className="text-xs text-rose-500 mt-1">
+                      This class-teacher assignment has no subject set, so coverage can't be calculated. Fix the assignment in class setup.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-700 ${getBarColor(item.percentage)}`}
+                          style={{ width: `${item.percentage}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {item.coveredChapters} of {item.totalChapters} chapter{item.totalChapters !== 1 ? "s" : ""} covered
+                        {item.totalChapters === 0 && (
+                          <span className="ml-1 text-amber-500">(no chapters found in curriculum)</span>
+                        )}
+                      </p>
+                    </>
+                  )}
                 </div>
               ))}
             </div>

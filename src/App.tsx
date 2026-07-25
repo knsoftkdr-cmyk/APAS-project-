@@ -85,6 +85,8 @@ const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicati
 const StudentCommunicationCenter = lazy(() => import("./pages/StudentCommunicationCenter"));
 const AdminCommunicationCenter = lazy(() => import("./pages/AdminCommunicationCenter"));
 const AdminElectivesPage = lazy(() => import("./pages/AdminElectivesPage"));
+const BranchManagementPage = lazy(() => import("./pages/BranchManagementPage"));
+const FacilitiesManagementPage = lazy(() => import("./pages/FacilitiesManagementPage"));
 const AITeacherAssistant = lazy(() => import("./pages/AITeacherAssistant"));
 const KnowledgeGraphDashboard = lazy(() => import("./pages/KnowledgeGraphDashboard"));
 const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenceDashboard"));
@@ -95,6 +97,7 @@ const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
 const CompetencyDefinitions = lazy(() => import("./pages/CompetencyDefinitions"));
 const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
 const CompetencyHeatmap = lazy(() => import("./pages/CompetencyHeatmap"));
+const SchoolQualityIndexPage = lazy(() => import("./pages/SchoolQualityIndex"));
 const SkillsPassport = lazy(() => import("./pages/SkillsPassport"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const ParentSafeguardingPage = lazy(() => import("./pages/ParentSafeguardingPage"));
@@ -192,6 +195,8 @@ export default function App() {
                       <Route path="/student-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><AdminCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin/electives" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><AdminElectivesPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin/branches" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><BranchManagementPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin/facilities" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><FacilitiesManagementPage /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/safeguarding-report" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherSafeguardingReport /></RoleGuard></ProtectedRoute>} />
@@ -270,6 +275,7 @@ export default function App() {
                       <Route path="/competency-definitions" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyDefinitions /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-assessment" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><CompetencyAssessment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-heatmap" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyHeatmap /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
