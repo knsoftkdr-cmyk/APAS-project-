@@ -417,23 +417,6 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card className="border-2 border-purple-200 hover:border-purple-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50">
-              <Sparkles className="h-4 w-4 text-purple-600" />
-            </span>
-            AI Insights
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {aiInsights.length === 0 ? (
-            <EmptyState message="No insights generated yet." />
-          ) : (
-            aiInsights.map((insight) => <InsightCard key={insight.id} insight={insight} />)
-          )}
-        </CardContent>
-      </Card>
 
       <Card
         onClick={onNavigateToTab}
@@ -467,28 +450,6 @@ function OverviewTab({
         </CardContent>
       </Card>
 
-      <Card className="border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-emerald-100">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
-              <ClipboardList className="h-4 w-4 text-emerald-600" />
-            </span>
-            Recent Assessments
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {recentAssessments.length === 0 ? (
-            <EmptyState message="No assessments recorded yet." />
-          ) : (
-            recentAssessments.map((a: any) => (
-              <div key={a.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-0">
-                <p className="font-medium">{a.student_name ?? "Assessment"}</p>
-                <span className="text-muted-foreground text-xs">{a.created_at?.slice(0, 10)}</span>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }
