@@ -2489,7 +2489,7 @@ function DocumentsTab({
   const [documentType, setDocumentType] = useState("");
 
   const uploadMutation = useMutation({
-    mutationFn: () => uploadStudentDocument(file!, studentId, schoolId, documentType || "Document"),
+    mutationFn: () => uploadStudentDocument(file!, studentId, schoolId, documentType),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["student-documents", studentId] });
       setFile(null);
@@ -2513,11 +2513,22 @@ function DocumentsTab({
           <CardContent className="space-y-3">
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Document Type</label>
-              <Input
+              <select
                 value={documentType}
                 onChange={(e) => setDocumentType(e.target.value)}
-                placeholder="e.g. Birth Certificate, Aadhar Card, Transfer Certificate"
-              />
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm"
+              >
+                <option value="" disabled>Select document type</option>
+                <option value="birth_certificate">Birth Certificate</option>
+                <option value="aadhaar_card">Aadhaar Card</option>
+                <option value="pan_card">PAN Card</option>
+                <option value="transfer_certificate">Transfer Certificate</option>
+                <option value="progress_report">Progress Report</option>
+                <option value="medical_certificate">Medical Certificate</option>
+                <option value="identity_proof">Identity Proof</option>
+                <option value="passport_copy">Passport Copy</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">File</label>
@@ -2530,7 +2541,7 @@ function DocumentsTab({
               size="sm"
               className="bg-indigo-600 hover:bg-indigo-700"
               onClick={() => uploadMutation.mutate()}
-              disabled={!file || uploadMutation.isPending}
+              disabled={!file || !documentType || uploadMutation.isPending}
             >
               {uploadMutation.isPending ? "Uploading..." : "Upload"}
             </Button>
