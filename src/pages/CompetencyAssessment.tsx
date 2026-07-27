@@ -392,13 +392,13 @@ export default function CompetencyAssessment() {
                         className="border-2 border-indigo-200 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-white to-white hover:shadow-md hover:-translate-y-0.5 transition-all"
                       >
                         <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-start gap-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <div className="flex items-start gap-3 min-w-0">
                               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 shadow-sm">
                                 <Target className="h-4.5 w-4.5 text-white" />
                               </div>
-                              <div>
-                                <CardTitle className="text-base">{c.name}</CardTitle>
+                              <div className="min-w-0">
+                                <CardTitle className="text-base break-words">{c.name}</CardTitle>
                                 {c.description && (
                                   <p className="text-sm text-muted-foreground mt-1">
                                     {c.description}
@@ -408,7 +408,7 @@ export default function CompetencyAssessment() {
                             </div>
                             {latest && (
                               <Badge
-                                className={`border ${PROFICIENCY_COLOR[latest.proficiency]}`}
+                                className={`border shrink-0 ${PROFICIENCY_COLOR[latest.proficiency]}`}
                                 variant="outline"
                               >
                                 Current: {latest.proficiency}
@@ -427,25 +427,25 @@ export default function CompetencyAssessment() {
                                 {history.map((h) => (
                                   <div
                                     key={h.id}
-                                    className="flex items-center gap-2 text-sm text-muted-foreground"
+                                    className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground"
                                   >
-                                    <Clock className="h-3 w-3" />
-                                    <span>{h.assessed_date}</span>
+                                    <Clock className="h-3 w-3 shrink-0" />
+                                    <span className="shrink-0">{h.assessed_date}</span>
                                     <Badge
                                       variant="outline"
-                                      className={`text-xs ${PROFICIENCY_COLOR[h.proficiency]}`}
+                                      className={`text-xs shrink-0 ${PROFICIENCY_COLOR[h.proficiency]}`}
                                     >
                                       {h.proficiency}
                                     </Badge>
                                     {h.notes && (
-                                      <span className="italic truncate max-w-xs">
+                                      <span className="italic truncate max-w-[160px] sm:max-w-xs">
                                         "{h.notes}"
                                       </span>
                                     )}
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-6 px-2 text-xs ml-auto"
+                                      className="h-6 px-2 text-xs sm:ml-auto"
                                       onClick={() => {
                                         setPendingRatings((prev) => ({
                                           ...prev,
@@ -505,14 +505,14 @@ export default function CompetencyAssessment() {
                                 </Button>
                               </div>
                             )}
-                            <div className="flex gap-3 items-start">
+                            <div className="flex flex-col sm:flex-row gap-3 sm:items-start">
                               <Select
                                 value={pendingRatings[c.id] || ""}
                                 onValueChange={(v) =>
                                   setPendingRatings((prev) => ({ ...prev, [c.id]: v }))
                                 }
                               >
-                                <SelectTrigger className="w-44 border-indigo-200 focus:ring-indigo-400">
+                                <SelectTrigger className="w-full sm:w-44 shrink-0 border-indigo-200 focus:ring-indigo-400">
                                   <SelectValue placeholder="Rate today" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -525,7 +525,7 @@ export default function CompetencyAssessment() {
                               </Select>
                               <Textarea
                                 placeholder="Notes (optional)"
-                                className="flex-1 min-h-0 h-10 resize-none"
+                                className="w-full sm:flex-1 min-h-0 h-10 resize-none"
                                 value={pendingNotes[c.id] || ""}
                                 onChange={(e) =>
                                   setPendingNotes((prev) => ({
@@ -535,7 +535,7 @@ export default function CompetencyAssessment() {
                                 }
                               />
                               <Button
-                                className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+                                className="w-full sm:w-auto shrink-0 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                                 onClick={() => handleSaveAssessment(c.id)}
                                 disabled={saving === c.id}
                               >
