@@ -413,6 +413,7 @@ export default function MySENStudents() {
         accommodation_type: accForm.accommodation_type,
         applies_to: accForm.applies_to,
         description: accForm.description || null,
+        active: true,
       });
       if (error) { toast({ title: "Could not add accommodation", description: error.message, variant: "destructive" }); return; }
     }

@@ -73,7 +73,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, getStudentGoals, createStudentGoal, updateStudentGoal, deleteStudentGoal, type StudentGoal, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
+import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, getStudentGoals, createStudentGoal, updateStudentGoal, deleteStudentGoal, type StudentGoal, getIepPlansForStudent, type IepPlanRecord, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
 import { getImprovementPlan, type ImprovementPlan } from "@/lib/improvementPlan";
 
 export type ProfileRole = "student" | "parent" | "staff";
@@ -349,7 +349,7 @@ function OverviewTab({
             Summary Analytics
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-3 gap-2">
+        <CardContent className="grid grid-cols-2 gap-2">
           <StatBox
             label="Attendance"
             value={attendancePercentage !== null ? `${attendancePercentage}%` : "No data"}
@@ -366,7 +366,6 @@ function OverviewTab({
             value={gpa !== null ? `${gpa} / ${APP_CONFIG.gpa.scale}` : "No data"}
             status={gpa === null ? undefined : gpa >= 3.0 ? "good" : "warning"}
           />
-          <StatBox label="Behaviour Score" value={`${behaviourScore} / 100`} status={behaviourScore >= 70 ? "good" : "warning"} />
           <StatBox
             label="Confidence Index"
             value={`${confidenceIndex ?? 0} / 100`}
@@ -1849,289 +1848,89 @@ function BehaviourRecordCard({
 
 function LearningSupportTab({
   studentId,
-  schoolId,
-  canEdit,
-  canDelete,
 }: {
   studentId: string;
   schoolId: string;
   canEdit: boolean;
   canDelete: boolean;
 }) {
-  const [addingNew, setAddingNew] = useState(false);
-
-  const { data: records, isLoading } = useQuery({
-    queryKey: ["learning-support-records", studentId],
-    queryFn: () => getLearningSupportRecords(studentId),
-    enabled: !!studentId,
+  const { data: plans, isLoading } = useQuery({
+    queryKey: ["iep-plans-for-student", studentId],
+    queryFn: () => getIepPlansForStudent(studentId),
+    enabled: Boolean(studentId),
   });
-
   if (isLoading) return <Skeleton className="h-48 w-full" />;
-
+  if (!plans || plans.length === 0) {
+    return <EmptyState message="No IEP / learning support plans yet." />;
+  }
   return (
     <div className="space-y-4">
-      {(!records || records.length === 0) && !addingNew && (
-        <EmptyState message="No learning support records yet." />
-      )}
-      {records?.map((record) => (
-        <LearningSupportCard
-          key={record.id}
-          record={record}
-          studentId={studentId}
-          canEdit={canEdit}
-          canDelete={canDelete}
-        />
+      {plans.map((plan) => (
+        <Card key={plan.id} className="border-t-4 border-t-emerald-400">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between flex-wrap gap-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
+                <HeartHandshake className="h-4 w-4 text-emerald-600" />
+              </span>
+              {plan.title}
+              <Badge variant={plan.status === "active" ? "default" : plan.status === "completed" ? "secondary" : "outline"}>
+                {plan.status}
+              </Badge>
+            </CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {plan.start_date}{plan.end_date ? ` → ${plan.end_date}` : ""}
+            </span>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {plan.goals.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Goals
+                </p>
+                <div className="space-y-2">
+                  {plan.goals.map((g) => (
+                    <div key={g.id} className="rounded-lg border p-2.5 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{g.domain}: {g.goal_description}</span>
+                        <Badge variant="outline" className="text-xs shrink-0">{g.progress_status}</Badge>
+                      </div>
+                      {(g.baseline || g.target_criteria || g.target_date) && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {g.baseline && `Baseline: ${g.baseline}`}
+                          {g.target_criteria && ` · Target: ${g.target_criteria}`}
+                          {g.target_date && ` · By ${g.target_date}`}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {plan.reviews.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                  <CalendarClock className="h-3 w-3" /> Reviews
+                </p>
+                <div className="space-y-2">
+                  {plan.reviews.map((r) => (
+                    <div key={r.id} className="rounded-lg border p-2.5 text-sm">
+                      <p className="font-medium">{r.review_date}</p>
+                      {r.summary && <p className="text-muted-foreground mt-1">{r.summary}</p>}
+                      {r.next_review_date && (
+                        <p className="text-xs text-muted-foreground mt-1">Next review: {r.next_review_date}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {plan.goals.length === 0 && plan.reviews.length === 0 && (
+              <p className="text-sm text-muted-foreground">No goals or reviews logged yet.</p>
+            )}
+          </CardContent>
+        </Card>
       ))}
-      {addingNew && (
-        <LearningSupportCard
-          studentId={studentId}
-          schoolId={schoolId}
-          canEdit={canEdit}
-          canDelete={canDelete}
-          onDoneAdding={() => setAddingNew(false)}
-        />
-      )}
-      {canEdit && !addingNew && (
-        <Button variant="outline" size="sm" onClick={() => setAddingNew(true)}>
-          + Add Learning Support Record
-        </Button>
-      )}
     </div>
-  );
-}
-
-function LearningSupportCard({
-  record,
-  studentId,
-  schoolId,
-  canEdit,
-  canDelete,
-  onDoneAdding,
-}: {
-  record?: LearningSupportRecord;
-  studentId: string;
-  schoolId?: string;
-  canEdit: boolean;
-  canDelete: boolean;
-  onDoneAdding?: () => void;
-}) {
-  const isNew = !record;
-  const [isEditing, setIsEditing] = useState(isNew);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const queryClient = useQueryClient();
-
-  const buildInitial = () => ({
-    support_type: record?.support_type ?? "iep",
-    diagnosis: record?.diagnosis ?? "",
-    goals: record?.goals ?? "",
-    accommodations: record?.accommodations ?? "",
-    start_date: record?.start_date ?? new Date().toISOString().slice(0, 10),
-    review_date: record?.review_date ?? "",
-    status: record?.status ?? "active",
-  });
-
-  const [formValues, setFormValues] = useState<any>(buildInitial);
-  const [validationError, setValidationError] = useState<string | null>(null);
-
-  const saveMutation = useMutation({
-    mutationFn: () => {
-      const payload = {
-        ...formValues,
-        start_date: formValues.start_date || null,
-        review_date: formValues.review_date || null,
-      };
-      if (isNew) {
-        return createLearningSupportRecord({
-          school_id: schoolId!,
-          student_id: studentId,
-          ...payload,
-        });
-      }
-      return updateLearningSupportRecord(record!.id, payload);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["learning-support-records", studentId] });
-      setIsEditing(false);
-      if (isNew && onDoneAdding) onDoneAdding();
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteLearningSupportRecord(record!.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["learning-support-records", studentId] });
-      setConfirmingDelete(false);
-    },
-  });
-
-  const validateAndSave = () => {
-    const missing: string[] = [];
-    if (!formValues.support_type?.trim()) missing.push("Support Type");
-    if (!formValues.diagnosis?.trim()) missing.push("Diagnosis");
-    if (!formValues.goals?.trim()) missing.push("Goals");
-    if (!formValues.accommodations?.trim()) missing.push("Accommodations");
-    if (!formValues.start_date) missing.push("Start Date");
-
-    if (missing.length > 0) {
-      setValidationError(`Please fill in: ${missing.join(", ")}`);
-      return;
-    }
-    setValidationError(null);
-    saveMutation.mutate();
-  };
-
-  const handleCancel = () => {
-    if (isNew && onDoneAdding) {
-      onDoneAdding();
-      return;
-    }
-    setFormValues(buildInitial());
-    setValidationError(null);
-    setIsEditing(false);
-    saveMutation.reset();
-  };
-
-  return (
-    <Card className="border-t-4 border-t-emerald-400">
-      <CardHeader className="pb-2 flex flex-row items-center justify-between">
-        <CardTitle className="text-base flex items-center gap-2 capitalize">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50">
-            <HeartHandshake className="h-4 w-4 text-emerald-600" />
-          </span>
-          {isNew ? "New Learning Support Record" : record!.support_type || "Support Record"}
-          {!isNew && (
-            <Badge variant={record!.status === "active" ? "default" : record!.status === "completed" ? "secondary" : "destructive"}>
-              {record!.status}
-            </Badge>
-          )}
-        </CardTitle>
-        <div className="flex gap-1">
-          {canEdit && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" className="bg-gradient-to-r from-indigo-500 to-cyan-400 text-white hover:opacity-90 border-0" onClick={() => setIsEditing(true)}>
-              Edit
-            </Button>
-          )}
-          {canDelete && !isNew && !isEditing && !confirmingDelete && (
-            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setConfirmingDelete(true)}>
-              Delete
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {confirmingDelete ? (
-          <div className="space-y-2">
-            <p className="text-sm text-destructive">Delete this learning support record? This cannot be undone.</p>
-            <div className="flex gap-2">
-              <Button size="sm" variant="destructive" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
-                {deleteMutation.isPending ? "Deleting..." : "Yes, Delete"}
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setConfirmingDelete(false)} disabled={deleteMutation.isPending}>
-                Cancel
-              </Button>
-            </div>
-            {deleteMutation.isError && (
-              <p className="text-xs text-destructive">
-                {deleteMutation.error instanceof Error ? deleteMutation.error.message : "Failed to delete"}
-              </p>
-            )}
-          </div>
-        ) : isEditing ? (
-          <>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Support Type <span className="text-destructive">*</span></label>
-              <select
-                className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                value={formValues.support_type}
-                onChange={(e) => setFormValues((p: any) => ({ ...p, support_type: e.target.value }))}
-              >
-                <option value="" disabled>Select a support type</option>
-                <option value="iep">IEP (Individualized Education Program)</option>
-                <option value="learning_disability">Learning Disability</option>
-                <option value="special_education_need">Special Education Need</option>
-                <option value="intervention_plan">Intervention Plan</option>
-                <option value="remedial_program">Remedial Program</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Diagnosis <span className="text-destructive">*</span></label>
-              <Input
-                value={formValues.diagnosis}
-                onChange={(e) => setFormValues((p: any) => ({ ...p, diagnosis: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Goals <span className="text-destructive">*</span></label>
-              <Input
-                value={formValues.goals}
-                onChange={(e) => setFormValues((p: any) => ({ ...p, goals: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Accommodations <span className="text-destructive">*</span></label>
-              <Input
-                value={formValues.accommodations}
-                onChange={(e) => setFormValues((p: any) => ({ ...p, accommodations: e.target.value }))}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Start Date <span className="text-destructive">*</span></label>
-                <Input
-                  type="date"
-                  value={formValues.start_date}
-                  onChange={(e) => setFormValues((p: any) => ({ ...p, start_date: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Review Date</label>
-                <Input
-                  type="date"
-                  value={formValues.review_date}
-                  onChange={(e) => setFormValues((p: any) => ({ ...p, review_date: e.target.value }))}
-                />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs text-muted-foreground">Status</label>
-              <select
-                className="w-full rounded-md border px-3 py-2 text-sm bg-background"
-                value={formValues.status}
-                onChange={(e) => setFormValues((p: any) => ({ ...p, status: e.target.value }))}
-              >
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="discontinued">Discontinued</option>
-              </select>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <Button size="sm" onClick={validateAndSave} disabled={saveMutation.isPending}>
-                {saveMutation.isPending ? "Saving..." : "Save"}
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleCancel} disabled={saveMutation.isPending}>
-                Cancel
-              </Button>
-            </div>
-            {validationError && (
-              <p className="text-xs text-destructive pt-1 font-medium">⚠ {validationError}</p>
-            )}
-            {saveMutation.isError && (
-              <p className="text-xs text-destructive pt-1">
-                {saveMutation.error instanceof Error ? saveMutation.error.message : "Failed to save"}
-              </p>
-            )}
-          </>
-        ) : (
-          <>
-            <InfoRow label="Diagnosis" value={record?.diagnosis} icon={Brain} iconColor="text-pink-500" />
-            <InfoRow label="Goals" value={record?.goals} icon={Target} iconColor="text-emerald-500" />
-            <InfoRow label="Accommodations" value={record?.accommodations} icon={ShieldCheck} iconColor="text-blue-500" />
-            <InfoRow label="Start Date" value={record?.start_date} icon={CalendarPlus} iconColor="text-teal-500" />
-            <InfoRow label="Review Date" value={record?.review_date} icon={CalendarClock} iconColor="text-amber-500" />
-          </>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 

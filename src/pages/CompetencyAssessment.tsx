@@ -19,7 +19,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ClipboardCheck, TrendingUp, Clock } from "lucide-react";
+import { ClipboardCheck, TrendingUp, Clock, Target } from "lucide-react";
 import { normalizeSubject } from "@/lib/subjectUtils";
 
 interface ClassTeacherAssignment {
@@ -30,7 +30,7 @@ interface ClassTeacherAssignment {
 }
 
 interface Student {
-  id: string; // profiles.id (students.profile_id)
+  id: string;
   full_name: string;
   roll_number: string | null;
   grade: string | null;
@@ -94,7 +94,6 @@ export default function CompetencyAssessment() {
   const schoolId = profile?.school_id;
   const teacherId = user?.id;
 
-  // Fetch teacher's class/subject assignments
   useEffect(() => {
     if (!teacherId) return;
     const fetchAssignments = async () => {
@@ -128,7 +127,6 @@ export default function CompetencyAssessment() {
     (a) => `${a.class_id}::${a.subject}` === selectedClassKey
   );
 
-  // Fetch students in the selected class
   useEffect(() => {
     if (!selectedAssignment || !schoolId) {
       setStudents([]);
@@ -165,7 +163,6 @@ export default function CompetencyAssessment() {
     fetchStudents();
   }, [selectedAssignment, schoolId]);
 
-  // Fetch competencies for this subject + student's grade, and their assessment history
   useEffect(() => {
     if (!selectedAssignment || !schoolId || !selectedStudentId) {
       setCompetencies([]);
@@ -177,9 +174,6 @@ export default function CompetencyAssessment() {
     const fetchCompetenciesAndHistory = async () => {
       setLoadingCompetencies(true);
 
-      // class_teachers.subject is raw/inconsistent (e.g. "maths"), while
-      // competencies.subject is saved in its canonical form (e.g.
-      // "Mathematics") — normalize before matching so the two line up.
       const canonicalSubject = normalizeSubject(selectedAssignment.subject);
 
       const { data: compData, error: compError } = await supabase
@@ -195,7 +189,6 @@ export default function CompetencyAssessment() {
         return;
       }
 
-      // Filter to competencies matching this student's grade, or "All Grades"
       const normalizedGrade = student?.grade?.replace(/\D/g, "");
       const relevant = (compData || []).filter((c) => {
         if (!c.grade_level || c.grade_level === "All Grades") return true;
@@ -267,7 +260,6 @@ export default function CompetencyAssessment() {
       setPendingRatings((prev) => ({ ...prev, [competencyId]: "" }));
       setPendingNotes((prev) => ({ ...prev, [competencyId]: "" }));
       setEditingDate((prev) => ({ ...prev, [competencyId]: "" }));
-      // Refresh history for this competency
       const { data } = await supabase
         .from("competency_assessments")
         .select("id, competency_id, proficiency, assessed_date, notes")
@@ -298,7 +290,6 @@ export default function CompetencyAssessment() {
       ...prev,
       [competencyId]: (prev[competencyId] || []).filter((a) => a.id !== assessmentId),
     }));
-    // If the deleted entry was being edited, reset the form
     setEditingDate((prev) => {
       if (prev[competencyId]) {
         return { ...prev, [competencyId]: "" };
@@ -312,20 +303,28 @@ export default function CompetencyAssessment() {
   return (
     <AppLayout>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2">
-            <ClipboardCheck className="h-6 w-6 text-primary" />
-            Competency Assessment
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Assess students on the competencies for your subject.
-          </p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-6 md:p-8">
+          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-14 -left-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+              <ClipboardCheck className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-white">
+                Competency Assessment
+              </h1>
+              <p className="text-indigo-100 text-xs md:text-sm mt-0.5">
+                Assess students on the competencies for your subject
+              </p>
+            </div>
+          </div>
         </div>
 
         {loadingClasses ? (
           <p className="text-sm text-muted-foreground">Loading your classes...</p>
         ) : assignments.length === 0 ? (
-          <Card>
+          <Card className="border-2 border-indigo-200 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-white to-white">
             <CardContent className="py-12 text-center text-muted-foreground">
               You aren't assigned to any classes yet.
             </CardContent>
@@ -334,7 +333,7 @@ export default function CompetencyAssessment() {
           <>
             <div className="flex gap-3 flex-wrap">
               <Select value={selectedClassKey} onValueChange={setSelectedClassKey}>
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-64 border-indigo-200 focus:ring-indigo-400">
                   <SelectValue placeholder="Select class & subject" />
                 </SelectTrigger>
                 <SelectContent>
@@ -354,7 +353,7 @@ export default function CompetencyAssessment() {
                 onValueChange={setSelectedStudentId}
                 disabled={loadingStudents || students.length === 0}
               >
-                <SelectTrigger className="w-64">
+                <SelectTrigger className="w-64 border-indigo-200 focus:ring-indigo-400">
                   <SelectValue
                     placeholder={loadingStudents ? "Loading students..." : "Select student"}
                   />
@@ -375,7 +374,7 @@ export default function CompetencyAssessment() {
                 {loadingCompetencies ? (
                   <p className="text-sm text-muted-foreground">Loading competencies...</p>
                 ) : competencies.length === 0 ? (
-                  <Card>
+                  <Card className="border-2 border-indigo-200 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-white to-white">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       No competencies defined for{" "}
                       {normalizeSubject(selectedAssignment?.subject || "")} at{" "}
@@ -388,16 +387,24 @@ export default function CompetencyAssessment() {
                     const history = assessmentsByCompetency[c.id] || [];
                     const latest = history[0];
                     return (
-                      <Card key={c.id}>
+                      <Card
+                        key={c.id}
+                        className="border-2 border-indigo-200 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-white to-white hover:shadow-md hover:-translate-y-0.5 transition-all"
+                      >
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-base">{c.name}</CardTitle>
-                              {c.description && (
-                                <p className="text-sm text-muted-foreground mt-1">
-                                  {c.description}
-                                </p>
-                              )}
+                            <div className="flex items-start gap-3">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-violet-500 shadow-sm">
+                                <Target className="h-4.5 w-4.5 text-white" />
+                              </div>
+                              <div>
+                                <CardTitle className="text-base">{c.name}</CardTitle>
+                                {c.description && (
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    {c.description}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                             {latest && (
                               <Badge
@@ -478,7 +485,7 @@ export default function CompetencyAssessment() {
                             </div>
                           )}
 
-                          <div className="pt-2 border-t space-y-2">
+                          <div className="pt-2 border-t border-indigo-100 space-y-2">
                             {editingDate[c.id] && (
                               <div className="flex items-center justify-between">
                                 <p className="text-xs text-muted-foreground">
@@ -505,7 +512,7 @@ export default function CompetencyAssessment() {
                                   setPendingRatings((prev) => ({ ...prev, [c.id]: v }))
                                 }
                               >
-                                <SelectTrigger className="w-44">
+                                <SelectTrigger className="w-44 border-indigo-200 focus:ring-indigo-400">
                                   <SelectValue placeholder="Rate today" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -528,6 +535,7 @@ export default function CompetencyAssessment() {
                                 }
                               />
                               <Button
+                                className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                                 onClick={() => handleSaveAssessment(c.id)}
                                 disabled={saving === c.id}
                               >

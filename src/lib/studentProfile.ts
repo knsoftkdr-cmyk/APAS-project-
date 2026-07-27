@@ -16,7 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const APP_CONFIG = {
   gpa: {
-    scale: 4.0, // change to 10.0 for a 10-point scale, etc.
+    scale: 10.0, // change to 10.0 for a 10-point scale, etc.
     // percentage breakpoints -> grade points, edit freely
     bands: [
       { minPercent: 90, points: 4.0 },
@@ -1120,7 +1120,7 @@ export async function getStudentOverview(studentId: string) {
     getAttendancePercentage(studentId),
     getAttendanceRecords(studentId, 6),
     getAIInsights(studentId),
-    calculateGPA(studentId),
+    getActiveSemesterGPA(studentId),
     getSubjectPerformance(studentId),
     calculateStudentIndices(studentId),
   ]);
@@ -1139,4 +1139,87 @@ export async function getStudentOverview(studentId: string) {
     confidenceIndex: studentIndices.confidenceIndex,
     motivationScore: studentIndices.motivationScore,
   };
+}
+
+// ============================================================
+// IEP Plans (read-only, sourced from the teacher's "My SEN
+// Students" workflow — iep_plans keyed on sen_students.id, which
+// itself is keyed on students.id via sen_students.student_id)
+// ============================================================
+export interface IepPlanRecord {
+  id: string;
+  title: string;
+  start_date: string;
+  end_date: string | null;
+  status: string;
+  goals: {
+    id: string;
+    domain: string;
+    goal_description: string;
+    baseline: string | null;
+    target_criteria: string | null;
+    target_date: string | null;
+    progress_status: string;
+  }[];
+  reviews: {
+    id: string;
+    review_date: string;
+    attendees: string | null;
+    summary: string | null;
+    next_review_date: string | null;
+  }[];
+}
+
+export async function getIepPlansForStudent(studentId: string): Promise<IepPlanRecord[]> {
+  const { data: senStudent, error: senError } = await supabase
+    .from("sen_students")
+    .select("id")
+    .eq("student_id", studentId)
+    .maybeSingle();
+  if (senError) throw senError;
+  if (!senStudent) return [];
+
+  const { data, error } = await supabase
+    .from("iep_plans")
+    .select("*, goals:iep_goals(*), reviews:iep_reviews(*)")
+    .eq("sen_student_id", senStudent.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as IepPlanRecord[];
+}
+
+// ============================================================
+// Active-semester GPA (sourced from student_gpa, which is
+// populated by the Semester Engine's recalculateStudentGPA —
+// NOT the same as the locally-computed calculateGPA() above,
+// which derives its own number straight from student_marks)
+// ============================================================
+export async function getActiveSemesterGPA(studentId: string): Promise<number | null> {
+  const { data: student, error: studentError } = await supabase
+    .from("students")
+    .select("school_id")
+    .eq("id", studentId)
+    .maybeSingle();
+  if (studentError) throw studentError;
+  if (!student) return null;
+
+  const { data: semesters, error: semError } = await supabase
+    .from("academic_semesters")
+    .select("id")
+    .eq("school_id", student.school_id)
+    .eq("status", "active")
+    .order("start_date", { ascending: false })
+    .limit(1);
+  if (semError) throw semError;
+  const semester = semesters?.[0];
+  if (!semester) return null;
+
+  const { data: gpaRow, error: gpaError } = await supabase
+    .from("student_gpa")
+    .select("gpa")
+    .eq("student_id", studentId)
+    .eq("semester_id", semester.id)
+    .maybeSingle();
+  if (gpaError) throw gpaError;
+  return gpaRow?.gpa ?? null;
 }

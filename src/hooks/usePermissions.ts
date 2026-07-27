@@ -17,7 +17,7 @@ const ALL_MODULES = ["Home","Reports","Alerts","Admin Panel","AI Tutor","School 
 
 const permCache = new Map<string, string[]>();
 // Cache version — bump this to invalidate all cached permissions
-const CACHE_VERSION = "v19";
+const CACHE_VERSION = "v20";
 
 interface UsePermissionsReturn {
   can: (moduleName: string) => boolean;
