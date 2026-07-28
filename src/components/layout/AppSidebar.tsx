@@ -3,6 +3,7 @@ import {
   TrendingUp,
   UserCheck,
   LayoutDashboard,
+  Store,
   Video,
   Brain,
   BookOpen,
@@ -157,6 +158,7 @@ const navItems: Array<{
   { title: "Semester Engine", icon: GraduationCap, path: "/semester-engine", roles: ["admin", "principal", "school_admin", "teacher", "student"], module: "Semester Engine" },
   { title: "Report Cards", icon: FileText, path: "/report-cards", roles: ["admin", "principal", "school_admin", "student"], module: "Report Cards" },
   { title: "Alumni", icon: Users, path: "/alumni", roles: ["school_admin"] },
+  { title: "Marketplace", icon: Store, path: "/marketplace", roles: ["admin", "school_admin", "teacher", "principal", "student"], module: "Marketplace" },
   { title: "Exam Seating", icon: Building2, path: "/exam-seating", roles: ["admin", "principal", "school_admin"], module: "Exam Seating" },
   { title: "Hall Tickets", icon: Ticket, path: "/hall-tickets", roles: ["admin", "principal", "school_admin", "student"], module: "Hall Tickets" },
   { title: "Invigilation", icon: UserCheck, path: "/invigilation", roles: ["admin", "principal", "school_admin", "teacher"], module: "Invigilation" },
@@ -215,6 +217,7 @@ const getMobileNavItems = (role?: string) => {
   if (role === "school_admin") {
     return [
       { title: "School Admin", icon: Shield, path: "/super-admin" },
+      { title: "Marketplace", icon: Store, path: "/marketplace" },
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
@@ -294,7 +297,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       if (item.roles && (!profile?.role || !item.roles.includes(profile.role))) return false;
       if (profile?.role === "student" || profile?.role === "parent") {
         if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects", "Courses", "Credentials", "My Accommodations"];
+        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects", "Credentials", "My Accommodations", "Marketplace"];
         const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication", "Safeguarding & Child Protection"];
         const allowed = profile?.role === "student" ? studentModules : parentModules;
         return allowed.includes((item as any).module);
