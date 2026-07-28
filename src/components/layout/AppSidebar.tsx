@@ -3,6 +3,7 @@ import {
   TrendingUp,
   UserCheck,
   LayoutDashboard,
+  Store,
   Video,
   Brain,
   BookOpen,
@@ -157,6 +158,7 @@ const navItems: Array<{
   { title: "Semester Engine", icon: GraduationCap, path: "/semester-engine", roles: ["admin", "principal", "school_admin", "teacher", "student"], module: "Semester Engine" },
   { title: "Report Cards", icon: FileText, path: "/report-cards", roles: ["admin", "principal", "school_admin", "student"], module: "Report Cards" },
   { title: "Alumni", icon: Users, path: "/alumni", roles: ["school_admin"] },
+  { title: "Marketplace", icon: Store, path: "/marketplace", roles: ["admin", "school_admin"], module: "Marketplace" },
   { title: "Exam Seating", icon: Building2, path: "/exam-seating", roles: ["admin", "principal", "school_admin"], module: "Exam Seating" },
   { title: "Hall Tickets", icon: Ticket, path: "/hall-tickets", roles: ["admin", "principal", "school_admin", "student"], module: "Hall Tickets" },
   { title: "Invigilation", icon: UserCheck, path: "/invigilation", roles: ["admin", "principal", "school_admin", "teacher"], module: "Invigilation" },
@@ -215,6 +217,7 @@ const getMobileNavItems = (role?: string) => {
   if (role === "school_admin") {
     return [
       { title: "School Admin", icon: Shield, path: "/super-admin" },
+      { title: "Marketplace", icon: Store, path: "/marketplace" },
       { title: "Settings", icon: Settings, path: "/settings" },
     ];
   }
