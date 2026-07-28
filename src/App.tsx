@@ -256,7 +256,7 @@ export default function App() {
                       <Route path="/houses" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent", "hod"]}><HouseManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="/report-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher", "student", "parent"]}><ReportCards /></RoleGuard></ProtectedRoute>} />
                       <Route path="/alumni" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><AlumniPage /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/marketplace" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin"]}><Marketplace /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/marketplace" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "school_admin", "teacher", "principal", "student"]}><Marketplace /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><AppointmentBooking /></RoleGuard></ProtectedRoute>} />
                       <Route path="/surveys" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "school_admin", "hod", "student", "parent"]}><Surveys /></RoleGuard></ProtectedRoute>} />

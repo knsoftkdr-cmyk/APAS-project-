@@ -15,7 +15,7 @@ export interface MarketplaceCategory {
 export type MarketplaceContentType =
   | "lesson_plan" | "worksheet" | "assessment" | "question_bank"
   | "ai_prompt" | "digital_content" | "course" | "template"
-  | "resource" | "third_party_app";
+  | "resource" | "third_party_app" | "video";
 
 export interface MarketplaceListing {
   id: string;
@@ -35,108 +35,103 @@ export interface MarketplaceListing {
   acquisition_count: number;
   created_at: string;
   published_at: string | null;
+  class_label: string | null;
+  subject: string | null;
+  video_url: string | null;
 }
 
-export interface MarketplacePurchase {
+export interface MarketplaceListingFile {
   id: string;
   listing_id: string;
-  buyer_school_id: string | null;
-  buyer_user_id: string;
-  price_paid: number;
-  license_type: string;
-  status: string;
-  purchased_at: string;
+  version: number;
+  storage_path: string;
+  file_type: string | null;
+  is_current: boolean;
+  created_at: string;
 }
 
 const LISTING_FILES_BUCKET = "marketplace-listing-files";
 
-// ---- Categories ----
-export async function getMarketplaceCategories() {
-  const { data, error } = await supabase
-    .from("marketplace_categories")
-    .select("*")
-    .eq("publishing_status", "published")
-    .order("sort_order", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as MarketplaceCategory[];
+export const CLASS_OPTIONS: { value: string; label: string }[] = [
+  { value: "nursery", label: "Nursery" },
+  { value: "lkg", label: "LKG" },
+  { value: "ukg", label: "UKG" },
+  ...Array.from({ length: 10 }, (_, i) => ({ value: `${i + 1}`, label: `Class ${i + 1}` })),
+];
+
+export const SUBJECT_OPTIONS: string[] = [
+  "Mathematics", "Science", "English", "Social Studies", "Hindi", "EVS", "Computer Science",
+];
+
+export function getClassLabel(value: string | null): string {
+  if (!value) return "—";
+  return CLASS_OPTIONS.find((c) => c.value === value)?.label || value;
 }
 
-// ---- Browse (published listings) ----
-export async function getBrowseListings(filters?: { categoryId?: string; contentType?: string }) {
-  let query = supabase
+export async function getSchoolVideos(schoolId: string) {
+  const { data, error } = await supabase
     .from("marketplace_listings")
     .select("*")
+    .eq("publisher_school_id", schoolId)
+    .eq("content_type", "video")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MarketplaceListing[];
+}
+
+export async function getMyClassVideos() {
+  const { data, error } = await supabase
+    .from("marketplace_listings")
+    .select("*")
+    .eq("content_type", "video")
     .eq("status", "published")
-    .order("created_at", { ascending: false });
-
-  if (filters?.categoryId) query = query.eq("category_id", filters.categoryId);
-  if (filters?.contentType) query = query.eq("content_type", filters.contentType);
-
-  const { data, error } = await query;
+    .order("subject", { ascending: true });
   if (error) throw error;
   return (data ?? []) as MarketplaceListing[];
 }
 
-// ---- My listings (as publisher) ----
-export async function getMyListings(publisherId: string) {
-  const { data, error } = await supabase
-    .from("marketplace_listings")
-    .select("*")
-    .eq("publisher_id", publisherId)
-    .order("created_at", { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as MarketplaceListing[];
-}
-
-export async function createListing(input: {
+export async function createVideoListing(input: {
   publisherId: string;
-  publisherSchoolId: string | null;
-  categoryId: string | null;
-  contentType: MarketplaceContentType;
+  publisherSchoolId: string;
   title: string;
   description: string;
-  visibility: "public" | "school_only" | "private";
+  classLabel: string;
+  subject: string;
+  videoUrl: string | null;
+  file: File | null;
 }) {
-  const { data, error } = await supabase
+  const { data: listing, error } = await supabase
     .from("marketplace_listings")
     .insert({
       publisher_id: input.publisherId,
       publisher_school_id: input.publisherSchoolId,
-      category_id: input.categoryId,
-      content_type: input.contentType,
+      content_type: "video",
       title: input.title,
       description: input.description,
+      class_label: input.classLabel,
+      subject: input.subject,
+      video_url: input.videoUrl,
       price: 0,
       license_type: "free",
-      status: "draft",
-      visibility: input.visibility,
+      status: "published",
+      visibility: "school_only",
+      published_at: new Date().toISOString(),
     })
     .select()
     .single();
   if (error) throw error;
-  return data as MarketplaceListing;
+
+  if (input.file) {
+    await uploadListingFile(input.file, listing.id);
+  }
+  return listing as MarketplaceListing;
 }
 
-export async function publishListing(listingId: string) {
-  const { data, error } = await supabase
-    .from("marketplace_listings")
-    .update({ status: "published", published_at: new Date().toISOString() })
-    .eq("id", listingId)
-    .select()
-    .single();
-  if (error) throw error;
-  return data as MarketplaceListing;
-}
-
-export async function archiveListing(listingId: string) {
-  const { error } = await supabase
-    .from("marketplace_listings")
-    .update({ status: "archived" })
-    .eq("id", listingId);
+export async function deleteVideoListing(listingId: string) {
+  const { error } = await supabase.from("marketplace_listings").delete().eq("id", listingId);
   if (error) throw error;
 }
 
-// ---- Files ----
 export async function uploadListingFile(file: File, listingId: string) {
   const filePath = `${listingId}/${Date.now()}-${file.name}`;
   const { error: uploadError } = await supabase.storage
@@ -155,13 +150,13 @@ export async function uploadListingFile(file: File, listingId: string) {
     .select()
     .single();
   if (error) throw error;
-  return data;
+  return data as MarketplaceListingFile;
 }
 
 export async function getListingFileSignedUrl(storagePath: string) {
   const { data, error } = await supabase.storage
     .from(LISTING_FILES_BUCKET)
-    .createSignedUrl(storagePath, 60);
+    .createSignedUrl(storagePath, 3600);
   if (error) throw error;
   return data.signedUrl;
 }
@@ -173,11 +168,79 @@ export async function getListingFiles(listingId: string) {
     .eq("listing_id", listingId)
     .eq("is_current", true);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as MarketplaceListingFile[];
 }
 
-// ---- Entitlements (free acquisition for now; payment fields ready for later) ----
-export async function acquireListing(listingId: string, buyerUserId: string, buyerSchoolId: string | null) {
+// ---- Courses (simple enroll + roster, not related to timetable) ----
+
+export interface CourseEnrollment {
+  id: string;
+  listing_id: string;
+  buyer_user_id: string;
+  buyer_school_id: string | null;
+  purchased_at: string;
+}
+
+export interface CourseRosterEntry {
+  buyer_user_id: string;
+  purchased_at: string;
+  student_name: string | null;
+  student_class: string | null;
+  roll_number: string | null;
+}
+
+export async function getSchoolCourses(schoolId: string) {
+  const { data, error } = await supabase
+    .from("marketplace_listings")
+    .select("*")
+    .eq("publisher_school_id", schoolId)
+    .eq("content_type", "course")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MarketplaceListing[];
+}
+
+// RLS scopes this to the student's own school automatically
+export async function getAvailableCourses() {
+  const { data, error } = await supabase
+    .from("marketplace_listings")
+    .select("*")
+    .eq("content_type", "course")
+    .eq("status", "published")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MarketplaceListing[];
+}
+
+export async function createCourseListing(input: {
+  publisherId: string;
+  publisherSchoolId: string;
+  title: string;
+  description: string;
+  classLabel: string | null;
+}) {
+  const { data, error } = await supabase
+    .from("marketplace_listings")
+    .insert({
+      publisher_id: input.publisherId,
+      publisher_school_id: input.publisherSchoolId,
+      content_type: "course",
+      title: input.title,
+      description: input.description,
+      class_label: input.classLabel,
+      price: 0,
+      license_type: "free",
+      status: "published",
+      visibility: "school_only",
+      published_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as MarketplaceListing;
+}
+
+export async function enrollInCourse(listingId: string, buyerUserId: string, buyerSchoolId: string | null) {
   const { data, error } = await supabase
     .from("marketplace_purchases")
     .insert({
@@ -191,16 +254,62 @@ export async function acquireListing(listingId: string, buyerUserId: string, buy
     .select()
     .single();
   if (error) throw error;
-  return data as MarketplacePurchase;
+  return data as CourseEnrollment;
 }
 
-export async function getMyAcquisitions(buyerUserId: string) {
+export async function getMyEnrolledCourseIds(buyerUserId: string) {
   const { data, error } = await supabase
     .from("marketplace_purchases")
-    .select("*, marketplace_listings(*)")
-    .eq("buyer_user_id", buyerUserId)
-    .eq("status", "active")
+    .select("listing_id")
+    .eq("buyer_user_id", buyerUserId);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.listing_id));
+}
+
+export async function getCourseRoster(listingId: string): Promise<CourseRosterEntry[]> {
+  const { data: purchases, error } = await supabase
+    .from("marketplace_purchases")
+    .select("buyer_user_id, purchased_at")
+    .eq("listing_id", listingId)
     .order("purchased_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  if (!purchases || purchases.length === 0) return [];
+
+  const buyerIds = purchases.map((p) => p.buyer_user_id);
+  const { data: students, error: studentsError } = await supabase
+    .from("students")
+    .select("profile_id, full_name, class, roll_number")
+    .in("profile_id", buyerIds);
+  if (studentsError) throw studentsError;
+
+  const studentMap = new Map((students ?? []).map((s) => [s.profile_id, s]));
+  return purchases.map((p) => {
+    const s = studentMap.get(p.buyer_user_id);
+    return {
+      buyer_user_id: p.buyer_user_id,
+      purchased_at: p.purchased_at,
+      student_name: s?.full_name ?? null,
+      student_class: s?.class ?? null,
+      roll_number: s?.roll_number ?? null,
+    };
+  });
+}
+
+export async function updateCourseListing(
+  listingId: string,
+  input: { title: string; description: string; classLabel: string | null }
+) {
+  const { data, error } = await supabase
+    .from("marketplace_listings")
+    .update({ title: input.title, description: input.description, class_label: input.classLabel })
+    .eq("id", listingId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as MarketplaceListing;
+}
+
+export async function deleteCourseListing(listingId: string) {
+  const { error } = await supabase.from("marketplace_listings").delete().eq("id", listingId);
+  if (error) throw error;
 }
