@@ -38,6 +38,9 @@ export interface MarketplaceListing {
   class_label: string | null;
   subject: string | null;
   video_url: string | null;
+  syllabus: string | null;
+  syllabus_file_path: string | null;
+  syllabus_file_type: string | null;
 }
 
 export interface MarketplaceListingFile {
@@ -218,6 +221,8 @@ export async function createCourseListing(input: {
   title: string;
   description: string;
   classLabel: string | null;
+  syllabus: string | null;
+  syllabusFile?: File | null;
 }) {
   const { data, error } = await supabase
     .from("marketplace_listings")
@@ -228,6 +233,7 @@ export async function createCourseListing(input: {
       title: input.title,
       description: input.description,
       class_label: input.classLabel,
+      syllabus: input.syllabus,
       price: 0,
       license_type: "free",
       status: "published",
@@ -237,6 +243,10 @@ export async function createCourseListing(input: {
     .select()
     .single();
   if (error) throw error;
+
+  if (input.syllabusFile) {
+    await uploadSyllabusFile(data.id, input.syllabusFile);
+  }
   return data as MarketplaceListing;
 }
 
@@ -264,6 +274,15 @@ export async function getMyEnrolledCourseIds(buyerUserId: string) {
     .eq("buyer_user_id", buyerUserId);
   if (error) throw error;
   return new Set((data ?? []).map((r) => r.listing_id));
+}
+
+export async function unenrollFromCourse(listingId: string, buyerUserId: string) {
+  const { error } = await supabase
+    .from("marketplace_purchases")
+    .delete()
+    .eq("listing_id", listingId)
+    .eq("buyer_user_id", buyerUserId);
+  if (error) throw error;
 }
 
 export async function getCourseRoster(listingId: string): Promise<CourseRosterEntry[]> {
@@ -297,19 +316,144 @@ export async function getCourseRoster(listingId: string): Promise<CourseRosterEn
 
 export async function updateCourseListing(
   listingId: string,
-  input: { title: string; description: string; classLabel: string | null }
+  input: {
+    title: string;
+    description: string;
+    classLabel: string | null;
+    syllabus: string | null;
+    syllabusFile?: File | null;
+  }
 ) {
   const { data, error } = await supabase
     .from("marketplace_listings")
-    .update({ title: input.title, description: input.description, class_label: input.classLabel })
+    .update({
+      title: input.title,
+      description: input.description,
+      class_label: input.classLabel,
+      syllabus: input.syllabus,
+    })
     .eq("id", listingId)
     .select()
     .single();
   if (error) throw error;
+
+  if (input.syllabusFile) {
+    await uploadSyllabusFile(listingId, input.syllabusFile);
+  }
   return data as MarketplaceListing;
+}
+
+const SYLLABUS_BUCKET = "course-syllabi";
+
+export async function uploadSyllabusFile(listingId: string, file: File) {
+  const filePath = `${listingId}/${Date.now()}-${file.name}`;
+  const { error: uploadError } = await supabase.storage.from(SYLLABUS_BUCKET).upload(filePath, file);
+  if (uploadError) throw uploadError;
+
+  const fileType = file.type || file.name.split(".").pop() || null;
+  const { error } = await supabase
+    .from("marketplace_listings")
+    .update({ syllabus_file_path: filePath, syllabus_file_type: fileType })
+    .eq("id", listingId);
+  if (error) throw error;
+  return filePath;
+}
+
+export async function removeSyllabusFile(listingId: string, storagePath: string) {
+  await supabase.storage.from(SYLLABUS_BUCKET).remove([storagePath]);
+  const { error } = await supabase
+    .from("marketplace_listings")
+    .update({ syllabus_file_path: null, syllabus_file_type: null })
+    .eq("id", listingId);
+  if (error) throw error;
+}
+
+export async function getSyllabusFileSignedUrl(storagePath: string) {
+  const { data, error } = await supabase.storage.from(SYLLABUS_BUCKET).createSignedUrl(storagePath, 3600);
+  if (error) throw error;
+  return data.signedUrl;
 }
 
 export async function deleteCourseListing(listingId: string) {
   const { error } = await supabase.from("marketplace_listings").delete().eq("id", listingId);
   if (error) throw error;
+}
+
+// ---- Course materials (videos/docs, gated by enrollment via RLS) ----
+
+const COURSE_MATERIALS_BUCKET = "course-materials";
+
+export interface CourseMaterial {
+  id: string;
+  listing_id: string;
+  material_type: "video" | "document";
+  title: string;
+  video_url: string | null;
+  storage_path: string | null;
+  file_type: string | null;
+  uploaded_by: string;
+  created_at: string;
+}
+
+export async function getCourseMaterials(listingId: string) {
+  const { data, error } = await supabase
+    .from("course_materials")
+    .select("*")
+    .eq("listing_id", listingId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as CourseMaterial[];
+}
+
+export async function addCourseMaterial(input: {
+  listingId: string;
+  uploadedBy: string;
+  title: string;
+  materialType: "video" | "document";
+  videoUrl?: string | null;
+  file?: File | null;
+}) {
+  let storagePath: string | null = null;
+  let fileType: string | null = null;
+
+  if (input.file) {
+    storagePath = `${input.listingId}/${Date.now()}-${input.file.name}`;
+    const { error: uploadError } = await supabase.storage
+      .from(COURSE_MATERIALS_BUCKET)
+      .upload(storagePath, input.file);
+    if (uploadError) throw uploadError;
+    fileType = input.file.type || input.file.name.split(".").pop() || null;
+  }
+
+  const { data, error } = await supabase
+    .from("course_materials")
+    .insert({
+      listing_id: input.listingId,
+      material_type: input.materialType,
+      title: input.title,
+      video_url: input.videoUrl || null,
+      storage_path: storagePath,
+      file_type: fileType,
+      uploaded_by: input.uploadedBy,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as CourseMaterial;
+}
+
+export async function deleteCourseMaterial(materialId: string, storagePath: string | null) {
+  if (storagePath) {
+    await supabase.storage.from(COURSE_MATERIALS_BUCKET).remove([storagePath]);
+  }
+  const { error } = await supabase.from("course_materials").delete().eq("id", materialId);
+  if (error) throw error;
+}
+
+export async function getCourseMaterialSignedUrl(storagePath: string) {
+  const { data, error } = await supabase.storage
+    .from(COURSE_MATERIALS_BUCKET)
+    .createSignedUrl(storagePath, 3600);
+  if (error) throw error;
+  return data.signedUrl;
 }

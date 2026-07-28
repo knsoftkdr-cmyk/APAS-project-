@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCap, BookOpen, Users, ChevronDown, ChevronUp, CheckCircle2, Pencil } from "lucide-react";
+import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCap, BookOpen, Users, ChevronDown, ChevronUp, CheckCircle2, Pencil, FileText, Eye } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { toast } from "sonner";
 import {
@@ -29,8 +30,15 @@ import {
   updateCourseListing,
   deleteCourseListing,
   enrollInCourse,
+  unenrollFromCourse,
   getMyEnrolledCourseIds,
   getCourseRoster,
+  getCourseMaterials,
+  addCourseMaterial,
+  deleteCourseMaterial,
+  getCourseMaterialSignedUrl,
+  type CourseMaterial,
+  getSyllabusFileSignedUrl,
 } from "@/lib/marketplace";
 
 function getYouTubeEmbed(url: string): string | null {
@@ -167,15 +175,211 @@ function CourseRoster({ listingId }: { listingId: string }) {
   );
 }
 
+function SyllabusViewer({ listing }: { listing: MarketplaceListing }) {
+  const [loading, setLoading] = useState(false);
+  if (!listing.syllabus_file_path) return null;
+
+  const handleView = async () => {
+    setLoading(true);
+    try {
+      const url = await getSyllabusFileSignedUrl(listing.syllabus_file_path!);
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Failed to load syllabus file");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button size="sm" variant="outline" className="w-full rounded-full" onClick={handleView} disabled={loading}>
+      <Eye className="h-3.5 w-3.5 mr-1" />
+      {loading ? "Loading..." : "View Syllabus"}
+    </Button>
+  );
+}
+
+function CourseMaterialsPanel({ listingId, canManage }: { listingId: string; canManage: boolean }) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [matTitle, setMatTitle] = useState("");
+  const [matType, setMatType] = useState<"video" | "document">("video");
+  const [matVideoUrl, setMatVideoUrl] = useState("");
+  const [matFile, setMatFile] = useState<File | null>(null);
+
+  const { data: materials, isLoading } = useQuery({
+    queryKey: ["course-materials", listingId],
+    queryFn: () => getCourseMaterials(listingId),
+  });
+
+  const resetMatForm = () => {
+    setMatTitle("");
+    setMatVideoUrl("");
+    setMatFile(null);
+    setShowForm(false);
+  };
+
+  const addMutation = useMutation({
+    mutationFn: () =>
+      addCourseMaterial({
+        listingId,
+        uploadedBy: user!.id,
+        title: matTitle,
+        materialType: matType,
+        videoUrl: matType === "video" ? matVideoUrl.trim() || null : null,
+        file: matFile,
+      }),
+    onSuccess: () => {
+      toast.success("Material added");
+      resetMatForm();
+      queryClient.invalidateQueries({ queryKey: ["course-materials", listingId] });
+    },
+    onError: () => toast.error("Failed to add material"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (m: CourseMaterial) => deleteCourseMaterial(m.id, m.storage_path),
+    onSuccess: () => {
+      toast.success("Material removed");
+      queryClient.invalidateQueries({ queryKey: ["course-materials", listingId] });
+    },
+    onError: () => toast.error("Failed to remove material"),
+  });
+
+  const openMaterial = async (m: CourseMaterial) => {
+    if (m.video_url) {
+      window.open(m.video_url, "_blank");
+      return;
+    }
+    if (m.storage_path) {
+      try {
+        const url = await getCourseMaterialSignedUrl(m.storage_path);
+        window.open(url, "_blank");
+      } catch {
+        toast.error("Failed to open material");
+      }
+    }
+  };
+
+  const canSubmitMaterial =
+    matTitle.trim().length > 0 &&
+    (matType === "video" ? matVideoUrl.trim().length > 0 || !!matFile : !!matFile) &&
+    !addMutation.isPending;
+
+  return (
+    <div className="space-y-2 pt-2 border-t">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Materials</span>
+        {canManage && (
+          <Button size="sm" variant="ghost" className="h-6 text-xs rounded-full" onClick={() => setShowForm((v) => !v)}>
+            {showForm ? "Cancel" : "+ Add"}
+          </Button>
+        )}
+      </div>
+
+      {canManage && showForm && (
+        <div className="space-y-2 bg-muted/30 rounded-lg p-3">
+          <Input
+            placeholder="Material title"
+            value={matTitle}
+            onChange={(e) => setMatTitle(e.target.value)}
+            className="h-8 text-xs"
+          />
+          <div className="flex gap-1">
+            <Button
+              size="sm"
+              variant={matType === "video" ? "default" : "outline"}
+              className="h-7 text-xs flex-1 rounded-full"
+              onClick={() => setMatType("video")}
+            >
+              Video
+            </Button>
+            <Button
+              size="sm"
+              variant={matType === "document" ? "default" : "outline"}
+              className="h-7 text-xs flex-1 rounded-full"
+              onClick={() => setMatType("document")}
+            >
+              Document
+            </Button>
+          </div>
+          {matType === "video" ? (
+            <>
+              <Input
+                placeholder="Video link (YouTube, Drive, etc.)"
+                value={matVideoUrl}
+                onChange={(e) => setMatVideoUrl(e.target.value)}
+                className="h-8 text-xs"
+              />
+              <div className="text-[10px] text-muted-foreground text-center">— or upload a file —</div>
+              <Input type="file" accept="video/*" onChange={(e) => setMatFile(e.target.files?.[0] ?? null)} className="text-xs" />
+            </>
+          ) : (
+            <Input
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+              onChange={(e) => setMatFile(e.target.files?.[0] ?? null)}
+              className="text-xs"
+            />
+          )}
+          <Button
+            size="sm"
+            className="w-full h-7 text-xs bg-blue-600 hover:bg-blue-700 rounded-full"
+            onClick={() => addMutation.mutate()}
+            disabled={!canSubmitMaterial}
+          >
+            {addMutation.isPending ? "Adding..." : "Add Material"}
+          </Button>
+        </div>
+      )}
+
+      {isLoading ? (
+        <Skeleton className="h-10 w-full" />
+      ) : !materials || materials.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No materials added yet.</p>
+      ) : (
+        <div className="space-y-1.5">
+          {materials.map((m) => (
+            <div key={m.id} className="flex items-center justify-between text-xs bg-muted/40 rounded-lg px-3 py-1.5">
+              <button className="flex items-center gap-1.5 min-w-0 hover:underline text-left" onClick={() => openMaterial(m)}>
+                {m.material_type === "video" ? (
+                  <Play className="h-3 w-3 shrink-0 text-blue-600" />
+                ) : (
+                  <FileText className="h-3 w-3 shrink-0 text-blue-600" />
+                )}
+                <span className="truncate">{m.title}</span>
+              </button>
+              {canManage && (
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-5 w-5 text-red-500 hover:text-red-700 shrink-0"
+                  onClick={() => deleteMutation.mutate(m)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminCourses() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [materialsOpenId, setMaterialsOpenId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [classLabel, setClassLabel] = useState("");
+  const [syllabus, setSyllabus] = useState("");
+  const [syllabusFile, setSyllabusFile] = useState<File | null>(null);
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["marketplace-school-courses", profile?.school_id],
@@ -187,6 +391,8 @@ function AdminCourses() {
     setTitle("");
     setDescription("");
     setClassLabel("");
+    setSyllabus("");
+    setSyllabusFile(null);
     setShowForm(false);
     setEditingId(null);
   };
@@ -199,6 +405,8 @@ function AdminCourses() {
         title,
         description,
         classLabel: classLabel || null,
+        syllabus: syllabus || null,
+        syllabusFile,
       }),
     onSuccess: () => {
       toast.success("Course created");
@@ -209,7 +417,14 @@ function AdminCourses() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: () => updateCourseListing(editingId!, { title, description, classLabel: classLabel || null }),
+    mutationFn: () =>
+      updateCourseListing(editingId!, {
+        title,
+        description,
+        classLabel: classLabel || null,
+        syllabus: syllabus || null,
+        syllabusFile,
+      }),
     onSuccess: () => {
       toast.success("Course updated");
       resetForm();
@@ -232,6 +447,8 @@ function AdminCourses() {
     setTitle(c.title);
     setDescription(c.description ?? "");
     setClassLabel(c.class_label ?? "");
+    setSyllabus(c.syllabus ?? "");
+    setSyllabusFile(null);
     setShowForm(false);
   };
 
@@ -280,6 +497,24 @@ function AdminCourses() {
               <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
             <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">Syllabus</label>
+              <Textarea
+                value={syllabus}
+                onChange={(e) => setSyllabus(e.target.value)}
+                rows={4}
+                placeholder="Outline what this course covers, week by week or topic by topic..."
+              />
+              <div className="text-[10px] text-muted-foreground text-center pt-1">— or upload a syllabus file (PDF/doc) —</div>
+              <Input
+                type="file"
+                accept=".pdf,.doc,.docx,.ppt,.pptx"
+                onChange={(e) => setSyllabusFile(e.target.files?.[0] ?? null)}
+              />
+              {isEditing && editingId && courses?.find((c) => c.id === editingId)?.syllabus_file_path && !syllabusFile && (
+                <p className="text-[10px] text-muted-foreground">A syllabus file is already attached. Uploading a new one will replace it.</p>
+              )}
+            </div>
+            <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Class</label>
               <select
                 className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
@@ -311,6 +546,7 @@ function AdminCourses() {
         <div className="grid gap-3 md:grid-cols-2">
           {courses.map((c) => {
             const isExpanded = expandedId === c.id;
+            const isMaterialsOpen = materialsOpenId === c.id;
             return (
               <Card key={c.id} className="border-2 border-blue-200 rounded-2xl bg-gradient-to-br from-blue-50/60 via-white to-white">
                 <CardHeader className="pb-2">
@@ -345,6 +581,7 @@ function AdminCourses() {
                     {c.class_label ? getClassLabel(c.class_label) : "All Classes"}
                   </Badge>
                   {c.description && <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>}
+                  <SyllabusViewer listing={c} />
                   <Button
                     size="sm"
                     variant="outline"
@@ -356,6 +593,17 @@ function AdminCourses() {
                     {isExpanded ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
                   </Button>
                   {isExpanded && <CourseRoster listingId={c.id} />}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full rounded-full"
+                    onClick={() => setMaterialsOpenId(isMaterialsOpen ? null : c.id)}
+                  >
+                    <BookOpen className="h-3.5 w-3.5 mr-1" />
+                    Materials
+                    {isMaterialsOpen ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
+                  </Button>
+                  {isMaterialsOpen && <CourseMaterialsPanel listingId={c.id} canManage />}
                 </CardContent>
               </Card>
             );
@@ -369,6 +617,7 @@ function AdminCourses() {
 function StudentCourses() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: courses, isLoading } = useQuery({
     queryKey: ["marketplace-available-courses", profile?.id],
@@ -391,6 +640,22 @@ function StudentCourses() {
     onError: () => toast.error("Failed to enroll"),
   });
 
+  const dropMutation = useMutation({
+    mutationFn: (listingId: string) => unenrollFromCourse(listingId, user!.id),
+    onSuccess: (_data, listingId) => {
+      toast.success("You've dropped the course");
+      if (expandedId === listingId) setExpandedId(null);
+      queryClient.invalidateQueries({ queryKey: ["my-enrolled-course-ids"] });
+    },
+    onError: () => toast.error("Failed to drop course"),
+  });
+
+  const handleDrop = (c: MarketplaceListing) => {
+    if (window.confirm(`Drop "${c.title}"? You'll lose access to its materials until you re-enroll.`)) {
+      dropMutation.mutate(c.id);
+    }
+  };
+
   if (isLoading) return <Skeleton className="h-40 w-full" />;
   if (!courses || courses.length === 0) {
     return <p className="text-sm text-muted-foreground">No courses available yet.</p>;
@@ -410,10 +675,37 @@ function StudentCourses() {
             </CardHeader>
             <CardContent className="space-y-2">
               {c.description && <p className="text-xs text-muted-foreground line-clamp-2">{c.description}</p>}
+              {c.syllabus && (
+                <div className="text-xs bg-muted/30 rounded-lg p-2 space-y-1">
+                  <p className="font-semibold text-muted-foreground">Syllabus</p>
+                  <p className="whitespace-pre-wrap line-clamp-4">{c.syllabus}</p>
+                </div>
+              )}
+              <SyllabusViewer listing={c} />
               {isEnrolled ? (
-                <Badge variant="secondary" className="rounded-full flex items-center gap-1 w-fit">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Enrolled
-                </Badge>
+                <>
+                  <Badge variant="secondary" className="rounded-full flex items-center gap-1 w-fit">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> Enrolled
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full rounded-full"
+                    onClick={() => setExpandedId(expandedId === c.id ? null : c.id)}
+                  >
+                    {expandedId === c.id ? "Hide Materials" : "View Materials"}
+                  </Button>
+                  {expandedId === c.id && <CourseMaterialsPanel listingId={c.id} canManage={false} />}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full rounded-full text-red-500 hover:text-red-700 border-red-200 hover:bg-red-50"
+                    onClick={() => handleDrop(c)}
+                    disabled={dropMutation.isPending}
+                  >
+                    Drop Course
+                  </Button>
+                </>
               ) : (
                 <Button
                   size="sm"
