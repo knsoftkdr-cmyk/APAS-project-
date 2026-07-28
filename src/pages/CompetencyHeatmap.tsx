@@ -60,9 +60,23 @@ const PROFICIENCY_COLORS: Record<string, string> = {
   advanced: "rgb(34, 197, 94)", // green-500
 };
 
+// --- NEW: simple responsive hook ---------------------------------------
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth <= breakpoint : false
+  );
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, [breakpoint]);
+  return isMobile;
+}
+
 export default function CompetencyHeatmap() {
   const { profile } = useAuth();
   const schoolId = profile?.school_id;
+  const isMobile = useIsMobile(); // --- NEW ---
 
   const [classes, setClasses] = useState<ClassRow[]>([]);
   const [allCompetencies, setAllCompetencies] = useState<Competency[]>([]);
@@ -72,8 +86,6 @@ export default function CompetencyHeatmap() {
   const [classDistributions, setClassDistributions] = useState<ClassDistribution[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // School-wide, deduplicated subject list — merged from class_teachers,
-  // teacher_subjects, and existing competencies, same source as CompetencyDefinitions.tsx
   const [subjectMasterList, setSubjectMasterList] = useState<string[]>([]);
 
   useEffect(() => {
@@ -102,7 +114,6 @@ export default function CompetencyHeatmap() {
     fetchSubjectMasterList();
   }, [schoolId]);
 
-  // Load classes + all competencies for this school
   useEffect(() => {
     if (!schoolId) return;
     const load = async () => {
@@ -121,9 +132,6 @@ export default function CompetencyHeatmap() {
     load();
   }, [schoolId]);
 
-  // Default subject selection once the master list arrives — prefer a subject
-  // that actually has competencies defined, so the heatmap isn't defaulted
-  // into an empty subject just because it's alphabetically first school-wide.
   useEffect(() => {
     if ((subjectMasterList.length > 0 || allCompetencies.length > 0) && !subjectFilter) {
       const subjectsWithCompetencies = new Set(allCompetencies.map((c) => c.subject));
@@ -153,7 +161,6 @@ export default function CompetencyHeatmap() {
     );
   }, [classes]);
 
-  // Fetch and aggregate assessments: count of (student, competency) data points per proficiency level, per class
   useEffect(() => {
     if (!schoolId || visibleCompetencies.length === 0 || classes.length === 0) {
       setClassDistributions([]);
@@ -176,7 +183,6 @@ export default function CompetencyHeatmap() {
         return;
       }
 
-      // Keep only the most recent assessment per (student_id, competency_id)
       const latestPerStudentCompetency = new Map<string, (typeof data)[number]>();
       for (const row of data) {
         const key = `${row.student_id}::${row.competency_id}`;
@@ -185,9 +191,8 @@ export default function CompetencyHeatmap() {
         }
       }
 
-      // Count how many data points fall into each proficiency level, per class + competency
       const counts = new Map<
-        string, // `${classId}::${competencyId}`
+        string, 
         { beginner: number; developing: number; proficient: number; advanced: number }
       >();
       for (const row of latestPerStudentCompetency.values()) {
@@ -243,8 +248,67 @@ export default function CompetencyHeatmap() {
     };
     aggregate();
   }, [schoolId, visibleCompetencies, classes]);
+
   const chartData = classDistributions.filter((c) => c.total > 0);
   const hasAnyData = chartData.length > 0;
+
+  // --- NEW: responsive sizing constants -----------------------------------
+  const rowHeight = isMobile ? 130 : 90;
+  const baseHeight = isMobile ? 170 : 140;
+  const yAxisWidth = isMobile ? 92 : 140;
+  const barSize = isMobile ? 12 : 16;
+  const chartMargin = isMobile
+    ? { top: 8, right: 10, left: 0, bottom: 8 }
+    : { top: 8, right: 24, left: 8, bottom: 8 };
+
+  // --- NEW: wraps long competency names onto up to 2 lines so they never
+  // get clipped, instead of relying on a single fixed-width line ----------
+  const renderYAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    const text: string = String(payload.value);
+    const maxChars = isMobile ? 12 : 20;
+
+    let lines: string[];
+    if (text.length <= maxChars) {
+      lines = [text];
+    } else {
+      const words = text.split(" ");
+      const built: string[] = [];
+      let current = "";
+      for (const w of words) {
+        if ((current + " " + w).trim().length > maxChars && current) {
+          built.push(current.trim());
+          current = w;
+        } else {
+          current = (current + " " + w).trim();
+        }
+      }
+      if (current) built.push(current);
+      // cap at 2 lines, merge any overflow into the second line
+      lines = built.length > 2 ? [built[0], built.slice(1).join(" ")] : built;
+    }
+
+    const lineHeight = isMobile ? 11 : 13;
+    const startY = y - ((lines.length - 1) * lineHeight) / 2;
+
+    return (
+      <g>
+        {lines.map((line, i) => (
+          <text
+            key={i}
+            x={x}
+            y={startY + i * lineHeight}
+            dy={4}
+            textAnchor="end"
+            fontSize={isMobile ? 10 : 12}
+            fill="#374151"
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+    );
+  };
 
   return (
     <AppLayout>
@@ -315,20 +379,26 @@ export default function CompetencyHeatmap() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div style={{ height: Math.max(140, (cls.rows?.length ?? 0) * 90) }}>
+                  <div
+                    style={{
+                      height: Math.max(baseHeight, (cls.rows?.length ?? 0) * rowHeight),
+                    }}
+                  >
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={cls.rows ?? []}
                         layout="vertical"
-                        margin={{ top: 8, right: 24, left: 8, bottom: 8 }}
+                        margin={chartMargin}
+                        barCategoryGap={isMobile ? "30%" : "20%"}
                       >
                         <CartesianGrid strokeDasharray="3 3" horizontal={false} />
                         <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
                         <YAxis
                           type="category"
                           dataKey="competencyName"
-                          width={140}
-                          tick={{ fontSize: 12 }}
+                          width={yAxisWidth}
+                          tick={renderYAxisTick}
+                          interval={0}
                         />
                         <RechartsTooltip
                           formatter={(value: number, name: string) => [
@@ -336,34 +406,34 @@ export default function CompetencyHeatmap() {
                             name.charAt(0).toUpperCase() + name.slice(1),
                           ]}
                         />
-                        <Legend />
+                        <Legend wrapperStyle={isMobile ? { fontSize: 11 } : undefined} />
                         <Bar
                           dataKey="beginner"
                           name="Beginner"
                           fill={PROFICIENCY_COLORS.beginner}
                           radius={[0, 4, 4, 0]}
-                          barSize={16}
+                          barSize={barSize}
                         />
                         <Bar
                           dataKey="developing"
                           name="Developing"
                           fill={PROFICIENCY_COLORS.developing}
                           radius={[0, 4, 4, 0]}
-                          barSize={16}
+                          barSize={barSize}
                         />
                         <Bar
                           dataKey="proficient"
                           name="Proficient"
                           fill={PROFICIENCY_COLORS.proficient}
                           radius={[0, 4, 4, 0]}
-                          barSize={16}
+                          barSize={barSize}
                         />
                         <Bar
                           dataKey="advanced"
                           name="Advanced"
                           fill={PROFICIENCY_COLORS.advanced}
                           radius={[0, 4, 4, 0]}
-                          barSize={16}
+                          barSize={barSize}
                         />
                       </BarChart>
                     </ResponsiveContainer>

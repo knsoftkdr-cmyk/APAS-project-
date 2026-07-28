@@ -456,11 +456,26 @@ export default function BranchManagementPage() {
                   ) : (
                     <div className="border border-slate-100 rounded-xl max-h-[500px] overflow-y-auto divide-y divide-slate-50">
                       {filteredStudents.map((s) => (
-                        <label key={s.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer">
-                          <Checkbox checked={selectedStudentIds.has(s.id)} onCheckedChange={() => toggleStudent(s.id)} />
-                          <span className="text-sm text-slate-700 flex-1 truncate">{s.full_name}</span>
-                          <span className="text-xs text-muted-foreground">{s.class_grade}</span>
-                          <Badge variant="outline" className="text-xs">{branchName(s.branch_id)}</Badge>
+                        <label
+                          key={s.id}
+                          className="flex items-start sm:items-center gap-3 px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={selectedStudentIds.has(s.id)}
+                            onCheckedChange={() => toggleStudent(s.id)}
+                            className="mt-0.5 sm:mt-0 shrink-0"
+                          />
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 flex-1 min-w-0">
+                            <span className="text-sm text-slate-700 font-medium sm:font-normal truncate sm:flex-1">
+                              {s.full_name}
+                            </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-muted-foreground">{s.class_grade}</span>
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                {branchName(s.branch_id)}
+                              </Badge>
+                            </div>
+                          </div>
                         </label>
                       ))}
                       {filteredStudents.length === 0 && (
@@ -504,11 +519,26 @@ export default function BranchManagementPage() {
                   ) : (
                     <div className="border border-slate-100 rounded-xl max-h-[500px] overflow-y-auto divide-y divide-slate-50">
                       {filteredStaff.map((s) => (
-                        <label key={s.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer">
-                          <Checkbox checked={selectedStaffIds.has(s.id)} onCheckedChange={() => toggleStaff(s.id)} />
-                          <span className="text-sm text-slate-700 flex-1 truncate">{s.full_name}</span>
-                          <span className="text-xs text-muted-foreground capitalize">{s.role}</span>
-                          <Badge variant="outline" className="text-xs">{branchName(s.branch_id)}</Badge>
+                        <label
+                          key={s.id}
+                          className="flex items-start sm:items-center gap-3 px-4 py-2.5 hover:bg-blue-50/50 cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={selectedStaffIds.has(s.id)}
+                            onCheckedChange={() => toggleStaff(s.id)}
+                            className="mt-0.5 sm:mt-0 shrink-0"
+                          />
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 flex-1 min-w-0">
+                            <span className="text-sm text-slate-700 font-medium sm:font-normal truncate sm:flex-1">
+                              {s.full_name}
+                            </span>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs text-muted-foreground capitalize">{s.role}</span>
+                              <Badge variant="outline" className="text-xs shrink-0">
+                                {branchName(s.branch_id)}
+                              </Badge>
+                            </div>
+                          </div>
                         </label>
                       ))}
                       {filteredStaff.length === 0 && (
