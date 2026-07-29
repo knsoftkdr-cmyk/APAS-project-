@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+python-dotenv
+pdfplumber
+pytesseract
+pillow
+pdf2image
+google-genai
+pydantic
+supabase
+sentence-transformers
+pymupdf

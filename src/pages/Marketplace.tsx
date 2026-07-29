@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCap, BookOpen, Users, ChevronDown, ChevronUp, CheckCircle2, Pencil, FileText, Eye } from "lucide-react";
+import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCap, BookOpen, Users, ChevronDown, ChevronUp, CheckCircle2, Pencil, FileText, Eye, FileUp } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { TextbookLoaderPanel } from "@/components/marketplace/TextbookLoaderPanel";
 import { toast } from "sonner";
 import {
   getSchoolVideos,
@@ -727,6 +728,7 @@ function StudentCourses() {
 function AdminMarketplace() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const isSchoolAdmin = profile?.role === "school_admin";
   const [tab, setTab] = useState("videos");
   const [filterClass, setFilterClass] = useState("");
   const [filterSubject, setFilterSubject] = useState("");
@@ -824,6 +826,11 @@ function AdminMarketplace() {
           <TabsTrigger value="courses" className="rounded-full px-5 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             Courses
           </TabsTrigger>
+          {isSchoolAdmin && (
+            <TabsTrigger value="textbooks" className="rounded-full px-5 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              Textbook Loader
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="videos" className="space-y-3 mt-4">
@@ -954,6 +961,12 @@ function AdminMarketplace() {
         <TabsContent value="courses" className="mt-4">
           <AdminCourses />
         </TabsContent>
+
+        {isSchoolAdmin && (
+          <TabsContent value="textbooks" className="mt-4">
+            <TextbookLoaderPanel schoolId={profile?.school_id ?? null} />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );
