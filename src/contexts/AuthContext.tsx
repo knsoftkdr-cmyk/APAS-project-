@@ -89,6 +89,7 @@ const fetchProfile = async (userId: string) => {
 
   const { data: { subscription } } = supabase.auth.onAuthStateChange(
     (_event, session) => {
+      console.log("[AUTH DEBUG] onAuthStateChange fired:", _event, "session:", session ? "present" : "null");
       if (!isMounted) return;
       setSession(session);
       if (session?.user) {
