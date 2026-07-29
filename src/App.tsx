@@ -113,6 +113,7 @@ const MyAccommodations = lazy(() => import("./pages/MyAccommodations"));
 const StudentVirtualClassroom = lazy(() => import("./pages/StudentVirtualClassroom"));
 const TeacherSafeguardingReport = lazy(() => import("./pages/TeacherSafeguardingReport"));
 const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
+const AdmissionsPage = lazy(() => import("./pages/AdmissionsPage"));
 
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
@@ -202,6 +203,7 @@ export default function App() {
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/safeguarding-report" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherSafeguardingReport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/safeguarding" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod"]}><SafeguardingPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admissions" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><AdmissionsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent/safeguarding" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentSafeguardingPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><GroupProjectsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupProjectsPage /></RoleGuard></ProtectedRoute>} />

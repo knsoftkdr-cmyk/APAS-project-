@@ -44,6 +44,7 @@ import {
   RotateCw,
   ShieldAlert,
   Accessibility,
+  UserPlus,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -88,6 +89,7 @@ const navItems: Array<{
   { title: "Appointments", icon: CalendarCheck, path: "/teacher/appointments", roles: ["teacher"] },
   { title: "Report Cards", icon: FileText, path: "/report-cards", roles: ["teacher"], module: "Report Cards" },
   { title: "Rotation Schedules", icon: RotateCw, path: "/rotation-schedules", roles: ["admin", "principal"], module: "Rotation Schedules" },
+  { title: "Admissions", icon: UserPlus, path: "/admissions", roles: ["admin", "principal", "school_admin"] },
   { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["admin", "principal"], module: "SEN Management" },
   { title: "My SEN Students", icon: Accessibility, path: "/my-sen-students", roles: ["teacher", "hod"], module: "SEN Management" },
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal"] },

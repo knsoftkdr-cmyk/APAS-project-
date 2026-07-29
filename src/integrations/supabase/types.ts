@@ -1986,9 +1986,261 @@ export type Database = {
           },
         ]
       }
+      admission_intakes: {
+        Row: {
+          academic_year: string
+          closes_on: string | null
+          created_at: string
+          created_by: string | null
+          criteria_notes: string | null
+          grade: string
+          id: string
+          is_open: boolean
+          min_percentage_required: number | null
+          opens_on: string | null
+          school_id: string
+          total_seats: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year: string
+          closes_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria_notes?: string | null
+          grade: string
+          id?: string
+          is_open?: boolean
+          min_percentage_required?: number | null
+          opens_on?: string | null
+          school_id: string
+          total_seats?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: string
+          closes_on?: string | null
+          created_at?: string
+          created_by?: string | null
+          criteria_notes?: string | null
+          grade?: string
+          id?: string
+          is_open?: boolean
+          min_percentage_required?: number | null
+          opens_on?: string | null
+          school_id?: string
+          total_seats?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_intakes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_intakes_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admission_applicants: {
+        Row: {
+          address: string | null
+          category: string | null
+          created_at: string
+          date_of_birth: string | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_notes: string | null
+          distance_from_school_km: number | null
+          full_name: string
+          gender: string | null
+          id: string
+          intake_id: string
+          meeting_date: string
+          meeting_notes: string | null
+          parent_email: string | null
+          parent_name: string
+          parent_phone: string
+          previous_grade: string | null
+          previous_percentage: number | null
+          previous_school_name: string | null
+          priority_score: number | null
+          recorded_by: string
+          school_id: string
+          sibling_studying_here: boolean
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          distance_from_school_km?: number | null
+          full_name: string
+          gender?: string | null
+          id?: string
+          intake_id: string
+          meeting_date?: string
+          meeting_notes?: string | null
+          parent_email?: string | null
+          parent_name: string
+          parent_phone: string
+          previous_grade?: string | null
+          previous_percentage?: number | null
+          previous_school_name?: string | null
+          priority_score?: number | null
+          recorded_by: string
+          // NOTE: school_id is auto-populated by a DB trigger from admission_intakes.school_id,
+          // so it's marked optional here for convenience — safe to omit on insert.
+          school_id?: string
+          sibling_studying_here?: boolean
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          category?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          distance_from_school_km?: number | null
+          full_name?: string
+          gender?: string | null
+          id?: string
+          intake_id?: string
+          meeting_date?: string
+          meeting_notes?: string | null
+          parent_email?: string | null
+          parent_name?: string
+          parent_phone?: string
+          previous_grade?: string | null
+          previous_percentage?: number | null
+          previous_school_name?: string | null
+          priority_score?: number | null
+          recorded_by?: string
+          school_id?: string
+          sibling_studying_here?: boolean
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_applicants_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: false
+            referencedRelation: "admission_intakes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_applicants_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_applicants_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_applicants_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admission_documents: {
+        Row: {
+          applicant_id: string
+          document_type: string
+          file_name: string | null
+          file_path: string
+          id: string
+          school_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          applicant_id: string
+          document_type: string
+          file_name?: string | null
+          file_path: string
+          id?: string
+          // NOTE: school_id is auto-populated by a DB trigger from admission_applicants.school_id.
+          school_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          document_type?: string
+          file_name?: string | null
+          file_path?: string
+          id?: string
+          school_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_documents_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "admission_applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_documents_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      [_ in never]: never
+      admission_intake_seat_summary: {
+        Row: {
+          academic_year: string | null
+          applicants_pending_review: number | null
+          grade: string | null
+          intake_id: string | null
+          school_id: string | null
+          seats_filled: number | null
+          seats_remaining: number | null
+          total_seats: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_role: { Args: { _user_id: string }; Returns: string }
