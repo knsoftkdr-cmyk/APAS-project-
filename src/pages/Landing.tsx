@@ -10,6 +10,8 @@ import aboutBg from "@/assets/landing-about-bg.jpg";
 import ctaBg from "@/assets/landing-cta-bg.jpg";
 // Add import at top:
 import apasLogo from "@/assets/APAS-logo.png";
+import SolutionsMegaMenu from "@/components/SolutionsMegaMenu";
+import SolutionsMobileAccordion from "@/components/SolutionsMobileAccordion";
 import airobot from "@/assets/landing-ai-robot.png";
 import schoolbg from "@/assets/school-bg.png";
 import AOS from "aos";
@@ -77,6 +79,7 @@ const features = [
 const Landing = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [solutionsOpen, setSolutionsOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -152,25 +155,29 @@ const Landing = () => {
 </Link>
 
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-700">
-            <a href="#home" className="hover:text-blue-600 transition-colors">Home</a>
-            <a href="#about" className="hover:text-blue-600 transition-colors">About</a>
-            <a href="#platform" className="hover:text-blue-600 transition-colors">Platform</a>
-            <a href="#solutions" className="hover:text-blue-600 transition-colors">Solutions</a>
-            <a href="#aifeatures" className="hover:text-blue-600 transition-colors">AI Features</a>
-            <a href="#how" className="hover:text-blue-600 transition-colors">How it Works</a>
-            <a href="#resources" className="hover:text-blue-600 transition-colors">Resources</a>
-            <a href="#contact" className="hover:text-blue-600 transition-colors">Contact</a>
+            <a href="#home" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Home</a>
+            <a href="#about" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">About</a>
+            <a href="#platform" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Platform</a>
+            <SolutionsMegaMenu
+              open={solutionsOpen}
+              onToggle={() => setSolutionsOpen((v) => !v)}
+              onClose={() => setSolutionsOpen(false)}
+            />
+            <a href="#aifeatures" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">AI Features</a>
+            <a href="#how" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">How it Works</a>
+            <a href="#resources" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Resources</a>
+            <a href="#contact" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
 
           <div className="hidden md:block">
-            <Link to="/request-demo">
+            <Link to="/request-demo" onClick={() => setSolutionsOpen(false)}>
               <Button className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white shadow-lg shadow-blue-500/30 rounded-full px-5">
                 Request Demo
               </Button>
             </Link>
           </div>
 
-          <button className="md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
+          <button className="md:hidden" onClick={() => { setMenuOpen(!menuOpen); setSolutionsOpen(false); }}>
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
@@ -182,6 +189,7 @@ const Landing = () => {
             <a href="#features" onClick={() => setMenuOpen(false)} className="block">Features</a>
             <a href="#students" onClick={() => setMenuOpen(false)} className="block">Students</a>
             <a href="#faculty" onClick={() => setMenuOpen(false)} className="block">Faculty</a>
+            <SolutionsMobileAccordion onNavigate={() => setMenuOpen(false)} />
             <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
             <a href="#analytics" onClick={() => setMenuOpen(false)} className="block">Analytics</a>
             <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
