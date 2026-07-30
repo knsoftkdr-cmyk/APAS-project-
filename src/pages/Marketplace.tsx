@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { transcodeToH264 } from "@/lib/videoTranscode";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCa
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { TextbookLoaderPanel } from "@/components/marketplace/TextbookLoaderPanel";
+import AssessmentEvaluationPage from "@/pages/AssessmentEvaluation";
 import { toast } from "sonner";
 import {
   getSchoolVideos,
@@ -168,7 +169,7 @@ function CourseRoster({ listingId }: { listingId: string }) {
         <div key={r.buyer_user_id} className="flex items-center justify-between text-xs bg-muted/40 rounded-lg px-3 py-1.5">
           <span className="font-medium">{r.student_name ?? "Unknown student"}</span>
           <span className="text-muted-foreground">
-            {r.student_class ? `Class ${r.student_class}` : ""} {r.roll_number ? `· Roll ${r.roll_number}` : ""}
+            {r.student_class ? `Class ${r.student_class}` : ""} {r.roll_number ? `Â· Roll ${r.roll_number}` : ""}
           </span>
         </div>
       ))}
@@ -313,7 +314,7 @@ function CourseMaterialsPanel({ listingId, canManage }: { listingId: string; can
                 onChange={(e) => setMatVideoUrl(e.target.value)}
                 className="h-8 text-xs"
               />
-              <div className="text-[10px] text-muted-foreground text-center">— or upload a file —</div>
+              <div className="text-[10px] text-muted-foreground text-center">â€” or upload a file â€”</div>
               <Input type="file" accept="video/*" onChange={(e) => setMatFile(e.target.files?.[0] ?? null)} className="text-xs" />
             </>
           ) : (
@@ -505,7 +506,7 @@ function AdminCourses() {
                 rows={4}
                 placeholder="Outline what this course covers, week by week or topic by topic..."
               />
-              <div className="text-[10px] text-muted-foreground text-center pt-1">— or upload a syllabus file (PDF/doc) —</div>
+              <div className="text-[10px] text-muted-foreground text-center pt-1">â€” or upload a syllabus file (PDF/doc) â€”</div>
               <Input
                 type="file"
                 accept=".pdf,.doc,.docx,.ppt,.pptx"
@@ -826,6 +827,9 @@ function AdminMarketplace() {
           <TabsTrigger value="courses" className="rounded-full px-5 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
             Courses
           </TabsTrigger>
+          <TabsTrigger value="assessment-evaluation" className="rounded-full px-5 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+            Assessment Evaluation
+          </TabsTrigger>
           {isSchoolAdmin && (
             <TabsTrigger value="textbooks" className="rounded-full px-5 py-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               Textbook Loader
@@ -938,7 +942,7 @@ function AdminMarketplace() {
                 <label className="text-xs text-muted-foreground">Video Link (YouTube, Drive, etc.)</label>
                 <Input value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} placeholder="https://..." />
               </div>
-              <div className="text-xs text-muted-foreground text-center">— or —</div>
+              <div className="text-xs text-muted-foreground text-center">â€” or â€”</div>
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Upload Video File</label>
                 <Input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
@@ -960,6 +964,9 @@ function AdminMarketplace() {
 
         <TabsContent value="courses" className="mt-4">
           <AdminCourses />
+        </TabsContent>
+        <TabsContent value="assessment-evaluation" className="mt-4">
+          <AssessmentEvaluationPage embedded={true} />
         </TabsContent>
 
         {isSchoolAdmin && (
@@ -1060,3 +1067,4 @@ export default function Marketplace() {
     </AppLayout>
   );
 }
+

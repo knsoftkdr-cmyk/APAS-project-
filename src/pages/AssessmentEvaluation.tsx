@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, Fragment } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,7 +57,7 @@ interface AssessmentPaper {
 
 type TabFilter = "pending" | "ai_reviewed" | "reviewed" | "all";
 
-export default function AssessmentEvaluation() {
+export default function AssessmentEvaluation({ embedded = false }: { embedded?: boolean } = {}) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<TabFilter>("pending");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -239,7 +239,7 @@ export default function AssessmentEvaluation() {
       const lowerName = row.file_name.toLowerCase();
       if (lowerName.endsWith(".pdf") || row.file_type === "application/pdf") {
         setPreviewKind("pdf");
-        // Render via pdf.js to canvas/images instead of an iframe blob URL —
+        // Render via pdf.js to canvas/images instead of an iframe blob URL Ã¢â‚¬â€
         // most mobile browsers and the native app WebView have no built-in
         // PDF viewer plugin, so an <iframe src="blob:...pdf"> just shows blank.
         const arrayBuffer = await data.arrayBuffer();
@@ -460,8 +460,9 @@ export default function AssessmentEvaluation() {
     }
   };
 
+  const Wrapper: any = embedded ? (Fragment as any) : AppLayout;
 return (
-  <AppLayout>
+  <Wrapper>
   <div
     className="min-h-screen relative overflow-x-hidden"
     
@@ -477,6 +478,7 @@ return (
     
 
     <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
+{!embedded && (
 <div className="rounded-2xl p-6 relative overflow-hidden bg-gradient-to-r from-blue-500 to-sky-600 shadow-lg">
   <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
   <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
@@ -492,6 +494,7 @@ return (
     </div>
   </div>
 </div>
+)}
 
 <div className="flex justify-end">
   <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetUploadForm(); }}>
@@ -909,6 +912,8 @@ return (
         onOpenChange={(open) => { if (!open) setReportEvaluationId(null); }}
       />
       </div>
-    </AppLayout>
+    </Wrapper>
   );
 }
+
+
