@@ -120,3 +120,28 @@ export const DOCUMENT_TYPE_LABELS: Record<AdmissionDocumentType, string> = {
   photo: "Photo",
   other: "Other",
 };
+
+// Known pre-primary stages, in the order they should sort before numbered grades.
+const KNOWN_GRADE_ORDER = ["nursery", "pre-kg", "prekg", "pp1", "lkg", "pp2", "ukg"];
+
+/**
+ * Returns a sortable rank for a free-text grade label like "Nursery", "LKG",
+ * "UKG", "Grade 5", "Class 10", "5". Lower = earlier. Recognized pre-primary
+ * stages come first, then numbered grades in numeric order, then anything
+ * unrecognized sorts last (alphabetically, via the caller's tiebreaker).
+ */
+export function getGradeSortRank(gradeLabel: string): number {
+  const normalized = gradeLabel
+    .trim()
+    .toLowerCase()
+    .replace(/^grade\s+/, "")
+    .replace(/^class\s+/, "");
+
+  const knownIndex = KNOWN_GRADE_ORDER.indexOf(normalized);
+  if (knownIndex !== -1) return knownIndex;
+
+  const numeric = normalized.match(/\d+/);
+  if (numeric) return 100 + parseInt(numeric[0], 10);
+
+  return 1000;
+}

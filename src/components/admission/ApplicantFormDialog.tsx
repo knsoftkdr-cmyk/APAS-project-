@@ -186,8 +186,12 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
         </div>
 
         <div className="grid gap-4 px-5 py-4 overflow-y-auto flex-1">
+          
+
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-slate-600">Admission Intake</Label>
+            <Label className="text-xs font-semibold text-slate-600">
+              Admission Intake <span className="text-red-500">*</span>
+            </Label>
             <Select value={form.intake_id} onValueChange={(v) => setForm((f) => ({ ...f, intake_id: v }))}>
               <SelectTrigger className="border-slate-200 focus:ring-indigo-400">
                 <SelectValue placeholder="Select grade / academic year" />
@@ -204,7 +208,9 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
 
           <div className="grid sm:grid-cols-2 gap-3">
   <div className="space-y-1.5">
-    <Label htmlFor="full_name" className="text-xs font-semibold text-slate-600">Student Name</Label>
+    <Label htmlFor="full_name" className="text-xs font-semibold text-slate-600">
+      Student Name <span className="text-red-500">*</span>
+    </Label>
     <Input
       id="full_name"
       value={form.full_name}
@@ -259,7 +265,9 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
             <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-3">Parent / Guardian</p>
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="parent_name">Name</Label>
+                <Label htmlFor="parent_name">
+                  Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="parent_name"
                   value={form.parent_name}
@@ -267,7 +275,9 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="parent_phone">Phone</Label>
+                <Label htmlFor="parent_phone">
+                  Phone <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="parent_phone"
                   value={form.parent_phone}
