@@ -35,7 +35,7 @@ const SolutionDetail = () => {
             <img src={apasLogo} alt="APAS Logo" className="h-14 w-auto object-contain" />
           </Link>
           <div className="hidden sm:flex items-center gap-3">
-            <Link to="/request-demo">
+            <Link to={`/get-started/${solution.slug}`} target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="rounded-full">Start for Free</Button>
             </Link>
             <Link to="/request-demo">
@@ -81,7 +81,7 @@ const SolutionDetail = () => {
                   Request Demo <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
               </Link>
-              <Link to="/request-demo">
+              <Link to={`/get-started/${solution.slug}`} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="rounded-full px-6">
                   Start for Free
                 </Button>
@@ -246,7 +246,7 @@ const SolutionDetail = () => {
                 Request Demo <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </Link>
-            <Link to="/request-demo">
+            <Link to={`/get-started/${solution.slug}`} target="_blank" rel="noopener noreferrer">
               <Button
                 size="lg"
                 variant="outline"
