@@ -34,6 +34,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const Login = lazy(() => import("./pages/Login"));
 const RequestDemo = lazy(() => import("./pages/RequestDemo"));
 const ERPDashboard = lazy(() => import("./pages/ERPDashboard"));
+const ERPPeople = lazy(() => import("./pages/ERPPeople"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
@@ -115,6 +116,7 @@ const StudentVirtualClassroom = lazy(() => import("./pages/StudentVirtualClassro
 const TeacherSafeguardingReport = lazy(() => import("./pages/TeacherSafeguardingReport"));
 const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
 const AdmissionsPage = lazy(() => import("./pages/AdmissionsPage"));
+const ERPFeeManagement = lazy(() => import("./pages/ERPFeeManagement"));
 
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
@@ -183,6 +185,8 @@ export default function App() {
                       <Route path="/login" element={<Login />} />
                       <Route path="/request-demo" element={<RequestDemo />} />
                       <Route path="/erp/dashboard" element={<ERPDashboard />} />
+                      <Route path="/erp/people" element={<ERPPeople />} />
+                      <Route path="/erp/fees" element={<ERPFeeManagement />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                       <Route path="/student-profile" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><StudentProfile360 /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
