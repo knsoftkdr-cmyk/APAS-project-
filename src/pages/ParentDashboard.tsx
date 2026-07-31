@@ -17,7 +17,6 @@ import { Link } from "react-router-dom";
 import parentBanner from "@/assets/parent-banner.png";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import parentBanner from "@/assets/parent-banner.png";
-import { DashboardHero } from "@/components/dashboard/DashboardHero";
 
 interface Child { id: string; full_name: string | null; class_grade: string | null; }
 interface HomeworkRow { id: string; title: string; due_date: string | null; status: string; score: number | null; feedback: string | null; answers: any[]; }
