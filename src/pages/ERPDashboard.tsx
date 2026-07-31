@@ -21,24 +21,23 @@ const ERPDashboard = () => {
     const loadOrg = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
-        navigate("/erp/login");
+        navigate("/login");
         return;
       }
 
-      const { data: erpUser, error } = await supabase
-        .from("erp_users")
-        .select("organization_id, erp_organizations(org_name)")
+      const { data: profileData, error } = await supabase
+        .from("profiles")
+        .select("erp_access, school_id, schools(name)")
         .eq("id", sessionData.session.user.id)
         .single();
 
-      if (error || !erpUser) {
-        await supabase.auth.signOut();
-        navigate("/erp/login");
+      if (error || !profileData || profileData.erp_access !== true) {
+        navigate("/dashboard");
         return;
       }
 
-      const org = (erpUser as any).erp_organizations;
-      setOrgName(org?.org_name ?? "Your Organization");
+      const school = (profileData as any).schools;
+      setOrgName(school?.name ?? "Your Organization");
       setLoading(false);
     };
 
@@ -47,7 +46,7 @@ const ERPDashboard = () => {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    navigate("/erp/login");
+    navigate("/login");
   };
 
   if (loading) {

@@ -99,6 +99,7 @@ interface ProfileRow {
   role: string;
   school_id: string | null;
   class_grade?: string | null;
+  erp_access?: boolean | null;
 }
 
 interface StudentPerf {
@@ -150,6 +151,11 @@ const SuperAdminPanel = () => {
   const [newStudentDOB, setNewStudentDOB] = useState("");
   const [newStudentParentPhone, setNewStudentParentPhone] = useState("");
   const [creating, setCreating] = useState(false);
+  const [erpOpen, setErpOpen] = useState(false);
+  const [erpRole, setErpRole] = useState<"teacher" | "student" | "principal" | "hod" | "parent">("teacher");
+  const [erpUserId, setErpUserId] = useState("");
+  const [erpGranting, setErpGranting] = useState(false);
+  const [erpFilterOnly, setErpFilterOnly] = useState(false);
   const [linkParentId, setLinkParentId] = useState<string | null>(null);
   const [linkStudentId, setLinkStudentId] = useState("");
   const [linkClassFilter, setLinkClassFilter] = useState("all");
@@ -244,7 +250,7 @@ const SuperAdminPanel = () => {
 
       const { data: profilesData } = await supabase
         .from("profiles")
-        .select("id, full_name, role, school_id, class_grade")
+        .select("id, full_name, role, school_id, class_grade, erp_access")
         .eq("school_id", sid);
       setUsers(profilesData ?? []);
       await fetchParentLinks(sid);
@@ -393,7 +399,34 @@ const SuperAdminPanel = () => {
     }
   };
 
+  // ── Grant ERP access ──────────────────────────────────────────────────
+  const handleGrantErpAccess = async () => {
+    if (!erpUserId) {
+      toast({ title: "Please select a user", variant: "destructive" });
+      return;
+    }
+    setErpGranting(true);
+    const { error } = await supabase.from("profiles").update({ erp_access: true }).eq("id", erpUserId);
+    setErpGranting(false);
+    if (error) {
+      toast({ title: "Error granting ERP access", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "ERP access granted ✅" });
+      setErpOpen(false);
+      setErpUserId("");
+      fetchAll();
+    }
+  };
+
   // ── Unlink student from parent ──────────────────────────────────────────────
+  // ── Revoke ERP access ─────────────────────────────────────────────────
+  const handleRevokeErpAccess = async (userId: string) => {
+    if (!confirm("Revoke ERP access for this user?")) return;
+    const { error } = await supabase.from("profiles").update({ erp_access: false }).eq("id", userId);
+    if (error) toast({ title: "Error revoking ERP access", description: error.message, variant: "destructive" });
+    else { toast({ title: "ERP access revoked" }); fetchAll(); }
+  };
+
   const handleUnlinkChild = async (linkId: string) => {
     if (!confirm("Remove this child link?")) return;
     const { error } = await supabase.from("parent_students").delete().eq("id", linkId);
@@ -535,6 +568,7 @@ const SuperAdminPanel = () => {
                 <h2 className="text-lg font-semibold">School Accounts</h2>
                 <p className="text-sm text-muted-foreground">Manage all users for {school?.name}</p>
               </div>
+              <div className="flex items-center gap-2">
               <Dialog open={createOpen} onOpenChange={setCreateOpen}>
                 <DialogTrigger asChild>
                   <Button className="gap-1.5 bg-blue-600"><Plus className="h-4 w-4" />Create Account</Button>
@@ -600,6 +634,44 @@ const SuperAdminPanel = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+              <Dialog open={erpOpen} onOpenChange={setErpOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-1.5"><Lock className="h-4 w-4" />Grant ERP Access</Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader><DialogTitle>Grant ERP Access</DialogTitle></DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-1.5">
+                      <Label>Role</Label>
+                      <Select value={erpRole} onValueChange={(v) => { setErpRole(v as any); setErpUserId(""); }}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="teacher">Teacher</SelectItem>
+                          <SelectItem value="principal">Principal</SelectItem>
+                          <SelectItem value="hod">HOD (Head of Department)</SelectItem>
+                          <SelectItem value="parent">Parent</SelectItem>
+                          <SelectItem value="student">Student</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Select {erpRole}</Label>
+                      <Select value={erpUserId} onValueChange={setErpUserId}>
+                        <SelectTrigger><SelectValue placeholder={`Choose a ${erpRole}`} /></SelectTrigger>
+                        <SelectContent>
+                          {users.filter(u => u.role === erpRole).map(u => (
+                            <SelectItem key={u.id} value={u.id}>{u.full_name || "Unnamed"}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button className="w-full" onClick={handleGrantErpAccess} disabled={erpGranting || !erpUserId}>
+                      {erpGranting ? <LoadingSpinner size="sm" /> : "Grant ERP Access"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              </div>
             </div>
 
             {/* Role filter pill bar */}
@@ -628,6 +700,21 @@ const SuperAdminPanel = () => {
                     </span>
                   </button>
                 ))}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setErpFilterOnly(v => !v)}
+                  className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-200 border flex items-center gap-1.5 ${
+                    erpFilterOnly
+                      ? "bg-green-600 text-white border-green-600 shadow-sm"
+                      : "bg-background text-muted-foreground border-border hover:bg-muted"
+                  }`}
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  ERP Access Only
+                  <span className="ml-1 opacity-70">({users.filter(u => u.erp_access).length})</span>
+                </button>
               </div>
 
               {roleFilter === "student" && (
@@ -666,7 +753,8 @@ const SuperAdminPanel = () => {
               .map((role) => {
               const roleUsers = users.filter((u) =>
                 u.role === role &&
-                (role !== "student" || classFilter === "all" || String(u.class_grade ?? "").toLowerCase() === classFilter)
+                (role !== "student" || classFilter === "all" || String(u.class_grade ?? "").toLowerCase() === classFilter) &&
+                (!erpFilterOnly || u.erp_access)
               );
               if (!roleUsers.length) return null;
               return (
@@ -690,7 +778,19 @@ const SuperAdminPanel = () => {
                         {roleUsers.map((u) => (
                           <TableRow key={u.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
                             <TableCell className="font-medium group-hover:text-blue-600 transition-colors duration-300">
-                              {u.full_name ?? <span className="italic text-muted-foreground">Unnamed</span>}
+                              <div className="flex items-center gap-2">
+                                <span>{u.full_name ?? <span className="italic text-muted-foreground">Unnamed</span>}</span>
+                                {u.erp_access && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] px-1.5 py-0 border-green-500 text-green-700 bg-green-50 cursor-pointer hover:bg-red-50 hover:border-red-400 hover:text-red-600"
+                                    onClick={(e) => { e.stopPropagation(); handleRevokeErpAccess(u.id); }}
+                                    title="Click to revoke ERP access"
+                                  >
+                                    ERP
+                                  </Badge>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell className="text-xs text-muted-foreground font-mono group-hover:text-blue-500 transition-colors duration-300">{u.id.slice(0, 8)}…</TableCell>
                             <TableCell>

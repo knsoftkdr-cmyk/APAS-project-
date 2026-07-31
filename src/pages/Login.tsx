@@ -122,7 +122,7 @@ setLoading(false);
       return;
     }
 
-    const { data: profileData } = await supabase.from("profiles").select("role").eq("id", data.user.id).single();
+    const { data: profileData } = await supabase.from("profiles").select("role, erp_access").eq("id", data.user.id).single();
     const role = profileData?.role;
     const roleMap: Record<string, string[]> = {
           Student: ["student"],
@@ -130,11 +130,13 @@ setLoading(false);
           Teacher: ["teacher"],
           Principal: ["admin", "principal"],
           "School Admin": ["school_admin"],
+          "ERP": ["erp"],
           HOD: ["hod"],
           "KNSOFT Admin": ["knsoft_admin"],
         };
 
-if (!role || !roleMap[selectedRole]?.includes(role)) {
+const erpAccessOk = selectedRole === "ERP" ? profileData?.erp_access === true : true;
+if (!role || !erpAccessOk || (selectedRole !== "ERP" && !roleMap[selectedRole]?.includes(role))) {
   toast({
     title: "Role mismatch",
     description: `This account is not registered as ${selectedRole}.`,
@@ -171,7 +173,9 @@ try {
 }
 setShowSplash(true);
 setTimeout(() => {
-  if (role === "knsoft_admin") {
+  if (selectedRole === "ERP") {
+    navigate("/erp/dashboard");
+  } else if (role === "knsoft_admin") {
     navigate("/knsoft-admin");
   } else if (role === "school_admin") {
     navigate("/super-admin");
@@ -259,6 +263,7 @@ return (
     <option>Principal</option>
     <option>HOD</option>
     <option>School Admin</option>
+    <option>ERP</option>
   </select>
 </div>
 

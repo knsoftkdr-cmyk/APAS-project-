@@ -10,8 +10,6 @@ import aboutBg from "@/assets/landing-about-bg.jpg";
 import ctaBg from "@/assets/landing-cta-bg.jpg";
 // Add import at top:
 import apasLogo from "@/assets/APAS-logo.png";
-import SolutionsMegaMenu from "@/components/SolutionsMegaMenu";
-import SolutionsMobileAccordion from "@/components/SolutionsMobileAccordion";
 import airobot from "@/assets/landing-ai-robot.png";
 import schoolbg from "@/assets/school-bg.png";
 import AOS from "aos";
@@ -158,18 +156,19 @@ const Landing = () => {
             <a href="#home" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Home</a>
             <a href="#about" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">About</a>
             <a href="#platform" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Platform</a>
-            <SolutionsMegaMenu
-              open={solutionsOpen}
-              onToggle={() => setSolutionsOpen((v) => !v)}
-              onClose={() => setSolutionsOpen(false)}
-            />
+            <a href="#solutions" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Solutions</a>
             <a href="#aifeatures" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">AI Features</a>
             <a href="#how" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">How it Works</a>
             <a href="#resources" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Resources</a>
             <a href="#contact" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
 
-          <div className="hidden md:block">
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/login" onClick={() => setSolutionsOpen(false)}>
+              <Button variant="outline" className="rounded-full px-5 border-2 border-blue-200 text-blue-700 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:border-blue-600 hover:shadow-lg hover:shadow-blue-500/30">
+                Login
+              </Button>
+            </Link>
             <Link to="/request-demo" onClick={() => setSolutionsOpen(false)}>
               <Button className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white shadow-lg shadow-blue-500/30 rounded-full px-5">
                 Request Demo
@@ -189,7 +188,7 @@ const Landing = () => {
             <a href="#features" onClick={() => setMenuOpen(false)} className="block">Features</a>
             <a href="#students" onClick={() => setMenuOpen(false)} className="block">Students</a>
             <a href="#faculty" onClick={() => setMenuOpen(false)} className="block">Faculty</a>
-            <SolutionsMobileAccordion onNavigate={() => setMenuOpen(false)} />
+            <a href="#solutions" onClick={() => setMenuOpen(false)} className="block">Solutions</a>
             <a href="#how" onClick={() => setMenuOpen(false)} className="block">How it works</a>
             <a href="#analytics" onClick={() => setMenuOpen(false)} className="block">Analytics</a>
             <a href="#contact" onClick={() => setMenuOpen(false)} className="block">Contact</a>
