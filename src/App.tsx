@@ -104,6 +104,7 @@ const SchoolQualityIndexPage = lazy(() => import("./pages/SchoolQualityIndex"));
 const SkillsPassport = lazy(() => import("./pages/SkillsPassport"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
 const ParentSafeguardingPage = lazy(() => import("./pages/ParentSafeguardingPage"));
+const ParentFeePayment = lazy(() => import("./pages/ParentFeePayment"));
 const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
@@ -211,6 +212,7 @@ export default function App() {
                       <Route path="/safeguarding" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod"]}><SafeguardingPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admissions" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><AdmissionsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent/safeguarding" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentSafeguardingPage /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/parent/fee-payment" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentFeePayment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><GroupProjectsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student/group-projects" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupProjectsPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student/group-projects/:groupId" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentGroupWorkspacePage /></RoleGuard></ProtectedRoute>} />

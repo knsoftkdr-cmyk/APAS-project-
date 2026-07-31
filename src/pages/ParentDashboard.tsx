@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { GraduationCap, BookOpen, BarChart3, TrendingUp } from "lucide-react";
+import { GraduationCap, BookOpen, BarChart3, TrendingUp, Wallet, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import parentBanner from "@/assets/parent-banner.png";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 
@@ -168,6 +169,22 @@ export default function ParentDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {/* Pay Fees entry point */}
+        <Link to="/parent/fee-payment" state={{ studentId: selectedChild }}>
+          <Card className="border-0 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 bg-gradient-to-r from-teal-500 to-teal-600">
+            <CardContent className="py-4 flex items-center gap-4">
+              <div className="h-12 w-12 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+                <Wallet className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <p className="font-semibold text-white">Pay Fees</p>
+                <p className="text-xs text-teal-50">View dues and make a payment for {selectedChildData?.full_name ?? "your child"}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-white" />
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
