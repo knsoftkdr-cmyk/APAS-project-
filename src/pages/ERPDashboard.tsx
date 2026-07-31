@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Wallet, ArrowRight } from "lucide-react";
+import { Users, Wallet, Bus, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ERPLayout from "@/components/erp/ERPLayout";
 
@@ -9,6 +9,7 @@ const ERPDashboard = () => {
   const [orgName, setOrgName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [employeeCount, setEmployeeCount] = useState<number>(0);
+  const [vehicleCount, setVehicleCount] = useState<number>(0);
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -39,6 +40,13 @@ const ERPDashboard = () => {
         .eq("organization_id", schoolId);
 
       setEmployeeCount(count ?? 0);
+
+      const { count: vehiclesCountResult } = await supabase
+        .from("vehicles" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("school_id", schoolId);
+
+      setVehicleCount(vehiclesCountResult ?? 0);
       setLoading(false);
     };
 
@@ -95,6 +103,24 @@ const ERPDashboard = () => {
   </div>
   <p className="text-sm text-slate-500">Track student fee payments</p>
 </button>
+
+        <button
+          onClick={() => navigate("/erp/transport")}
+          className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+        >
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
+            <Bus className="h-6 w-6 text-white" />
+          </div>
+          <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
+            Transport
+            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+          </div>
+          <p className="text-sm text-slate-500">
+            {vehicleCount > 0
+              ? `${vehicleCount} vehicle${vehicleCount === 1 ? "" : "s"} in fleet`
+              : "Manage fleet, drivers & routes"}
+          </p>
+        </button>
 
         <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-6 opacity-60">
           <div className="h-12 w-12 rounded-xl bg-slate-200 flex items-center justify-center mb-4">

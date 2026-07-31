@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Users, Wallet, Search, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { label: string; icon: React.ElementType; path: string };
@@ -9,6 +9,7 @@ export const ERP_NAV_ITEMS: NavItem[] = [
   { label: "Home", icon: Home, path: "/erp/dashboard" },
   { label: "People", icon: Users, path: "/erp/people" },
   { label: "Fee Management", icon: Wallet, path: "/erp/fees" },
+  { label: "Transport", icon: Bus, path: "/erp/transport" },
 ];
 
 interface ERPLayoutProps {

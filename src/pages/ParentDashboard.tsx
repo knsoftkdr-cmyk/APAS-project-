@@ -27,6 +27,9 @@ interface TransportInfo {
   routeId: string | null;
   pickupStopId: string | null;
   dropStopId: string | null;
+  driverName: string | null;
+  driverPhone: string | null;
+  pickupTime: string | null;
 }
 
 export default function ParentDashboard() {
@@ -121,12 +124,24 @@ export default function ParentDashboard() {
     }
     const { data } = await supabase
       .from("transport_assignments")
-      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number)")
+      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, drivers(name, phone))")
       .eq("student_id", studentRow.id)
       .eq("status", "active")
       .maybeSingle();
     const row: any = data ?? null;
     const route: any = row?.transport_routes ?? null;
+    const driver: any = route?.drivers ?? null;
+
+    let pickupTime: string | null = null;
+    if (row?.pickup_stop_id) {
+      const { data: stopRow } = await supabase
+        .from("route_stops")
+        .select("pickup_time")
+        .eq("id", row.pickup_stop_id)
+        .maybeSingle();
+      pickupTime = stopRow?.pickup_time ?? null;
+    }
+
     setTransportInfo(
       route
         ? {
@@ -135,6 +150,9 @@ export default function ParentDashboard() {
             routeId: row.route_id ?? null,
             pickupStopId: row.pickup_stop_id ?? null,
             dropStopId: row.drop_stop_id ?? null,
+            driverName: driver?.name ?? null,
+            driverPhone: driver?.phone ?? null,
+            pickupTime,
           }
         : null
     );
@@ -322,6 +340,9 @@ export default function ParentDashboard() {
                 routeId={transportInfo.routeId}
                 pickupStopId={transportInfo.pickupStopId}
                 dropStopId={transportInfo.dropStopId}
+                driverName={transportInfo.driverName}
+                driverPhone={transportInfo.driverPhone}
+                pickupTime={transportInfo.pickupTime}
               />
             </TabsContent>
           )}

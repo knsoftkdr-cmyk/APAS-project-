@@ -43,6 +43,9 @@ interface BusTrackingMapProps {
   dropStopId?: string | null;
   busNumber?: string;
   routeName?: string;
+  driverName?: string | null;
+  driverPhone?: string | null;
+  pickupTime?: string | null;
 }
 
 // Uses OSRM's free public routing server to fetch a road-following path
@@ -67,7 +70,16 @@ async function fetchRoadPath(stops: StopRow[]): Promise<[number, number][] | nul
   }
 }
 
-export function BusTrackingMap({ routeId, pickupStopId, dropStopId, busNumber = "Bus", routeName = "Route" }: BusTrackingMapProps) {
+export function BusTrackingMap({
+  routeId,
+  pickupStopId,
+  dropStopId,
+  busNumber = "Bus",
+  routeName = "Route",
+  driverName,
+  driverPhone,
+  pickupTime,
+}: BusTrackingMapProps) {
   const [stops, setStops] = useState<StopRow[] | null>(null);
   const [roadPath, setRoadPath] = useState<[number, number][] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,9 +140,22 @@ export function BusTrackingMap({ routeId, pickupStopId, dropStopId, busNumber = 
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="mb-3 text-sm text-muted-foreground">
+        <div className="mb-1 text-sm text-muted-foreground">
           {busNumber} · {routeName}
         </div>
+        {(driverName || pickupTime) && (
+          <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            {driverName && (
+              <span>Driver: <span className="font-medium text-foreground">{driverName}</span></span>
+            )}
+            {driverPhone && (
+              <span>Phone: <span className="font-medium text-foreground">{driverPhone}</span></span>
+            )}
+            {pickupTime && (
+              <span>Pickup time: <span className="font-medium text-foreground">{pickupTime}</span></span>
+            )}
+          </div>
+        )}
         {loading ? (
           <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
             Loading route...

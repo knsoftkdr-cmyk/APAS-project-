@@ -258,7 +258,7 @@ function GlowCard({ children, className = "" }: { children: React.ReactNode; cla
 // ============================================================
 // VEHICLES TAB
 // ============================================================
-function VehiclesTab({ schoolId }: { schoolId?: string }) {
+export function VehiclesTab({ schoolId }: { schoolId?: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Vehicle | null>(null);
@@ -476,7 +476,7 @@ function VehiclesTab({ schoolId }: { schoolId?: string }) {
 // ============================================================
 // DRIVERS TAB
 // ============================================================
-function DriversTab({ schoolId }: { schoolId?: string }) {
+export function DriversTab({ schoolId }: { schoolId?: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Driver | null>(null);
@@ -666,7 +666,7 @@ function DriversTab({ schoolId }: { schoolId?: string }) {
 // ============================================================
 // ROUTES & STOPS TAB
 // ============================================================
-function RoutesTab({ schoolId }: { schoolId?: string }) {
+export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TransportRoute | null>(null);
@@ -786,6 +786,18 @@ function RoutesTab({ schoolId }: { schoolId?: string }) {
         }
 
         const toUpdate = stops.filter((s) => s.id);
+        // route_stops has a UNIQUE(route_id, sequence_number) constraint.
+        // Writing each row's new sequence_number in place can collide with
+        // another existing row that still holds that number (e.g. moving
+        // stop 4 -> position 1 collides with whatever row is still "1").
+        // Two-pass fix: push everything to unique negative placeholders
+        // first, then set final values once no row holds a "real" number.
+        for (const s of toUpdate) {
+          const { error: tempErr } = await supabase.from("route_stops").update({
+            sequence_number: -(s.sequence_number) - 1000,
+          }).eq("id", s.id!);
+          if (tempErr) throw tempErr;
+        }
         for (const s of toUpdate) {
           const { error: updErr } = await supabase.from("route_stops").update({
             stop_name: s.stop_name,
@@ -1039,9 +1051,10 @@ function RoutesTab({ schoolId }: { schoolId?: string }) {
 // ============================================================
 // STUDENT ASSIGNMENT TAB
 // ============================================================
-function AssignmentsTab({ schoolId }: { schoolId?: string }) {
+export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Assignment | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentLite | null>(null);
   const [selectedClassName, setSelectedClassName] = useState("");
   const [selectedSection, setSelectedSection] = useState("");
@@ -1074,6 +1087,31 @@ function AssignmentsTab({ schoolId }: { schoolId?: string }) {
       return data as TransportRoute[];
     },
     enabled: !!schoolId,
+  });
+
+  // Fee Management is the source of truth for transport fee amounts —
+  // pull each student's latest fee_payments.transport_amount so the
+  // Student Assignment table reflects what Fee Management has on record.
+  const { data: feePayments } = useQuery({
+    queryKey: ["transport-fee-payments", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("fee_payments" as any)
+        .select("student_id, transport_amount, due_date, created_at")
+        .eq("school_id", schoolId)
+        .gt("transport_amount", 0)
+        .order("due_date", { ascending: false });
+      if (error) throw error;
+      return (data as any[]) || [];
+    },
+    enabled: !!schoolId,
+  });
+
+  const transportFeeByStudent = new Map<string, number>();
+  (feePayments || []).forEach((f: any) => {
+    if (f.student_id && !transportFeeByStudent.has(f.student_id)) {
+      transportFeeByStudent.set(f.student_id, f.transport_amount);
+    }
   });
 
   const { data: classesData } = useQuery({
@@ -1117,14 +1155,25 @@ function AssignmentsTab({ schoolId }: { schoolId?: string }) {
   const resetForm = () => {
     setSelectedStudent(null); setRouteId(""); setPickupStopId(""); setDropStopId("");
     setFee(""); setFeeStatus("pending"); setSelectedClassName(""); setSelectedSection("");
+    setEditing(null);
+  };
+
+  const openEdit = (a: Assignment) => {
+    setEditing(a);
+    setSelectedStudent(a.students ? { id: a.students.id, full_name: a.students.full_name, class: a.students.class } : null);
+    setRouteId(a.route_id || "");
+    setPickupStopId(a.pickup_stop_id || "");
+    setDropStopId(a.drop_stop_id || "");
+    setFee(a.transport_fee != null ? String(a.transport_fee) : "");
+    setFeeStatus(a.fee_status || "pending");
+    setOpen(true);
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!selectedStudent) throw new Error("Select a student first");
       const route = routes?.find((r) => r.id === routeId);
-      const { error } = await supabase.from("transport_assignments").insert({
-        school_id: schoolId,
+      const payload = {
         student_id: selectedStudent.id,
         route_id: routeId || null,
         pickup_stop_id: pickupStopId || null,
@@ -1132,17 +1181,28 @@ function AssignmentsTab({ schoolId }: { schoolId?: string }) {
         route_name: route?.route_name || null,
         transport_fee: fee ? Number(fee) : null,
         fee_status: feeStatus,
-        status: "active",
-      });
-      if (error) throw error;
+      };
+      if (editing) {
+        const { error } = await supabase.from("transport_assignments")
+          .update(payload)
+          .eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("transport_assignments").insert({
+          school_id: schoolId,
+          status: "active",
+          ...payload,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
-      toast.success("Student assigned to route");
+      toast.success(editing ? "Assignment updated" : "Student assigned to route");
       queryClient.invalidateQueries({ queryKey: ["transport-assignments"] });
       setOpen(false);
       resetForm();
     },
-    onError: (e: any) => toast.error(e.message || "Failed to assign student"),
+    onError: (e: any) => toast.error(e.message || "Failed to save assignment"),
   });
 
   const deleteMutation = useMutation({
@@ -1168,10 +1228,10 @@ function AssignmentsTab({ schoolId }: { schoolId?: string }) {
         </CardTitle>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="gap-1.5"><Plus className="h-4 w-4" /> Assign Student</Button>
+            <Button className="gap-1.5" onClick={() => { setEditing(null); }}><Plus className="h-4 w-4" /> Assign Student</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
-            <DialogHeader><DialogTitle>Assign Student to Route</DialogTitle></DialogHeader>
+            <DialogHeader><DialogTitle>{editing ? "Edit Assignment" : "Assign Student to Route"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div>
                 <Label>Class & Section</Label>
@@ -1284,7 +1344,7 @@ function AssignmentsTab({ schoolId }: { schoolId?: string }) {
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!selectedStudent || saveMutation.isPending}>
                 {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
-                Assign
+                {editing ? "Save Changes" : "Assign"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1311,13 +1371,24 @@ function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                   <TableCell className="font-medium">{a.students?.full_name || "—"}</TableCell>
                   <TableCell>{a.students?.class || "—"}</TableCell>
                   <TableCell>{routes?.find((r) => r.id === a.route_id)?.route_name || "—"}</TableCell>
-                  <TableCell>{a.transport_fee != null ? `₹${a.transport_fee}` : "—"}</TableCell>
+                  <TableCell>
+                    {(() => {
+                      const feeMgmtAmount = a.student_id ? transportFeeByStudent.get(a.student_id) : undefined;
+                      if (feeMgmtAmount != null) {
+                        return <span>₹{feeMgmtAmount} <span className="text-xs text-muted-foreground">(Fee Mgmt)</span></span>;
+                      }
+                      return a.transport_fee != null ? `₹${a.transport_fee}` : "—";
+                    })()}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={a.fee_status === "paid" ? "default" : "secondary"} className="capitalize">
                       {a.fee_status || "—"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right space-x-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(a)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
