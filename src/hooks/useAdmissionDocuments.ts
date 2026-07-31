@@ -11,22 +11,20 @@ export interface UploadAdmissionDocumentParams {
   file: File;
   documentType: AdmissionDocumentType;
   applicantId: string;
-  schoolId: string;
-  uploadedBy: string;
 }
 
 /**
- * Standalone uploader — does the same validate -> upload -> insert -> rollback-on-failure
- * flow as the hook below, but doesn't depend on useAdmissionDocuments' state. Use this
- * directly from places that don't have a bound applicantId yet (e.g. the "Log New
- * Applicant" form, before the row exists).
+ * Standalone uploader. Sends the file to the upload-admission-document Edge
+ * Function, which does server-side type/size validation, a malware scan,
+ * and only then writes to storage + inserts the DB row using the service
+ * role. schoolId/uploadedBy are no longer taken from the caller — the
+ * function derives both from the authenticated JWT and the applicant's own
+ * row, so the browser can no longer just assert them.
  */
 export async function uploadAdmissionDocument({
   file,
   documentType,
   applicantId,
-  schoolId,
-  uploadedBy,
 }: UploadAdmissionDocumentParams): Promise<{ error: string | null }> {
   const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
   if (!ALLOWED_EXTENSIONS.includes(extension)) {
@@ -36,30 +34,20 @@ export async function uploadAdmissionDocument({
     return { error: "File is too large. Max size is 10MB." };
   }
 
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const storagePath = `${schoolId}/${applicantId}/${Date.now()}-${safeName}`;
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("applicantId", applicantId);
+  formData.append("documentType", documentType);
 
-  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(storagePath, file, {
-    cacheControl: "3600",
-    upsert: false,
+  const { data, error } = await supabase.functions.invoke("upload-admission-document", {
+    body: formData,
   });
 
-  if (uploadError) {
-    return { error: uploadError.message };
+  if (error) {
+    return { error: error.message ?? "Upload failed." };
   }
-
-  const { error: dbError } = await supabase.from("admission_documents").insert({
-    applicant_id: applicantId,
-    document_type: documentType,
-    file_path: storagePath,
-    file_name: file.name,
-    uploaded_by: uploadedBy,
-  });
-
-  if (dbError) {
-    // Roll back the uploaded file if the DB row failed, so we don't leave orphaned storage objects.
-    await supabase.storage.from(BUCKET).remove([storagePath]);
-    return { error: dbError.message };
+  if (data?.error) {
+    return { error: data.error };
   }
 
   return { error: null };
@@ -101,18 +89,12 @@ export function useAdmissionDocuments(applicantId: string | null) {
 
   const uploadDocument = useCallback(
     async (file: File, documentType: AdmissionDocumentType): Promise<{ error: string | null }> => {
-      if (!applicantId || !schoolId || !profile?.id) {
-        return { error: "Missing applicant or school context." };
+      if (!applicantId) {
+        return { error: "Missing applicant context." };
       }
 
       setUploading(true);
-      const result = await uploadAdmissionDocument({
-        file,
-        documentType,
-        applicantId,
-        schoolId,
-        uploadedBy: profile.id,
-      });
+      const result = await uploadAdmissionDocument({ file, documentType, applicantId });
       setUploading(false);
 
       if (result.error) {
@@ -122,7 +104,7 @@ export function useAdmissionDocuments(applicantId: string | null) {
       await fetchDocuments();
       return { error: null };
     },
-    [applicantId, schoolId, profile?.id, fetchDocuments]
+    [applicantId, fetchDocuments]
   );
 
   const viewDocument = useCallback(async (doc: AdmissionDocument): Promise<{ url: string | null; error: string | null }> => {
@@ -130,8 +112,17 @@ export function useAdmissionDocuments(applicantId: string | null) {
     if (error || !data) {
       return { url: null, error: error?.message ?? "Could not generate a link for this file." };
     }
+
+    // Best-effort audit log — don't block the view on this.
+    supabase
+      .from("admission_document_views")
+      .insert({ document_id: doc.id, viewed_by: profile?.id ?? null })
+      .then(({ error: logError }) => {
+        if (logError) console.error("Failed to log document view:", logError);
+      });
+
     return { url: data.signedUrl, error: null };
-  }, []);
+  }, [profile?.id]);
 
   const deleteDocument = useCallback(
     async (doc: AdmissionDocument): Promise<{ error: string | null }> => {

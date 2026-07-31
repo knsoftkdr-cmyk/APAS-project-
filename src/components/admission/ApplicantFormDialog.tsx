@@ -14,7 +14,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Paperclip, UserPlus, X } from "lucide-react";
 import type { ApplicantFormInput } from "@/hooks/useAdmissionApplicants";
 import { uploadAdmissionDocument } from "@/hooks/useAdmissionDocuments";
@@ -61,7 +60,6 @@ function emptyForm(defaultIntakeId?: string | null): ApplicantFormInput {
 
 export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocumentsUploaded }: ApplicantFormDialogProps) {
   const { toast } = useToast();
-  const { profile } = useAuth();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<ApplicantFormInput>(emptyForm(defaultIntakeId));
@@ -133,15 +131,13 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
       return;
     }
 
-    if (pendingDocuments.length > 0 && id && profile?.school_id && profile?.id) {
+    if (pendingDocuments.length > 0 && id) {
       const failures: string[] = [];
       for (const doc of pendingDocuments) {
         const result = await uploadAdmissionDocument({
           file: doc.file,
           documentType: doc.documentType,
           applicantId: id,
-          schoolId: profile.school_id,
-          uploadedBy: profile.id,
         });
         if (result.error) failures.push(`${doc.file.name}: ${result.error}`);
       }
