@@ -117,6 +117,7 @@ const TeacherSafeguardingReport = lazy(() => import("./pages/TeacherSafeguarding
 const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
 const AdmissionsPage = lazy(() => import("./pages/AdmissionsPage"));
 const ERPFeeManagement = lazy(() => import("./pages/ERPFeeManagement"));
+const TransportManagement = lazy(() => import("./pages/TransportManagement"));
 
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
@@ -290,6 +291,7 @@ export default function App() {
                       <Route path="/register" element={<Register />} />
                       <Route path="/forgot-password" element={<ForgotPassword />} />
                       <Route path="/update-password" element={<UpdatePassword />} />
+                      <Route path="/transport" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><TransportManagement /></RoleGuard></ProtectedRoute>} />
                       <Route path="*" element={<NotFound />} />
 
                       <Route path="/student/courses" element={

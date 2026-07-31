@@ -1,0 +1,1340 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
+  Bus,
+  UserRound,
+  Route as RouteIcon,
+  Users,
+  Plus,
+  Pencil,
+  Trash2,
+  MapPin,
+  ArrowUp,
+  ArrowDown,
+  Loader2
+} from "lucide-react";
+import { toast } from "sonner";
+
+// ============================================================
+// TYPES
+// ============================================================
+interface Vehicle {
+  id: string;
+  school_id: string;
+  registration_number: string;
+  vehicle_type: string;
+  capacity: number | null;
+  insurance_expiry: string | null;
+  fitness_expiry: string | null;
+  permit_expiry: string | null;
+  status: string;
+}
+
+interface Driver {
+  id: string;
+  school_id: string;
+  name: string;
+  phone: string | null;
+  license_number: string | null;
+  license_expiry: string | null;
+  address: string | null;
+  status: string;
+}
+
+interface RouteStop {
+  id?: string;
+  route_id?: string;
+  stop_name: string;
+  sequence_number: number;
+  pickup_time: string | null;
+  drop_time: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+function useDebouncedAddressSearch(query: string) {
+  const [results, setResults] = useState<{ display_name: string; lat: string; lon: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (query.trim().length < 3) {
+      setResults([]);
+      return;
+    }
+    setLoading(true);
+    const handle = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=5&q=${encodeURIComponent(query)}`
+        );
+        const data = await res.json();
+        setResults(data || []);
+      } catch {
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 500);
+    return () => clearTimeout(handle);
+  }, [query]);
+
+  return { results, loading };
+}
+
+function StopAddressSearch({
+  onSelect,
+  hasCoords,
+}: {
+  onSelect: (lat: number, lng: number, address: string) => void;
+  hasCoords: boolean;
+}) {
+  const [query, setQuery] = useState("");
+  const [showResults, setShowResults] = useState(false);
+  const { results, loading } = useDebouncedAddressSearch(query);
+
+  return (
+    <div className="relative w-48 shrink-0">
+      <Input
+        placeholder={hasCoords ? "Location set" : "Search address..."}
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
+        onFocus={() => setShowResults(true)}
+        className={hasCoords ? "border-emerald-400 pr-7" : ""}
+      />
+      {loading && (
+        <Loader2 className="absolute right-2 top-2.5 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+      )}
+      {showResults && results.length > 0 && (
+        <div className="absolute z-20 w-72 mt-1 rounded-lg border bg-popover shadow-md max-h-48 overflow-y-auto">
+          {results.map((r, i) => (
+            <button
+              key={i}
+              type="button"
+              className="w-full text-left px-3 py-2 hover:bg-muted text-xs"
+              onClick={() => {
+                onSelect(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
+                setQuery(r.display_name.split(",")[0]);
+                setShowResults(false);
+              }}
+            >
+              {r.display_name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface TransportRoute {
+  id: string;
+  school_id: string;
+  route_name: string;
+  route_number: string | null;
+  vehicle_id: string | null;
+  driver_id: string | null;
+  status: string;
+  route_stops: RouteStop[];
+}
+
+interface StudentLite {
+  id: string;
+  full_name: string;
+  class: string | null;
+}
+
+interface Assignment {
+  id: string;
+  school_id: string;
+  student_id: string;
+  route_id: string | null;
+  pickup_stop_id: string | null;
+  drop_stop_id: string | null;
+  transport_fee: number | null;
+  fee_status: string | null;
+  status: string | null;
+  students?: StudentLite;
+}
+
+const EMPTY_VEHICLE = {
+  registration_number: "", vehicle_type: "bus", capacity: "",
+  insurance_expiry: "", fitness_expiry: "", permit_expiry: "", status: "active",
+};
+
+const EMPTY_DRIVER = {
+  name: "", phone: "", license_number: "", license_expiry: "", address: "", status: "active",
+};
+
+// ============================================================
+// MAIN PAGE
+// ============================================================
+export default function TransportManagement() {
+  const { profile } = useAuth();
+  const schoolId = profile?.school_id as string | undefined;
+
+  return (
+    <AppLayout>
+      <div className="space-y-6">
+        {/* Hero banner */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 p-8">
+          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative flex items-center gap-4">
+            <div className="rounded-xl bg-white/15 p-3">
+              <Bus className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Transport Management</h1>
+              <p className="text-emerald-50/90 mt-1">
+                Manage your fleet, drivers, routes, and student transport assignments.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <Tabs defaultValue="vehicles" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+            <TabsTrigger value="vehicles" className="gap-1.5">
+              <Bus className="h-4 w-4" /> Vehicles
+            </TabsTrigger>
+            <TabsTrigger value="drivers" className="gap-1.5">
+              <UserRound className="h-4 w-4" /> Drivers
+            </TabsTrigger>
+            <TabsTrigger value="routes" className="gap-1.5">
+              <RouteIcon className="h-4 w-4" /> Routes & Stops
+            </TabsTrigger>
+            <TabsTrigger value="assignments" className="gap-1.5">
+              <Users className="h-4 w-4" /> Student Assignment
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="vehicles">
+            <VehiclesTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="drivers">
+            <DriversTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="routes">
+            <RoutesTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="assignments">
+            <AssignmentsTab schoolId={schoolId} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </AppLayout>
+  );
+}
+
+// ============================================================
+// GLOW CARD WRAPPER (design system)
+// ============================================================
+function GlowCard({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return (
+    <Card className={`border-2 border-emerald-200 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white hover:shadow-md transition-all ${className}`}>
+      {children}
+    </Card>
+  );
+}
+
+// ============================================================
+// VEHICLES TAB
+// ============================================================
+function VehiclesTab({ schoolId }: { schoolId?: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Vehicle | null>(null);
+  const [form, setForm] = useState(EMPTY_VEHICLE);
+
+  const { data: vehicles, isLoading } = useQuery({
+    queryKey: ["transport-vehicles", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("*")
+        .eq("school_id", schoolId)
+        .order("registration_number");
+      if (error) throw error;
+      return data as Vehicle[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        school_id: schoolId,
+        registration_number: form.registration_number,
+        vehicle_type: form.vehicle_type,
+        capacity: form.capacity ? Number(form.capacity) : null,
+        insurance_expiry: form.insurance_expiry || null,
+        fitness_expiry: form.fitness_expiry || null,
+        permit_expiry: form.permit_expiry || null,
+        status: form.status,
+      };
+      if (editing) {
+        const { error } = await supabase.from("vehicles").update(payload).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("vehicles").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing ? "Vehicle updated" : "Vehicle added");
+      queryClient.invalidateQueries({ queryKey: ["transport-vehicles"] });
+      setOpen(false);
+      setEditing(null);
+      setForm(EMPTY_VEHICLE);
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to save vehicle"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("vehicles").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Vehicle deleted");
+      queryClient.invalidateQueries({ queryKey: ["transport-vehicles"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to delete — vehicle may be linked to a route"),
+  });
+
+  const openEdit = (v: Vehicle) => {
+    setEditing(v);
+    setForm({
+      registration_number: v.registration_number,
+      vehicle_type: v.vehicle_type,
+      capacity: v.capacity?.toString() || "",
+      insurance_expiry: v.insurance_expiry || "",
+      fitness_expiry: v.fitness_expiry || "",
+      permit_expiry: v.permit_expiry || "",
+      status: v.status,
+    });
+    setOpen(true);
+  };
+
+  const openNew = () => {
+    setEditing(null);
+    setForm(EMPTY_VEHICLE);
+    setOpen(true);
+  };
+
+  return (
+    <GlowCard>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
+            <Bus className="h-4 w-4 text-white" />
+          </div>
+          Fleet Vehicles
+        </CardTitle>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openNew} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Vehicle
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editing ? "Edit Vehicle" : "Add Vehicle"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Registration Number</Label>
+                <Input value={form.registration_number}
+                  onChange={(e) => setForm({ ...form, registration_number: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Type</Label>
+                  <Select value={form.vehicle_type} onValueChange={(v) => setForm({ ...form, vehicle_type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bus">Bus</SelectItem>
+                      <SelectItem value="van">Van</SelectItem>
+                      <SelectItem value="car">Car</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Capacity</Label>
+                  <Input type="number" value={form.capacity}
+                    onChange={(e) => setForm({ ...form, capacity: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Insurance Expiry</Label>
+                  <Input type="date" value={form.insurance_expiry}
+                    onChange={(e) => setForm({ ...form, insurance_expiry: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Fitness Expiry</Label>
+                  <Input type="date" value={form.fitness_expiry}
+                    onChange={(e) => setForm({ ...form, fitness_expiry: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Permit Expiry</Label>
+                  <Input type="date" value={form.permit_expiry}
+                    onChange={(e) => setForm({ ...form, permit_expiry: e.target.value })} />
+                </div>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => saveMutation.mutate()} disabled={!form.registration_number || saveMutation.isPending}>
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Registration</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Capacity</TableHead>
+                <TableHead>Insurance Expiry</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {vehicles?.map((v) => (
+                <TableRow key={v.id}>
+                  <TableCell className="font-medium">{v.registration_number}</TableCell>
+                  <TableCell className="capitalize">{v.vehicle_type}</TableCell>
+                  <TableCell>{v.capacity ?? "—"}</TableCell>
+                  <TableCell>{v.insurance_expiry || "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={v.status === "active" ? "default" : "secondary"} className="capitalize">
+                      {v.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(v)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(v.id)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {vehicles?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    No vehicles added yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </GlowCard>
+  );
+}
+
+// ============================================================
+// DRIVERS TAB
+// ============================================================
+function DriversTab({ schoolId }: { schoolId?: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Driver | null>(null);
+  const [form, setForm] = useState(EMPTY_DRIVER);
+
+  const { data: drivers, isLoading } = useQuery({
+    queryKey: ["transport-drivers", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("drivers").select("*").eq("school_id", schoolId).order("name");
+      if (error) throw error;
+      return data as Driver[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        school_id: schoolId,
+        ...form,
+        license_expiry: form.license_expiry || null,
+      };
+      if (editing) {
+        const { error } = await supabase.from("drivers").update(payload).eq("id", editing.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("drivers").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing ? "Driver updated" : "Driver added");
+      queryClient.invalidateQueries({ queryKey: ["transport-drivers"] });
+      setOpen(false);
+      setEditing(null);
+      setForm(EMPTY_DRIVER);
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to save driver"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("drivers").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Driver deleted");
+      queryClient.invalidateQueries({ queryKey: ["transport-drivers"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to delete — driver may be linked to a route"),
+  });
+
+  const openEdit = (d: Driver) => {
+    setEditing(d);
+    setForm({
+      name: d.name, phone: d.phone || "", license_number: d.license_number || "",
+      license_expiry: d.license_expiry || "", address: d.address || "", status: d.status,
+    });
+    setOpen(true);
+  };
+
+  const openNew = () => {
+    setEditing(null);
+    setForm(EMPTY_DRIVER);
+    setOpen(true);
+  };
+
+  return (
+    <GlowCard>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
+            <UserRound className="h-4 w-4 text-white" />
+          </div>
+          Drivers
+        </CardTitle>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openNew} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Driver
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{editing ? "Edit Driver" : "Add Driver"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Name</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Phone</Label>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </div>
+                <div>
+                  <Label>License Number</Label>
+                  <Input value={form.license_number}
+                    onChange={(e) => setForm({ ...form, license_number: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>License Expiry</Label>
+                  <Input type="date" value={form.license_expiry}
+                    onChange={(e) => setForm({ ...form, license_expiry: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Address</Label>
+                <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending}>
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>License No.</TableHead>
+                <TableHead>License Expiry</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {drivers?.map((d) => (
+                <TableRow key={d.id}>
+                  <TableCell className="font-medium">{d.name}</TableCell>
+                  <TableCell>{d.phone || "—"}</TableCell>
+                  <TableCell>{d.license_number || "—"}</TableCell>
+                  <TableCell>{d.license_expiry || "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={d.status === "active" ? "default" : "secondary"} className="capitalize">
+                      {d.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(d.id)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {drivers?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    No drivers added yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </GlowCard>
+  );
+}
+
+// ============================================================
+// ROUTES & STOPS TAB
+// ============================================================
+function RoutesTab({ schoolId }: { schoolId?: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<TransportRoute | null>(null);
+  const [routeName, setRouteName] = useState("");
+  const [routeNumber, setRouteNumber] = useState("");
+  const [vehicleId, setVehicleId] = useState<string>("");
+  const [driverId, setDriverId] = useState<string>("");
+  const [status, setStatus] = useState("active");
+  const [stops, setStops] = useState<RouteStop[]>([]);
+  const [originalStopIds, setOriginalStopIds] = useState<string[]>([]);
+
+  const { data: routes, isLoading } = useQuery({
+    queryKey: ["transport-routes", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transport_routes")
+        .select("*, route_stops(*)")
+        .eq("school_id", schoolId)
+        .order("route_name");
+      if (error) throw error;
+      return (data as any[]).map((r) => ({
+        ...r,
+        route_stops: (r.route_stops || []).sort(
+          (a: RouteStop, b: RouteStop) => a.sequence_number - b.sequence_number
+        ),
+      })) as TransportRoute[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const { data: vehicles } = useQuery({
+    queryKey: ["transport-vehicles", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("vehicles").select("id, registration_number").eq("school_id", schoolId);
+      if (error) throw error;
+      return data as { id: string; registration_number: string }[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const { data: drivers } = useQuery({
+    queryKey: ["transport-drivers", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("drivers").select("id, name").eq("school_id", schoolId);
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const resetForm = () => {
+    setRouteName(""); setRouteNumber(""); setVehicleId(""); setDriverId("");
+    setStatus("active"); setStops([]); setOriginalStopIds([]);
+  };
+
+  const openNew = () => { setEditing(null); resetForm(); setOpen(true); };
+
+  const openEdit = (r: TransportRoute) => {
+    setEditing(r);
+    setRouteName(r.route_name);
+    setRouteNumber(r.route_number || "");
+    setVehicleId(r.vehicle_id || "");
+    setDriverId(r.driver_id || "");
+    setStatus(r.status);
+    setStops(r.route_stops.map((s) => ({ ...s })));
+    setOriginalStopIds(r.route_stops.map((s) => s.id!).filter(Boolean));
+    setOpen(true);
+  };
+
+  const addStop = () => {
+    setStops([...stops, {
+      stop_name: "", sequence_number: stops.length + 1, pickup_time: null, drop_time: null,
+      latitude: null, longitude: null,
+    }]);
+  };
+
+  const updateStop = (idx: number, patch: Partial<RouteStop>) => {
+    setStops(stops.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
+  };
+
+  const removeStop = (idx: number) => {
+    setStops(stops.filter((_, i) => i !== idx).map((s, i) => ({ ...s, sequence_number: i + 1 })));
+  };
+
+  const moveStop = (idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= stops.length) return;
+    const next = [...stops];
+    [next[idx], next[target]] = [next[target], next[idx]];
+    setStops(next.map((s, i) => ({ ...s, sequence_number: i + 1 })));
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        school_id: schoolId,
+        route_name: routeName,
+        route_number: routeNumber || null,
+        vehicle_id: vehicleId || null,
+        driver_id: driverId || null,
+        status,
+      };
+      let routeId = editing?.id;
+      if (editing) {
+        const { error } = await supabase.from("transport_routes").update(payload).eq("id", editing.id);
+        if (error) throw error;
+
+        // Diff stops instead of delete-all/insert-all, so stop IDs that
+        // existing transport_assignments rows point to (pickup_stop_id /
+        // drop_stop_id) survive an edit unless the user actually removed them.
+        const currentIds = stops.map((s) => s.id).filter(Boolean) as string[];
+        const removedIds = originalStopIds.filter((id) => !currentIds.includes(id));
+
+        if (removedIds.length > 0) {
+          const { error: delErr } = await supabase.from("route_stops").delete().in("id", removedIds);
+          if (delErr) throw delErr;
+        }
+
+        const toUpdate = stops.filter((s) => s.id);
+        for (const s of toUpdate) {
+          const { error: updErr } = await supabase.from("route_stops").update({
+            stop_name: s.stop_name,
+            sequence_number: s.sequence_number,
+            pickup_time: s.pickup_time || null,
+            drop_time: s.drop_time || null,
+            latitude: s.latitude ?? null,
+            longitude: s.longitude ?? null,
+          }).eq("id", s.id!);
+          if (updErr) throw updErr;
+        }
+
+        const toInsert = stops.filter((s) => !s.id);
+        if (toInsert.length > 0) {
+          const insertPayload = toInsert.map((s) => ({
+            route_id: routeId,
+            stop_name: s.stop_name,
+            sequence_number: s.sequence_number,
+            pickup_time: s.pickup_time || null,
+            drop_time: s.drop_time || null,
+            latitude: s.latitude ?? null,
+            longitude: s.longitude ?? null,
+          }));
+          const { error: insErr } = await supabase.from("route_stops").insert(insertPayload);
+          if (insErr) throw insErr;
+        }
+      } else {
+        const { data, error } = await supabase.from("transport_routes").insert(payload).select("id").single();
+        if (error) throw error;
+        routeId = data.id;
+
+        if (stops.length > 0) {
+          const stopsPayload = stops.map((s) => ({
+            route_id: routeId,
+            stop_name: s.stop_name,
+            sequence_number: s.sequence_number,
+            pickup_time: s.pickup_time || null,
+            drop_time: s.drop_time || null,
+            latitude: s.latitude ?? null,
+            longitude: s.longitude ?? null,
+          }));
+          const { error: stopErr } = await supabase.from("route_stops").insert(stopsPayload);
+          if (stopErr) throw stopErr;
+        }
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing ? "Route updated" : "Route added");
+      queryClient.invalidateQueries({ queryKey: ["transport-routes"] });
+      setOpen(false);
+      resetForm();
+      setEditing(null);
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to save route"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("transport_routes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Route deleted");
+      queryClient.invalidateQueries({ queryKey: ["transport-routes"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to delete — route may have student assignments"),
+  });
+
+  return (
+    <GlowCard>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
+            <RouteIcon className="h-4 w-4 text-white" />
+          </div>
+          Routes & Stops
+        </CardTitle>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openNew} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Route
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editing ? "Edit Route" : "Add Route"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Route Name</Label>
+                  <Input value={routeName} onChange={(e) => setRouteName(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Route Number</Label>
+                  <Input value={routeNumber} onChange={(e) => setRouteNumber(e.target.value)} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label>Vehicle</Label>
+                  <Select value={vehicleId} onValueChange={setVehicleId}>
+                    <SelectTrigger><SelectValue placeholder="Select vehicle" /></SelectTrigger>
+                    <SelectContent>
+                      {vehicles?.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>{v.registration_number}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Driver</Label>
+                  <Select value={driverId} onValueChange={setDriverId}>
+                    <SelectTrigger><SelectValue placeholder="Select driver" /></SelectTrigger>
+                    <SelectContent>
+                      {drivers?.map((d) => (
+                        <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={status} onValueChange={setStatus}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="border-t pt-3">
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-sm font-semibold flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4" /> Stops
+                  </Label>
+                  <Button size="sm" variant="outline" onClick={addStop} className="gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Add Stop
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {stops.map((stop, idx) => (
+                    <div key={idx} className="flex items-center gap-2 rounded-lg border p-2 bg-muted/30 flex-wrap">
+                      <span className="text-xs font-medium text-muted-foreground w-5">{idx + 1}</span>
+                      <Input
+                        placeholder="Stop name"
+                        className="flex-1 min-w-[140px]"
+                        value={stop.stop_name}
+                        onChange={(e) => updateStop(idx, { stop_name: e.target.value })}
+                      />
+                      <StopAddressSearch
+                        hasCoords={stop.latitude != null && stop.longitude != null}
+                        onSelect={(lat, lng, address) =>
+                          updateStop(idx, {
+                            latitude: lat,
+                            longitude: lng,
+                            stop_name: stop.stop_name || address.split(",")[0],
+                          })
+                        }
+                      />
+                      {stop.latitude != null && stop.longitude != null && (
+                        <MapPin className="h-4 w-4 text-emerald-500 shrink-0" />
+                      )}
+                      <Input
+                        type="time"
+                        className="w-28"
+                        value={stop.pickup_time || ""}
+                        onChange={(e) => updateStop(idx, { pickup_time: e.target.value })}
+                      />
+                      <Input
+                        type="time"
+                        className="w-28"
+                        value={stop.drop_time || ""}
+                        onChange={(e) => updateStop(idx, { drop_time: e.target.value })}
+                      />
+                      <Button size="icon" variant="ghost" onClick={() => moveStop(idx, -1)} disabled={idx === 0}>
+                        <ArrowUp className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => moveStop(idx, 1)} disabled={idx === stops.length - 1}>
+                        <ArrowDown className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => removeStop(idx)}>
+                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                  {stops.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-3">No stops added yet.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => saveMutation.mutate()} disabled={!routeName || saveMutation.isPending}>
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Save Route
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : (
+          <div className="space-y-3">
+            {routes?.map((r) => (
+              <div key={r.id} className="rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-semibold">{r.route_name} {r.route_number && <span className="text-muted-foreground text-sm">({r.route_number})</span>}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {r.route_stops.length} stop{r.route_stops.length !== 1 ? "s" : ""}
+                      {vehicles?.find((v) => v.id === r.vehicle_id) && ` · ${vehicles.find((v) => v.id === r.vehicle_id)?.registration_number}`}
+                      {drivers?.find((d) => d.id === r.driver_id) && ` · ${drivers.find((d) => d.id === r.driver_id)?.name}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={r.status === "active" ? "default" : "secondary"} className="capitalize">{r.status}</Badge>
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(r.id)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+                {r.route_stops.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {r.route_stops.map((s, i) => (
+                      <span key={s.id || i} className="text-xs bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-1">
+                        {i + 1}. {s.stop_name} {s.pickup_time && `· ${s.pickup_time}`}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+            {routes?.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">No routes added yet.</p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </GlowCard>
+  );
+}
+
+// ============================================================
+// STUDENT ASSIGNMENT TAB
+// ============================================================
+function AssignmentsTab({ schoolId }: { schoolId?: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<StudentLite | null>(null);
+  const [selectedClassName, setSelectedClassName] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
+  const [routeId, setRouteId] = useState("");
+  const [pickupStopId, setPickupStopId] = useState("");
+  const [dropStopId, setDropStopId] = useState("");
+  const [fee, setFee] = useState("");
+  const [feeStatus, setFeeStatus] = useState("pending");
+
+  const { data: assignments, isLoading } = useQuery({
+    queryKey: ["transport-assignments", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transport_assignments")
+        .select("*, students(id, full_name, class)")
+        .eq("school_id", schoolId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as Assignment[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const { data: routes } = useQuery({
+    queryKey: ["transport-routes", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("transport_routes").select("*, route_stops(*)").eq("school_id", schoolId);
+      if (error) throw error;
+      return data as TransportRoute[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const { data: classesData } = useQuery({
+    queryKey: ["transport-classes", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("classes")
+        .select("id, name, section")
+        .eq("school_id", schoolId)
+        .order("name");
+      if (error) throw error;
+      return data as { id: string; name: string; section: string }[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const uniqueClassNames = Array.from(new Set((classesData || []).map((c) => c.name)));
+  const sectionsForSelectedClass = (classesData || [])
+    .filter((c) => c.name === selectedClassName)
+    .map((c) => c.section);
+
+  const { data: studentResults } = useQuery({
+    queryKey: ["transport-student-search", selectedClassName, selectedSection, schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, full_name, class")
+        .eq("school_id", schoolId)
+        .ilike("class", selectedClassName)
+        .ilike("section", selectedSection)
+        .eq("status", "active")
+        .order("full_name");
+      if (error) throw error;
+      return data as StudentLite[];
+    },
+    enabled: !!schoolId && !!selectedClassName && !!selectedSection,
+  });
+
+  const selectedRoute = routes?.find((r) => r.id === routeId);
+
+  const resetForm = () => {
+    setSelectedStudent(null); setRouteId(""); setPickupStopId(""); setDropStopId("");
+    setFee(""); setFeeStatus("pending"); setSelectedClassName(""); setSelectedSection("");
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedStudent) throw new Error("Select a student first");
+      const route = routes?.find((r) => r.id === routeId);
+      const { error } = await supabase.from("transport_assignments").insert({
+        school_id: schoolId,
+        student_id: selectedStudent.id,
+        route_id: routeId || null,
+        pickup_stop_id: pickupStopId || null,
+        drop_stop_id: dropStopId || null,
+        route_name: route?.route_name || null,
+        transport_fee: fee ? Number(fee) : null,
+        fee_status: feeStatus,
+        status: "active",
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Student assigned to route");
+      queryClient.invalidateQueries({ queryKey: ["transport-assignments"] });
+      setOpen(false);
+      resetForm();
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to assign student"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("transport_assignments").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Assignment removed");
+      queryClient.invalidateQueries({ queryKey: ["transport-assignments"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to remove assignment"),
+  });
+
+  return (
+    <GlowCard>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
+            <Users className="h-4 w-4 text-white" />
+          </div>
+          Student Transport Assignment
+        </CardTitle>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button className="gap-1.5"><Plus className="h-4 w-4" /> Assign Student</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg">
+            <DialogHeader><DialogTitle>Assign Student to Route</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Class & Section</Label>
+                <div className="grid grid-cols-2 gap-3 mt-1">
+                  <Select
+                    value={selectedClassName}
+                    onValueChange={(v) => { setSelectedClassName(v); setSelectedSection(""); setSelectedStudent(null); }}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+                    <SelectContent>
+                      {uniqueClassNames.map((name) => (
+                        <SelectItem key={name} value={name}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={selectedSection}
+                    onValueChange={(v) => { setSelectedSection(v); setSelectedStudent(null); }}
+                    disabled={!selectedClassName}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select section" /></SelectTrigger>
+                    <SelectContent>
+                      {sectionsForSelectedClass.map((sec) => (
+                        <SelectItem key={sec} value={sec}>{sec}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div>
+                <Label>Student</Label>
+                {selectedStudent ? (
+                  <div className="flex items-center justify-between rounded-lg border p-2 mt-1">
+                    <span>{selectedStudent.full_name} {selectedStudent.class && `· ${selectedStudent.class}`}</span>
+                    <Button size="sm" variant="ghost" onClick={() => setSelectedStudent(null)}>Change</Button>
+                  </div>
+                ) : (
+                  <Select
+                    value=""
+                    onValueChange={(v) => {
+                      const s = studentResults?.find((r) => r.id === v);
+                      if (s) setSelectedStudent(s);
+                    }}
+                    disabled={!selectedClassName || !selectedSection}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder={selectedClassName && selectedSection ? "Select student" : "Pick class & section first"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {studentResults?.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div>
+                <Label>Route</Label>
+                <Select value={routeId} onValueChange={(v) => { setRouteId(v); setPickupStopId(""); setDropStopId(""); }}>
+                  <SelectTrigger><SelectValue placeholder="Select route" /></SelectTrigger>
+                  <SelectContent>
+                    {routes?.map((r) => <SelectItem key={r.id} value={r.id}>{r.route_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedRoute && selectedRoute.route_stops.length > 0 && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Pickup Stop</Label>
+                    <Select value={pickupStopId} onValueChange={setPickupStopId}>
+                      <SelectTrigger><SelectValue placeholder="Select stop" /></SelectTrigger>
+                      <SelectContent>
+                        {selectedRoute.route_stops.map((s) => (
+                          <SelectItem key={s.id} value={s.id!}>{s.stop_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Drop Stop</Label>
+                    <Select value={dropStopId} onValueChange={setDropStopId}>
+                      <SelectTrigger><SelectValue placeholder="Select stop" /></SelectTrigger>
+                      <SelectContent>
+                        {selectedRoute.route_stops.map((s) => (
+                          <SelectItem key={s.id} value={s.id!}>{s.stop_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Transport Fee</Label>
+                  <Input type="number" value={fee} onChange={(e) => setFee(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Fee Status</Label>
+                  <Select value={feeStatus} onValueChange={setFeeStatus}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="paid">Paid</SelectItem>
+                      <SelectItem value="overdue">Overdue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => saveMutation.mutate()} disabled={!selectedStudent || saveMutation.isPending}>
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Assign
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Route</TableHead>
+                <TableHead>Fee</TableHead>
+                <TableHead>Fee Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {assignments?.map((a) => (
+                <TableRow key={a.id}>
+                  <TableCell className="font-medium">{a.students?.full_name || "—"}</TableCell>
+                  <TableCell>{a.students?.class || "—"}</TableCell>
+                  <TableCell>{routes?.find((r) => r.id === a.route_id)?.route_name || "—"}</TableCell>
+                  <TableCell>{a.transport_fee != null ? `₹${a.transport_fee}` : "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={a.fee_status === "paid" ? "default" : "secondary"} className="capitalize">
+                      {a.fee_status || "—"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {assignments?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    No students assigned yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </GlowCard>
+  );
+}

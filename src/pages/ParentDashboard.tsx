@@ -11,13 +11,21 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { GraduationCap, BookOpen, BarChart3, TrendingUp } from "lucide-react";
+import { GraduationCap, BookOpen, BarChart3, TrendingUp, Bus } from "lucide-react";
+import { BusTrackingMap } from "@/components/transport/BusTrackingMap";
 import parentBanner from "@/assets/parent-banner.png";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 
 interface Child { id: string; full_name: string | null; class_grade: string | null; }
 interface HomeworkRow { id: string; title: string; due_date: string | null; status: string; score: number | null; feedback: string | null; answers: any[]; }
 interface ScoreRow { id: string; score: number | null; completed_at: string | null; total_questions: number | null; age_group?: number; }
+interface TransportInfo {
+  routeName: string;
+  routeNumber: string | null;
+  routeId: string | null;
+  pickupStopId: string | null;
+  dropStopId: string | null;
+}
 
 export default function ParentDashboard() {
   const { user, profile } = useAuth();
@@ -29,6 +37,7 @@ export default function ParentDashboard() {
   const [scores, setScores] = useState<ScoreRow[]>([]);
   const [reportRow, setReportRow] = useState<any>(null);
   const [noLink, setNoLink] = useState(false);
+  const [transportInfo, setTransportInfo] = useState<TransportInfo | null>(null);
 
   const fetchChildren = useCallback(async () => {
     if (!user) return;
@@ -96,8 +105,41 @@ export default function ParentDashboard() {
     }
   }, [toast, children]);
 
+  const fetchTransport = useCallback(async (childId: string) => {
+    // transport_assignments.student_id references students.id, not profiles.id —
+    // resolve the students row for this child's profile first.
+    const { data: studentRow } = await supabase
+      .from("students")
+      .select("id")
+      .eq("profile_id", childId)
+      .maybeSingle();
+    if (!studentRow) {
+      setTransportInfo(null);
+      return;
+    }
+    const { data } = await supabase
+      .from("transport_assignments")
+      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number)")
+      .eq("student_id", studentRow.id)
+      .eq("status", "active")
+      .maybeSingle();
+    const row: any = data ?? null;
+    const route: any = row?.transport_routes ?? null;
+    setTransportInfo(
+      route
+        ? {
+            routeName: route.route_name,
+            routeNumber: route.route_number,
+            routeId: row.route_id ?? null,
+            pickupStopId: row.pickup_stop_id ?? null,
+            dropStopId: row.drop_stop_id ?? null,
+          }
+        : null
+    );
+  }, []);
+
   useEffect(() => { fetchChildren(); }, [fetchChildren]);
-  useEffect(() => { if (selectedChild) fetchChildData(selectedChild); }, [selectedChild, fetchChildData]);
+  useEffect(() => { if (selectedChild) { fetchChildData(selectedChild); fetchTransport(selectedChild); } }, [selectedChild, fetchChildData, fetchTransport]);
 
   const selectedChildData = children.find(c => c.id === selectedChild);
   const avgScore = scores.filter(s => s.score !== null).length
@@ -218,6 +260,9 @@ export default function ParentDashboard() {
           <TabsList>
             <TabsTrigger value="scores" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><BarChart3 className="h-4 w-4" /> Test Scores</TabsTrigger>
             <TabsTrigger value="homework" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><BookOpen className="h-4 w-4" /> Homework</TabsTrigger>
+            {transportInfo && (
+              <TabsTrigger value="transport" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><Bus className="h-4 w-4" /> Bus Tracking</TabsTrigger>
+            )}
           </TabsList>
 
           {/* Test Scores */}
@@ -249,6 +294,19 @@ export default function ParentDashboard() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Bus Tracking */}
+          {transportInfo && (
+            <TabsContent value="transport">
+              <BusTrackingMap
+                busNumber={transportInfo.routeNumber ? `Route ${transportInfo.routeNumber}` : "Bus"}
+                routeName={transportInfo.routeName}
+                routeId={transportInfo.routeId}
+                pickupStopId={transportInfo.pickupStopId}
+                dropStopId={transportInfo.dropStopId}
+              />
+            </TabsContent>
+          )}
 
           {/* Homework */}
           <TabsContent value="homework">

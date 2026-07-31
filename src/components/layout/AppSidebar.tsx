@@ -45,6 +45,7 @@ import {
   ShieldAlert,
   Accessibility,
   UserPlus,
+  Bus,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -93,6 +94,7 @@ const navItems: Array<{
   { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["admin", "principal"], module: "SEN Management" },
   { title: "My SEN Students", icon: Accessibility, path: "/my-sen-students", roles: ["teacher", "hod"], module: "SEN Management" },
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal"] },
+  { title: "Transport", icon: Bus, path: "/transport", roles: ["admin", "principal", "school_admin"] },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
   { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
