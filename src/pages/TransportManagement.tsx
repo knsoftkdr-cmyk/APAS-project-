@@ -1097,7 +1097,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("fee_payments" as any)
-        .select("student_id, transport_amount, due_date, created_at")
+        .select("student_id, transport_amount, status, due_date, created_at")
         .eq("school_id", schoolId)
         .gt("transport_amount", 0)
         .order("due_date", { ascending: false });
@@ -1108,9 +1108,11 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
   });
 
   const transportFeeByStudent = new Map<string, number>();
+  const transportFeeStatusByStudent = new Map<string, string>();
   (feePayments || []).forEach((f: any) => {
     if (f.student_id && !transportFeeByStudent.has(f.student_id)) {
       transportFeeByStudent.set(f.student_id, f.transport_amount);
+      transportFeeStatusByStudent.set(f.student_id, f.status);
     }
   });
 
@@ -1381,9 +1383,16 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                     })()}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={a.fee_status === "paid" ? "default" : "secondary"} className="capitalize">
-                      {a.fee_status || "—"}
-                    </Badge>
+                    {(() => {
+                      const feeMgmtStatus = a.student_id ? transportFeeStatusByStudent.get(a.student_id) : undefined;
+                      const displayStatus = feeMgmtStatus || a.fee_status;
+                      return (
+                        <Badge variant={displayStatus === "paid" ? "default" : "secondary"} className="capitalize">
+                          {displayStatus || "—"}
+                          {feeMgmtStatus && <span className="ml-1 text-[10px] opacity-70 font-normal">(Fee Mgmt)</span>}
+                        </Badge>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(a)}>
