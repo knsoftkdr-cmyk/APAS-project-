@@ -57,6 +57,7 @@ interface Driver {
   license_expiry: string | null;
   address: string | null;
   status: string;
+  profile_id: string | null;
 }
 
 interface RouteStop {
@@ -181,6 +182,7 @@ const EMPTY_VEHICLE = {
 
 const EMPTY_DRIVER = {
   name: "", phone: "", license_number: "", license_expiry: "", address: "", status: "active",
+  email: "", password: "",
 };
 
 // ============================================================
@@ -495,16 +497,26 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const { email, password, ...driverFields } = form;
       const payload = {
         school_id: schoolId,
-        ...form,
+        ...driverFields,
         license_expiry: form.license_expiry || null,
       };
       if (editing) {
         const { error } = await supabase.from("drivers").update(payload).eq("id", editing.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("drivers").insert(payload);
+        let profileId: string | null = null;
+        if (email && password) {
+          const { data: fnData, error: fnError } = await supabase.functions.invoke("register-driver", {
+            body: { email, password, full_name: form.name },
+          });
+          if (fnError) throw new Error(fnError.message || "Failed to create driver login");
+          if ((fnData as any)?.error) throw new Error((fnData as any).error);
+          profileId = (fnData as any)?.user_id ?? null;
+        }
+        const { error } = await supabase.from("drivers").insert({ ...payload, profile_id: profileId });
         if (error) throw error;
       }
     },
@@ -535,6 +547,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
     setForm({
       name: d.name, phone: d.phone || "", license_number: d.license_number || "",
       license_expiry: d.license_expiry || "", address: d.address || "", status: d.status,
+      email: "", password: "",
     });
     setOpen(true);
   };
@@ -601,6 +614,25 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                 <Label>Address</Label>
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
               </div>
+              {!editing && (
+                <div className="border-t pt-3 space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    App Login (optional — enables live GPS tracking for this driver)
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Email</Label>
+                      <Input type="email" value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Password</Label>
+                      <Input type="password" value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending}>
@@ -623,6 +655,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>License No.</TableHead>
                 <TableHead>License Expiry</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>App Login</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -638,6 +671,13 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                       {d.status}
                     </Badge>
                   </TableCell>
+                  <TableCell>
+                    {d.profile_id ? (
+                      <Badge variant="default" className="bg-emerald-600">Enabled</Badge>
+                    ) : (
+                      <Badge variant="secondary">Not set up</Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
                       <Pencil className="h-4 w-4" />
@@ -650,7 +690,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               ))}
               {drivers?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No drivers added yet.
                   </TableCell>
                 </TableRow>

@@ -96,6 +96,7 @@ const SchoolIntelligenceDashboard = lazy(() => import("./pages/SchoolIntelligenc
 const AutomationDashboard = lazy(() => import("./pages/AutomationDashboard"));
 const MultiTenantDashboard = lazy(() => import("./pages/MultiTenantDashboard"));
 const HODDashboard = lazy(() => import("./pages/HODDashboard"));
+const DriverDashboard = lazy(() => import("./pages/DriverDashboard"));
 const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
 const CompetencyDefinitions = lazy(() => import("./pages/CompetencyDefinitions"));
 const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
@@ -253,6 +254,7 @@ export default function App() {
                       <Route path="/automation-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><AutomationDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/multi-tenant" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><MultiTenantDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/hod-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["hod"]}><HODDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/driver/tracking" element={<ProtectedRoute><RoleGuard allowedRoles={["driver"]}><DriverDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/academic-tests" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AcademicTests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/gamification" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Gamification /></RoleGuard></ProtectedRoute>} />

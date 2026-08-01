@@ -133,6 +133,7 @@ setLoading(false);
           "ERP": ["erp"],
           HOD: ["hod"],
           "KNSOFT Admin": ["knsoft_admin"],
+          Driver: ["driver"],
         };
 
 const erpAccessOk = selectedRole === "ERP" ? profileData?.erp_access === true : true;
@@ -175,6 +176,8 @@ setShowSplash(true);
 setTimeout(() => {
   if (selectedRole === "ERP") {
     navigate("/erp/dashboard");
+  } else if (role === "driver") {
+    navigate("/driver/tracking");
   } else if (role === "knsoft_admin") {
     navigate("/knsoft-admin");
   } else if (role === "school_admin") {
@@ -263,6 +266,7 @@ return (
     <option>Principal</option>
     <option>HOD</option>
     <option>School Admin</option>
+    <option>Driver</option>
     <option>ERP</option>
   </select>
 </div>

@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => ({
       "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
       "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https: blob:; media-src 'self' https: blob:; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https: wss: http://localhost:8000; frame-src 'self' blob: https://www.youtube.com https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
       "Referrer-Policy": "strict-origin-when-cross-origin",
-      "Permissions-Policy": "geolocation=(), microphone=(), camera=()",
+      "Permissions-Policy": "geolocation=(self), microphone=(), camera=()",
     },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),

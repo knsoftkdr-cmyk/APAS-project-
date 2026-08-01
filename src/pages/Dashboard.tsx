@@ -681,6 +681,10 @@ const Dashboard = () => {
     return <AdminHome />;
   }
 
+  if (profile?.role === "driver") {
+    return <Navigate to="/driver/tracking" replace />;
+  }
+
   return <TeacherHome />;
 };
 

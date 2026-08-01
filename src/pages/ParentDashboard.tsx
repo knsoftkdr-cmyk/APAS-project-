@@ -25,6 +25,7 @@ interface TransportInfo {
   routeName: string;
   routeNumber: string | null;
   routeId: string | null;
+  vehicleId: string | null;
   pickupStopId: string | null;
   dropStopId: string | null;
   driverName: string | null;
@@ -124,7 +125,7 @@ export default function ParentDashboard() {
     }
     const { data } = await supabase
       .from("transport_assignments")
-      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, drivers(name, phone))")
+      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, vehicle_id, drivers(name, phone))")
       .eq("student_id", studentRow.id)
       .eq("status", "active")
       .maybeSingle();
@@ -148,6 +149,7 @@ export default function ParentDashboard() {
             routeName: route.route_name,
             routeNumber: route.route_number,
             routeId: row.route_id ?? null,
+            vehicleId: route.vehicle_id ?? null,
             pickupStopId: row.pickup_stop_id ?? null,
             dropStopId: row.drop_stop_id ?? null,
             driverName: driver?.name ?? null,
@@ -338,6 +340,7 @@ export default function ParentDashboard() {
                 busNumber={transportInfo.routeNumber ? `Route ${transportInfo.routeNumber}` : "Bus"}
                 routeName={transportInfo.routeName}
                 routeId={transportInfo.routeId}
+                vehicleId={transportInfo.vehicleId}
                 pickupStopId={transportInfo.pickupStopId}
                 dropStopId={transportInfo.dropStopId}
                 driverName={transportInfo.driverName}

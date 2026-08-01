@@ -29,6 +29,12 @@ function highlightIcon(label: string, color: string) {
   });
 }
 
+const busMarkerIcon = new L.DivIcon({
+  html: `<div style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#f97316;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.35);font-size:16px;transform:translate(-50%,-50%);">🚌</div>`,
+  className: "",
+  iconSize: [0, 0],
+});
+
 interface StopRow {
   id: string;
   stop_name: string;
@@ -39,6 +45,7 @@ interface StopRow {
 
 interface BusTrackingMapProps {
   routeId?: string | null;
+  vehicleId?: string | null;
   pickupStopId?: string | null;
   dropStopId?: string | null;
   busNumber?: string;
@@ -46,6 +53,12 @@ interface BusTrackingMapProps {
   driverName?: string | null;
   driverPhone?: string | null;
   pickupTime?: string | null;
+}
+
+interface BusPosition {
+  latitude: number;
+  longitude: number;
+  updated_at: string;
 }
 
 // Uses OSRM's free public routing server to fetch a road-following path
@@ -72,6 +85,7 @@ async function fetchRoadPath(stops: StopRow[]): Promise<[number, number][] | nul
 
 export function BusTrackingMap({
   routeId,
+  vehicleId,
   pickupStopId,
   dropStopId,
   busNumber = "Bus",
@@ -83,6 +97,7 @@ export function BusTrackingMap({
   const [stops, setStops] = useState<StopRow[] | null>(null);
   const [roadPath, setRoadPath] = useState<[number, number][] | null>(null);
   const [loading, setLoading] = useState(true);
+  const [busPosition, setBusPosition] = useState<BusPosition | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -126,6 +141,53 @@ export function BusTrackingMap({
     return () => { cancelled = true; };
   }, [routeId]);
 
+  useEffect(() => {
+    if (!vehicleId) {
+      setBusPosition(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadInitialPosition() {
+      const { data } = await supabase
+        .from("vehicle_locations")
+        .select("latitude, longitude, updated_at")
+        .eq("vehicle_id", vehicleId)
+        .maybeSingle();
+      if (!cancelled && data) {
+        setBusPosition(data as BusPosition);
+      }
+    }
+    loadInitialPosition();
+
+    const channel = supabase
+      .channel(`vehicle-location-${vehicleId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "vehicle_locations",
+          filter: `vehicle_id=eq.${vehicleId}`,
+        },
+        (payload) => {
+          const row = payload.new as BusPosition | undefined;
+          if (row) setBusPosition(row);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [vehicleId]);
+
+  const busIsStale = busPosition
+    ? Date.now() - new Date(busPosition.updated_at).getTime() > 2 * 60 * 1000
+    : false;
+
   const geocodedStops = (stops || []).filter((s) => s.latitude != null && s.longitude != null);
   const straightPath: [number, number][] = geocodedStops.map((s) => [s.latitude as number, s.longitude as number]);
   const displayPath = roadPath ?? straightPath;
@@ -156,6 +218,18 @@ export function BusTrackingMap({
             )}
           </div>
         )}
+        {vehicleId && (
+          <div className="mb-2 text-xs">
+            {busPosition ? (
+              <span className={busIsStale ? "text-amber-600" : "text-emerald-600"}>
+                {busIsStale ? "⚠ Bus location may be out of date" : "● Live"} — last updated{" "}
+                {new Date(busPosition.updated_at).toLocaleTimeString()}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Waiting for driver to start sharing location...</span>
+            )}
+          </div>
+        )}
         {loading ? (
           <div className="h-[400px] flex items-center justify-center text-sm text-muted-foreground">
             Loading route...
@@ -173,6 +247,23 @@ export function BusTrackingMap({
               />
               {hasPath && (
                 <Polyline positions={displayPath} pathOptions={{ color: "#2563eb", weight: 4, opacity: 0.6 }} />
+              )}
+
+              {busPosition && (
+                <Marker
+                  position={[busPosition.latitude, busPosition.longitude]}
+                  icon={busMarkerIcon}
+                >
+                  <Popup>
+                    {busNumber} — last updated {new Date(busPosition.updated_at).toLocaleTimeString()}
+                    {busIsStale && (
+                      <>
+                        <br />
+                        <span style={{ color: "#dc2626" }}>Location may be out of date</span>
+                      </>
+                    )}
+                  </Popup>
+                </Marker>
               )}
 
               {geocodedStops.map((s) => {
