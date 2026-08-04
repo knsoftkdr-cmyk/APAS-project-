@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronDown, MoreHorizontal, Plus, Wallet } from "lucide-react";
+import { ChevronDown, MoreHorizontal, Plus, Wallet, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,6 +107,39 @@ const ERPFeeManagement = () => {
   // Student details modal (opened by clicking a row)
   const [detailsStudentId, setDetailsStudentId] = useState<string | null>(null);
 
+  // Edit Fee dialog (opened via the row's Edit action or from the details modal)
+  const [editOpen, setEditOpen] = useState(false);
+  const [editingFeeId, setEditingFeeId] = useState<string | null>(null);
+  const [editStudentName, setEditStudentName] = useState<string>("");
+  const [editForm, setEditForm] = useState(emptyForm);
+  const [editSaving, setEditSaving] = useState(false);
+
+  // Delete confirmation (for a single fee record)
+  const [deleteTarget, setDeleteTarget] = useState<FeeRecord | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  // Top-level tabs: Assign Fees / Fee Records / Payment History
+  const [activeTab, setActiveTab] = useState<"records" | "history">("records");
+
+  // Bulk Assign dialog (Assign Fees tab)
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [bulkClass, setBulkClass] = useState("");
+  const [bulkSection, setBulkSection] = useState(""); // "" = pick one, "ALL" = every section
+  const [bulkDueDate, setBulkDueDate] = useState("");
+  const [bulkInclude, setBulkInclude] = useState({
+    course_amount: false,
+    transport_amount: false,
+    other_amount: false,
+    uniform_amount: false,
+    material_amount: false,
+    exam_amount: false,
+  });
+  const [bulkForm, setBulkForm] = useState(emptyForm);
+
+  // Payment History tab
+  const [resendingId, setResendingId] = useState<string | null>(null);
+
   const loadFees = async (sid: string) => {
     const { data, error } = await supabase
       .from("fee_payments" as any)
@@ -204,11 +237,45 @@ const ERPFeeManagement = () => {
     );
   }, [form]);
 
+  // Same sync, for the Edit Fee dialog
+  const editBreakdownTotal = useMemo(() => {
+    return (
+      num(editForm.course_amount) +
+      num(editForm.transport_amount) +
+      num(editForm.other_amount) +
+      num(editForm.uniform_amount) +
+      num(editForm.material_amount) +
+      num(editForm.exam_amount)
+    );
+  }, [editForm]);
+
   const resetAddModal = () => {
     setForm(emptyForm);
     setPickedClass("");
     setPickedSection("");
     setPickedStudentId("");
+  };
+
+  const resetEditModal = () => {
+    setEditForm(emptyForm);
+    setEditingFeeId(null);
+    setEditStudentName("");
+  };
+
+  const openEditFee = (fee: FeeRecord) => {
+    setEditingFeeId(fee.id);
+    setEditStudentName(fee.student_name);
+    setEditForm({
+      amount_paid: String(fee.amount_paid ?? 0),
+      due_date: fee.due_date ? fee.due_date.slice(0, 10) : "",
+      course_amount: String(fee.course_amount ?? 0),
+      transport_amount: String(fee.transport_amount ?? 0),
+      other_amount: String(fee.other_amount ?? 0),
+      uniform_amount: String(fee.uniform_amount ?? 0),
+      material_amount: String(fee.material_amount ?? 0),
+      exam_amount: String(fee.exam_amount ?? 0),
+    });
+    setEditOpen(true);
   };
 
   useEffect(() => {
@@ -304,6 +371,196 @@ const ERPFeeManagement = () => {
     await loadFees(schoolId);
   };
 
+  const handleUpdateFee = async () => {
+    if (!editingFeeId) return;
+
+    const courseAmount = num(editForm.course_amount);
+    const transportAmount = num(editForm.transport_amount);
+    const otherAmount = num(editForm.other_amount);
+    const uniformAmount = num(editForm.uniform_amount);
+    const materialAmount = num(editForm.material_amount);
+    const examAmount = num(editForm.exam_amount);
+    const amountDue =
+      courseAmount + transportAmount + otherAmount + uniformAmount + materialAmount + examAmount;
+    const amountPaid = num(editForm.amount_paid);
+
+    if (amountDue <= 0) {
+      toast({ title: "Enter at least one fee particular amount", variant: "destructive" });
+      return;
+    }
+
+    setEditSaving(true);
+
+    const { error } = await supabase
+      .from("fee_payments" as any)
+      .update({
+        amount_due: amountDue,
+        amount_paid: amountPaid,
+        course_amount: courseAmount,
+        transport_amount: transportAmount,
+        other_amount: otherAmount,
+        uniform_amount: uniformAmount,
+        material_amount: materialAmount,
+        exam_amount: examAmount,
+        due_date: editForm.due_date || null,
+        status: deriveStatus(amountDue, amountPaid, editForm.due_date || null),
+      })
+      .eq("id", editingFeeId);
+
+    setEditSaving(false);
+
+    if (error) {
+      toast({ title: "Couldn't update fee record", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Fee record updated" });
+    resetEditModal();
+    setEditOpen(false);
+    await loadFees(schoolId);
+  };
+
+  const handleDeleteFee = async () => {
+    if (!deleteTarget) return;
+
+    setDeleting(true);
+    const { error } = await supabase
+      .from("fee_payments" as any)
+      .delete()
+      .eq("id", deleteTarget.id);
+    setDeleting(false);
+
+    if (error) {
+      toast({ title: "Couldn't delete fee record", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    toast({ title: "Fee record deleted" });
+    setDeleteTarget(null);
+    await loadFees(schoolId);
+  };
+
+  const bulkTargetStudents = useMemo(() => {
+    if (!bulkClass) return [];
+    return students.filter(
+      (s) => s.class === bulkClass && (bulkSection === "ALL" || s.section === bulkSection)
+    );
+  }, [students, bulkClass, bulkSection]);
+
+  const resetBulkModal = () => {
+    setBulkClass("");
+    setBulkSection("");
+    setBulkDueDate("");
+    setBulkInclude({
+      course_amount: false,
+      transport_amount: false,
+      other_amount: false,
+      uniform_amount: false,
+      material_amount: false,
+      exam_amount: false,
+    });
+    setBulkForm(emptyForm);
+  };
+
+  const handleBulkAssign = async () => {
+    if (!bulkClass || !bulkSection) {
+      toast({ title: "Select a class and section", variant: "destructive" });
+      return;
+    }
+    if (bulkTargetStudents.length === 0) {
+      toast({ title: "No students found for that class/section", variant: "destructive" });
+      return;
+    }
+
+    const breakdown = {
+      course_amount: bulkInclude.course_amount ? num(bulkForm.course_amount) : 0,
+      transport_amount: bulkInclude.transport_amount ? num(bulkForm.transport_amount) : 0,
+      other_amount: bulkInclude.other_amount ? num(bulkForm.other_amount) : 0,
+      uniform_amount: bulkInclude.uniform_amount ? num(bulkForm.uniform_amount) : 0,
+      material_amount: bulkInclude.material_amount ? num(bulkForm.material_amount) : 0,
+      exam_amount: bulkInclude.exam_amount ? num(bulkForm.exam_amount) : 0,
+    };
+    const amountDue = Object.values(breakdown).reduce((a, b) => a + b, 0);
+
+    if (amountDue <= 0) {
+      toast({ title: "Select at least one category and enter an amount", variant: "destructive" });
+      return;
+    }
+
+    setBulkSaving(true);
+    const { data: sessionData } = await supabase.auth.getSession();
+
+    // Skip students who already have a pending record for this same due date
+    // (safe default so re-clicking bulk-assign doesn't create duplicates).
+    const studentIds = bulkTargetStudents.map((s) => s.id);
+    const { data: existingPending } = await supabase
+      .from("fee_payments" as any)
+      .select("student_id")
+      .in("student_id", studentIds)
+      .eq("status", "pending")
+      .eq("due_date", bulkDueDate || null);
+
+    const alreadyHave = new Set(((existingPending as any[]) || []).map((r) => r.student_id));
+    const targets = bulkTargetStudents.filter((s) => !alreadyHave.has(s.id));
+
+    if (targets.length === 0) {
+      setBulkSaving(false);
+      toast({
+        title: "Nothing to assign",
+        description: "Every student in this selection already has a pending record for this due date.",
+      });
+      return;
+    }
+
+    const rows = targets.map((s) => ({
+      school_id: schoolId,
+      student_id: s.id,
+      student_name: s.full_name,
+      class_grade: s.class,
+      section: s.section,
+      amount_due: amountDue,
+      amount_paid: 0,
+      ...breakdown,
+      due_date: bulkDueDate || null,
+      status: deriveStatus(amountDue, 0, bulkDueDate || null),
+      created_by: sessionData.session?.user.id,
+    }));
+
+    const { error } = await supabase.from("fee_payments" as any).insert(rows);
+    setBulkSaving(false);
+
+    if (error) {
+      toast({ title: "Couldn't bulk-assign fee", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const skipped = bulkTargetStudents.length - targets.length;
+    toast({
+      title: `Fee assigned to ${targets.length} student${targets.length === 1 ? "" : "s"}`,
+      description:
+        skipped > 0
+          ? `${skipped} student${skipped === 1 ? "" : "s"} skipped (already pending for this due date)`
+          : undefined,
+    });
+    resetBulkModal();
+    setBulkOpen(false);
+    await loadFees(schoolId);
+  };
+
+  const handleResendReceipt = async (fee: FeeRecord) => {
+    setResendingId(fee.id);
+    const { error } = await supabase.functions.invoke("resend-fee-receipt", {
+      body: { fee_payment_id: fee.id },
+    });
+    setResendingId(null);
+
+    if (error) {
+      toast({ title: "Couldn't resend receipt", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Receipt resent", description: `Emailed to ${fee.student_name}'s registered contact` });
+  };
+
   const statusBadgeClasses = (status: string) => {
     if (status === "paid") return "bg-emerald-50 text-emerald-700";
     if (status === "overdue") return "bg-red-50 text-red-700";
@@ -328,19 +585,138 @@ const ERPFeeManagement = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setAddOpen(true)}
-            className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white rounded-full px-5"
-          >
-            <Plus className="h-4 w-4 mr-1" /> Add
-          </Button>
+          {activeTab === "records" && (
+            <>
+              <Button
+                onClick={() => setAddOpen(true)}
+                className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white rounded-full px-5"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Individual Fee
+              </Button>
+              <Button variant="outline" onClick={() => setBulkOpen(true)} className="rounded-full px-5">
+                Bulk Assign to Class
+              </Button>
+            </>
+          )}
           <Button variant="outline" size="icon" className="rounded-lg">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </div>
       </div>
 
-      {fees.length === 0 ? (
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
+        {([
+          { key: "records", label: "Fee Records" },
+          { key: "history", label: "Payment History" },
+        ] as const).map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setActiveTab(t.key)}
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+              activeTab === t.key
+                ? "border-blue-600 text-blue-700"
+                : "border-transparent text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+
+
+      {activeTab === "history" && (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50 border-b border-slate-200">
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Class</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid Date</TableHead>
+                <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Receipt</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {fees.filter((f) => f.status === "paid").length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-slate-400 py-8">
+                    No payments recorded yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                fees
+                  .filter((f) => f.status === "paid")
+                  .map((f) => (
+                    <TableRow key={f.id} className="border-b border-slate-100 transition-colors hover:bg-slate-50">
+                      <TableCell className="font-medium text-slate-900">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                            {f.student_name?.charAt(0)?.toUpperCase() || "?"}
+                          </div>
+                          {f.student_name}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-slate-600">{f.class_grade || "—"}</TableCell>
+                      <TableCell className="text-slate-600">{f.section || "—"}</TableCell>
+                      <TableCell className="font-medium text-emerald-600">₹{f.amount_paid.toLocaleString()}</TableCell>
+                      <TableCell className="text-slate-600">
+                        {f.due_date ? new Date(f.due_date).toLocaleDateString() : "—"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={resendingId === f.id}
+                          onClick={() => handleResendReceipt(f)}
+                        >
+                          {resendingId === f.id ? "Sending..." : "Resend Receipt"}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {activeTab === "records" && fees.length > 0 && (() => {
+        const pendingCount = fees.filter((fee) => fee.status?.toLowerCase() === "pending").length;
+        const totalDue = fees.reduce(
+          (sum, fee) => sum + Math.max(fee.amount_due - fee.amount_paid, 0),
+          0
+        );
+        if (pendingCount === 0) return null;
+        return (
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Wallet className="h-4 w-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Pending Fees</p>
+                <p className="font-semibold text-slate-900">{pendingCount}</p>
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-red-50 flex items-center justify-center">
+                <Wallet className="h-4 w-4 text-red-600" />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500">Total Due</p>
+                <p className="font-semibold text-red-600">₹{totalDue.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {activeTab === "records" && (() => {
+        const pendingFees = fees.filter((fee) => fee.status?.toLowerCase() === "pending");
+        return pendingFees.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="max-w-md text-center">
             <div className="h-40 w-40 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-50 to-emerald-50 flex items-center justify-center">
@@ -362,47 +738,77 @@ const ERPFeeManagement = () => {
           </div>
         </div>
       ) : (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Section</TableHead>
-                <TableHead>Amount Due</TableHead>
-                <TableHead>Amount Paid</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
+              <TableRow className="bg-slate-50 border-b border-slate-200">
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Class</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Due</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Due Date</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {fees.map((fee) => (
+              {pendingFees.map((fee) => (
                 <TableRow
                   key={fee.id}
                   onClick={() => fee.student_id && setDetailsStudentId(fee.student_id)}
-                  className={fee.student_id ? "cursor-pointer hover:bg-slate-50" : ""}
+                  className={`border-b border-slate-100 transition-colors ${fee.student_id ? "cursor-pointer hover:bg-slate-50" : ""}`}
                 >
-                  <TableCell className="font-medium text-slate-900">{fee.student_name}</TableCell>
+                  <TableCell className="font-medium text-slate-900">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+                        {fee.student_name?.charAt(0)?.toUpperCase() || "?"}
+                      </div>
+                      {fee.student_name}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-slate-600">{fee.class_grade || "—"}</TableCell>
                   <TableCell className="text-slate-600">{fee.section || "—"}</TableCell>
-                  <TableCell className="text-slate-600">₹{fee.amount_due.toLocaleString()}</TableCell>
-                  <TableCell className="text-slate-600">₹{fee.amount_paid.toLocaleString()}</TableCell>
+                  <TableCell className="font-semibold text-red-600">
+                    ₹{Math.max(fee.amount_due - fee.amount_paid, 0).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="font-medium text-emerald-600">₹{fee.amount_paid.toLocaleString()}</TableCell>
                   <TableCell className="text-slate-600">
                     {fee.due_date ? new Date(fee.due_date).toLocaleDateString() : "—"}
                   </TableCell>
                   <TableCell>
                     <span
-                      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${statusBadgeClasses(fee.status)}`}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium capitalize ring-1 ring-inset ${statusBadgeClasses(fee.status)}`}
                     >
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
                       {fee.status}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => openEditFee(fee)}
+                    >
+                      <Pencil className="h-4 w-4 text-slate-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setDeleteTarget(fee)}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
-      )}
+      );
+      })()}
 
       {/* Add Fee dialog */}
       <Dialog
@@ -628,6 +1034,289 @@ const ERPFeeManagement = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Bulk Assign Fee dialog */}
+      <Dialog
+        open={bulkOpen}
+        onOpenChange={(open) => {
+          setBulkOpen(open);
+          if (!open) resetBulkModal();
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Bulk Assign Fee</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Class</Label>
+              <Select
+                value={bulkClass}
+                onValueChange={(val) => {
+                  setBulkClass(val);
+                  setBulkSection("");
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classOptions.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Section</Label>
+              <Select value={bulkSection} onValueChange={setBulkSection} disabled={!bulkClass}>
+                <SelectTrigger>
+                  <SelectValue placeholder={bulkClass ? "Select section" : "Select a class first"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">All Sections</SelectItem>
+                  {Array.from(
+                    new Set(students.filter((s) => s.class === bulkClass).map((s) => s.section).filter(Boolean) as string[])
+                  ).sort().map((s) => (
+                    <SelectItem key={s} value={s}>
+                      {s}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {bulkClass && bulkSection && (
+              <p className="text-xs text-slate-500">
+                This will target {bulkTargetStudents.length} student{bulkTargetStudents.length === 1 ? "" : "s"}.
+              </p>
+            )}
+
+            <div>
+              <Label className="mb-2 block">Fee Particulars (check to include)</Label>
+              <div className="grid grid-cols-2 gap-4">
+                {([
+                  ["course_amount", "Course Amount"],
+                  ["transport_amount", "Transport Amount"],
+                  ["other_amount", "Other Amount"],
+                  ["uniform_amount", "Uniform Amount"],
+                  ["material_amount", "Material Amount"],
+                  ["exam_amount", "Exam Amount"],
+                ] as const).map(([key, label]) => (
+                  <div key={key} className="space-y-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={bulkInclude[key]}
+                        onChange={(e) => setBulkInclude({ ...bulkInclude, [key]: e.target.checked })}
+                      />
+                      <Label className="text-xs text-slate-500 font-normal">{label}</Label>
+                    </div>
+                    <Input
+                      type="number"
+                      disabled={!bulkInclude[key]}
+                      value={bulkForm[key]}
+                      onChange={(e) => setBulkForm({ ...bulkForm, [key]: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="bulk_due_date">Due date</Label>
+              <Input
+                id="bulk_due_date"
+                type="date"
+                value={bulkDueDate}
+                onChange={(e) => setBulkDueDate(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBulkAssign}
+              disabled={bulkSaving}
+              className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white"
+            >
+              {bulkSaving ? "Assigning..." : "Assign Fee"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Fee dialog */}
+      <Dialog
+        open={editOpen}
+        onOpenChange={(open) => {
+          setEditOpen(open);
+          if (!open) resetEditModal();
+        }}
+      >
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              Edit Fee Record{editStudentName ? ` — ${editStudentName}` : ""}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label className="mb-2 block">Fee Particulars</Label>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit_course_amount" className="text-xs text-slate-500 font-normal">
+                    Course Amount
+                  </Label>
+                  <Input
+                    id="edit_course_amount"
+                    type="number"
+                    value={editForm.course_amount}
+                    onChange={(e) => setEditForm({ ...editForm, course_amount: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit_transport_amount" className="text-xs text-slate-500 font-normal">
+                    Transport Amount
+                  </Label>
+                  <Input
+                    id="edit_transport_amount"
+                    type="number"
+                    value={editForm.transport_amount}
+                    onChange={(e) => setEditForm({ ...editForm, transport_amount: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit_uniform_amount" className="text-xs text-slate-500 font-normal">
+                    Uniform Amount
+                  </Label>
+                  <Input
+                    id="edit_uniform_amount"
+                    type="number"
+                    value={editForm.uniform_amount}
+                    onChange={(e) => setEditForm({ ...editForm, uniform_amount: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit_material_amount" className="text-xs text-slate-500 font-normal">
+                    Material Amount
+                  </Label>
+                  <Input
+                    id="edit_material_amount"
+                    type="number"
+                    value={editForm.material_amount}
+                    onChange={(e) => setEditForm({ ...editForm, material_amount: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit_exam_amount" className="text-xs text-slate-500 font-normal">
+                    Exam Amount
+                  </Label>
+                  <Input
+                    id="edit_exam_amount"
+                    type="number"
+                    value={editForm.exam_amount}
+                    onChange={(e) => setEditForm({ ...editForm, exam_amount: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="edit_other_amount" className="text-xs text-slate-500 font-normal">
+                    Other Amount
+                  </Label>
+                  <Input
+                    id="edit_other_amount"
+                    type="number"
+                    value={editForm.other_amount}
+                    onChange={(e) => setEditForm({ ...editForm, other_amount: e.target.value })}
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Amount due (total)</Label>
+                <div className="flex h-10 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
+                  ₹{editBreakdownTotal.toLocaleString()}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="edit_amount_paid">Amount paid</Label>
+                <Input
+                  id="edit_amount_paid"
+                  type="number"
+                  value={editForm.amount_paid}
+                  onChange={(e) => setEditForm({ ...editForm, amount_paid: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="edit_due_date">Due date</Label>
+              <Input
+                id="edit_due_date"
+                type="date"
+                value={editForm.due_date}
+                onChange={(e) => setEditForm({ ...editForm, due_date: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateFee}
+              disabled={editSaving}
+              className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white"
+            >
+              {editSaving ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete fee record?</DialogTitle>
+          </DialogHeader>
+          {deleteTarget && (
+            <p className="text-sm text-slate-600">
+              This will permanently delete the fee record for{" "}
+              <span className="font-medium text-slate-900">{deleteTarget.student_name}</span> due{" "}
+              {deleteTarget.due_date ? new Date(deleteTarget.due_date).toLocaleDateString() : "—"}{" "}
+              (₹{deleteTarget.amount_due.toLocaleString()} due, ₹
+              {deleteTarget.amount_paid.toLocaleString()} paid). This cannot be undone.
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteFee} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Student details dialog — opened by clicking a row */}
       <Dialog open={!!detailsStudentId} onOpenChange={(open) => !open && setDetailsStudentId(null)}>
         <DialogContent className="sm:max-w-lg">
@@ -696,9 +1385,27 @@ const ERPFeeManagement = () => {
                             ₹{f.amount_due.toLocaleString()} due · ₹{f.amount_paid.toLocaleString()} paid
                           </p>
                         </div>
-                        <Badge variant="secondary" className={`capitalize ${statusBadgeClasses(f.status)}`}>
-                          {f.status}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge variant="secondary" className={`capitalize ${statusBadgeClasses(f.status)}`}>
+                            {f.status}
+                          </Badge>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => openEditFee(f)}
+                          >
+                            <Pencil className="h-3.5 w-3.5 text-slate-500" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => setDeleteTarget(f)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="grid grid-cols-3 gap-x-3 gap-y-1 text-xs text-slate-500 border-t border-slate-100 pt-2">
                         <span>Course ₹{(f.course_amount ?? 0).toLocaleString()}</span>

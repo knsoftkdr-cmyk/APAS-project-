@@ -62,6 +62,20 @@ const emptyParticulars = {
   exam_amount: "0",
 };
 
+const loadRazorpayScript = (): Promise<boolean> => {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
+
 export default function ParentFeePayment() {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -147,6 +161,7 @@ export default function ParentFeePayment() {
       material_amount: includeMaterial ? num(particulars.material_amount) : 0,
       exam_amount: includeExam ? num(particulars.exam_amount) : 0,
     };
+
     const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
 
     if (total <= 0) {
@@ -161,35 +176,152 @@ export default function ParentFeePayment() {
     setSubmitting(true);
     const { data: sessionData } = await supabase.auth.getSession();
 
-    const { error } = await supabase.from("fee_payments" as any).insert({
-      school_id: student.school_id,
-      student_id: student.student_id,
-      student_name: student.full_name,
-      class_grade: student.class,
-      section: student.section,
-      amount_due: total,
-      amount_paid: 0,
-      due_date: new Date().toISOString().slice(0, 10),
-      status: "pending",
-      created_by: sessionData.session?.user.id,
-      ...breakdown,
-    });
+    // Clean up any abandoned pending attempts for this student before
+    // creating a new one, so repeated clicks / cancelled checkouts don't
+    // pile up and inflate the due amount.
+    await supabase
+      .from("fee_payments" as any)
+      .delete()
+      .eq("student_id", student.student_id)
+      .eq("status", "pending");
 
-    setSubmitting(false);
+    const { data: inserted, error } = await supabase
+      .from("fee_payments" as any)
+      .insert({
+        school_id: student.school_id,
+        student_id: student.student_id,
+        student_name: student.full_name,
+        class_grade: student.class,
+        section: student.section,
+        amount_due: total,
+        amount_paid: 0,
+        due_date: new Date().toISOString().slice(0, 10),
+        status: "pending",
+        created_by: sessionData.session?.user.id,
+        ...breakdown,
+      })
+      .select("id")
+      .single();
 
-    if (error) {
-      toast({ title: "Couldn't create payment request", description: error.message, variant: "destructive" });
+    if (error || !inserted) {
+      setSubmitting(false);
+      toast({
+        title: "Couldn't create payment request",
+        description: error?.message,
+        variant: "destructive",
+      });
       return;
     }
 
-    toast({
-      title: mode === "gateway" ? "Payment request created" : "Finance plan requested",
-      description:
-        mode === "gateway"
-          ? "Online checkout isn't connected yet — this fee request has been recorded and is visible to the school."
-          : "Your installment request has been recorded for the school to review.",
+    if (mode === "finance") {
+      setSubmitting(false);
+      toast({
+        title: "Finance plan requested",
+        description: "Your installment request has been recorded for the school to review.",
+      });
+      navigate("/dashboard");
+      return;
+    }
+
+    // mode === "gateway" — launch the real Razorpay checkout
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      setSubmitting(false);
+      toast({
+        title: "Couldn't load payment gateway",
+        description: "Please check your connection and try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data: orderData, error: orderError } = await supabase.functions.invoke(
+      "create-razorpay-order",
+      { body: { fee_payment_id: inserted.id } }
+    );
+
+    if (orderError || !orderData || (orderData as any).error) {
+      setSubmitting(false);
+      toast({
+        title: "Couldn't start payment",
+        description: (orderData as any)?.error || orderError?.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { order_id, amount, currency, key_id } = orderData as {
+      order_id: string;
+      amount: number;
+      currency: string;
+      key_id: string;
+    };
+
+    const rzp = new (window as any).Razorpay({
+      key: key_id,
+      amount,
+      currency,
+      order_id,
+      name: student.branch_name || "School Fee Payment",
+      description: "Fee payment for " + student.full_name,
+      prefill: {
+        name: student.father_name || student.mother_name || student.full_name,
+        email: student.contact_email || undefined,
+        contact: student.mobile || undefined,
+      },
+      handler: async (response: any) => {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          "verify-razorpay-payment",
+          {
+            body: {
+              fee_payment_id: inserted.id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+          }
+        );
+
+        setSubmitting(false);
+
+        if (verifyError || !verifyData || (verifyData as any).error) {
+          toast({
+            title: "Payment verification failed",
+            description:
+              (verifyData as any)?.error ||
+              verifyError?.message ||
+              "Please contact the school if your payment was deducted.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        toast({ title: "Payment successful", description: "Your fee payment has been recorded." });
+        navigate("/dashboard");
+      },
+      modal: {
+        ondismiss: () => {
+          setSubmitting(false);
+          toast({
+            title: "Payment cancelled",
+            description:
+              "Your fee request has been saved as pending — you can complete payment anytime from your dashboard.",
+          });
+        },
+      },
+      theme: { color: "#2563eb" },
     });
-    navigate("/dashboard");
+
+    rzp.on("payment.failed", () => {
+      setSubmitting(false);
+      toast({
+        title: "Payment failed",
+        description: "Please try again or contact the school if the issue persists.",
+        variant: "destructive",
+      });
+    });
+
+    rzp.open();
   };
 
   if (loading) {

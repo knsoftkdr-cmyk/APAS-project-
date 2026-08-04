@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ interface ERPLayoutProps {
 
 const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: ERPLayoutProps) => {
   const navigate = useNavigate();
+  const [orgMenuOpen, setOrgMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -75,14 +76,41 @@ const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: E
             />
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-amber-600 font-medium hidden sm:inline">Trial Mode</span>
-            <Bell className="h-5 w-5 text-slate-400" />
-            <Settings className="h-5 w-5 text-slate-400" />
-            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+          <div className="flex items-center gap-4 relative">
+            <button
+              onClick={() => setOrgMenuOpen((v) => !v)}
+              className="flex items-center gap-1 text-sm font-medium text-slate-700 hover:text-slate-900"
+            >
               {orgName}
               <ChevronDown className="h-4 w-4 text-slate-400" />
-            </div>
+            </button>
+            {orgMenuOpen && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setOrgMenuOpen(false)}
+                />
+                <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                  <button
+                    onClick={() => {
+                      setOrgMenuOpen(false);
+                      navigate("/erp/settings");
+                    }}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 text-left"
+                  >
+                    <Settings className="h-4 w-4 text-slate-400" />
+                    Organization Settings
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left border-t border-slate-100"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </header>
 

@@ -1,29 +1,42 @@
 // _shared/email.ts
-// Thin adapter around Resend's REST API.
-
+// SMTP adapter using Hostinger mailbox via denomailer.
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 import type { EmailPayload } from "./types.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const FROM_ADDRESS = Deno.env.get("RESEND_FROM_ADDRESS") ?? "APAS <notifications@yourdomain.com>";
+const SMTP_HOST = Deno.env.get("SMTP_HOST")!;
+const SMTP_PORT = Number(Deno.env.get("SMTP_PORT") ?? "465");
+const SMTP_USERNAME = Deno.env.get("SMTP_USERNAME")!;
+const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD")!;
+const FROM_ADDRESS = Deno.env.get("SMTP_FROM_ADDRESS") ?? `APAS <${SMTP_USERNAME}>`;
 
 export async function sendEmail(payload: EmailPayload): Promise<{ id: string }> {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-      "Content-Type": "application/json",
+  const client = new SMTPClient({
+    connection: {
+      hostname: SMTP_HOST,
+      port: SMTP_PORT,
+      tls: true,
+      auth: {
+        username: SMTP_USERNAME,
+        password: SMTP_PASSWORD,
+      },
     },
-    body: JSON.stringify({
-      from: FROM_ADDRESS,
-      to: [payload.to],
-      subject: payload.subject,
-      text: payload.body,
-    }),
   });
 
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(`Resend error: ${JSON.stringify(result)}`);
+  try {
+    await client.send({
+      from: FROM_ADDRESS,
+      to: payload.to,
+      subject: payload.subject,
+      content: payload.body,
+      attachments: (payload.attachments ?? []).map((a) => ({
+        filename: a.filename,
+        content: a.content,
+        encoding: "base64",
+      })),
+    });
+  } finally {
+    await client.close();
   }
-  return result;
+
+  return { id: "smtp-sent" };
 }
