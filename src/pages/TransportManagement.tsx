@@ -29,7 +29,9 @@ import {
   MapPin,
   ArrowUp,
   ArrowDown,
-  Loader2
+  Loader2,
+  Upload,
+  ExternalLink
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,6 +48,20 @@ interface Vehicle {
   fitness_expiry: string | null;
   permit_expiry: string | null;
   status: string;
+  fuel_type: string | null;
+  chassis_number: string | null;
+  engine_number: string | null;
+  gps_device_id: string | null;
+  insurance_number: string | null;
+  insurance_document_url: string | null;
+  fitness_certificate_number: string | null;
+  fitness_document_url: string | null;
+  puc_number: string | null;
+  puc_expiry: string | null;
+  puc_document_url: string | null;
+  rc_owner_name: string | null;
+  rc_registration_date: string | null;
+  rc_document_url: string | null;
 }
 
 interface Driver {
@@ -58,6 +74,17 @@ interface Driver {
   address: string | null;
   status: string;
   profile_id: string | null;
+  photo_url: string | null;
+  license_document_url: string | null;
+  license_verification_status: string | null;
+  background_verification_status: string | null;
+  background_verification_document_url: string | null;
+  medical_certificate_number: string | null;
+  medical_certificate_expiry: string | null;
+  medical_certificate_document_url: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  emergency_contact_relation: string | null;
 }
 
 interface RouteStop {
@@ -178,11 +205,21 @@ interface Assignment {
 const EMPTY_VEHICLE = {
   registration_number: "", vehicle_type: "bus", capacity: "",
   insurance_expiry: "", fitness_expiry: "", permit_expiry: "", status: "active",
+  fuel_type: "diesel", chassis_number: "", engine_number: "", gps_device_id: "",
+  insurance_number: "", insurance_document_url: "",
+  fitness_certificate_number: "", fitness_document_url: "",
+  puc_number: "", puc_expiry: "", puc_document_url: "",
+  rc_owner_name: "", rc_registration_date: "", rc_document_url: "",
 };
 
 const EMPTY_DRIVER = {
   name: "", phone: "", license_number: "", license_expiry: "", address: "", status: "active",
   email: "", password: "",
+  photo_url: "", license_document_url: "",
+  license_verification_status: "pending", background_verification_status: "pending",
+  background_verification_document_url: "",
+  medical_certificate_number: "", medical_certificate_expiry: "", medical_certificate_document_url: "",
+  emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_relation: "",
 };
 
 // ============================================================
@@ -258,6 +295,99 @@ function GlowCard({ children, className = "" }: { children: React.ReactNode; cla
 }
 
 // ============================================================
+// DOCUMENT UPLOAD FIELD (private storage, signed URL on view)
+// ============================================================
+function DocumentUploadField({
+  label, bucket, folder, value, onChange, table, recordId, column,
+}: {
+  label: string;
+  bucket: string;
+  folder: string;
+  value: string;
+  onChange: (path: string) => void;
+  table: "vehicles" | "drivers";
+  recordId?: string;
+  column: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const slug = label.replace(/\s+/g, "_").toLowerCase();
+      const path = `${folder}/${slug}-${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true });
+      if (error) throw error;
+      onChange(path);
+      toast.success(`${label} uploaded`);
+    } catch (err: any) {
+      toast.error(err.message || `Failed to upload ${label}`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleView = async () => {
+    const { data, error } = await supabase.storage.from(bucket).createSignedUrl(value, 60);
+    if (error || !data?.signedUrl) {
+      toast.error("Failed to open document");
+      return;
+    }
+    window.open(data.signedUrl, "_blank");
+  };
+
+  const handleDelete = async () => {
+    if (!value) return;
+    const { error } = await supabase.storage.from(bucket).remove([value]);
+    if (error) {
+      toast.error("Failed to delete document");
+      return;
+    }
+    if (recordId) {
+      const { error: dbError } = await supabase.from(table).update({ [column]: null }).eq("id", recordId);
+      if (dbError) {
+        toast.error("Removed file but failed to update the saved record — please click Save to sync.");
+      }
+    }
+    onChange("");
+    toast.success(`${label} removed`);
+  };
+
+  return (
+    <div>
+      <Label className="flex items-center gap-1"><Upload className="h-3 w-3" /> {label}</Label>
+      {value && !uploading ? (
+        <div className="flex items-center gap-2 mt-1 border rounded-md px-2 py-1.5 bg-emerald-50/50">
+          <span className="text-xs text-emerald-700 flex-1 truncate">Document uploaded</span>
+          <button
+            type="button"
+            onClick={handleView}
+            className="text-xs text-emerald-600 hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            <ExternalLink className="h-3 w-3" /> View
+          </button>
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="text-xs text-red-500 hover:underline inline-flex items-center gap-1 shrink-0"
+          >
+            <Trash2 className="h-3 w-3" /> Delete
+          </button>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 mt-1">
+          <Input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFile} disabled={uploading} className="text-xs" />
+          {uploading && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // VEHICLES TAB
 // ============================================================
 export function VehiclesTab({ schoolId }: { schoolId?: string }) {
@@ -265,6 +395,8 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Vehicle | null>(null);
   const [form, setForm] = useState(EMPTY_VEHICLE);
+  const [draftId] = useState(() => crypto.randomUUID());
+  const folderId = editing?.id || draftId;
 
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ["transport-vehicles", schoolId],
@@ -291,10 +423,25 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
         fitness_expiry: form.fitness_expiry || null,
         permit_expiry: form.permit_expiry || null,
         status: form.status,
+        fuel_type: form.fuel_type || null,
+        chassis_number: form.chassis_number || null,
+        engine_number: form.engine_number || null,
+        gps_device_id: form.gps_device_id || null,
+        insurance_number: form.insurance_number || null,
+        insurance_document_url: form.insurance_document_url || null,
+        fitness_certificate_number: form.fitness_certificate_number || null,
+        fitness_document_url: form.fitness_document_url || null,
+        puc_number: form.puc_number || null,
+        puc_expiry: form.puc_expiry || null,
+        puc_document_url: form.puc_document_url || null,
+        rc_owner_name: form.rc_owner_name || null,
+        rc_registration_date: form.rc_registration_date || null,
+        rc_document_url: form.rc_document_url || null,
       };
       if (editing) {
-        const { error } = await supabase.from("vehicles").update(payload).eq("id", editing.id);
+        const { data, error } = await supabase.from("vehicles").update(payload).eq("id", editing.id).select();
         if (error) throw error;
+        if (!data || data.length === 0) throw new Error("Update matched 0 rows — check RLS/session (are you logged in as principal/admin/school_admin for this school?)");
       } else {
         const { error } = await supabase.from("vehicles").insert(payload);
         if (error) throw error;
@@ -332,6 +479,20 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
       fitness_expiry: v.fitness_expiry || "",
       permit_expiry: v.permit_expiry || "",
       status: v.status,
+      fuel_type: v.fuel_type || "diesel",
+      chassis_number: v.chassis_number || "",
+      engine_number: v.engine_number || "",
+      gps_device_id: v.gps_device_id || "",
+      insurance_number: v.insurance_number || "",
+      insurance_document_url: v.insurance_document_url || "",
+      fitness_certificate_number: v.fitness_certificate_number || "",
+      fitness_document_url: v.fitness_document_url || "",
+      puc_number: v.puc_number || "",
+      puc_expiry: v.puc_expiry || "",
+      puc_document_url: v.puc_document_url || "",
+      rc_owner_name: v.rc_owner_name || "",
+      rc_registration_date: v.rc_registration_date || "",
+      rc_document_url: v.rc_document_url || "",
     });
     setOpen(true);
   };
@@ -357,7 +518,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
               <Plus className="h-4 w-4" /> Add Vehicle
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing ? "Edit Vehicle" : "Add Vehicle"}</DialogTitle>
             </DialogHeader>
@@ -412,6 +573,127 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                     <SelectItem value="maintenance">Maintenance</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">RC & Identification</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Fuel Type</Label>
+                    <Select value={form.fuel_type} onValueChange={(v) => setForm({ ...form, fuel_type: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="diesel">Diesel</SelectItem>
+                        <SelectItem value="petrol">Petrol</SelectItem>
+                        <SelectItem value="cng">CNG</SelectItem>
+                        <SelectItem value="electric">Electric</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>GPS Device ID</Label>
+                    <Input value={form.gps_device_id}
+                      onChange={(e) => setForm({ ...form, gps_device_id: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <Label>Chassis Number</Label>
+                    <Input value={form.chassis_number}
+                      onChange={(e) => setForm({ ...form, chassis_number: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Engine Number</Label>
+                    <Input value={form.engine_number}
+                      onChange={(e) => setForm({ ...form, engine_number: e.target.value })} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div>
+                    <Label>RC Owner Name</Label>
+                    <Input value={form.rc_owner_name}
+                      onChange={(e) => setForm({ ...form, rc_owner_name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>RC Registration Date</Label>
+                    <Input type="date" value={form.rc_registration_date}
+                      onChange={(e) => setForm({ ...form, rc_registration_date: e.target.value })} />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <DocumentUploadField
+                    label="RC Document"
+                    bucket="transport-documents"
+                    folder={`${schoolId}/vehicles/${folderId}`}
+                    value={form.rc_document_url}
+                    onChange={(path) => setForm({ ...form, rc_document_url: path })}
+                    table="vehicles"
+                    recordId={editing?.id}
+                    column="rc_document_url"
+                  />
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Insurance</p>
+                <div>
+                  <Label>Insurance Number</Label>
+                  <Input value={form.insurance_number}
+                    onChange={(e) => setForm({ ...form, insurance_number: e.target.value })} />
+                </div>
+                <DocumentUploadField
+                  label="Insurance Document"
+                  bucket="transport-documents"
+                  folder={`${schoolId}/vehicles/${folderId}`}
+                  value={form.insurance_document_url}
+                  onChange={(path) => setForm({ ...form, insurance_document_url: path })}
+                  table="vehicles"
+                  recordId={editing?.id}
+                  column="insurance_document_url"
+                />
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Fitness Certificate</p>
+                <div>
+                  <Label>Fitness Certificate Number</Label>
+                  <Input value={form.fitness_certificate_number}
+                    onChange={(e) => setForm({ ...form, fitness_certificate_number: e.target.value })} />
+                </div>
+                <DocumentUploadField
+                  label="Fitness Document"
+                  bucket="transport-documents"
+                  folder={`${schoolId}/vehicles/${folderId}`}
+                  value={form.fitness_document_url}
+                  onChange={(path) => setForm({ ...form, fitness_document_url: path })}
+                  table="vehicles"
+                  recordId={editing?.id}
+                  column="fitness_document_url"
+                />
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Pollution Certificate (PUC)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>PUC Number</Label>
+                    <Input value={form.puc_number}
+                      onChange={(e) => setForm({ ...form, puc_number: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>PUC Expiry</Label>
+                    <Input type="date" value={form.puc_expiry}
+                      onChange={(e) => setForm({ ...form, puc_expiry: e.target.value })} />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <DocumentUploadField
+                    label="PUC Document"
+                    bucket="transport-documents"
+                    folder={`${schoolId}/vehicles/${folderId}`}
+                    value={form.puc_document_url}
+                    onChange={(path) => setForm({ ...form, puc_document_url: path })}
+                    table="vehicles"
+                    recordId={editing?.id}
+                    column="puc_document_url"
+                  />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -483,6 +765,8 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Driver | null>(null);
   const [form, setForm] = useState(EMPTY_DRIVER);
+  const [draftId] = useState(() => crypto.randomUUID());
+  const folderId = editing?.id || draftId;
 
   const { data: drivers, isLoading } = useQuery({
     queryKey: ["transport-drivers", schoolId],
@@ -502,10 +786,12 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
         school_id: schoolId,
         ...driverFields,
         license_expiry: form.license_expiry || null,
+        medical_certificate_expiry: form.medical_certificate_expiry || null,
       };
       if (editing) {
-        const { error } = await supabase.from("drivers").update(payload).eq("id", editing.id);
+        const { data, error } = await supabase.from("drivers").update(payload).eq("id", editing.id).select();
         if (error) throw error;
+        if (!data || data.length === 0) throw new Error("Update matched 0 rows — check RLS/session (are you logged in as principal/admin/school_admin for this school?)");
       } else {
         let profileId: string | null = null;
         if (email && password) {
@@ -548,6 +834,16 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
       name: d.name, phone: d.phone || "", license_number: d.license_number || "",
       license_expiry: d.license_expiry || "", address: d.address || "", status: d.status,
       email: "", password: "",
+      photo_url: d.photo_url || "", license_document_url: d.license_document_url || "",
+      license_verification_status: d.license_verification_status || "pending",
+      background_verification_status: d.background_verification_status || "pending",
+      background_verification_document_url: d.background_verification_document_url || "",
+      medical_certificate_number: d.medical_certificate_number || "",
+      medical_certificate_expiry: d.medical_certificate_expiry || "",
+      medical_certificate_document_url: d.medical_certificate_document_url || "",
+      emergency_contact_name: d.emergency_contact_name || "",
+      emergency_contact_phone: d.emergency_contact_phone || "",
+      emergency_contact_relation: d.emergency_contact_relation || "",
     });
     setOpen(true);
   };
@@ -573,7 +869,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               <Plus className="h-4 w-4" /> Add Driver
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editing ? "Edit Driver" : "Add Driver"}</DialogTitle>
             </DialogHeader>
@@ -613,6 +909,104 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               <div>
                 <Label>Address</Label>
                 <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Verification</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>License Verification Status</Label>
+                    <Select value={form.license_verification_status}
+                      onValueChange={(v) => setForm({ ...form, license_verification_status: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Background Verification Status</Label>
+                    <Select value={form.background_verification_status}
+                      onValueChange={(v) => setForm({ ...form, background_verification_status: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="rejected">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <DocumentUploadField
+                    label="License Document"
+                    bucket="transport-documents"
+                    folder={`${schoolId}/drivers/${folderId}`}
+                    value={form.license_document_url}
+                    onChange={(path) => setForm({ ...form, license_document_url: path })}
+                    table="drivers"
+                    recordId={editing?.id}
+                    column="license_document_url"
+                  />
+                  <DocumentUploadField
+                    label="Background Verification Document"
+                    bucket="transport-documents"
+                    folder={`${schoolId}/drivers/${folderId}`}
+                    value={form.background_verification_document_url}
+                    onChange={(path) => setForm({ ...form, background_verification_document_url: path })}
+                    table="drivers"
+                    recordId={editing?.id}
+                    column="background_verification_document_url"
+                  />
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Medical Certificate</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Certificate Number</Label>
+                    <Input value={form.medical_certificate_number}
+                      onChange={(e) => setForm({ ...form, medical_certificate_number: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Expiry Date</Label>
+                    <Input type="date" value={form.medical_certificate_expiry}
+                      onChange={(e) => setForm({ ...form, medical_certificate_expiry: e.target.value })} />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <DocumentUploadField
+                    label="Medical Certificate Document"
+                    bucket="transport-documents"
+                    folder={`${schoolId}/drivers/${folderId}`}
+                    value={form.medical_certificate_document_url}
+                    onChange={(path) => setForm({ ...form, medical_certificate_document_url: path })}
+                    table="drivers"
+                    recordId={editing?.id}
+                    column="medical_certificate_document_url"
+                  />
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Emergency Contact</p>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <Label>Name</Label>
+                    <Input value={form.emergency_contact_name}
+                      onChange={(e) => setForm({ ...form, emergency_contact_name: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Phone</Label>
+                    <Input value={form.emergency_contact_phone}
+                      onChange={(e) => setForm({ ...form, emergency_contact_phone: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Relation</Label>
+                    <Input value={form.emergency_contact_relation}
+                      onChange={(e) => setForm({ ...form, emergency_contact_relation: e.target.value })} />
+                  </div>
+                </div>
               </div>
               {!editing && (
                 <div className="border-t pt-3 space-y-3">
@@ -655,6 +1049,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>License No.</TableHead>
                 <TableHead>License Expiry</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Verification</TableHead>
                 <TableHead>App Login</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -670,6 +1065,22 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                     <Badge variant={d.status === "active" ? "default" : "secondary"} className="capitalize">
                       {d.status}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      <Badge
+                        variant={d.license_verification_status === "verified" ? "default" : "secondary"}
+                        className={`capitalize text-[10px] ${d.license_verification_status === "verified" ? "bg-emerald-600" : ""}`}
+                      >
+                        License: {d.license_verification_status || "pending"}
+                      </Badge>
+                      <Badge
+                        variant={d.background_verification_status === "verified" ? "default" : "secondary"}
+                        className={`capitalize text-[10px] ${d.background_verification_status === "verified" ? "bg-emerald-600" : ""}`}
+                      >
+                        BGV: {d.background_verification_status || "pending"}
+                      </Badge>
+                    </div>
                   </TableCell>
                   <TableCell>
                     {d.profile_id ? (
@@ -690,7 +1101,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               ))}
               {drivers?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No drivers added yet.
                   </TableCell>
                 </TableRow>
