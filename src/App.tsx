@@ -35,6 +35,7 @@ const Login = lazy(() => import("./pages/Login"));
 const RequestDemo = lazy(() => import("./pages/RequestDemo"));
 const ERPDashboard = lazy(() => import("./pages/ERPDashboard"));
 const ERPPeople = lazy(() => import("./pages/ERPPeople"));
+const ERPAdmissions = lazy(() => import("./pages/ERPAdmissions"));
 const Register = lazy(() => import("./pages/Register"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const StudentDashboard = lazy(() => import("./pages/StudentDashboard"));
@@ -190,6 +191,7 @@ export default function App() {
                       <Route path="/request-demo" element={<RequestDemo />} />
                       <Route path="/erp/dashboard" element={<ERPDashboard />} />
                       <Route path="/erp/people" element={<ERPPeople />} />
+                      <Route path="/erp/admissions" element={<ERPAdmissions />} />
                       <Route path="/erp/fees" element={<ERPFeeManagement />} />
                       <Route path="/erp/transport" element={<ERPTransport />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
