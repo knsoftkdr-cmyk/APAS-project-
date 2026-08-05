@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bus, MapPin, Loader2, FileText, ExternalLink } from "lucide-react";
+import { Bus, MapPin, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface DriverRow {
@@ -34,34 +34,6 @@ interface RouteStop {
   sequence_number: number;
   pickup_time: string | null;
   drop_time: string | null;
-}
-
-function DriverDocumentRow({ label, path }: { label: string; path: string | null }) {
-  const handleView = async () => {
-    if (!path) return;
-    const { data, error } = await supabase.storage.from("transport-documents").createSignedUrl(path, 60);
-    if (error || !data?.signedUrl) {
-      toast.error("Failed to open document");
-      return;
-    }
-    window.open(data.signedUrl, "_blank");
-  };
-  return (
-    <div className="flex items-center justify-between border-b last:border-b-0 py-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      {path ? (
-        <button
-          type="button"
-          onClick={handleView}
-          className="text-emerald-600 hover:underline inline-flex items-center gap-1"
-        >
-          <ExternalLink className="h-3.5 w-3.5" /> View
-        </button>
-      ) : (
-        <span className="text-xs text-muted-foreground">Not uploaded</span>
-      )}
-    </div>
-  );
 }
 
 export default function DriverDashboard() {
@@ -293,41 +265,6 @@ export default function DriverDashboard() {
                   Keep this page open and your screen unlocked while driving — location sharing pauses if the browser tab is backgrounded or the phone is locked.
                 </p>
               </>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" /> My Documents
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading documents...
-              </p>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Driver Documents</p>
-                  <DriverDocumentRow label="License" path={driverRow?.license_document_url ?? null} />
-                  <DriverDocumentRow label="Background Verification" path={driverRow?.background_verification_document_url ?? null} />
-                  <DriverDocumentRow label="Medical Certificate" path={driverRow?.medical_certificate_document_url ?? null} />
-                </div>
-                {route?.vehicles && (
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-1">
-                      Vehicle Documents{route.vehicles.registration_number ? ` — ${route.vehicles.registration_number}` : ""}
-                    </p>
-                    <DriverDocumentRow label="Insurance" path={route.vehicles.insurance_document_url} />
-                    <DriverDocumentRow label="Fitness Certificate" path={route.vehicles.fitness_document_url} />
-                    <DriverDocumentRow label="Pollution Certificate (PUC)" path={route.vehicles.puc_document_url} />
-                    <DriverDocumentRow label="RC Document" path={route.vehicles.rc_document_url} />
-                  </div>
-                )}
-              </div>
             )}
           </CardContent>
         </Card>
