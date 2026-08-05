@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { GraduationCap, BookOpen, BarChart3, TrendingUp, Bus, Wallet, ChevronRight } from "lucide-react";
 import { BusTrackingMap } from "@/components/transport/BusTrackingMap";
+import { DriverRatingForm } from "@/components/transport/DriverRatingForm";
 import { Link } from "react-router-dom";
 import parentBanner from "@/assets/parent-banner.png";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
@@ -28,9 +29,11 @@ interface TransportInfo {
   vehicleId: string | null;
   pickupStopId: string | null;
   dropStopId: string | null;
+  driverId: string | null;
   driverName: string | null;
   driverPhone: string | null;
   pickupTime: string | null;
+  studentId: string | null;
 }
 
 export default function ParentDashboard() {
@@ -125,7 +128,7 @@ export default function ParentDashboard() {
     }
     const { data } = await supabase
       .from("transport_assignments")
-      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, vehicle_id, drivers(name, phone))")
+      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, vehicle_id, drivers(id, name, phone))")
       .eq("student_id", studentRow.id)
       .eq("status", "active")
       .maybeSingle();
@@ -152,9 +155,11 @@ export default function ParentDashboard() {
             vehicleId: route.vehicle_id ?? null,
             pickupStopId: row.pickup_stop_id ?? null,
             dropStopId: row.drop_stop_id ?? null,
+            driverId: driver?.id ?? null,
             driverName: driver?.name ?? null,
             driverPhone: driver?.phone ?? null,
             pickupTime,
+            studentId: studentRow.id,
           }
         : null
     );
@@ -346,6 +351,13 @@ export default function ParentDashboard() {
                 driverName={transportInfo.driverName}
                 driverPhone={transportInfo.driverPhone}
                 pickupTime={transportInfo.pickupTime}
+              />
+              <DriverRatingForm
+                schoolId={profile?.school_id ?? null}
+                parentId={user?.id ?? null}
+                driverId={transportInfo.driverId}
+                studentId={transportInfo.studentId}
+                routeId={transportInfo.routeId}
               />
             </TabsContent>
           )}

@@ -46,6 +46,7 @@ import {
   Accessibility,
   UserPlus,
   Bus,
+  Star
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -95,8 +96,11 @@ const navItems: Array<{
   { title: "My SEN Students", icon: Accessibility, path: "/my-sen-students", roles: ["teacher", "hod"], module: "SEN Management" },
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal"] },
   { title: "Transport", icon: Bus, path: "/transport", roles: ["admin", "principal", "school_admin"] },
+  { title: "Home", icon: LayoutDashboard, path: "/driver/tracking", roles: ["driver"] },
   { title: "My Documents", icon: FileText, path: "/driver/documents", roles: ["driver"] },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["driver"] },
+  { title: "My Attendance", icon: ClipboardList, path: "/driver/attendance", roles: ["driver"] },
+  { title: "My Ratings", icon: Star, path: "/driver/ratings", roles: ["driver"] },
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
   { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
