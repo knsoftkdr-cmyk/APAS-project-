@@ -1,6 +1,6 @@
 import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown } from "lucide-react";
+import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown, GraduationCap, Package } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { label: string; icon: React.ElementType; path: string };

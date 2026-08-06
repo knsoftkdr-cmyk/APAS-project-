@@ -32,7 +32,11 @@ import {
   ArrowDown,
   Loader2,
   Upload,
-  ExternalLink
+  ExternalLink,
+  LayoutTemplate,
+  BookmarkPlus,
+  Copy,
+  History
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -193,7 +197,43 @@ interface TransportRoute {
   driver_id: string | null;
   attendant_id: string | null;
   status: string;
+  days_of_week: number[];
   route_stops: RouteStop[];
+}
+
+interface RouteTemplateStop {
+  id?: string;
+  stop_name: string;
+  sequence_number: number;
+  pickup_time: string | null;
+  drop_time: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+interface RouteTemplate {
+  id: string;
+  school_id: string;
+  template_name: string;
+  description: string | null;
+  route_template_stops: RouteTemplateStop[];
+}
+
+interface RouteVersion {
+  id: string;
+  route_id: string;
+  version_number: number;
+  route_name: string;
+  route_number: string | null;
+  vehicle_id: string | null;
+  driver_id: string | null;
+  attendant_id: string | null;
+  status: string | null;
+  days_of_week: number[];
+  stops_snapshot: RouteTemplateStop[];
+  changed_by: string | null;
+  changed_by_name: string | null;
+  created_at: string;
 }
 
 interface StudentLite {
@@ -1342,6 +1382,16 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
 // ============================================================
 // ROUTES & STOPS TAB
 // ============================================================
+const DAY_LABELS = [
+  { value: 1, label: "Mon" },
+  { value: 2, label: "Tue" },
+  { value: 3, label: "Wed" },
+  { value: 4, label: "Thu" },
+  { value: 5, label: "Fri" },
+  { value: 6, label: "Sat" },
+  { value: 7, label: "Sun" },
+];
+
 export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -1352,8 +1402,16 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const [driverId, setDriverId] = useState<string>("");
   const [attendantId, setAttendantId] = useState<string>("");
   const [status, setStatus] = useState("active");
+  const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 2, 3, 4, 5, 6]);
   const [stops, setStops] = useState<RouteStop[]>([]);
   const [originalStopIds, setOriginalStopIds] = useState<string[]>([]);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [templateSourceRoute, setTemplateSourceRoute] = useState<TransportRoute | null>(null);
+  const [templateName, setTemplateName] = useState("");
+  const [templateDescription, setTemplateDescription] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyRoute, setHistoryRoute] = useState<TransportRoute | null>(null);
 
   const { data: routes, isLoading } = useQuery({
     queryKey: ["transport-routes", schoolId],
@@ -1404,9 +1462,87 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     enabled: !!schoolId,
   });
 
+  const { data: templates, isLoading: templatesLoading } = useQuery({
+    queryKey: ["route-templates", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("route_templates")
+        .select("*, route_template_stops(*)")
+        .eq("school_id", schoolId)
+        .order("template_name");
+      if (error) throw error;
+      return (data as any[]).map((t) => ({
+        ...t,
+        route_template_stops: (t.route_template_stops || []).sort(
+          (a: RouteTemplateStop, b: RouteTemplateStop) => a.sequence_number - b.sequence_number
+        ),
+      })) as RouteTemplate[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const { data: todayHolidays } = useQuery({
+    queryKey: ["today-holidays", schoolId],
+    queryFn: async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data, error } = await supabase
+        .from("academic_calendar_events")
+        .select("id")
+        .eq("school_id", schoolId)
+        .eq("event_type", "holiday")
+        .lte("start_date", today)
+        .gte("end_date", today);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!schoolId,
+  });
+
+  const isHolidayToday = (todayHolidays?.length || 0) > 0;
+
+  const getTodayIso = () => {
+    const day = new Date().getDay(); // 0=Sun .. 6=Sat
+    return day === 0 ? 7 : day;
+  };
+
+  const isRouteRunningToday = (r: TransportRoute): { running: boolean; reason: string } => {
+    if (r.status !== "active") return { running: false, reason: "Inactive" };
+    const todayIso = getTodayIso();
+    if (!r.days_of_week?.includes(todayIso)) return { running: false, reason: "Not scheduled today" };
+    if (isHolidayToday) return { running: false, reason: "Holiday" };
+    return { running: true, reason: "" };
+  };
+
+  const { data: versions, isLoading: versionsLoading } = useQuery({
+    queryKey: ["route-versions", historyRoute?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("route_versions")
+        .select("*")
+        .eq("route_id", historyRoute!.id)
+        .order("version_number", { ascending: false });
+      if (error) throw error;
+      return data as RouteVersion[];
+    },
+    enabled: !!historyRoute,
+  });
+
+  const describeVersionChange = (curr: RouteVersion, prev?: RouteVersion) => {
+    if (!prev) return "Route created";
+    const changes: string[] = [];
+    if (curr.route_name !== prev.route_name) changes.push("name changed");
+    if (curr.route_number !== prev.route_number) changes.push("number changed");
+    if (curr.vehicle_id !== prev.vehicle_id) changes.push("vehicle changed");
+    if (curr.driver_id !== prev.driver_id) changes.push("driver changed");
+    if (curr.attendant_id !== prev.attendant_id) changes.push("attendant changed");
+    if (curr.status !== prev.status) changes.push("status changed");
+    if (JSON.stringify(curr.stops_snapshot) !== JSON.stringify(prev.stops_snapshot)) changes.push("stops changed");
+    return changes.length > 0 ? changes.join(", ") : "No changes detected";
+  };
+
   const resetForm = () => {
     setRouteName(""); setRouteNumber(""); setVehicleId(""); setDriverId(""); setAttendantId("");
-    setStatus("active"); setStops([]); setOriginalStopIds([]);
+    setStatus("active"); setDaysOfWeek([1, 2, 3, 4, 5, 6]); setStops([]); setOriginalStopIds([]);
   };
 
   const openNew = () => { setEditing(null); resetForm(); setOpen(true); };
@@ -1419,6 +1555,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     setDriverId(r.driver_id || "");
     setAttendantId(r.attendant_id || "");
     setStatus(r.status);
+    setDaysOfWeek(r.days_of_week && r.days_of_week.length > 0 ? r.days_of_week : [1, 2, 3, 4, 5, 6]);
     setStops(r.route_stops.map((s) => ({ ...s })));
     setOriginalStopIds(r.route_stops.map((s) => s.id!).filter(Boolean));
     setOpen(true);
@@ -1447,6 +1584,44 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     setStops(next.map((s, i) => ({ ...s, sequence_number: i + 1 })));
   };
 
+  const recordVersion = async (routeId: string, stopsData: RouteStop[]) => {
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const { data: lastVersion } = await supabase
+        .from("route_versions")
+        .select("version_number")
+        .eq("route_id", routeId)
+        .order("version_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const nextVersion = (lastVersion?.version_number || 0) + 1;
+      await supabase.from("route_versions").insert({
+        route_id: routeId,
+        school_id: schoolId,
+        version_number: nextVersion,
+        route_name: routeName,
+        route_number: routeNumber || null,
+        vehicle_id: vehicleId || null,
+        driver_id: driverId || null,
+        attendant_id: attendantId || null,
+        status,
+        days_of_week: daysOfWeek,
+        stops_snapshot: stopsData.map((s) => ({
+          stop_name: s.stop_name,
+          sequence_number: s.sequence_number,
+          pickup_time: s.pickup_time,
+          drop_time: s.drop_time,
+          latitude: s.latitude,
+          longitude: s.longitude,
+        })),
+        changed_by: userData.user?.id || null,
+        changed_by_name: userData.user?.email || null,
+      });
+    } catch (e) {
+      console.warn("[ROUTE VERSION] failed to record version snapshot", e);
+    }
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
@@ -1457,6 +1632,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
         driver_id: driverId || null,
         attendant_id: attendantId || null,
         status,
+        days_of_week: daysOfWeek,
       };
       let routeId = editing?.id;
       if (editing) {
@@ -1540,6 +1716,8 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
           if (stopErr) throw stopErr;
         }
       }
+
+      await recordVersion(routeId!, stops);
     },
     onSuccess: () => {
       toast.success(editing ? "Route updated" : "Route added");
@@ -1563,6 +1741,83 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     onError: (e: any) => toast.error(e.message || "Failed to delete — route may have student assignments"),
   });
 
+  const saveAsTemplateMutation = useMutation({
+    mutationFn: async () => {
+      if (!templateSourceRoute) return;
+      const { data: tpl, error } = await supabase.from("route_templates").insert({
+        school_id: schoolId,
+        template_name: templateName,
+        description: templateDescription || null,
+        source_route_id: templateSourceRoute.id,
+      }).select("id").single();
+      if (error) throw error;
+
+      if (templateSourceRoute.route_stops.length > 0) {
+        const stopsPayload = templateSourceRoute.route_stops.map((s) => ({
+          template_id: tpl.id,
+          stop_name: s.stop_name,
+          sequence_number: s.sequence_number,
+          pickup_time: s.pickup_time || null,
+          drop_time: s.drop_time || null,
+          latitude: s.latitude ?? null,
+          longitude: s.longitude ?? null,
+        }));
+        const { error: stopErr } = await supabase.from("route_template_stops").insert(stopsPayload);
+        if (stopErr) throw stopErr;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Template saved");
+      queryClient.invalidateQueries({ queryKey: ["route-templates"] });
+      setSaveTemplateOpen(false);
+      setTemplateSourceRoute(null);
+      setTemplateName("");
+      setTemplateDescription("");
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to save template"),
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("route_templates").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Template deleted");
+      queryClient.invalidateQueries({ queryKey: ["route-templates"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to delete template"),
+  });
+
+  const openSaveAsTemplate = (r: TransportRoute) => {
+    setTemplateSourceRoute(r);
+    setTemplateName(r.route_name);
+    setTemplateDescription("");
+    setSaveTemplateOpen(true);
+  };
+
+  const useTemplate = (t: RouteTemplate) => {
+    setEditing(null);
+    setRouteName(t.template_name);
+    setRouteNumber("");
+    setVehicleId("");
+    setDriverId("");
+    setAttendantId("");
+    setStatus("active");
+    setDaysOfWeek([1, 2, 3, 4, 5, 6]);
+    setStops(t.route_template_stops.map((s) => ({
+      stop_name: s.stop_name,
+      sequence_number: s.sequence_number,
+      pickup_time: s.pickup_time,
+      drop_time: s.drop_time,
+      latitude: s.latitude,
+      longitude: s.longitude,
+    })));
+    setOriginalStopIds([]);
+    setTemplatesOpen(false);
+    setOpen(true);
+  };
+
   return (
     <GlowCard>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -1572,6 +1827,10 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
           </div>
           Routes & Stops
         </CardTitle>
+        <div className="flex items-center gap-2">
+        <Button variant="outline" onClick={() => setTemplatesOpen(true)} className="gap-1.5">
+          <LayoutTemplate className="h-4 w-4" /> Templates
+        </Button>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button onClick={openNew} className="gap-1.5">
@@ -1636,6 +1895,34 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                       <SelectItem value="inactive">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="col-span-2">
+                  <Label>Runs on Days</Label>
+                  <div className="flex gap-1 mt-1">
+                    {DAY_LABELS.map((d) => (
+                      <button
+                        key={d.value}
+                        type="button"
+                        onClick={() =>
+                          setDaysOfWeek(
+                            daysOfWeek.includes(d.value)
+                              ? daysOfWeek.filter((x) => x !== d.value)
+                              : [...daysOfWeek, d.value].sort((a, b) => a - b)
+                          )
+                        }
+                        className={`h-8 w-8 rounded-full text-xs font-medium border transition-colors ${
+                          daysOfWeek.includes(d.value)
+                            ? "bg-emerald-500 text-white border-emerald-500"
+                            : "bg-muted text-muted-foreground border-transparent"
+                        }`}
+                      >
+                        {d.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Route also auto-skips school holidays from the Academic Calendar.
+                  </p>
                 </div>
               </div>
 
@@ -1708,7 +1995,116 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
+
+      <Dialog open={templatesOpen} onOpenChange={setTemplatesOpen}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Route Templates</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {templatesLoading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : templates?.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No templates yet. Save a route as a template to reuse its stops later.
+              </p>
+            ) : (
+              templates?.map((t) => (
+                <div key={t.id} className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <p className="font-medium text-sm">{t.template_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t.route_template_stops.length} stop{t.route_template_stops.length !== 1 ? "s" : ""}
+                      {t.description && ` · ${t.description}`}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="outline" onClick={() => useTemplate(t)} className="gap-1">
+                      <Copy className="h-3.5 w-3.5" /> Use
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => deleteTemplateMutation.mutate(t.id)}>
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={saveTemplateOpen} onOpenChange={setSaveTemplateOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Save as Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Template Name</Label>
+              <Input value={templateName} onChange={(e) => setTemplateName(e.target.value)} />
+            </div>
+            <div>
+              <Label>Description (optional)</Label>
+              <Input value={templateDescription} onChange={(e) => setTemplateDescription(e.target.value)} />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This saves the {templateSourceRoute?.route_stops.length || 0} stop{(templateSourceRoute?.route_stops.length || 0) !== 1 ? "s" : ""} from "{templateSourceRoute?.route_name}" as a reusable template. Vehicle/driver/attendant assignments are not included.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => saveAsTemplateMutation.mutate()} disabled={!templateName || saveAsTemplateMutation.isPending}>
+              {saveAsTemplateMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+              Save Template
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Route History{historyRoute && ` — ${historyRoute.route_name}`}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {versionsLoading ? (
+              <p className="text-sm text-muted-foreground">Loading...</p>
+            ) : versions?.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No version history yet — history is recorded starting from the next save.
+              </p>
+            ) : (
+              versions?.map((v, idx) => (
+                <details key={v.id} className="rounded-lg border p-3">
+                  <summary className="cursor-pointer flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium">
+                      v{v.version_number} — {describeVersionChange(v, versions[idx + 1])}
+                    </span>
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {new Date(v.created_at).toLocaleString()}
+                      {v.changed_by_name && ` · ${v.changed_by_name}`}
+                    </span>
+                  </summary>
+                  <div className="mt-2 pt-2 border-t text-xs space-y-1.5">
+                    <p><span className="text-muted-foreground">Name:</span> {v.route_name}{v.route_number && ` (${v.route_number})`}</p>
+                    <p><span className="text-muted-foreground">Status:</span> {v.status}</p>
+                    <p className="text-muted-foreground">Stops:</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {v.stops_snapshot.map((s: any, i: number) => (
+                        <span key={i} className="bg-muted rounded-full px-2 py-0.5">
+                          {i + 1}. {s.stop_name}{s.pickup_time && ` · ${s.pickup_time}`}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </details>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <CardContent>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
@@ -1724,10 +2120,29 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                       {vehicles?.find((v) => v.id === r.vehicle_id) && ` · ${vehicles.find((v) => v.id === r.vehicle_id)?.registration_number}`}
                       {drivers?.find((d) => d.id === r.driver_id) && ` · ${drivers.find((d) => d.id === r.driver_id)?.name}`}
                       {attendants?.find((a) => a.id === r.attendant_id) && ` · ${attendants.find((a) => a.id === r.attendant_id)?.name} (Attendant)`}
+                      {r.days_of_week && r.days_of_week.length > 0 && r.days_of_week.length < 7 &&
+                        ` · ${r.days_of_week.map((d) => DAY_LABELS.find((l) => l.value === d)?.label).join(", ")}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant={r.status === "active" ? "default" : "secondary"} className="capitalize">{r.status}</Badge>
+                    {(() => {
+                      const runToday = isRouteRunningToday(r);
+                      return (
+                        <Badge
+                          variant={runToday.running ? "default" : "outline"}
+                          className={runToday.running ? "bg-emerald-500 hover:bg-emerald-500" : "text-muted-foreground"}
+                        >
+                          {runToday.running ? "Running Today" : runToday.reason}
+                        </Badge>
+                      );
+                    })()}
+                    <Button size="icon" variant="ghost" onClick={() => openSaveAsTemplate(r)} title="Save as Template">
+                      <BookmarkPlus className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => { setHistoryRoute(r); setHistoryOpen(true); }} title="Version History">
+                      <History className="h-4 w-4" />
+                    </Button>
                     <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
