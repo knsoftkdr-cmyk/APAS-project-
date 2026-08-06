@@ -4,7 +4,7 @@ import { Bus, UserRound, Route as RouteIcon, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ERPLayout from "@/components/erp/ERPLayout";
-import { VehiclesTab, DriversTab, RoutesTab, AssignmentsTab } from "@/pages/TransportManagement";
+import { VehiclesTab, DriversTab, AttendantsTab, RoutesTab, AssignmentsTab } from "@/pages/TransportManagement";
 
 const ERPTransport = () => {
   const navigate = useNavigate();
@@ -58,7 +58,7 @@ const ERPTransport = () => {
             <Bus className="h-4 w-4" /> Vehicles
           </TabsTrigger>
           <TabsTrigger value="drivers" className="gap-1.5">
-            <UserRound className="h-4 w-4" /> Drivers
+            <UserRound className="h-4 w-4" /> Driver & Attendant
           </TabsTrigger>
           <TabsTrigger value="routes" className="gap-1.5">
             <RouteIcon className="h-4 w-4" /> Routes & Stops
@@ -71,8 +71,9 @@ const ERPTransport = () => {
         <TabsContent value="vehicles">
           <VehiclesTab schoolId={schoolId} />
         </TabsContent>
-        <TabsContent value="drivers">
+        <TabsContent value="drivers" className="space-y-6">
           <DriversTab schoolId={schoolId} />
+          <AttendantsTab schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="routes">
           <RoutesTab schoolId={schoolId} />

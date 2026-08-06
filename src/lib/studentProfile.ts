@@ -95,7 +95,13 @@ export interface TransportAssignment {
   drop_time: string | null;
   driver_name: string | null;
   driver_phone: string | null;
+  attendant_name: string | null;
+  attendant_phone: string | null;
   vehicle_registration_number: string | null;
+  gps_device_id: string | null;
+  route_id: string | null;
+  pickup_stop_id: string | null;
+  drop_stop_id: string | null;
   transport_fee: number | null;
   fee_status: "pending" | "paid" | "overdue" | "waived";
   status: "active" | "inactive";
@@ -324,6 +330,95 @@ export async function getTransportAssignment(studentId: string) {
 
   if (error) throw error;
   return data as TransportAssignment | null;
+}
+
+export interface TransportLiveInfo {
+  routeId: string | null;
+  routeName: string | null;
+  routeNumber: string | null;
+  driverName: string | null;
+  driverPhone: string | null;
+  attendantName: string | null;
+  attendantPhone: string | null;
+  vehicleRegistrationNumber: string | null;
+  pickupStopName: string | null;
+  pickupTime: string | null;
+  dropStopName: string | null;
+  dropTime: string | null;
+}
+
+// Live transport info, sourced from the actual Transport Management
+// route/driver/attendant/vehicle/stop records (not the manually-typed
+// fields on transport_assignments). Returns null if the student's
+// transport assignment isn't linked to a route_id, so callers should
+// fall back to the manual fields on TransportAssignment in that case.
+export async function getTransportLiveInfo(studentId: string): Promise<TransportLiveInfo | null> {
+  const { data, error } = await supabase
+    .from("transport_assignments")
+    .select("route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, vehicle_id, drivers(name, phone), bus_attendants(name, phone))")
+    .eq("student_id", studentId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data || !data.route_id) return null;
+
+  const route: any = (data as any).transport_routes;
+  const driver = route?.drivers;
+  const attendant = route?.bus_attendants;
+
+  // Fetch the vehicle separately rather than embedding it in the query
+  // above — PostgREST's nested embed for transport_routes -> vehicles
+  // wasn't resolving reliably, so a plain follow-up query is safer.
+  let vehicle: { registration_number: string | null } | null = null;
+  if (route?.vehicle_id) {
+    const { data: vehicleData, error: vehicleError } = await supabase
+      .from("vehicles")
+      .select("registration_number")
+      .eq("id", route.vehicle_id)
+      .maybeSingle();
+    if (vehicleError) throw vehicleError;
+    vehicle = vehicleData;
+  }
+
+  // Fetch pickup/drop stop names + times in a second query, since
+  // pickup_stop_id and drop_stop_id both reference route_stops.id and
+  // embedding two FKs to the same table needs exact constraint names.
+  const stopIds = [data.pickup_stop_id, data.drop_stop_id].filter(Boolean) as string[];
+  let pickupStopName: string | null = null;
+  let pickupTime: string | null = null;
+  let dropStopName: string | null = null;
+  let dropTime: string | null = null;
+
+  if (stopIds.length > 0) {
+    const { data: stops, error: stopsError } = await supabase
+      .from("route_stops")
+      .select("id, stop_name, pickup_time, drop_time")
+      .in("id", stopIds);
+
+    if (stopsError) throw stopsError;
+
+    const pickupStop = stops?.find((s) => s.id === data.pickup_stop_id);
+    const dropStop = stops?.find((s) => s.id === data.drop_stop_id);
+    pickupStopName = pickupStop?.stop_name ?? null;
+    pickupTime = pickupStop?.pickup_time ?? null;
+    dropStopName = dropStop?.stop_name ?? null;
+    dropTime = dropStop?.drop_time ?? null;
+  }
+
+  return {
+    routeId: data.route_id,
+    routeName: route?.route_name ?? null,
+    routeNumber: route?.route_number ?? null,
+    driverName: driver?.name ?? null,
+    driverPhone: driver?.phone ?? null,
+    attendantName: attendant?.name ?? null,
+    attendantPhone: attendant?.phone ?? null,
+    vehicleRegistrationNumber: vehicle?.registration_number ?? null,
+    pickupStopName,
+    pickupTime,
+    dropStopName,
+    dropTime,
+  };
 }
 export async function upsertTransportAssignment(
   payload: Partial<TransportAssignment> & { school_id: string; student_id: string }

@@ -32,6 +32,9 @@ interface TransportInfo {
   driverId: string | null;
   driverName: string | null;
   driverPhone: string | null;
+  attendantId: string | null;
+  attendantName: string | null;
+  attendantPhone: string | null;
   pickupTime: string | null;
   studentId: string | null;
 }
@@ -128,13 +131,14 @@ export default function ParentDashboard() {
     }
     const { data } = await supabase
       .from("transport_assignments")
-      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, vehicle_id, drivers(id, name, phone))")
+      .select("status, route_id, pickup_stop_id, drop_stop_id, transport_routes(route_name, route_number, vehicle_id, drivers(id, name, phone), bus_attendants(id, name, phone))")
       .eq("student_id", studentRow.id)
       .eq("status", "active")
       .maybeSingle();
     const row: any = data ?? null;
     const route: any = row?.transport_routes ?? null;
     const driver: any = route?.drivers ?? null;
+    const attendant: any = route?.bus_attendants ?? null;
 
     let pickupTime: string | null = null;
     if (row?.pickup_stop_id) {
@@ -158,6 +162,9 @@ export default function ParentDashboard() {
             driverId: driver?.id ?? null,
             driverName: driver?.name ?? null,
             driverPhone: driver?.phone ?? null,
+            attendantId: attendant?.id ?? null,
+            attendantName: attendant?.name ?? null,
+            attendantPhone: attendant?.phone ?? null,
             pickupTime,
             studentId: studentRow.id,
           }
@@ -350,6 +357,8 @@ export default function ParentDashboard() {
                 dropStopId={transportInfo.dropStopId}
                 driverName={transportInfo.driverName}
                 driverPhone={transportInfo.driverPhone}
+                attendantName={transportInfo.attendantName}
+                attendantPhone={transportInfo.attendantPhone}
                 pickupTime={transportInfo.pickupTime}
               />
               <DriverRatingForm

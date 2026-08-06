@@ -21,6 +21,7 @@ import {
 import {
   Bus,
   UserRound,
+  UserCheck,
   Route as RouteIcon,
   Users,
   Plus,
@@ -85,6 +86,17 @@ interface Driver {
   emergency_contact_name: string | null;
   emergency_contact_phone: string | null;
   emergency_contact_relation: string | null;
+}
+
+interface Attendant {
+  id: string;
+  school_id: string;
+  name: string;
+  phone: string | null;
+  certificate_number: string | null;
+  certificate_expiry: string | null;
+  certificate_document_url: string | null;
+  status: string;
 }
 
 interface RouteStop {
@@ -179,6 +191,7 @@ interface TransportRoute {
   route_number: string | null;
   vehicle_id: string | null;
   driver_id: string | null;
+  attendant_id: string | null;
   status: string;
   route_stops: RouteStop[];
 }
@@ -221,6 +234,10 @@ const EMPTY_DRIVER = {
   medical_certificate_number: "", medical_certificate_expiry: "", medical_certificate_document_url: "",
   emergency_contact_name: "", emergency_contact_phone: "", emergency_contact_relation: "",
 };
+const EMPTY_ATTENDANT = {
+  name: "", phone: "", certificate_number: "", certificate_expiry: "",
+  certificate_document_url: "", status: "active",
+};
 
 // ============================================================
 // MAIN PAGE
@@ -255,7 +272,7 @@ export default function TransportManagement() {
               <Bus className="h-4 w-4" /> Vehicles
             </TabsTrigger>
             <TabsTrigger value="drivers" className="gap-1.5">
-              <UserRound className="h-4 w-4" /> Drivers
+              <UserRound className="h-4 w-4" /> Driver & Attendant
             </TabsTrigger>
             <TabsTrigger value="routes" className="gap-1.5">
               <RouteIcon className="h-4 w-4" /> Routes & Stops
@@ -268,8 +285,9 @@ export default function TransportManagement() {
           <TabsContent value="vehicles">
             <VehiclesTab schoolId={schoolId} />
           </TabsContent>
-          <TabsContent value="drivers">
+          <TabsContent value="drivers" className="space-y-6">
             <DriversTab schoolId={schoolId} />
+            <AttendantsTab schoolId={schoolId} />
           </TabsContent>
           <TabsContent value="routes">
             <RoutesTab schoolId={schoolId} />
@@ -1115,6 +1133,213 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
 }
 
 // ============================================================
+// BUS ATTENDANTS TAB
+// ============================================================
+export function AttendantsTab({ schoolId }: { schoolId?: string }) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Attendant | null>(null);
+  const [form, setForm] = useState(EMPTY_ATTENDANT);
+  const [draftId] = useState(() => crypto.randomUUID());
+  const folderId = editing?.id || draftId;
+
+  const { data: attendants, isLoading } = useQuery({
+    queryKey: ["transport-attendants", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bus_attendants").select("*").eq("school_id", schoolId).order("name");
+      if (error) throw error;
+      return data as Attendant[];
+    },
+    enabled: !!schoolId,
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        school_id: schoolId,
+        ...form,
+        certificate_expiry: form.certificate_expiry || null,
+      };
+      if (editing) {
+        const { data, error } = await supabase.from("bus_attendants").update(payload).eq("id", editing.id).select();
+        if (error) throw error;
+        if (!data || data.length === 0) throw new Error("Update matched 0 rows — check RLS/session (are you logged in as principal/admin/school_admin for this school?)");
+      } else {
+        const { error } = await supabase.from("bus_attendants").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success(editing ? "Attendant updated" : "Attendant added");
+      queryClient.invalidateQueries({ queryKey: ["transport-attendants"] });
+      setOpen(false);
+      setEditing(null);
+      setForm(EMPTY_ATTENDANT);
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to save attendant"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("bus_attendants").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Attendant deleted");
+      queryClient.invalidateQueries({ queryKey: ["transport-attendants"] });
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to delete — attendant may be linked to a route"),
+  });
+
+  const openEdit = (a: Attendant) => {
+    setEditing(a);
+    setForm({
+      name: a.name, phone: a.phone || "",
+      certificate_number: a.certificate_number || "",
+      certificate_expiry: a.certificate_expiry || "",
+      certificate_document_url: a.certificate_document_url || "",
+      status: a.status,
+    });
+    setOpen(true);
+  };
+
+  const openNew = () => {
+    setEditing(null);
+    setForm(EMPTY_ATTENDANT);
+    setOpen(true);
+  };
+
+  return (
+    <GlowCard>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <div className="rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 p-2">
+            <UserCheck className="h-4 w-4 text-white" />
+          </div>
+          Bus Attendants
+        </CardTitle>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openNew} className="gap-1.5">
+              <Plus className="h-4 w-4" /> Add Attendant
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editing ? "Edit Attendant" : "Add Attendant"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Name</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Phone</Label>
+                  <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="border-t pt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Certification</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Certificate Number</Label>
+                    <Input value={form.certificate_number}
+                      onChange={(e) => setForm({ ...form, certificate_number: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Expiry Date</Label>
+                    <Input type="date" value={form.certificate_expiry}
+                      onChange={(e) => setForm({ ...form, certificate_expiry: e.target.value })} />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <DocumentUploadField
+                    label="Certificate Document"
+                    bucket="transport-documents"
+                    folder={`${schoolId}/attendants/${folderId}`}
+                    value={form.certificate_document_url}
+                    onChange={(path) => setForm({ ...form, certificate_document_url: path })}
+                    table="bus_attendants"
+                    recordId={editing?.id}
+                    column="certificate_document_url"
+                  />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending}>
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Certificate No.</TableHead>
+                <TableHead>Certificate Expiry</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {attendants?.map((a) => (
+                <TableRow key={a.id}>
+                  <TableCell className="font-medium">{a.name}</TableCell>
+                  <TableCell>{a.phone || "—"}</TableCell>
+                  <TableCell>{a.certificate_number || "—"}</TableCell>
+                  <TableCell>{a.certificate_expiry || "—"}</TableCell>
+                  <TableCell>
+                    <Badge variant={a.status === "active" ? "default" : "secondary"} className="capitalize">
+                      {a.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEdit(a)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => deleteMutation.mutate(a.id)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {attendants?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                    No attendants added yet.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </GlowCard>
+  );
+}
+
+// ============================================================
 // ROUTES & STOPS TAB
 // ============================================================
 export function RoutesTab({ schoolId }: { schoolId?: string }) {
@@ -1125,6 +1350,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const [routeNumber, setRouteNumber] = useState("");
   const [vehicleId, setVehicleId] = useState<string>("");
   const [driverId, setDriverId] = useState<string>("");
+  const [attendantId, setAttendantId] = useState<string>("");
   const [status, setStatus] = useState("active");
   const [stops, setStops] = useState<RouteStop[]>([]);
   const [originalStopIds, setOriginalStopIds] = useState<string[]>([]);
@@ -1168,8 +1394,18 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     enabled: !!schoolId,
   });
 
+  const { data: attendants } = useQuery({
+    queryKey: ["transport-attendants", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("bus_attendants").select("id, name").eq("school_id", schoolId);
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+    enabled: !!schoolId,
+  });
+
   const resetForm = () => {
-    setRouteName(""); setRouteNumber(""); setVehicleId(""); setDriverId("");
+    setRouteName(""); setRouteNumber(""); setVehicleId(""); setDriverId(""); setAttendantId("");
     setStatus("active"); setStops([]); setOriginalStopIds([]);
   };
 
@@ -1181,6 +1417,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     setRouteNumber(r.route_number || "");
     setVehicleId(r.vehicle_id || "");
     setDriverId(r.driver_id || "");
+    setAttendantId(r.attendant_id || "");
     setStatus(r.status);
     setStops(r.route_stops.map((s) => ({ ...s })));
     setOriginalStopIds(r.route_stops.map((s) => s.id!).filter(Boolean));
@@ -1218,12 +1455,21 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
         route_number: routeNumber || null,
         vehicle_id: vehicleId || null,
         driver_id: driverId || null,
+        attendant_id: attendantId || null,
         status,
       };
       let routeId = editing?.id;
       if (editing) {
-        const { error } = await supabase.from("transport_routes").update(payload).eq("id", editing.id);
-        if (error) throw error;
+        const { data: updateData, error } = await supabase.from("transport_routes").update(payload).eq("id", editing.id).select();
+        console.log("[ROUTE UPDATE DEBUG] payload sent:", payload);
+        console.log("[ROUTE UPDATE DEBUG] rows returned:", updateData);
+        if (error) {
+          console.log("[ROUTE UPDATE DEBUG] error:", error);
+          throw error;
+        }
+        if (!updateData || updateData.length === 0) {
+          console.log("[ROUTE UPDATE DEBUG] WARNING: 0 rows matched/updated — likely RLS silently filtering");
+        }
 
         // Diff stops instead of delete-all/insert-all, so stop IDs that
         // existing transport_assignments rows point to (pickup_stop_id /
@@ -1347,7 +1593,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                   <Input value={routeNumber} onChange={(e) => setRouteNumber(e.target.value)} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Vehicle</Label>
                   <Select value={vehicleId} onValueChange={setVehicleId}>
@@ -1366,6 +1612,17 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                     <SelectContent>
                       {drivers?.map((d) => (
                         <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Attendant</Label>
+                  <Select value={attendantId} onValueChange={setAttendantId}>
+                    <SelectTrigger><SelectValue placeholder="Select attendant" /></SelectTrigger>
+                    <SelectContent>
+                      {attendants?.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -1466,6 +1723,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                       {r.route_stops.length} stop{r.route_stops.length !== 1 ? "s" : ""}
                       {vehicles?.find((v) => v.id === r.vehicle_id) && ` · ${vehicles.find((v) => v.id === r.vehicle_id)?.registration_number}`}
                       {drivers?.find((d) => d.id === r.driver_id) && ` · ${drivers.find((d) => d.id === r.driver_id)?.name}`}
+                      {attendants?.find((a) => a.id === r.attendant_id) && ` · ${attendants.find((a) => a.id === r.attendant_id)?.name} (Attendant)`}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
