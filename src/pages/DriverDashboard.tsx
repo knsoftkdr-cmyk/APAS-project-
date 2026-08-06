@@ -10,13 +10,22 @@ import { toast } from "sonner";
 interface DriverRow {
   id: string;
   name: string;
+  license_document_url: string | null;
+  background_verification_document_url: string | null;
+  medical_certificate_document_url: string | null;
 }
 
 interface AssignedRoute {
   id: string;
   route_name: string;
   vehicle_id: string | null;
-  vehicles: { registration_number: string } | null;
+  vehicles: {
+    registration_number: string;
+    insurance_document_url: string | null;
+    fitness_document_url: string | null;
+    puc_document_url: string | null;
+    rc_document_url: string | null;
+  } | null;
 }
 
 interface RouteStop {
@@ -46,7 +55,7 @@ export default function DriverDashboard() {
       if (!profile?.id) return;
       const { data: driver } = await supabase
         .from("drivers")
-        .select("id, name")
+        .select("id, name, license_document_url, background_verification_document_url, medical_certificate_document_url")
         .eq("profile_id", profile.id)
         .maybeSingle();
 
@@ -58,7 +67,7 @@ export default function DriverDashboard() {
 
       const { data: routeRow } = await supabase
         .from("transport_routes")
-        .select("id, route_name, vehicle_id, vehicles(registration_number)")
+        .select("id, route_name, vehicle_id, vehicles(registration_number, insurance_document_url, fitness_document_url, puc_document_url, rc_document_url)")
         .eq("driver_id", driver.id)
         .eq("status", "active")
         .maybeSingle();

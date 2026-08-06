@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Wallet, Bus, ArrowRight } from "lucide-react";
+import { Users, Wallet, Bus, GraduationCap, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ERPLayout from "@/components/erp/ERPLayout";
 
@@ -10,6 +10,7 @@ const ERPDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [employeeCount, setEmployeeCount] = useState<number>(0);
   const [vehicleCount, setVehicleCount] = useState<number>(0);
+  const [openIntakeCount, setOpenIntakeCount] = useState<number>(0);
 
   useEffect(() => {
     const loadOrg = async () => {
@@ -47,6 +48,14 @@ const ERPDashboard = () => {
         .eq("school_id", schoolId);
 
       setVehicleCount(vehiclesCountResult ?? 0);
+
+      const { count: intakesCountResult } = await supabase
+        .from("admission_intakes" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("school_id", schoolId)
+        .eq("is_open", true);
+
+      setOpenIntakeCount(intakesCountResult ?? 0);
       setLoading(false);
     };
 
@@ -87,6 +96,24 @@ const ERPDashboard = () => {
             {employeeCount > 0
               ? `${employeeCount} employee${employeeCount === 1 ? "" : "s"} onboarded`
               : "No employees onboarded yet"}
+          </p>
+        </button>
+
+        <button
+          onClick={() => navigate("/erp/admissions")}
+          className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+        >
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
+            <GraduationCap className="h-6 w-6 text-white" />
+          </div>
+          <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
+            Admissions
+            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+          </div>
+          <p className="text-sm text-slate-500">
+            {openIntakeCount > 0
+              ? `${openIntakeCount} open intake${openIntakeCount === 1 ? "" : "s"}`
+              : "Log applicants & track seats"}
           </p>
         </button>
 

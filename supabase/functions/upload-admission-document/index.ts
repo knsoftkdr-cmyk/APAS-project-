@@ -156,14 +156,15 @@ Deno.serve(async (req) => {
 
   const { data: profile, error: profileError } = await callerClient
     .from("profiles")
-    .select("id, role, school_id")
+    .select("id, role, school_id, erp_access")
     .eq("id", user.id)
     .single();
 
   if (profileError || !profile) {
     return jsonResponse({ error: "Could not verify your profile" }, 403);
   }
-  if (!["principal", "admin", "school_admin", "knsoft_admin"].includes(profile.role)) {
+  const ADMIN_ROLES = ["principal", "admin", "school_admin", "knsoft_admin"];
+  if (!ADMIN_ROLES.includes(profile.role) && profile.erp_access !== true) {
     return jsonResponse({ error: "Your role cannot upload admission documents" }, 403);
   }
 

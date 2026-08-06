@@ -52,6 +52,8 @@ interface BusTrackingMapProps {
   routeName?: string;
   driverName?: string | null;
   driverPhone?: string | null;
+  attendantName?: string | null;
+  attendantPhone?: string | null;
   pickupTime?: string | null;
 }
 
@@ -92,6 +94,8 @@ export function BusTrackingMap({
   routeName = "Route",
   driverName,
   driverPhone,
+  attendantName,
+  attendantPhone,
   pickupTime,
 }: BusTrackingMapProps) {
   const [stops, setStops] = useState<StopRow[] | null>(null);
@@ -212,6 +216,12 @@ export function BusTrackingMap({
             )}
             {driverPhone && (
               <span>Phone: <span className="font-medium text-foreground">{driverPhone}</span></span>
+            )}
+            {attendantName && (
+              <span>Attendant: <span className="font-medium text-foreground">{attendantName}</span></span>
+            )}
+            {attendantPhone && (
+              <span>Attendant Phone: <span className="font-medium text-foreground">{attendantPhone}</span></span>
             )}
             {pickupTime && (
               <span>Pickup time: <span className="font-medium text-foreground">{pickupTime}</span></span>

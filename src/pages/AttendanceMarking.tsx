@@ -31,6 +31,28 @@ const CARD_SHADOW = 'shadow-sm rounded-2xl';
 
 interface TeacherRow { id: string; full_name: string; employee_id: string | null; designation: string | null; }
 
+type DriverAttendanceStatus = 'present' | 'absent' | 'on_leave' | 'half_day';
+
+const DRIVER_STATUS_OPTIONS: { value: DriverAttendanceStatus; label: string; color: string; soft: string }[] = [
+  { value: 'present', label: 'Present', color: 'bg-green-500 text-white', soft: 'bg-green-50 text-green-700 border border-green-200' },
+  { value: 'absent', label: 'Absent', color: 'bg-red-500 text-white', soft: 'bg-red-50 text-red-700 border border-red-200' },
+  { value: 'half_day', label: 'Half Day', color: 'bg-blue-500 text-white', soft: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  { value: 'on_leave', label: 'On Leave', color: 'bg-gray-400 text-white', soft: 'bg-gray-50 text-gray-600 border border-gray-200' },
+];
+
+interface AttendanceDriverRow { id: string; name: string; phone: string | null; license_number: string | null; }
+
+type AttendantAttendanceStatus = 'present' | 'absent' | 'on_leave' | 'half_day';
+
+const ATTENDANT_STATUS_OPTIONS: { value: AttendantAttendanceStatus; label: string; color: string; soft: string }[] = [
+  { value: 'present', label: 'Present', color: 'bg-green-500 text-white', soft: 'bg-green-50 text-green-700 border border-green-200' },
+  { value: 'absent', label: 'Absent', color: 'bg-red-500 text-white', soft: 'bg-red-50 text-red-700 border border-red-200' },
+  { value: 'half_day', label: 'Half Day', color: 'bg-blue-500 text-white', soft: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  { value: 'on_leave', label: 'On Leave', color: 'bg-gray-400 text-white', soft: 'bg-gray-50 text-gray-600 border border-gray-200' },
+];
+
+interface AttendanceAttendantRow { id: string; name: string; phone: string | null; certificate_number: string | null; }
+
 export default function AttendanceMarking() {
   const { user } = useAuth();
   const [schoolId, setSchoolId] = useState<string | null>(null);
@@ -80,6 +102,8 @@ export default function AttendanceMarking() {
   const canMark = role === 'teacher' || role === 'principal' || role === 'admin';
   const isSelfView = role === 'student' || role === 'parent' || role === 'teacher';
   const canManageTeacherAttendance = role === 'principal' || role === 'admin';
+  const canManageDriverAttendance = role === 'principal' || role === 'admin';
+  const canManageAttendantAttendance = role === 'principal' || role === 'admin';
   const canViewRisk = role === 'teacher' || role === 'admin';
 
   const [activeTab, setActiveTab] = useState<string>('mark');
@@ -111,6 +135,10 @@ export default function AttendanceMarking() {
             {isSelfView && <TabsTrigger value="mine" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">My Attendance</TabsTrigger>}
             {canManageTeacherAttendance && <TabsTrigger value="teacher-mark" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Teacher Attendance</TabsTrigger>}
             {canManageTeacherAttendance && <TabsTrigger value="teacher-view" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Teacher View</TabsTrigger>}
+            {canManageDriverAttendance && <TabsTrigger value="driver-mark" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Driver Attendance</TabsTrigger>}
+            {canManageDriverAttendance && <TabsTrigger value="driver-view" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Driver View</TabsTrigger>}
+            {canManageAttendantAttendance && <TabsTrigger value="attendant-mark" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Attendant Attendance</TabsTrigger>}
+            {canManageAttendantAttendance && <TabsTrigger value="attendant-view" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Attendant View</TabsTrigger>}
             {canViewRisk && <TabsTrigger value="risk" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">Attendance Risk</TabsTrigger>}
           </TabsList>
           {canMark && (
@@ -136,6 +164,26 @@ export default function AttendanceMarking() {
           {canManageTeacherAttendance && (
             <TabsContent value="teacher-view">
               <ViewTeacherAttendanceTab schoolId={schoolId} />
+            </TabsContent>
+          )}
+          {canManageDriverAttendance && (
+            <TabsContent value="driver-mark">
+              <MarkDriverAttendanceTab schoolId={schoolId} userId={user?.id ?? null} />
+            </TabsContent>
+          )}
+          {canManageDriverAttendance && (
+            <TabsContent value="driver-view">
+              <ViewDriverAttendanceTab schoolId={schoolId} />
+            </TabsContent>
+          )}
+          {canManageAttendantAttendance && (
+            <TabsContent value="attendant-mark">
+              <MarkAttendantAttendanceTab schoolId={schoolId} userId={user?.id ?? null} />
+            </TabsContent>
+          )}
+          {canManageAttendantAttendance && (
+            <TabsContent value="attendant-view">
+              <ViewAttendantAttendanceTab schoolId={schoolId} />
             </TabsContent>
           )}
           {canViewRisk && (
@@ -1004,6 +1052,592 @@ function MarkTeacherAttendanceTab({ schoolId, userId }: { schoolId: string | nul
             </Button>
             {saveMessage && <span className="text-sm text-muted-foreground">{saveMessage}</span>}
           </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MarkDriverAttendanceTab({ schoolId, userId }: { schoolId: string | null; userId: string | null; }) {
+  const [drivers, setDrivers] = useState<AttendanceDriverRow[]>([]);
+  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [marks, setMarks] = useState<Record<string, DriverAttendanceStatus>>({});
+  const [existingIds, setExistingIds] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!schoolId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('drivers')
+        .select('id, name, phone, license_number')
+        .eq('school_id', schoolId)
+        .order('name');
+      setDrivers((data || []) as AttendanceDriverRow[]);
+    })();
+  }, [schoolId]);
+
+  const loadMarks = useCallback(async () => {
+    if (!schoolId || drivers.length === 0) return;
+    setLoading(true);
+    setSaveMessage(null);
+    const { data } = await supabase
+      .from('driver_attendance')
+      .select('id, driver_id, status')
+      .eq('school_id', schoolId)
+      .eq('date', date);
+
+    const marksMap: Record<string, DriverAttendanceStatus> = {};
+    const idsMap: Record<string, string> = {};
+    (data || []).forEach((r: any) => {
+      marksMap[r.driver_id] = r.status;
+      idsMap[r.driver_id] = r.id;
+    });
+    setMarks(marksMap);
+    setExistingIds(idsMap);
+    setLoading(false);
+  }, [schoolId, date, drivers.length]);
+
+  useEffect(() => {
+    loadMarks();
+  }, [loadMarks]);
+
+  const setStatus = (driverId: string, status: DriverAttendanceStatus) => {
+    setMarks((prev) => ({ ...prev, [driverId]: status }));
+  };
+
+  const markedCount = drivers.filter((d) => marks[d.id]).length;
+  const presentCount = drivers.filter((d) => marks[d.id] === 'present').length;
+
+  const handleSubmit = async () => {
+    if (!schoolId || drivers.length === 0) return;
+    setSaving(true);
+    setSaveMessage(null);
+
+    const toInsert: Record<string, unknown>[] = [];
+    const toUpdate: { id: string; status: DriverAttendanceStatus }[] = [];
+
+    drivers.forEach((d) => {
+      const status = marks[d.id];
+      if (!status) return;
+      const existingId = existingIds[d.id];
+      if (existingId) {
+        toUpdate.push({ id: existingId, status });
+      } else {
+        toInsert.push({
+          school_id: schoolId,
+          driver_id: d.id,
+          date,
+          status,
+          marked_by: userId,
+        });
+      }
+    });
+
+    try {
+      if (toInsert.length > 0) {
+        const { error } = await supabase.from('driver_attendance').insert(toInsert);
+        if (error) throw error;
+      }
+      if (toUpdate.length > 0) {
+        await Promise.all(
+          toUpdate.map((u) =>
+            supabase.from('driver_attendance').update({ status: u.status }).eq('id', u.id)
+          )
+        );
+      }
+      setSaveMessage(`Saved for ${markedCount} of ${drivers.length} drivers.`);
+      loadMarks();
+    } catch (err: any) {
+      setSaveMessage(`Error: ${err.message || 'failed to save'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Driver Attendance</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-5">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
+          />
+          {drivers.length > 0 && (
+            <div className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 w-full sm:w-auto">
+              <span className="text-green-600 font-semibold">{presentCount} present</span>
+              <span className="text-muted-foreground">/ {drivers.length} total</span>
+            </div>
+          )}
+        </div>
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+          </div>
+        )}
+
+        {!loading && drivers.length === 0 && (
+          <p className="text-sm text-muted-foreground">No drivers found for this school.</p>
+        )}
+
+        {!loading && drivers.length > 0 && (
+          <div className="space-y-2.5">
+            {drivers.map((d) => (
+              <div key={d.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border border-emerald-100 rounded-xl px-4 py-3 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                    {d.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-slate-800">{d.name}</div>
+                    {(d.phone || d.license_number) && (
+                      <div className="text-xs text-muted-foreground">
+                        {d.phone ? d.phone : ''}{d.phone && d.license_number ? ' \u00b7 ' : ''}{d.license_number ? `License ${d.license_number}` : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {DRIVER_STATUS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setStatus(d.id, opt.value)}
+                      className={`text-xs font-medium px-2.5 py-1.5 rounded-full border transition-all ${
+                        marks[d.id] === opt.value ? `${opt.color} border-transparent shadow-sm` : 'bg-white text-muted-foreground border-slate-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {drivers.length > 0 && (
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
+            <Button onClick={handleSubmit} disabled={saving} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl">
+              {saving ? 'Saving...' : 'Save Attendance'}
+            </Button>
+            {saveMessage && <span className="text-sm text-muted-foreground">{saveMessage}</span>}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function MarkAttendantAttendanceTab({ schoolId, userId }: { schoolId: string | null; userId: string | null; }) {
+  const [attendants, setAttendants] = useState<AttendanceAttendantRow[]>([]);
+  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [marks, setMarks] = useState<Record<string, AttendantAttendanceStatus>>({});
+  const [existingIds, setExistingIds] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!schoolId) return;
+    (async () => {
+      const { data } = await supabase
+        .from('bus_attendants')
+        .select('id, name, phone, certificate_number')
+        .eq('school_id', schoolId)
+        .order('name');
+      setAttendants((data || []) as AttendanceAttendantRow[]);
+    })();
+  }, [schoolId]);
+
+  const loadMarks = useCallback(async () => {
+    if (!schoolId || attendants.length === 0) return;
+    setLoading(true);
+    setSaveMessage(null);
+    const { data } = await supabase
+      .from('bus_attendant_attendance')
+      .select('id, attendant_id, status')
+      .eq('school_id', schoolId)
+      .eq('date', date);
+
+    const marksMap: Record<string, AttendantAttendanceStatus> = {};
+    const idsMap: Record<string, string> = {};
+    (data || []).forEach((r: any) => {
+      marksMap[r.attendant_id] = r.status;
+      idsMap[r.attendant_id] = r.id;
+    });
+    setMarks(marksMap);
+    setExistingIds(idsMap);
+    setLoading(false);
+  }, [schoolId, date, attendants.length]);
+
+  useEffect(() => {
+    loadMarks();
+  }, [loadMarks]);
+
+  const setStatus = (attendantId: string, status: AttendantAttendanceStatus) => {
+    setMarks((prev) => ({ ...prev, [attendantId]: status }));
+  };
+
+  const markedCount = attendants.filter((a) => marks[a.id]).length;
+  const presentCount = attendants.filter((a) => marks[a.id] === 'present').length;
+
+  const handleSubmit = async () => {
+    if (!schoolId || attendants.length === 0) return;
+    setSaving(true);
+    setSaveMessage(null);
+
+    const toInsert: Record<string, unknown>[] = [];
+    const toUpdate: { id: string; status: AttendantAttendanceStatus }[] = [];
+
+    attendants.forEach((a) => {
+      const status = marks[a.id];
+      if (!status) return;
+      const existingId = existingIds[a.id];
+      if (existingId) {
+        toUpdate.push({ id: existingId, status });
+      } else {
+        toInsert.push({
+          school_id: schoolId,
+          attendant_id: a.id,
+          date,
+          status,
+          marked_by: userId,
+        });
+      }
+    });
+
+    try {
+      if (toInsert.length > 0) {
+        const { error } = await supabase.from('bus_attendant_attendance').insert(toInsert);
+        if (error) throw error;
+      }
+      if (toUpdate.length > 0) {
+        await Promise.all(
+          toUpdate.map((u) =>
+            supabase.from('bus_attendant_attendance').update({ status: u.status }).eq('id', u.id)
+          )
+        );
+      }
+      setSaveMessage(`Saved for ${markedCount} of ${attendants.length} attendants.`);
+      loadMarks();
+    } catch (err: any) {
+      setSaveMessage(`Error: ${err.message || 'failed to save'}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Attendant Attendance</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-5">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:items-center">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
+          />
+          {attendants.length > 0 && (
+            <div className="flex items-center gap-2 text-sm font-medium px-4 py-2.5 bg-white rounded-xl shadow-sm border border-emerald-100 w-full sm:w-auto">
+              <span className="text-green-600 font-semibold">{presentCount} present</span>
+              <span className="text-muted-foreground">/ {attendants.length} total</span>
+            </div>
+          )}
+        </div>
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+          </div>
+        )}
+
+        {!loading && attendants.length === 0 && (
+          <p className="text-sm text-muted-foreground">No bus attendants found for this school.</p>
+        )}
+
+        {!loading && attendants.length > 0 && (
+          <div className="space-y-2.5">
+            {attendants.map((a) => (
+              <div key={a.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 border border-emerald-100 rounded-xl px-4 py-3 bg-white shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                    {a.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-sm text-slate-800">{a.name}</div>
+                    {(a.phone || a.certificate_number) && (
+                      <div className="text-xs text-muted-foreground">
+                        {a.phone ? a.phone : ''}{a.phone && a.certificate_number ? ' \u00b7 ' : ''}{a.certificate_number ? `Cert ${a.certificate_number}` : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-1.5 flex-wrap">
+                  {ATTENDANT_STATUS_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setStatus(a.id, opt.value)}
+                      className={`text-xs font-medium px-2.5 py-1.5 rounded-full border transition-all ${
+                        marks[a.id] === opt.value ? `${opt.color} border-transparent shadow-sm` : 'bg-white text-muted-foreground border-slate-200 hover:border-emerald-300'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {attendants.length > 0 && (
+          <div className="flex items-center gap-3 pt-2 flex-wrap">
+            <Button onClick={handleSubmit} disabled={saving} className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl">
+              {saving ? 'Saving...' : 'Save Attendance'}
+            </Button>
+            {saveMessage && <span className="text-sm text-muted-foreground">{saveMessage}</span>}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ViewAttendantAttendanceTab({ schoolId }: { schoolId: string | null; }) {
+  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<{ attendant_id: string; name: string; certificate_number: string | null; status: AttendantAttendanceStatus | null }[]>([]);
+
+  const loadSummary = useCallback(async () => {
+    if (!schoolId) return;
+    setLoading(true);
+
+    const { data: attendantRows } = await supabase
+      .from('bus_attendants')
+      .select('id, name, certificate_number')
+      .eq('school_id', schoolId)
+      .order('name');
+
+    const { data: recordRows } = await supabase
+      .from('bus_attendant_attendance')
+      .select('attendant_id, status')
+      .eq('school_id', schoolId)
+      .eq('date', date);
+
+    const statusMap: Record<string, AttendantAttendanceStatus> = {};
+    (recordRows || []).forEach((r: any) => {
+      statusMap[r.attendant_id] = r.status;
+    });
+
+    const combined = (attendantRows || []).map((a: any) => ({
+      attendant_id: a.id,
+      name: a.name,
+      certificate_number: a.certificate_number,
+      status: statusMap[a.id] ?? null,
+    }));
+
+    setRows(combined);
+    setLoading(false);
+  }, [schoolId, date]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  const counts = ATTENDANT_STATUS_OPTIONS.reduce((acc, opt) => {
+    acc[opt.value] = rows.filter((r) => r.status === opt.value).length;
+    return acc;
+  }, {} as Record<AttendantAttendanceStatus, number>);
+  const notMarked = rows.filter((r) => r.status === null).length;
+
+  return (
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Attendant Attendance View</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-5">
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
+        />
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+          </div>
+        )}
+
+        {!loading && rows.length === 0 && (
+          <p className="text-sm text-muted-foreground">No bus attendants found for this school.</p>
+        )}
+
+        {!loading && rows.length > 0 && (
+          <>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {ATTENDANT_STATUS_OPTIONS.map((opt) => (
+                <div key={opt.value} className={`text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm ${opt.soft}`}>
+                  {counts[opt.value]} {opt.label}
+                </div>
+              ))}
+              {notMarked > 0 && (
+                <div className="text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm bg-gray-50 text-gray-500 border border-gray-200">
+                  {notMarked} Not marked
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {rows.map((r) => {
+                const opt = ATTENDANT_STATUS_OPTIONS.find((o) => o.value === r.status);
+                return (
+                  <div key={r.attendant_id} className="flex items-center justify-between gap-2 px-4 py-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                        {r.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm text-slate-800 truncate">{r.name}</div>
+                        {r.certificate_number && (
+                          <div className="text-xs text-muted-foreground">Cert {r.certificate_number}</div>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full shrink-0 ${opt ? opt.soft : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
+                      {opt ? opt.label : 'Not marked'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function ViewDriverAttendanceTab({ schoolId }: { schoolId: string | null; }) {
+  const [date, setDate] = useState<string>(new Date().toISOString().slice(0, 10));
+  const [loading, setLoading] = useState(false);
+  const [rows, setRows] = useState<{ driver_id: string; name: string; license_number: string | null; status: DriverAttendanceStatus | null }[]>([]);
+
+  const loadSummary = useCallback(async () => {
+    if (!schoolId) return;
+    setLoading(true);
+
+    const { data: driverRows } = await supabase
+      .from('drivers')
+      .select('id, name, license_number')
+      .eq('school_id', schoolId)
+      .order('name');
+
+    const { data: recordRows } = await supabase
+      .from('driver_attendance')
+      .select('driver_id, status')
+      .eq('school_id', schoolId)
+      .eq('date', date);
+
+    const statusMap: Record<string, DriverAttendanceStatus> = {};
+    (recordRows || []).forEach((r: any) => {
+      statusMap[r.driver_id] = r.status;
+    });
+
+    const combined = (driverRows || []).map((d: any) => ({
+      driver_id: d.id,
+      name: d.name,
+      license_number: d.license_number,
+      status: statusMap[d.id] ?? null,
+    }));
+
+    setRows(combined);
+    setLoading(false);
+  }, [schoolId, date]);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  const counts = DRIVER_STATUS_OPTIONS.reduce((acc, opt) => {
+    acc[opt.value] = rows.filter((r) => r.status === opt.value).length;
+    return acc;
+  }, {} as Record<DriverAttendanceStatus, number>);
+  const notMarked = rows.filter((r) => r.status === null).length;
+
+  return (
+    <Card className="border border-emerald-100 rounded-2xl shadow-sm overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50/50 border-b border-emerald-100">
+        <CardTitle className="text-emerald-900">Driver Attendance View</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-5">
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="border border-emerald-100 rounded-xl px-3 py-2 text-sm w-full sm:w-auto"
+        />
+
+        {loading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+          </div>
+        )}
+
+        {!loading && rows.length === 0 && (
+          <p className="text-sm text-muted-foreground">No drivers found for this school.</p>
+        )}
+
+        {!loading && rows.length > 0 && (
+          <>
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              {DRIVER_STATUS_OPTIONS.map((opt) => (
+                <div key={opt.value} className={`text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm ${opt.soft}`}>
+                  {counts[opt.value]} {opt.label}
+                </div>
+              ))}
+              {notMarked > 0 && (
+                <div className="text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm bg-gray-50 text-gray-500 border border-gray-200">
+                  {notMarked} Not marked
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {rows.map((r) => {
+                const opt = DRIVER_STATUS_OPTIONS.find((o) => o.value === r.status);
+                return (
+                  <div key={r.driver_id} className="flex items-center justify-between gap-2 px-4 py-3 bg-white border border-emerald-100 rounded-xl shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-teal-100 flex items-center justify-center text-sm font-bold text-teal-700 shrink-0">
+                        {r.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-sm text-slate-800 truncate">{r.name}</div>
+                        {r.license_number && (
+                          <div className="text-xs text-muted-foreground">License {r.license_number}</div>
+                        )}
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full shrink-0 ${opt ? opt.soft : 'bg-gray-50 text-gray-500 border border-gray-200'}`}>
+                      {opt ? opt.label : 'Not marked'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

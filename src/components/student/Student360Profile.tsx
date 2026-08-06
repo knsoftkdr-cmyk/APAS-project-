@@ -73,7 +73,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
 
-import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, getStudentGoals, createStudentGoal, updateStudentGoal, deleteStudentGoal, type StudentGoal, getIepPlansForStudent, type IepPlanRecord, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
+import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getTransportLiveInfo, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, getStudentGoals, createStudentGoal, updateStudentGoal, deleteStudentGoal, type StudentGoal, getIepPlansForStudent, type IepPlanRecord, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type TransportLiveInfo, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
 import { getImprovementPlan, type ImprovementPlan } from "@/lib/improvementPlan";
 
 export type ProfileRole = "student" | "parent" | "staff";
@@ -181,8 +181,8 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
           <TransportTab
             studentId={studentId}
             schoolId={data.core.school_id ?? ""}
-            canEdit={canEdit}
-            canDelete={canDelete}
+            canEdit={false}
+            canDelete={false}
           />
         </TabsContent>
         <TabsContent value="documents" className="mt-4">
@@ -1230,6 +1230,26 @@ function TransportTab({
     enabled: !!studentId,
   });
 
+  // Live driver/attendant/route data from Transport Management, used
+  // whenever this student's transport assignment is linked to a real
+  // route_id. Falls back to the manual fields below when it isn't.
+  const { data: liveInfo } = useQuery({
+    queryKey: ["transport-live-info", studentId, record?.route_id],
+    queryFn: () => getTransportLiveInfo(studentId),
+    enabled: !!record?.route_id,
+  });
+
+  const effectiveRouteName = liveInfo?.routeName ?? record?.route_name ?? null;
+  const effectiveDriverName = liveInfo?.driverName ?? record?.driver_name ?? null;
+  const effectiveDriverPhone = liveInfo?.driverPhone ?? record?.driver_phone ?? null;
+  const effectiveAttendantName = liveInfo?.attendantName ?? record?.attendant_name ?? null;
+  const effectiveAttendantPhone = liveInfo?.attendantPhone ?? record?.attendant_phone ?? null;
+  const effectiveVehicleRegistration = liveInfo?.vehicleRegistrationNumber ?? record?.vehicle_registration_number ?? null;
+  const effectivePickupPoint = liveInfo?.pickupStopName ?? record?.pickup_point ?? null;
+  const effectivePickupTime = liveInfo?.pickupTime ?? record?.pickup_time ?? null;
+  const effectiveDropPoint = liveInfo?.dropStopName ?? record?.drop_point ?? null;
+  const effectiveDropTime = liveInfo?.dropTime ?? record?.drop_time ?? null;
+
   const [isEditing, setIsEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -1242,6 +1262,8 @@ function TransportTab({
     drop_time: record?.drop_time ?? "",
     driver_name: record?.driver_name ?? "",
     driver_phone: record?.driver_phone ?? "",
+    attendant_name: record?.attendant_name ?? "",
+    attendant_phone: record?.attendant_phone ?? "",
     vehicle_registration_number: record?.vehicle_registration_number ?? "",
     transport_fee: record?.transport_fee ?? "",
     fee_status: record?.fee_status ?? "pending",
@@ -1276,7 +1298,6 @@ function TransportTab({
 
   const validateAndSave = () => {
     const missing: string[] = [];
-    if (!formValues.bus_number?.trim()) missing.push("Bus Number");
     if (!formValues.route_name?.trim()) missing.push("Route Name");
     if (!formValues.driver_name?.trim()) missing.push("Driver Name");
     if (!formValues.driver_phone?.trim()) missing.push("Driver Phone");
@@ -1346,13 +1367,6 @@ function TransportTab({
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Bus Number <span className="text-destructive">*</span></label>
-                <Input
-                  value={formValues.bus_number}
-                  onChange={(e) => setFormValues((p: any) => ({ ...p, bus_number: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Route Name <span className="text-destructive">*</span></label>
                 <Input
                   value={formValues.route_name}
@@ -1402,6 +1416,21 @@ function TransportTab({
                   type="tel"
                   value={formValues.driver_phone}
                   onChange={(e) => setFormValues((p: any) => ({ ...p, driver_phone: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Attendant Name</label>
+                <Input
+                  value={formValues.attendant_name}
+                  onChange={(e) => setFormValues((p: any) => ({ ...p, attendant_name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-muted-foreground">Attendant Phone</label>
+                <Input
+                  type="tel"
+                  value={formValues.attendant_phone}
+                  onChange={(e) => setFormValues((p: any) => ({ ...p, attendant_phone: e.target.value }))}
                 />
               </div>
               <div className="space-y-1">
@@ -1464,15 +1493,19 @@ function TransportTab({
           </>
         ) : record ? (
           <>
-            <InfoRow label="Bus Number" value={record.bus_number} icon={Hash} iconColor="text-amber-500" />
-            <InfoRow label="Route Name" value={record.route_name} icon={Route} iconColor="text-orange-500" />
-            <InfoRow label="Pickup Point" value={record.pickup_point} icon={MapPinned} iconColor="text-emerald-500" />
-            <InfoRow label="Pickup Time" value={record.pickup_time} icon={Clock} iconColor="text-emerald-500" />
-            <InfoRow label="Drop Point" value={record.drop_point} icon={MapPinned} iconColor="text-rose-500" />
-            <InfoRow label="Drop Time" value={record.drop_time} icon={Clock} iconColor="text-rose-500" />
-            <InfoRow label="Driver Name" value={record.driver_name} icon={UserCircle} iconColor="text-indigo-500" />
-            <InfoRow label="Driver Phone" value={record.driver_phone} icon={Phone} iconColor="text-blue-500" />
-            <InfoRow label="Vehicle Registration Number" value={record.vehicle_registration_number} icon={IdCard} iconColor="text-slate-500" />
+            <InfoRow label="Route Name" value={effectiveRouteName} icon={Route} iconColor="text-orange-500" />
+            {liveInfo?.routeNumber && (
+              <InfoRow label="Route Number" value={liveInfo.routeNumber} icon={Hash} iconColor="text-orange-400" />
+            )}
+            <InfoRow label="Pickup Point" value={effectivePickupPoint} icon={MapPinned} iconColor="text-emerald-500" />
+            <InfoRow label="Pickup Time" value={effectivePickupTime} icon={Clock} iconColor="text-emerald-500" />
+            <InfoRow label="Drop Point" value={effectiveDropPoint} icon={MapPinned} iconColor="text-rose-500" />
+            <InfoRow label="Drop Time" value={effectiveDropTime} icon={Clock} iconColor="text-rose-500" />
+            <InfoRow label="Driver Name" value={effectiveDriverName} icon={UserCircle} iconColor="text-indigo-500" />
+            <InfoRow label="Driver Phone" value={effectiveDriverPhone} icon={Phone} iconColor="text-blue-500" />
+            <InfoRow label="Attendant Name" value={effectiveAttendantName} icon={UserCircle} iconColor="text-teal-500" />
+            <InfoRow label="Attendant Phone" value={effectiveAttendantPhone} icon={Phone} iconColor="text-teal-600" />
+            <InfoRow label="Vehicle Registration Number" value={effectiveVehicleRegistration} icon={IdCard} iconColor="text-slate-500" />
             <InfoRow label="Transport Fee" value={record.transport_fee != null ? String(record.transport_fee) : null} icon={Wallet} iconColor="text-green-500" />
             <div className="flex justify-between items-center text-sm py-1.5 px-2 -mx-2 rounded-md hover:bg-slate-50">
               <span className="text-muted-foreground">Fee Status</span>

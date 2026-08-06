@@ -59,6 +59,7 @@ function emptyForm(defaultIntakeId?: string | null): ApplicantFormInput {
 }
 
 export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocumentsUploaded }: ApplicantFormDialogProps) {
+  const openIntakes = intakes.filter((intake) => intake.is_open);
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -193,7 +194,12 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
                 <SelectValue placeholder="Select grade / academic year" />
               </SelectTrigger>
               <SelectContent>
-                {intakes.map((intake) => (
+                {openIntakes.length === 0 && (
+                  <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                    No open intakes right now
+                  </div>
+                )}
+                {openIntakes.map((intake) => (
                   <SelectItem key={intake.id} value={intake.id}>
                     {intake.grade} · {intake.academic_year} ({intake.seats_remaining ?? intake.total_seats} seats left)
                   </SelectItem>
