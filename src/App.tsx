@@ -120,6 +120,7 @@ const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
 const AdmissionsPage = lazy(() => import("./pages/AdmissionsPage"));
 const ERPFeeManagement = lazy(() => import("./pages/ERPFeeManagement"));
 const ERPTransport = lazy(() => import("./pages/ERPTransport"));
+const ERPInventory = lazy(() => import("./pages/ERPInventory"));
 const TransportManagement = lazy(() => import("./pages/TransportManagement"));
 
 import AttendanceMarking from "@/pages/AttendanceMarking";
@@ -192,6 +193,7 @@ export default function App() {
                       <Route path="/erp/people" element={<ERPPeople />} />
                       <Route path="/erp/fees" element={<ERPFeeManagement />} />
                       <Route path="/erp/transport" element={<ERPTransport />} />
+                      <Route path="/erp/inventory" element={<ERPInventory />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
                       <Route path="/student-profile" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><StudentProfile360 /></RoleGuard></ProtectedRoute>} />
                       <Route path="/student-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "admin", "parent"]}><StudentDashboard /></RoleGuard></ProtectedRoute>} />
