@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bus, MapPin, Loader2 } from "lucide-react";
+import { Bus, MapPin, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface DriverRow {
@@ -34,6 +34,22 @@ interface RouteStop {
   sequence_number: number;
   pickup_time: string | null;
   drop_time: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  radius_meters: number;
+}
+
+// Haversine distance in meters between two lat/lng points.
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 export default function DriverDashboard() {
@@ -45,7 +61,9 @@ export default function DriverDashboard() {
   const [sharing, setSharing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [statusMsg, setStatusMsg] = useState<string>("");
+  const [arrivedStopIds, setArrivedStopIds] = useState<Set<string>>(new Set());
 
+  const arrivedStopIdsRef = useRef<Set<string>>(new Set());
   const watchIdRef = useRef<number | null>(null);
   const intervalIdRef = useRef<number | null>(null);
   const lastSentRef = useRef<number>(0);
@@ -77,16 +95,54 @@ export default function DriverDashboard() {
       if (routeRow?.id) {
         const { data: stopRows } = await supabase
           .from("route_stops")
-          .select("id, stop_name, sequence_number, pickup_time, drop_time")
+          .select("id, stop_name, sequence_number, pickup_time, drop_time, latitude, longitude, radius_meters")
           .eq("route_id", routeRow.id)
           .order("sequence_number");
         setStops((stopRows as RouteStop[]) ?? []);
+
+        const today = new Date().toISOString().slice(0, 10);
+        const { data: arrivalRows } = await supabase
+          .from("stop_arrivals")
+          .select("stop_id")
+          .eq("route_id", routeRow.id)
+          .eq("arrival_date", today);
+        const arrivedSet = new Set((arrivalRows ?? []).map((a: any) => a.stop_id as string));
+        arrivedStopIdsRef.current = arrivedSet;
+        setArrivedStopIds(arrivedSet);
       }
 
       setLoading(false);
     };
     load();
   }, [profile?.id]);
+
+  const checkArrivals = async (lat: number, lng: number, vehicleId: string, driverId: string) => {
+    if (!route) return;
+    for (const stop of stops) {
+      if (arrivedStopIdsRef.current.has(stop.id)) continue;
+      if (stop.latitude == null || stop.longitude == null) continue;
+      const dist = distanceMeters(lat, lng, stop.latitude, stop.longitude);
+      if (dist <= (stop.radius_meters ?? 200)) {
+        arrivedStopIdsRef.current.add(stop.id);
+        setArrivedStopIds(new Set(arrivedStopIdsRef.current));
+        const { error } = await supabase.from("stop_arrivals").upsert(
+          {
+            route_id: route.id,
+            stop_id: stop.id,
+            vehicle_id: vehicleId,
+            driver_id: driverId,
+            school_id: profile?.school_id,
+            latitude: lat,
+            longitude: lng,
+          },
+          { onConflict: "stop_id,arrival_date" }
+        );
+        if (!error) {
+          toast.success(`Arrived at ${stop.stop_name}`);
+        }
+      }
+    }
+  };
 
   const sendLocation = async (lat: number, lng: number, vehicleId: string, driverId: string) => {
     const { error } = await supabase.from("vehicle_locations").upsert({
@@ -103,6 +159,8 @@ export default function DriverDashboard() {
       setLastUpdate(new Date());
       setStatusMsg("Sharing live location...");
     }
+
+    await checkArrivals(lat, lng, vehicleId, driverId);
   };
 
   const startTrip = () => {
@@ -230,9 +288,12 @@ export default function DriverDashboard() {
                     <p className="text-xs font-medium text-muted-foreground">Stops</p>
                     {stops.map((s, idx) => (
                       <div key={s.id} className="flex items-center justify-between text-sm border-b last:border-b-0 pb-2 last:pb-0">
-                        <span>
+                        <span className="flex items-center">
                           <span className="text-muted-foreground mr-1.5">{idx + 1}.</span>
                           {s.stop_name}
+                          {arrivedStopIds.has(s.id) && (
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 ml-1.5" />
+                          )}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {s.pickup_time && `Pickup ${s.pickup_time}`}

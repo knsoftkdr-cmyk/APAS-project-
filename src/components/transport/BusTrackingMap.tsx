@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { useEffect, useState, Fragment } from "react";
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,11 +18,11 @@ const stopIcon = new L.DivIcon({
   iconSize: [10, 10],
 });
 
-function highlightIcon(label: string, color: string) {
+function highlightIcon(label: string, color: string, arrived?: boolean) {
   return new L.DivIcon({
     html: `<div style="display:flex;flex-direction:column;align-items:center;transform:translate(-50%,-100%);">
-             <div style="background:${color};color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;white-space:nowrap;margin-bottom:2px;">${label}</div>
-             <div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;"></div>
+             <div style="background:${color};color:white;font-size:10px;font-weight:600;padding:2px 6px;border-radius:6px;white-space:nowrap;margin-bottom:2px;">${label}${arrived ? " ✓" : ""}</div>
+             <div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;${arrived ? "box-shadow:0 0 0 5px rgba(16,185,129,0.35);" : ""}"></div>
            </div>`,
     className: "",
     iconSize: [0, 0],
@@ -41,6 +41,7 @@ interface StopRow {
   sequence_number: number;
   latitude: number | null;
   longitude: number | null;
+  radius_meters: number | null;
 }
 
 interface BusTrackingMapProps {
@@ -102,6 +103,7 @@ export function BusTrackingMap({
   const [roadPath, setRoadPath] = useState<[number, number][] | null>(null);
   const [loading, setLoading] = useState(true);
   const [busPosition, setBusPosition] = useState<BusPosition | null>(null);
+  const [arrivals, setArrivals] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -115,7 +117,7 @@ export function BusTrackingMap({
       setLoading(true);
       const { data, error } = await supabase
         .from("route_stops")
-        .select("id, stop_name, sequence_number, latitude, longitude")
+        .select("id, stop_name, sequence_number, latitude, longitude, radius_meters")
         .eq("route_id", routeId)
         .order("sequence_number");
 
@@ -188,6 +190,47 @@ export function BusTrackingMap({
     };
   }, [vehicleId]);
 
+  useEffect(() => {
+    if (!routeId) {
+      setArrivals({});
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadArrivals() {
+      const today = new Date().toISOString().slice(0, 10);
+      const { data } = await supabase
+        .from("stop_arrivals")
+        .select("stop_id, arrived_at")
+        .eq("route_id", routeId)
+        .eq("arrival_date", today);
+      if (!cancelled) {
+        const map: Record<string, string> = {};
+        (data || []).forEach((a: any) => { map[a.stop_id] = a.arrived_at; });
+        setArrivals(map);
+      }
+    }
+    loadArrivals();
+
+    const channel = supabase
+      .channel(`stop-arrivals-${routeId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "stop_arrivals", filter: `route_id=eq.${routeId}` },
+        (payload) => {
+          const row = payload.new as any;
+          setArrivals((prev) => ({ ...prev, [row.stop_id]: row.arrived_at }));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [routeId]);
+
   const busIsStale = busPosition
     ? Date.now() - new Date(busPosition.updated_at).getTime() > 2 * 60 * 1000
     : false;
@@ -196,7 +239,16 @@ export function BusTrackingMap({
   const straightPath: [number, number][] = geocodedStops.map((s) => [s.latitude as number, s.longitude as number]);
   const displayPath = roadPath ?? straightPath;
   const hasPath = geocodedStops.length >= 2;
-  const center: [number, number] | null = geocodedStops.length > 0 ? straightPath[0] : null;
+  const focusStop =
+    geocodedStops.find((s) => s.id === pickupStopId) ||
+    geocodedStops.find((s) => s.id === dropStopId) ||
+    null;
+  const center: [number, number] | null = focusStop
+    ? [focusStop.latitude as number, focusStop.longitude as number]
+    : geocodedStops.length > 0
+    ? straightPath[0]
+    : null;
+  const initialZoom = focusStop ? 16 : 13;
 
   return (
     <Card>
@@ -228,6 +280,22 @@ export function BusTrackingMap({
             )}
           </div>
         )}
+        {(pickupStopId && arrivals[pickupStopId]) || (dropStopId && arrivals[dropStopId]) ? (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {pickupStopId && arrivals[pickupStopId] && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                ✅ Bus reached pickup stop at{" "}
+                {new Date(arrivals[pickupStopId]).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+            {dropStopId && arrivals[dropStopId] && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2.5 py-1 text-xs font-medium text-red-700">
+                ✅ Bus reached drop stop at{" "}
+                {new Date(arrivals[dropStopId]).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+          </div>
+        ) : null}
         {vehicleId && (
           <div className="mb-2 text-xs">
             {busPosition ? (
@@ -250,7 +318,7 @@ export function BusTrackingMap({
           </div>
         ) : (
           <div className="rounded-lg overflow-hidden border" style={{ height: "400px" }}>
-            <MapContainer center={center as [number, number]} zoom={13} style={{ height: "100%", width: "100%" }}>
+            <MapContainer center={center as [number, number]} zoom={initialZoom} style={{ height: "100%", width: "100%" }}>
               <TileLayer
                 attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -279,15 +347,40 @@ export function BusTrackingMap({
               {geocodedStops.map((s) => {
                 const isPickup = s.id === pickupStopId;
                 const isDrop = s.id === dropStopId;
+                const arrivedAt = arrivals[s.id];
                 if (isPickup || isDrop) {
+                  const color = isPickup ? "#059669" : "#dc2626";
                   return (
-                    <Marker
-                      key={s.id}
-                      position={[s.latitude as number, s.longitude as number]}
-                      icon={highlightIcon(isPickup ? "Pickup" : "Drop", isPickup ? "#059669" : "#dc2626")}
-                    >
-                      <Popup>{s.stop_name} — {isPickup ? "Your child's pickup stop" : "Your child's drop stop"}</Popup>
-                    </Marker>
+                    <Fragment key={s.id}>
+                      <Circle
+                        center={[s.latitude as number, s.longitude as number]}
+                        radius={s.radius_meters ?? 200}
+                        pathOptions={{
+                          color,
+                          fillColor: color,
+                          fillOpacity: arrivedAt ? 0.22 : 0.08,
+                          weight: arrivedAt ? 2 : 1,
+                          dashArray: arrivedAt ? undefined : "4 4",
+                        }}
+                      />
+                      <Marker
+                        position={[s.latitude as number, s.longitude as number]}
+                        icon={highlightIcon(isPickup ? "Pickup" : "Drop", color, !!arrivedAt)}
+                      >
+                        <Popup>
+                          {s.stop_name} — {isPickup ? "Your child's pickup stop" : "Your child's drop stop"}
+                          {arrivedAt && (
+                            <>
+                              <br />
+                              <span style={{ color: "#059669" }}>
+                                ✅ Bus arrived at{" "}
+                                {new Date(arrivedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </>
+                          )}
+                        </Popup>
+                      </Marker>
+                    </Fragment>
                   );
                 }
                 return (

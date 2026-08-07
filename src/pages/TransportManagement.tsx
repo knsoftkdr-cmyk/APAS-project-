@@ -36,7 +36,8 @@ import {
   LayoutTemplate,
   BookmarkPlus,
   Copy,
-  History
+  History,
+  Wand2
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -112,6 +113,7 @@ interface RouteStop {
   drop_time: string | null;
   latitude?: number | null;
   longitude?: number | null;
+  radius_meters?: number;
 }
 
 function useDebouncedAddressSearch(query: string) {
@@ -252,6 +254,7 @@ interface Assignment {
   transport_fee: number | null;
   fee_status: string | null;
   status: string | null;
+  seat_number: number | null;
   students?: StudentLite;
 }
 
@@ -1392,6 +1395,54 @@ const DAY_LABELS = [
   { value: 7, label: "Sun" },
 ];
 
+// Nearest-neighbor TSP heuristic, keeping index 0 fixed as the start stop.
+function nearestNeighborOrder(durations: number[][], startIdx: number): number[] {
+  const n = durations.length;
+  const visited = new Array(n).fill(false);
+  visited[startIdx] = true;
+  const order = [startIdx];
+  let current = startIdx;
+  for (let step = 1; step < n; step++) {
+    let best = -1;
+    let bestDur = Infinity;
+    for (let j = 0; j < n; j++) {
+      if (!visited[j] && durations[current][j] < bestDur) {
+        bestDur = durations[current][j];
+        best = j;
+      }
+    }
+    visited[best] = true;
+    order.push(best);
+    current = best;
+  }
+  return order;
+}
+
+function totalRouteDuration(order: number[], durations: number[][]): number {
+  let total = 0;
+  for (let i = 0; i < order.length - 1; i++) total += durations[order[i]][order[i + 1]];
+  return total;
+}
+
+// 2-opt improvement pass. Index 0 (the start) is never moved since i starts at 1.
+function twoOptImprove(order: number[], durations: number[][]): number[] {
+  let best = [...order];
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (let i = 1; i < best.length - 1; i++) {
+      for (let k = i + 1; k < best.length; k++) {
+        const candidate = [...best.slice(0, i), ...best.slice(i, k + 1).reverse(), ...best.slice(k + 1)];
+        if (totalRouteDuration(candidate, durations) < totalRouteDuration(best, durations)) {
+          best = candidate;
+          improved = true;
+        }
+      }
+    }
+  }
+  return best;
+}
+
 export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -1564,7 +1615,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const addStop = () => {
     setStops([...stops, {
       stop_name: "", sequence_number: stops.length + 1, pickup_time: null, drop_time: null,
-      latitude: null, longitude: null,
+      latitude: null, longitude: null, radius_meters: 200,
     }]);
   };
 
@@ -1583,6 +1634,34 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     [next[idx], next[target]] = [next[target], next[idx]];
     setStops(next.map((s, i) => ({ ...s, sequence_number: i + 1 })));
   };
+
+  const optimizeMutation = useMutation({
+    mutationFn: async () => {
+      if (stops.length < 3) throw new Error("Add at least 3 stops to optimize the order");
+      if (stops.some((s) => s.latitude == null || s.longitude == null)) {
+        throw new Error("Every stop needs coordinates (use the address search) before optimizing");
+      }
+
+      const coordStr = stops.map((s) => `${s.longitude},${s.latitude}`).join(";");
+      const res = await fetch(
+        `https://router.project-osrm.org/table/v1/driving/${coordStr}?annotations=duration`
+      );
+      if (!res.ok) throw new Error("Route optimization service is unavailable right now — try again shortly");
+      const data = await res.json();
+      if (data.code !== "Ok") throw new Error(data.message || "Could not compute an optimized route");
+
+      const durations: number[][] = data.durations;
+      let order = nearestNeighborOrder(durations, 0);
+      order = twoOptImprove(order, durations);
+
+      return order.map((idx, i) => ({ ...stops[idx], sequence_number: i + 1 }));
+    },
+    onSuccess: (reordered) => {
+      setStops(reordered);
+      toast.success("Stop order optimized for shortest driving route");
+    },
+    onError: (e: any) => toast.error(e.message || "Failed to optimize route"),
+  });
 
   const recordVersion = async (routeId: string, stopsData: RouteStop[]) => {
     try {
@@ -1635,6 +1714,21 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
         days_of_week: daysOfWeek,
       };
       let routeId = editing?.id;
+
+      if (vehicleId) {
+        const { data: conflictRoutes, error: conflictErr } = await supabase
+          .from("transport_routes")
+          .select("id, route_name")
+          .eq("school_id", schoolId)
+          .eq("vehicle_id", vehicleId);
+        if (conflictErr) throw conflictErr;
+        const conflict = (conflictRoutes || []).find((r) => r.id !== routeId);
+        if (conflict) {
+          throw new Error(
+            `This vehicle is already assigned to route "${conflict.route_name}". A vehicle can only run one route at a time.`
+          );
+        }
+      }
       if (editing) {
         const { data: updateData, error } = await supabase.from("transport_routes").update(payload).eq("id", editing.id).select();
         console.log("[ROUTE UPDATE DEBUG] payload sent:", payload);
@@ -1679,6 +1773,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
             drop_time: s.drop_time || null,
             latitude: s.latitude ?? null,
             longitude: s.longitude ?? null,
+            radius_meters: s.radius_meters ?? 200,
           }).eq("id", s.id!);
           if (updErr) throw updErr;
         }
@@ -1693,6 +1788,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
             drop_time: s.drop_time || null,
             latitude: s.latitude ?? null,
             longitude: s.longitude ?? null,
+            radius_meters: s.radius_meters ?? 200,
           }));
           const { error: insErr } = await supabase.from("route_stops").insert(insertPayload);
           if (insErr) throw insErr;
@@ -1711,6 +1807,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
             drop_time: s.drop_time || null,
             latitude: s.latitude ?? null,
             longitude: s.longitude ?? null,
+            radius_meters: s.radius_meters ?? 200,
           }));
           const { error: stopErr } = await supabase.from("route_stops").insert(stopsPayload);
           if (stopErr) throw stopErr;
@@ -1722,6 +1819,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     onSuccess: () => {
       toast.success(editing ? "Route updated" : "Route added");
       queryClient.invalidateQueries({ queryKey: ["transport-routes"] });
+      queryClient.invalidateQueries({ queryKey: ["transport-routes-with-capacity"] });
       setOpen(false);
       resetForm();
       setEditing(null);
@@ -1931,9 +2029,25 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                   <Label className="text-sm font-semibold flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" /> Stops
                   </Label>
-                  <Button size="sm" variant="outline" onClick={addStop} className="gap-1">
-                    <Plus className="h-3.5 w-3.5" /> Add Stop
-                  </Button>
+                  <div className="flex gap-1.5">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => optimizeMutation.mutate()}
+                      disabled={stops.length < 3 || optimizeMutation.isPending}
+                      className="gap-1"
+                    >
+                      {optimizeMutation.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Wand2 className="h-3.5 w-3.5" />
+                      )}
+                      Optimize Order
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={addStop} className="gap-1">
+                      <Plus className="h-3.5 w-3.5" /> Add Stop
+                    </Button>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   {stops.map((stop, idx) => (
@@ -1970,6 +2084,21 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                         value={stop.drop_time || ""}
                         onChange={(e) => updateStop(idx, { drop_time: e.target.value })}
                       />
+                      <div className="relative w-24">
+                        <Input
+                          type="number"
+                          className="pr-6"
+                          min={25}
+                          step={25}
+                          title="Safe zone radius in meters — how close the bus must get to count as arrived"
+                          placeholder="Radius"
+                          value={stop.radius_meters ?? 200}
+                          onChange={(e) => updateStop(idx, { radius_meters: Number(e.target.value) || 200 })}
+                        />
+                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                          m
+                        </span>
+                      </div>
                       <Button size="icon" variant="ghost" onClick={() => moveStop(idx, -1)} disabled={idx === 0}>
                         <ArrowUp className="h-3.5 w-3.5" />
                       </Button>
@@ -2187,6 +2316,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
   const [dropStopId, setDropStopId] = useState("");
   const [fee, setFee] = useState("");
   const [feeStatus, setFeeStatus] = useState("pending");
+  const [seatNumber, setSeatNumber] = useState("");
 
   const { data: assignments, isLoading } = useQuery({
     queryKey: ["transport-assignments", schoolId],
@@ -2203,12 +2333,14 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
   });
 
   const { data: routes } = useQuery({
-    queryKey: ["transport-routes", schoolId],
+    queryKey: ["transport-routes-with-capacity", schoolId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("transport_routes").select("*, route_stops(*)").eq("school_id", schoolId);
+        .from("transport_routes")
+        .select("*, route_stops(*), vehicles(capacity)")
+        .eq("school_id", schoolId);
       if (error) throw error;
-      return data as TransportRoute[];
+      return data as (TransportRoute & { vehicles: { capacity: number | null } | null })[];
     },
     enabled: !!schoolId,
   });
@@ -2277,11 +2409,38 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
   });
 
   const selectedRoute = routes?.find((r) => r.id === routeId);
+  const routeCapacity = selectedRoute?.vehicles?.capacity ?? null;
+  const takenSeats = new Set(
+    (assignments || [])
+      .filter((a) => a.route_id === routeId && a.status === "active" && a.id !== editing?.id)
+      .map((a) => a.seat_number)
+      .filter((n): n is number => n != null)
+  );
+  const seatsFilledCount = takenSeats.size;
+  const availableSeats = routeCapacity != null
+    ? Array.from({ length: routeCapacity }, (_, i) => i + 1).filter((n) => !takenSeats.has(n))
+    : [];
+
+  const suggestSeatForRoute = (newRouteId: string, excludeAssignmentId?: string) => {
+    const route = routes?.find((r) => r.id === newRouteId);
+    const capacity = route?.vehicles?.capacity ?? null;
+    if (capacity == null) return "";
+    const taken = new Set(
+      (assignments || [])
+        .filter((a) => a.route_id === newRouteId && a.status === "active" && a.id !== excludeAssignmentId)
+        .map((a) => a.seat_number)
+        .filter((n): n is number => n != null)
+    );
+    for (let i = 1; i <= capacity; i++) {
+      if (!taken.has(i)) return String(i);
+    }
+    return "";
+  };
 
   const resetForm = () => {
     setSelectedStudent(null); setRouteId(""); setPickupStopId(""); setDropStopId("");
     setFee(""); setFeeStatus("pending"); setSelectedClassName(""); setSelectedSection("");
-    setEditing(null);
+    setSeatNumber(""); setEditing(null);
   };
 
   const openEdit = (a: Assignment) => {
@@ -2292,6 +2451,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
     setDropStopId(a.drop_stop_id || "");
     setFee(a.transport_fee != null ? String(a.transport_fee) : "");
     setFeeStatus(a.fee_status || "pending");
+    setSeatNumber(a.seat_number != null ? String(a.seat_number) : "");
     setOpen(true);
   };
 
@@ -2299,6 +2459,10 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
     mutationFn: async () => {
       if (!selectedStudent) throw new Error("Select a student first");
       const route = routes?.find((r) => r.id === routeId);
+      const capacity = route?.vehicles?.capacity ?? null;
+      if (routeId && capacity != null && !seatNumber) {
+        throw new Error(`Bus is full (${seatsFilledCount}/${capacity} seats occupied)`);
+      }
       const payload = {
         student_id: selectedStudent.id,
         route_id: routeId || null,
@@ -2307,6 +2471,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
         route_name: route?.route_name || null,
         transport_fee: fee ? Number(fee) : null,
         fee_status: feeStatus,
+        seat_number: seatNumber ? Number(seatNumber) : null,
       };
       if (editing) {
         const { error } = await supabase.from("transport_assignments")
@@ -2416,13 +2581,58 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div>
                 <Label>Route</Label>
-                <Select value={routeId} onValueChange={(v) => { setRouteId(v); setPickupStopId(""); setDropStopId(""); }}>
+                <Select
+                  value={routeId}
+                  onValueChange={(v) => {
+                    setRouteId(v);
+                    setPickupStopId("");
+                    setDropStopId("");
+                    setSeatNumber(suggestSeatForRoute(v, editing?.id));
+                  }}
+                >
                   <SelectTrigger><SelectValue placeholder="Select route" /></SelectTrigger>
                   <SelectContent>
                     {routes?.map((r) => <SelectItem key={r.id} value={r.id}>{r.route_name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
+              {routeId && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label>Seat Number</Label>
+                    {routeCapacity != null && (
+                      <span className={`text-xs font-medium ${seatsFilledCount >= routeCapacity ? "text-red-600" : "text-muted-foreground"}`}>
+                        {seatsFilledCount}/{routeCapacity} seats filled
+                      </span>
+                    )}
+                  </div>
+                  {routeCapacity == null ? (
+                    <Input
+                      type="number"
+                      className="mt-1"
+                      placeholder="Seat number (no capacity set for this bus)"
+                      value={seatNumber}
+                      onChange={(e) => setSeatNumber(e.target.value)}
+                    />
+                  ) : availableSeats.length === 0 && !editing ? (
+                    <p className="text-xs text-red-600 mt-1.5">
+                      Bus is full ({seatsFilledCount}/{routeCapacity}) — no seats available on this route.
+                    </p>
+                  ) : (
+                    <Select value={seatNumber} onValueChange={setSeatNumber}>
+                      <SelectTrigger className="mt-1"><SelectValue placeholder="Select seat" /></SelectTrigger>
+                      <SelectContent>
+                        {editing?.seat_number != null && !availableSeats.includes(editing.seat_number) && (
+                          <SelectItem value={String(editing.seat_number)}>Seat {editing.seat_number} (current)</SelectItem>
+                        )}
+                        {availableSeats.map((n) => (
+                          <SelectItem key={n} value={String(n)}>Seat {n}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+              )}
               {selectedRoute && selectedRoute.route_stops.length > 0 && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -2486,6 +2696,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Student</TableHead>
                 <TableHead>Class</TableHead>
                 <TableHead>Route</TableHead>
+                <TableHead>Seat</TableHead>
                 <TableHead>Fee</TableHead>
                 <TableHead>Fee Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -2497,6 +2708,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                   <TableCell className="font-medium">{a.students?.full_name || "—"}</TableCell>
                   <TableCell>{a.students?.class || "—"}</TableCell>
                   <TableCell>{routes?.find((r) => r.id === a.route_id)?.route_name || "—"}</TableCell>
+                  <TableCell>{a.seat_number ?? "—"}</TableCell>
                   <TableCell>
                     {(() => {
                       const feeMgmtAmount = a.student_id ? transportFeeByStudent.get(a.student_id) : undefined;
@@ -2530,7 +2742,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
               ))}
               {assignments?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No students assigned yet.
                   </TableCell>
                 </TableRow>
