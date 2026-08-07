@@ -104,6 +104,7 @@ export function BusTrackingMap({
   const [loading, setLoading] = useState(true);
   const [busPosition, setBusPosition] = useState<BusPosition | null>(null);
   const [arrivals, setArrivals] = useState<Record<string, string>>({});
+  const [trail, setTrail] = useState<[number, number][]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -231,6 +232,52 @@ export function BusTrackingMap({
     };
   }, [routeId]);
 
+  useEffect(() => {
+    if (!vehicleId) {
+      setTrail([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadTrail() {
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const { data } = await supabase
+        .from("vehicle_location_history")
+        .select("latitude, longitude, recorded_at")
+        .eq("vehicle_id", vehicleId)
+        .gte("recorded_at", startOfToday.toISOString())
+        .order("recorded_at", { ascending: true });
+      if (!cancelled) {
+        setTrail((data || []).map((p: any) => [p.latitude, p.longitude] as [number, number]));
+      }
+    }
+    loadTrail();
+
+    const channel = supabase
+      .channel(`vehicle-trail-${vehicleId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "vehicle_location_history",
+          filter: `vehicle_id=eq.${vehicleId}`,
+        },
+        (payload) => {
+          const row = payload.new as { latitude: number; longitude: number } | undefined;
+          if (row) setTrail((prev) => [...prev, [row.latitude, row.longitude]]);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [vehicleId]);
+
   const busIsStale = busPosition
     ? Date.now() - new Date(busPosition.updated_at).getTime() > 2 * 60 * 1000
     : false;
@@ -323,6 +370,12 @@ export function BusTrackingMap({
                 attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
+              {trail.length >= 2 && (
+                <Polyline
+                  positions={trail}
+                  pathOptions={{ color: "#f97316", weight: 3, opacity: 0.85, dashArray: "1 8", lineCap: "round" }}
+                />
+              )}
               {hasPath && (
                 <Polyline positions={displayPath} pathOptions={{ color: "#2563eb", weight: 4, opacity: 0.6 }} />
               )}

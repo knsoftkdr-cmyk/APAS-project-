@@ -4,7 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bus, MapPin, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
+import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 interface DriverRow {
@@ -38,6 +41,13 @@ interface RouteStop {
   longitude: number | null;
   radius_meters: number;
 }
+interface TransportAssignment {
+  id: string;
+  student_id: string;
+  pickup_stop_id: string | null;
+  drop_stop_id: string | null;
+  students: { full_name: string } | null;
+}
 
 // Haversine distance in meters between two lat/lng points.
 function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -62,6 +72,13 @@ export default function DriverDashboard() {
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [statusMsg, setStatusMsg] = useState<string>("");
   const [arrivedStopIds, setArrivedStopIds] = useState<Set<string>>(new Set());
+  const [sosOpen, setSosOpen] = useState(false);
+  const [sosSending, setSosSending] = useState(false);
+  const [tripDirection, setTripDirection] = useState<"pickup" | "drop">("pickup");
+  const [assignments, setAssignments] = useState<TransportAssignment[]>([]);
+  const [boardedStudentIds, setBoardedStudentIds] = useState<Set<string>>(new Set());
+  const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
+  const [confirmingKey, setConfirmingKey] = useState<string | null>(null);
 
   const arrivedStopIdsRef = useRef<Set<string>>(new Set());
   const watchIdRef = useRef<number | null>(null);
@@ -109,6 +126,20 @@ export default function DriverDashboard() {
         const arrivedSet = new Set((arrivalRows ?? []).map((a: any) => a.stop_id as string));
         arrivedStopIdsRef.current = arrivedSet;
         setArrivedStopIds(arrivedSet);
+
+        const { data: assignmentRows } = await supabase
+          .from("transport_assignments")
+          .select("id, student_id, pickup_stop_id, drop_stop_id, students(full_name)")
+          .eq("route_id", routeRow.id);
+        setAssignments((assignmentRows as any as TransportAssignment[]) ?? []);
+
+        const today2 = new Date().toISOString().slice(0, 10);
+        const { data: boardingRows } = await supabase
+          .from("boarding_confirmations")
+          .select("student_id")
+          .eq("route_id", routeRow.id)
+          .eq("trip_date", today2);
+        setBoardedStudentIds(new Set((boardingRows ?? []).map((b: any) => b.student_id as string)));
       }
 
       setLoading(false);
@@ -159,6 +190,19 @@ export default function DriverDashboard() {
       setLastUpdate(new Date());
       setStatusMsg("Sharing live location...");
     }
+
+    // Append-only breadcrumb log, separate from the single "current position"
+    // row above — this is what powers the vehicle trail on the parent map.
+    // Best-effort: a logging failure shouldn't interrupt live tracking.
+    supabase.from("vehicle_location_history").insert({
+      vehicle_id: vehicleId,
+      driver_id: driverId,
+      school_id: profile?.school_id,
+      latitude: lat,
+      longitude: lng,
+    }).then(({ error: histError }) => {
+      if (histError) console.warn("[VEHICLE TRAIL] failed to log location history", histError);
+    });
 
     await checkArrivals(lat, lng, vehicleId, driverId);
   };
@@ -240,6 +284,124 @@ export default function DriverDashboard() {
     };
   }, []);
 
+  const navigateToStop = (stop: RouteStop) => {
+    if (stop.latitude == null || stop.longitude == null) {
+      toast.error("This stop doesn't have coordinates set yet — ask your school admin to add one.");
+      return;
+    }
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${stop.latitude},${stop.longitude}&travelmode=driving`;
+    window.open(url, "_blank");
+  };
+
+  const nextStop = stops.find((s) => !arrivedStopIds.has(s.id));
+
+  const navigateFullRoute = () => {
+    const remaining = stops.filter((s) => !arrivedStopIds.has(s.id));
+    const targets = remaining.length > 0 ? remaining : stops;
+    const withCoords = targets.filter((s) => s.latitude != null && s.longitude != null);
+    if (withCoords.length === 0) {
+      toast.error("None of the stops have coordinates set yet — ask your school admin to add them.");
+      return;
+    }
+    const destination = withCoords[withCoords.length - 1];
+    const waypoints = withCoords.slice(0, -1);
+    let url = `https://www.google.com/maps/dir/?api=1&destination=${destination.latitude},${destination.longitude}&travelmode=driving`;
+    if (waypoints.length > 0) {
+      url += `&waypoints=${waypoints.map((s) => `${s.latitude},${s.longitude}`).join("|")}`;
+    }
+    window.open(url, "_blank");
+  };
+
+  const sendSOS = () => {
+    if (!driverRow) return;
+    setSosSending(true);
+
+    const submit = (lat: number | null, lng: number | null) => {
+      supabase.from("sos_alerts").insert({
+        school_id: profile?.school_id,
+        driver_id: driverRow.id,
+        vehicle_id: route?.vehicle_id || null,
+        route_id: route?.id || null,
+        latitude: lat,
+        longitude: lng,
+      }).then(({ error }) => {
+        setSosSending(false);
+        setSosOpen(false);
+        if (error) {
+          toast.error("Failed to send SOS: " + error.message);
+        } else {
+          toast.success("SOS sent — school staff have been alerted.");
+        }
+      });
+    };
+
+    if (!("geolocation" in navigator)) {
+      submit(null, null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => submit(pos.coords.latitude, pos.coords.longitude),
+      // Location failing shouldn't block the alert itself — send it anyway.
+      () => submit(null, null),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 }
+    );
+  };
+
+  const confirmBoarding = async (assignment: TransportAssignment, stopId: string) => {
+    if (!route?.id || !driverRow) return;
+    const key = `${assignment.student_id}-${tripDirection}`;
+    setConfirmingKey(key);
+    const { error } = await supabase.from("boarding_confirmations").insert({
+      school_id: profile?.school_id,
+      assignment_id: assignment.id,
+      student_id: assignment.student_id,
+      route_id: route.id,
+      stop_id: stopId,
+      direction: tripDirection,
+      confirmed_by: driverRow.id,
+    });
+    setConfirmingKey(null);
+    if (error) {
+      if (!error.message.toLowerCase().includes("duplicate")) {
+        toast.error("Failed to confirm boarding: " + error.message);
+      }
+      return;
+    }
+    setBoardedStudentIds((prev) => new Set(prev).add(assignment.student_id));
+  };
+
+  const markAllBoarded = async (stopId: string) => {
+    if (!route?.id || !driverRow) return;
+    const toConfirm = assignments.filter(
+      (a) =>
+        (tripDirection === "pickup" ? a.pickup_stop_id : a.drop_stop_id) === stopId &&
+        !boardedStudentIds.has(a.student_id)
+    );
+    if (toConfirm.length === 0) return;
+    setConfirmingKey(`stop-${stopId}`);
+    const rows = toConfirm.map((a) => ({
+      school_id: profile?.school_id,
+      assignment_id: a.id,
+      student_id: a.student_id,
+      route_id: route.id,
+      stop_id: stopId,
+      direction: tripDirection,
+      confirmed_by: driverRow.id,
+    }));
+    const { error } = await supabase.from("boarding_confirmations").insert(rows);
+    setConfirmingKey(null);
+    if (error) {
+      toast.error("Failed to mark all boarded: " + error.message);
+      return;
+    }
+    setBoardedStudentIds((prev) => {
+      const next = new Set(prev);
+      toConfirm.forEach((a) => next.add(a.student_id));
+      return next;
+    });
+    toast.success("All students marked boarded.");
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -258,6 +420,39 @@ export default function DriverDashboard() {
             </div>
           </div>
         </div>
+
+        {driverRow && (
+          <Button
+            variant="destructive"
+            size="lg"
+            className="w-full gap-2 text-base font-semibold h-14"
+            onClick={() => setSosOpen(true)}
+          >
+            <AlertTriangle className="h-5 w-5" /> SOS — Emergency Alert
+          </Button>
+        )}
+
+        <Dialog open={sosOpen} onOpenChange={setSosOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="h-5 w-5" /> Send Emergency Alert?
+              </DialogTitle>
+              <DialogDescription>
+                This immediately notifies your school's transport staff with your current location. Only use this for a genuine emergency.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setSosOpen(false)} disabled={sosSending}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={sendSOS} disabled={sosSending}>
+                {sosSending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Send SOS
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card>
           <CardHeader>
@@ -283,28 +478,116 @@ export default function DriverDashboard() {
                   )}
                 </div>
 
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Direction:</span>
+                  <div className="inline-flex rounded-md border overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setTripDirection("pickup")}
+                      className={`px-3 py-1 text-xs font-medium ${tripDirection === "pickup" ? "bg-emerald-600 text-white" : "bg-background text-muted-foreground"}`}
+                    >
+                      Pickup
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTripDirection("drop")}
+                      className={`px-3 py-1 text-xs font-medium ${tripDirection === "drop" ? "bg-emerald-600 text-white" : "bg-background text-muted-foreground"}`}
+                    >
+                      Drop
+                    </button>
+                  </div>
+                </div>
                 {stops.length > 0 && (
                   <div className="rounded-lg border p-3 space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">Stops</p>
-                    {stops.map((s, idx) => (
-                      <div key={s.id} className="flex items-center justify-between text-sm border-b last:border-b-0 pb-2 last:pb-0">
-                        <span className="flex items-center">
-                          <span className="text-muted-foreground mr-1.5">{idx + 1}.</span>
-                          {s.stop_name}
-                          {arrivedStopIds.has(s.id) && (
-                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 ml-1.5" />
+                    {stops.map((s, idx) => {
+                      const stopStudents = assignments.filter(
+                        (a) => (tripDirection === "pickup" ? a.pickup_stop_id : a.drop_stop_id) === s.id
+                      );
+                      const boardedCount = stopStudents.filter((a) => boardedStudentIds.has(a.student_id)).length;
+                      const isExpanded = expandedStopId === s.id;
+                      return (
+                        <div key={s.id} className="border-b last:border-b-0 pb-2 last:pb-0">
+                          <div className="flex items-center justify-between text-sm">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedStopId(isExpanded ? null : s.id)}
+                              className="flex items-center text-left"
+                            >
+                              <span className="text-muted-foreground mr-1.5">{idx + 1}.</span>
+                              {s.stop_name}
+                              {arrivedStopIds.has(s.id) && (
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 ml-1.5" />
+                              )}
+                              {stopStudents.length > 0 && (
+                                <span className="ml-1.5 text-xs text-muted-foreground">
+                                  ({boardedCount}/{stopStudents.length})
+                                </span>
+                              )}
+                            </button>
+                            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                              {s.pickup_time && `Pickup ${s.pickup_time}`}
+                              {s.pickup_time && s.drop_time && " · "}
+                              {s.drop_time && `Drop ${s.drop_time}`}
+                              <button
+                                type="button"
+                                onClick={() => navigateToStop(s)}
+                                className="text-blue-600 hover:text-blue-700"
+                                title={`Navigate to ${s.stop_name}`}
+                              >
+                                <Navigation className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          </div>
+                          {isExpanded && stopStudents.length > 0 && (
+                            <div className="mt-2 ml-4 space-y-1.5 border-l pl-3">
+                              {stopStudents.map((a) => {
+                                const boarded = boardedStudentIds.has(a.student_id);
+                                const key = `${a.student_id}-${tripDirection}`;
+                                return (
+                                  <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={boarded}
+                                      disabled={boarded || confirmingKey === key}
+                                      onChange={() => confirmBoarding(a, s.id)}
+                                      className="h-4 w-4 rounded border-gray-300"
+                                    />
+                                    <span className={boarded ? "text-muted-foreground line-through" : ""}>
+                                      {a.students?.full_name || "Student"}
+                                    </span>
+                                  </label>
+                                );
+                              })}
+                              {boardedCount < stopStudents.length && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-1 h-7 text-xs"
+                                  onClick={() => markAllBoarded(s.id)}
+                                  disabled={confirmingKey === `stop-${s.id}`}
+                                >
+                                  Mark all boarded
+                                </Button>
+                              )}
+                            </div>
                           )}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {s.pickup_time && `Pickup ${s.pickup_time}`}
-                          {s.pickup_time && s.drop_time && " · "}
-                          {s.drop_time && `Drop ${s.drop_time}`}
-                        </span>
-                      </div>
-                    ))}
+                          {isExpanded && stopStudents.length === 0 && (
+                            <p className="mt-2 ml-4 text-xs text-muted-foreground">
+                              No students assigned to this stop for {tripDirection}.
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
+                {stops.length > 0 && (
+                  <Button variant="outline" onClick={navigateFullRoute} className="gap-2">
+                    <Navigation className="h-4 w-4" /> Navigate Full Route
+                  </Button>
+                )}
                 {!sharing ? (
                   <Button onClick={startTrip} className="gap-2">
                     <MapPin className="h-4 w-4" /> Start Trip

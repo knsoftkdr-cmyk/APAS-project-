@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ERPLayout from "@/components/erp/ERPLayout";
 import { VehiclesTab, DriversTab, AttendantsTab, RoutesTab, AssignmentsTab } from "@/pages/TransportManagement";
+import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
 
 const ERPTransport = () => {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ const ERPTransport = () => {
 
   return (
     <ERPLayout orgName={orgName} activePath="/erp/transport" tabLabel="Transport">
+      <SosAlertBanner />
       <Tabs defaultValue="vehicles" className="space-y-4">
         <TabsList className="grid w-full grid-cols-4 max-w-2xl">
           <TabsTrigger value="vehicles" className="gap-1.5">

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -308,6 +309,8 @@ export default function TransportManagement() {
             </div>
           </div>
         </div>
+
+        <SosAlertBanner />
 
         <Tabs defaultValue="vehicles" className="space-y-4">
           <TabsList className="grid w-full grid-cols-4 max-w-2xl">
