@@ -123,6 +123,7 @@ const TeacherSafeguardingReport = lazy(() => import("./pages/TeacherSafeguarding
 const SafeguardingPage = lazy(() => import("./pages/SafeguardingPage"));
 const AdmissionsPage = lazy(() => import("./pages/AdmissionsPage"));
 const ERPFeeManagement = lazy(() => import("./pages/ERPFeeManagement"));
+const ERPLibraryManagement = lazy(() => import("./pages/ERPLibraryManagement"));
 const ERPTransport = lazy(() => import("./pages/ERPTransport"));
 const ERPInventory = lazy(() => import("./pages/ERPInventory"));
 const TransportManagement = lazy(() => import("./pages/TransportManagement"));
@@ -197,6 +198,7 @@ export default function App() {
                       <Route path="/erp/people" element={<ERPPeople />} />
                       <Route path="/erp/admissions" element={<ERPAdmissions />} />
                       <Route path="/erp/fees" element={<ERPFeeManagement />} />
+                      <Route path="/erp/library" element={<ERPLibraryManagement />} />
                       <Route path="/erp/transport" element={<ERPTransport />} />
                       <Route path="/erp/inventory" element={<ERPInventory />} />
                       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

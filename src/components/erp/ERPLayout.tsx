@@ -1,6 +1,6 @@
-import { ReactNode, useState } from "react";
+﻿import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown, GraduationCap, Package } from "lucide-react";
+import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown, GraduationCap, Package, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 type NavItem = { label: string; icon: React.ElementType; path: string };
@@ -10,6 +10,7 @@ export const ERP_NAV_ITEMS: NavItem[] = [
   { label: "People", icon: Users, path: "/erp/people" },
   { label: "Admissions", icon: GraduationCap, path: "/erp/admissions" },
   { label: "Fee Management", icon: Wallet, path: "/erp/fees" },
+  { label: "Library", icon: BookOpen, path: "/erp/library" },
   { label: "Transport", icon: Bus, path: "/erp/transport" },
   { label: "Inventory", icon: Package, path: "/erp/inventory" },
 ];
