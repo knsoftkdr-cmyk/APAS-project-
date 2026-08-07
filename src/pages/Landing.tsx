@@ -15,6 +15,7 @@ import schoolbg from "@/assets/school-bg.png";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { Helmet } from "react-helmet-async";
+import { getAllPosts } from "@/lib/blog";
 import {
   Brain,
   BarChart3,
@@ -1773,6 +1774,56 @@ duration-300
         </div>
       </section> 
 
+{/* Latest Articles */}
+<section className="relative py-24 px-6 bg-gradient-to-b from-white via-blue-50/30 to-white">
+  <div className="max-w-7xl mx-auto">
+    <div data-reveal className="reveal text-center max-w-2xl mx-auto mb-14">
+      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-100 text-xs font-semibold text-blue-700 mb-4">
+        From the Blog
+      </div>
+      <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">
+        Latest{" "}
+        <span className="bg-gradient-to-r from-blue-600 to-green-500 bg-clip-text text-transparent">
+          Articles
+        </span>
+      </h2>
+      <p className="mt-4 text-slate-600">
+        Insights on adaptive learning, AI in education, and how APAS works.
+      </p>
+    </div>
+
+    <div className="grid md:grid-cols-3 gap-6">
+      {getAllPosts().slice(0, 3).map((post, i) => (
+        <Link
+          key={post.slug}
+          to={`/blog/${post.slug}`}
+          data-reveal
+          className="reveal group rounded-2xl bg-white border border-slate-100 p-7 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200 transition-all"
+          style={{ transitionDelay: `${i * 100}ms` }}
+        >
+          {post.date && (
+            <div className="text-xs font-semibold text-blue-600 mb-2">
+              {new Date(post.date).toLocaleDateString(undefined, {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </div>
+          )}
+          <h3 className="font-bold text-lg text-slate-900 group-hover:text-blue-700 transition-colors">
+            {post.title}
+          </h3>
+          <p className="mt-2 text-sm text-slate-600 leading-relaxed">
+            {post.description}
+          </p>
+          <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+            Read more <ArrowRight className="w-3.5 h-3.5" />
+          </div>
+        </Link>
+      ))}
+    </div>
+  </div>
+</section>
       {/* CTA */}
       <section id="get-started" className="relative py-24 px-6">
         <div className="max-w-5xl mx-auto rounded-3xl relative overflow-hidden shadow-2xl shadow-blue-500/40">

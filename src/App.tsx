@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
@@ -324,6 +326,8 @@ export default function App() {
 <Route path="/student/credentials" element={
   <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><MyCredentials /></AppLayout></RoleGuard></ProtectedRoute>
 } />
+<Route path="/blog" element={<Blog />} />
+        <Route path="/blog/:slug" element={<BlogPost />} />
                     </Routes>
                   </Suspense>
                 </NotificationProvider>
