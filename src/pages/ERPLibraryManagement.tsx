@@ -1093,6 +1093,18 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
 // Digital Library Tab — ebook upload/browse (placeholder for storage wiring)
 // ---------------------------------------------------------------------------
 function DigitalLibraryTab({ schoolId }: { schoolId: string }) {
+  const queryClient = useQueryClient();
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({
+    title: "",
+    author: "",
+    subject: "",
+    class_level: "",
+    isDownloadable: true,
+  });
+  const [file, setFile] = useState<File | null>(null);
+
   const { data: ebooks, isLoading } = useQuery({
     queryKey: ["library-ebooks", schoolId],
     queryFn: async () => {
@@ -1108,37 +1120,169 @@ function DigitalLibraryTab({ schoolId }: { schoolId: string }) {
     enabled: !!schoolId,
   });
 
+  const resetForm = () => {
+    setForm({ title: "", author: "", subject: "", class_level: "", isDownloadable: true });
+    setFile(null);
+  };
+
+  const uploadMutation = useMutation({
+    mutationFn: async () => {
+      if (!file) throw new Error("Please choose a file to upload");
+      setUploading(true);
+
+      const { data: userData } = await supabase.auth.getUser();
+      const uploadedBy = userData.user?.id ?? null;
+
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const storagePath = `${schoolId}/ebooks/${Date.now()}-${safeName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("library-files")
+        .upload(storagePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from("library-files")
+        .getPublicUrl(storagePath);
+
+      const { data: itemData, error: itemError } = await supabase
+        .from("library_items")
+        .insert({
+          school_id: schoolId,
+          item_type: "ebook",
+          title: form.title,
+          author: form.author || null,
+          subject: form.subject || null,
+          class_level: form.class_level || null,
+          total_copies: 1,
+          available_copies: 1,
+        })
+        .select("id")
+        .single();
+      if (itemError) throw itemError;
+
+      const { error: fileError } = await supabase.from("library_item_files").insert({
+        item_id: itemData.id,
+        school_id: schoolId,
+        file_url: publicUrlData.publicUrl,
+        file_type: file.type || file.name.split(".").pop() || "unknown",
+        file_size_kb: Math.round(file.size / 1024),
+        is_downloadable: form.isDownloadable,
+        uploaded_by: uploadedBy,
+      });
+      if (fileError) throw fileError;
+    },
+    onSuccess: () => {
+      toast.success("eBook uploaded");
+      queryClient.invalidateQueries({ queryKey: ["library-ebooks", schoolId] });
+      setUploadOpen(false);
+      resetForm();
+    },
+    onError: (err: Error) => toast.error(err.message),
+    onSettled: () => setUploading(false),
+  });
+
   return (
     <div className="space-y-4 mt-4">
       <div className="flex justify-end">
-        <Button size="sm" variant="outline" disabled title="Wire to Supabase Storage upload">
-          <Upload className="h-4 w-4 mr-1" />
-          Upload eBook
-        </Button>
+        <Dialog open={uploadOpen} onOpenChange={(v) => { setUploadOpen(v); if (!v) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <Upload className="h-4 w-4 mr-1" />
+              Upload eBook
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload eBook</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Title</Label>
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+              <div>
+                <Label>Author</Label>
+                <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} />
+              </div>
+              <div>
+                <Label>Subject / Genre (optional)</Label>
+                <Input
+                  value={form.subject}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                  placeholder="e.g. Science, Fiction, Biography..."
+                />
+              </div>
+              <div>
+                <Label>Class Level (optional, e.g. Class 6)</Label>
+                <Input value={form.class_level} onChange={(e) => setForm({ ...form, class_level: e.target.value })} />
+              </div>
+              <div>
+                <Label>File (PDF, EPUB, etc.)</Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.epub,.doc,.docx"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="isDownloadable"
+                  checked={form.isDownloadable}
+                  onChange={(e) => setForm({ ...form, isDownloadable: e.target.checked })}
+                />
+                <Label htmlFor="isDownloadable">Allow download</Label>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => uploadMutation.mutate()}
+                disabled={!form.title || !file || uploading}
+              >
+                {uploading ? "Uploading..." : "Upload"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead>File Type</TableHead>
-            <TableHead>Downloadable</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading && (
-            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
-          )}
-          {ebooks?.map((e: any) => (
-            <TableRow key={e.id}>
-              <TableCell className="font-medium">{e.title}</TableCell>
-              <TableCell>{e.author || "-"}</TableCell>
-              <TableCell>{e.library_item_files?.[0]?.file_type || "-"}</TableCell>
-              <TableCell>{e.library_item_files?.[0]?.is_downloadable ? "Yes" : "No"}</TableCell>
+
+      <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-blue-600 hover:bg-blue-600">
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white py-3">Title</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Author</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">File Type</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Downloadable</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow className="border-0"><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Loading...</TableCell></TableRow>
+            )}
+            {!isLoading && ebooks?.length === 0 && (
+              <TableRow className="border-0"><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No eBooks yet</TableCell></TableRow>
+            )}
+            {ebooks?.map((e: any) => (
+              <TableRow key={e.id} className="border-0 border-b border-slate-100 last:border-0 hover:bg-slate-50/70 transition-colors">
+                <TableCell className="font-medium text-slate-900 py-3">
+                  {e.library_item_files?.[0]?.file_url ? (
+                    <a href={e.library_item_files[0].file_url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+                      {e.title}
+                    </a>
+                  ) : (
+                    e.title
+                  )}
+                </TableCell>
+                <TableCell className="text-slate-700">{e.author || "-"}</TableCell>
+                <TableCell className="text-slate-600">{e.library_item_files?.[0]?.file_type || "-"}</TableCell>
+                <TableCell className="text-slate-600">{e.library_item_files?.[0]?.is_downloadable ? "Yes" : "No"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
@@ -1147,6 +1291,12 @@ function DigitalLibraryTab({ schoolId }: { schoolId: string }) {
 // Research Repository Tab — tagged research papers
 // ---------------------------------------------------------------------------
 function ResearchRepositoryTab({ schoolId }: { schoolId: string }) {
+  const queryClient = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({ title: "", author: "", subject: "", tags: "" });
+  const [file, setFile] = useState<File | null>(null);
+
   const { data: papers, isLoading } = useQuery({
     queryKey: ["library-research", schoolId],
     queryFn: async () => {
@@ -1162,35 +1312,165 @@ function ResearchRepositoryTab({ schoolId }: { schoolId: string }) {
     enabled: !!schoolId,
   });
 
+  const resetForm = () => {
+    setForm({ title: "", author: "", subject: "", tags: "" });
+    setFile(null);
+  };
+
+  const addPaperMutation = useMutation({
+    mutationFn: async () => {
+      setUploading(true);
+      const { data: itemData, error: itemError } = await supabase
+        .from("library_items")
+        .insert({
+          school_id: schoolId,
+          item_type: "research_paper",
+          title: form.title,
+          author: form.author || null,
+          subject: form.subject || null,
+          total_copies: 1,
+          available_copies: 1,
+        })
+        .select("id")
+        .single();
+      if (itemError) throw itemError;
+
+      const tagList = form.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (tagList.length > 0) {
+        const { error: tagError } = await supabase.from("library_item_tags").insert(
+          tagList.map((tag) => ({ item_id: itemData.id, school_id: schoolId, tag }))
+        );
+        if (tagError) throw tagError;
+      }
+
+      if (file) {
+        const { data: userData } = await supabase.auth.getUser();
+        const uploadedBy = userData.user?.id ?? null;
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const storagePath = `${schoolId}/research/${Date.now()}-${safeName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("library-files")
+          .upload(storagePath, file);
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("library-files")
+          .getPublicUrl(storagePath);
+
+        const { error: fileError } = await supabase.from("library_item_files").insert({
+          item_id: itemData.id,
+          school_id: schoolId,
+          file_url: publicUrlData.publicUrl,
+          file_type: file.type || file.name.split(".").pop() || "unknown",
+          file_size_kb: Math.round(file.size / 1024),
+          is_downloadable: true,
+          uploaded_by: uploadedBy,
+        });
+        if (fileError) throw fileError;
+      }
+    },
+    onSuccess: () => {
+      toast.success("Research paper added");
+      queryClient.invalidateQueries({ queryKey: ["library-research", schoolId] });
+      setAddOpen(false);
+      resetForm();
+    },
+    onError: (err: Error) => toast.error(err.message),
+    onSettled: () => setUploading(false),
+  });
+
   return (
     <div className="space-y-4 mt-4">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead>Subject</TableHead>
-            <TableHead>Tags</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading && (
-            <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Loading...</TableCell></TableRow>
-          )}
-          {papers?.map((p: any) => (
-            <TableRow key={p.id}>
-              <TableCell className="font-medium">{p.title}</TableCell>
-              <TableCell>{p.author || "-"}</TableCell>
-              <TableCell>{p.subject || "-"}</TableCell>
-              <TableCell className="space-x-1">
-                {p.library_item_tags?.map((t: any, i: number) => (
-                  <Badge key={i} variant="outline">{t.tag}</Badge>
-                ))}
-              </TableCell>
+      <div className="flex justify-end">
+        <Dialog open={addOpen} onOpenChange={(v) => { setAddOpen(v); if (!v) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Add Paper
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Research Paper</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Title</Label>
+                <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+              </div>
+              <div>
+                <Label>Author</Label>
+                <Input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} />
+              </div>
+              <div>
+                <Label>Subject (optional)</Label>
+                <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+              </div>
+              <div>
+                <Label>Tags (comma separated)</Label>
+                <Input
+                  value={form.tags}
+                  onChange={(e) => setForm({ ...form, tags: e.target.value })}
+                  placeholder="e.g. AI, education, K-12"
+                />
+              </div>
+              <div>
+                <Label>File (optional, PDF)</Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                onClick={() => addPaperMutation.mutate()}
+                disabled={!form.title || uploading}
+              >
+                {uploading ? "Saving..." : "Add Paper"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="border border-slate-200 rounded-xl overflow-hidden bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-blue-600 hover:bg-blue-600">
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white py-3">Title</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Author</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Subject</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Tags</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {isLoading && (
+              <TableRow className="border-0"><TableCell colSpan={4} className="text-center text-muted-foreground py-8">Loading...</TableCell></TableRow>
+            )}
+            {!isLoading && papers?.length === 0 && (
+              <TableRow className="border-0"><TableCell colSpan={4} className="text-center text-muted-foreground py-8">No research papers yet</TableCell></TableRow>
+            )}
+            {papers?.map((p: any) => (
+              <TableRow key={p.id} className="border-0 border-b border-slate-100 last:border-0 hover:bg-slate-50/70 transition-colors">
+                <TableCell className="font-medium text-slate-900 py-3">{p.title}</TableCell>
+                <TableCell className="text-slate-700">{p.author || "-"}</TableCell>
+                <TableCell className="text-slate-600">{p.subject || "-"}</TableCell>
+                <TableCell className="space-x-1">
+                  {p.library_item_tags?.map((t: any, i: number) => (
+                    <Badge key={i} variant="outline">{t.tag}</Badge>
+                  ))}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 }
