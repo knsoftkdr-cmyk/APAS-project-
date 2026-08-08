@@ -424,6 +424,106 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── TRANSPORT ALERT (boarding/drop confirmation -> parent push + bell) ──
+    if (type === "transport_alert") {
+      const { student_id, direction, stop_name, route_name } = payload;
+
+      if (!student_id || !direction) {
+        return Response.json(
+          { success: false, message: "student_id and direction are required" },
+          { status: 400 }
+        );
+      }
+
+      // boarding_confirmations.student_id is students.id -> resolve to profiles.id
+      const { data: studentRow } = await supabase
+        .from("students")
+        .select("profile_id, full_name")
+        .eq("id", student_id)
+        .maybeSingle();
+
+      if (!studentRow?.profile_id) {
+        return Response.json({ success: false, message: "Student profile not found" });
+      }
+
+      const { data: parentLinks } = await supabase
+        .from("parent_students")
+        .select("parent_id")
+        .eq("student_id", studentRow.profile_id);
+
+      const parentIds = (parentLinks || []).map((p: { parent_id: string }) => p.parent_id);
+      if (parentIds.length === 0) {
+        return Response.json({ success: false, message: "No parent linked to this student" });
+      }
+
+      const isPickup = direction === "pickup";
+      const title = isPickup ? "Your child has boarded the bus" : "Your child has been dropped off";
+      const notifBody = isPickup
+        ? `${studentRow.full_name || "Your child"} boarded the bus at ${stop_name || "their stop"}${route_name ? ` (${route_name})` : ""}.`
+        : `${studentRow.full_name || "Your child"} was dropped off at ${stop_name || "their stop"}${route_name ? ` (${route_name})` : ""}.`;
+
+      // In-app bell notification — written for ALL linked parents regardless of
+      // push preference, since that preference only gates the FCM push below.
+      const govRows = parentIds.map((pid: string) => ({
+        user_id: pid,
+        event_type: isPickup ? "transport_boarding" : "transport_drop",
+        title,
+        message: notifBody,
+        reference_id: student_id,
+        reference_type: "boarding_confirmation",
+        channel: "in_app",
+        is_read: false,
+      }));
+      const { error: govError } = await supabase.from("governance_notifications").insert(govRows);
+      if (govError) {
+        console.error("governance_notifications insert failed:", govError.message);
+      }
+
+      // Respect push preference (default enabled if no row exists)
+      const { data: prefs } = await supabase
+        .from("notification_preferences")
+        .select("user_id, push")
+        .in("user_id", parentIds);
+
+      const disabledIds = new Set(
+        (prefs || []).filter((p: { push: boolean }) => p.push === false).map((p: { user_id: string }) => p.user_id)
+      );
+      const eligibleParentIds = parentIds.filter((id: string) => !disabledIds.has(id));
+
+      if (eligibleParentIds.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; all parents have push disabled" });
+      }
+
+      const { data: parentDevices } = await supabase
+        .from("user_devices")
+        .select("fcm_token")
+        .in("user_id", eligibleParentIds)
+        .eq("is_active", true);
+
+      if (!parentDevices || parentDevices.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; no active parent devices" });
+      }
+
+      const results = await Promise.allSettled(
+        parentDevices.map((device: { fcm_token: string }) =>
+          sendPushToToken(accessToken, {
+            token: device.fcm_token,
+            title,
+            body: notifBody,
+            data: { type: "transport_alert", direction, student_id },
+          })
+        )
+      );
+
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+
+      return Response.json({
+        success: true,
+        parent_devices: parentDevices.length,
+        sent: succeeded,
+      });
+    }
+
     return Response.json(
       { success: false, message: `Unknown type: ${type}` },
       { status: 400 }

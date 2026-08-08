@@ -10,6 +10,28 @@ import {
 import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
+// Fire-and-forget parent push alert on boarding/drop confirmation.
+// Never blocks or fails the driver's UI flow.
+async function sendTransportAlert(params: {
+  student_id: string;
+  direction: "pickup" | "drop";
+  stop_name?: string;
+  route_name?: string;
+}) {
+  try {
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "transport_alert", payload: params }),
+      }
+    );
+  } catch {
+    // Non-critical — swallow errors, don't surface to driver.
+  }
+}
+
 interface DriverRow {
   id: string;
   name: string;
@@ -136,10 +158,12 @@ export default function DriverDashboard() {
         const today2 = new Date().toISOString().slice(0, 10);
         const { data: boardingRows } = await supabase
           .from("boarding_confirmations")
-          .select("student_id")
+          .select("student_id, direction")
           .eq("route_id", routeRow.id)
           .eq("trip_date", today2);
-        setBoardedStudentIds(new Set((boardingRows ?? []).map((b: any) => b.student_id as string)));
+        setBoardedStudentIds(
+          new Set((boardingRows ?? []).map((b: any) => `${b.student_id}-${b.direction}`))
+        );
       }
 
       setLoading(false);
@@ -367,7 +391,14 @@ export default function DriverDashboard() {
       }
       return;
     }
-    setBoardedStudentIds((prev) => new Set(prev).add(assignment.student_id));
+    setBoardedStudentIds((prev) => new Set(prev).add(`${assignment.student_id}-${tripDirection}`));
+    const stopName = stops.find((s) => s.id === stopId)?.stop_name;
+    sendTransportAlert({
+      student_id: assignment.student_id,
+      direction: tripDirection,
+      stop_name: stopName,
+      route_name: route?.route_name,
+    });
   };
 
   const markAllBoarded = async (stopId: string) => {
@@ -375,7 +406,7 @@ export default function DriverDashboard() {
     const toConfirm = assignments.filter(
       (a) =>
         (tripDirection === "pickup" ? a.pickup_stop_id : a.drop_stop_id) === stopId &&
-        !boardedStudentIds.has(a.student_id)
+        !boardedStudentIds.has(`${a.student_id}-${tripDirection}`)
     );
     if (toConfirm.length === 0) return;
     setConfirmingKey(`stop-${stopId}`);
@@ -391,15 +422,24 @@ export default function DriverDashboard() {
     const { error } = await supabase.from("boarding_confirmations").insert(rows);
     setConfirmingKey(null);
     if (error) {
-      toast.error("Failed to mark all boarded: " + error.message);
+      toast.error(`Failed to mark all ${tripDirection === "drop" ? "dropped" : "boarded"}: ` + error.message);
       return;
     }
+    const stopName = stops.find((s) => s.id === stopId)?.stop_name;
+    toConfirm.forEach((a) =>
+      sendTransportAlert({
+        student_id: a.student_id,
+        direction: tripDirection,
+        stop_name: stopName,
+        route_name: route?.route_name,
+      })
+    );
     setBoardedStudentIds((prev) => {
       const next = new Set(prev);
-      toConfirm.forEach((a) => next.add(a.student_id));
+      toConfirm.forEach((a) => next.add(`${a.student_id}-${tripDirection}`));
       return next;
     });
-    toast.success("All students marked boarded.");
+    toast.success(`All students marked ${tripDirection === "drop" ? "dropped" : "boarded"}.`);
   };
 
   return (
@@ -504,7 +544,7 @@ export default function DriverDashboard() {
                       const stopStudents = assignments.filter(
                         (a) => (tripDirection === "pickup" ? a.pickup_stop_id : a.drop_stop_id) === s.id
                       );
-                      const boardedCount = stopStudents.filter((a) => boardedStudentIds.has(a.student_id)).length;
+                      const boardedCount = stopStudents.filter((a) => boardedStudentIds.has(`${a.student_id}-${tripDirection}`)).length;
                       const isExpanded = expandedStopId === s.id;
                       return (
                         <div key={s.id} className="border-b last:border-b-0 pb-2 last:pb-0">
@@ -542,7 +582,7 @@ export default function DriverDashboard() {
                           {isExpanded && stopStudents.length > 0 && (
                             <div className="mt-2 ml-4 space-y-1.5 border-l pl-3">
                               {stopStudents.map((a) => {
-                                const boarded = boardedStudentIds.has(a.student_id);
+                                const boarded = boardedStudentIds.has(`${a.student_id}-${tripDirection}`);
                                 const key = `${a.student_id}-${tripDirection}`;
                                 return (
                                   <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -567,7 +607,7 @@ export default function DriverDashboard() {
                                   onClick={() => markAllBoarded(s.id)}
                                   disabled={confirmingKey === `stop-${s.id}`}
                                 >
-                                  Mark all boarded
+                                  {tripDirection === "drop" ? "Mark all dropped" : "Mark all boarded"}
                                 </Button>
                               )}
                             </div>

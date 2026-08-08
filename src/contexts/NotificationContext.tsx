@@ -588,6 +588,35 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(govChannel);
 
+    // 8. Transport boarding/drop alerts (via governance_notifications)
+    const transportChannel = supabase
+      .channel("notif_transport_alerts")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "governance_notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            event_type: string;
+            title: string;
+            message: string;
+          };
+          if (!row.event_type.startsWith("transport_")) return;
+          push({
+            type: "info",
+            title: row.title || "Transport update",
+            message: row.message || "Your child's bus status has been updated.",
+            link: "/parent-dashboard",
+          });
+        }
+      )
+      .subscribe();
+    channels.push(transportChannel);
+
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch));
     };

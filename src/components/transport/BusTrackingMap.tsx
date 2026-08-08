@@ -1,4 +1,4 @@
-import { useEffect, useState, Fragment } from "react";
+import { useEffect, useState, useRef, Fragment } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -105,6 +105,7 @@ export function BusTrackingMap({
   const [busPosition, setBusPosition] = useState<BusPosition | null>(null);
   const [arrivals, setArrivals] = useState<Record<string, string>>({});
   const [trail, setTrail] = useState<[number, number][]>([]);
+  const [eta, setEta] = useState<{ minutes: number; distanceKm: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -283,6 +284,64 @@ export function BusTrackingMap({
     : false;
 
   const geocodedStops = (stops || []).filter((s) => s.latitude != null && s.longitude != null);
+
+  // ETA: target whichever of pickup/drop the bus hasn't reached yet today.
+  const etaTargetStop =
+    pickupStopId && !arrivals[pickupStopId]
+      ? geocodedStops.find((s) => s.id === pickupStopId) ?? null
+      : dropStopId && !arrivals[dropStopId]
+      ? geocodedStops.find((s) => s.id === dropStopId) ?? null
+      : null;
+
+  const busPositionRef = useRef<BusPosition | null>(null);
+  useEffect(() => { busPositionRef.current = busPosition; }, [busPosition]);
+
+  const etaTargetStopRef = useRef(etaTargetStop);
+  useEffect(() => { etaTargetStopRef.current = etaTargetStop; }, [etaTargetStop]);
+
+  useEffect(() => {
+    if (!vehicleId) {
+      setEta(null);
+      return;
+    }
+    let cancelled = false;
+
+    async function computeEta() {
+      const pos = busPositionRef.current;
+      const stop = etaTargetStopRef.current;
+      if (!pos || !stop || stop.latitude == null || stop.longitude == null) {
+        if (!cancelled) setEta(null);
+        return;
+      }
+      // Skip if GPS is stale — an ETA from a 10-minute-old position is misleading.
+      if (Date.now() - new Date(pos.updated_at).getTime() > 5 * 60 * 1000) {
+        if (!cancelled) setEta(null);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${pos.longitude},${pos.latitude};${stop.longitude},${stop.latitude}?overview=false`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        const route = data?.routes?.[0];
+        if (!route || cancelled) return;
+        setEta({
+          minutes: Math.max(1, Math.round(route.duration / 60)),
+          distanceKm: Math.round((route.distance / 1000) * 10) / 10,
+        });
+      } catch {
+        // ETA is a nice-to-have — never surface an error for it.
+      }
+    }
+
+    computeEta();
+    const interval = setInterval(computeEta, 45000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [vehicleId, etaTargetStop?.id]);
   const straightPath: [number, number][] = geocodedStops.map((s) => [s.latitude as number, s.longitude as number]);
   const displayPath = roadPath ?? straightPath;
   const hasPath = geocodedStops.length >= 2;
@@ -344,7 +403,7 @@ export function BusTrackingMap({
           </div>
         ) : null}
         {vehicleId && (
-          <div className="mb-2 text-xs">
+          <div className="mb-2 text-xs flex flex-wrap items-center gap-2">
             {busPosition ? (
               <span className={busIsStale ? "text-amber-600" : "text-emerald-600"}>
                 {busIsStale ? "⚠ Bus location may be out of date" : "● Live"} — last updated{" "}
@@ -352,6 +411,11 @@ export function BusTrackingMap({
               </span>
             ) : (
               <span className="text-muted-foreground">Waiting for driver to start sharing location...</span>
+            )}
+            {eta && !busIsStale && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 font-medium text-blue-700">
+                🕒 ~{eta.minutes} min away ({eta.distanceKm} km)
+              </span>
             )}
           </div>
         )}
