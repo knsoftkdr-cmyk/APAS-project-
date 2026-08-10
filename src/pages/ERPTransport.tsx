@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bus, UserRound, Route as RouteIcon, Users, MapPin } from "lucide-react";
+import { Bus, UserRound, Route as RouteIcon, Users, MapPin, Wand2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ERPLayout from "@/components/erp/ERPLayout";
 import { VehiclesTab, DriversTab, AttendantsTab, RoutesTab, AssignmentsTab } from "@/pages/TransportManagement";
 import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
 import { GeofenceZonesTab } from "@/components/transport/GeofenceZonesTab";
+import { MultiRoutePlanner } from "@/components/transport/MultiRoutePlanner";
 
 const ERPTransport = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const ERPTransport = () => {
     <ERPLayout orgName={orgName} activePath="/erp/transport" tabLabel="Transport">
       <SosAlertBanner />
       <Tabs defaultValue="vehicles" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+        <TabsList className="grid w-full grid-cols-6 max-w-4xl">
           <TabsTrigger value="vehicles" className="gap-1.5">
             <Bus className="h-4 w-4" /> Vehicles
           </TabsTrigger>
@@ -72,6 +73,9 @@ const ERPTransport = () => {
           <TabsTrigger value="geofencing" className="gap-1.5">
             <MapPin className="h-4 w-4" /> Geofencing
           </TabsTrigger>
+          <TabsTrigger value="multiroute" className="gap-1.5">
+            <Wand2 className="h-4 w-4" /> Multi-Route
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="vehicles">
           <VehiclesTab schoolId={schoolId} />
@@ -85,6 +89,9 @@ const ERPTransport = () => {
         </TabsContent>
         <TabsContent value="assignments">
           <AssignmentsTab schoolId={schoolId} />
+        </TabsContent>
+        <TabsContent value="multiroute">
+          <MultiRoutePlanner schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="geofencing">
           <GeofenceZonesTab schoolId={schoolId} />

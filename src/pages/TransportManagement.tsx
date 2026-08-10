@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
 import { GeofenceZonesTab } from "@/components/transport/GeofenceZonesTab";
+import { MultiRoutePlanner } from "@/components/transport/MultiRoutePlanner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ interface Vehicle {
   permit_expiry: string | null;
   status: string;
   fuel_type: string | null;
+  mileage_kmpl: number | null;
   chassis_number: string | null;
   engine_number: string | null;
   gps_device_id: string | null;
@@ -263,7 +265,7 @@ interface Assignment {
 const EMPTY_VEHICLE = {
   registration_number: "", vehicle_type: "bus", capacity: "",
   insurance_expiry: "", fitness_expiry: "", permit_expiry: "", status: "active",
-  fuel_type: "diesel", chassis_number: "", engine_number: "", gps_device_id: "",
+  fuel_type: "diesel", mileage_kmpl: "", chassis_number: "", engine_number: "", gps_device_id: "",
   insurance_number: "", insurance_document_url: "",
   fitness_certificate_number: "", fitness_document_url: "",
   puc_number: "", puc_expiry: "", puc_document_url: "",
@@ -314,7 +316,7 @@ export default function TransportManagement() {
         <SosAlertBanner />
 
         <Tabs defaultValue="vehicles" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
+          <TabsList className="grid w-full grid-cols-6 max-w-4xl">
             <TabsTrigger value="vehicles" className="gap-1.5">
               <Bus className="h-4 w-4" /> Vehicles
             </TabsTrigger>
@@ -330,6 +332,9 @@ export default function TransportManagement() {
             <TabsTrigger value="geofencing" className="gap-1.5">
               <MapPin className="h-4 w-4" /> Geofencing
             </TabsTrigger>
+            <TabsTrigger value="multiroute" className="gap-1.5">
+              <Wand2 className="h-4 w-4" /> Multi-Route
+            </TabsTrigger>
           </TabsList>
           <TabsContent value="vehicles">
             <VehiclesTab schoolId={schoolId} />
@@ -343,6 +348,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="assignments">
             <AssignmentsTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="multiroute">
+            <MultiRoutePlanner schoolId={schoolId} />
           </TabsContent>
           <TabsContent value="geofencing">
             <GeofenceZonesTab schoolId={schoolId} />
@@ -494,6 +502,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
         permit_expiry: form.permit_expiry || null,
         status: form.status,
         fuel_type: form.fuel_type || null,
+        mileage_kmpl: form.mileage_kmpl ? Number(form.mileage_kmpl) : null,
         chassis_number: form.chassis_number || null,
         engine_number: form.engine_number || null,
         gps_device_id: form.gps_device_id || null,
@@ -550,6 +559,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
       permit_expiry: v.permit_expiry || "",
       status: v.status,
       fuel_type: v.fuel_type || "diesel",
+      mileage_kmpl: v.mileage_kmpl?.toString() || "",
       chassis_number: v.chassis_number || "",
       engine_number: v.engine_number || "",
       gps_device_id: v.gps_device_id || "",
@@ -658,6 +668,16 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                         <SelectItem value="electric">Electric</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div>
+                    <Label>Mileage (km/l)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={form.mileage_kmpl}
+                      onChange={(e) => setForm({ ...form, mileage_kmpl: e.target.value })}
+                      placeholder="e.g. 8.5"
+                    />
                   </div>
                   <div>
                     <Label>GPS Device ID</Label>
@@ -1603,6 +1623,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const resetForm = () => {
     setRouteName(""); setRouteNumber(""); setVehicleId(""); setDriverId(""); setAttendantId("");
     setStatus("active"); setDaysOfWeek([1, 2, 3, 4, 5, 6]); setStops([]); setOriginalStopIds([]);
+    setFuelStats(null);
   };
 
   const openNew = () => { setEditing(null); resetForm(); setOpen(true); };
@@ -1644,30 +1665,74 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     setStops(next.map((s, i) => ({ ...s, sequence_number: i + 1 })));
   };
 
+  const [fuelStats, setFuelStats] = useState<{ originalKm: number; optimizedKm: number; savedKm: number } | null>(null);
+
+  const { data: fuelInputs } = useQuery({
+    queryKey: ["fuel-inputs", vehicleId, schoolId],
+    queryFn: async () => {
+      const [{ data: vehicleRow }, { data: settingsRow }] = await Promise.all([
+        supabase.from("vehicles").select("mileage_kmpl").eq("id", vehicleId).maybeSingle(),
+        supabase.from("transport_settings").select("fuel_price_per_liter").eq("school_id", schoolId).maybeSingle(),
+      ]);
+      return {
+        mileageKmpl: (vehicleRow as any)?.mileage_kmpl ?? null,
+        fuelPricePerLiter: (settingsRow as any)?.fuel_price_per_liter ?? 100,
+      };
+    },
+    enabled: !!vehicleId && !!schoolId,
+  });
+
   const optimizeMutation = useMutation({
     mutationFn: async () => {
       if (stops.length < 3) throw new Error("Add at least 3 stops to optimize the order");
       if (stops.some((s) => s.latitude == null || s.longitude == null)) {
         throw new Error("Every stop needs coordinates (use the address search) before optimizing");
       }
-
       const coordStr = stops.map((s) => `${s.longitude},${s.latitude}`).join(";");
       const res = await fetch(
-        `https://router.project-osrm.org/table/v1/driving/${coordStr}?annotations=duration`
+        `https://router.project-osrm.org/table/v1/driving/${coordStr}?annotations=duration,distance`
       );
       if (!res.ok) throw new Error("Route optimization service is unavailable right now — try again shortly");
       const data = await res.json();
       if (data.code !== "Ok") throw new Error(data.message || "Could not compute an optimized route");
-
       const durations: number[][] = data.durations;
+      const distances: number[][] = data.distances;
+
+      const sumConsecutive = (indices: number[]) => {
+        let total = 0;
+        for (let i = 0; i < indices.length - 1; i++) {
+          total += distances[indices[i]][indices[i + 1]];
+        }
+        return total;
+      };
+      const originalOrder = stops.map((_, i) => i);
+      const originalMeters = sumConsecutive(originalOrder);
+
       let order = nearestNeighborOrder(durations, 0);
       order = twoOptImprove(order, durations);
+      const optimizedMeters = sumConsecutive(order);
 
-      return order.map((idx, i) => ({ ...stops[idx], sequence_number: i + 1 }));
+      return {
+        reordered: order.map((idx, i) => ({ ...stops[idx], sequence_number: i + 1 })),
+        originalKm: originalMeters / 1000,
+        optimizedKm: optimizedMeters / 1000,
+      };
     },
-    onSuccess: (reordered) => {
+    onSuccess: ({ reordered, originalKm, optimizedKm }) => {
       setStops(reordered);
-      toast.success("Stop order optimized for shortest driving route");
+      const savedKm = Math.max(0, originalKm - optimizedKm);
+      setFuelStats({ originalKm, optimizedKm, savedKm });
+
+      const mileage = fuelInputs?.mileageKmpl;
+      if (mileage && savedKm > 0.05) {
+        const savedLiters = savedKm / mileage;
+        const savedCost = savedLiters * (fuelInputs?.fuelPricePerLiter ?? 100);
+        toast.success(
+          `Optimized: ${optimizedKm.toFixed(1)} km (was ${originalKm.toFixed(1)} km) — saves ~${savedKm.toFixed(1)} km, ≈ ₹${savedCost.toFixed(0)}/day in fuel`
+        );
+      } else {
+        toast.success(`Stop order optimized — ${optimizedKm.toFixed(1)} km total driving distance`);
+      }
     },
     onError: (e: any) => toast.error(e.message || "Failed to optimize route"),
   });
@@ -2058,6 +2123,20 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                     </Button>
                   </div>
                 </div>
+                {fuelStats && (
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    {fuelStats.optimizedKm.toFixed(1)} km total
+                    {fuelStats.savedKm > 0.05 && (
+                      <>
+                        {" "}(was {fuelStats.originalKm.toFixed(1)} km — saved {fuelStats.savedKm.toFixed(1)} km
+                        {fuelInputs?.mileageKmpl
+                          ? `, ≈ ₹${((fuelStats.savedKm / fuelInputs.mileageKmpl) * (fuelInputs?.fuelPricePerLiter ?? 100)).toFixed(0)}/day in fuel`
+                          : ""}
+                        )
+                      </>
+                    )}
+                  </p>
+                )}
                 <div className="space-y-2">
                   {stops.map((stop, idx) => (
                     <div key={idx} className="flex items-center gap-2 rounded-lg border p-2 bg-muted/30 flex-wrap">
