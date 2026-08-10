@@ -39,6 +39,14 @@ interface DriverRow {
   background_verification_document_url: string | null;
   medical_certificate_document_url: string | null;
 }
+interface GeofenceZoneRow {
+  id: string;
+  zone_type: "school" | "depot" | "restricted";
+  name: string;
+  latitude: number;
+  longitude: number;
+  radius_meters: number;
+}
 
 interface AssignedRoute {
   id: string;
@@ -97,6 +105,8 @@ export default function DriverDashboard() {
   const [sosOpen, setSosOpen] = useState(false);
   const [sosSending, setSosSending] = useState(false);
   const [tripDirection, setTripDirection] = useState<"pickup" | "drop">("pickup");
+  const [zones, setZones] = useState<GeofenceZoneRow[]>([]);
+  const insideZoneIdsRef = useRef<Set<string>>(new Set());
   const [assignments, setAssignments] = useState<TransportAssignment[]>([]);
   const [boardedStudentIds, setBoardedStudentIds] = useState<Set<string>>(new Set());
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
@@ -121,6 +131,13 @@ export default function DriverDashboard() {
         return;
       }
       setDriverRow(driver as DriverRow);
+
+      const { data: zoneRows } = await supabase
+        .from("geofence_zones")
+        .select("id, zone_type, name, latitude, longitude, radius_meters")
+        .eq("school_id", profile.school_id)
+        .eq("is_active", true);
+      setZones((zoneRows as GeofenceZoneRow[]) ?? []);
 
       const { data: routeRow } = await supabase
         .from("transport_routes")
@@ -199,6 +216,61 @@ export default function DriverDashboard() {
     }
   };
 
+  const checkGeofences = async (lat: number, lng: number, vehicleId: string, driverId: string) => {
+    for (const zone of zones) {
+      const dist = distanceMeters(lat, lng, zone.latitude, zone.longitude);
+      const isInside = dist <= zone.radius_meters;
+      const wasInside = insideZoneIdsRef.current.has(zone.id);
+
+      if (isInside && !wasInside) {
+        insideZoneIdsRef.current.add(zone.id);
+        await supabase.from("geofence_events").insert({
+          zone_id: zone.id,
+          vehicle_id: vehicleId,
+          driver_id: driverId,
+          school_id: profile?.school_id,
+          event_type: "enter",
+          latitude: lat,
+          longitude: lng,
+        });
+        if (zone.zone_type === "restricted") {
+          toast.error(`Entered restricted area: ${zone.name}`);
+          fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "restricted_zone_alert",
+                payload: {
+                  school_id: profile?.school_id,
+                  zone_name: zone.name,
+                  driver_name: driverRow?.name,
+                  vehicle_id: vehicleId,
+                },
+              }),
+            }
+          ).catch(() => {
+            // Non-critical — the geofence_events row is already the source of truth.
+          });
+        } else {
+          toast.success(`Entered ${zone.name}`);
+        }
+      } else if (!isInside && wasInside) {
+        insideZoneIdsRef.current.delete(zone.id);
+        await supabase.from("geofence_events").insert({
+          zone_id: zone.id,
+          vehicle_id: vehicleId,
+          driver_id: driverId,
+          school_id: profile?.school_id,
+          event_type: "exit",
+          latitude: lat,
+          longitude: lng,
+        });
+      }
+    }
+  };
+
   const sendLocation = async (lat: number, lng: number, vehicleId: string, driverId: string) => {
     const { error } = await supabase.from("vehicle_locations").upsert({
       vehicle_id: vehicleId,
@@ -229,6 +301,7 @@ export default function DriverDashboard() {
     });
 
     await checkArrivals(lat, lng, vehicleId, driverId);
+    await checkGeofences(lat, lng, vehicleId, driverId);
   };
 
   const startTrip = () => {

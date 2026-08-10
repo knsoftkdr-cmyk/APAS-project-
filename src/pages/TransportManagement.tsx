@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
+import { GeofenceZonesTab } from "@/components/transport/GeofenceZonesTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -313,7 +314,7 @@ export default function TransportManagement() {
         <SosAlertBanner />
 
         <Tabs defaultValue="vehicles" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="grid w-full grid-cols-5 max-w-3xl">
             <TabsTrigger value="vehicles" className="gap-1.5">
               <Bus className="h-4 w-4" /> Vehicles
             </TabsTrigger>
@@ -326,8 +327,10 @@ export default function TransportManagement() {
             <TabsTrigger value="assignments" className="gap-1.5">
               <Users className="h-4 w-4" /> Student Assignment
             </TabsTrigger>
+            <TabsTrigger value="geofencing" className="gap-1.5">
+              <MapPin className="h-4 w-4" /> Geofencing
+            </TabsTrigger>
           </TabsList>
-
           <TabsContent value="vehicles">
             <VehiclesTab schoolId={schoolId} />
           </TabsContent>
@@ -340,6 +343,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="assignments">
             <AssignmentsTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="geofencing">
+            <GeofenceZonesTab schoolId={schoolId} />
           </TabsContent>
         </Tabs>
       </div>
