@@ -42,6 +42,8 @@ interface StopRow {
   latitude: number | null;
   longitude: number | null;
   radius_meters: number | null;
+  pickup_time: string | null;
+  drop_time: string | null;
 }
 
 interface BusTrackingMapProps {
@@ -105,7 +107,8 @@ export function BusTrackingMap({
   const [busPosition, setBusPosition] = useState<BusPosition | null>(null);
   const [arrivals, setArrivals] = useState<Record<string, string>>({});
   const [trail, setTrail] = useState<[number, number][]>([]);
-  const [eta, setEta] = useState<{ minutes: number; distanceKm: number } | null>(null);
+  const [eta, setEta] = useState<{ minutes: number; distanceKm: number; delayMinutes: number } | null>(null);
+  const [delayPrediction, setDelayPrediction] = useState<{ avgMinutes: number; sampleSize: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,7 +122,7 @@ export function BusTrackingMap({
       setLoading(true);
       const { data, error } = await supabase
         .from("route_stops")
-        .select("id, stop_name, sequence_number, latitude, longitude, radius_meters")
+        .select("id, stop_name, sequence_number, latitude, longitude, radius_meters, pickup_time, drop_time")
         .eq("route_id", routeId)
         .order("sequence_number");
 
@@ -320,15 +323,25 @@ export function BusTrackingMap({
       }
       try {
         const res = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${pos.longitude},${pos.latitude};${stop.longitude},${stop.latitude}?overview=false`
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-traffic-eta`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              originLat: pos.latitude,
+              originLng: pos.longitude,
+              destLat: stop.latitude,
+              destLng: stop.longitude,
+            }),
+          }
         );
-        if (!res.ok) return;
+        if (!res.ok || cancelled) return;
         const data = await res.json();
-        const route = data?.routes?.[0];
-        if (!route || cancelled) return;
+        if (!data?.success || cancelled) return;
         setEta({
-          minutes: Math.max(1, Math.round(route.duration / 60)),
-          distanceKm: Math.round((route.distance / 1000) * 10) / 10,
+          minutes: Math.max(1, Math.round(data.liveSeconds / 60)),
+          distanceKm: Math.round((data.distanceMeters / 1000) * 10) / 10,
+          delayMinutes: Math.round(data.delaySeconds / 60),
         });
       } catch {
         // ETA is a nice-to-have — never surface an error for it.
@@ -342,6 +355,75 @@ export function BusTrackingMap({
       clearInterval(interval);
     };
   }, [vehicleId, etaTargetStop?.id]);
+
+  // Delay Prediction: how this stop has historically run vs its scheduled
+  // time. stop_arrivals only keeps one row per stop per day (upserted on
+  // stop_id+arrival_date), so AM/PM isn't distinguishable in history —
+  // each row is compared against whichever of pickup_time/drop_time is
+  // closer to its actual time-of-day.
+  useEffect(() => {
+    if (!routeId || !etaTargetStop?.id) {
+      setDelayPrediction(null);
+      return;
+    }
+    let cancelled = false;
+
+    function timeStringToMinutes(t: string): number {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    }
+    function isoToLocalMinutes(iso: string): number {
+      const d = new Date(iso);
+      return d.getHours() * 60 + d.getMinutes();
+    }
+
+    async function loadDelayHistory() {
+      const { data } = await supabase
+        .from("stop_arrivals")
+        .select("arrived_at")
+        .eq("route_id", routeId)
+        .eq("stop_id", etaTargetStop!.id)
+        .order("arrival_date", { ascending: false })
+        .limit(30);
+      if (cancelled || !data || data.length === 0) {
+        if (!cancelled) setDelayPrediction(null);
+        return;
+      }
+
+      const pickupMin = etaTargetStop!.pickup_time ? timeStringToMinutes(etaTargetStop!.pickup_time) : null;
+      const dropMin = etaTargetStop!.drop_time ? timeStringToMinutes(etaTargetStop!.drop_time) : null;
+      if (pickupMin == null && dropMin == null) {
+        setDelayPrediction(null);
+        return;
+      }
+
+      const deltas: number[] = [];
+      for (const row of data as { arrived_at: string }[]) {
+        const actualMin = isoToLocalMinutes(row.arrived_at);
+        let scheduledMin: number;
+        if (pickupMin != null && dropMin != null) {
+          scheduledMin =
+            Math.abs(actualMin - pickupMin) <= Math.abs(actualMin - dropMin) ? pickupMin : dropMin;
+        } else {
+          scheduledMin = (pickupMin ?? dropMin) as number;
+        }
+        deltas.push(actualMin - scheduledMin);
+      }
+
+      if (deltas.length < 3) {
+        setDelayPrediction(null);
+        return;
+      }
+
+      const avg = deltas.reduce((a, b) => a + b, 0) / deltas.length;
+      if (!cancelled) setDelayPrediction({ avgMinutes: Math.round(avg), sampleSize: deltas.length });
+    }
+
+    loadDelayHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, [routeId, etaTargetStop?.id, etaTargetStop?.pickup_time, etaTargetStop?.drop_time]);
   const straightPath: [number, number][] = geocodedStops.map((s) => [s.latitude as number, s.longitude as number]);
   const displayPath = roadPath ?? straightPath;
   const hasPath = geocodedStops.length >= 2;
@@ -415,6 +497,14 @@ export function BusTrackingMap({
             {eta && !busIsStale && (
               <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 px-2 py-0.5 font-medium text-blue-700">
                 🕒 ~{eta.minutes} min away ({eta.distanceKm} km)
+                {eta.delayMinutes >= 2 && (
+                  <span className="text-amber-600">· +{eta.delayMinutes} min traffic</span>
+                )}
+              </span>
+            )}
+            {delayPrediction && Math.abs(delayPrediction.avgMinutes) >= 2 && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 border border-slate-200 px-2 py-0.5 font-medium text-slate-600">
+                📊 Typically {delayPrediction.avgMinutes > 0 ? "~" + delayPrediction.avgMinutes + " min late" : "~" + Math.abs(delayPrediction.avgMinutes) + " min early"} here
               </span>
             )}
           </div>
