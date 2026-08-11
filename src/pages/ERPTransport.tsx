@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bus, UserRound, Route as RouteIcon, Users, MapPin, Wand2, MapPinned } from "lucide-react";
+import { Bus, UserRound, Route as RouteIcon, Users, MapPin, Wand2, MapPinned, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ERPLayout from "@/components/erp/ERPLayout";
@@ -9,6 +9,7 @@ import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
 import { GeofenceZonesTab } from "@/components/transport/GeofenceZonesTab";
 import { MultiRoutePlanner } from "@/components/transport/MultiRoutePlanner";
 import { TripsTab } from "@/components/transport/TripsTab";
+import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 
 const ERPTransport = () => {
   const navigate = useNavigate();
@@ -58,7 +59,7 @@ const ERPTransport = () => {
     <ERPLayout orgName={orgName} activePath="/erp/transport" tabLabel="Transport">
       <SosAlertBanner />
       <Tabs defaultValue="vehicles" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7 max-w-5xl">
+        <TabsList className="grid w-full grid-cols-8 max-w-6xl">
           <TabsTrigger value="vehicles" className="gap-1.5">
             <Bus className="h-4 w-4" /> Vehicles
           </TabsTrigger>
@@ -80,6 +81,9 @@ const ERPTransport = () => {
           <TabsTrigger value="trips" className="gap-1.5">
             <MapPinned className="h-4 w-4" /> Trips
           </TabsTrigger>
+          <TabsTrigger value="boardinglogs" className="gap-1.5">
+            <ClipboardList className="h-4 w-4" /> Boarding & Drop
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="vehicles">
           <VehiclesTab schoolId={schoolId} />
@@ -99,6 +103,9 @@ const ERPTransport = () => {
         </TabsContent>
         <TabsContent value="trips">
           <TripsTab schoolId={schoolId} />
+        </TabsContent>
+        <TabsContent value="boardinglogs">
+          <BoardingDropManagementTab schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="geofencing">
           <GeofenceZonesTab schoolId={schoolId} />

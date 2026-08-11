@@ -590,6 +590,73 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, staff_devices: devices.length, sent: succeeded });
     }
 
+    // ── UNAUTHORIZED BOARDING ALERT (confirmed far from the stop -> staff push + bell) ──
+    if (type === "unauthorized_boarding_alert") {
+      const { school_id, student_name, stop_name, direction, distance_meters, vehicle_id } = payload;
+
+      if (!school_id || !stop_name) {
+        return Response.json(
+          { success: false, message: "school_id and stop_name are required" },
+          { status: 400 }
+        );
+      }
+
+      const staffRoles = ["knsoft_admin", "principal", "admin", "school_admin", "teacher"];
+      const { data: staffUsers } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("school_id", school_id)
+        .in("role", staffRoles);
+
+      if (!staffUsers || staffUsers.length === 0) {
+        return Response.json({ success: false, message: "No staff found for this school" });
+      }
+
+      const staffIds = staffUsers.map((u: { id: string }) => u.id);
+      const title = "Unusual Boarding Confirmation";
+      const distanceText = distance_meters ? `~${Math.round(distance_meters)}m away` : "far";
+      const notifBody = `${student_name || "A student"}'s ${direction || "boarding"} was confirmed at ${stop_name} while the bus was ${distanceText} from that stop.`;
+
+      const govRows = staffIds.map((uid: string) => ({
+        user_id: uid,
+        event_type: "unauthorized_boarding",
+        title,
+        message: notifBody,
+        reference_id: vehicle_id ?? null,
+        reference_type: "boarding_confirmation",
+        channel: "in_app",
+        is_read: false,
+      }));
+      const { error: govError } = await supabase.from("governance_notifications").insert(govRows);
+      if (govError) {
+        console.error("governance_notifications insert failed:", govError.message);
+      }
+
+      const { data: devices } = await supabase
+        .from("user_devices")
+        .select("fcm_token")
+        .in("user_id", staffIds)
+        .eq("is_active", true);
+
+      if (!devices || devices.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; no active staff devices" });
+      }
+
+      const results = await Promise.allSettled(
+        devices.map((device: { fcm_token: string }) =>
+          sendPushToToken(accessToken, {
+            token: device.fcm_token,
+            title,
+            body: notifBody,
+            data: { type: "unauthorized_boarding_alert" },
+          })
+        )
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+
+      return Response.json({ success: true, staff_devices: devices.length, sent: succeeded });
+    }
+
     return Response.json(
       { success: false, message: `Unknown type: ${type}` },
       { status: 400 }

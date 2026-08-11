@@ -502,13 +502,51 @@ export default function DriverDashboard() {
       return;
     }
     setBoardedStudentIds((prev) => new Set(prev).add(`${assignment.student_id}-${tripDirection}`));
-    const stopName = stops.find((s) => s.id === stopId)?.stop_name;
+    const targetStop = stops.find((s) => s.id === stopId);
+    const stopName = targetStop?.stop_name;
     sendTransportAlert({
       student_id: assignment.student_id,
       direction: tripDirection,
       stop_name: stopName,
       route_name: route?.route_name,
     });
+
+    // Unauthorized-boarding check: was the bus actually near this stop
+    // when the confirmation happened? A confirmation logged while the bus
+    // is far away is a meaningful anomaly worth flagging to staff.
+    if (targetStop?.latitude != null && targetStop?.longitude != null && route.vehicle_id) {
+      const { data: posRow } = await supabase
+        .from("vehicle_locations")
+        .select("latitude, longitude")
+        .eq("vehicle_id", route.vehicle_id)
+        .maybeSingle();
+      if (posRow) {
+        const dist = distanceMeters(posRow.latitude, posRow.longitude, targetStop.latitude, targetStop.longitude);
+        const threshold = Math.max((targetStop.radius_meters ?? 200) * 2, 500);
+        if (dist > threshold) {
+          fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                type: "unauthorized_boarding_alert",
+                payload: {
+                  school_id: profile?.school_id,
+                  student_name: assignment.students?.full_name,
+                  stop_name: stopName,
+                  direction: tripDirection,
+                  distance_meters: dist,
+                  vehicle_id: route.vehicle_id,
+                },
+              }),
+            }
+          ).catch(() => {
+            // Non-critical — never block the driver's UI on push failures.
+          });
+        }
+      }
+    }
   };
 
   const markAllBoarded = async (stopId: string) => {
