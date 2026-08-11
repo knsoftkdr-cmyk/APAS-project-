@@ -7,8 +7,18 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle } from "lucide-react";
+import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle, FileWarning } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog as IncidentDialog, DialogContent as IncidentDialogContent, DialogHeader as IncidentDialogHeader,
+  DialogTitle as IncidentDialogTitle, DialogFooter as IncidentDialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select as IncidentSelect, SelectContent as IncidentSelectContent, SelectItem as IncidentSelectItem,
+  SelectTrigger as IncidentSelectTrigger, SelectValue as IncidentSelectValue,
+} from "@/components/ui/select";
 
 // Fire-and-forget parent push alert on boarding/drop confirmation.
 // Never blocks or fails the driver's UI flow.
@@ -25,6 +35,30 @@ async function sendTransportAlert(params: {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type: "transport_alert", payload: params }),
+      }
+    );
+  } catch {
+    // Non-critical — swallow errors, don't surface to driver.
+  }
+}
+
+// Fire-and-forget parent push alert when a student_incident is logged.
+// Never blocks or fails the driver's UI flow.
+async function sendIncidentAlert(params: {
+  incident_id: string;
+  student_id: string;
+  incident_type: string;
+  severity: string;
+  description: string;
+  route_name?: string;
+}) {
+  try {
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "student_incident_alert", payload: params }),
       }
     );
   } catch {
@@ -111,6 +145,15 @@ export default function DriverDashboard() {
   const [boardedStudentIds, setBoardedStudentIds] = useState<Set<string>>(new Set());
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
   const [confirmingKey, setConfirmingKey] = useState<string | null>(null);
+
+  // Incident reporting state
+  const [incidentOpen, setIncidentOpen] = useState(false);
+  const [incidentSubmitting, setIncidentSubmitting] = useState(false);
+  const [incidentType, setIncidentType] = useState<"accident" | "breakdown" | "student_incident">("accident");
+  const [incidentSeverity, setIncidentSeverity] = useState<"low" | "medium" | "high">("low");
+  const [incidentDescription, setIncidentDescription] = useState("");
+  const [incidentStudentId, setIncidentStudentId] = useState<string>("");
+  const [incidentPhoto, setIncidentPhoto] = useState<File | null>(null);
 
   const arrivedStopIdsRef = useRef<Set<string>>(new Set());
   const watchIdRef = useRef<number | null>(null);
@@ -305,6 +348,103 @@ export default function DriverDashboard() {
   };
 
   const currentTripIdRef = useRef<string | null>(null);
+
+  const getCurrentPositionSafe = (): Promise<{ lat: number | null; lng: number | null }> => {
+    return new Promise((resolve) => {
+      if (!("geolocation" in navigator)) {
+        resolve({ lat: null, lng: null });
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => resolve({ lat: null, lng: null }),
+        { timeout: 5000 }
+      );
+    });
+  };
+
+  const submitIncident = async () => {
+    if (!driverRow) {
+      toast.error("Driver profile not found.");
+      return;
+    }
+    if (!incidentDescription.trim()) {
+      toast.error("Please describe what happened.");
+      return;
+    }
+    if (incidentType === "student_incident" && !incidentStudentId) {
+      toast.error("Please select the student involved.");
+      return;
+    }
+
+    setIncidentSubmitting(true);
+
+    const { lat, lng } = await getCurrentPositionSafe();
+
+    const { data: incidentRow, error: insertError } = await supabase
+      .from("transport_incidents")
+      .insert({
+        school_id: profile?.school_id,
+        incident_type: incidentType,
+        route_id: route?.id ?? null,
+        trip_id: currentTripIdRef.current,
+        driver_id: driverRow.id,
+        student_id: incidentType === "student_incident" ? incidentStudentId : null,
+        severity: incidentSeverity,
+        description: incidentDescription.trim(),
+        location_lat: lat,
+        location_lng: lng,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !incidentRow) {
+      setIncidentSubmitting(false);
+      toast.error("Failed to submit report: " + (insertError?.message ?? "unknown error"));
+      return;
+    }
+
+    // Optional photo upload — best-effort, doesn't block the report itself
+    if (incidentPhoto) {
+      const filePath = `incidents/${incidentRow.id}/${Date.now()}_${incidentPhoto.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("transport-documents")
+        .upload(filePath, incidentPhoto);
+
+      if (uploadError) {
+        console.warn("[INCIDENT] photo upload failed", uploadError);
+        toast.error("Report saved, but photo upload failed: " + uploadError.message);
+      } else {
+        const { error: attError } = await supabase.from("transport_incident_attachments").insert({
+          incident_id: incidentRow.id,
+          file_path: filePath,
+          uploaded_by: profile?.id,
+        });
+        if (attError) console.warn("[INCIDENT] attachment row insert failed", attError);
+      }
+    }
+
+    // Notify parent for student incidents — fire-and-forget
+    if (incidentType === "student_incident") {
+      sendIncidentAlert({
+        incident_id: incidentRow.id,
+        student_id: incidentStudentId,
+        incident_type: incidentType,
+        severity: incidentSeverity,
+        description: incidentDescription.trim(),
+        route_name: route?.route_name,
+      });
+    }
+
+    setIncidentSubmitting(false);
+    setIncidentOpen(false);
+    setIncidentType("accident");
+    setIncidentSeverity("low");
+    setIncidentDescription("");
+    setIncidentStudentId("");
+    setIncidentPhoto(null);
+    toast.success("Incident reported.");
+  };
 
   const startTrip = async () => {
     if (!route?.vehicle_id || !driverRow) {
@@ -610,14 +750,24 @@ export default function DriverDashboard() {
         </div>
 
         {driverRow && (
-          <Button
-            variant="destructive"
-            size="lg"
-            className="w-full gap-2 text-base font-semibold h-14"
-            onClick={() => setSosOpen(true)}
-          >
-            <AlertTriangle className="h-5 w-5" /> SOS — Emergency Alert
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="destructive"
+              size="lg"
+              className="flex-1 gap-2 text-base font-semibold h-14"
+              onClick={() => setSosOpen(true)}
+            >
+              <AlertTriangle className="h-5 w-5" /> SOS — Emergency Alert
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="flex-1 gap-2 text-base font-semibold h-14"
+              onClick={() => setIncidentOpen(true)}
+            >
+              <FileWarning className="h-5 w-5" /> Report Incident
+            </Button>
+          </div>
         )}
 
         <Dialog open={sosOpen} onOpenChange={setSosOpen}>
@@ -641,6 +791,86 @@ export default function DriverDashboard() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <IncidentDialog open={incidentOpen} onOpenChange={setIncidentOpen}>
+          <IncidentDialogContent className="max-w-sm">
+            <IncidentDialogHeader>
+              <IncidentDialogTitle className="flex items-center gap-2">
+                <FileWarning className="h-5 w-5" /> Report Incident
+              </IncidentDialogTitle>
+            </IncidentDialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Type</Label>
+                <IncidentSelect value={incidentType} onValueChange={(v: any) => setIncidentType(v)}>
+                  <IncidentSelectTrigger><IncidentSelectValue /></IncidentSelectTrigger>
+                  <IncidentSelectContent>
+                    <IncidentSelectItem value="accident">Accident</IncidentSelectItem>
+                    <IncidentSelectItem value="breakdown">Breakdown</IncidentSelectItem>
+                    <IncidentSelectItem value="student_incident">Student Incident</IncidentSelectItem>
+                  </IncidentSelectContent>
+                </IncidentSelect>
+              </div>
+
+              {incidentType === "student_incident" && (
+                <div>
+                  <Label className="text-xs">Student</Label>
+                  <IncidentSelect value={incidentStudentId} onValueChange={setIncidentStudentId}>
+                    <IncidentSelectTrigger><IncidentSelectValue placeholder="Select student" /></IncidentSelectTrigger>
+                    <IncidentSelectContent>
+                      {assignments.map((a) => (
+                        <IncidentSelectItem key={a.student_id} value={a.student_id}>
+                          {a.students?.full_name || "Student"}
+                        </IncidentSelectItem>
+                      ))}
+                    </IncidentSelectContent>
+                  </IncidentSelect>
+                </div>
+              )}
+
+              <div>
+                <Label className="text-xs">Severity</Label>
+                <IncidentSelect value={incidentSeverity} onValueChange={(v: any) => setIncidentSeverity(v)}>
+                  <IncidentSelectTrigger><IncidentSelectValue /></IncidentSelectTrigger>
+                  <IncidentSelectContent>
+                    <IncidentSelectItem value="low">Low</IncidentSelectItem>
+                    <IncidentSelectItem value="medium">Medium</IncidentSelectItem>
+                    <IncidentSelectItem value="high">High</IncidentSelectItem>
+                  </IncidentSelectContent>
+                </IncidentSelect>
+              </div>
+
+              <div>
+                <Label className="text-xs">Description</Label>
+                <Textarea
+                  value={incidentDescription}
+                  onChange={(e) => setIncidentDescription(e.target.value)}
+                  placeholder="What happened?"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Photo (optional)</Label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setIncidentPhoto(e.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
+                />
+              </div>
+            </div>
+            <IncidentDialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setIncidentOpen(false)} disabled={incidentSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={submitIncident} disabled={incidentSubmitting}>
+                {incidentSubmitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Submit Report
+              </Button>
+            </IncidentDialogFooter>
+          </IncidentDialogContent>
+        </IncidentDialog>
 
         <Card>
           <CardHeader>

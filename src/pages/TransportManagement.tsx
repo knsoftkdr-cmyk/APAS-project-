@@ -7,6 +7,7 @@ import { SosAlertBanner } from "@/components/transport/SosAlertBanner";
 import { GeofenceZonesTab } from "@/components/transport/GeofenceZonesTab";
 import { MultiRoutePlanner } from "@/components/transport/MultiRoutePlanner";
 import { TripsTab } from "@/components/transport/TripsTab";
+import { IncidentManagementTab } from "@/components/transport/IncidentManagementTab";
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 import { EmergencyManagementTab } from "@/components/transport/EmergencyManagementTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -322,32 +323,35 @@ export default function TransportManagement() {
         <SosAlertBanner />
 
         <Tabs defaultValue="vehicles" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-9 max-w-6xl">
-            <TabsTrigger value="vehicles" className="gap-1.5">
+          <TabsList className="flex flex-wrap h-auto gap-1.5 bg-slate-100/70 p-1.5 rounded-xl">
+            <TabsTrigger value="vehicles" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Bus className="h-4 w-4" /> Vehicles
             </TabsTrigger>
-            <TabsTrigger value="drivers" className="gap-1.5">
+            <TabsTrigger value="drivers" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <UserRound className="h-4 w-4" /> Driver & Attendant
             </TabsTrigger>
-            <TabsTrigger value="routes" className="gap-1.5">
+            <TabsTrigger value="routes" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <RouteIcon className="h-4 w-4" /> Routes & Stops
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="gap-1.5">
+            <TabsTrigger value="assignments" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Users className="h-4 w-4" /> Student Assignment
             </TabsTrigger>
-            <TabsTrigger value="geofencing" className="gap-1.5">
+            <TabsTrigger value="geofencing" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <MapPin className="h-4 w-4" /> Geofencing
             </TabsTrigger>
-            <TabsTrigger value="multiroute" className="gap-1.5">
+            <TabsTrigger value="multiroute" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Wand2 className="h-4 w-4" /> Multi-Route
             </TabsTrigger>
-            <TabsTrigger value="trips" className="gap-1.5">
+            <TabsTrigger value="trips" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <MapPinned className="h-4 w-4" /> Trips
             </TabsTrigger>
-            <TabsTrigger value="boardinglogs" className="gap-1.5">
+            <TabsTrigger value="boardinglogs" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <ClipboardList className="h-4 w-4" /> Boarding & Drop
             </TabsTrigger>
-            <TabsTrigger value="emergency" className="gap-1.5">
+            <TabsTrigger value="incidents" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
+              Incidents
+            </TabsTrigger>
+            <TabsTrigger value="emergency" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Siren className="h-4 w-4" /> Emergency
             </TabsTrigger>
           </TabsList>
@@ -375,6 +379,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="emergency">
             <EmergencyManagementTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="incidents">
+            <IncidentManagementTab schoolId={schoolId} />
           </TabsContent>
           <TabsContent value="geofencing">
             <GeofenceZonesTab schoolId={schoolId} />

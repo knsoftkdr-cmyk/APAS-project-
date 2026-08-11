@@ -657,6 +657,102 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, staff_devices: devices.length, sent: succeeded });
     }
 
+    // ── STUDENT INCIDENT ALERT (driver logs accident/breakdown/student incident -> parent push + bell) ──
+    if (type === "student_incident_alert") {
+      const { incident_id, student_id, incident_type, severity, description, route_name } = payload;
+
+      if (!incident_id || !student_id || !incident_type) {
+        return Response.json(
+          { success: false, message: "incident_id, student_id and incident_type are required" },
+          { status: 400 }
+        );
+      }
+
+      // transport_incidents.student_id -> students.id -> resolve to profiles.id
+      const { data: studentRow } = await supabase
+        .from("students")
+        .select("profile_id, full_name")
+        .eq("id", student_id)
+        .maybeSingle();
+
+      if (!studentRow?.profile_id) {
+        return Response.json({ success: false, message: "Student profile not found" });
+      }
+
+      const { data: parentLinks } = await supabase
+        .from("parent_students")
+        .select("parent_id")
+        .eq("student_id", studentRow.profile_id);
+
+      const parentIds = (parentLinks || []).map((p: { parent_id: string }) => p.parent_id);
+      if (parentIds.length === 0) {
+        return Response.json({ success: false, message: "No parent linked to this student" });
+      }
+
+      const title = "Incident Reported: Your Child's Bus";
+      const notifBody = `An incident involving ${studentRow.full_name || "your child"} was reported${route_name ? ` on ${route_name}` : ""}. Severity: ${severity || "low"}. ${description ? description.substring(0, 80) : ""}`;
+
+      // In-app bell notification for all linked parents, regardless of push preference
+      const govRows = parentIds.map((pid: string) => ({
+        user_id: pid,
+        event_type: "student_incident",
+        title,
+        message: notifBody,
+        reference_id: incident_id,
+        reference_type: "transport_incident",
+        channel: "in_app",
+        is_read: false,
+      }));
+      const { error: govError } = await supabase.from("governance_notifications").insert(govRows);
+      if (govError) {
+        console.error("governance_notifications insert failed:", govError.message);
+      }
+
+      // Respect push preference (default enabled if no row exists)
+      const { data: prefs } = await supabase
+        .from("notification_preferences")
+        .select("user_id, push")
+        .in("user_id", parentIds);
+
+      const disabledIds = new Set(
+        (prefs || []).filter((p: { push: boolean }) => p.push === false).map((p: { user_id: string }) => p.user_id)
+      );
+      const eligibleParentIds = parentIds.filter((id: string) => !disabledIds.has(id));
+
+      if (eligibleParentIds.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; all parents have push disabled" });
+      }
+
+      const { data: parentDevices } = await supabase
+        .from("user_devices")
+        .select("fcm_token")
+        .in("user_id", eligibleParentIds)
+        .eq("is_active", true);
+
+      if (!parentDevices || parentDevices.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; no active parent devices" });
+      }
+
+      const results = await Promise.allSettled(
+        parentDevices.map((device: { fcm_token: string }) =>
+          sendPushToToken(accessToken, {
+            token: device.fcm_token,
+            title,
+            body: notifBody,
+            data: { type: "student_incident_alert", incident_id, incident_type },
+          })
+        )
+      );
+
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+
+      return Response.json({
+        success: true,
+        parent_devices: parentDevices.length,
+        sent: succeeded,
+      });
+    }
+
     return Response.json(
       { success: false, message: `Unknown type: ${type}` },
       { status: 400 }
