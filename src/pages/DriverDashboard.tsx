@@ -304,7 +304,9 @@ export default function DriverDashboard() {
     await checkGeofences(lat, lng, vehicleId, driverId);
   };
 
-  const startTrip = () => {
+  const currentTripIdRef = useRef<string | null>(null);
+
+  const startTrip = async () => {
     if (!route?.vehicle_id || !driverRow) {
       toast.error("No active route/vehicle assigned to you yet.");
       return;
@@ -312,6 +314,31 @@ export default function DriverDashboard() {
     if (!("geolocation" in navigator)) {
       toast.error("Location isn't available on this device/browser.");
       return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: tripRow, error: tripError } = await supabase
+      .from("trips")
+      .upsert(
+        {
+          school_id: profile?.school_id,
+          route_id: route.id,
+          vehicle_id: route.vehicle_id,
+          driver_id: driverRow.id,
+          trip_type: "recurring",
+          direction: tripDirection,
+          trip_date: today,
+          status: "in_progress",
+          started_at: new Date().toISOString(),
+        },
+        { onConflict: "route_id,trip_date,direction" }
+      )
+      .select("id")
+      .single();
+    if (tripError) {
+      console.warn("[TRIP] failed to create/update trip record", tripError);
+    } else {
+      currentTripIdRef.current = tripRow?.id ?? null;
     }
 
     setStatusMsg("Requesting location permission...");
@@ -356,7 +383,7 @@ export default function DriverDashboard() {
     toast.success("Trip started — sharing live location");
   };
 
-  const stopTrip = () => {
+  const stopTrip = async () => {
     if (watchIdRef.current != null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
@@ -367,6 +394,16 @@ export default function DriverDashboard() {
     }
     setSharing(false);
     setStatusMsg("Stopped sharing location.");
+
+    if (currentTripIdRef.current) {
+      const { error } = await supabase
+        .from("trips")
+        .update({ status: "completed", ended_at: new Date().toISOString() })
+        .eq("id", currentTripIdRef.current);
+      if (error) console.warn("[TRIP] failed to mark trip completed", error);
+      currentTripIdRef.current = null;
+    }
+
     toast.success("Trip stopped");
   };
 
