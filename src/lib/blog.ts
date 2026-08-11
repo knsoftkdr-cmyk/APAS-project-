@@ -25,7 +25,11 @@ const rawModules = import.meta.glob("/content/*.md", {
 }) as Record<string, string>;
 
 function parseFrontmatter(raw: string): { data: Record<string, string>; content: string } {
-  const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  // Strip a leading BOM (common when .md files are saved as "UTF-8 with BOM"
+  // on Windows) and any leading blank lines, both of which would otherwise
+  // break the strict "starts with ---" match below.
+  const cleaned = raw.replace(/^\uFEFF/, "").replace(/^\s+/, "");
+  const match = cleaned.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
   if (!match) {
     return { data: {}, content: raw };
   }

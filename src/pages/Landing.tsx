@@ -161,6 +161,7 @@ const Landing = () => {
             <a href="#aifeatures" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">AI Features</a>
             <a href="#how" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">How it Works</a>
             <a href="#resources" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Resources</a>
+            <Link to="/blog" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Blog</Link>
             <a href="#contact" onClick={() => setSolutionsOpen(false)} className="hover:text-blue-600 transition-colors">Contact</a>
           </div>
 
