@@ -8,6 +8,7 @@ import { GeofenceZonesTab } from "@/components/transport/GeofenceZonesTab";
 import { MultiRoutePlanner } from "@/components/transport/MultiRoutePlanner";
 import { TripsTab } from "@/components/transport/TripsTab";
 import { IncidentManagementTab } from "@/components/transport/IncidentManagementTab";
+import { VehicleMaintenanceTab } from "@/components/transport/VehicleMaintenanceTab";
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 import { EmergencyManagementTab } from "@/components/transport/EmergencyManagementTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -351,6 +352,9 @@ export default function TransportManagement() {
             <TabsTrigger value="incidents" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               Incidents
             </TabsTrigger>
+            <TabsTrigger value="maintenance" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
+              Maintenance
+            </TabsTrigger>
             <TabsTrigger value="emergency" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Siren className="h-4 w-4" /> Emergency
             </TabsTrigger>
@@ -382,6 +386,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="incidents">
             <IncidentManagementTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="maintenance">
+            <VehicleMaintenanceTab schoolId={schoolId} />
           </TabsContent>
           <TabsContent value="geofencing">
             <GeofenceZonesTab schoolId={schoolId} />
