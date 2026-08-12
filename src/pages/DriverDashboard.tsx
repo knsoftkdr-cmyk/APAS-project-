@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle, FileWarning } from "lucide-react";
+import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle, FileWarning, Fuel } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog as IncidentDialog, DialogContent as IncidentDialogContent, DialogHeader as IncidentDialogHeader,
@@ -154,6 +154,16 @@ export default function DriverDashboard() {
   const [incidentDescription, setIncidentDescription] = useState("");
   const [incidentStudentId, setIncidentStudentId] = useState<string>("");
   const [incidentPhoto, setIncidentPhoto] = useState<File | null>(null);
+
+  // Fuel logging state
+  const [fuelOpen, setFuelOpen] = useState(false);
+  const [fuelSubmitting, setFuelSubmitting] = useState(false);
+  const [fuelOdometer, setFuelOdometer] = useState("");
+  const [fuelLiters, setFuelLiters] = useState("");
+  const [fuelCost, setFuelCost] = useState("");
+  const [fuelStation, setFuelStation] = useState("");
+  const [fuelNotes, setFuelNotes] = useState("");
+  const [fuelReceipt, setFuelReceipt] = useState<File | null>(null);
 
   const arrivedStopIdsRef = useRef<Set<string>>(new Set());
   const watchIdRef = useRef<number | null>(null);
@@ -444,6 +454,69 @@ export default function DriverDashboard() {
     setIncidentStudentId("");
     setIncidentPhoto(null);
     toast.success("Incident reported.");
+  };
+
+  const submitFuelLog = async () => {
+    if (!route?.vehicle_id || !driverRow) {
+      toast.error("No active vehicle assigned to you yet.");
+      return;
+    }
+    if (!fuelOdometer || !fuelLiters) {
+      toast.error("Odometer and liters are required.");
+      return;
+    }
+
+    setFuelSubmitting(true);
+
+    const { data: { user } } = await supabase.auth.getUser();
+
+    const { data: row, error: insertError } = await supabase
+      .from("vehicle_fuel_logs")
+      .insert({
+        school_id: profile?.school_id,
+        vehicle_id: route.vehicle_id,
+        driver_id: driverRow.id,
+        logged_by: user?.id,
+        fill_date: new Date().toISOString().slice(0, 10),
+        odometer_reading: Number(fuelOdometer),
+        fuel_quantity_liters: Number(fuelLiters),
+        cost: fuelCost ? Number(fuelCost) : null,
+        fuel_station: fuelStation.trim() || null,
+        notes: fuelNotes.trim() || null,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !row) {
+      setFuelSubmitting(false);
+      toast.error("Failed to save fuel log: " + (insertError?.message ?? "unknown error"));
+      return;
+    }
+
+    if (fuelReceipt) {
+      const filePath = `fuel-receipts/${route.vehicle_id}/${row.id}_${Date.now()}_${fuelReceipt.name}`;
+      const { error: uploadError } = await supabase.storage.from("transport-documents").upload(filePath, fuelReceipt);
+      if (uploadError) {
+        console.warn("[FUEL] receipt upload failed", uploadError);
+        toast.error("Log saved, but receipt upload failed: " + uploadError.message);
+      } else {
+        const { error: updateError } = await supabase
+          .from("vehicle_fuel_logs")
+          .update({ receipt_document_url: filePath })
+          .eq("id", row.id);
+        if (updateError) console.warn("[FUEL] receipt path update failed", updateError);
+      }
+    }
+
+    setFuelSubmitting(false);
+    setFuelOpen(false);
+    setFuelOdometer("");
+    setFuelLiters("");
+    setFuelCost("");
+    setFuelStation("");
+    setFuelNotes("");
+    setFuelReceipt(null);
+    toast.success("Fuel log saved.");
   };
 
   const startTrip = async () => {
@@ -750,11 +823,11 @@ export default function DriverDashboard() {
         </div>
 
         {driverRow && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="destructive"
               size="lg"
-              className="flex-1 gap-2 text-base font-semibold h-14"
+              className="flex-1 gap-2 text-base font-semibold h-14 min-w-[140px]"
               onClick={() => setSosOpen(true)}
             >
               <AlertTriangle className="h-5 w-5" /> SOS — Emergency Alert
@@ -762,10 +835,18 @@ export default function DriverDashboard() {
             <Button
               variant="outline"
               size="lg"
-              className="flex-1 gap-2 text-base font-semibold h-14"
+              className="flex-1 gap-2 text-base font-semibold h-14 min-w-[140px]"
               onClick={() => setIncidentOpen(true)}
             >
               <FileWarning className="h-5 w-5" /> Report Incident
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              className="flex-1 gap-2 text-base font-semibold h-14 min-w-[140px]"
+              onClick={() => setFuelOpen(true)}
+            >
+              <Fuel className="h-5 w-5" /> Log Fuel
             </Button>
           </div>
         )}
@@ -867,6 +948,76 @@ export default function DriverDashboard() {
               <Button onClick={submitIncident} disabled={incidentSubmitting}>
                 {incidentSubmitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
                 Submit Report
+              </Button>
+            </IncidentDialogFooter>
+          </IncidentDialogContent>
+        </IncidentDialog>
+
+        <IncidentDialog open={fuelOpen} onOpenChange={setFuelOpen}>
+          <IncidentDialogContent className="max-w-sm">
+            <IncidentDialogHeader>
+              <IncidentDialogTitle className="flex items-center gap-2">
+                <Fuel className="h-5 w-5" /> Log Fuel
+              </IncidentDialogTitle>
+            </IncidentDialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Odometer (km)</Label>
+                <input
+                  type="number"
+                  value={fuelOdometer}
+                  onChange={(e) => setFuelOdometer(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Liters</Label>
+                <input
+                  type="number"
+                  value={fuelLiters}
+                  onChange={(e) => setFuelLiters(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Cost (₹, optional)</Label>
+                <input
+                  type="number"
+                  value={fuelCost}
+                  onChange={(e) => setFuelCost(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Fuel Station (optional)</Label>
+                <input
+                  type="text"
+                  value={fuelStation}
+                  onChange={(e) => setFuelStation(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Notes</Label>
+                <Textarea rows={2} value={fuelNotes} onChange={(e) => setFuelNotes(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Receipt (optional)</Label>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setFuelReceipt(e.target.files?.[0] ?? null)}
+                  className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
+                />
+              </div>
+            </div>
+            <IncidentDialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setFuelOpen(false)} disabled={fuelSubmitting}>
+                Cancel
+              </Button>
+              <Button onClick={submitFuelLog} disabled={fuelSubmitting}>
+                {fuelSubmitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                Save
               </Button>
             </IncidentDialogFooter>
           </IncidentDialogContent>
