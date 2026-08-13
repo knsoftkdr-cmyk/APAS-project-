@@ -66,6 +66,30 @@ async function sendIncidentAlert(params: {
   }
 }
 
+// Fire-and-forget staff push alert when a vehicle exceeds its speed limit.
+// Never blocks or fails the driver's UI flow.
+async function sendOverspeedAlert(params: {
+  school_id: string;
+  vehicle_id: string;
+  driver_name?: string;
+  speed_kmh: number;
+  speed_limit_kmph: number;
+  route_name?: string;
+}) {
+  try {
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "overspeed_alert", payload: params }),
+      }
+    );
+  } catch {
+    // Non-critical — swallow errors, don't surface to driver.
+  }
+}
+
 interface DriverRow {
   id: string;
   name: string;
@@ -92,6 +116,7 @@ interface AssignedRoute {
     fitness_document_url: string | null;
     puc_document_url: string | null;
     rc_document_url: string | null;
+    speed_limit_kmph: number | null;
   } | null;
 }
 
@@ -141,6 +166,8 @@ export default function DriverDashboard() {
   const [tripDirection, setTripDirection] = useState<"pickup" | "drop">("pickup");
   const [zones, setZones] = useState<GeofenceZoneRow[]>([]);
   const insideZoneIdsRef = useRef<Set<string>>(new Set());
+  const lastLocationRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+  const isOverspeedingRef = useRef<boolean>(false);
   const [assignments, setAssignments] = useState<TransportAssignment[]>([]);
   const [boardedStudentIds, setBoardedStudentIds] = useState<Set<string>>(new Set());
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
@@ -194,7 +221,7 @@ export default function DriverDashboard() {
 
       const { data: routeRow } = await supabase
         .from("transport_routes")
-        .select("id, route_name, vehicle_id, vehicles(registration_number, insurance_document_url, fitness_document_url, puc_document_url, rc_document_url)")
+        .select("id, route_name, vehicle_id, vehicles(registration_number, insurance_document_url, fitness_document_url, puc_document_url, rc_document_url, speed_limit_kmph)")
         .eq("driver_id", driver.id)
         .eq("status", "active")
         .maybeSingle();
@@ -324,12 +351,32 @@ export default function DriverDashboard() {
     }
   };
 
+  const GPS_NOISE_FLOOR_METERS = 20; // below this between pings = GPS jitter, not real movement
+
   const sendLocation = async (lat: number, lng: number, vehicleId: string, driverId: string) => {
+    // Compute speed from the previous known position. A stationary phone
+    // still drifts a few meters between GPS reads due to normal signal
+    // noise, so movement under GPS_NOISE_FLOOR_METERS is treated as 0 speed
+    // rather than a "phantom" speed reading.
+    const now = Date.now();
+    let speedKmh: number | null = null;
+    if (lastLocationRef.current) {
+      const distMeters = distanceMeters(lastLocationRef.current.lat, lastLocationRef.current.lng, lat, lng);
+      const seconds = (now - lastLocationRef.current.time) / 1000;
+      if (seconds > 0) {
+        const effectiveDist = distMeters < GPS_NOISE_FLOOR_METERS ? 0 : distMeters;
+        const kmh = (effectiveDist / seconds) * 3.6;
+        speedKmh = kmh > 150 ? null : kmh; // discard GPS glitches (satellite reacquisition jumps)
+      }
+    }
+    lastLocationRef.current = { lat, lng, time: now };
+
     const { error } = await supabase.from("vehicle_locations").upsert({
       vehicle_id: vehicleId,
       driver_id: driverId,
       latitude: lat,
       longitude: lng,
+      speed_kmh: speedKmh,
       updated_at: new Date().toISOString(),
     });
 
@@ -352,6 +399,28 @@ export default function DriverDashboard() {
     }).then(({ error: histError }) => {
       if (histError) console.warn("[VEHICLE TRAIL] failed to log location history", histError);
     });
+
+    // Overspeed check — debounced so it fires once on crossing INTO overspeed,
+    // not on every ping while continuously over the limit (same enter/exit
+    // pattern as the restricted-zone geofence check below).
+    const speedLimit = route?.vehicles?.speed_limit_kmph;
+    if (speedKmh != null && speedLimit != null) {
+      const isOverLimit = speedKmh > speedLimit;
+      if (isOverLimit && !isOverspeedingRef.current) {
+        isOverspeedingRef.current = true;
+        toast.error(`Over speed limit: ${Math.round(speedKmh)} km/h (limit ${Math.round(speedLimit)} km/h)`);
+        sendOverspeedAlert({
+          school_id: profile?.school_id ?? "",
+          vehicle_id: vehicleId,
+          driver_name: driverRow?.name,
+          speed_kmh: speedKmh,
+          speed_limit_kmph: speedLimit,
+          route_name: route?.route_name,
+        });
+      } else if (!isOverLimit && isOverspeedingRef.current) {
+        isOverspeedingRef.current = false;
+      }
+    }
 
     await checkArrivals(lat, lng, vehicleId, driverId);
     await checkGeofences(lat, lng, vehicleId, driverId);

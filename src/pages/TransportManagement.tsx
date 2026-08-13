@@ -11,6 +11,7 @@ import { IncidentManagementTab } from "@/components/transport/IncidentManagement
 import { VehicleMaintenanceTab } from "@/components/transport/VehicleMaintenanceTab";
 import { FuelManagementTab } from "@/components/transport/FuelManagementTab";
 import { DriverBehaviourAnalyticsTab } from "@/components/transport/DriverBehaviourAnalyticsTab";
+import { SpeedMonitoringTab } from "@/components/transport/SpeedMonitoringTab";
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 import { EmergencyManagementTab } from "@/components/transport/EmergencyManagementTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -69,6 +70,7 @@ interface Vehicle {
   status: string;
   fuel_type: string | null;
   mileage_kmpl: number | null;
+  speed_limit_kmph: number | null;
   chassis_number: string | null;
   engine_number: string | null;
   gps_device_id: string | null;
@@ -275,7 +277,7 @@ interface Assignment {
 const EMPTY_VEHICLE = {
   registration_number: "", vehicle_type: "bus", capacity: "",
   insurance_expiry: "", fitness_expiry: "", permit_expiry: "", status: "active",
-  fuel_type: "diesel", mileage_kmpl: "", chassis_number: "", engine_number: "", gps_device_id: "",
+  fuel_type: "diesel", mileage_kmpl: "", speed_limit_kmph: "", chassis_number: "", engine_number: "", gps_device_id: "",
   insurance_number: "", insurance_document_url: "",
   fitness_certificate_number: "", fitness_document_url: "",
   puc_number: "", puc_expiry: "", puc_document_url: "",
@@ -363,6 +365,9 @@ export default function TransportManagement() {
             <TabsTrigger value="behaviour" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               Driver Behaviour
             </TabsTrigger>
+            <TabsTrigger value="speedmonitoring" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
+              Speed Monitoring
+            </TabsTrigger>
             <TabsTrigger value="emergency" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Siren className="h-4 w-4" /> Emergency
             </TabsTrigger>
@@ -403,6 +408,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="behaviour">
             <DriverBehaviourAnalyticsTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="speedmonitoring">
+            <SpeedMonitoringTab schoolId={schoolId} />
           </TabsContent>
           <TabsContent value="geofencing">
             <GeofenceZonesTab schoolId={schoolId} />
@@ -555,6 +563,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
         status: form.status,
         fuel_type: form.fuel_type || null,
         mileage_kmpl: form.mileage_kmpl ? Number(form.mileage_kmpl) : null,
+        speed_limit_kmph: form.speed_limit_kmph ? Number(form.speed_limit_kmph) : null,
         chassis_number: form.chassis_number || null,
         engine_number: form.engine_number || null,
         gps_device_id: form.gps_device_id || null,
@@ -612,6 +621,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
       status: v.status,
       fuel_type: v.fuel_type || "diesel",
       mileage_kmpl: v.mileage_kmpl?.toString() || "",
+      speed_limit_kmph: v.speed_limit_kmph?.toString() || "",
       chassis_number: v.chassis_number || "",
       engine_number: v.engine_number || "",
       gps_device_id: v.gps_device_id || "",
@@ -729,6 +739,15 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                       value={form.mileage_kmpl}
                       onChange={(e) => setForm({ ...form, mileage_kmpl: e.target.value })}
                       placeholder="e.g. 8.5"
+                    />
+                  </div>
+                  <div>
+                    <Label>Speed Limit (km/h)</Label>
+                    <Input
+                      type="number"
+                      value={form.speed_limit_kmph}
+                      onChange={(e) => setForm({ ...form, speed_limit_kmph: e.target.value })}
+                      placeholder="e.g. 60"
                     />
                   </div>
                   <div>

@@ -97,6 +97,7 @@ const navItems: Array<{
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["admin", "principal"] },
   { title: "Transport", icon: Bus, path: "/transport", roles: ["admin", "principal", "school_admin"] },
   { title: "Home", icon: LayoutDashboard, path: "/driver/tracking", roles: ["driver"] },
+  { title: "Communication", icon: MessageSquare, path: "/driver/communication", roles: ["driver"] },
   { title: "My Documents", icon: FileText, path: "/driver/documents", roles: ["driver"] },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["driver"] },
   { title: "My Attendance", icon: ClipboardList, path: "/driver/attendance", roles: ["driver"] },

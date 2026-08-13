@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { getMyChildren, getTeachersForChild } from "@/lib/appointments";
+import { getDriverForChild } from "@/lib/transport";
 import { useNotifications } from "@/contexts/NotificationContext";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,6 +137,28 @@ export default function ParentCommunicationCenter() {
               name: t.fullName,
               subtitle: `Teaches ${childLabel}`,
               role: "teacher",
+            });
+          }
+        }
+
+        // Driver for this child's active transport route, if any
+        const driver = await getDriverForChild(child.studentId);
+        if (driver) {
+          const childLabel = `${child.fullName} (${child.className}${child.section ? ` - ${child.section}` : ""})`;
+          const existingDriver = teacherMap.get(driver.profileId);
+          const routeLabel = driver.routeNumber
+            ? `Route ${driver.routeNumber}`
+            : driver.routeName || "Transport";
+          if (existingDriver) {
+            existingDriver.subtitle = existingDriver.subtitle.includes(childLabel)
+              ? existingDriver.subtitle
+              : `${existingDriver.subtitle}, ${childLabel}`;
+          } else {
+            teacherMap.set(driver.profileId, {
+              id: driver.profileId,
+              name: driver.name,
+              subtitle: `Driver for ${childLabel} (${routeLabel})`,
+              role: "driver",
             });
           }
         }

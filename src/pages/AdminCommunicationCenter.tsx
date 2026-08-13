@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
-  Search, Send, Paperclip, Users, User, GraduationCap,
+  Search, Send, Paperclip, Users, User, GraduationCap, Truck,
   MessageSquare, Check, CheckCheck, Smile, X, FileText, ChevronLeft, Megaphone,
   Image as ImageIcon,
 } from "lucide-react";
@@ -28,7 +28,7 @@ import { useNotifications } from "@/contexts/NotificationContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ContactRole = "teacher" | "parent" | "student";
+type ContactRole = "teacher" | "parent" | "student" | "driver";
 
 interface Contact {
   id: string; // profile id, or a synthetic "group-*" id for broadcast groups
@@ -63,6 +63,7 @@ const roleBadgeColor: Record<ContactRole, string> = {
   teacher: "bg-amber-100 text-amber-700 border-amber-200",
   parent: "bg-blue-100 text-blue-700 border-blue-200",
   student: "bg-green-100 text-green-700 border-green-200",
+  driver: "bg-purple-100 text-purple-700 border-purple-200",
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -98,6 +99,7 @@ export default function AdminCommunicationCenter() {
   const [teacherContacts, setTeacherContacts] = useState<Contact[]>([]);
   const [parentContacts, setParentContacts] = useState<Contact[]>([]);
   const [studentContacts, setStudentContacts] = useState<Contact[]>([]);
+  const [driverContacts, setDriverContacts] = useState<Contact[]>([]);
 
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [showMobileChat, setShowMobileChat] = useState(false);
@@ -162,6 +164,24 @@ export default function AdminCommunicationCenter() {
           role: "student" as const,
           name: s.full_name || "Unnamed Student",
           subtitle: s.class_grade ? `${s.class_grade}${s.section ? ` - ${s.section}` : ""}` : "Student",
+        }))
+      );
+
+      // drivers.profile_id is the actual auth.uid() used for messaging —
+      // drivers.id is a separate internal id, not usable here.
+      const { data: drivers } = await supabase
+        .from("drivers")
+        .select("id, profile_id, name, phone")
+        .eq("school_id", profile.school_id)
+        .not("profile_id", "is", null);
+
+      setDriverContacts(
+        (drivers || []).map((d: any) => ({
+          id: d.profile_id,
+          kind: "individual" as const,
+          role: "driver" as const,
+          name: d.name || "Unnamed Driver",
+          subtitle: d.phone || "Driver",
         }))
       );
 
@@ -320,13 +340,16 @@ export default function AdminCommunicationCenter() {
             ...teacherContacts.map(c => ({ id: c.id, role: "teacher" as const })),
             ...parentContacts.map(c => ({ id: c.id, role: "parent" as const })),
             ...studentContacts.map(c => ({ id: c.id, role: "student" as const })),
+            ...driverContacts.map(c => ({ id: c.id, role: "driver" as const })),
           ];
         } else if (selectedContact.role === "teacher") {
           recipients = teacherContacts.map(c => ({ id: c.id, role: "teacher" as const }));
         } else if (selectedContact.role === "parent") {
           recipients = parentContacts.map(c => ({ id: c.id, role: "parent" as const }));
-        } else {
+        } else if (selectedContact.role === "student") {
           recipients = studentContacts.map(c => ({ id: c.id, role: "student" as const }));
+        } else {
+          recipients = driverContacts.map(c => ({ id: c.id, role: "driver" as const }));
         }
 
         if (recipients.length === 0) {
@@ -369,19 +392,27 @@ export default function AdminCommunicationCenter() {
 
   const currentContacts = useMemo(() => {
     let list: Contact[] =
-      contactTab === "teacher" ? teacherContacts : contactTab === "parent" ? parentContacts : studentContacts;
+      contactTab === "teacher" ? teacherContacts
+      : contactTab === "parent" ? parentContacts
+      : contactTab === "student" ? studentContacts
+      : driverContacts;
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(c => c.name.toLowerCase().includes(q) || c.subtitle?.toLowerCase().includes(q));
     }
     return list;
-  }, [contactTab, teacherContacts, parentContacts, studentContacts, search]);
+  }, [contactTab, teacherContacts, parentContacts, studentContacts, driverContacts, search]);
 
   const groupForTab: Contact = useMemo(() => ({
     id: `group-all-${contactTab}`,
     kind: "group",
     role: contactTab,
-    name: `All ${contactTab === "teacher" ? "Teachers" : contactTab === "parent" ? "Parents" : "Students"}`,
+    name: `All ${
+      contactTab === "teacher" ? "Teachers"
+      : contactTab === "parent" ? "Parents"
+      : contactTab === "student" ? "Students"
+      : "Drivers"
+    }`,
     subtitle: `Broadcast to every ${contactTab}`,
   }), [contactTab]);
 
@@ -390,7 +421,7 @@ export default function AdminCommunicationCenter() {
     kind: "group",
     role: "teacher", // arbitrary — badge color only, recipients span all roles
     name: "Whole School",
-    subtitle: "Broadcast to every teacher, parent & student",
+    subtitle: "Broadcast to every teacher, parent, student & driver",
   };
 
   return (
@@ -445,7 +476,7 @@ export default function AdminCommunicationCenter() {
               </div>
 
               <Tabs value={contactTab} onValueChange={(v: any) => setContactTab(v)} className="px-3 pt-3">
-                <TabsList className="grid grid-cols-3 w-full h-9 bg-slate-100 rounded-full p-1">
+                <TabsList className="grid grid-cols-4 w-full h-9 bg-slate-100 rounded-full p-1">
                   <TabsTrigger value="teacher" className="text-xs gap-1 rounded-full data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
                     <User className="h-3.5 w-3.5" /> Teachers
                   </TabsTrigger>
@@ -454,6 +485,9 @@ export default function AdminCommunicationCenter() {
                   </TabsTrigger>
                   <TabsTrigger value="student" className="text-xs gap-1 rounded-full data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
                     <GraduationCap className="h-3.5 w-3.5" /> Students
+                  </TabsTrigger>
+                  <TabsTrigger value="driver" className="text-xs gap-1 rounded-full data-[state=active]:bg-green-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
+                    <Truck className="h-3.5 w-3.5" /> Drivers
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
