@@ -21,7 +21,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, MessageSquare, Check, CheckCheck,
   Smile, X, FileText, ChevronLeft, ShieldCheck, Users, Megaphone,
-  Image as ImageIcon,
+  Image as ImageIcon, Mic, Square,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { getParentsForDriver } from "@/lib/transport";
@@ -84,6 +84,9 @@ const isImageFile = (name?: string | null) =>
   !!name && /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(name);
 const isVideoFile = (name?: string | null) =>
   !!name && /\.(mp4|mov|webm|m4v|avi|3gp)$/i.test(name);
+// Recorded voice notes are saved as .webm too (same container as video), so
+// distinguish them by a dedicated filename prefix instead of extension.
+const isVoiceNote = (name?: string | null) => !!name && name.startsWith("voice-note-");
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -110,6 +113,11 @@ export default function DriverCommunicationCenter() {
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
 
@@ -332,6 +340,46 @@ export default function DriverCommunicationCenter() {
     }
   };
 
+  // ── Voice recording ──────────────────────────────────────────────────────────
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const file = new File([blob], `voice-note-${Date.now()}.webm`, { type: "audio/webm" });
+        setAttachedFile(file);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setRecordingSeconds(0);
+      recordingIntervalRef.current = setInterval(() => setRecordingSeconds(s => s + 1), 1000);
+    } catch (e: any) {
+      toast({ title: "Microphone access denied", description: e.message || "Couldn't access your microphone.", variant: "destructive" });
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    };
+  }, []);
+
   const currentContacts = useMemo(() => {
     let list = contacts;
     if (search.trim()) {
@@ -496,7 +544,12 @@ export default function DriverCommunicationCenter() {
                                 }`}
                               >
                                 {m.attachment_url && (
-                                  isImageFile(m.attachment_name) ? (
+                                  isVoiceNote(m.attachment_name) ? (
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                      <Mic className={`h-3.5 w-3.5 shrink-0 ${isMine ? "text-purple-100" : "text-purple-500"}`} />
+                                      <audio controls src={m.attachment_url} className="h-8 max-w-[220px]" />
+                                    </div>
+                                  ) : isImageFile(m.attachment_name) ? (
                                     <img src={m.attachment_url} alt={m.attachment_name || "attachment"} className="rounded-lg mb-1.5 max-h-56 object-cover" />
                                   ) : isVideoFile(m.attachment_name) ? (
                                     <video src={m.attachment_url} controls className="rounded-lg mb-1.5 max-h-56" />
@@ -525,8 +578,17 @@ export default function DriverCommunicationCenter() {
                   {attachedFile && (
                     <div className="px-3 pt-2 shrink-0">
                       <div className="flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-lg px-2.5 py-1.5 text-xs w-fit">
-                        {isImageFile(attachedFile.name) ? <ImageIcon className="h-3.5 w-3.5 text-purple-500" /> : <FileText className="h-3.5 w-3.5 text-purple-500" />}
-                        <span className="truncate max-w-[160px]">{attachedFile.name}</span>
+                        {isVoiceNote(attachedFile.name) ? (
+                          <>
+                            <Mic className="h-3.5 w-3.5 text-purple-500 shrink-0" />
+                            <audio controls src={URL.createObjectURL(attachedFile)} className="h-8 max-w-[220px]" />
+                          </>
+                        ) : isImageFile(attachedFile.name) ? (
+                          <ImageIcon className="h-3.5 w-3.5 text-purple-500" />
+                        ) : (
+                          <FileText className="h-3.5 w-3.5 text-purple-500" />
+                        )}
+                        {!isVoiceNote(attachedFile.name) && <span className="truncate max-w-[160px]">{attachedFile.name}</span>}
                         <button onClick={() => setAttachedFile(null)}><X className="h-3.5 w-3.5 text-slate-400" /></button>
                       </div>
                     </div>
@@ -544,6 +606,12 @@ export default function DriverCommunicationCenter() {
                             {e}
                           </button>
                         ))}
+                      </div>
+                    )}
+                    {isRecording && (
+                      <div className="absolute bottom-full left-3 mb-2 bg-white border border-red-200 rounded-full shadow-lg px-3 py-1.5 flex items-center gap-2 text-xs text-red-600 z-10">
+                        <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                        Recording {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")}
                       </div>
                     )}
                     <div className="flex items-end gap-2">
@@ -565,6 +633,15 @@ export default function DriverCommunicationCenter() {
                       </Button>
                       <Button variant="ghost" size="icon" className="shrink-0" onClick={() => mediaInputRef.current?.click()}>
                         <ImageIcon className="h-4.5 w-4.5 text-slate-400" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={`shrink-0 ${isRecording ? "bg-red-50" : ""}`}
+                        onClick={() => (isRecording ? stopRecording() : startRecording())}
+                        title={isRecording ? "Stop recording" : "Record a voice announcement"}
+                      >
+                        {isRecording ? <Square className="h-4 w-4 text-red-500 fill-red-500" /> : <Mic className="h-4.5 w-4.5 text-slate-400" />}
                       </Button>
                       <Button variant="ghost" size="icon" className="shrink-0" onClick={() => setShowEmojiPicker(v => !v)}>
                         <Smile className="h-4.5 w-4.5 text-slate-400" />

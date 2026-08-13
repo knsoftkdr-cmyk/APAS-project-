@@ -12,6 +12,7 @@ import { VehicleMaintenanceTab } from "@/components/transport/VehicleMaintenance
 import { FuelManagementTab } from "@/components/transport/FuelManagementTab";
 import { DriverBehaviourAnalyticsTab } from "@/components/transport/DriverBehaviourAnalyticsTab";
 import { SpeedMonitoringTab } from "@/components/transport/SpeedMonitoringTab";
+import AnalyticsDashboardTab from "@/components/transport/AnalyticsDashboardTab";
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 import { EmergencyManagementTab } from "@/components/transport/EmergencyManagementTab";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -368,6 +369,9 @@ export default function TransportManagement() {
             <TabsTrigger value="speedmonitoring" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               Speed Monitoring
             </TabsTrigger>
+            <TabsTrigger value="analytics" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
+              Analytics Dashboard
+            </TabsTrigger>
             <TabsTrigger value="emergency" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Siren className="h-4 w-4" /> Emergency
             </TabsTrigger>
@@ -411,6 +415,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="speedmonitoring">
             <SpeedMonitoringTab schoolId={schoolId} />
+          </TabsContent>
+            <TabsContent value="analytics">
+            <AnalyticsDashboardTab schoolId={schoolId} />
           </TabsContent>
           <TabsContent value="geofencing">
             <GeofenceZonesTab schoolId={schoolId} />

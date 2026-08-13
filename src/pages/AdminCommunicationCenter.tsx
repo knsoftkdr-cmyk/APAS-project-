@@ -21,7 +21,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, Users, User, GraduationCap, Truck,
   MessageSquare, Check, CheckCheck, Smile, X, FileText, ChevronLeft, Megaphone,
-  Image as ImageIcon,
+  Image as ImageIcon, Mic, Square,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -79,6 +79,9 @@ const isImageFile = (name?: string | null) =>
   !!name && /\.(png|jpe?g|gif|webp|heic|heif)$/i.test(name);
 const isVideoFile = (name?: string | null) =>
   !!name && /\.(mp4|mov|webm|m4v|avi|3gp)$/i.test(name);
+// Recorded voice notes are saved as .webm too (same container as video), so
+// distinguish them by a dedicated filename prefix instead of extension.
+const isVoiceNote = (name?: string | null) => !!name && name.startsWith("voice-note-");
 
 const WHOLE_SCHOOL_ID = "group-whole-school";
 
@@ -111,6 +114,11 @@ export default function AdminCommunicationCenter() {
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
 
@@ -390,6 +398,46 @@ export default function AdminCommunicationCenter() {
     }
   };
 
+  // ── Voice recording ──────────────────────────────────────────────────────────
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const file = new File([blob], `voice-note-${Date.now()}.webm`, { type: "audio/webm" });
+        setAttachedFile(file);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+      setRecordingSeconds(0);
+      recordingIntervalRef.current = setInterval(() => setRecordingSeconds(s => s + 1), 1000);
+    } catch (e: any) {
+      toast({ title: "Microphone access denied", description: e.message || "Couldn't access your microphone.", variant: "destructive" });
+    }
+  };
+
+  const stopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) clearInterval(recordingIntervalRef.current);
+    };
+  }, []);
+
   const currentContacts = useMemo(() => {
     let list: Contact[] =
       contactTab === "teacher" ? teacherContacts
@@ -625,7 +673,13 @@ export default function AdminCommunicationCenter() {
                                     : "bg-white border border-border/60 rounded-bl-sm"
                                 }`}
                               >
-                                {m.attachment_url && isImageFile(m.attachment_name) && (
+                                {m.attachment_url && isVoiceNote(m.attachment_name) && (
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <Mic className={`h-3.5 w-3.5 shrink-0 ${isMine ? "text-green-100" : "text-green-700"}`} />
+                                    <audio controls src={m.attachment_url} className="h-8 max-w-[220px]" />
+                                  </div>
+                                )}
+                                {m.attachment_url && !isVoiceNote(m.attachment_name) && isImageFile(m.attachment_name) && (
                                   <a href={m.attachment_url} target="_blank" rel="noreferrer" className="block mb-1.5">
                                     <img
                                       src={m.attachment_url}
@@ -634,7 +688,7 @@ export default function AdminCommunicationCenter() {
                                     />
                                   </a>
                                 )}
-                                {m.attachment_url && isVideoFile(m.attachment_name) && (
+                                {m.attachment_url && !isVoiceNote(m.attachment_name) && isVideoFile(m.attachment_name) && (
                                   <video
                                     src={m.attachment_url}
                                     controls
@@ -642,7 +696,7 @@ export default function AdminCommunicationCenter() {
                                   />
                                 )}
                                 {m.message && <p className="text-sm whitespace-pre-line">{m.message}</p>}
-                                {m.attachment_url && !isImageFile(m.attachment_name) && !isVideoFile(m.attachment_name) && (
+                                {m.attachment_url && !isVoiceNote(m.attachment_name) && !isImageFile(m.attachment_name) && !isVideoFile(m.attachment_name) && (
                                     <a
                                     href={m.attachment_url}
                                     target="_blank"
@@ -693,7 +747,15 @@ export default function AdminCommunicationCenter() {
                   {/* Attached file preview */}
                   {attachedFile && (
                     <div className="px-3 pb-2">
-                      {isImageFile(attachedFile.name) ? (
+                      {isVoiceNote(attachedFile.name) ? (
+                        <div className="inline-flex items-center gap-2 bg-muted rounded-lg px-3 py-1.5 text-xs">
+                          <Mic className="h-3.5 w-3.5" />
+                          <audio controls src={URL.createObjectURL(attachedFile)} className="h-8 max-w-[220px]" />
+                          <button onClick={() => setAttachedFile(null)}>
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ) : isImageFile(attachedFile.name) ? (
                         <div className="relative inline-block">
                           <img
                             src={URL.createObjectURL(attachedFile)}
@@ -775,6 +837,21 @@ export default function AdminCommunicationCenter() {
                     >
                       <Paperclip className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`shrink-0 rounded-full hover:bg-slate-100 ${isRecording ? "bg-red-50 text-red-500" : "text-slate-500"}`}
+                      onClick={() => (isRecording ? stopRecording() : startRecording())}
+                      title={isRecording ? "Stop recording" : "Record a voice announcement"}
+                    >
+                      {isRecording ? <Square className="h-4 w-4 fill-red-500" /> : <Mic className="h-4 w-4" />}
+                    </Button>
+                    {isRecording && (
+                      <span className="text-[11px] text-red-600 font-medium self-center flex items-center gap-1 shrink-0">
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                        {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")}
+                      </span>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
