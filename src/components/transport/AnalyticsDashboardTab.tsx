@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import DelayAnalyticsSubTab from "./DelayAnalyticsSubTab";
+import UtilizationReportsSubTab from "./UtilizationReportsSubTab";
 
 interface Props {
   schoolId: string;
@@ -145,6 +146,9 @@ export default function AnalyticsDashboardTab({ schoolId }: Props) {
         <TabsTrigger value="delay" className="text-xs rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">
           Delay Analytics
         </TabsTrigger>
+        <TabsTrigger value="utilization" className="text-xs rounded-full data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+          Utilization Reports
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="livefleet">
@@ -232,6 +236,10 @@ export default function AnalyticsDashboardTab({ schoolId }: Props) {
 
       <TabsContent value="delay">
         <DelayAnalyticsSubTab schoolId={schoolId} />
+      </TabsContent>
+
+      <TabsContent value="utilization">
+        <UtilizationReportsSubTab schoolId={schoolId} />
       </TabsContent>
     </Tabs>
   );

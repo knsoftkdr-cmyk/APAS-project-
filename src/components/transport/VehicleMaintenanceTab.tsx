@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   Wrench, CalendarClock, FileText, ShieldCheck, Plus, Loader2, Car, ExternalLink,
+  Sparkles, AlertTriangle,
 } from "lucide-react";
 
 // ============================================================
@@ -26,13 +27,14 @@ interface VehicleOption {
   registration_number: string;
 }
 
-type SubView = "schedule" | "service" | "amc" | "breakdown";
+type SubView = "schedule" | "service" | "amc" | "breakdown" | "ai";
 
 const SUB_VIEWS: { id: SubView; label: string; icon: typeof Wrench }[] = [
   { id: "schedule", label: "Maintenance Schedule", icon: CalendarClock },
   { id: "service", label: "Service History", icon: Wrench },
   { id: "amc", label: "AMC Management", icon: ShieldCheck },
   { id: "breakdown", label: "Breakdown Tracking", icon: FileText },
+  { id: "ai", label: "AI Predictive Maintenance", icon: Sparkles },
 ];
 
 function useVehicleOptions(schoolId?: string) {
@@ -84,6 +86,7 @@ export function VehicleMaintenanceTab({ schoolId }: { schoolId?: string }) {
       {subView === "service" && <ServiceHistoryView schoolId={schoolId} />}
       {subView === "amc" && <AmcManagementView schoolId={schoolId} />}
       {subView === "breakdown" && <BreakdownTrackingView schoolId={schoolId} />}
+      {subView === "ai" && <AiPredictiveMaintenanceView schoolId={schoolId} />}
     </div>
   );
 }
@@ -742,5 +745,173 @@ function BreakdownTrackingView({ schoolId }: { schoolId?: string }) {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+// ============================================================
+// AI PREDICTIVE MAINTENANCE
+// ============================================================
+interface PredictionRow {
+  vehicle_id: string;
+  risk_level: "low" | "medium" | "high";
+  summary: string;
+  predicted_issues: { issue: string; reasoning: string }[];
+  recommended_actions: { action: string; urgency: "immediate" | "soon" | "routine" }[];
+  next_service_estimate: string | null;
+  generated_at: string;
+}
+
+const RISK_COLORS: Record<string, string> = {
+  low: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  medium: "bg-amber-50 text-amber-700 border-amber-200",
+  high: "bg-red-50 text-red-600 border-red-200",
+};
+
+const URGENCY_COLORS: Record<string, string> = {
+  immediate: "bg-red-50 text-red-600 border-red-200",
+  soon: "bg-amber-50 text-amber-700 border-amber-200",
+  routine: "bg-slate-100 text-slate-600 border-slate-200",
+};
+
+function AiPredictiveMaintenanceView({ schoolId }: { schoolId?: string }) {
+  const queryClient = useQueryClient();
+  const { data: vehicles } = useVehicleOptions(schoolId);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>("");
+
+  const { data: prediction, isLoading: loadingPrediction } = useQuery({
+    queryKey: ["maintenance-prediction", selectedVehicleId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vehicle_maintenance_predictions")
+        .select("*")
+        .eq("vehicle_id", selectedVehicleId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as unknown as PredictionRow | null;
+    },
+    enabled: !!selectedVehicleId,
+  });
+
+  const analyzeMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("predict-vehicle-maintenance", {
+        body: { vehicle_id: selectedVehicleId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data.prediction;
+    },
+    onSuccess: () => {
+      toast.success("Analysis complete.");
+      queryClient.invalidateQueries({ queryKey: ["maintenance-prediction", selectedVehicleId] });
+    },
+    onError: (e: any) => toast.error(e.message || "Analysis failed"),
+  });
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-indigo-500" /> AI Predictive Maintenance
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[220px]">
+              <Label className="text-xs">Vehicle</Label>
+              <Select value={selectedVehicleId} onValueChange={setSelectedVehicleId}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select a vehicle" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(vehicles || []).map((v) => (
+                    <SelectItem key={v.id} value={v.id}>{v.registration_number}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={() => analyzeMutation.mutate()}
+              disabled={!selectedVehicleId || analyzeMutation.isPending}
+            >
+              {analyzeMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Analyzing...</>
+              ) : prediction ? (
+                <><Sparkles className="h-4 w-4 mr-1.5" /> Re-analyze</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-1.5" /> Analyze</>
+              )}
+            </Button>
+          </div>
+
+          {!selectedVehicleId ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Select a vehicle to view or run an AI maintenance analysis.
+            </p>
+          ) : loadingPrediction ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : !prediction && !analyzeMutation.isPending ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              No analysis yet for this vehicle. Click Analyze to generate one.
+            </p>
+          ) : prediction ? (
+            <div className="space-y-4 border-t pt-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <Badge variant="outline" className={`text-xs ${RISK_COLORS[prediction.risk_level]}`}>
+                  {prediction.risk_level.toUpperCase()} RISK
+                </Badge>
+                <p className="text-xs text-muted-foreground">
+                  Last analyzed {new Date(prediction.generated_at).toLocaleString()}
+                </p>
+              </div>
+
+              <p className="text-sm text-slate-700">{prediction.summary}</p>
+
+              {prediction.next_service_estimate && (
+                <div className="flex items-center gap-2 text-sm bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+                  <CalendarClock className="h-4 w-4 text-blue-500 shrink-0" />
+                  <span className="font-medium text-blue-800">Next service:</span>
+                  <span className="text-blue-700">{prediction.next_service_estimate}</span>
+                </div>
+              )}
+
+              {prediction.predicted_issues?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1.5">Predicted Issues</p>
+                  <div className="space-y-1.5">
+                    {prediction.predicted_issues.map((issue, i) => (
+                      <div key={i} className="flex items-start gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-medium text-slate-800">{issue.issue}</p>
+                          <p className="text-xs text-muted-foreground">{issue.reasoning}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {prediction.recommended_actions?.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1.5">Recommended Actions</p>
+                  <div className="space-y-1.5">
+                    {prediction.recommended_actions.map((rec, i) => (
+                      <div key={i} className="flex items-center justify-between gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
+                        <span className="text-slate-800">{rec.action}</span>
+                        <Badge variant="outline" className={`text-[10px] shrink-0 ${URGENCY_COLORS[rec.urgency]}`}>
+                          {rec.urgency}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
