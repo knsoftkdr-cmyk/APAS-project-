@@ -65,6 +65,7 @@ import { toast } from "sonner";
 interface Vehicle {
   id: string;
   school_id: string;
+  branch_id: string | null;
   registration_number: string;
   vehicle_type: string;
   capacity: number | null;
@@ -93,6 +94,7 @@ interface Vehicle {
 interface Driver {
   id: string;
   school_id: string;
+  branch_id: string | null;
   name: string;
   phone: string | null;
   license_number: string | null;
@@ -279,7 +281,7 @@ interface Assignment {
 }
 
 const EMPTY_VEHICLE = {
-  registration_number: "", vehicle_type: "bus", capacity: "",
+  registration_number: "", vehicle_type: "bus", capacity: "", branch_id: "shared",
   insurance_expiry: "", fitness_expiry: "", permit_expiry: "", status: "active",
   fuel_type: "diesel", mileage_kmpl: "", speed_limit_kmph: "", chassis_number: "", engine_number: "", gps_device_id: "",
   insurance_number: "", insurance_document_url: "",
@@ -289,7 +291,7 @@ const EMPTY_VEHICLE = {
 };
 
 const EMPTY_DRIVER = {
-  name: "", phone: "", license_number: "", license_expiry: "", address: "", status: "active",
+  name: "", phone: "", license_number: "", license_expiry: "", address: "", status: "active", branch_id: "shared",
   email: "", password: "",
   photo_url: "", license_document_url: "",
   license_verification_status: "pending", background_verification_status: "pending",
@@ -556,7 +558,26 @@ function DocumentUploadField({
 // ============================================================
 // VEHICLES TAB
 // ============================================================
+function useBranchOptions(schoolId?: string) {
+  return useQuery({
+    queryKey: ["transport-branches", schoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("branches")
+        .select("id, name")
+        .eq("school_id", schoolId)
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+    enabled: !!schoolId,
+  });
+}
+
 export function VehiclesTab({ schoolId }: { schoolId?: string }) {
+  const { data: branches } = useBranchOptions(schoolId);
+  const [branchFilter, setBranchFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Vehicle | null>(null);
@@ -582,6 +603,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
     mutationFn: async () => {
       const payload = {
         school_id: schoolId,
+        branch_id: form.branch_id === "shared" ? null : form.branch_id,
         registration_number: form.registration_number,
         vehicle_type: form.vehicle_type,
         capacity: form.capacity ? Number(form.capacity) : null,
@@ -642,6 +664,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
     setForm({
       registration_number: v.registration_number,
       vehicle_type: v.vehicle_type,
+      branch_id: v.branch_id || "shared",
       capacity: v.capacity?.toString() || "",
       insurance_expiry: v.insurance_expiry || "",
       fitness_expiry: v.fitness_expiry || "",
@@ -741,6 +764,18 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Branch</Label>
+                <Select value={form.branch_id} onValueChange={(v) => setForm({ ...form, branch_id: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="shared">Shared (All Branches)</SelectItem>
+                    {(branches || []).map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -895,6 +930,19 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
         </Dialog>
       </CardHeader>
       <CardContent>
+        <div className="mb-3 flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground shrink-0">Branch</Label>
+          <Select value={branchFilter} onValueChange={setBranchFilter}>
+            <SelectTrigger className="w-[220px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Branches</SelectItem>
+              <SelectItem value="shared">Shared Only</SelectItem>
+              {(branches || []).map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
         ) : (
@@ -904,17 +952,29 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Registration</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Capacity</TableHead>
+                <TableHead>Branch</TableHead>
                 <TableHead>Insurance Expiry</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {vehicles?.map((v) => (
+              {vehicles?.filter((v) =>
+                branchFilter === "all" ? true :
+                branchFilter === "shared" ? !v.branch_id :
+                v.branch_id === branchFilter
+              ).map((v) => (
                 <TableRow key={v.id}>
                   <TableCell className="font-medium">{v.registration_number}</TableCell>
                   <TableCell className="capitalize">{v.vehicle_type}</TableCell>
                   <TableCell>{v.capacity ?? "—"}</TableCell>
+                  <TableCell>
+                    {v.branch_id ? (
+                      <Badge variant="outline">{branches?.find((b) => b.id === v.branch_id)?.name || "—"}</Badge>
+                    ) : (
+                      <Badge variant="secondary">Shared</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>{v.insurance_expiry || "—"}</TableCell>
                   <TableCell>
                     <Badge variant={v.status === "active" ? "default" : "secondary"} className="capitalize">
@@ -933,7 +993,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
               ))}
               {vehicles?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                     No vehicles added yet.
                   </TableCell>
                 </TableRow>
@@ -950,6 +1010,8 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
 // DRIVERS TAB
 // ============================================================
 export function DriversTab({ schoolId }: { schoolId?: string }) {
+  const { data: branches } = useBranchOptions(schoolId);
+  const [branchFilter, setBranchFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Driver | null>(null);
@@ -974,6 +1036,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
       const payload = {
         school_id: schoolId,
         ...driverFields,
+        branch_id: form.branch_id === "shared" ? null : form.branch_id,
         license_expiry: form.license_expiry || null,
         medical_certificate_expiry: form.medical_certificate_expiry || null,
       };
@@ -1022,6 +1085,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
     setForm({
       name: d.name, phone: d.phone || "", license_number: d.license_number || "",
       license_expiry: d.license_expiry || "", address: d.address || "", status: d.status,
+      branch_id: d.branch_id || "shared",
       email: "", password: "",
       photo_url: d.photo_url || "", license_document_url: d.license_document_url || "",
       license_verification_status: d.license_verification_status || "pending",
@@ -1094,6 +1158,18 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div>
+                <Label>Branch</Label>
+                <Select value={form.branch_id} onValueChange={(v) => setForm({ ...form, branch_id: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="shared">Shared (All Branches)</SelectItem>
+                    {(branches || []).map((b) => (
+                      <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Address</Label>
@@ -1227,6 +1303,19 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
         </Dialog>
       </CardHeader>
       <CardContent>
+        <div className="mb-3 flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground shrink-0">Branch</Label>
+          <Select value={branchFilter} onValueChange={setBranchFilter}>
+            <SelectTrigger className="w-[220px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Branches</SelectItem>
+              <SelectItem value="shared">Shared Only</SelectItem>
+              {(branches || []).map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
         ) : (
@@ -1237,6 +1326,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Phone</TableHead>
                 <TableHead>License No.</TableHead>
                 <TableHead>License Expiry</TableHead>
+                <TableHead>Branch</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Verification</TableHead>
                 <TableHead>App Login</TableHead>
@@ -1244,12 +1334,23 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {drivers?.map((d) => (
+              {drivers?.filter((d) =>
+                branchFilter === "all" ? true :
+                branchFilter === "shared" ? !d.branch_id :
+                d.branch_id === branchFilter
+              ).map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.name}</TableCell>
                   <TableCell>{d.phone || "—"}</TableCell>
                   <TableCell>{d.license_number || "—"}</TableCell>
                   <TableCell>{d.license_expiry || "—"}</TableCell>
+                  <TableCell>
+                    {d.branch_id ? (
+                      <Badge variant="outline">{branches?.find((b) => b.id === d.branch_id)?.name || "—"}</Badge>
+                    ) : (
+                      <Badge variant="secondary">Shared</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Badge variant={d.status === "active" ? "default" : "secondary"} className="capitalize">
                       {d.status}
@@ -1290,7 +1391,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               ))}
               {drivers?.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
                     No drivers added yet.
                   </TableCell>
                 </TableRow>
