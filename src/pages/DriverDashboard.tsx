@@ -90,6 +90,51 @@ async function sendOverspeedAlert(params: {
   }
 }
 
+// Fire-and-forget staff push alert when a vehicle strays from its route's
+// stop-to-stop corridor. Never blocks or fails the driver's UI flow.
+async function sendRouteDeviationAlert(params: {
+  school_id: string;
+  vehicle_id: string;
+  driver_name?: string;
+  route_name?: string;
+  distance_meters?: number;
+}) {
+  try {
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "route_deviation_alert", payload: params }),
+      }
+    );
+  } catch {
+    // Non-critical — swallow errors, don't surface to driver.
+  }
+}
+
+// Fire-and-forget staff push alert when a vehicle idles somewhere that
+// isn't a registered stop. Never blocks or fails the driver's UI flow.
+async function sendUnauthorizedStopAlert(params: {
+  school_id: string;
+  vehicle_id: string;
+  driver_name?: string;
+  route_name?: string;
+}) {
+  try {
+    await fetch(
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-push-notification`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "unauthorized_stop_alert", payload: params }),
+      }
+    );
+  } catch {
+    // Non-critical — swallow errors, don't surface to driver.
+  }
+}
+
 interface DriverRow {
   id: string;
   name: string;
@@ -151,6 +196,44 @@ function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number):
   return R * c;
 }
 
+// Minimum distance in meters from a point to a line segment (a-b), used to
+// approximate "distance from the route corridor" since there's no stored
+// road-following polyline — only the ordered stop points. This treats the
+// local area as flat (fine at these small distances) by converting lat/lng
+// deltas to meters using distanceMeters as the metric.
+function pointToSegmentDistanceMeters(
+  pLat: number, pLng: number,
+  aLat: number, aLng: number,
+  bLat: number, bLng: number
+): number {
+  // Project onto an approximate local planar frame in meters, using aLat/aLng as origin.
+  const toXY = (lat: number, lng: number) => {
+    const y = distanceMeters(aLat, aLng, lat, aLng) * (lat >= aLat ? 1 : -1);
+    const x = distanceMeters(aLat, aLng, aLat, lng) * (lng >= aLng ? 1 : -1);
+    return { x, y };
+  };
+  const A = { x: 0, y: 0 };
+  const B = toXY(bLat, bLng);
+  const P = toXY(pLat, pLng);
+
+  const ABx = B.x - A.x;
+  const ABy = B.y - A.y;
+  const lenSq = ABx * ABx + ABy * ABy;
+
+  if (lenSq === 0) {
+    // Degenerate segment (same point) — just distance to A
+    return distanceMeters(pLat, pLng, aLat, aLng);
+  }
+
+  let t = ((P.x - A.x) * ABx + (P.y - A.y) * ABy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+
+  const closestX = A.x + t * ABx;
+  const closestY = A.y + t * ABy;
+
+  return Math.sqrt((P.x - closestX) ** 2 + (P.y - closestY) ** 2);
+}
+
 export default function DriverDashboard() {
   const { profile } = useAuth();
   const [driverRow, setDriverRow] = useState<DriverRow | null>(null);
@@ -168,6 +251,9 @@ export default function DriverDashboard() {
   const insideZoneIdsRef = useRef<Set<string>>(new Set());
   const lastLocationRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
   const isOverspeedingRef = useRef<boolean>(false);
+  const idleSinceRef = useRef<number | null>(null);
+  const isOffRouteRef = useRef<boolean>(false);
+  const isUnauthorizedStopRef = useRef<boolean>(false);
   const [assignments, setAssignments] = useState<TransportAssignment[]>([]);
   const [boardedStudentIds, setBoardedStudentIds] = useState<Set<string>>(new Set());
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
@@ -352,6 +438,8 @@ export default function DriverDashboard() {
   };
 
   const GPS_NOISE_FLOOR_METERS = 20; // below this between pings = GPS jitter, not real movement
+  const OFF_ROUTE_BUFFER_METERS = 500; // distance from the stop-to-stop corridor that counts as "off route"
+  const IDLE_SECONDS_FOR_UNAUTHORIZED_STOP = 120; // must be idle this long, away from any stop, to flag
 
   const sendLocation = async (lat: number, lng: number, vehicleId: string, driverId: string) => {
     // Compute speed from the previous known position. A stationary phone
@@ -360,16 +448,56 @@ export default function DriverDashboard() {
     // rather than a "phantom" speed reading.
     const now = Date.now();
     let speedKmh: number | null = null;
+    let effectiveDist = 0;
     if (lastLocationRef.current) {
       const distMeters = distanceMeters(lastLocationRef.current.lat, lastLocationRef.current.lng, lat, lng);
       const seconds = (now - lastLocationRef.current.time) / 1000;
+      effectiveDist = distMeters < GPS_NOISE_FLOOR_METERS ? 0 : distMeters;
       if (seconds > 0) {
-        const effectiveDist = distMeters < GPS_NOISE_FLOOR_METERS ? 0 : distMeters;
         const kmh = (effectiveDist / seconds) * 3.6;
         speedKmh = kmh > 150 ? null : kmh; // discard GPS glitches (satellite reacquisition jumps)
       }
     }
     lastLocationRef.current = { lat, lng, time: now };
+
+    // Idle tracking, reusing the same "stationary" signal computed for speed.
+    if (effectiveDist === 0) {
+      if (idleSinceRef.current === null) idleSinceRef.current = now;
+    } else {
+      idleSinceRef.current = null;
+    }
+    const idleSeconds = idleSinceRef.current ? (now - idleSinceRef.current) / 1000 : 0;
+
+    // Off-route check: minimum distance from the current position to the
+    // route's stop-to-stop corridor (approximated as straight segments —
+    // there's no stored road-following polyline). Falls back to distance
+    // to the single stop if only one exists; skipped if no stops at all.
+    let offRouteDistance: number | null = null;
+    if (stops.length >= 2) {
+      let minDist = Infinity;
+      for (let i = 0; i < stops.length - 1; i++) {
+        const a = stops[i];
+        const b = stops[i + 1];
+        if (a.latitude == null || a.longitude == null || b.latitude == null || b.longitude == null) continue;
+        const d = pointToSegmentDistanceMeters(lat, lng, a.latitude, a.longitude, b.latitude, b.longitude);
+        if (d < minDist) minDist = d;
+      }
+      offRouteDistance = minDist === Infinity ? null : minDist;
+    } else if (stops.length === 1 && stops[0].latitude != null && stops[0].longitude != null) {
+      offRouteDistance = distanceMeters(lat, lng, stops[0].latitude, stops[0].longitude);
+    }
+    const isOffRoute = offRouteDistance != null ? offRouteDistance > OFF_ROUTE_BUFFER_METERS : null;
+
+    // Unauthorized stop check: idle long enough AND not within any
+    // registered stop's own radius.
+    let isUnauthorizedStop: boolean | null = null;
+    if (stops.length > 0) {
+      const nearAnyStop = stops.some((s) => {
+        if (s.latitude == null || s.longitude == null) return false;
+        return distanceMeters(lat, lng, s.latitude, s.longitude) <= (s.radius_meters ?? 200);
+      });
+      isUnauthorizedStop = idleSeconds >= IDLE_SECONDS_FOR_UNAUTHORIZED_STOP && !nearAnyStop;
+    }
 
     const { error } = await supabase.from("vehicle_locations").upsert({
       vehicle_id: vehicleId,
@@ -377,6 +505,8 @@ export default function DriverDashboard() {
       latitude: lat,
       longitude: lng,
       speed_kmh: speedKmh,
+      is_off_route: isOffRoute,
+      is_unauthorized_stop: isUnauthorizedStop,
       updated_at: new Date().toISOString(),
     });
 
@@ -419,6 +549,39 @@ export default function DriverDashboard() {
         });
       } else if (!isOverLimit && isOverspeedingRef.current) {
         isOverspeedingRef.current = false;
+      }
+    }
+
+    // Off-route alert — debounced (enter/exit).
+    if (isOffRoute != null) {
+      if (isOffRoute && !isOffRouteRef.current) {
+        isOffRouteRef.current = true;
+        toast.error("You appear to be off the assigned route.");
+        sendRouteDeviationAlert({
+          school_id: profile?.school_id ?? "",
+          vehicle_id: vehicleId,
+          driver_name: driverRow?.name,
+          route_name: route?.route_name,
+          distance_meters: offRouteDistance ?? undefined,
+        });
+      } else if (!isOffRoute && isOffRouteRef.current) {
+        isOffRouteRef.current = false;
+      }
+    }
+
+    // Unauthorized stop alert — debounced (enter/exit).
+    if (isUnauthorizedStop != null) {
+      if (isUnauthorizedStop && !isUnauthorizedStopRef.current) {
+        isUnauthorizedStopRef.current = true;
+        toast.error("Stopped away from a registered stop for a while.");
+        sendUnauthorizedStopAlert({
+          school_id: profile?.school_id ?? "",
+          vehicle_id: vehicleId,
+          driver_name: driverRow?.name,
+          route_name: route?.route_name,
+        });
+      } else if (!isUnauthorizedStop && isUnauthorizedStopRef.current) {
+        isUnauthorizedStopRef.current = false;
       }
     }
 

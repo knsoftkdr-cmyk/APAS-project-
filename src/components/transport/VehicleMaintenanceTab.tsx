@@ -862,7 +862,7 @@ function AiPredictiveMaintenanceView({ schoolId }: { schoolId?: string }) {
                   {prediction.risk_level.toUpperCase()} RISK
                 </Badge>
                 <p className="text-xs text-muted-foreground">
-                  Last analyzed {new Date(prediction.generated_at).toLocaleString()}
+                  Last analyzed {new Date(prediction.generated_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "medium" })}
                 </p>
               </div>
 

@@ -14,6 +14,7 @@ import { VehicleMaintenanceTab } from "@/components/transport/VehicleMaintenance
 import { FuelManagementTab } from "@/components/transport/FuelManagementTab";
 import { DriverBehaviourAnalyticsTab } from "@/components/transport/DriverBehaviourAnalyticsTab";
 import { SpeedMonitoringTab } from "@/components/transport/SpeedMonitoringTab";
+import { RouteDeviationTab } from "@/components/transport/RouteDeviationTab";
 import AnalyticsDashboardTab from "@/components/transport/AnalyticsDashboardTab";
 import AiInsightsTab from "@/components/transport/AiInsightsTab";
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
@@ -107,6 +108,9 @@ const ERPTransport = () => {
           <TabsTrigger value="speedmonitoring" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
             Speed Monitoring
           </TabsTrigger>
+          <TabsTrigger value="routedeviation" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
+            Route Deviation
+          </TabsTrigger>
             <TabsTrigger value="analytics" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               Analytics Dashboard
             </TabsTrigger>
@@ -150,6 +154,9 @@ const ERPTransport = () => {
         </TabsContent>
         <TabsContent value="speedmonitoring">
           <SpeedMonitoringTab schoolId={schoolId} />
+        </TabsContent>
+        <TabsContent value="routedeviation">
+          <RouteDeviationTab schoolId={schoolId} />
         </TabsContent>
         <TabsContent value="analytics">
           <AnalyticsDashboardTab schoolId={schoolId} />

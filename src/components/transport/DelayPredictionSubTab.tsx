@@ -105,7 +105,7 @@ export default function DelayPredictionSubTab({ schoolId }: Props) {
               <p className="text-sm text-slate-700">{prediction.overall_summary}</p>
             </div>
             <p className="text-xs text-muted-foreground">
-              Last forecast: {new Date(prediction.generated_at).toLocaleString()}
+              Last forecast: {new Date(prediction.generated_at).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium", timeStyle: "medium" })}
             </p>
 
             <div className="space-y-2.5 pt-2 border-t">
