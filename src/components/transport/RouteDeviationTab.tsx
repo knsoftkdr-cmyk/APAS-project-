@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Route, Bell, Loader2, Car, Info } from "lucide-react";
+import { Route, Bell, Loader2, Car, Info, TrafficCone } from "lucide-react";
 
 type SubView = "live" | "alerts";
 
@@ -35,10 +35,22 @@ export function RouteDeviationTab({ schoolId }: { schoolId?: string }) {
         >
           <Bell className="h-3.5 w-3.5" /> Route Exception Alerts
         </button>
+        <button
+          type="button"
+          onClick={() => setSubView("traffic")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm border transition-all duration-200 ${
+            subView === "traffic"
+              ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+              : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:text-slate-800"
+          }`}
+        >
+          <TrafficCone className="h-3.5 w-3.5" /> Traffic Intelligence
+        </button>
       </div>
 
       {subView === "live" && <LiveRouteStatusView schoolId={schoolId} />}
       {subView === "alerts" && <RouteAlertsView />}
+      {subView === "traffic" && <TrafficIntelligenceView schoolId={schoolId} />}
     </div>
   );
 }
@@ -195,6 +207,319 @@ function RouteAlertsView() {
               </div>
               {!a.is_read && (
                 <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 shrink-0">New</Badge>
+              )}
+            </div>
+          ))
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================================
+// TRAFFIC INTELLIGENCE
+// Live traffic (TomTom Flow via get-traffic-eta), alternate routes,
+// and delay prediction vs both schedule and historical average.
+// ============================================================
+interface RouteStopCoord {
+  id: string;
+  stop_name: string;
+  sequence_number: number;
+  latitude: number;
+  longitude: number;
+}
+interface TrafficLocation {
+  latitude: number;
+  longitude: number;
+  updated_at: string;
+}
+interface TrafficRoute {
+  id: string;
+  route_name: string;
+  status: string;
+  vehicle_id: string | null;
+  vehicles: {
+    registration_number: string;
+    vehicle_locations: TrafficLocation[] | TrafficLocation | null;
+  } | null;
+  route_stops: RouteStopCoord[];
+}
+interface TrafficResult {
+  routeId: string;
+  routeName: string;
+  registrationNumber: string;
+  nextStopName?: string;
+  congestionLevel: "low" | "moderate" | "heavy" | "unknown";
+  liveMinutes: number;
+  delayMinutes: number;
+  scheduleDelayMinutes: number | null;
+  historicalDelayMinutes: number | null;
+  alternates: { liveMinutes: number; delayMinutes: number }[];
+  error?: string;
+}
+
+// Straight-line distance — same approximation tier as the existing
+// pointToSegmentDistanceMeters() corridor check, not a road-following path.
+function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function fetchTrafficIntelligence(schoolId: string): Promise<TrafficResult[]> {
+  const { data: routes, error } = await supabase
+    .from("transport_routes")
+    .select(
+      "id, route_name, status, vehicle_id, vehicles(registration_number, vehicle_locations(latitude, longitude, updated_at)), route_stops(id, stop_name, sequence_number, latitude, longitude)"
+    )
+    .eq("school_id", schoolId)
+    .eq("status", "active")
+    .order("route_name");
+  if (error) throw error;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Historical baseline: completed trips, grouped by route+direction.
+  const { data: historicalTrips } = await supabase
+    .from("trips")
+    .select("route_id, direction, started_at, ended_at")
+    .eq("school_id", schoolId)
+    .eq("status", "completed")
+    .not("started_at", "is", null)
+    .not("ended_at", "is", null)
+    .order("trip_date", { ascending: false })
+    .limit(500);
+
+  // Today's in-progress trips, for the schedule baseline.
+  const { data: todaysTrips } = await supabase
+    .from("trips")
+    .select("route_id, direction, scheduled_start_time, scheduled_end_time, status")
+    .eq("school_id", schoolId)
+    .eq("trip_date", today);
+
+  const grouped = new Map<string, number[]>();
+  (historicalTrips || []).forEach((t: any) => {
+    if (!t.started_at || !t.ended_at) return;
+    const durationSec = (new Date(t.ended_at).getTime() - new Date(t.started_at).getTime()) / 1000;
+    if (durationSec <= 0 || durationSec > 4 * 3600) return; // discard bad/incomplete rows
+    const key = `${t.route_id}:${t.direction}`;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(durationSec);
+  });
+  const historicalAvgByKey = new Map<string, number>();
+  grouped.forEach((arr, key) => {
+    historicalAvgByKey.set(key, arr.reduce((a, b) => a + b, 0) / arr.length);
+  });
+
+  const results: TrafficResult[] = [];
+
+  for (const r of (routes || []) as unknown as TrafficRoute[]) {
+    const loc = Array.isArray(r.vehicles?.vehicle_locations)
+      ? r.vehicles?.vehicle_locations[0]
+      : r.vehicles?.vehicle_locations;
+    const stops = (r.route_stops || []).filter((s) => s.latitude != null && s.longitude != null);
+    if (!loc || loc.latitude == null || loc.longitude == null || stops.length === 0) continue;
+
+    const isStale = Date.now() - new Date(loc.updated_at).getTime() > 5 * 60 * 1000;
+    if (isStale) continue;
+
+    // Next stop approximated as nearest stop to current GPS position.
+    let nextStop = stops[0];
+    let minDist = Infinity;
+    for (const s of stops) {
+      const d = haversineMeters(loc.latitude, loc.longitude, s.latitude, s.longitude);
+      if (d < minDist) {
+        minDist = d;
+        nextStop = s;
+      }
+    }
+
+    try {
+      const { data: ttData, error: ttError } = await supabase.functions.invoke("get-traffic-eta", {
+        body: {
+          originLat: loc.latitude,
+          originLng: loc.longitude,
+          destLat: nextStop.latitude,
+          destLng: nextStop.longitude,
+          maxAlternatives: 2,
+        },
+      });
+
+      if (ttError || !ttData?.success) {
+        results.push({
+          routeId: r.id,
+          routeName: r.route_name,
+          registrationNumber: r.vehicles?.registration_number || "—",
+          congestionLevel: "unknown",
+          liveMinutes: 0,
+          delayMinutes: 0,
+          scheduleDelayMinutes: null,
+          historicalDelayMinutes: null,
+          alternates: [],
+          error: ttData?.message || ttError?.message || "Traffic data unavailable",
+        });
+        continue;
+      }
+
+      const trip = (todaysTrips || []).find(
+        (t: any) => t.route_id === r.id && t.status !== "completed" && t.status !== "cancelled"
+      );
+
+      let scheduleDelayMinutes: number | null = null;
+      if (trip?.scheduled_end_time) {
+        const [h, m] = trip.scheduled_end_time.split(":").map(Number);
+        const scheduledEnd = new Date();
+        scheduledEnd.setHours(h, m, 0, 0);
+        const projectedArrival = new Date(Date.now() + ttData.liveSeconds * 1000);
+        scheduleDelayMinutes = Math.round((projectedArrival.getTime() - scheduledEnd.getTime()) / 60000);
+      }
+
+      let historicalDelayMinutes: number | null = null;
+      if (trip?.direction) {
+        const histAvg = historicalAvgByKey.get(`${r.id}:${trip.direction}`);
+        if (histAvg != null) {
+          historicalDelayMinutes = Math.round((ttData.liveSeconds - histAvg) / 60);
+        }
+      }
+
+      results.push({
+        routeId: r.id,
+        routeName: r.route_name,
+        registrationNumber: r.vehicles?.registration_number || "—",
+        nextStopName: nextStop.stop_name,
+        congestionLevel: ttData.congestionLevel || "unknown",
+        liveMinutes: Math.round(ttData.liveSeconds / 60),
+        delayMinutes: Math.round(ttData.delaySeconds / 60),
+        scheduleDelayMinutes,
+        historicalDelayMinutes,
+        alternates: (ttData.alternates || []).map((a: any) => ({
+          liveMinutes: Math.round(a.liveSeconds / 60),
+          delayMinutes: Math.round(a.delaySeconds / 60),
+        })),
+      });
+
+      // Fire-and-forget trend snapshot; a failure here shouldn't block the UI.
+      void supabase.from("transport_traffic_snapshots").insert({
+        school_id: schoolId,
+        route_id: r.id,
+        vehicle_id: r.vehicle_id,
+        congestion_level: ttData.congestionLevel || "unknown",
+        live_seconds: ttData.liveSeconds,
+        no_traffic_seconds: ttData.noTrafficSeconds,
+        schedule_delay_seconds: scheduleDelayMinutes != null ? scheduleDelayMinutes * 60 : null,
+        historical_delay_seconds: historicalDelayMinutes != null ? historicalDelayMinutes * 60 : null,
+        alt_routes: ttData.alternates || [],
+      });
+    } catch (e: any) {
+      results.push({
+        routeId: r.id,
+        routeName: r.route_name,
+        registrationNumber: r.vehicles?.registration_number || "—",
+        congestionLevel: "unknown",
+        liveMinutes: 0,
+        delayMinutes: 0,
+        scheduleDelayMinutes: null,
+        historicalDelayMinutes: null,
+        alternates: [],
+        error: String(e),
+      });
+    }
+  }
+
+  return results;
+}
+
+const CONGESTION_STYLES: Record<string, string> = {
+  low: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  moderate: "bg-amber-50 text-amber-700 border-amber-200",
+  heavy: "bg-red-50 text-red-600 border-red-200",
+  unknown: "bg-slate-100 text-slate-500 border-slate-200",
+};
+
+function TrafficIntelligenceView({ schoolId }: { schoolId?: string }) {
+  const { data: results, isLoading, dataUpdatedAt } = useQuery({
+    queryKey: ["traffic-intelligence", schoolId],
+    queryFn: () => fetchTrafficIntelligence(schoolId!),
+    enabled: !!schoolId,
+    // Slower than the 12s GPS poll — each refresh fires one TomTom call per
+    // active route, so this interval is deliberately lighter on API usage.
+    refetchInterval: 30000,
+  });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+        <CardTitle className="flex items-center gap-2">
+          <TrafficCone className="h-5 w-5" /> Traffic Intelligence
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Auto-refreshes every 30s{dataUpdatedAt ? ` · last updated ${new Date(dataUpdatedAt).toLocaleTimeString()}` : ""}
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-xs text-muted-foreground flex items-start gap-1.5 mb-2">
+          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+          Next stop is approximated as the nearest stop to the vehicle's current GPS position, not a
+          confirmed boarding sequence. Delay figures compare live TomTom traffic ETA against today's
+          schedule and the route's historical average.
+        </p>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading...
+          </p>
+        ) : !results || results.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No routes with live position data right now.</p>
+        ) : (
+          results.map((r) => (
+            <div key={r.routeId} className="rounded-lg border p-3 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="rounded-full bg-muted p-2 shrink-0">
+                    <Car className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{r.routeName}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {r.registrationNumber}
+                      {r.nextStopName ? ` · next: ${r.nextStopName}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="outline" className={CONGESTION_STYLES[r.congestionLevel]}>
+                  {r.congestionLevel === "unknown" ? "No data" : `${r.congestionLevel} traffic`}
+                </Badge>
+              </div>
+              {r.error ? (
+                <p className="text-xs text-red-500 pl-11">{r.error}</p>
+              ) : (
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pl-11">
+                  <span>
+                    ETA: {r.liveMinutes} min{r.delayMinutes > 0 ? ` (+${r.delayMinutes} min traffic)` : ""}
+                  </span>
+                  {r.scheduleDelayMinutes != null && (
+                    <span className={r.scheduleDelayMinutes > 0 ? "text-amber-600" : "text-emerald-600"}>
+                      {r.scheduleDelayMinutes > 0 ? `+${r.scheduleDelayMinutes}` : r.scheduleDelayMinutes} min vs
+                      schedule
+                    </span>
+                  )}
+                  {r.historicalDelayMinutes != null && (
+                    <span className={r.historicalDelayMinutes > 0 ? "text-amber-600" : "text-emerald-600"}>
+                      {r.historicalDelayMinutes > 0 ? `+${r.historicalDelayMinutes}` : r.historicalDelayMinutes} min vs
+                      usual
+                    </span>
+                  )}
+                  {r.alternates.length > 0 && (
+                    <span>
+                      {r.alternates.length} alternate route{r.alternates.length > 1 ? "s" : ""} available (
+                      {r.alternates.map((a) => `${a.liveMinutes}min`).join(", ")})
+                    </span>
+                  )}
+                </div>
               )}
             </div>
           ))
