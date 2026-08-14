@@ -8,6 +8,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Bus, MapPin, Loader2, CheckCircle2, Navigation, AlertTriangle, FileWarning, Fuel } from "lucide-react";
+import { RouteSuggestionBanner } from "@/components/transport/RouteSuggestionBanner";
 import { toast } from "sonner";
 import {
   Dialog as IncidentDialog, DialogContent as IncidentDialogContent, DialogHeader as IncidentDialogHeader,
@@ -1082,6 +1083,7 @@ export default function DriverDashboard() {
             </Button>
           </div>
         )}
+        {driverRow && <RouteSuggestionBanner driverId={driverRow.id} />}
 
         <Dialog open={sosOpen} onOpenChange={setSosOpen}>
           <DialogContent className="max-w-sm">

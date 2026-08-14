@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Route, Bell, Loader2, Car, Info, TrafficCone } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type SubView = "live" | "alerts";
 
@@ -256,6 +258,12 @@ interface TrafficResult {
   historicalDelayMinutes: number | null;
   alternates: { liveMinutes: number; delayMinutes: number }[];
   error?: string;
+  driverId: string | null;
+  vehicleIdForSuggestion: string | null;
+  originLat: number;
+  originLng: number;
+  destLat: number;
+  destLng: number;
 }
 
 // Straight-line distance — same approximation tier as the existing
@@ -275,7 +283,7 @@ async function fetchTrafficIntelligence(schoolId: string): Promise<TrafficResult
   const { data: routes, error } = await supabase
     .from("transport_routes")
     .select(
-      "id, route_name, status, vehicle_id, vehicles(registration_number, vehicle_locations(latitude, longitude, updated_at)), route_stops(id, stop_name, sequence_number, latitude, longitude)"
+      "id, route_name, status, vehicle_id, driver_id, vehicles(registration_number, vehicle_locations(latitude, longitude, updated_at)), route_stops(id, stop_name, sequence_number, latitude, longitude)"
     )
     .eq("school_id", schoolId)
     .eq("status", "active")
@@ -362,6 +370,12 @@ async function fetchTrafficIntelligence(schoolId: string): Promise<TrafficResult
           historicalDelayMinutes: null,
           alternates: [],
           error: ttData?.message || ttError?.message || "Traffic data unavailable",
+          driverId: (r as any).driver_id ?? null,
+          vehicleIdForSuggestion: r.vehicle_id,
+          originLat: loc.latitude,
+          originLng: loc.longitude,
+          destLat: nextStop.latitude,
+          destLng: nextStop.longitude,
         });
         continue;
       }
@@ -401,6 +415,12 @@ async function fetchTrafficIntelligence(schoolId: string): Promise<TrafficResult
           liveMinutes: Math.round(a.liveSeconds / 60),
           delayMinutes: Math.round(a.delaySeconds / 60),
         })),
+        driverId: (r as any).driver_id ?? null,
+        vehicleIdForSuggestion: r.vehicle_id,
+        originLat: loc.latitude,
+        originLng: loc.longitude,
+        destLat: nextStop.latitude,
+        destLng: nextStop.longitude,
       });
 
       // Fire-and-forget trend snapshot; a failure here shouldn't block the UI.
@@ -427,11 +447,95 @@ async function fetchTrafficIntelligence(schoolId: string): Promise<TrafficResult
         historicalDelayMinutes: null,
         alternates: [],
         error: String(e),
+        driverId: (r as any).driver_id ?? null,
+        vehicleIdForSuggestion: r.vehicle_id,
+        originLat: loc.latitude,
+        originLng: loc.longitude,
+        destLat: nextStop.latitude,
+        destLng: nextStop.longitude,
       });
     }
   }
 
   return results;
+}
+
+async function suggestRouteToDriver(schoolId: string, result: TrafficResult, altIndex: number) {
+  if (!result.driverId) {
+    toast.error("No driver assigned to this route");
+    return;
+  }
+  try {
+    // Re-fetch with geometry for the specific alternate — the periodic poll
+    // deliberately skips geometry to keep payloads small.
+    const { data: ttData, error: ttError } = await supabase.functions.invoke("get-traffic-eta", {
+      body: {
+        originLat: result.originLat,
+        originLng: result.originLng,
+        destLat: result.destLat,
+        destLng: result.destLng,
+        maxAlternatives: 2,
+        includeGeometry: true,
+      },
+    });
+    if (ttError || !ttData?.success) {
+      toast.error(ttData?.message || ttError?.message || "Could not fetch route geometry");
+      return;
+    }
+    const chosen = ttData.alternates?.[altIndex];
+    if (!chosen) {
+      toast.error("Alternate route not available anymore");
+      return;
+    }
+
+    const { data: driverRow } = await supabase
+      .from("drivers")
+      .select("profile_id")
+      .eq("id", result.driverId)
+      .maybeSingle();
+
+    const { data: inserted, error: insertError } = await supabase
+      .from("transport_route_suggestions")
+      .insert({
+        school_id: schoolId,
+        route_id: result.routeId,
+        vehicle_id: result.vehicleIdForSuggestion,
+        driver_id: result.driverId,
+        origin_lat: result.originLat,
+        origin_lng: result.originLng,
+        dest_lat: result.destLat,
+        dest_lng: result.destLng,
+        dest_stop_name: result.nextStopName,
+        live_seconds: chosen.liveSeconds,
+        delay_seconds: chosen.delaySeconds,
+        baseline_live_seconds: ttData.liveSeconds,
+        geometry: chosen.geometry || [],
+      })
+      .select("id")
+      .single();
+
+    if (insertError) throw insertError;
+
+    if (driverRow?.profile_id) {
+      const minutesSaved = Math.round((ttData.liveSeconds - chosen.liveSeconds) / 60);
+      void supabase.functions.invoke("send-push-notification", {
+        body: {
+          type: "route_suggestion_alert",
+          payload: {
+            driver_profile_id: driverRow.profile_id,
+            route_name: result.routeName,
+            dest_stop_name: result.nextStopName,
+            minutes_saved: minutesSaved,
+            suggestion_id: inserted?.id,
+          },
+        },
+      });
+    }
+
+    toast.success("Route suggestion sent to driver");
+  } catch (e: any) {
+    toast.error(e.message || "Failed to suggest route");
+  }
 }
 
 const CONGESTION_STYLES: Record<string, string> = {
@@ -519,6 +623,21 @@ function TrafficIntelligenceView({ schoolId }: { schoolId?: string }) {
                       {r.alternates.map((a) => `${a.liveMinutes}min`).join(", ")})
                     </span>
                   )}
+                </div>
+              )}
+              {!r.error && r.alternates.length > 0 && (
+                <div className="pl-11 flex flex-wrap gap-2">
+                  {r.alternates.map((a, idx) => (
+                    <Button
+                      key={idx}
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs gap-1"
+                      onClick={() => suggestRouteToDriver(schoolId!, r, idx)}
+                    >
+                      Suggest {a.liveMinutes}min route to driver
+                    </Button>
+                  ))}
                 </div>
               )}
             </div>

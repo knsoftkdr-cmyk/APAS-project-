@@ -3,7 +3,10 @@
 // never reaches the browser. Returns the live-traffic travel time and the
 // no-traffic baseline for the primary route (same shape as before, so
 // existing callers are unaffected), plus an optional set of alternate
-// routes and a derived congestion label when maxAlternatives is passed.
+// routes, a derived congestion label, and (only when includeGeometry is
+// requested) a road-following point path for turn-by-turn rendering.
+// Geometry is opt-in because it's the bulk of the payload and most callers
+// (the 30s Traffic Intelligence poll) don't need it.
 const TOMTOM_API_KEY = Deno.env.get("TOMTOM_API_KEY")!;
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -32,15 +35,29 @@ interface RouteSummary {
   noTrafficSeconds: number;
   delaySeconds: number;
   distanceMeters: number;
+  geometry?: [number, number][];
 }
 
-function summarizeRoute(route: any): RouteSummary {
+function extractGeometry(route: any): [number, number][] {
+  const legs = route.legs ?? [];
+  const pts: [number, number][] = [];
+  for (const leg of legs) {
+    for (const p of leg.points ?? []) {
+      if (p.latitude != null && p.longitude != null) pts.push([p.latitude, p.longitude]);
+    }
+  }
+  return pts;
+}
+
+function summarizeRoute(route: any, includeGeometry: boolean): RouteSummary {
   const summary = route.summary;
   const liveSeconds: number = summary.travelTimeInSeconds;
   const noTrafficSeconds: number = summary.noTrafficTravelTimeInSeconds ?? liveSeconds;
   const distanceMeters: number = summary.lengthInMeters;
   const delaySeconds = Math.max(0, liveSeconds - noTrafficSeconds);
-  return { liveSeconds, noTrafficSeconds, delaySeconds, distanceMeters };
+  const result: RouteSummary = { liveSeconds, noTrafficSeconds, delaySeconds, distanceMeters };
+  if (includeGeometry) result.geometry = extractGeometry(route);
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -49,7 +66,7 @@ Deno.serve(async (req) => {
   }
   try {
     const body = await req.json();
-    const { originLat, originLng, destLat, destLng, maxAlternatives } = body;
+    const { originLat, originLng, destLat, destLng, maxAlternatives, includeGeometry } = body;
     if (originLat == null || originLng == null || destLat == null || destLng == null) {
       return json(
         { success: false, message: "originLat, originLng, destLat, destLng are required" },
@@ -58,6 +75,7 @@ Deno.serve(async (req) => {
     }
     // Clamp: TomTom supports up to a handful of alternatives, we only need up to 2.
     const altCount = Math.max(0, Math.min(2, Number(maxAlternatives) || 0));
+    const wantGeometry = includeGeometry === true;
     const url =
       `https://api.tomtom.com/routing/1/calculateRoute/` +
       `${originLat},${originLng}:${destLat},${destLng}/json` +
@@ -74,8 +92,8 @@ Deno.serve(async (req) => {
       return json({ success: false, message: "No route found" }, 404);
     }
 
-    const primary = summarizeRoute(routes[0]);
-    const alternates = routes.slice(1).map(summarizeRoute);
+    const primary = summarizeRoute(routes[0], wantGeometry);
+    const alternates = routes.slice(1).map((r: any) => summarizeRoute(r, wantGeometry));
 
     return json({
       success: true,
@@ -84,9 +102,10 @@ Deno.serve(async (req) => {
       noTrafficSeconds: primary.noTrafficSeconds,
       delaySeconds: primary.delaySeconds,
       distanceMeters: primary.distanceMeters,
-      // New fields, additive only.
+      // Additive fields.
       congestionLevel: congestionLabel(primary.delaySeconds, primary.noTrafficSeconds),
       alternates,
+      ...(wantGeometry ? { geometry: primary.geometry } : {}),
     });
   } catch (error) {
     return json({ success: false, message: String(error) }, 500);

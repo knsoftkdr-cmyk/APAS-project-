@@ -952,6 +952,61 @@ Deno.serve(async (req) => {
       return Response.json({ success: true, staff_devices: devices.length, sent: succeeded });
     }
 
+
+    // ── ROUTE SUGGESTION ALERT (admin suggests an alternate route -> single driver push + bell) ──
+    if (type === "route_suggestion_alert") {
+      const { driver_profile_id, route_name, dest_stop_name, minutes_saved, suggestion_id } = payload;
+
+      if (!driver_profile_id) {
+        return Response.json(
+          { success: false, message: "driver_profile_id is required" },
+          { status: 400 }
+        );
+      }
+
+      const title = "Alternate Route Suggested";
+      const savedText = minutes_saved > 0 ? ` (saves ~${minutes_saved} min)` : "";
+      const notifBody = `Dispatch suggests an alternate route to ${dest_stop_name || "your next stop"}${route_name ? ` on ${route_name}` : ""}${savedText}. Open your dashboard to accept or decline.`;
+
+      const { error: govError } = await supabase.from("governance_notifications").insert({
+        user_id: driver_profile_id,
+        event_type: "route_suggestion",
+        title,
+        message: notifBody,
+        reference_id: suggestion_id ?? null,
+        reference_type: "transport_route_suggestion",
+        channel: "in_app",
+        is_read: false,
+      });
+      if (govError) {
+        console.error("governance_notifications insert failed:", govError.message);
+      }
+
+      const { data: devices } = await supabase
+        .from("user_devices")
+        .select("fcm_token")
+        .eq("user_id", driver_profile_id)
+        .eq("is_active", true);
+
+      if (!devices || devices.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; no active driver devices" });
+      }
+
+      const results = await Promise.allSettled(
+        devices.map((device: { fcm_token: string }) =>
+          sendPushToToken(accessToken, {
+            token: device.fcm_token,
+            title,
+            body: notifBody,
+            data: { type: "route_suggestion_alert", suggestion_id: suggestion_id ?? "" },
+          })
+        )
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+
+      return Response.json({ success: true, driver_devices: devices.length, sent: succeeded });
+    }
+
     return Response.json(
       { success: false, message: `Unknown type: ${type}` },
       { status: 400 }
