@@ -215,6 +215,7 @@ function StopAddressSearch({
 interface TransportRoute {
   id: string;
   school_id: string;
+  branch_id: string | null;
   route_name: string;
   route_number: string | null;
   vehicle_id: string | null;
@@ -1673,6 +1674,8 @@ function twoOptImprove(order: number[], durations: number[][]): number[] {
 }
 
 export function RoutesTab({ schoolId }: { schoolId?: string }) {
+  const { data: branches } = useBranchOptions(schoolId);
+  const [branchFilter, setBranchFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TransportRoute | null>(null);
@@ -1681,6 +1684,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
   const [vehicleId, setVehicleId] = useState<string>("");
   const [driverId, setDriverId] = useState<string>("");
   const [attendantId, setAttendantId] = useState<string>("");
+  const [branchId, setBranchId] = useState<string>("shared");
   const [status, setStatus] = useState("active");
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([1, 2, 3, 4, 5, 6]);
   const [stops, setStops] = useState<RouteStop[]>([]);
@@ -1822,6 +1826,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
 
   const resetForm = () => {
     setRouteName(""); setRouteNumber(""); setVehicleId(""); setDriverId(""); setAttendantId("");
+    setBranchId("shared");
     setStatus("active"); setDaysOfWeek([1, 2, 3, 4, 5, 6]); setStops([]); setOriginalStopIds([]);
     setFuelStats(null);
   };
@@ -1835,6 +1840,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
     setVehicleId(r.vehicle_id || "");
     setDriverId(r.driver_id || "");
     setAttendantId(r.attendant_id || "");
+    setBranchId(r.branch_id || "shared");
     setStatus(r.status);
     setDaysOfWeek(r.days_of_week && r.days_of_week.length > 0 ? r.days_of_week : [1, 2, 3, 4, 5, 6]);
     setStops(r.route_stops.map((s) => ({ ...s })));
@@ -1984,6 +1990,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
         vehicle_id: vehicleId || null,
         driver_id: driverId || null,
         attendant_id: attendantId || null,
+        branch_id: branchId === "shared" ? null : branchId,
         status,
         days_of_week: daysOfWeek,
       };
@@ -2268,6 +2275,18 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <Label>Branch</Label>
+                  <Select value={branchId} onValueChange={setBranchId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="shared">Shared (All Branches)</SelectItem>
+                      {(branches || []).map((b) => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="col-span-2">
                   <Label>Runs on Days</Label>
                   <div className="flex gap-1 mt-1">
@@ -2523,11 +2542,28 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
       </Dialog>
 
       <CardContent>
+        <div className="mb-3 flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground shrink-0">Branch</Label>
+          <Select value={branchFilter} onValueChange={setBranchFilter}>
+            <SelectTrigger className="w-[220px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Branches</SelectItem>
+              <SelectItem value="shared">Shared Only</SelectItem>
+              {(branches || []).map((b) => (
+                <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Loading...</p>
         ) : (
           <div className="space-y-3">
-            {routes?.map((r) => (
+            {routes?.filter((r) =>
+              branchFilter === "all" ? true :
+              branchFilter === "shared" ? !r.branch_id :
+              r.branch_id === branchFilter
+            ).map((r) => (
               <div key={r.id} className="rounded-xl border p-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -2542,6 +2578,11 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
+                    {r.branch_id ? (
+                      <Badge variant="outline">{branches?.find((b) => b.id === r.branch_id)?.name || "—"}</Badge>
+                    ) : (
+                      <Badge variant="secondary">Shared</Badge>
+                    )}
                     <Badge variant={r.status === "active" ? "default" : "secondary"} className="capitalize">{r.status}</Badge>
                     {(() => {
                       const runToday = isRouteRunningToday(r);
