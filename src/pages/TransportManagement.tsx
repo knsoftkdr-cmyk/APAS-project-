@@ -13,6 +13,7 @@ import { FuelManagementTab } from "@/components/transport/FuelManagementTab";
 import { DriverBehaviourAnalyticsTab } from "@/components/transport/DriverBehaviourAnalyticsTab";
 import { SpeedMonitoringTab } from "@/components/transport/SpeedMonitoringTab";
 import { RouteDeviationTab } from "@/components/transport/RouteDeviationTab";
+import WeatherTab from "@/components/transport/WeatherTab";
 import AnalyticsDashboardTab from "@/components/transport/AnalyticsDashboardTab";
 import AiInsightsTab from "@/components/transport/AiInsightsTab";
 import ExecutiveDashboardTab from "@/components/transport/ExecutiveDashboardTab";
@@ -378,6 +379,9 @@ export default function TransportManagement() {
             <TabsTrigger value="routedeviation" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               Route Deviation
             </TabsTrigger>
+            <TabsTrigger value="weather" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
+              Weather
+            </TabsTrigger>
             <TabsTrigger value="analytics" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               Analytics Dashboard
             </TabsTrigger>
@@ -433,6 +437,9 @@ export default function TransportManagement() {
           </TabsContent>
           <TabsContent value="routedeviation">
             <RouteDeviationTab schoolId={schoolId} />
+          </TabsContent>
+          <TabsContent value="weather">
+            <WeatherTab schoolId={schoolId} />
           </TabsContent>
             <TabsContent value="analytics">
             <AnalyticsDashboardTab schoolId={schoolId} />

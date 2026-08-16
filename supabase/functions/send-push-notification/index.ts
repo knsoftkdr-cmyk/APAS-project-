@@ -953,6 +953,74 @@ Deno.serve(async (req) => {
     }
 
 
+    // ── WEATHER ALERT (moderate/severe weather affecting a route -> staff push + bell) ──
+    if (type === "weather_alert") {
+      const { school_id, route_id, route_name, severity, condition, alert_message } = payload;
+
+      if (!school_id || !route_id || !severity) {
+        return Response.json(
+          { success: false, message: "school_id, route_id and severity are required" },
+          { status: 400 }
+        );
+      }
+
+      const staffRoles = ["knsoft_admin", "principal", "admin", "school_admin", "teacher"];
+      const { data: staffUsers } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("school_id", school_id)
+        .in("role", staffRoles);
+
+      if (!staffUsers || staffUsers.length === 0) {
+        return Response.json({ success: false, message: "No staff found for this school" });
+      }
+
+      const staffIds = staffUsers.map((u: { id: string }) => u.id);
+      const title = severity === "severe" ? "Severe Weather Alert" : "Weather Advisory";
+      const notifBody = alert_message
+        ? `${alert_message}${route_name ? ` — affects ${route_name}` : ""}`
+        : `${condition || "Adverse weather"} conditions detected${route_name ? ` on ${route_name}` : ""}. Severity: ${severity}.`;
+
+      const govRows = staffIds.map((uid: string) => ({
+        user_id: uid,
+        event_type: "weather_alert",
+        title,
+        message: notifBody,
+        reference_id: route_id,
+        reference_type: "transport_weather_snapshot",
+        channel: "in_app",
+        is_read: false,
+      }));
+      const { error: govError } = await supabase.from("governance_notifications").insert(govRows);
+      if (govError) {
+        console.error("governance_notifications insert failed:", govError.message);
+      }
+
+      const { data: devices } = await supabase
+        .from("user_devices")
+        .select("fcm_token")
+        .in("user_id", staffIds)
+        .eq("is_active", true);
+
+      if (!devices || devices.length === 0) {
+        return Response.json({ success: true, message: "Bell notified; no active staff devices" });
+      }
+
+      const results = await Promise.allSettled(
+        devices.map((device: { fcm_token: string }) =>
+          sendPushToToken(accessToken, {
+            token: device.fcm_token,
+            title,
+            body: notifBody,
+            data: { type: "weather_alert", route_id },
+          })
+        )
+      );
+      const succeeded = results.filter((r) => r.status === "fulfilled").length;
+
+      return Response.json({ success: true, staff_devices: devices.length, sent: succeeded });
+    }
+
     // ── ROUTE SUGGESTION ALERT (admin suggests an alternate route -> single driver push + bell) ──
     if (type === "route_suggestion_alert") {
       const { driver_profile_id, route_name, dest_stop_name, minutes_saved, suggestion_id } = payload;
