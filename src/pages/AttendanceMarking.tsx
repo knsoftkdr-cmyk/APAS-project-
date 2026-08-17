@@ -6,6 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { UserCheck } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
@@ -460,6 +463,77 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
 
+  const [earlyPickupStudent, setEarlyPickupStudent] = useState<StudentRow | null>(null);
+  const [guardianOptions, setGuardianOptions] = useState<{ id: string; guardian_name: string; relation: string }[]>([]);
+  const [pickupChoice, setPickupChoice] = useState<string>('parent');
+  const [pickupName, setPickupName] = useState('');
+  const [pickupRelation, setPickupRelation] = useState('');
+  const [pickupReason, setPickupReason] = useState<'half_day' | 'early_leave' | 'other'>('early_leave');
+  const [pickupNotes, setPickupNotes] = useState('');
+  const [pickupSaving, setPickupSaving] = useState(false);
+  const [pickupMessage, setPickupMessage] = useState<string | null>(null);
+
+  const openEarlyPickup = async (s: StudentRow) => {
+    setEarlyPickupStudent(s);
+    setPickupChoice('parent');
+    setPickupName('');
+    setPickupRelation('');
+    setPickupReason('early_leave');
+    setPickupNotes('');
+    setPickupMessage(null);
+    const { data } = await supabase
+      .from('authorized_guardians')
+      .select('id, guardian_name, relation')
+      .eq('student_id', s.id)
+      .eq('status', 'active');
+    setGuardianOptions(data || []);
+  };
+
+  const submitEarlyPickup = async () => {
+    if (!earlyPickupStudent || !schoolId) return;
+    let picked_up_by_name = '';
+    let relation_to_student = '';
+    let guardian_id: string | null = null;
+    if (pickupChoice === 'parent') {
+      picked_up_by_name = 'Parent (on file)';
+      relation_to_student = 'Parent';
+    } else if (pickupChoice === 'other') {
+      if (!pickupName.trim()) {
+        setPickupMessage("Enter the pickup person's name");
+        return;
+      }
+      picked_up_by_name = pickupName.trim();
+      relation_to_student = pickupRelation.trim() || 'Other';
+    } else {
+      const g = guardianOptions.find((g) => g.id === pickupChoice);
+      if (!g) return;
+      guardian_id = g.id;
+      picked_up_by_name = g.guardian_name;
+      relation_to_student = g.relation;
+    }
+    setPickupSaving(true);
+    setPickupMessage(null);
+    const { error } = await supabase.from('student_early_pickups').insert({
+      school_id: schoolId,
+      student_id: earlyPickupStudent.id,
+      class_id: selectedClassId || null,
+      pickup_date: date,
+      picked_up_by_name,
+      relation_to_student,
+      guardian_id,
+      reason: pickupReason,
+      notes: pickupNotes.trim() || null,
+      marked_by: userId,
+    });
+    setPickupSaving(false);
+    if (error) {
+      setPickupMessage(error.message || 'Failed to log early pickup');
+      return;
+    }
+    setPickupMessage('Early pickup logged.');
+    setTimeout(() => setEarlyPickupStudent(null), 900);
+  };
+
   useEffect(() => {
     if (!schoolId) return;
     (async () => {
@@ -722,6 +796,12 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
                       {opt.label}
                     </button>
                   ))}
+                  <button
+                    onClick={() => openEarlyPickup(s)}
+                    className="text-xs font-medium px-2.5 py-1.5 rounded-full border border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300 transition-all flex items-center gap-1"
+                  >
+                    <UserCheck className="h-3 w-3" /> Early Pickup
+                  </button>
                 </div>
               </div>
             ))}
@@ -736,6 +816,54 @@ function MarkAttendanceTab({ schoolId, classes, userId }: { schoolId: string | n
             {saveMessage && <span className="text-sm text-muted-foreground">{saveMessage}</span>}
           </div>
         )}
+
+        <Dialog open={!!earlyPickupStudent} onOpenChange={(open) => !open && setEarlyPickupStudent(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Early Pickup — {earlyPickupStudent?.full_name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Picked up by</label>
+                <Select value={pickupChoice} onValueChange={setPickupChoice}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="parent">Parent (on file)</SelectItem>
+                    {guardianOptions.map((g) => (
+                      <SelectItem key={g.id} value={g.id}>{g.guardian_name} ({g.relation})</SelectItem>
+                    ))}
+                    <SelectItem value="other">Other — enter name</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {pickupChoice === 'other' && (
+                <div className="space-y-2">
+                  <Input placeholder="Full name" value={pickupName} onChange={(e) => setPickupName(e.target.value)} />
+                  <Input placeholder="Relation to student" value={pickupRelation} onChange={(e) => setPickupRelation(e.target.value)} />
+                </div>
+              )}
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Reason</label>
+                <Select value={pickupReason} onValueChange={(v) => setPickupReason(v as 'half_day' | 'early_leave' | 'other')}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="half_day">Half day</SelectItem>
+                    <SelectItem value="early_leave">Early leave</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Input placeholder="Notes (optional)" value={pickupNotes} onChange={(e) => setPickupNotes(e.target.value)} />
+              {pickupMessage && <p className="text-sm text-muted-foreground">{pickupMessage}</p>}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEarlyPickupStudent(null)}>Cancel</Button>
+              <Button onClick={submitEarlyPickup} disabled={pickupSaving}>
+                {pickupSaving ? 'Saving...' : 'Log Pickup'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -11,6 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { ShieldCheck, Trash2, Plus } from "lucide-react";
 import { GraduationCap, BookOpen, BarChart3, TrendingUp, Bus, Wallet, ChevronRight } from "lucide-react";
 import { BusTrackingMap } from "@/components/transport/BusTrackingMap";
 import { DriverRatingForm } from "@/components/transport/DriverRatingForm";
@@ -50,6 +54,79 @@ export default function ParentDashboard() {
   const [reportRow, setReportRow] = useState<any>(null);
   const [noLink, setNoLink] = useState(false);
   const [transportInfo, setTransportInfo] = useState<TransportInfo | null>(null);
+  const [studentDbId, setStudentDbId] = useState<string | null>(null);
+  const [guardians, setGuardians] = useState<{ id: string; guardian_name: string; relation: string; phone: string | null }[]>([]);
+  const [guardianDialogOpen, setGuardianDialogOpen] = useState(false);
+  const [newGuardianName, setNewGuardianName] = useState('');
+  const [newGuardianRelation, setNewGuardianRelation] = useState('');
+  const [newGuardianPhone, setNewGuardianPhone] = useState('');
+  const [guardianSaving, setGuardianSaving] = useState(false);
+  const [guardianMessage, setGuardianMessage] = useState<string | null>(null);
+
+  // authorized_guardians.student_id references students.id, but selectedChild
+  // here is profiles.id (see fetchChildren above) — resolve the real students.id
+  // before querying or inserting guardian rows.
+  const fetchGuardians = useCallback(async (childProfileId: string) => {
+    const { data: studentRow } = await supabase
+      .from('students')
+      .select('id')
+      .eq('profile_id', childProfileId)
+      .maybeSingle();
+    if (!studentRow) {
+      setStudentDbId(null);
+      setGuardians([]);
+      return;
+    }
+    setStudentDbId(studentRow.id);
+    const { data } = await supabase
+      .from('authorized_guardians')
+      .select('id, guardian_name, relation, phone')
+      .eq('student_id', studentRow.id)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false });
+    setGuardians(data || []);
+  }, []);
+
+  useEffect(() => {
+    if (selectedChild) fetchGuardians(selectedChild);
+  }, [selectedChild, fetchGuardians]);
+
+  const addGuardian = async () => {
+    if (!studentDbId || !profile?.school_id) return;
+    if (!newGuardianName.trim() || !newGuardianRelation.trim()) {
+      setGuardianMessage('Name and relation are required');
+      return;
+    }
+    setGuardianSaving(true);
+    setGuardianMessage(null);
+    const { error } = await supabase.from('authorized_guardians').insert({
+      school_id: profile.school_id,
+      student_id: studentDbId,
+      guardian_name: newGuardianName.trim(),
+      relation: newGuardianRelation.trim(),
+      phone: newGuardianPhone.trim() || null,
+      approved_by: user?.id,
+      approved_by_role: 'parent',
+    });
+    setGuardianSaving(false);
+    if (error) {
+      setGuardianMessage(error.message || 'Failed to add guardian');
+      return;
+    }
+    setNewGuardianName('');
+    setNewGuardianRelation('');
+    setNewGuardianPhone('');
+    setGuardianDialogOpen(false);
+    if (selectedChild) fetchGuardians(selectedChild);
+  };
+
+  const revokeGuardian = async (guardianId: string) => {
+    const { error } = await supabase
+      .from('authorized_guardians')
+      .update({ status: 'revoked' })
+      .eq('id', guardianId);
+    if (!error && selectedChild) fetchGuardians(selectedChild);
+  };
 
   const fetchChildren = useCallback(async () => {
     if (!user) return;
@@ -310,6 +387,7 @@ export default function ParentDashboard() {
           <TabsList>
             <TabsTrigger value="scores" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><BarChart3 className="h-4 w-4" /> Test Scores</TabsTrigger>
             <TabsTrigger value="homework" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><BookOpen className="h-4 w-4" /> Homework</TabsTrigger>
+            <TabsTrigger value="guardians" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><ShieldCheck className="h-4 w-4" /> Pickup Guardians</TabsTrigger>
             {transportInfo && (
               <TabsTrigger value="transport" className="gap-1.5 data-[state=active]:bg-blue-600 data-[state=active]:text-white rounded-lg"><Bus className="h-4 w-4" /> Bus Tracking</TabsTrigger>
             )}
@@ -370,6 +448,68 @@ export default function ParentDashboard() {
               />
             </TabsContent>
           )}
+
+          {/* Authorized Pickup Guardians */}
+          <TabsContent value="guardians">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                      <ShieldCheck className="h-7 w-7 text-purple-600" />
+                    </div>
+                    Authorized Pickup Guardians
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    People other than you who are allowed to pick up {selectedChildData?.full_name ?? "your child"} early
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => setGuardianDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" /> Add Guardian
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {guardians.length === 0 && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">
+                    No alternate guardians on file. Only you will be recognized for early pickup.
+                  </p>
+                )}
+                {guardians.map((g) => (
+                  <div key={g.id} className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <p className="font-medium text-sm">{g.guardian_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {g.relation}{g.phone ? ` · ${g.phone}` : ''}
+                      </p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => revokeGuardian(g.id)}>
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <Dialog open={guardianDialogOpen} onOpenChange={setGuardianDialogOpen}>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle>Add Authorized Guardian</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-2">
+                  <Input placeholder="Full name" value={newGuardianName} onChange={(e) => setNewGuardianName(e.target.value)} />
+                  <Input placeholder="Relation (e.g. grandparent, uncle)" value={newGuardianRelation} onChange={(e) => setNewGuardianRelation(e.target.value)} />
+                  <Input placeholder="Phone (optional)" value={newGuardianPhone} onChange={(e) => setNewGuardianPhone(e.target.value)} />
+                  {guardianMessage && <p className="text-sm text-red-600">{guardianMessage}</p>}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setGuardianDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={addGuardian} disabled={guardianSaving}>
+                    {guardianSaving ? 'Saving...' : 'Add'}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
 
           {/* Homework */}
           <TabsContent value="homework">
