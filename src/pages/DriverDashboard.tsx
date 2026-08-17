@@ -258,6 +258,7 @@ export default function DriverDashboard() {
   const isUnauthorizedStopRef = useRef<boolean>(false);
   const [assignments, setAssignments] = useState<TransportAssignment[]>([]);
   const [boardedStudentIds, setBoardedStudentIds] = useState<Set<string>>(new Set());
+  const [earlyPickupStudentIds, setEarlyPickupStudentIds] = useState<Set<string>>(new Set());
   const [expandedStopId, setExpandedStopId] = useState<string | null>(null);
   const [confirmingKey, setConfirmingKey] = useState<string | null>(null);
 
@@ -349,6 +350,14 @@ export default function DriverDashboard() {
         setBoardedStudentIds(
           new Set((boardingRows ?? []).map((b: any) => `${b.student_id}-${b.direction}`))
         );
+
+        // Students already picked up early today (via a parent/guardian, logged by
+        // a teacher) shouldn't be waited on for the afternoon drop leg.
+        const { data: earlyPickupRows } = await supabase
+          .from("student_early_pickups")
+          .select("student_id")
+          .eq("pickup_date", today2);
+        setEarlyPickupStudentIds(new Set((earlyPickupRows ?? []).map((p: any) => p.student_id as string)));
       }
 
       setLoading(false);
@@ -1001,7 +1010,8 @@ export default function DriverDashboard() {
     const toConfirm = assignments.filter(
       (a) =>
         (tripDirection === "pickup" ? a.pickup_stop_id : a.drop_stop_id) === stopId &&
-        !boardedStudentIds.has(`${a.student_id}-${tripDirection}`)
+        !boardedStudentIds.has(`${a.student_id}-${tripDirection}`) &&
+        !(tripDirection === "drop" && earlyPickupStudentIds.has(a.student_id))
     );
     if (toConfirm.length === 0) return;
     setConfirmingKey(`stop-${stopId}`);
@@ -1349,6 +1359,18 @@ export default function DriverDashboard() {
                               {stopStudents.map((a) => {
                                 const boarded = boardedStudentIds.has(`${a.student_id}-${tripDirection}`);
                                 const key = `${a.student_id}-${tripDirection}`;
+                                const alreadyPickedUp = tripDirection === "drop" && earlyPickupStudentIds.has(a.student_id);
+                                if (alreadyPickedUp) {
+                                  return (
+                                    <div key={a.id} className="flex items-center gap-2 text-sm">
+                                      <CheckCircle2 className="h-4 w-4 text-amber-500" />
+                                      <span className="text-muted-foreground">
+                                        {a.students?.full_name || "Student"}
+                                      </span>
+                                      <span className="text-xs text-amber-600">Already picked up — skip</span>
+                                    </div>
+                                  );
+                                }
                                 return (
                                   <label key={a.id} className="flex items-center gap-2 text-sm cursor-pointer">
                                     <input
