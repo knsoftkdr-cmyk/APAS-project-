@@ -88,7 +88,7 @@ export default function ExecutiveDashboardTab({ schoolId }: Props) {
         supabase.from("vehicle_amc_contracts").select("cost").eq("school_id", schoolId).eq("status", "active"),
         supabase.from("transport_incidents").select("severity, status, occurred_at").eq("school_id", schoolId).gte("occurred_at", startDateTimeStr),
         supabase.from("sos_alerts").select("status, created_at").eq("school_id", schoolId).gte("created_at", startDateTimeStr),
-        supabase.from("governance_notifications").select("id, created_at").eq("school_id", schoolId).eq("event_type", "vehicle_overspeed").gte("created_at", startDateTimeStr),
+        supabase.from("governance_notifications").select("id, created_at").eq("event_type", "vehicle_overspeed").gte("created_at", startDateTimeStr),
       ]);
 
       setVehicles(vehiclesRes.data || []);
