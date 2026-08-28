@@ -146,6 +146,7 @@ const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: E
         <ERPTransportAssistantWidget
           schoolId={schoolId}
           onNavigate={(tab) => navigate(`/erp/transport?tab=${tab}`)}
+          isTransportTab={activePath === "/erp/transport"}
         />
       </div>
     </div>

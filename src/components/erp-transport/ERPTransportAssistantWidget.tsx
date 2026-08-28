@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
+import { Sparkles, X, Send, Mic, MicOff, Bus } from "lucide-react";
+import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 
 interface ActionConfirm {
   action: "update_vehicle_status";
@@ -22,6 +23,7 @@ interface ChatMessage {
 interface ERPTransportAssistantWidgetProps {
   schoolId?: string;
   onNavigate: (tab: string) => void;
+  isTransportTab?: boolean;
 }
 
 type VoiceState = "idle" | "listening" | "thinking" | "speaking";
@@ -51,7 +53,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 const CONFIRM_WORDS = /^(yes|yeah|yep|confirm|do it|go ahead|sure|okay|ok)\b/i;
 const CANCEL_WORDS = /^(no|nope|cancel|dont|don't|stop)\b/i;
 
-export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTransportAssistantWidgetProps) {
+export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportTab = true }: ERPTransportAssistantWidgetProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -177,6 +179,44 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     );
   };
 
+  const preferredVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
+
+  useEffect(() => {
+    if (!ttsSupported) return;
+    const pickVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices.length) return;
+      const priorityNames = [
+        "Google US English",
+        "Samantha",
+        "Microsoft Aria Online (Natural)",
+        "Microsoft Jenny Online (Natural)",
+        "Microsoft Guy Online (Natural)",
+      ];
+      let chosen: SpeechSynthesisVoice | undefined;
+      for (const name of priorityNames) {
+        chosen = voices.find((v) => v.name === name);
+        if (chosen) break;
+      }
+      if (!chosen) {
+        chosen = voices.find((v) => /natural|neural/i.test(v.name) && v.lang.startsWith("en"));
+      }
+      if (!chosen) {
+        chosen = voices.find((v) => v.lang === "en-US" && v.localService);
+      }
+      if (!chosen) {
+        chosen = voices.find((v) => v.lang.startsWith("en"));
+      }
+      preferredVoiceRef.current = chosen || null;
+    };
+    pickVoice();
+    window.speechSynthesis.onvoiceschanged = pickVoice;
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const speak = (text: string) => {
     if (!ttsSupported || !voiceModeRef.current) {
       if (voiceModeRef.current) startListeningSafely();
@@ -185,8 +225,10 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     const doSpeak = () => {
       const utterance = new SpeechSynthesisUtterance(forSpeech(text));
       utteranceRef.current = utterance;
-      utterance.rate = 1;
-      utterance.pitch = 1;
+      if (preferredVoiceRef.current) utterance.voice = preferredVoiceRef.current;
+      utterance.rate = 0.97;
+      utterance.pitch = 1.02;
+      utterance.volume = 1;
       utterance.onstart = () => setVoiceState("speaking");
       utterance.onend = () => {
         utteranceRef.current = null;
@@ -348,15 +390,17 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     speaking: "from-sky-300 via-blue-200 to-indigo-300 animate-bounce",
   };
 
+  if (!isTransportTab && !open) return null;
+
   return (
     <>
-      {!open && (
+      {!open && isTransportTab && (
         <button
           onClick={() => setOpen(true)}
           className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
           aria-label="Open APAS Agent"
         >
-          <Sparkles className="h-6 w-6" />
+          <Bus className="h-6 w-6" />
         </button>
       )}
 
@@ -370,7 +414,16 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
             <X className="h-5 w-5" />
           </button>
 
-          <div className={`h-56 w-56 rounded-full bg-gradient-to-br shadow-2xl ${orbClasses[voiceState]}`} />
+          <div className="h-64 w-64">
+            <VoicePoweredOrb
+              enableVoiceControl={voiceState === "listening"}
+              hue={voiceState === "speaking" ? 300 : voiceState === "thinking" ? 260 : 0}
+              voiceSensitivity={1.5}
+              maxRotationSpeed={1.2}
+              maxHoverIntensity={0.8}
+              className="rounded-full overflow-hidden"
+            />
+          </div>
 
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
 
