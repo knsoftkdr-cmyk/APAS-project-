@@ -84,6 +84,8 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     setVoiceMode(v);
   };
 
+  const sendMessageWithTextRef = useRef<(overrideText?: string) => Promise<void>>(async () => {});
+
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -92,16 +94,18 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     }
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (event: any) => {
+      clearTimeout(listeningTimeoutRef.current);
       noSpeechRetryRef.current = 0;
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
-      setTimeout(() => sendMessageWithText(transcript), 100);
+      setTimeout(() => sendMessageWithTextRef.current(transcript), 100);
     };
     recognition.onerror = (event: any) => {
+      clearTimeout(listeningTimeoutRef.current);
       setIsListening(false);
       console.error("SpeechRecognition error:", event.error);
       if (event.error === "aborted") return;
@@ -134,6 +138,8 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const listeningTimeoutRef = useRef<any>(null);
+
   const startListeningSafely = () => {
     if (!recognitionRef.current) return;
     try {
@@ -141,6 +147,12 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
       setVoiceError(null);
       setIsListening(true);
       recognitionRef.current.start();
+      clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = setTimeout(() => {
+        if (recognitionRef.current) {
+          try { recognitionRef.current.stop(); } catch {}
+        }
+      }, 8000);
     } catch {
       // already started - ignore
     }
@@ -157,13 +169,21 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
     }
   };
 
+  const forSpeech = (text: string): string => {
+    // Space out alphanumeric codes (e.g. vehicle registrations) so TTS reads
+    // them character-by-character instead of as one garbled number.
+    return text.replace(/\b(?=[A-Za-z]*\d)(?=\d*[A-Za-z])[A-Za-z0-9]{4,}\b/g, (token) =>
+      token.split("").join(" ")
+    );
+  };
+
   const speak = (text: string) => {
     if (!ttsSupported || !voiceModeRef.current) {
       if (voiceModeRef.current) startListeningSafely();
       return;
     }
     const doSpeak = () => {
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(forSpeech(text));
       utteranceRef.current = utterance;
       utterance.rate = 1;
       utterance.pitch = 1;
@@ -309,6 +329,10 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate }: ERPTranspo
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    sendMessageWithTextRef.current = sendMessageWithText;
+  });
 
   const orbStateLabel: Record<VoiceState, string> = {
     idle: "Starting...",

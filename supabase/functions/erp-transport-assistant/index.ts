@@ -143,7 +143,7 @@ Classify the message and call handle_transport_query with the right intent:
       case "navigate": {
         const tab = VALID_TABS.includes(args.target_tab) ? args.target_tab : null;
         if (!tab) {
-          return new Response(JSON.stringify({ type: "message", text: "I couldn't tell which screen you meant — could you name it, e.g. 'drivers' or 'fuel'?" }),
+          return new Response(JSON.stringify({ type: "message", text: "I couldn't tell which screen you meant  -  could you name it, e.g. 'drivers' or 'fuel'?" }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         return new Response(JSON.stringify({ type: "navigate", target_tab: tab, text: `Opening ${tab}...` }),
@@ -163,12 +163,14 @@ Classify the message and call handle_transport_query with the right intent:
             return days !== null && days >= 0 && days <= 30;
           })
         );
-        let text = `Fleet: ${list.length} vehicle(s) — ` +
-          Object.entries(byStatus).map(([s, c]) => `${c} ${s}`).join(", ") + ".";
+        const vehicleWord = list.length === 1 ? "vehicle" : "vehicles";
+        const statusPhrase = Object.entries(byStatus).map(([s, c]) => `${c} ${s}`).join(", ");
+        let text = `You have ${list.length} ${vehicleWord} in the fleet: ${statusPhrase}.`;
         if (expiringSoon.length > 0) {
-          text += ` ${expiringSoon.length} vehicle(s) have a document expiring within 30 days: ${expiringSoon.map((v: any) => v.registration_number).join(", ")}.`;
+          const docWord = expiringSoon.length === 1 ? "vehicle has" : "vehicles have";
+          text += ` ${expiringSoon.length} ${docWord} a document expiring within 30 days: ${expiringSoon.map((v: any) => v.registration_number).join(", ")}.`;
         } else {
-          text += " No documents expiring in the next 30 days.";
+          text += " No documents are expiring in the next 30 days.";
         }
         return new Response(JSON.stringify({ type: "message", text }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
@@ -186,7 +188,8 @@ Classify the message and call handle_transport_query with the right intent:
         const pendingVerification = list.filter((d: any) =>
           d.license_verification_status === "pending" || d.background_verification_status === "pending"
         );
-        let text = `Drivers: ${list.length} total.`;
+        const driverWord = list.length === 1 ? "driver" : "drivers";
+        let text = `You have ${list.length} ${driverWord} total.`;
         if (expiringSoon.length > 0) text += ` ${expiringSoon.length} with a license or medical certificate expiring within 30 days: ${expiringSoon.map((d: any) => d.name).join(", ")}.`;
         if (pendingVerification.length > 0) text += ` ${pendingVerification.length} with pending verification: ${pendingVerification.map((d: any) => d.name).join(", ")}.`;
         if (expiringSoon.length === 0 && pendingVerification.length === 0) text += " All clear on expiry and verification.";
@@ -254,7 +257,7 @@ Classify the message and call handle_transport_query with the right intent:
             ? supabase.from("route_stops").select("stop_name, pickup_time").eq("id", assignment.pickup_stop_id).maybeSingle()
             : Promise.resolve({ data: null }),
         ]);
-        const text = `${student.full_name} (${student.class || "class n/a"}): route ${route?.route_name || "—"}${route?.route_number ? ` (${route.route_number})` : ""}, seat ${assignment.seat_number ?? "unassigned"}, pickup at ${stop?.stop_name || "—"}${stop?.pickup_time ? ` (${stop.pickup_time})` : ""}. Fee status: ${assignment.fee_status || "—"}.`;
+        const text = `${student.full_name} (${student.class || "class n/a"}): route ${route?.route_name || " - "}${route?.route_number ? ` (${route.route_number})` : ""}, seat ${assignment.seat_number ?? "unassigned"}, pickup at ${stop?.stop_name || " - "}${stop?.pickup_time ? ` (${stop.pickup_time})` : ""}. Fee status: ${assignment.fee_status || " - "}.`;
         return new Response(JSON.stringify({ type: "message", text }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -263,7 +266,7 @@ Classify the message and call handle_transport_query with the right intent:
           .from("route_delay_predictions").select("overall_summary, route_forecasts, generated_at")
           .eq("school_id", school_id).maybeSingle();
         if (!cached) {
-          return new Response(JSON.stringify({ type: "message", text: "No delay forecast has been generated yet — run it from the AI Insights tab first, then ask me again." }),
+          return new Response(JSON.stringify({ type: "message", text: "No delay forecast has been generated yet  -  run it from the AI Insights tab first, then ask me again." }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         const forecasts = (cached.route_forecasts || []) as any[];
@@ -280,7 +283,7 @@ Classify the message and call handle_transport_query with the right intent:
         }
         const validStatuses = ["active", "inactive", "maintenance"];
         if (!validStatuses.includes(args.new_status)) {
-          return new Response(JSON.stringify({ type: "message", text: `"${args.new_status}" isn't a valid status — use active, inactive, or maintenance.` }),
+          return new Response(JSON.stringify({ type: "message", text: `"${args.new_status}" isn't a valid status  -  use active, inactive, or maintenance.` }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         const { data: vehicle } = await supabase
