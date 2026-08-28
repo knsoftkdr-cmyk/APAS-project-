@@ -1,7 +1,8 @@
-﻿import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Home, Users, Wallet, Bus, Search, Bell, Settings, LogOut, ChevronDown, GraduationCap, Package, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ERPTransportAssistantWidget } from "@/components/erp-transport/ERPTransportAssistantWidget";
 
 type NavItem = { label: string; icon: React.ElementType; path: string };
 
@@ -26,6 +27,21 @@ interface ERPLayoutProps {
 const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: ERPLayoutProps) => {
   const navigate = useNavigate();
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
+  const [schoolId, setSchoolId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    const loadSchoolId = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) return;
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("school_id")
+        .eq("id", sessionData.session.user.id)
+        .single();
+      setSchoolId((profileData as any)?.school_id ?? undefined);
+    };
+    loadSchoolId();
+  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -127,6 +143,10 @@ const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: E
 
         {/* Content */}
         <main className="flex-1 flex flex-col px-6 py-6">{children}</main>
+        <ERPTransportAssistantWidget
+          schoolId={schoolId}
+          onNavigate={(tab) => navigate(`/erp/transport?tab=${tab}`)}
+        />
       </div>
     </div>
   );

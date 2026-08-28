@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Bus, UserRound, Route as RouteIcon, Users, MapPin, Wand2, MapPinned, ClipboardList, Siren } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,12 +23,16 @@ import ExecutiveDashboardTab from "@/components/transport/ExecutiveDashboardTab"
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 import { EmergencyManagementTab } from "@/components/transport/EmergencyManagementTab";
 
+
 const ERPTransport = () => {
   const navigate = useNavigate();
 
   const [schoolId, setSchoolId] = useState<string>("");
   const [orgName, setOrgName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "vehicles";
+  const setActiveTab = (tab: string) => setSearchParams({ tab });
 
   useEffect(() => {
     const init = async () => {
@@ -70,7 +74,7 @@ const ERPTransport = () => {
   return (
     <ERPLayout orgName={orgName} activePath="/erp/transport" tabLabel="Transport">
       <SosAlertBanner />
-      <Tabs defaultValue="vehicles" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="flex flex-wrap h-auto gap-1.5 bg-slate-100/70 p-1.5 rounded-xl">
           <TabsTrigger value="vehicles" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
             <Bus className="h-4 w-4" /> Vehicles
@@ -195,6 +199,7 @@ const ERPTransport = () => {
           <GeofenceZonesTab schoolId={schoolId} />
         </TabsContent>
       </Tabs>
+
     </ERPLayout>
   );
 };

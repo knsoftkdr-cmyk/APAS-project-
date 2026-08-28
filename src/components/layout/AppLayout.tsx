@@ -4,6 +4,10 @@ import { useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { AILessonAssistantWidget } from "@/components/ai-assistant/AILessonAssistantWidget";
+import { ParentBusAssistantWidget } from "@/components/parent-transport/ParentBusAssistantWidget";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Homework — APAS",
@@ -24,6 +28,44 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { user, profile } = useAuth();
+  const [busStudentId, setBusStudentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (profile?.role !== "parent" || !user) {
+      setBusStudentId(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data: links } = await supabase
+        .from("parent_students")
+        .select("student_id")
+        .eq("parent_id", user.id);
+      if (!links || links.length === 0 || cancelled) return;
+
+      for (const link of links) {
+        const { data: studentRow } = await supabase
+          .from("students")
+          .select("id")
+          .eq("profile_id", link.student_id)
+          .maybeSingle();
+        if (!studentRow) continue;
+        const { data: assignment } = await supabase
+          .from("transport_assignments")
+          .select("student_id")
+          .eq("student_id", studentRow.id)
+          .eq("status", "active")
+          .maybeSingle();
+        if (assignment && !cancelled) {
+          setBusStudentId(assignment.student_id);
+          return;
+        }
+      }
+      if (!cancelled) setBusStudentId(null);
+    })();
+    return () => { cancelled = true; };
+  }, [profile?.role, user]);
 
   // Set document title based on route
   useEffect(() => {
@@ -50,6 +92,8 @@ export function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
       <OnboardingFlow />
+      <AILessonAssistantWidget />
+      {busStudentId && <ParentBusAssistantWidget studentId={busStudentId} />}
     </div>
   );
 }

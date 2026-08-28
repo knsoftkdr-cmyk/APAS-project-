@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import { useGamification } from "@/hooks/useGamification";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -692,6 +692,30 @@ const Curative = () => {
   const [periodDuration, setPeriodDuration] = useState("40");
   
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [pendingIntent, setPendingIntent] = useState<{
+    class_level?: string; section?: string; subject_query?: string;
+    topic_query?: string; periods?: number; duration_minutes?: number;
+    stage: "subject" | "chapter" | "topic" | "ready";
+  } | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Pick up an intent handed off from AILessonAssistantWidget (or any other entry point)
+  useEffect(() => {
+    const incomingIntent = (location.state as any)?.intent;
+    if (incomingIntent) {
+      setPendingIntent({
+        subject_query: incomingIntent.subject_query,
+        topic_query: incomingIntent.topic_query,
+        periods: incomingIntent.periods,
+        duration_minutes: incomingIntent.duration_minutes,
+        stage: "subject",
+      });
+      // Clear the state so a refresh does not re-trigger generation
+      navigate(location.pathname + location.search, { replace: true, state: {} });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [inputValue, setInputValue] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [hasGeneratedContent, setHasGeneratedContent] = useState(false);
@@ -910,6 +934,32 @@ const Curative = () => {
     }
   }, [chatMessages]);
 
+  // Agent auto-fill: subject -> chapter -> topic -> ready
+  useEffect(() => {
+    if (!pendingIntent || pendingIntent.stage !== "subject") return;
+    if (subjects.length === 0) return;
+    const q = (pendingIntent.subject_query || "").trim().toLowerCase();
+    if (!q) {
+      setChatMessages((prev) => [...prev, {
+        role: "assistant",
+        content: `Which subject is this for? Available: ${subjects.map((s) => s.label).join(", ") || "none found"}.`,
+      }]);
+      setPendingIntent(null);
+      return;
+    }
+    const match = subjects.find((s) => s.label.toLowerCase().includes(q) || q.includes(s.label.toLowerCase()));
+    if (match) {
+      setSelectedSubject(match.value);
+      setPendingIntent({ ...pendingIntent, stage: "chapter" });
+    } else {
+      setChatMessages((prev) => [...prev, {
+        role: "assistant",
+        content: `I couldn't match "${pendingIntent.subject_query}" to a subject for this class. Available: ${subjects.map((s) => s.label).join(", ") || "none found"}. Which one did you mean?`,
+      }]);
+      setPendingIntent(null);
+    }
+  }, [subjects, pendingIntent]);
+
   const { data: chaptersList = [] } = useQuery({
     queryKey: ["chapters-by-class-subject", selectedClass, selectedSubject, profile?.school_id],
     queryFn: async () => {
@@ -952,6 +1002,33 @@ const Curative = () => {
     enabled: !!selectedClass && !!selectedSubject && !!profile?.school_id,
   });
 
+  useEffect(() => {
+    if (!pendingIntent || pendingIntent.stage !== "chapter") return;
+    if (chaptersList.length === 0) return;
+    const q = (pendingIntent.topic_query || "").trim().toLowerCase();
+    if (!q) {
+      setChatMessages((prev) => [...prev, {
+        role: "assistant",
+        content: `Which chapter/topic is this for? Available chapters: ${(chaptersList as any[]).map((c) => c.full_chapter_name || c.chapter_name).join(", ") || "none found"}.`,
+      }]);
+      setPendingIntent(null);
+      return;
+    }
+    const match = (chaptersList as any[]).find((c) =>
+      (c.full_chapter_name || c.chapter_name || "").toLowerCase().includes(q)
+    );
+    if (match) {
+      setSelectedChapter(match.full_chapter_name || match.chapter_name);
+      setPendingIntent({ ...pendingIntent, stage: "topic" });
+    } else {
+      setChatMessages((prev) => [...prev, {
+        role: "assistant",
+        content: `I couldn't match "${pendingIntent.topic_query}" to a chapter. Available chapters: ${(chaptersList as any[]).map((c) => c.full_chapter_name || c.chapter_name).join(", ") || "none found"}. Which one?`,
+      }]);
+      setPendingIntent(null);
+    }
+  }, [chaptersList, pendingIntent]);
+
   // Fetch topics from curriculum_chapters -> topics
   const { data: topicsList = [] } = useQuery({
     queryKey: ["topics-by-chapter", selectedChapter],
@@ -971,6 +1048,29 @@ const Curative = () => {
     },
     enabled: !!selectedChapter && chaptersList.length > 0,
   });
+
+  useEffect(() => {
+    if (!pendingIntent || pendingIntent.stage !== "topic") return;
+    if (topicsList.length === 0) {
+      setPendingIntent({ ...pendingIntent, stage: "ready" });
+      return;
+    }
+    const q = (pendingIntent.topic_query || "").toLowerCase();
+    const match = q ? (topicsList as any[]).find((t) => t.topic_name?.toLowerCase().includes(q)) : null;
+    setTopicValue(match ? match.topic_name : "");
+    setPendingIntent({ ...pendingIntent, stage: "ready" });
+  }, [topicsList, pendingIntent]);
+
+  useEffect(() => {
+    if (pendingIntent?.stage !== "ready") return;
+    if (pendingIntent.section) setSelectedSection(pendingIntent.section);
+    if (pendingIntent.periods) setSelectedPeriods(String(pendingIntent.periods));
+    if (pendingIntent.duration_minutes) setPeriodDuration(String(pendingIntent.duration_minutes));
+    setPendingIntent(null);
+    setTimeout(() => handleGeneratePlan(), 300);
+  }, [pendingIntent]);
+
+
 
   // Fetch subtopics from topics -> subtopics
   const { data: subtopicsList = [] } = useQuery({
@@ -1646,7 +1746,38 @@ console.log("PDF SAVED:", result.uri);
     toast.success('PDF downloaded successfully!');
   };
 
-  const handleSendChat = () => { if (!inputValue.trim()) return; sendMessage(inputValue.trim(), "chat"); };
+  const handleSendChat = async () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+    if (!selectedClass) { toast.error("Please select a class first"); return; }
+    if (!selectedSection) { toast.error("Please select a section first"); return; }
+    if (isStreaming) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke("extract-lesson-intent", {
+        body: { message: trimmed },
+      });
+
+      if (!error && data?.isLessonRequest) {
+        const intent = data.intent || {};
+        setChatMessages((prev) => [...prev, { role: "user", content: trimmed }]);
+        setInputValue("");
+        setPendingIntent((prev) => ({
+          ...prev,
+          subject_query: intent.subject_query ?? prev?.subject_query,
+          topic_query: intent.topic_query ?? prev?.topic_query,
+          periods: intent.periods ?? prev?.periods,
+          duration_minutes: intent.duration_minutes ?? prev?.duration_minutes,
+          stage: "subject",
+        }));
+        return;
+      }
+    } catch (e) {
+      console.error("extract-lesson-intent failed, falling back to normal chat:", e);
+    }
+
+    sendMessage(trimmed, "chat");
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); }
@@ -4275,6 +4406,8 @@ try {
 };
 
 export default Curative;
+
+
 
 
 

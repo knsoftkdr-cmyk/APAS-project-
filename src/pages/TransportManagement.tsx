@@ -20,6 +20,7 @@ import AiInsightsTab from "@/components/transport/AiInsightsTab";
 import ExecutiveDashboardTab from "@/components/transport/ExecutiveDashboardTab";
 import { BoardingDropManagementTab } from "@/components/transport/BoardingDropManagementTab";
 import { EmergencyManagementTab } from "@/components/transport/EmergencyManagementTab";
+import { ERPTransportAssistantWidget } from "@/components/erp-transport/ERPTransportAssistantWidget";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -313,6 +314,7 @@ const EMPTY_ATTENDANT = {
 export default function TransportManagement() {
   const { profile } = useAuth();
   const schoolId = profile?.school_id as string | undefined;
+  const [activeTab, setActiveTab] = useState("vehicles");
 
   return (
     <AppLayout>
@@ -336,7 +338,7 @@ export default function TransportManagement() {
 
         <SosAlertBanner />
 
-        <Tabs defaultValue="vehicles" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="flex flex-wrap h-auto gap-1.5 bg-slate-100/70 p-1.5 rounded-xl">
             <TabsTrigger value="vehicles" className="gap-1.5 rounded-lg bg-white text-slate-600 border border-slate-200 transition-all duration-300 hover:-translate-y-1 hover:scale-105 hover:shadow-lg hover:bg-slate-50 hover:text-slate-800 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:border-blue-600 data-[state=active]:shadow-sm">
               <Bus className="h-4 w-4" /> Vehicles
@@ -461,6 +463,8 @@ export default function TransportManagement() {
             <GeofenceZonesTab schoolId={schoolId} />
           </TabsContent>
         </Tabs>
+
+        <ERPTransportAssistantWidget schoolId={schoolId} onNavigate={setActiveTab} />
       </div>
     </AppLayout>
   );
