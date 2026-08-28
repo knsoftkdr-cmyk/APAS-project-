@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
+import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -19,6 +20,75 @@ interface ParentBusAssistantWidgetProps {
 }
 
 type VoiceState = "idle" | "listening" | "thinking" | "speaking";
+
+function VoiceWaveform({ state }: { state: VoiceState }) {
+  const pathRef1 = useRef<SVGPathElement>(null);
+  const pathRef2 = useRef<SVGPathElement>(null);
+  const rafRef = useRef<number>(0);
+  const tRef = useRef(0);
+
+  const speedByState: Record<VoiceState, number> = { idle: 0.35, listening: 0.9, thinking: 1.4, speaking: 1.1 };
+  const ampByState: Record<VoiceState, number> = { idle: 10, listening: 26, thinking: 34, speaking: 30 };
+
+  useEffect(() => {
+    const width = 320;
+    const height = 140;
+    const midY = height / 2;
+    const points = 60;
+
+    const buildPath = (phase: number, amp: number, freq: number, secondary: number) => {
+      let d = "";
+      for (let i = 0; i <= points; i++) {
+        const x = (i / points) * width;
+        const norm = i / points;
+        const envelope = Math.sin(norm * Math.PI);
+        const y =
+          midY +
+          Math.sin(norm * Math.PI * freq + phase) * amp * envelope +
+          Math.sin(norm * Math.PI * freq * 1.7 + phase * 1.3) * (amp * 0.35 * envelope) +
+          secondary;
+        d += (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1) + " ";
+      }
+      return d;
+    };
+
+    const animate = () => {
+      tRef.current += 0.02 * speedByState[state];
+      const amp = ampByState[state];
+      if (pathRef1.current) pathRef1.current.setAttribute("d", buildPath(tRef.current, amp, 3.2, 0));
+      if (pathRef2.current) pathRef2.current.setAttribute("d", buildPath(tRef.current * 0.8 + 1.5, amp * 0.75, 2.4, 6));
+      rafRef.current = requestAnimationFrame(animate);
+    };
+    rafRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [state]);
+
+  return (
+    <svg viewBox="0 0 320 140" className="h-40 w-80" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#a855f7" />
+          <stop offset="50%" stopColor="#22d3ee" />
+          <stop offset="100%" stopColor="#3b82f6" />
+        </linearGradient>
+        <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#6366f1" />
+          <stop offset="50%" stopColor="#06b6d4" />
+          <stop offset="100%" stopColor="#8b5cf6" />
+        </linearGradient>
+        <filter id="waveGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3.5" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+      <path ref={pathRef2} fill="none" stroke="url(#waveGrad2)" strokeWidth="2" strokeLinecap="round" opacity="0.55" filter="url(#waveGlow)" />
+      <path ref={pathRef1} fill="none" stroke="url(#waveGrad1)" strokeWidth="2.5" strokeLinecap="round" filter="url(#waveGlow)" />
+    </svg>
+  );
+}
 
 function VoiceWaveIcon({ className }: { className?: string }) {
   return (
@@ -40,6 +110,26 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
       (err) => { clearTimeout(timer); reject(err); }
     );
   });
+}
+
+let cachedFemaleVoice: SpeechSynthesisVoice | null = null;
+let voicesReady = false;
+
+function pickFemaleVoice(): SpeechSynthesisVoice | null {
+  if (cachedFemaleVoice) return cachedFemaleVoice;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+  voicesReady = true;
+  const englishVoices = voices.filter((v) => v.lang.startsWith("en"));
+  const pool = englishVoices.length > 0 ? englishVoices : voices;
+  const nameHints = ["female", "zira", "samantha", "victoria", "susan", "linda", "google us english", "microsoft ava", "microsoft jenny", "aria", "libby"];
+  const byName = pool.find((v) => nameHints.some((hint) => v.name.toLowerCase().includes(hint)));
+  cachedFemaleVoice = byName || pool[0] || null;
+  return cachedFemaleVoice;
+}
+
+if (typeof window !== "undefined" && "speechSynthesis" in window) {
+  window.speechSynthesis.onvoiceschanged = () => { cachedFemaleVoice = null; pickFemaleVoice(); };
 }
 
 export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAssistantWidgetProps) {
@@ -190,8 +280,9 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     const doSpeak = () => {
       const utterance = new SpeechSynthesisUtterance(text);
       utteranceRef.current = utterance;
-      utterance.rate = 1;
-      utterance.pitch = 1;
+      const preferredVoice = pickFemaleVoice(); if (preferredVoice) utterance.voice = preferredVoice;
+      utterance.rate = 0.95;
+      utterance.pitch = 1.05;
       utterance.onstart = () => setVoiceState("speaking");
       utterance.onend = () => {
         utteranceRef.current = null;
@@ -303,10 +394,11 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
+          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-cyan-400 to-blue-500 text-white transition-transform hover:scale-105"
+          style={{ animation: "orb-glow 2.4s ease-in-out infinite, orb-float 3s ease-in-out infinite" }}
           aria-label="Open APAS Agent"
         >
-          <Sparkles className="h-6 w-6" />
+          <Mic className="h-6 w-6" />
         </button>
       )}
 
@@ -320,7 +412,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
             <X className="h-5 w-5" />
           </button>
 
-          <div className={`h-56 w-56 rounded-full bg-gradient-to-br shadow-2xl ${orbClasses[voiceState]}`} />
+          <div className="h-56 w-56"><VoicePoweredOrb enableVoiceControl={voiceState === "listening" || voiceState === "speaking"} hue={voiceState === "thinking" ? 200 : 0} /></div>
 
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
 
