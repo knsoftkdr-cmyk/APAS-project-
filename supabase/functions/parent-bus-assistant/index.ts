@@ -17,22 +17,36 @@ function getGeminiKeys(): string[] {
   ].filter((k): k is string => !!k && k.trim().length > 0);
 }
 
-async function callGemini(systemPrompt: string, userPrompt: string, keys: string[]): Promise<string | null> {
+async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: { role: string; text: string }[] = []): Promise<string | null> {
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
   for (const key of keys) {
     for (const model of models) {
       try {
-        const response = await fetch(
+        const response = await fetchWithTimeout(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
-              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-              generationConfig: { temperature: 0.3, maxOutputTokens: 300 },
+              contents: [
+                ...history.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.text }] })),
+                { role: "user", parts: [{ text: userPrompt }] },
+              ],
+              generationConfig: { temperature: 0.4, maxOutputTokens: 300 },
             }),
           },
+          5000,
         );
         if (response.status === 429 || response.status === 503) continue;
         if (!response.ok) continue;
@@ -60,7 +74,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, student_id } = await req.json();
+    const { message, student_id, history } = await req.json();
     if (!student_id) {
       return new Response(JSON.stringify({ type: "message", text: "I don't know which child this is for yet." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -145,7 +159,7 @@ let liveStatusLine = "No live GPS data available for this bus right now.";
 
       if (!isStale && targetStop?.latitude != null && targetStop?.longitude != null) {
         try {
-          const etaRes = await fetch(
+          const etaRes = await fetchWithTimeout(
             `${Deno.env.get("SUPABASE_URL")}/functions/v1/get-traffic-eta`,
             {
               method: "POST",
@@ -154,7 +168,8 @@ let liveStatusLine = "No live GPS data available for this bus right now.";
                 originLat: position.latitude, originLng: position.longitude,
                 destLat: targetStop.latitude, destLng: targetStop.longitude,
               }),
-            }
+            },
+            4000,
           );
           if (etaRes.ok) {
             const etaData = await etaRes.json();
@@ -212,12 +227,16 @@ ${arrivedPickupText}
 ${arrivedDropText}
     `.trim();
 
-    const systemPrompt = `You are a warm, reassuring assistant helping a parent track their child's school bus. Answer ONLY using the data given below - never invent GPS coordinates, times, or contact details that aren't present. If something isn't available in the data, say so plainly (e.g. "the bus hasn't started sharing its location yet") rather than guessing. Keep answers to 1-3 short sentences.
+    const systemPrompt = `You are a warm, friendly assistant helping a parent track their child's school bus. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked or said, using the conversation so far for context.
+
+If the parent just greets you (e.g. "hello", "hi") without asking anything specific, greet them back warmly and briefly ask how you can help - do NOT dump bus details unprompted. Only bring up location, driver, or route info once they actually ask about it.
+
+Answer ONLY using the data given below - never invent GPS coordinates, times, or contact details that aren't present. If something isn't available, say so plainly (e.g. "the bus hasn't started sharing its location yet") rather than guessing. Keep answers to 1-3 short, natural sentences.
 
 CURRENT DATA:
 ${context}`;
 
-    const reply = await callGemini(systemPrompt, message, keys);
+    const reply = await callGemini(systemPrompt, message, keys, Array.isArray(history) ? history.slice(-6) : []);
 
     return new Response(JSON.stringify({
       type: "message",

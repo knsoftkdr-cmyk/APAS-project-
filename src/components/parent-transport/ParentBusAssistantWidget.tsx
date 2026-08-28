@@ -14,6 +14,7 @@ interface ChatMessage {
 }
 
 interface ParentBusAssistantWidgetProps {
+  studentName?: string | null;
   studentId: string | null;
 }
 
@@ -41,17 +42,22 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
-export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidgetProps) {
+export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAssistantWidgetProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
+  const resultHandledRef = useRef(false);
+  const finalTranscriptRef = useRef("");
+  const hadErrorRef = useRef(false);
 
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(true);
   const recognitionRef = useRef<any>(null);
+  const listeningWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceModeRef = useRef(false);
@@ -73,21 +79,30 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
     }
     const recognition = new SpeechRecognition();
     recognition.lang = "en-US";
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = false;
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
-      setTimeout(() => sendMessageWithText(transcript), 100);
+      let combined = "";
+      for (let i = 0; i < event.results.length; i++) {
+        combined += event.results[i][0].transcript;
+      }
+      combined = combined.trim();
+      finalTranscriptRef.current = combined;
+      setInput(combined);
+      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+      listeningWatchdogRef.current = setTimeout(() => {
+        try { recognitionRef.current?.stop(); } catch {}
+      }, 1500);
     };
     recognition.onerror = (event: any) => {
+      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
       setIsListening(false);
       if (event.error === "aborted") return;
       if (voiceModeRef.current && event.error === "no-speech") {
         setTimeout(() => startListeningSafely(), 400);
         return;
       }
+      hadErrorRef.current = true;
       const messagesMap: Record<string, string> = {
         "no-speech": "No speech detected. Please try again.",
         "not-allowed": "Microphone access was denied. Check the site permissions and allow microphone access.",
@@ -102,8 +117,27 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
         toast({ title: "Voice input error", description: msg, variant: "destructive" });
       }
     };
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+      setIsListening(false);
+      const transcript = finalTranscriptRef.current;
+      finalTranscriptRef.current = "";
+      if (!resultHandledRef.current && !hadErrorRef.current && transcript) {
+        resultHandledRef.current = true;
+        if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
+        setTimeout(() => sendMessageWithText(transcript), 100);
+      }
+      hadErrorRef.current = false;
+    };
     recognitionRef.current = recognition;
+
+    return () => {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      try { recognition.abort(); } catch {}
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -114,8 +148,23 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
       setVoiceError(null);
       setIsListening(true);
       recognitionRef.current.start();
-    } catch {
-      // already started - ignore
+      resultHandledRef.current = false;
+      hadErrorRef.current = false;
+      finalTranscriptRef.current = "";
+      if (listeningWatchdogRef.current) clearTimeout(listeningWatchdogRef.current);
+      listeningWatchdogRef.current = setTimeout(() => {
+        try { recognitionRef.current?.stop(); } catch {}
+        setIsListening(false);
+        if (voiceModeRef.current) {
+          setVoiceError("Didn't catch that in time - the mic seems stuck. Tap to try again or switch to typing.");
+          setVoiceState("idle");
+        }
+      }, 8000);
+    } catch (err: any) {
+      if (err?.name === "InvalidStateError") {
+        try { recognitionRef.current.stop(); } catch {}
+        setTimeout(() => startListeningSafely(), 150);
+      }
     }
   };
 
@@ -127,6 +176,9 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
     } else {
       setIsListening(true);
       recognitionRef.current.start();
+      resultHandledRef.current = false;
+      hadErrorRef.current = false;
+      finalTranscriptRef.current = "";
     }
   };
 
@@ -180,6 +232,7 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
   };
 
   const exitVoiceMode = () => {
+    if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
@@ -202,14 +255,15 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
 
   const sendMessageWithText = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
-    if (!text || loading || !studentId) return;
+    if (!text || loadingRef.current || !studentId) return;
+    loadingRef.current = true;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {
       const { data, error } = await withTimeout(
-        supabase.functions.invoke("parent-bus-assistant", { body: { message: text, student_id: studentId } }),
+        supabase.functions.invoke("parent-assistant", { body: { message: text, student_id: studentId, student_name: studentName, history: messages.slice(-6).map((m) => ({ role: m.role, text: m.text })) } }),
         20000,
         "Bus assistant"
       );
@@ -223,6 +277,7 @@ export function ParentBusAssistantWidget({ studentId }: ParentBusAssistantWidget
       toast({ title: "Bus assistant error", description: friendly, variant: "destructive" });
       say(friendly);
     } finally {
+      loadingRef.current = false;
       setLoading(false);
     }
   };

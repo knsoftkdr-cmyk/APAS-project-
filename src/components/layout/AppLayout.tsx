@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
@@ -10,14 +9,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Homework â€” APAS",
-  "/student-dashboard": "Home â€” APAS",
-  "/diagnostic": "Assessments â€” APAS",
-  "/curative": "Curative Phase â€” APAS",
-  "/analytics": "Learning Analytics & Insights â€” APAS",
-  "/teacher": "Teacher Panel â€” APAS",
-  "/settings": "Settings â€” APAS",
-  "/alerts": "Alerts â€” APAS",
+  "/dashboard": "Homework — APAS",
+  "/student-dashboard": "Home — APAS",
+  "/diagnostic": "Assessments — APAS",
+  "/curative": "Curative Phase — APAS",
+  "/analytics": "Learning Analytics & Insights — APAS",
+  "/teacher": "Teacher Panel — APAS",
+  "/settings": "Settings — APAS",
+  "/alerts": "Alerts — APAS",
 };
 
 interface AppLayoutProps {
@@ -29,47 +28,37 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, profile } = useAuth();
-  const [busStudentId, setBusStudentId] = useState<string | null>(null);
+  const [childProfileId, setChildProfileId] = useState<string | null>(null);
+  const [childName, setChildName] = useState<string | null>(null);
 
+  // Assistant now covers transport, homework, assessments, and fees for the
+  // parent's (first linked) child — all of those key off profiles.id, so we
+  // just need that one id + the child's name. Transport-specific lookups
+  // (real students.id) happen inside the edge function itself, same way
+  // get_parent_fee_details() already resolves it internally.
   useEffect(() => {
     if (profile?.role !== "parent" || !user) {
-      setBusStudentId(null);
+      setChildProfileId(null);
+      setChildName(null);
       return;
     }
     let cancelled = false;
     (async () => {
       const { data: links } = await supabase
         .from("parent_students")
-        .select("student_id")
-        .eq("parent_id", user.id);
+        .select("student_id, profiles:student_id(full_name)")
+        .eq("parent_id", user.id)
+        .limit(1);
       if (!links || links.length === 0 || cancelled) return;
-
-      for (const link of links) {
-        const { data: studentRow } = await supabase
-          .from("students")
-          .select("id")
-          .eq("profile_id", link.student_id)
-          .maybeSingle();
-        if (!studentRow) continue;
-        const { data: assignment } = await supabase
-          .from("transport_assignments")
-          .select("student_id")
-          .eq("student_id", studentRow.id)
-          .eq("status", "active")
-          .maybeSingle();
-        if (assignment && !cancelled) {
-          setBusStudentId(assignment.student_id);
-          return;
-        }
-      }
-      if (!cancelled) setBusStudentId(null);
+      const link = links[0] as any;
+      setChildProfileId(link.student_id);
+      setChildName(link.profiles?.full_name ?? null);
     })();
     return () => { cancelled = true; };
   }, [profile?.role, user]);
 
-  // Set document title based on route
   useEffect(() => {
-    document.title = pageTitles[location.pathname] || "APAS â€” Adaptive Pedagogy & Analytics System";
+    document.title = pageTitles[location.pathname] || "APAS — Adaptive Pedagogy & Analytics System";
   }, [location.pathname]);
 
   return (
@@ -93,7 +82,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <OnboardingFlow />
       <AILessonAssistantWidget />
-      {busStudentId && <ParentBusAssistantWidget studentId={busStudentId} />}
+      {childProfileId && <ParentBusAssistantWidget studentId={childProfileId} studentName={childName} />}
     </div>
   );
 }
