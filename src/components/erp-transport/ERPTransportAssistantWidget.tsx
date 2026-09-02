@@ -7,6 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, X, Send, Mic, MicOff, Bus } from "lucide-react";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
+import { Capacitor } from "@capacitor/core";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+
+const isNativePlatform = Capacitor.isNativePlatform();
 
 interface ActionConfirm {
   action: "update_vehicle_status";
@@ -78,7 +82,7 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
   const voiceModeRef = useRef(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+  const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const updateVoiceMode = (v: boolean) => {
@@ -182,7 +186,7 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
   const preferredVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
   useEffect(() => {
-    if (!ttsSupported) return;
+    if (!ttsSupported || isNativePlatform) return;
     const pickVoice = () => {
       const voices = window.speechSynthesis.getVoices();
       if (!voices.length) return;
@@ -222,6 +226,26 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
       if (voiceModeRef.current) startListeningSafely();
       return;
     }
+
+    if (isNativePlatform) {
+      setVoiceState("speaking");
+      TextToSpeech.speak({
+        text: forSpeech(text),
+        lang: "en-US",
+        rate: 0.97,
+        pitch: 1.02,
+        volume: 1,
+        category: "playback",
+      })
+        .then(() => {
+          if (voiceModeRef.current) startListeningSafely();
+        })
+        .catch(() => {
+          if (voiceModeRef.current) startListeningSafely();
+        });
+      return;
+    }
+
     const doSpeak = () => {
       const utterance = new SpeechSynthesisUtterance(forSpeech(text));
       utteranceRef.current = utterance;
@@ -272,7 +296,11 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
-    window.speechSynthesis?.cancel();
+    if (isNativePlatform) {
+      TextToSpeech.stop().catch(() => {});
+    } else {
+      window.speechSynthesis?.cancel();
+    }
     utteranceRef.current = null;
     if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
@@ -300,12 +328,12 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
           .eq("id", confirm.vehicle_id)
           .eq("school_id", schoolId);
         if (error) throw error;
-        say(`Done — ${confirm.vehicle_registration} is now marked ${confirm.new_status}.`);
+        say(`Done ï¿½ ${confirm.vehicle_registration} is now marked ${confirm.new_status}.`);
         toast({ title: "Vehicle updated", description: `${confirm.vehicle_registration} to ${confirm.new_status}` });
       }
     } catch (e: any) {
       toast({ title: "Action failed", description: e?.message || "Could not update the vehicle.", variant: "destructive" });
-      say("That didn't go through — please try updating it directly from the Vehicles tab.");
+      say("That didn't go through ï¿½ please try updating it directly from the Vehicles tab.");
     } finally {
       setActingOn(false);
       updatePendingAction(null);
@@ -463,7 +491,7 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
       )}
 
       {open && !voiceMode && (
-        <Card className="fixed bottom-5 right-5 z-50 flex h-[520px] w-[380px] flex-col shadow-2xl">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent

@@ -51,13 +51,13 @@ function AdmissionStatCard({
     <Card className="group relative overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-125 ${tones.glow}`} />
       <div className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${tones.bar}`} />
-      <CardContent className="relative p-3 md:p-4 pl-4 md:pl-5 flex items-center gap-3">
-        <div className={`w-10 h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br ${tones.chip} flex items-center justify-center shadow-sm shrink-0 transition-transform duration-300 group-hover:scale-110`}>
-          <Icon className="h-5 w-5 text-white" />
+      <CardContent className="relative p-3 md:p-4 pl-4 md:pl-5 flex items-center gap-2.5 sm:gap-3">
+        <div className={`w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br ${tones.chip} flex items-center justify-center shadow-sm shrink-0 transition-transform duration-300 group-hover:scale-110`}>
+          <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
         </div>
         <div className="min-w-0">
-          <p className="text-xl md:text-2xl font-extrabold tracking-tight text-slate-800 leading-tight">{value}</p>
-          <p className="text-[11px] md:text-xs text-muted-foreground font-medium truncate">{label}</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight text-slate-800 leading-tight">{value}</p>
+          <p className="text-[10px] sm:text-[11px] md:text-xs text-muted-foreground font-medium leading-snug">{label}</p>
         </div>
       </CardContent>
     </Card>

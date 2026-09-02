@@ -121,7 +121,7 @@ const ERPLibraryManagement = () => {
 
   return (
     <ERPLayout orgName={orgName} activePath="/erp/library" tabLabel="Library">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 md:mb-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <BookOpen className="h-6 w-6" />
@@ -245,8 +245,8 @@ function CatalogTab({
   const rangeEnd = items ? Math.min(page * pageSize, items.length) : 0;
   return (
     <div className="space-y-4 mt-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex-1 min-w-[180px] max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by title, author, subject..."

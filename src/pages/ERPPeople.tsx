@@ -212,7 +212,7 @@ const ERPPeople = () => {
       />
 
       {/* Section header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 md:mb-6">
         <div className="flex items-center gap-1 text-lg font-bold text-slate-900">
           Active Employees
           <ChevronDown className="h-5 w-5 text-slate-400" />
@@ -250,7 +250,9 @@ const ERPPeople = () => {
                 Add Employee
               </Button>
               <Button variant="outline" className="rounded-full px-6" onClick={handleImportClick}>
-                <Upload className="h-4 w-4 mr-1.5" /> Import Employees
+                <Upload className="h-4 w-4 mr-1.5" />
+                <span className="hidden sm:inline">Import Employees</span>
+                <span className="sm:hidden">Import</span>
               </Button>
             </div>
           </div>
@@ -261,10 +263,10 @@ const ERPPeople = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Designation</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
+                <TableHead className="hidden sm:table-cell">Designation</TableHead>
+                <TableHead className="hidden md:table-cell">Department</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden sm:table-cell">Phone</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -272,10 +274,10 @@ const ERPPeople = () => {
               {employees.map((emp) => (
                 <TableRow key={emp.id}>
                   <TableCell className="font-medium text-slate-900">{emp.full_name}</TableCell>
-                  <TableCell className="text-slate-600">{emp.designation || "—"}</TableCell>
-                  <TableCell className="text-slate-600">{emp.department || "—"}</TableCell>
-                  <TableCell className="text-slate-600">{emp.email || "—"}</TableCell>
-                  <TableCell className="text-slate-600">{emp.phone || "—"}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-slate-600">{emp.designation || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell text-slate-600">{emp.department || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell text-slate-600">{emp.email || "—"}</TableCell>
+                  <TableCell className="hidden sm:table-cell text-slate-600">{emp.phone || "—"}</TableCell>
                   <TableCell>
                     <span
                       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${

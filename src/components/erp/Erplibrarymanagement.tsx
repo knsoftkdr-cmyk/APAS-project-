@@ -256,11 +256,11 @@ function CatalogTab({
         <TableHeader>
           <TableRow>
             <TableHead>Title</TableHead>
-            <TableHead>Author</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Subject / Class</TableHead>
+            <TableHead className="hidden sm:table-cell">Author</TableHead>
+            <TableHead className="hidden md:table-cell">Type</TableHead>
+            <TableHead className="hidden md:table-cell">Subject / Class</TableHead>
             <TableHead>Availability</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="hidden sm:table-cell">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -273,17 +273,17 @@ function CatalogTab({
           {items?.map((item) => (
             <TableRow key={item.id}>
               <TableCell className="font-medium">{item.title}</TableCell>
-              <TableCell>{item.author || "-"}</TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">{item.author || "-"}</TableCell>
+              <TableCell className="hidden md:table-cell">
                 <Badge variant="outline">{item.item_type.replace("_", " ")}</Badge>
               </TableCell>
-              <TableCell>{[item.subject, item.class_level].filter(Boolean).join(" · ") || "-"}</TableCell>
+              <TableCell className="hidden md:table-cell">{[item.subject, item.class_level].filter(Boolean).join(" · ") || "-"}</TableCell>
               <TableCell>
                 {item.item_type === "physical_book"
                   ? `${item.available_copies} / ${item.total_copies}`
                   : "Digital"}
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <Badge variant={item.status === "active" ? "default" : "secondary"}>
                   {item.status}
                 </Badge>
