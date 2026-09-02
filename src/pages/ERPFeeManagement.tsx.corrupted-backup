@@ -579,26 +579,23 @@ const ERPFeeManagement = () => {
   return (
     <ERPLayout orgName={orgName} activePath="/erp/fees" tabLabel="Fee Records">
       {/* Section header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 md:mb-6">
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-1 text-lg font-bold text-slate-900">
           Fee Records
           <ChevronDown className="h-5 w-5 text-slate-400" />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+        <div className="flex items-center gap-2">
           {activeTab === "records" && (
             <>
               <Button
                 onClick={() => setAddOpen(true)}
                 className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white rounded-full px-5"
               >
-                <Plus className="h-4 w-4 mr-1" />
-                <span className="hidden sm:inline">Add Individual Fee</span>
-                <span className="sm:hidden">Add Fee</span>
+                <Plus className="h-4 w-4 mr-1" /> Add Individual Fee
               </Button>
               <Button variant="outline" onClick={() => setBulkOpen(true)} className="rounded-full px-5">
-                <span className="hidden sm:inline">Bulk Assign to Class</span>
-                <span className="sm:hidden">Bulk Assign</span>
+                Bulk Assign to Class
               </Button>
             </>
           )}
@@ -636,10 +633,10 @@ const ERPFeeManagement = () => {
             <TableHeader>
               <TableRow className="bg-slate-50 border-b border-slate-200">
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student</TableHead>
-                <TableHead className="hidden sm:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Class</TableHead>
-                <TableHead className="hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Class</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
-                <TableHead className="hidden lg:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid Date</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid Date</TableHead>
                 <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Receipt</TableHead>
               </TableRow>
             </TableHeader>
@@ -663,11 +660,11 @@ const ERPFeeManagement = () => {
                           {f.student_name}
                         </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-slate-600">{f.class_grade || "—"}</TableCell>
-                      <TableCell className="hidden md:table-cell text-slate-600">{f.section || "—"}</TableCell>
-                      <TableCell className="font-medium text-emerald-600">₹{f.amount_paid.toLocaleString()}</TableCell>
-                      <TableCell className="hidden lg:table-cell text-slate-600">
-                        {f.due_date ? new Date(f.due_date).toLocaleDateString() : "—"}
+                      <TableCell className="text-slate-600">{f.class_grade || "â€”"}</TableCell>
+                      <TableCell className="text-slate-600">{f.section || "â€”"}</TableCell>
+                      <TableCell className="font-medium text-emerald-600">â‚¹{f.amount_paid.toLocaleString()}</TableCell>
+                      <TableCell className="text-slate-600">
+                        {f.due_date ? new Date(f.due_date).toLocaleDateString() : "â€”"}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -711,7 +708,7 @@ const ERPFeeManagement = () => {
               </div>
               <div>
                 <p className="text-xs text-slate-500">Total Due</p>
-                <p className="font-semibold text-red-600">₹{totalDue.toLocaleString()}</p>
+                <p className="font-semibold text-red-600">â‚¹{totalDue.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -747,11 +744,11 @@ const ERPFeeManagement = () => {
             <TableHeader>
               <TableRow className="bg-slate-50 border-b border-slate-200">
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Student</TableHead>
-                <TableHead className="hidden sm:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Class</TableHead>
-                <TableHead className="hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Class</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Due</TableHead>
-                <TableHead className="hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
-                <TableHead className="hidden lg:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Due Date</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Due Date</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</TableHead>
                 <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</TableHead>
               </TableRow>
@@ -771,14 +768,14 @@ const ERPFeeManagement = () => {
                       {fee.student_name}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden sm:table-cell text-slate-600">{fee.class_grade || "—"}</TableCell>
-                  <TableCell className="hidden md:table-cell text-slate-600">{fee.section || "—"}</TableCell>
+                  <TableCell className="text-slate-600">{fee.class_grade || "â€”"}</TableCell>
+                  <TableCell className="text-slate-600">{fee.section || "â€”"}</TableCell>
                   <TableCell className="font-semibold text-red-600">
-                    ₹{Math.max(fee.amount_due - fee.amount_paid, 0).toLocaleString()}
+                    â‚¹{Math.max(fee.amount_due - fee.amount_paid, 0).toLocaleString()}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell font-medium text-emerald-600">₹{fee.amount_paid.toLocaleString()}</TableCell>
-                  <TableCell className="hidden lg:table-cell text-slate-600">
-                    {fee.due_date ? new Date(fee.due_date).toLocaleDateString() : "—"}
+                  <TableCell className="font-medium text-emerald-600">â‚¹{fee.amount_paid.toLocaleString()}</TableCell>
+                  <TableCell className="text-slate-600">
+                    {fee.due_date ? new Date(fee.due_date).toLocaleDateString() : "â€”"}
                   </TableCell>
                   <TableCell>
                     <span
@@ -908,8 +905,8 @@ const ERPFeeManagement = () => {
                   Existing dues for {selectedStudentDues.student_name}
                 </p>
                 <p className="text-slate-600">
-                  Due ₹{selectedStudentDues.amount_due.toLocaleString()} · Paid ₹
-                  {selectedStudentDues.amount_paid.toLocaleString()} · Balance ₹
+                  Due â‚¹{selectedStudentDues.amount_due.toLocaleString()} Â· Paid â‚¹
+                  {selectedStudentDues.amount_paid.toLocaleString()} Â· Balance â‚¹
                   {(selectedStudentDues.amount_due - selectedStudentDues.amount_paid).toLocaleString()}
                 </p>
                 <p className="capitalize text-slate-500">Status: {selectedStudentDues.status}</p>
@@ -998,7 +995,7 @@ const ERPFeeManagement = () => {
               <div className="space-y-1.5">
                 <Label>Amount due (total)</Label>
                 <div className="flex h-10 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
-                  ₹{breakdownTotal.toLocaleString()}
+                  â‚¹{breakdownTotal.toLocaleString()}
                 </div>
               </div>
               <div className="space-y-1.5">
@@ -1168,7 +1165,7 @@ const ERPFeeManagement = () => {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              Edit Fee Record{editStudentName ? ` — ${editStudentName}` : ""}
+              Edit Fee Record{editStudentName ? ` â€” ${editStudentName}` : ""}
             </DialogTitle>
           </DialogHeader>
 
@@ -1255,7 +1252,7 @@ const ERPFeeManagement = () => {
               <div className="space-y-1.5">
                 <Label>Amount due (total)</Label>
                 <div className="flex h-10 items-center rounded-md border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-700">
-                  ₹{editBreakdownTotal.toLocaleString()}
+                  â‚¹{editBreakdownTotal.toLocaleString()}
                 </div>
               </div>
               <div className="space-y-1.5">
@@ -1305,8 +1302,8 @@ const ERPFeeManagement = () => {
             <p className="text-sm text-slate-600">
               This will permanently delete the fee record for{" "}
               <span className="font-medium text-slate-900">{deleteTarget.student_name}</span> due{" "}
-              {deleteTarget.due_date ? new Date(deleteTarget.due_date).toLocaleDateString() : "—"}{" "}
-              (₹{deleteTarget.amount_due.toLocaleString()} due, ₹
+              {deleteTarget.due_date ? new Date(deleteTarget.due_date).toLocaleDateString() : "â€”"}{" "}
+              (â‚¹{deleteTarget.amount_due.toLocaleString()} due, â‚¹
               {deleteTarget.amount_paid.toLocaleString()} paid). This cannot be undone.
             </p>
           )}
@@ -1321,13 +1318,13 @@ const ERPFeeManagement = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Student details dialog — opened by clicking a row */}
+      {/* Student details dialog â€” opened by clicking a row */}
       <Dialog open={!!detailsStudentId} onOpenChange={(open) => !open && setDetailsStudentId(null)}>
         <DialogContent className="sm:max-w-lg">
           {detailsStudent && (
             <>
               <DialogHeader>
-                <DialogTitle className="sr-only">{detailsStudent.full_name} — fee details</DialogTitle>
+                <DialogTitle className="sr-only">{detailsStudent.full_name} â€” fee details</DialogTitle>
               </DialogHeader>
 
               <div className="flex items-center gap-3">
@@ -1339,9 +1336,9 @@ const ERPFeeManagement = () => {
                 <div>
                   <p className="text-lg font-bold text-slate-900">{detailsStudent.full_name}</p>
                   <p className="text-sm text-slate-500">
-                    {detailsStudent.class ? `Class ${detailsStudent.class}` : "—"}
-                    {detailsStudent.section ? ` · Section ${detailsStudent.section}` : ""}
-                    {detailsStudent.roll_number ? ` · Roll No. ${detailsStudent.roll_number}` : ""}
+                    {detailsStudent.class ? `Class ${detailsStudent.class}` : "â€”"}
+                    {detailsStudent.section ? ` Â· Section ${detailsStudent.section}` : ""}
+                    {detailsStudent.roll_number ? ` Â· Roll No. ${detailsStudent.roll_number}` : ""}
                   </p>
                   {detailsStudent.parent_phone && (
                     <p className="text-xs text-slate-400 mt-0.5">Parent contact: {detailsStudent.parent_phone}</p>
@@ -1355,16 +1352,16 @@ const ERPFeeManagement = () => {
               <div className="grid grid-cols-3 gap-3 mb-4">
                 <div className="rounded-lg bg-slate-50 p-3 text-center">
                   <p className="text-xs text-slate-500">Total Due</p>
-                  <p className="text-base font-bold text-slate-900">₹{detailsTotals.due.toLocaleString()}</p>
+                  <p className="text-base font-bold text-slate-900">â‚¹{detailsTotals.due.toLocaleString()}</p>
                 </div>
                 <div className="rounded-lg bg-emerald-50 p-3 text-center">
                   <p className="text-xs text-emerald-600">Total Paid</p>
-                  <p className="text-base font-bold text-emerald-700">₹{detailsTotals.paid.toLocaleString()}</p>
+                  <p className="text-base font-bold text-emerald-700">â‚¹{detailsTotals.paid.toLocaleString()}</p>
                 </div>
                 <div className="rounded-lg bg-red-50 p-3 text-center">
                   <p className="text-xs text-red-600">Balance</p>
                   <p className="text-base font-bold text-red-700">
-                    ₹{Math.max(detailsTotals.due - detailsTotals.paid, 0).toLocaleString()}
+                    â‚¹{Math.max(detailsTotals.due - detailsTotals.paid, 0).toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -1383,10 +1380,10 @@ const ERPFeeManagement = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-slate-900 font-medium">
-                            Due {f.due_date ? new Date(f.due_date).toLocaleDateString() : "—"}
+                            Due {f.due_date ? new Date(f.due_date).toLocaleDateString() : "â€”"}
                           </p>
                           <p className="text-slate-500 text-xs">
-                            ₹{f.amount_due.toLocaleString()} due · ₹{f.amount_paid.toLocaleString()} paid
+                            â‚¹{f.amount_due.toLocaleString()} due Â· â‚¹{f.amount_paid.toLocaleString()} paid
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
@@ -1412,12 +1409,12 @@ const ERPFeeManagement = () => {
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-x-3 gap-y-1 text-xs text-slate-500 border-t border-slate-100 pt-2">
-                        <span>Course ₹{(f.course_amount ?? 0).toLocaleString()}</span>
-                        <span>Transport ₹{(f.transport_amount ?? 0).toLocaleString()}</span>
-                        <span>Uniform ₹{(f.uniform_amount ?? 0).toLocaleString()}</span>
-                        <span>Material ₹{(f.material_amount ?? 0).toLocaleString()}</span>
-                        <span>Exam ₹{(f.exam_amount ?? 0).toLocaleString()}</span>
-                        <span>Other ₹{(f.other_amount ?? 0).toLocaleString()}</span>
+                        <span>Course â‚¹{(f.course_amount ?? 0).toLocaleString()}</span>
+                        <span>Transport â‚¹{(f.transport_amount ?? 0).toLocaleString()}</span>
+                        <span>Uniform â‚¹{(f.uniform_amount ?? 0).toLocaleString()}</span>
+                        <span>Material â‚¹{(f.material_amount ?? 0).toLocaleString()}</span>
+                        <span>Exam â‚¹{(f.exam_amount ?? 0).toLocaleString()}</span>
+                        <span>Other â‚¹{(f.other_amount ?? 0).toLocaleString()}</span>
                       </div>
                     </div>
                   ))
@@ -1439,5 +1436,4 @@ const ERPFeeManagement = () => {
 };
 
 export default ERPFeeManagement;
-
 
