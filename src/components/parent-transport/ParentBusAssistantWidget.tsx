@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
+import { Capacitor } from "@capacitor/core";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
+
+const isNativePlatform = Capacitor.isNativePlatform();
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -153,7 +158,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   const voiceModeRef = useRef(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+  const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const updateVoiceMode = (v: boolean) => {
@@ -162,12 +167,26 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   };
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    if (isNativePlatform) {
+      let cancelled = false;
+      SpeechRecognition.available()
+        .then(({ available }: { available: boolean }) => {
+          if (!cancelled && !available) setVoiceSupported(false);
+        })
+        .catch(() => {
+          if (!cancelled) setVoiceSupported(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) {
       setVoiceSupported(false);
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition = new BrowserSpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = true;
     recognition.interimResults = false;
@@ -232,6 +251,65 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   }, []);
 
   const startListeningSafely = () => {
+    if (isNativePlatform) {
+      setVoiceState("listening");
+      setVoiceError(null);
+      setIsListening(true);
+
+      SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {}).finally(() => {
+        setTimeout(() => {
+          if (listeningWatchdogRef.current) clearTimeout(listeningWatchdogRef.current);
+          listeningWatchdogRef.current = setTimeout(() => {
+            SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {});
+          }, 8000);
+
+          SpeechRecognition.requestPermissions()
+            .then(() =>
+              SpeechRecognition.start({
+                language: "en-US",
+                maxResults: 1,
+                partialResults: false,
+                popup: false,
+              })
+            )
+            .then((result: { matches?: string[] }) => {
+              if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+              setIsListening(false);
+              const transcript = result?.matches?.[0];
+              if (!transcript) {
+                const msg = "No speech detected. Please try again.";
+                if (voiceModeRef.current) {
+                  setVoiceError(msg);
+                  setVoiceState("idle");
+                } else {
+                  toast({ title: "Voice input error", description: msg, variant: "destructive" });
+                }
+                return;
+              }
+              setInput(transcript);
+              if (voiceModeRef.current) {
+                setVoiceState("thinking");
+                setVoiceError(null);
+              }
+              setTimeout(() => sendMessageWithText(transcript), 100);
+            })
+            .catch((err: any) => {
+              if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+              setIsListening(false);
+              console.error("SpeechRecognition error:", err);
+              const msg = "Could not hear you clearly. Please try again or type instead.";
+              if (voiceModeRef.current) {
+                setVoiceError(msg);
+                setVoiceState("idle");
+              } else {
+                toast({ title: "Voice input error", description: msg, variant: "destructive" });
+              }
+            });
+        }, 300);
+      });
+      return;
+    }
+
     if (!recognitionRef.current) return;
     try {
       setVoiceState("listening");
@@ -259,6 +337,15 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   };
 
   const toggleListening = () => {
+    if (isNativePlatform) {
+      if (isListening) {
+        SpeechRecognition.stop().catch(() => {});
+        setIsListening(false);
+      } else {
+        startListeningSafely();
+      }
+      return;
+    }
     if (!recognitionRef.current) return;
     if (isListening) {
       recognitionRef.current.stop();
@@ -277,6 +364,26 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       if (voiceModeRef.current) startListeningSafely();
       return;
     }
+
+    if (isNativePlatform) {
+      setVoiceState("speaking");
+      const estimatedMs = Math.max(1200, text.split(/\s+/).length * 380);
+
+      TextToSpeech.speak({
+        text,
+        lang: "en-US",
+        rate: 0.95,
+        pitch: 1.05,
+        volume: 1,
+        category: "playback",
+      }).catch(() => {});
+
+      setTimeout(() => {
+        if (voiceModeRef.current) startListeningSafely();
+      }, estimatedMs);
+      return;
+    }
+
     const doSpeak = () => {
       const utterance = new SpeechSynthesisUtterance(text);
       utteranceRef.current = utterance;
@@ -327,9 +434,15 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
-    window.speechSynthesis?.cancel();
+    if (isNativePlatform) {
+      TextToSpeech.stop().catch(() => {});
+    } else {
+      window.speechSynthesis?.cancel();
+    }
     utteranceRef.current = null;
-    if (recognitionRef.current && isListening) {
+    if (isNativePlatform) {
+      if (isListening) SpeechRecognition.stop().catch(() => {});
+    } else if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
     }
     setIsListening(false);
@@ -412,7 +525,12 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
             <X className="h-5 w-5" />
           </button>
 
-          <div className="h-56 w-56"><VoicePoweredOrb enableVoiceControl={voiceState === "listening" || voiceState === "speaking"} hue={voiceState === "thinking" ? 200 : 0} /></div>
+          <div className="h-56 w-56">
+            <VoicePoweredOrb
+              enableVoiceControl={!isNativePlatform && (voiceState === "listening" || voiceState === "speaking")}
+              hue={voiceState === "thinking" ? 200 : 0}
+            />
+          </div>
 
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
 
@@ -443,7 +561,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       )}
 
       {open && !voiceMode && (
-        <Card className="fixed bottom-5 right-5 z-50 flex h-[520px] w-[380px] flex-col shadow-2xl">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent

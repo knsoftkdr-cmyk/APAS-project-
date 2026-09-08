@@ -127,7 +127,7 @@ console.log("Bell Unread Count:", unreadCount);
           </button>
 
           {bellOpen && (
-            <div className="absolute right-0 top-full mt-2 w-[380px] rounded-xl border border-border bg-card shadow-2xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-[380px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-card shadow-2xl z-50 overflow-hidden">
 
               {/* Panel header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">

@@ -77,7 +77,7 @@ export function ParentTransportAssistantWidget({ schoolId, studentId }: ParentTr
       )}
 
       {open && (
-        <Card className="fixed bottom-5 right-5 z-50 flex h-[520px] w-[380px] flex-col shadow-2xl">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent

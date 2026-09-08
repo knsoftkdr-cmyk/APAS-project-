@@ -8,6 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
+import { createPortal } from "react-dom";
+const isNativePlatform = Capacitor.isNativePlatform();
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -84,7 +89,7 @@ export function AILessonAssistantWidget() {
   const voiceModeRef = useRef(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+  const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
   const knownRef = useRef<KnownIntent>({});
@@ -109,12 +114,24 @@ export function AILessonAssistantWidget() {
   };
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    if (isNativePlatform) {
+      let cancelled = false;
+      SpeechRecognition.available()
+        .then(({ available }: { available: boolean }) => {
+          if (!cancelled && !available) setVoiceSupported(false);
+        })
+        .catch(() => {
+          if (!cancelled) setVoiceSupported(false);
+        });
+      return () => { cancelled = true; };
+    }
+
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) {
       setVoiceSupported(false);
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition = new BrowserSpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -134,13 +151,13 @@ export function AILessonAssistantWidget() {
         return;
       }
 
-      const messages: Record<string, string> = {
+      const messagesMap: Record<string, string> = {
         "no-speech": "No speech detected. Please try again.",
         "not-allowed": "Microphone access was denied. Check the site permissions (padlock icon in the address bar) and allow microphone access.",
         "audio-capture": "No microphone found. Please check your microphone is connected.",
         "network": "Voice recognition needs an internet connection. Please check your connection and try again.",
       };
-      const msg = messages[event.error] || `Could not hear you clearly (${event.error}). Please try again or type instead.`;
+      const msg = messagesMap[event.error] || `Could not hear you clearly (${event.error}). Please try again or type instead.`;
       if (voiceModeRef.current) {
         setVoiceError(msg);
         setVoiceState("idle");
@@ -154,6 +171,58 @@ export function AILessonAssistantWidget() {
   }, []);
 
   const startListeningSafely = () => {
+    if (isNativePlatform) {
+      setVoiceState("listening");
+      setVoiceError(null);
+      setIsListening(true);
+
+      SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {}).finally(() => {
+        setTimeout(() => {
+          SpeechRecognition.requestPermissions()
+            .then(() =>
+              SpeechRecognition.start({
+                language: "en-US",
+                maxResults: 1,
+                partialResults: false,
+                popup: false,
+              })
+            )
+            .then((result: { matches?: string[] }) => {
+              setIsListening(false);
+              const transcript = result?.matches?.[0];
+              if (!transcript) {
+                const msg = "No speech detected. Please try again.";
+                if (voiceModeRef.current) {
+                  setVoiceError(msg);
+                  setVoiceState("idle");
+                } else {
+                  toast({ title: "Voice input error", description: msg, variant: "destructive" });
+                }
+                return;
+              }
+              setInput(transcript);
+              if (voiceModeRef.current) {
+                setVoiceState("thinking");
+                setVoiceError(null);
+              }
+              setTimeout(() => sendMessageWithText(transcript), 100);
+            })
+            .catch((err: any) => {
+              setIsListening(false);
+              console.error("SpeechRecognition error:", err);
+              const msg = "Could not hear you clearly. Please try again or type instead.";
+              if (voiceModeRef.current) {
+                setVoiceError(msg);
+                setVoiceState("idle");
+              } else {
+                toast({ title: "Voice input error", description: msg, variant: "destructive" });
+              }
+            });
+        }, 300);
+      });
+      return;
+    }
+
     if (!recognitionRef.current) return;
     try {
       setVoiceState("listening");
@@ -166,6 +235,15 @@ export function AILessonAssistantWidget() {
   };
 
   const toggleListening = () => {
+    if (isNativePlatform) {
+      if (isListening) {
+        SpeechRecognition.stop().catch(() => {});
+        setIsListening(false);
+      } else {
+        startListeningSafely();
+      }
+      return;
+    }
     if (!recognitionRef.current) return;
     if (isListening) {
       recognitionRef.current.stop();
@@ -181,6 +259,23 @@ export function AILessonAssistantWidget() {
       // Voice mode active but TTS unsupported/unavailable - don't leave the UI
       // stuck on "thinking" with no way forward, resume listening immediately.
       if (voiceModeRef.current) startListeningSafely();
+      return;
+    }
+
+    if (isNativePlatform) {
+      setVoiceState("speaking");
+      const estimatedMs = Math.max(1200, text.split(/\s+/).length * 380);
+      TextToSpeech.speak({
+        text,
+        lang: "en-US",
+        rate: 1,
+        pitch: 1,
+        volume: 1,
+        category: "playback",
+      }).catch(() => {});
+      setTimeout(() => {
+        if (voiceModeRef.current) startListeningSafely();
+      }, estimatedMs);
       return;
     }
 
@@ -239,11 +334,16 @@ export function AILessonAssistantWidget() {
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
-    window.speechSynthesis?.cancel();
-    utteranceRef.current = null;
-    if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+    if (isNativePlatform) {
+      TextToSpeech.stop().catch(() => {});
+      if (isListening) SpeechRecognition.stop().catch(() => {});
+    } else {
+      window.speechSynthesis?.cancel();
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+      }
     }
+    utteranceRef.current = null;
     setIsListening(false);
   };
 
@@ -461,6 +561,7 @@ export function AILessonAssistantWidget() {
     speaking: "from-sky-300 via-blue-200 to-indigo-300 animate-bounce",
   };
 
+  if (typeof document === "undefined") return null;
   return (
     <>
       {!open && (
@@ -516,7 +617,7 @@ export function AILessonAssistantWidget() {
       )}
 
       {open && !voiceMode && (
-        <Card className="fixed bottom-5 right-5 z-50 flex h-[520px] w-[360px] flex-col shadow-2xl">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[360px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent

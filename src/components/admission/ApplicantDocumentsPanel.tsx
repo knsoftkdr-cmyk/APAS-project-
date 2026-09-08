@@ -89,7 +89,7 @@ export function ApplicantDocumentsPanel({ applicantId, onDocumentsChanged }: App
           ref={fileInputRef}
           type="file"
           className="hidden"
-          accept=".pdf,.jpg,.jpeg,.png,.webp"
+          accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
           onChange={handleFileChange}
         />
         <span className="text-xs text-muted-foreground">PDF or image, up to 10MB</span>

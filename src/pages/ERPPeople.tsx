@@ -206,7 +206,7 @@ const ERPPeople = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,text/csv"
+        accept=".csv,text/csv,text/plain,text/comma-separated-values,application/vnd.ms-excel,application/csv"
         className="hidden"
         onChange={handleImportFile}
       />

@@ -9,6 +9,7 @@ import { Sparkles, X, Send, Mic, MicOff, Bus } from "lucide-react";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -93,12 +94,26 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
   const sendMessageWithTextRef = useRef<(overrideText?: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    if (isNativePlatform) {
+      let cancelled = false;
+      SpeechRecognition.available()
+        .then(({ available }: { available: boolean }) => {
+          if (!cancelled && !available) setVoiceSupported(false);
+        })
+        .catch(() => {
+          if (!cancelled) setVoiceSupported(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) {
       setVoiceSupported(false);
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition = new BrowserSpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
@@ -146,7 +161,67 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
 
   const listeningTimeoutRef = useRef<any>(null);
 
-  const startListeningSafely = () => {
+const startListeningSafely = () => {
+    if (isNativePlatform) {
+      setVoiceState("listening");
+      setVoiceError(null);
+      setIsListening(true);
+
+      SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {}).finally(() => {
+        setTimeout(() => {
+          clearTimeout(listeningTimeoutRef.current);
+          listeningTimeoutRef.current = setTimeout(() => {
+            SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {});
+          }, 8000);
+
+          SpeechRecognition.requestPermissions()
+            .then(() =>
+              SpeechRecognition.start({
+                language: "en-US",
+                maxResults: 1,
+                partialResults: false,
+                popup: true,
+              })
+            )
+            .then((result: { matches?: string[] }) => {
+              clearTimeout(listeningTimeoutRef.current);
+              setIsListening(false);
+              const transcript = result?.matches?.[0];
+              if (!transcript) {
+                const msg = "No speech detected. Please try again.";
+                if (voiceModeRef.current) {
+                  setVoiceError(msg);
+                  setVoiceState("idle");
+                } else {
+                  toast({ title: "Voice input error", description: msg, variant: "destructive" });
+                }
+                return;
+              }
+              noSpeechRetryRef.current = 0;
+              setInput(transcript);
+              if (voiceModeRef.current) {
+                setVoiceState("thinking");
+                setVoiceError(null);
+              }
+              setTimeout(() => sendMessageWithTextRef.current(transcript), 100);
+            })
+            .catch((err: any) => {
+              clearTimeout(listeningTimeoutRef.current);
+              setIsListening(false);
+              console.error("SpeechRecognition error:", err);
+              const msg = "Could not hear you clearly. Please try again or type instead.";
+              if (voiceModeRef.current) {
+                setVoiceError(msg);
+                setVoiceState("idle");
+              } else {
+                toast({ title: "Voice input error", description: msg, variant: "destructive" });
+              }
+            });
+        }, 300);
+      });
+      return;
+    }
+
     if (!recognitionRef.current) return;
     try {
       setVoiceState("listening");
@@ -165,6 +240,15 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
   };
 
   const toggleListening = () => {
+    if (isNativePlatform) {
+      if (isListening) {
+        SpeechRecognition.stop().catch(() => {});
+        setIsListening(false);
+      } else {
+        startListeningSafely();
+      }
+      return;
+    }
     if (!recognitionRef.current) return;
     if (isListening) {
       recognitionRef.current.stop();
@@ -227,24 +311,25 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
       return;
     }
 
-    if (isNativePlatform) {
-      setVoiceState("speaking");
-      TextToSpeech.speak({
-        text: forSpeech(text),
-        lang: "en-US",
-        rate: 0.97,
-        pitch: 1.02,
-        volume: 1,
-        category: "playback",
-      })
-        .then(() => {
-          if (voiceModeRef.current) startListeningSafely();
-        })
-        .catch(() => {
-          if (voiceModeRef.current) startListeningSafely();
-        });
-      return;
-    }
+if (isNativePlatform) {
+  setVoiceState("speaking");
+  const spokenText = forSpeech(text);
+  const estimatedMs = Math.max(1200, spokenText.split(/\s+/).length * 380);
+
+  TextToSpeech.speak({
+    text: spokenText,
+    lang: "en-US",
+    rate: 0.97,
+    pitch: 1.02,
+    volume: 1,
+    category: "playback",
+  }).catch(() => {});
+
+  setTimeout(() => {
+    if (voiceModeRef.current) startListeningSafely();
+  }, estimatedMs);
+  return;
+}
 
     const doSpeak = () => {
       const utterance = new SpeechSynthesisUtterance(forSpeech(text));
@@ -302,7 +387,9 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
       window.speechSynthesis?.cancel();
     }
     utteranceRef.current = null;
-    if (recognitionRef.current && isListening) {
+    if (isNativePlatform) {
+      if (isListening) SpeechRecognition.stop().catch(() => {});
+    } else if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
     }
     setIsListening(false);
@@ -328,12 +415,12 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
           .eq("id", confirm.vehicle_id)
           .eq("school_id", schoolId);
         if (error) throw error;
-        say(`Done � ${confirm.vehicle_registration} is now marked ${confirm.new_status}.`);
+        say(`Done — ${confirm.vehicle_registration} is now marked ${confirm.new_status}.`);
         toast({ title: "Vehicle updated", description: `${confirm.vehicle_registration} to ${confirm.new_status}` });
       }
     } catch (e: any) {
       toast({ title: "Action failed", description: e?.message || "Could not update the vehicle.", variant: "destructive" });
-      say("That didn't go through � please try updating it directly from the Vehicles tab.");
+      say("That didn't go through — please try updating it directly from the Vehicles tab.");
     } finally {
       setActingOn(false);
       updatePendingAction(null);
@@ -444,7 +531,7 @@ export function ERPTransportAssistantWidget({ schoolId, onNavigate, isTransportT
 
           <div className="h-64 w-64">
             <VoicePoweredOrb
-              enableVoiceControl={voiceState === "listening"}
+              enableVoiceControl={!isNativePlatform && voiceState === "listening"}
               hue={voiceState === "speaking" ? 300 : voiceState === "thinking" ? 260 : 0}
               voiceSensitivity={1.5}
               maxRotationSpeed={1.2}
