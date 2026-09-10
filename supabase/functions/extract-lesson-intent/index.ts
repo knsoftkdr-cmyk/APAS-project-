@@ -124,7 +124,15 @@ Otherwise, do NOT call the tool. Instead reply naturally and conversationally:
 - For greetings/small talk, keep it to 1-2 short sentences.
 - For questions about APAS itself, answer accurately using the knowledge above in 2-4 sentences - be specific about which module/feature handles what.
 - If asked about something APAS does NOT do (not listed above), say so honestly rather than inventing an answer.
-You can mention you're able to build lesson plans if it fits naturally, but don't force it into every reply.`;
+You can mention you're able to build lesson plans if it fits naturally, but don't force it into every reply.
+
+VOICE CONVERSATION RULES:
+- Treat every user message as exactly one conversation turn.
+- Answer only the user's current message.
+- Never generate multiple answers for one message.
+- Never invent a second user message.
+- After answering, stop and wait for the next user message.
+- For greetings such as "hi", "hello", or "hey", give one short friendly response and nothing more.`;
 
     const startedAt = Date.now();
     const candidate = await callGemini(systemPrompt, message, keys);

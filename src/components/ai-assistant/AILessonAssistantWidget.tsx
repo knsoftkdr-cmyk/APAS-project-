@@ -12,6 +12,9 @@ import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
 import { createPortal } from "react-dom";
+import robotAvatar from "@/assets/ai-assistant-robot.png";
+import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
+import { RobotFace } from "@/components/ai-assistant/RobotFace";
 const isNativePlatform = Capacitor.isNativePlatform();
 
 interface ChatMessage {
@@ -88,6 +91,12 @@ export function AILessonAssistantWidget() {
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceModeRef = useRef(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+
+  // Speech-synced mouth animation (real timing schedule + boundary
+  // re-anchoring for the web voice, estimated timing for native TTS).
+  // See src/hooks/useLipSync.ts.
+  const lipSync = useLipSync();
+
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -95,7 +104,18 @@ export function AILessonAssistantWidget() {
   const knownRef = useRef<KnownIntent>({});
   const awaitingRef = useRef<AwaitingSlot>(null);
   const chapterOptionsRef = useRef<string[]>([]);
-
+  // Speech-recognition callbacks are wired up once (effect deps: []) but
+  // call sendMessageWithText, which is declared later in this component
+  // and recreated every render. Calling it through a ref (set right after
+  // its declaration, below) means those callbacks never depend on
+  // closure/declaration order - avoids TDZ errors under Vite's Fast
+  // Refresh, where a stale closure can otherwise point at a torn-down
+  // module scope.
+  const sendMessageWithTextRef = useRef<(overrideText?: string) => void>(() => {});
+  const voiceRequestInFlightRef = useRef(false);
+  const listeningInProgressRef = useRef(false);
+  // Incremented on every speak() call - see speak() for why.
+  const speechGenerationRef = useRef(0);
   const updateKnown = (k: KnownIntent) => {
     knownRef.current = k;
     setKnown(k);
@@ -113,35 +133,66 @@ export function AILessonAssistantWidget() {
     setVoiceMode(v);
   };
 
-  useEffect(() => {
-    if (isNativePlatform) {
-      let cancelled = false;
-      SpeechRecognition.available()
-        .then(({ available }: { available: boolean }) => {
-          if (!cancelled && !available) setVoiceSupported(false);
-        })
-        .catch(() => {
-          if (!cancelled) setVoiceSupported(false);
-        });
-      return () => { cancelled = true; };
-    }
+  const handleVoiceTranscript = (transcript: string) => {
+    const text = transcript.trim();
+    if (!text) return;
 
-    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!BrowserSpeechRecognition) {
-      setVoiceSupported(false);
+    // Ignore duplicate recognition results firing close together.
+    if (voiceRequestInFlightRef.current) {
+      console.debug("[voice] duplicate transcript ignored:", text);
       return;
     }
+    // Ignore stray results if voice mode was exited in the meantime.
+    if (!voiceModeRef.current) return;
+
+    // Lock immediately - this is a ref, so it takes effect synchronously,
+    // unlike React state which could let a second transcript slip through.
+    voiceRequestInFlightRef.current = true;
+
+    setInput(text);
+    setVoiceState("thinking");
+    setVoiceError(null);
+    sendMessageWithTextRef.current(text);
+  };
+
+  // Builds a brand-new SpeechRecognition instance for a single listen turn.
+  // We deliberately do NOT reuse one long-lived instance across turns:
+  // calling .start() repeatedly on the same instance can leave old
+  // recognition results/session state around in some browsers, which was
+  // causing transcripts to accumulate across turns ("hello" -> "hello how
+  // are you" -> ...). A fresh instance per turn guarantees a clean session.
+  const createRecognition = () => {
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) return null;
+
     const recognition = new BrowserSpeechRecognition();
     recognition.lang = "en-US";
     recognition.continuous = false;
     recognition.interimResults = false;
+
+    // Some browsers fire onresult more than once for a single utterance
+    // (e.g. once per detected phrase/pause) even with continuous=false.
+    // Reacting to - and stopping on - the FIRST onresult was cutting
+    // sentences short after just the first word/phrase. Instead we
+    // accumulate every result this session reports, and only act once
+    // on the session's natural end (onend), which is when continuous=false
+    // actually stops listening after you finish speaking.
+    let consumed = false;
+    let latestTranscript = "";
+
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(transcript);
-      if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
-      setTimeout(() => sendMessageWithText(transcript), 100);
+      let combined = "";
+      for (let i = 0; i < event.results.length; i++) {
+        combined += event.results[i][0]?.transcript ?? "";
+      }
+      latestTranscript = combined.trim();
+      console.debug("[voice] transcript so far:", latestTranscript);
     };
+
     recognition.onerror = (event: any) => {
+      if (consumed) return;
+      consumed = true;
+      listeningInProgressRef.current = false;
       setIsListening(false);
       console.error("SpeechRecognition error:", event.error);
       if (event.error === "aborted") return;
@@ -165,12 +216,51 @@ export function AILessonAssistantWidget() {
         toast({ title: "Voice input error", description: msg, variant: "destructive" });
       }
     };
-    recognition.onend = () => setIsListening(false);
-    recognitionRef.current = recognition;
+
+    recognition.onend = () => {
+      if (consumed) return;
+      consumed = true;
+      listeningInProgressRef.current = false;
+      setIsListening(false);
+      if (latestTranscript) {
+        console.debug("[voice] final transcript:", latestTranscript);
+        handleVoiceTranscript(latestTranscript);
+      }
+    };
+
+    return recognition;
+  };
+
+  useEffect(() => {
+    if (isNativePlatform) {
+      let cancelled = false;
+      SpeechRecognition.available()
+        .then(({ available }: { available: boolean }) => {
+          if (!cancelled && !available) setVoiceSupported(false);
+        })
+        .catch(() => {
+          if (!cancelled) setVoiceSupported(false);
+        });
+      return () => { cancelled = true; };
+    }
+
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) {
+      setVoiceSupported(false);
+    }
+    // Real recognition instances are created fresh per turn by
+    // createRecognition() (called from startListeningSafely /
+    // toggleListening) - reusing one instance across turns is what caused
+    // transcripts to accumulate, so we don't create one here anymore.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startListeningSafely = () => {
+    if (!voiceModeRef.current) return;
+    if (voiceRequestInFlightRef.current) return;
+    if (listeningInProgressRef.current) return;
+    listeningInProgressRef.current = true;
+
     if (isNativePlatform) {
       setVoiceState("listening");
       setVoiceError(null);
@@ -188,8 +278,9 @@ export function AILessonAssistantWidget() {
               })
             )
             .then((result: { matches?: string[] }) => {
+              listeningInProgressRef.current = false;
               setIsListening(false);
-              const transcript = result?.matches?.[0];
+              const transcript = result?.matches?.[0]?.trim();
               if (!transcript) {
                 const msg = "No speech detected. Please try again.";
                 if (voiceModeRef.current) {
@@ -200,14 +291,10 @@ export function AILessonAssistantWidget() {
                 }
                 return;
               }
-              setInput(transcript);
-              if (voiceModeRef.current) {
-                setVoiceState("thinking");
-                setVoiceError(null);
-              }
-              setTimeout(() => sendMessageWithText(transcript), 100);
+              handleVoiceTranscript(transcript);
             })
             .catch((err: any) => {
+              listeningInProgressRef.current = false;
               setIsListening(false);
               console.error("SpeechRecognition error:", err);
               const msg = "Could not hear you clearly. Please try again or type instead.";
@@ -223,14 +310,25 @@ export function AILessonAssistantWidget() {
       return;
     }
 
-    if (!recognitionRef.current) return;
+    // Web: abort any leftover instance, then start a brand-new one so this
+    // turn's transcript can never inherit words from a previous turn.
+    try { recognitionRef.current?.abort(); } catch {}
+    const recognition = createRecognition();
+    if (!recognition) {
+      listeningInProgressRef.current = false;
+      return;
+    }
+    recognitionRef.current = recognition;
     try {
+      setInput("");
       setVoiceState("listening");
       setVoiceError(null);
       setIsListening(true);
-      recognitionRef.current.start();
-    } catch {
-      // already started - ignore
+      recognition.start();
+    } catch (err) {
+      console.error("[voice] failed to start recognition:", err);
+      listeningInProgressRef.current = false;
+      setIsListening(false);
     }
   };
 
@@ -244,17 +342,34 @@ export function AILessonAssistantWidget() {
       }
       return;
     }
-    if (!recognitionRef.current) return;
+
     if (isListening) {
-      recognitionRef.current.stop();
+      recognitionRef.current?.stop();
       setIsListening(false);
-    } else {
-      setIsListening(true);
-      recognitionRef.current.start();
+      return;
     }
+
+    try { recognitionRef.current?.abort(); } catch {}
+    const recognition = createRecognition();
+    if (!recognition) return;
+    recognitionRef.current = recognition;
+    setInput("");
+    setIsListening(true);
+    recognition.start();
   };
 
   const speak = (text: string) => {
+    // Every call to speak() gets its own generation id. If two speak()
+    // calls happen close together (e.g. the widget mounted twice - React
+    // StrictMode double-invoking in dev, or the widget rendered in two
+    // places), both would otherwise call speechSynthesis.cancel() to
+    // clear the queue before speaking, endlessly cancelling each other's
+    // utterance and producing a burst of "interrupted" errors. With this
+    // guard, only the LATEST call is allowed to actually speak or react
+    // to its utterance events; every earlier/stale call quietly no-ops
+    // instead of fighting for the speech queue.
+    const myGeneration = ++speechGenerationRef.current;
+
     if (!ttsSupported || !voiceModeRef.current) {
       // Voice mode active but TTS unsupported/unavailable - don't leave the UI
       // stuck on "thinking" with no way forward, resume listening immediately.
@@ -265,6 +380,10 @@ export function AILessonAssistantWidget() {
     if (isNativePlatform) {
       setVoiceState("speaking");
       const estimatedMs = Math.max(1200, text.split(/\s+/).length * 380);
+      // Native TTS gives us no audio stream or word events, so drive the
+      // mouth off the same estimated duration already used to schedule
+      // when to resume listening - keeps them in lockstep.
+      lipSync.start(text, estimatedMs);
       TextToSpeech.speak({
         text,
         lang: "en-US",
@@ -274,26 +393,55 @@ export function AILessonAssistantWidget() {
         category: "playback",
       }).catch(() => {});
       setTimeout(() => {
+        if (speechGenerationRef.current !== myGeneration) return; // superseded
+        lipSync.stop();
         if (voiceModeRef.current) startListeningSafely();
       }, estimatedMs);
       return;
     }
 
     const doSpeak = () => {
+      if (speechGenerationRef.current !== myGeneration) return; // superseded - don't speak stale text
       console.debug("[voice] speaking:", text);
       const utterance = new SpeechSynthesisUtterance(text);
       utteranceRef.current = utterance;
       utterance.rate = 1;
       utterance.pitch = 1;
-      utterance.onstart = () => { console.debug("[voice] tts started"); setVoiceState("speaking"); };
+      utterance.onstart = () => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        console.debug("[voice] tts started");
+        setVoiceState("speaking");
+        // Browsers never expose speechSynthesis audio to the Web Audio
+        // API, so we schedule mouth movement against an estimated
+        // duration and correct drift live via onboundary below.
+        lipSync.start(text, estimateSpeechDurationMs(text));
+      };
+      utterance.onboundary = (event: SpeechSynthesisEvent) => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        // Fires per-word (in browsers that support it) with the real
+        // character offset - use it to keep the mouth locked to the
+        // actual voice instead of drifting from the estimate.
+        lipSync.reanchor(event.charIndex ?? 0, text.length);
+      };
       utterance.onend = () => {
+        if (speechGenerationRef.current !== myGeneration) return;
         console.debug("[voice] tts ended");
         utteranceRef.current = null;
+        lipSync.stop();
         if (voiceModeRef.current) startListeningSafely();
       };
       utterance.onerror = (e: any) => {
         console.error("[voice] tts error:", e);
+        // A stale/superseded call's utterance was cancelled by a newer
+        // speak() - that's expected and not a real failure, so it must
+        // not touch state or restart listening.
+        if (speechGenerationRef.current !== myGeneration) return;
         utteranceRef.current = null;
+        lipSync.stop();
+        // "interrupted"/"canceled" mean something else deliberately cut
+        // this utterance off (a newer speak() call, or exitVoiceMode).
+        // Whatever caused that already handles resuming listening itself.
+        if (e?.error === "interrupted" || e?.error === "canceled") return;
         if (voiceModeRef.current) startListeningSafely();
       };
       window.speechSynthesis.speak(utterance);
@@ -301,22 +449,23 @@ export function AILessonAssistantWidget() {
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
       }, 60);
       // Safety net: if the browser never fires onstart/onend at all (silent
-      // TTS failure), don't let the orb sit on "thinking"/"speaking" forever.
+      // TTS failure), don't let the orb (or the mouth) sit stuck forever.
       setTimeout(() => {
-        if (utteranceRef.current === utterance && voiceModeRef.current) {
+        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
           console.warn("[voice] tts appears stuck, forcing recovery");
           utteranceRef.current = null;
+          lipSync.stop();
           startListeningSafely();
         }
       }, 15000);
     };
 
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-      window.speechSynthesis.cancel();
-      setTimeout(doSpeak, 80);
-    } else {
-      doSpeak();
-    }
+    // Cancel once, synchronously, and do not chase it with retries - the
+    // generation guard above is what actually prevents duplicate/competing
+    // callers from fighting over the queue, so a retry loop here is no
+    // longer needed and was part of what caused the error burst.
+    window.speechSynthesis.cancel();
+    setTimeout(doSpeak, 80);
   };
 
   const enterVoiceMode = () => {
@@ -334,6 +483,7 @@ export function AILessonAssistantWidget() {
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
+    lipSync.stop();
     if (isNativePlatform) {
       TextToSpeech.stop().catch(() => {});
       if (isListening) SpeechRecognition.stop().catch(() => {});
@@ -544,8 +694,10 @@ export function AILessonAssistantWidget() {
       say(friendly);
     } finally {
       setLoading(false);
+      voiceRequestInFlightRef.current = false;
     }
   };
+  sendMessageWithTextRef.current = sendMessageWithText;
 
   const orbStateLabel: Record<VoiceState, string> = {
     idle: "Starting...",
@@ -554,11 +706,12 @@ export function AILessonAssistantWidget() {
     speaking: "Speaking...",
   };
 
+  // Soft glow behind the avatar, colored/animated per voice state.
   const orbClasses: Record<VoiceState, string> = {
     idle: "from-blue-400 via-indigo-400 to-purple-400 animate-pulse",
     listening: "from-blue-400 via-cyan-300 to-indigo-400 animate-pulse",
     thinking: "from-indigo-500 via-purple-400 to-blue-500 animate-spin",
-    speaking: "from-sky-300 via-blue-200 to-indigo-300 animate-bounce",
+    speaking: "from-sky-300 via-blue-200 to-indigo-300 animate-pulse",
   };
 
   if (typeof document === "undefined") return null;
@@ -584,7 +737,58 @@ export function AILessonAssistantWidget() {
             <X className="h-5 w-5" />
           </button>
 
-          <div className={`h-56 w-56 rounded-full bg-gradient-to-br shadow-2xl ${orbClasses[voiceState]}`} />
+          <div className="relative flex h-56 w-56 items-center justify-center">
+            {/* Ambient glow behind the avatar, colored per voice state and
+                pulsing in brightness while speaking, driven by the same
+                lip-sync intensity that drives the mouth - so the whole
+                avatar reads as "alive" while talking, not just the mouth. */}
+            <div
+              className={`absolute inset-0 rounded-full bg-gradient-to-br blur-2xl ${orbClasses[voiceState]}`}
+              style={{
+                opacity: voiceState === "speaking" ? 0.55 + lipSync.intensity * 0.4 : 0.7,
+                transition: "opacity 90ms ease-out",
+              }}
+            />
+
+            {/* State ring */}
+            {voiceState === "listening" && (
+              <div className="absolute inset-1 rounded-full border-2 border-cyan-300/60 animate-pulse" />
+            )}
+            {voiceState === "thinking" && (
+              <div className="absolute inset-1 rounded-full border-2 border-t-transparent border-indigo-300/70 animate-spin" />
+            )}
+            {voiceState === "speaking" && (
+              <div
+                className="absolute inset-0 rounded-full border-2 border-sky-300/60"
+                style={{
+                  transform: `scale(${1 + lipSync.intensity * 0.06})`,
+                  opacity: 0.5 + lipSync.intensity * 0.4,
+                  transition: "transform 90ms ease-out, opacity 90ms ease-out",
+                }}
+              />
+            )}
+
+            {/* Robot avatar - the whole figure gets a gentle "talking" bob
+                and scale while speaking, and its mouth is replaced with a
+                real speech-synced overlay (see RobotFace / useLipSync). */}
+            <div
+              className="relative h-48 w-48 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/10"
+              style={{
+                transform:
+                  voiceState === "speaking"
+                    ? `scale(${1.015 + lipSync.intensity * 0.02}) translateY(${-lipSync.intensity * 2}px)`
+                    : "scale(1)",
+                transition: "transform 90ms ease-out",
+              }}
+            >
+              <RobotFace
+                src={robotAvatar}
+                viseme={lipSync.viseme}
+                intensity={lipSync.intensity}
+                active={voiceState === "speaking"}
+              />
+            </div>
+          </div>
 
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
 

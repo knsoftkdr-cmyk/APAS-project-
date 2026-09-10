@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
-import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
+import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
+import { RobotFace } from "@/components/ai-assistant/RobotFace";
+import robotAvatar from "@/assets/ai-assistant-robot.png";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -160,6 +162,14 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Speech-synced mouth animation - see src/hooks/useLipSync.ts. Shape comes
+  // from a timing schedule built from the spoken text; on the web it's kept
+  // locked to the real voice via SpeechSynthesisUtterance's boundary event.
+  const lipSync = useLipSync();
+  // Guards against overlapping speak() calls (e.g. a fast retry) fighting
+  // over the speech queue / lip-sync clock - only the latest call acts.
+  const speechGenerationRef = useRef(0);
 
   const updateVoiceMode = (v: boolean) => {
     voiceModeRef.current = v;
@@ -360,6 +370,8 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   };
 
   const speak = (text: string) => {
+    const myGeneration = ++speechGenerationRef.current;
+
     if (!ttsSupported || !voiceModeRef.current) {
       if (voiceModeRef.current) startListeningSafely();
       return;
@@ -368,6 +380,10 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     if (isNativePlatform) {
       setVoiceState("speaking");
       const estimatedMs = Math.max(1200, text.split(/\s+/).length * 380);
+      // Native TTS gives no audio stream or word events, so the mouth is
+      // driven off the same estimated duration used to schedule when to
+      // resume listening - keeps them in lockstep.
+      lipSync.start(text, estimatedMs);
 
       TextToSpeech.speak({
         text,
@@ -379,24 +395,43 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       }).catch(() => {});
 
       setTimeout(() => {
+        if (speechGenerationRef.current !== myGeneration) return; // superseded
+        lipSync.stop();
         if (voiceModeRef.current) startListeningSafely();
       }, estimatedMs);
       return;
     }
 
     const doSpeak = () => {
+      if (speechGenerationRef.current !== myGeneration) return; // superseded
       const utterance = new SpeechSynthesisUtterance(text);
       utteranceRef.current = utterance;
       const preferredVoice = pickFemaleVoice(); if (preferredVoice) utterance.voice = preferredVoice;
       utterance.rate = 0.95;
       utterance.pitch = 1.05;
-      utterance.onstart = () => setVoiceState("speaking");
+      utterance.onstart = () => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        setVoiceState("speaking");
+        // Browsers never expose speechSynthesis audio to the Web Audio API,
+        // so mouth movement is scheduled against an estimated duration and
+        // corrected live via onboundary below.
+        lipSync.start(text, estimateSpeechDurationMs(text));
+      };
+      utterance.onboundary = (event: SpeechSynthesisEvent) => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        lipSync.reanchor(event.charIndex ?? 0, text.length);
+      };
       utterance.onend = () => {
+        if (speechGenerationRef.current !== myGeneration) return;
         utteranceRef.current = null;
+        lipSync.stop();
         if (voiceModeRef.current) startListeningSafely();
       };
-      utterance.onerror = () => {
+      utterance.onerror = (e: any) => {
+        if (speechGenerationRef.current !== myGeneration) return;
         utteranceRef.current = null;
+        lipSync.stop();
+        if (e?.error === "interrupted" || e?.error === "canceled") return;
         if (voiceModeRef.current) startListeningSafely();
       };
       window.speechSynthesis.speak(utterance);
@@ -404,18 +439,15 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
       }, 60);
       setTimeout(() => {
-        if (utteranceRef.current === utterance && voiceModeRef.current) {
+        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
           utteranceRef.current = null;
+          lipSync.stop();
           startListeningSafely();
         }
       }, 15000);
     };
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-      window.speechSynthesis.cancel();
-      setTimeout(doSpeak, 80);
-    } else {
-      doSpeak();
-    }
+    window.speechSynthesis.cancel();
+    setTimeout(doSpeak, 80);
   };
 
   const enterVoiceMode = () => {
@@ -434,6 +466,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
+    lipSync.stop();
     if (isNativePlatform) {
       TextToSpeech.stop().catch(() => {});
     } else {
@@ -525,11 +558,55 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
             <X className="h-5 w-5" />
           </button>
 
-          <div className="h-56 w-56">
-            <VoicePoweredOrb
-              enableVoiceControl={!isNativePlatform && (voiceState === "listening" || voiceState === "speaking")}
-              hue={voiceState === "thinking" ? 200 : 0}
+          <div className="relative flex h-56 w-56 items-center justify-center">
+            {/* Ambient glow behind the avatar, colored per voice state and
+                pulsing in brightness while speaking, driven by the same
+                lip-sync intensity that drives the mouth. */}
+            <div
+              className={`absolute inset-0 rounded-full bg-gradient-to-br blur-2xl ${orbClasses[voiceState]}`}
+              style={{
+                opacity: voiceState === "speaking" ? 0.55 + lipSync.intensity * 0.4 : 0.7,
+                transition: "opacity 90ms ease-out",
+              }}
             />
+
+            {voiceState === "listening" && (
+              <div className="absolute inset-1 rounded-full border-2 border-cyan-300/60 animate-pulse" />
+            )}
+            {voiceState === "thinking" && (
+              <div className="absolute inset-1 rounded-full border-2 border-t-transparent border-indigo-300/70 animate-spin" />
+            )}
+            {voiceState === "speaking" && (
+              <div
+                className="absolute inset-0 rounded-full border-2 border-sky-300/60"
+                style={{
+                  transform: `scale(${1 + lipSync.intensity * 0.06})`,
+                  opacity: 0.5 + lipSync.intensity * 0.4,
+                  transition: "transform 90ms ease-out, opacity 90ms ease-out",
+                }}
+              />
+            )}
+
+            {/* Robot avatar - gets a gentle "talking" bob and scale while
+                speaking, and its mouth is replaced with a real speech-synced
+                overlay (see RobotFace / useLipSync). */}
+            <div
+              className="relative h-48 w-48 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/10"
+              style={{
+                transform:
+                  voiceState === "speaking"
+                    ? `scale(${1.015 + lipSync.intensity * 0.02}) translateY(${-lipSync.intensity * 2}px)`
+                    : "scale(1)",
+                transition: "transform 90ms ease-out",
+              }}
+            >
+              <RobotFace
+                src={robotAvatar}
+                viseme={lipSync.viseme}
+                intensity={lipSync.intensity}
+                active={voiceState === "speaking"}
+              />
+            </div>
           </div>
 
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
