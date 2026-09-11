@@ -4,19 +4,20 @@ import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { AILessonAssistantWidget } from "@/components/ai-assistant/AILessonAssistantWidget";
+import { AIStudentAssistantWidget } from "@/components/ai-assistant/AIStudentAssistantWidget";
 import { ParentBusAssistantWidget } from "@/components/parent-transport/ParentBusAssistantWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
 const pageTitles: Record<string, string> = {
-  "/dashboard": "Homework — APAS",
-  "/student-dashboard": "Home — APAS",
-  "/diagnostic": "Assessments — APAS",
-  "/curative": "Curative Phase — APAS",
-  "/analytics": "Learning Analytics & Insights — APAS",
-  "/teacher": "Teacher Panel — APAS",
-  "/settings": "Settings — APAS",
-  "/alerts": "Alerts — APAS",
+  "/dashboard": "Homework ï¿½ APAS",
+  "/student-dashboard": "Home ï¿½ APAS",
+  "/diagnostic": "Assessments ï¿½ APAS",
+  "/curative": "Curative Phase ï¿½ APAS",
+  "/analytics": "Learning Analytics & Insights ï¿½ APAS",
+  "/teacher": "Teacher Panel ï¿½ APAS",
+  "/settings": "Settings ï¿½ APAS",
+  "/alerts": "Alerts ï¿½ APAS",
 };
 
 interface AppLayoutProps {
@@ -31,11 +32,12 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [childProfileId, setChildProfileId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
 
-  // Assistant now covers transport, homework, assessments, and fees for the
-  // parent's (first linked) child — all of those key off profiles.id, so we
-  // just need that one id + the child's name. Transport-specific lookups
-  // (real students.id) happen inside the edge function itself, same way
-  // get_parent_fee_details() already resolves it internally.
+  // The assistant widget covers transport, fees, report cards, attendance,
+  // appointments, the academic calendar, hall tickets, surveys, safeguarding
+  // updates, and messages from school - for ALL of the parent's linked
+  // children. That resolution now happens server-side inside the edge
+  // function from the parent's verified auth session, so this effect only
+  // fetches the first child's name for a nicer opening greeting.
   useEffect(() => {
     if (profile?.role !== "parent" || !user) {
       setChildProfileId(null);
@@ -58,7 +60,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   }, [profile?.role, user]);
 
   useEffect(() => {
-    document.title = pageTitles[location.pathname] || "APAS — Adaptive Pedagogy & Analytics System";
+    document.title = pageTitles[location.pathname] || "APAS ï¿½ Adaptive Pedagogy & Analytics System";
   }, [location.pathname]);
 
   return (
@@ -82,7 +84,8 @@ export function AppLayout({ children }: AppLayoutProps) {
       </div>
       <OnboardingFlow />
       <AILessonAssistantWidget />
-      {childProfileId && <ParentBusAssistantWidget studentId={childProfileId} studentName={childName} />}
+      <AIStudentAssistantWidget />
+      {profile?.role === "parent" && <ParentBusAssistantWidget studentId={childProfileId} studentName={childName} />}
     </div>
   );
 }

@@ -220,15 +220,233 @@ function buildHomeworkAssessmentsPlaceholder(): string {
   return "HOMEWORK & ASSESSMENTS: Not wired up yet - if asked, say this is coming soon rather than guessing.";
 }
 
+// ---- Resolved child shape used by all the new sections below ----
+interface ChildRecord {
+  profileId: string;    // profiles.id - used by appointments, transport, fees
+  studentRowId: string; // students.id - used by attendance, marks, safeguarding, seating
+  fullName: string;
+  className: string;
+  section: string;
+  schoolId: string;
+}
+
+// ---- Report card (latest semester marks + GPA) ----
+async function buildReportCardContext(supabase: any, child: ChildRecord): Promise<string> {
+  const { data: sem } = await supabase
+    .from("academic_semesters")
+    .select("id, name")
+    .eq("school_id", child.schoolId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!sem) return "REPORT CARD: No semester/report data has been set up for this school yet.";
+
+  const [{ data: marks }, { data: gpaRow }] = await Promise.all([
+    supabase.from("semester_marks").select("subject, marks_obtained, max_marks").eq("semester_id", sem.id).eq("student_id", child.studentRowId),
+    supabase.from("student_gpa").select("gpa, combined_score, result_status").eq("semester_id", sem.id).eq("student_id", child.studentRowId).maybeSingle(),
+  ]);
+
+  if ((!marks || marks.length === 0) && !gpaRow) {
+    return `REPORT CARD (${sem.name}): No marks have been entered yet for this semester.`;
+  }
+
+  const subjectLines = (marks || [])
+    .map((m: any) => `${m.subject}: ${m.marks_obtained ?? "-"}/${m.max_marks}`)
+    .join("; ");
+
+  const gpaLine = gpaRow
+    ? `GPA: ${gpaRow.gpa ?? "-"}, Combined score: ${gpaRow.combined_score ?? "-"}, Result: ${gpaRow.result_status ?? "-"}.`
+    : "";
+
+  return `REPORT CARD (${sem.name}):\nSubject-wise marks: ${subjectLines || "not entered yet"}\n${gpaLine}`.trim();
+}
+
+// ---- Attendance (last 30 days) ----
+async function buildAttendanceContext(supabase: any, child: ChildRecord): Promise<string> {
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  const { data: records } = await supabase
+    .from("attendance_records")
+    .select("date, status")
+    .eq("student_id", child.studentRowId)
+    .gte("date", since.toISOString().slice(0, 10))
+    .order("date", { ascending: false });
+
+  if (!records || records.length === 0) {
+    return "ATTENDANCE (last 30 days): No attendance records found for this period.";
+  }
+
+  const total = records.length;
+  const present = records.filter((r: any) => r.status === "present").length;
+  const pct = Math.round((present / total) * 100);
+  const absences = records.filter((r: any) => r.status !== "present").slice(0, 8)
+    .map((r: any) => `${r.date} (${r.status})`).join(", ");
+
+  return `ATTENDANCE (last 30 days): ${present}/${total} days present (${pct}%).${absences ? ` Non-present days: ${absences}.` : ""}`;
+}
+
+// ---- Hall tickets / seating for upcoming exams ----
+async function buildHallTicketContext(supabase: any, child: ChildRecord): Promise<string> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: schedules } = await supabase
+    .from("exam_schedules")
+    .select("id, subject, exam_date, start_time, end_time, classes")
+    .eq("school_id", child.schoolId)
+    .gte("exam_date", today)
+    .order("exam_date", { ascending: true })
+    .limit(20);
+
+  const normalizedClass = (child.className || "").toLowerCase().replace(/^class\s*/i, "").trim();
+  const mine = (schedules || []).filter((s: any) =>
+    (s.classes || []).some((c: string) => c.toLowerCase().replace(/^class\s*/i, "").trim() === normalizedClass)
+  );
+
+  if (mine.length === 0) return "HALL TICKETS: No upcoming exams scheduled for this child's class.";
+
+  const ids = mine.map((s: any) => s.id);
+  const { data: seats } = await supabase
+    .from("seating_arrangements")
+    .select("exam_schedule_id, hall_id, seat_row, seat_col, seat_number, exam_halls(name)")
+    .in("exam_schedule_id", ids)
+    .eq("student_id", child.studentRowId);
+  const seatBySchedule = new Map((seats || []).map((s: any) => [s.exam_schedule_id, s]));
+
+  const lines = mine.map((s: any) => {
+    const seat = seatBySchedule.get(s.id);
+    const seatText = seat
+      ? `Hall: ${seat.exam_halls?.name ?? "-"}, Seat: ${seat.seat_number ?? `${seat.seat_row ?? "-"}${seat.seat_col ?? ""}`}`
+      : "Seat not allotted yet";
+    return `${s.subject} on ${s.exam_date} (${s.start_time}-${s.end_time}) - ${seatText}`;
+  });
+
+  return `HALL TICKETS / UPCOMING EXAMS:\n${lines.join("\n")}`;
+}
+
+// ---- Appointments (account-level, spans all children) ----
+async function buildAppointmentsContext(supabase: any, parentAuthId: string, nameByProfileId: Map<string, string>): Promise<string> {
+  const { data: appts } = await supabase
+    .from("appointments")
+    .select("student_id, teacher_id, appointment_date, start_time, status, reason_category, meeting_mode")
+    .eq("parent_id", parentAuthId)
+    .order("appointment_date", { ascending: false })
+    .limit(10);
+
+  if (!appts || appts.length === 0) return "APPOINTMENTS: No appointments booked with teachers.";
+
+  const teacherIds = [...new Set(appts.map((a: any) => a.teacher_id))];
+  const { data: teacherProfiles } = teacherIds.length
+    ? await supabase.from("profiles").select("id, full_name").in("id", teacherIds)
+    : { data: [] };
+  const teacherName = new Map((teacherProfiles || []).map((p: any) => [p.id, p.full_name]));
+
+  const lines = appts.map((a: any) =>
+    `${nameByProfileId.get(a.student_id) ?? "Child"} with ${teacherName.get(a.teacher_id) ?? "teacher"} on ${a.appointment_date} ${a.start_time} - ${a.status} (${a.reason_category}, ${a.meeting_mode})`
+  );
+
+  return `APPOINTMENTS:\n${lines.join("\n")}`;
+}
+
+// ---- Academic calendar (shared per school) ----
+async function buildCalendarContext(supabase: any, schoolIds: string[]): Promise<string> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: events } = await supabase
+    .from("academic_calendar_events")
+    .select("title, description, event_type, start_date, end_date")
+    .in("school_id", schoolIds)
+    .gte("end_date", today)
+    .order("start_date", { ascending: true })
+    .limit(10);
+
+  if (!events || events.length === 0) return "ACADEMIC CALENDAR: No upcoming events found.";
+
+  const lines = events.map((e: any) =>
+    `${e.title} (${e.event_type}) - ${e.start_date}${e.end_date !== e.start_date ? ` to ${e.end_date}` : ""}${e.description ? `: ${e.description}` : ""}`
+  );
+  return `ACADEMIC CALENDAR (upcoming):\n${lines.join("\n")}`;
+}
+
+// ---- Surveys targeted at this parent (account-level) ----
+async function buildSurveysContext(supabase: any, parentAuthId: string, schoolIds: string[], classIds: string[]): Promise<string> {
+  const { data: surveys } = await supabase
+    .from("surveys")
+    .select("id, title, status, target_type, is_anonymous")
+    .in("school_id", schoolIds)
+    .eq("status", "active");
+
+  if (!surveys || surveys.length === 0) return "SURVEYS: No active surveys right now.";
+
+  const classTargeted = surveys.filter((s: any) => s.target_type === "class_parents");
+  const classTargetedIds = classTargeted.map((s: any) => s.id);
+  const { data: targetRows } = classTargetedIds.length
+    ? await supabase.from("survey_target_classes").select("survey_id, class_id").in("survey_id", classTargetedIds)
+    : { data: [] };
+  const targetedSurveyIds = new Set(
+    (targetRows || []).filter((r: any) => classIds.includes(r.class_id)).map((r: any) => r.survey_id)
+  );
+
+  const { data: receipts } = await supabase.from("survey_receipts").select("survey_id").eq("respondent_id", parentAuthId);
+  const respondedIds = new Set((receipts || []).map((r: any) => r.survey_id));
+
+  const relevant = surveys.filter((s: any) =>
+    (s.target_type === "all_parents" || targetedSurveyIds.has(s.id)) && !respondedIds.has(s.id)
+  );
+
+  if (relevant.length === 0) return "SURVEYS: No pending surveys for this parent right now.";
+
+  const lines = relevant.map((s: any) => `"${s.title}"${s.is_anonymous ? " (anonymous)" : ""} - not yet responded`);
+  return `SURVEYS (pending):\n${lines.join("\n")}`;
+}
+
+// ---- Safeguarding incidents concerning this parent's children only ----
+async function buildSafeguardingContext(supabase: any, studentRowIds: string[], nameByStudentRowId: Map<string, string>): Promise<string> {
+  if (studentRowIds.length === 0) return "SAFEGUARDING: No records.";
+  const { data: incidents } = await supabase
+    .from("safeguarding_incidents")
+    .select("student_id, category, severity, status, description, created_at, resolved_at")
+    .in("student_id", studentRowIds)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (!incidents || incidents.length === 0) return "SAFEGUARDING: No safeguarding records for these children.";
+
+  const lines = incidents.map((i: any) =>
+    `${nameByStudentRowId.get(i.student_id) ?? "Child"}: ${i.category} (${i.severity}) - status: ${i.status}, reported ${i.created_at?.slice(0, 10)}${i.resolved_at ? `, resolved ${i.resolved_at.slice(0, 10)}` : ""}`
+  );
+  return `SAFEGUARDING UPDATES:\n${lines.join("\n")}`;
+}
+
+// ---- School <-> parent messages (account-level) ----
+async function buildCommunicationContext(supabase: any, parentAuthId: string): Promise<string> {
+  const { data: msgs } = await supabase
+    .from("teacher_messages")
+    .select("sender_id, recipient_id, message, is_read, created_at")
+    .or(`sender_id.eq.${parentAuthId},recipient_id.eq.${parentAuthId}`)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  if (!msgs || msgs.length === 0) return "COMMUNICATION: No messages from school staff.";
+
+  const senderIds = [...new Set(msgs.filter((m: any) => m.recipient_id === parentAuthId).map((m: any) => m.sender_id))];
+  const { data: senderProfiles } = senderIds.length
+    ? await supabase.from("profiles").select("id, full_name, role").in("id", senderIds)
+    : { data: [] };
+  const senderName = new Map((senderProfiles || []).map((p: any) => [p.id, `${p.full_name} (${p.role})`]));
+
+  const unreadCount = msgs.filter((m: any) => m.recipient_id === parentAuthId && !m.is_read).length;
+  const lines = msgs.slice(0, 6).map((m: any) => {
+    const from = m.sender_id === parentAuthId ? "You" : (senderName.get(m.sender_id) ?? "School staff");
+    return `${from} (${m.created_at?.slice(0, 10)}): ${m.message?.slice(0, 140)}`;
+  });
+
+  return `COMMUNICATION (${unreadCount} unread):\n${lines.join("\n")}`;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, student_id, student_name, history } = await req.json();
-    if (!student_id) {
-      return new Response(JSON.stringify({ type: "message", text: "I don't know which child this is for yet." }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    const { message, history } = await req.json();
 
     const keys = getGeminiKeys();
     if (keys.length === 0) {
@@ -243,19 +461,109 @@ serve(async (req) => {
       { global: { headers: { Authorization: req.headers.get("Authorization") ?? "" } } }
     );
 
-    const [transportContext, feesContext] = await Promise.all([
-      buildTransportContext(supabase, student_id),
-      buildFeesContext(supabase, student_id),
+    // SECURITY: the parent's identity comes ONLY from their verified auth
+    // token - never from anything the client sends in the request body.
+    // Every child lookup below is derived from this id, so a parent can
+    // never pull another parent's child's data even if the client were
+    // compromised or tampered with.
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) {
+      return new Response(JSON.stringify({ type: "message", text: "Your session has expired - please sign in again." }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const parentAuthId = authData.user.id;
+
+    const { data: links } = await supabase.from("parent_students").select("student_id").eq("parent_id", parentAuthId);
+    const childProfileIds = [...new Set((links || []).map((l: any) => l.student_id))];
+
+    if (childProfileIds.length === 0) {
+      return new Response(JSON.stringify({
+        type: "message",
+        text: "I don't see any children linked to your account yet - please contact the school office to get your child linked to your profile.",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const [{ data: childProfiles }, { data: childStudentRows }] = await Promise.all([
+      supabase.from("profiles").select("id, full_name, class_grade, section, school_id").in("id", childProfileIds),
+      supabase.from("students").select("id, full_name, class, section, school_id, profile_id").in("profile_id", childProfileIds),
+    ]);
+
+    const studentRowByProfileId = new Map((childStudentRows || []).map((s: any) => [s.profile_id, s]));
+    const children: ChildRecord[] = (childProfiles || [])
+      .map((p: any) => {
+        const sRow = studentRowByProfileId.get(p.id);
+        if (!sRow) return null; // no students row yet - skip rather than guess
+        return {
+          profileId: p.id,
+          studentRowId: sRow.id,
+          fullName: p.full_name || sRow.full_name || "Child",
+          className: sRow.class || p.class_grade || "",
+          section: sRow.section || p.section || "",
+          schoolId: sRow.school_id || p.school_id,
+        } as ChildRecord;
+      })
+      .filter((c: ChildRecord | null): c is ChildRecord => !!c);
+
+    if (children.length === 0) {
+      return new Response(JSON.stringify({
+        type: "message",
+        text: "I found your account but couldn't find a matching student record yet - please contact the school office.",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const nameByProfileId = new Map(children.map((c) => [c.profileId, c.fullName]));
+    const nameByStudentRowId = new Map(children.map((c) => [c.studentRowId, c.fullName]));
+    const schoolIds = [...new Set(children.map((c) => c.schoolId))];
+    const studentRowIds = children.map((c) => c.studentRowId);
+
+    const { data: classRows } = await supabase.from("class_students").select("class_id").in("student_id", studentRowIds);
+    const classIds = [...new Set((classRows || []).map((r: any) => r.class_id))];
+
+    // Per-child sections (transport, fees, report card, attendance, hall tickets)
+    const perChildBlocks = await Promise.all(children.map(async (child) => {
+      const [transport, fees, reportCard, attendance, hallTicket] = await Promise.all([
+        buildTransportContext(supabase, child.profileId),
+        buildFeesContext(supabase, child.profileId),
+        buildReportCardContext(supabase, child),
+        buildAttendanceContext(supabase, child),
+        buildHallTicketContext(supabase, child),
+      ]);
+      return `=== ${child.fullName} (Class ${child.className}${child.section ? `-${child.section}` : ""}) ===\n${transport}\n\n${fees}\n\n${reportCard}\n\n${attendance}\n\n${hallTicket}`;
+    }));
+
+    // Account-level sections (span all children at once)
+    const [appointments, calendar, surveys, safeguarding, communication] = await Promise.all([
+      buildAppointmentsContext(supabase, parentAuthId, nameByProfileId),
+      buildCalendarContext(supabase, schoolIds),
+      buildSurveysContext(supabase, parentAuthId, schoolIds, classIds),
+      buildSafeguardingContext(supabase, studentRowIds, nameByStudentRowId),
+      buildCommunicationContext(supabase, parentAuthId),
     ]);
     const homeworkContext = buildHomeworkAssessmentsPlaceholder();
 
-    const context = [transportContext, feesContext, homeworkContext].join("\n\n");
+    const context = [
+      ...perChildBlocks,
+      "=== Shared / account-level ===",
+      appointments,
+      calendar,
+      surveys,
+      safeguarding,
+      communication,
+      homeworkContext,
+    ].join("\n\n");
 
-    const systemPrompt = `You are a warm, friendly assistant helping a parent keep track of their child${student_name ? ` (${student_name})` : ""}'s school life - bus/transport and fees today, with homework and assessments coming soon. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked or said, using the conversation so far for context.
+    const childNames = children.map((c) => c.fullName).join(", ");
+    const multiChild = children.length > 1;
+
+    const systemPrompt = `You are a warm, friendly assistant helping a parent keep track of ${multiChild ? `their children (${childNames})'` : `their child (${childNames})'s`} school life - transport, fees, report cards, attendance, appointments, the academic calendar, hall tickets/exam seating, surveys, safeguarding updates, and messages from school staff. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked, using the conversation so far for context.
 
 If the parent just greets you (e.g. "hello", "hi") without asking anything specific, greet them back warmly and briefly ask how you can help - do NOT dump details unprompted. Only bring up specific info once they actually ask about it.
 
-Answer ONLY using the data given below - never invent GPS coordinates, times, amounts, or contact details that aren't present. If something isn't available, say so plainly rather than guessing. Keep answers to 1-3 short, natural sentences.
+${multiChild ? `This parent has MULTIPLE children: ${childNames}. If their question doesn't make clear which child they mean and the answer would differ per child, ask which child they mean, or briefly cover all of them if that's more natural. If they name a child, use only that child's section.` : ""}
+
+SECURITY: you have information ONLY about this parent's own child(ren) listed in the data below (${childNames}). If asked about any other student, class-wide data, or anything not tied to these specific children, say you don't have access to that information rather than guessing or inventing it.
+
+Answer ONLY using the data given below - never invent dates, amounts, scores, contact details, or seat numbers that aren't present. If something isn't available, say so plainly rather than guessing. Keep answers to 1-4 short, natural sentences.
 
 CURRENT DATA:
 ${context}`;

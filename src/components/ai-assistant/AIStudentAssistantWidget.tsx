@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,9 @@ import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
+import robotAvatar from "@/assets/ai-assistant-robot.png";
 import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
-import robotAvatar from "@/assets/ai-assistant-robot.png";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -21,85 +21,7 @@ interface ChatMessage {
   text: string;
 }
 
-interface ParentBusAssistantWidgetProps {
-  // Kept optional for backwards compatibility with existing callers - the
-  // assistant no longer needs these to function, since the edge function
-  // resolves the parent's own linked child(ren) itself from their verified
-  // auth session. Passing a name is only used for a nicer initial greeting.
-  studentName?: string | null;
-  studentId?: string | null;
-}
-
 type VoiceState = "idle" | "listening" | "thinking" | "speaking";
-
-function VoiceWaveform({ state }: { state: VoiceState }) {
-  const pathRef1 = useRef<SVGPathElement>(null);
-  const pathRef2 = useRef<SVGPathElement>(null);
-  const rafRef = useRef<number>(0);
-  const tRef = useRef(0);
-
-  const speedByState: Record<VoiceState, number> = { idle: 0.35, listening: 0.9, thinking: 1.4, speaking: 1.1 };
-  const ampByState: Record<VoiceState, number> = { idle: 10, listening: 26, thinking: 34, speaking: 30 };
-
-  useEffect(() => {
-    const width = 320;
-    const height = 140;
-    const midY = height / 2;
-    const points = 60;
-
-    const buildPath = (phase: number, amp: number, freq: number, secondary: number) => {
-      let d = "";
-      for (let i = 0; i <= points; i++) {
-        const x = (i / points) * width;
-        const norm = i / points;
-        const envelope = Math.sin(norm * Math.PI);
-        const y =
-          midY +
-          Math.sin(norm * Math.PI * freq + phase) * amp * envelope +
-          Math.sin(norm * Math.PI * freq * 1.7 + phase * 1.3) * (amp * 0.35 * envelope) +
-          secondary;
-        d += (i === 0 ? "M" : "L") + x.toFixed(1) + "," + y.toFixed(1) + " ";
-      }
-      return d;
-    };
-
-    const animate = () => {
-      tRef.current += 0.02 * speedByState[state];
-      const amp = ampByState[state];
-      if (pathRef1.current) pathRef1.current.setAttribute("d", buildPath(tRef.current, amp, 3.2, 0));
-      if (pathRef2.current) pathRef2.current.setAttribute("d", buildPath(tRef.current * 0.8 + 1.5, amp * 0.75, 2.4, 6));
-      rafRef.current = requestAnimationFrame(animate);
-    };
-    rafRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [state]);
-
-  return (
-    <svg viewBox="0 0 320 140" className="h-40 w-80" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="waveGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#a855f7" />
-          <stop offset="50%" stopColor="#22d3ee" />
-          <stop offset="100%" stopColor="#3b82f6" />
-        </linearGradient>
-        <linearGradient id="waveGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#6366f1" />
-          <stop offset="50%" stopColor="#06b6d4" />
-          <stop offset="100%" stopColor="#8b5cf6" />
-        </linearGradient>
-        <filter id="waveGlow" x="-50%" y="-50%" width="200%" height="200%">
-          <feGaussianBlur stdDeviation="3.5" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-      <path ref={pathRef2} fill="none" stroke="url(#waveGrad2)" strokeWidth="2" strokeLinecap="round" opacity="0.55" filter="url(#waveGlow)" />
-      <path ref={pathRef1} fill="none" stroke="url(#waveGrad1)" strokeWidth="2.5" strokeLinecap="round" filter="url(#waveGlow)" />
-    </svg>
-  );
-}
 
 function VoiceWaveIcon({ className }: { className?: string }) {
   return (
@@ -113,6 +35,9 @@ function VoiceWaveIcon({ className }: { className?: string }) {
   );
 }
 
+// Rejects with a timeout error if the wrapped promise takes too long -
+// prevents the widget from being stuck on "Thinking..." forever if the
+// backend AI call hangs.
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => reject(new Error(`${label} timed out after ${ms / 1000}s`)), ms);
@@ -123,61 +48,157 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
   });
 }
 
-let cachedFemaleVoice: SpeechSynthesisVoice | null = null;
-let voicesReady = false;
-
-function pickFemaleVoice(): SpeechSynthesisVoice | null {
-  if (cachedFemaleVoice) return cachedFemaleVoice;
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length === 0) return null;
-  voicesReady = true;
-  const englishVoices = voices.filter((v) => v.lang.startsWith("en"));
-  const pool = englishVoices.length > 0 ? englishVoices : voices;
-  const nameHints = ["female", "zira", "samantha", "victoria", "susan", "linda", "google us english", "microsoft ava", "microsoft jenny", "aria", "libby"];
-  const byName = pool.find((v) => nameHints.some((hint) => v.name.toLowerCase().includes(hint)));
-  cachedFemaleVoice = byName || pool[0] || null;
-  return cachedFemaleVoice;
+// ---------------------------------------------------------------------
+// ANSWERING LOGIC
+// ---------------------------------------------------------------------
+// Calls the `student-self-assistant` Supabase edge function, which
+// derives the caller's identity from their auth JWT server-side (never
+// from anything passed here) and answers using ONLY that one student's
+// own data - homework, worksheets, tests, assessments, gamification,
+// leaderboard rank, attendance, timetable, calendar, electives,
+// credentials, messages, virtual classroom, group projects, grades,
+// hall tickets, house, and accommodations. See supabase/functions/
+// student-self-assistant/index.ts for the full implementation.
+async function getAssistantReply(userText: string, recentHistory: ChatMessage[]): Promise<string> {
+  const { data, error } = await supabase.functions.invoke("student-self-assistant", {
+    body: {
+      message: userText,
+      history: recentHistory.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+    },
+  });
+  if (error) throw error;
+  return data?.text || "I couldn't come up with an answer just now - please try again.";
 }
+// ---------------------------------------------------------------------
 
-if (typeof window !== "undefined" && "speechSynthesis" in window) {
-  window.speechSynthesis.onvoiceschanged = () => { cachedFemaleVoice = null; pickFemaleVoice(); };
-}
-
-export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAssistantWidgetProps) {
+export function AIStudentAssistantWidget() {
+  const { isStudent } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const loadingRef = useRef(false);
-  const resultHandledRef = useRef(false);
-  const finalTranscriptRef = useRef("");
-  const hadErrorRef = useRef(false);
-
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(true);
   const recognitionRef = useRef<any>(null);
-  const listeningWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [voiceMode, setVoiceMode] = useState(false);
   const voiceModeRef = useRef(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+
+  // Speech-synced mouth animation (real timing schedule + boundary
+  // re-anchoring for the web voice, estimated timing for native TTS).
+  // See src/hooks/useLipSync.ts.
+  const lipSync = useLipSync();
+
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Speech-synced mouth animation - see src/hooks/useLipSync.ts. Shape comes
-  // from a timing schedule built from the spoken text; on the web it's kept
-  // locked to the real voice via SpeechSynthesisUtterance's boundary event.
-  const lipSync = useLipSync();
-  // Guards against overlapping speak() calls (e.g. a fast retry) fighting
-  // over the speech queue / lip-sync clock - only the latest call acts.
+  // Speech-recognition callbacks are wired up once (effect deps: []) but
+  // call sendMessageWithText, which is declared later in this component
+  // and recreated every render. Calling it through a ref (set right after
+  // its declaration, below) means those callbacks never depend on
+  // closure/declaration order.
+  const sendMessageWithTextRef = useRef<(overrideText?: string) => void>(() => {});
+  const voiceRequestInFlightRef = useRef(false);
+  const listeningInProgressRef = useRef(false);
+  // Incremented on every speak() call - see speak() for why.
   const speechGenerationRef = useRef(0);
-
   const updateVoiceMode = (v: boolean) => {
     voiceModeRef.current = v;
     setVoiceMode(v);
+  };
+
+  const handleVoiceTranscript = (transcript: string) => {
+    const text = transcript.trim();
+    if (!text) return;
+
+    // Ignore duplicate recognition results firing close together.
+    if (voiceRequestInFlightRef.current) return;
+    // Ignore stray results if voice mode was exited in the meantime.
+    if (!voiceModeRef.current) return;
+
+    // Lock immediately - this is a ref, so it takes effect synchronously,
+    // unlike React state which could let a second transcript slip through.
+    voiceRequestInFlightRef.current = true;
+
+    setInput(text);
+    setVoiceState("thinking");
+    setVoiceError(null);
+    sendMessageWithTextRef.current(text);
+  };
+
+  // Builds a brand-new SpeechRecognition instance for a single listen turn.
+  // We deliberately do NOT reuse one long-lived instance across turns:
+  // calling .start() repeatedly on the same instance can leave old
+  // recognition results/session state around in some browsers, which
+  // causes transcripts to accumulate across turns. A fresh instance per
+  // turn guarantees a clean session.
+  const createRecognition = () => {
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) return null;
+
+    const recognition = new BrowserSpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    // Some browsers fire onresult more than once for a single utterance
+    // (e.g. once per detected phrase/pause) even with continuous=false.
+    // Reacting to - and stopping on - the FIRST onresult was cutting
+    // sentences short. Instead we accumulate every result this session
+    // reports, and only act once on the session's natural end (onend).
+    let consumed = false;
+    let latestTranscript = "";
+
+    recognition.onresult = (event: any) => {
+      let combined = "";
+      for (let i = 0; i < event.results.length; i++) {
+        combined += event.results[i][0]?.transcript ?? "";
+      }
+      latestTranscript = combined.trim();
+    };
+
+    recognition.onerror = (event: any) => {
+      if (consumed) return;
+      consumed = true;
+      listeningInProgressRef.current = false;
+      setIsListening(false);
+      if (event.error === "aborted") return;
+
+      if (voiceModeRef.current && event.error === "no-speech") {
+        setTimeout(() => startListeningSafely(), 400);
+        return;
+      }
+
+      const messagesMap: Record<string, string> = {
+        "no-speech": "No speech detected. Please try again.",
+        "not-allowed": "Microphone access was denied. Check the site permissions (padlock icon in the address bar) and allow microphone access.",
+        "audio-capture": "No microphone found. Please check your microphone is connected.",
+        "network": "Voice recognition needs an internet connection. Please check your connection and try again.",
+      };
+      const msg = messagesMap[event.error] || `Could not hear you clearly (${event.error}). Please try again or type instead.`;
+      if (voiceModeRef.current) {
+        setVoiceError(msg);
+        setVoiceState("idle");
+      } else {
+        toast({ title: "Voice input error", description: msg, variant: "destructive" });
+      }
+    };
+
+    recognition.onend = () => {
+      if (consumed) return;
+      consumed = true;
+      listeningInProgressRef.current = false;
+      setIsListening(false);
+      if (latestTranscript) {
+        handleVoiceTranscript(latestTranscript);
+      }
+    };
+
+    return recognition;
   };
 
   useEffect(() => {
@@ -190,81 +211,22 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         .catch(() => {
           if (!cancelled) setVoiceSupported(false);
         });
-      return () => {
-        cancelled = true;
-      };
+      return () => { cancelled = true; };
     }
 
     const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!BrowserSpeechRecognition) {
       setVoiceSupported(false);
-      return;
     }
-    const recognition = new BrowserSpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.onresult = (event: any) => {
-      let combined = "";
-      for (let i = 0; i < event.results.length; i++) {
-        combined += event.results[i][0].transcript;
-      }
-      combined = combined.trim();
-      finalTranscriptRef.current = combined;
-      setInput(combined);
-      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
-      listeningWatchdogRef.current = setTimeout(() => {
-        try { recognitionRef.current?.stop(); } catch {}
-      }, 1500);
-    };
-    recognition.onerror = (event: any) => {
-      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
-      setIsListening(false);
-      if (event.error === "aborted") return;
-      if (voiceModeRef.current && event.error === "no-speech") {
-        setTimeout(() => startListeningSafely(), 400);
-        return;
-      }
-      hadErrorRef.current = true;
-      const messagesMap: Record<string, string> = {
-        "no-speech": "No speech detected. Please try again.",
-        "not-allowed": "Microphone access was denied. Check the site permissions and allow microphone access.",
-        "audio-capture": "No microphone found. Please check your microphone is connected.",
-        "network": "Voice recognition needs an internet connection.",
-      };
-      const msg = messagesMap[event.error] || `Could not hear you clearly (${event.error}). Please try again or type instead.`;
-      if (voiceModeRef.current) {
-        setVoiceError(msg);
-        setVoiceState("idle");
-      } else {
-        toast({ title: "Voice input error", description: msg, variant: "destructive" });
-      }
-    };
-    recognition.onend = () => {
-      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
-      setIsListening(false);
-      const transcript = finalTranscriptRef.current;
-      finalTranscriptRef.current = "";
-      if (!resultHandledRef.current && !hadErrorRef.current && transcript) {
-        resultHandledRef.current = true;
-        if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
-        setTimeout(() => sendMessageWithText(transcript), 100);
-      }
-      hadErrorRef.current = false;
-    };
-    recognitionRef.current = recognition;
-
-    return () => {
-      recognition.onresult = null;
-      recognition.onerror = null;
-      recognition.onend = null;
-      try { recognition.abort(); } catch {}
-      if (recognitionRef.current === recognition) recognitionRef.current = null;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const startListeningSafely = () => {
+    if (!voiceModeRef.current) return;
+    if (voiceRequestInFlightRef.current) return;
+    if (listeningInProgressRef.current) return;
+    listeningInProgressRef.current = true;
+
     if (isNativePlatform) {
       setVoiceState("listening");
       setVoiceError(null);
@@ -272,11 +234,6 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
 
       SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {}).finally(() => {
         setTimeout(() => {
-          if (listeningWatchdogRef.current) clearTimeout(listeningWatchdogRef.current);
-          listeningWatchdogRef.current = setTimeout(() => {
-            SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {});
-          }, 8000);
-
           SpeechRecognition.requestPermissions()
             .then(() =>
               SpeechRecognition.start({
@@ -287,9 +244,9 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
               })
             )
             .then((result: { matches?: string[] }) => {
-              if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+              listeningInProgressRef.current = false;
               setIsListening(false);
-              const transcript = result?.matches?.[0];
+              const transcript = result?.matches?.[0]?.trim();
               if (!transcript) {
                 const msg = "No speech detected. Please try again.";
                 if (voiceModeRef.current) {
@@ -300,17 +257,11 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
                 }
                 return;
               }
-              setInput(transcript);
-              if (voiceModeRef.current) {
-                setVoiceState("thinking");
-                setVoiceError(null);
-              }
-              setTimeout(() => sendMessageWithText(transcript), 100);
+              handleVoiceTranscript(transcript);
             })
             .catch((err: any) => {
-              if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+              listeningInProgressRef.current = false;
               setIsListening(false);
-              console.error("SpeechRecognition error:", err);
               const msg = "Could not hear you clearly. Please try again or type instead.";
               if (voiceModeRef.current) {
                 setVoiceError(msg);
@@ -324,29 +275,24 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       return;
     }
 
-    if (!recognitionRef.current) return;
+    // Web: abort any leftover instance, then start a brand-new one so this
+    // turn's transcript can never inherit words from a previous turn.
+    try { recognitionRef.current?.abort(); } catch {}
+    const recognition = createRecognition();
+    if (!recognition) {
+      listeningInProgressRef.current = false;
+      return;
+    }
+    recognitionRef.current = recognition;
     try {
+      setInput("");
       setVoiceState("listening");
       setVoiceError(null);
       setIsListening(true);
-      recognitionRef.current.start();
-      resultHandledRef.current = false;
-      hadErrorRef.current = false;
-      finalTranscriptRef.current = "";
-      if (listeningWatchdogRef.current) clearTimeout(listeningWatchdogRef.current);
-      listeningWatchdogRef.current = setTimeout(() => {
-        try { recognitionRef.current?.stop(); } catch {}
-        setIsListening(false);
-        if (voiceModeRef.current) {
-          setVoiceError("Didn't catch that in time - the mic seems stuck. Tap to try again or switch to typing.");
-          setVoiceState("idle");
-        }
-      }, 8000);
-    } catch (err: any) {
-      if (err?.name === "InvalidStateError") {
-        try { recognitionRef.current.stop(); } catch {}
-        setTimeout(() => startListeningSafely(), 150);
-      }
+      recognition.start();
+    } catch (err) {
+      listeningInProgressRef.current = false;
+      setIsListening(false);
     }
   };
 
@@ -360,20 +306,26 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       }
       return;
     }
-    if (!recognitionRef.current) return;
+
     if (isListening) {
-      recognitionRef.current.stop();
+      recognitionRef.current?.stop();
       setIsListening(false);
-    } else {
-      setIsListening(true);
-      recognitionRef.current.start();
-      resultHandledRef.current = false;
-      hadErrorRef.current = false;
-      finalTranscriptRef.current = "";
+      return;
     }
+
+    try { recognitionRef.current?.abort(); } catch {}
+    const recognition = createRecognition();
+    if (!recognition) return;
+    recognitionRef.current = recognition;
+    setInput("");
+    setIsListening(true);
+    recognition.start();
   };
 
   const speak = (text: string) => {
+    // Every call to speak() gets its own generation id, so only the
+    // LATEST call is allowed to actually speak or react to its
+    // utterance events - avoids competing/duplicate utterances.
     const myGeneration = ++speechGenerationRef.current;
 
     if (!ttsSupported || !voiceModeRef.current) {
@@ -384,20 +336,15 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     if (isNativePlatform) {
       setVoiceState("speaking");
       const estimatedMs = Math.max(1200, text.split(/\s+/).length * 380);
-      // Native TTS gives no audio stream or word events, so the mouth is
-      // driven off the same estimated duration used to schedule when to
-      // resume listening - keeps them in lockstep.
       lipSync.start(text, estimatedMs);
-
       TextToSpeech.speak({
         text,
         lang: "en-US",
-        rate: 0.95,
-        pitch: 1.05,
+        rate: 1,
+        pitch: 1,
         volume: 1,
         category: "playback",
       }).catch(() => {});
-
       setTimeout(() => {
         if (speechGenerationRef.current !== myGeneration) return; // superseded
         lipSync.stop();
@@ -407,18 +354,14 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     }
 
     const doSpeak = () => {
-      if (speechGenerationRef.current !== myGeneration) return; // superseded
+      if (speechGenerationRef.current !== myGeneration) return; // superseded - don't speak stale text
       const utterance = new SpeechSynthesisUtterance(text);
       utteranceRef.current = utterance;
-      const preferredVoice = pickFemaleVoice(); if (preferredVoice) utterance.voice = preferredVoice;
-      utterance.rate = 0.95;
-      utterance.pitch = 1.05;
+      utterance.rate = 1;
+      utterance.pitch = 1;
       utterance.onstart = () => {
         if (speechGenerationRef.current !== myGeneration) return;
         setVoiceState("speaking");
-        // Browsers never expose speechSynthesis audio to the Web Audio API,
-        // so mouth movement is scheduled against an estimated duration and
-        // corrected live via onboundary below.
         lipSync.start(text, estimateSpeechDurationMs(text));
       };
       utterance.onboundary = (event: SpeechSynthesisEvent) => {
@@ -442,6 +385,8 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       setTimeout(() => {
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
       }, 60);
+      // Safety net: if the browser never fires onstart/onend at all (silent
+      // TTS failure), don't let the orb (or the mouth) sit stuck forever.
       setTimeout(() => {
         if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
           utteranceRef.current = null;
@@ -450,6 +395,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         }
       }, 15000);
     };
+
     window.speechSynthesis.cancel();
     setTimeout(doSpeak, 80);
   };
@@ -466,28 +412,28 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   };
 
   const exitVoiceMode = () => {
-    if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
     lipSync.stop();
     if (isNativePlatform) {
       TextToSpeech.stop().catch(() => {});
+      if (isListening) SpeechRecognition.stop().catch(() => {});
     } else {
       window.speechSynthesis?.cancel();
+      if (recognitionRef.current && isListening) {
+        recognitionRef.current.stop();
+      }
     }
     utteranceRef.current = null;
-    if (isNativePlatform) {
-      if (isListening) SpeechRecognition.stop().catch(() => {});
-    } else if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
-    }
     setIsListening(false);
   };
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
+
+  if (!isStudent) return null;
 
   const say = (text: string) => {
     setMessages((prev) => [...prev, { role: "assistant", text }]);
@@ -496,38 +442,27 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
 
   const sendMessageWithText = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
-    if (!text || loadingRef.current) return;
-    loadingRef.current = true;
+    if (!text || loading) return;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {
-      // No student/parent id is sent here on purpose - the edge function
-      // resolves the caller's own linked child(ren) server-side from their
-      // verified auth session, so a parent can never see another parent's
-      // child's data even if this payload were tampered with.
-      const { data, error } = await withTimeout(
-        supabase.functions.invoke("parent-assistant", { body: { message: text, history: messages.slice(-6).map((m) => ({ role: m.role, text: m.text })) } }),
-        20000,
-        "APAS Agent"
-      );
-      if (error) throw error;
-      say(data?.text || "I'm not sure how to help with that.");
+      const reply = await withTimeout(getAssistantReply(text, messages), 20000, "AI assistant");
+      say(reply);
     } catch (e: any) {
       const friendly = e?.message?.includes("timed out")
         ? "That took too long to respond. Let's try again."
         : (e?.message || "Something went wrong. Please try again.");
       if (voiceModeRef.current) setVoiceError(friendly);
-      toast({ title: "APAS Agent error", description: friendly, variant: "destructive" });
+      toast({ title: "AI Assistant error", description: friendly, variant: "destructive" });
       say(friendly);
     } finally {
-      loadingRef.current = false;
       setLoading(false);
+      voiceRequestInFlightRef.current = false;
     }
   };
-
-  if (typeof document === "undefined") return null;
+  sendMessageWithTextRef.current = sendMessageWithText;
 
   const orbStateLabel: Record<VoiceState, string> = {
     idle: "Starting...",
@@ -536,23 +471,24 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     speaking: "Speaking...",
   };
 
+  // Soft glow behind the avatar, colored/animated per voice state.
   const orbClasses: Record<VoiceState, string> = {
-    idle: "from-blue-400 via-indigo-400 to-purple-400 animate-pulse",
-    listening: "from-blue-400 via-cyan-300 to-indigo-400 animate-pulse",
-    thinking: "from-indigo-500 via-purple-400 to-blue-500 animate-spin",
-    speaking: "from-sky-300 via-blue-200 to-indigo-300 animate-bounce",
+    idle: "from-emerald-400 via-teal-400 to-cyan-400 animate-pulse",
+    listening: "from-emerald-400 via-cyan-300 to-teal-400 animate-pulse",
+    thinking: "from-teal-500 via-emerald-400 to-cyan-500 animate-spin",
+    speaking: "from-cyan-300 via-teal-200 to-emerald-300 animate-pulse",
   };
 
-  return createPortal(
+  if (typeof document === "undefined") return null;
+  return (
     <>
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-cyan-400 to-blue-500 text-white transition-transform hover:scale-105"
-          style={{ animation: "orb-glow 2.4s ease-in-out infinite, orb-float 3s ease-in-out infinite" }}
-          aria-label="Open APAS Agent"
+          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition-colors"
+          aria-label="Open Study Buddy"
         >
-          <Mic className="h-6 w-6" />
+          <Sparkles className="h-6 w-6" />
         </button>
       )}
 
@@ -567,9 +503,6 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
           </button>
 
           <div className="relative flex h-56 w-56 items-center justify-center">
-            {/* Ambient glow behind the avatar, colored per voice state and
-                pulsing in brightness while speaking, driven by the same
-                lip-sync intensity that drives the mouth. */}
             <div
               className={`absolute inset-0 rounded-full bg-gradient-to-br blur-2xl ${orbClasses[voiceState]}`}
               style={{
@@ -582,11 +515,11 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
               <div className="absolute inset-1 rounded-full border-2 border-cyan-300/60 animate-pulse" />
             )}
             {voiceState === "thinking" && (
-              <div className="absolute inset-1 rounded-full border-2 border-t-transparent border-indigo-300/70 animate-spin" />
+              <div className="absolute inset-1 rounded-full border-2 border-t-transparent border-emerald-300/70 animate-spin" />
             )}
             {voiceState === "speaking" && (
               <div
-                className="absolute inset-0 rounded-full border-2 border-sky-300/60"
+                className="absolute inset-0 rounded-full border-2 border-teal-300/60"
                 style={{
                   transform: `scale(${1 + lipSync.intensity * 0.06})`,
                   opacity: 0.5 + lipSync.intensity * 0.4,
@@ -595,9 +528,6 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
               />
             )}
 
-            {/* Robot avatar - gets a gentle "talking" bob and scale while
-                speaking, and its mouth is replaced with a real speech-synced
-                overlay (see RobotFace / useLipSync). */}
             <div
               className="relative h-48 w-48 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/10"
               style={{
@@ -620,7 +550,9 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
 
           {voiceError && (
-            <p className="mt-4 max-w-md px-6 text-center text-xs text-red-400">{voiceError}</p>
+            <p className="mt-4 max-w-md px-6 text-center text-xs text-red-400">
+              {voiceError}
+            </p>
           )}
 
           {!voiceError && messages.length > 0 && (
@@ -646,16 +578,16 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       )}
 
       {open && !voiceMode && (
-        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[360px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent
+              <Sparkles className="h-4 w-4 text-emerald-600" /> Study Buddy
             </CardTitle>
             <div className="flex items-center gap-2">
               {voiceSupported && ttsSupported && (
                 <button
                   onClick={enterVoiceMode}
-                  className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow hover:bg-blue-700 transition-colors shrink-0"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-600 text-white shadow hover:bg-emerald-700 transition-colors shrink-0"
                   aria-label="Start voice conversation"
                   title="Start voice conversation"
                 >
@@ -673,12 +605,12 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
               <div className="flex flex-col gap-3">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Ask me about the bus, fees, report cards, attendance, appointments, the academic calendar, hall tickets, surveys, safeguarding updates, or messages from school. Tap the blue icon above for hands-free voice mode.
+                    Hi! I'm your Study Buddy. Ask me anything, or tap the green icon above for hands-free voice mode.
                   </p>
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-blue-600 text-white" : "bg-muted"}`}>
+                    <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-emerald-600 text-white" : "bg-muted"}`}>
                       <p>{m.text}</p>
                     </div>
                   </div>
@@ -692,7 +624,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessageWithText()}
-                placeholder={isListening ? "Listening..." : "Ask about your child's school life..."}
+                placeholder={isListening ? "Listening..." : "Ask me anything..."}
                 className="h-9 text-xs"
                 disabled={loading || isListening}
               />
@@ -715,7 +647,6 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
           </CardContent>
         </Card>
       )}
-    </>,
-    document.body
+    </>
   );
 }
