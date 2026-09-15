@@ -5,6 +5,9 @@ import { AppHeader } from "./AppHeader";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 import { AILessonAssistantWidget } from "@/components/ai-assistant/AILessonAssistantWidget";
 import { AIStudentAssistantWidget } from "@/components/ai-assistant/AIStudentAssistantWidget";
+import { AIHODAssistantWidget } from "@/components/ai-assistant/AIHODAssistantWidget";
+import { AIPrincipalAssistantWidget } from "@/components/ai-assistant/AIPrincipalAssistantWidget";
+import { AISchoolAdminAssistantWidget } from "@/components/ai-assistant/AISchoolAdminAssistantWidget";
 import { ParentBusAssistantWidget } from "@/components/parent-transport/ParentBusAssistantWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,6 +88,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       <OnboardingFlow />
       <AILessonAssistantWidget />
       <AIStudentAssistantWidget />
+      <AIHODAssistantWidget />
+      <AIPrincipalAssistantWidget />
+      <AISchoolAdminAssistantWidget />
       {profile?.role === "parent" && <ParentBusAssistantWidget studentId={childProfileId} studentName={childName} />}
     </div>
   );
