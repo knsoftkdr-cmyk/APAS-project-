@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
+import { Sparkles, X, Send, Mic, MicOff, MessageSquare, Youtube } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
@@ -16,10 +16,20 @@ import robotAvatar from "@/assets/ai-assistant-robot.png";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
+interface VideoResult {
+  title: string;
+  url: string;
+  channel: string;
+  thumbnail: string | null;
+}
+
 interface ChatMessage {
   role: "user" | "assistant";
   text: string;
+  videos?: VideoResult[];
 }
+
+type AnswerMode = "text" | "video";
 
 interface ParentBusAssistantWidgetProps {
   // Kept optional for backwards compatibility with existing callers - the
@@ -149,6 +159,11 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Lets the parent choose how topic-understanding questions get
+  // answered: a written explanation, or a suggested YouTube video.
+  // Questions about their child's own records always come back as text
+  // regardless of this - see the parent-assistant edge function.
+  const [answerMode, setAnswerMode] = useState<AnswerMode>("text");
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const resultHandledRef = useRef(false);
@@ -489,8 +504,10 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
-  const say = (text: string) => {
-    setMessages((prev) => [...prev, { role: "assistant", text }]);
+  const say = (text: string, videos?: VideoResult[]) => {
+    setMessages((prev) => [...prev, { role: "assistant", text, videos }]);
+    // Voice mode only ever speaks the short intro text that comes back
+    // alongside video results, so this is safe even when videos are set.
     if (voiceModeRef.current) speak(text);
   };
 
@@ -508,12 +525,18 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       // verified auth session, so a parent can never see another parent's
       // child's data even if this payload were tampered with.
       const { data, error } = await withTimeout(
-        supabase.functions.invoke("parent-assistant", { body: { message: text, history: messages.slice(-6).map((m) => ({ role: m.role, text: m.text })) } }),
+        supabase.functions.invoke("parent-assistant", {
+          body: {
+            message: text,
+            mode: answerMode,
+            history: messages.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+          },
+        }),
         20000,
         "APAS Agent"
       );
       if (error) throw error;
-      say(data?.text || "I'm not sure how to help with that.");
+      say(data?.text || "I'm not sure how to help with that.", Array.isArray(data?.videos) ? data.videos : undefined);
     } catch (e: any) {
       const friendly = e?.message?.includes("timed out")
         ? "That took too long to respond. Let's try again."
@@ -673,19 +696,65 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
               <div className="flex flex-col gap-3">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Ask me about the bus, fees, report cards, attendance, appointments, the academic calendar, hall tickets, surveys, safeguarding updates, or messages from school. Tap the blue icon above for hands-free voice mode.
+                    Ask me about the bus, fees, report cards, attendance, appointments, the academic calendar, hall tickets, surveys, safeguarding updates, or messages from school - or ask me to explain a school topic so you can help your child. Tap the blue icon above for hands-free voice mode.
                   </p>
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-blue-600 text-white" : "bg-muted"}`}>
                       <p>{m.text}</p>
+                      {m.videos && m.videos.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-2">
+                          {m.videos.map((v, vi) => (
+                            <a
+                              key={vi}
+                              href={v.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-md border border-border bg-background/60 p-1.5 hover:bg-background transition-colors"
+                            >
+                              {v.thumbnail ? (
+                                <img src={v.thumbnail} alt="" className="h-10 w-16 shrink-0 rounded object-cover" />
+                              ) : (
+                                <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded bg-red-600/10">
+                                  <Youtube className="h-5 w-5 text-red-600" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-foreground">{v.title}</p>
+                                <p className="truncate text-[10px] text-muted-foreground">{v.channel}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
                 {loading && <p className="text-xs text-muted-foreground">Thinking...</p>}
               </div>
             </ScrollArea>
+
+            <div className="flex items-center gap-1 rounded-md bg-muted p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setAnswerMode("text")}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors ${
+                  answerMode === "text" ? "bg-background shadow-sm font-medium text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> Explain in text
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnswerMode("video")}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors ${
+                  answerMode === "video" ? "bg-background shadow-sm font-medium text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Youtube className="h-3.5 w-3.5" /> Find a video
+              </button>
+            </div>
 
             <div className="flex gap-2">
               <Input

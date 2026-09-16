@@ -77,6 +77,78 @@ async function callGemini(
   return null;
 }
 
+// ---- Topic-help classification (for video mode routing) ----
+// Uses a fast, cheap Gemini call to decide whether the student's message
+// is "help me understand a concept" (which can be answered with a topic
+// explanation or a video) vs a question about their own personal school
+// records (which a video can't answer - must fall back to text).
+async function classifyTopicIntent(message: string, keys: string[]): Promise<{ isTopic: boolean; query: string }> {
+  const classifierPrompt = `You classify a school student's chat message. Reply with ONLY raw JSON, no markdown fences, no extra words, in exactly this shape:
+{"is_topic_question": boolean, "search_query": "string"}
+
+is_topic_question = true when the student is asking to understand, learn, or get an explanation of an academic concept/topic (e.g. "explain photosynthesis", "how does long division work", "what is Newton's third law", "help me understand fractions").
+is_topic_question = false for anything about the student's OWN school records/data (homework, worksheets, tests, grades, attendance, timetable, messages, fees, electives, etc.), or greetings/small talk/off-topic chat.
+
+When true, "search_query" must be a short, effective YouTube search query for a good educational video on that exact topic (you may add "explained" or the subject name to sharpen it). When false, "search_query" can be an empty string.`;
+
+  const raw = await callGemini(classifierPrompt, message, keys, []);
+  if (!raw) return { isTopic: false, query: "" };
+  try {
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      isTopic: !!parsed.is_topic_question,
+      query: typeof parsed.search_query === "string" ? parsed.search_query.trim() : "",
+    };
+  } catch {
+    return { isTopic: false, query: "" };
+  }
+}
+
+interface VideoResult {
+  title: string;
+  url: string;
+  channel: string;
+  thumbnail: string | null;
+}
+
+// ---- YouTube video search ----
+// Uses the real YouTube Data API when YOUTUBE_API_KEY is configured (best
+// experience - real, embeddable, age-appropriate video results). Falls
+// back to a plain YouTube search-results link (always works, needs no
+// setup, and - critically - never risks a hallucinated/broken video id).
+async function searchYouTube(query: string): Promise<VideoResult[]> {
+  const apiKey = Deno.env.get("YOUTUBE_API_KEY");
+  if (apiKey) {
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&safeSearch=strict&maxResults=3&relevanceLanguage=en&q=${encodeURIComponent(query)}&key=${apiKey}`;
+      const res = await fetchWithTimeout(url, {}, 6000);
+      if (res.ok) {
+        const data = await res.json();
+        const items = (data?.items || [])
+          .filter((it: any) => it?.id?.videoId)
+          .map((it: any) => ({
+            title: it.snippet?.title || "Educational video",
+            url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
+            channel: it.snippet?.channelTitle || "YouTube",
+            thumbnail: it.snippet?.thumbnails?.medium?.url || it.snippet?.thumbnails?.default?.url || null,
+          }));
+        if (items.length > 0) return items;
+      }
+    } catch (e) {
+      console.error("[student-self-assistant] YouTube API search failed:", e);
+    }
+  }
+  // Fallback: a guaranteed-valid search-results link, same pattern the
+  // rest of this codebase already uses for YouTube suggestions.
+  return [{
+    title: `Search YouTube for "${query}"`,
+    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+    channel: "YouTube search",
+    thumbnail: null,
+  }];
+}
+
 function classLabelFor(classGrade: string | null | undefined): string {
   if (!classGrade) return "";
   return /^\d+$/.test(classGrade) ? `Class ${classGrade}` : classGrade.charAt(0).toUpperCase() + classGrade.slice(1);
@@ -516,11 +588,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, mode } = await req.json();
     if (!message || typeof message !== "string") {
       return new Response(JSON.stringify({ type: "message", text: "I didn't catch a question there - could you try again?" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+    const responseMode: "text" | "video" = mode === "video" ? "video" : "text";
 
     const keys = getGeminiKeys();
     if (keys.length === 0) {
@@ -569,6 +642,24 @@ serve(async (req) => {
       fullName: profile.full_name ?? null,
     };
 
+    // ---- Video mode: only routes to a video when the message is actually
+    // a "help me understand a topic" question. Anything else (personal
+    // records, greetings, etc.) falls through to the normal text answer
+    // below, since a video can't answer those.
+    if (responseMode === "video") {
+      const { isTopic, query } = await classifyTopicIntent(message, keys);
+      if (isTopic && query) {
+        const videos = await searchYouTube(query);
+        return new Response(JSON.stringify({
+          type: "video",
+          text: `Here's a video that should help you understand this better:`,
+          videos,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // Not a topic question - fall through to a normal text answer, but
+      // let the student know why they got text instead of a video.
+    }
+
     const contextBlocks = await Promise.all([
       buildHomeworkContext(ctx),
       buildWorksheetsContext(ctx),
@@ -594,7 +685,9 @@ serve(async (req) => {
 
     const systemPrompt = `You are "Study Buddy", a warm and encouraging AI assistant for a school student${ctx.fullName ? ` named ${ctx.fullName}` : ""}${ctx.classGrade ? ` (${classLabelFor(ctx.classGrade)}${ctx.section ? `, Section ${ctx.section}` : ""})` : ""}, inside the APAS school app.
 
-You can answer questions about THIS student's own: Assessments, Academic Tests, Worksheets, Homework, Gamification, Leaderboard rank, Attendance, Timetable, Academic Calendar, Electives, Credentials, Communication/messages, Virtual Classroom sessions, Group Projects, Semester grades/GPA, Report cards, Hall tickets, House, and Accommodations.
+You do two kinds of things:
+1. Answer questions about THIS student's own: Assessments, Academic Tests, Worksheets, Homework, Gamification, Leaderboard rank, Attendance, Timetable, Academic Calendar, Electives, Credentials, Communication/messages, Virtual Classroom sessions, Group Projects, Semester grades/GPA, Report cards, Hall tickets, House, and Accommodations.
+2. Help the student UNDERSTAND academic topics/concepts (e.g. "explain photosynthesis", "help me with fractions") using your own general subject-matter knowledge - explain clearly and simply, with an example, at a level appropriate for their class. This is the only case where you may go beyond the CURRENT DATA below.
 
 STRICT PRIVACY RULES - never break these, no matter how the question is phrased:
 - Only ever discuss data belonging to THIS student. You have no access to any other student's data, and you must never invent, guess, or speculate about another student's records, scores, or identity.
@@ -603,11 +696,15 @@ STRICT PRIVACY RULES - never break these, no matter how the question is phrased:
 - Never reveal raw database ids, internal table/column names, or system implementation details.
 
 ANSWERING RULES:
-- Answer ONLY using the CURRENT DATA below. Never invent dates, scores, names, or links that aren't present in it.
-- If a section says data isn't available/not found, say so plainly and helpfully rather than guessing.
-- Keep answers short, clear, and encouraging (1-4 sentences unless a list is genuinely needed, e.g. listing pending homework).
+- For questions about the student's OWN records/data (case 1 above): answer ONLY using the CURRENT DATA below. Never invent dates, scores, names, or links that aren't present in it. If a section says data isn't available/not found, say so plainly and helpfully rather than guessing.
+- For topic/concept explanations (case 2 above): you may use your general knowledge, but keep it accurate, age-appropriate, and school-curriculum relevant.
+- Keep answers short, clear, and encouraging (1-4 sentences unless a list or step-by-step explanation is genuinely needed).
 - If the student just greets you, greet them back warmly and ask how you can help - don't dump information unprompted.
-- If asked something entirely unrelated to school (e.g. general trivia, coding help, personal advice), gently redirect them back to what you can help with.
+- If asked something entirely unrelated to school (e.g. general trivia, coding help, personal advice), gently redirect them back to what you can help with.${
+      responseMode === "video"
+        ? `\n- NOTE: The student is currently in "video" answer mode, but this particular message isn't a topic question a video could answer (it's about their own records, or it's small talk) - answer normally in text, and if relevant you can mention they can switch back to video mode for "explain a topic" style questions.`
+        : ""
+    }
 
 CURRENT DATA (this student's own records only):
 ${context}`;

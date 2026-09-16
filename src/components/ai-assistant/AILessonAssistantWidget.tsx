@@ -142,16 +142,19 @@ export function AILessonAssistantWidget() {
       console.debug("[voice] duplicate transcript ignored:", text);
       return;
     }
-    // Ignore stray results if voice mode was exited in the meantime.
-    if (!voiceModeRef.current) return;
 
     // Lock immediately - this is a ref, so it takes effect synchronously,
     // unlike React state which could let a second transcript slip through.
     voiceRequestInFlightRef.current = true;
 
     setInput(text);
-    setVoiceState("thinking");
-    setVoiceError(null);
+    // These are only meaningful in full-screen voice mode - the plain
+    // mic button in the chat panel has no orb/voiceState to update, and
+    // should just send the transcript like a normal typed message.
+    if (voiceModeRef.current) {
+      setVoiceState("thinking");
+      setVoiceError(null);
+    }
     sendMessageWithTextRef.current(text);
   };
 
@@ -255,8 +258,12 @@ export function AILessonAssistantWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startListeningSafely = () => {
-    if (!voiceModeRef.current) return;
+  const startListeningSafely = (force = false) => {
+    // `force` = a direct user tap (e.g. the plain mic button in the chat
+    // panel) should always start listening. Without force, this is the
+    // voice-mode auto-resume path, which should stay silent if the
+    // user has since exited voice mode.
+    if (!force && !voiceModeRef.current) return;
     if (voiceRequestInFlightRef.current) return;
     if (listeningInProgressRef.current) return;
     listeningInProgressRef.current = true;
@@ -338,7 +345,7 @@ export function AILessonAssistantWidget() {
         SpeechRecognition.stop().catch(() => {});
         setIsListening(false);
       } else {
-        startListeningSafely();
+        startListeningSafely(true);
       }
       return;
     }

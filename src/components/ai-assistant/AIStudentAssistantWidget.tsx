@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sparkles, X, Send, Mic, MicOff } from "lucide-react";
+import { Sparkles, X, Send, Mic, MicOff, MessageSquare, Youtube } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { TextToSpeech } from "@capacitor-community/text-to-speech";
 import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
@@ -16,11 +16,20 @@ import { RobotFace } from "@/components/ai-assistant/RobotFace";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
+interface VideoResult {
+  title: string;
+  url: string;
+  channel: string;
+  thumbnail: string | null;
+}
+
 interface ChatMessage {
   role: "user" | "assistant";
   text: string;
+  videos?: VideoResult[];
 }
 
+type AnswerMode = "text" | "video";
 type VoiceState = "idle" | "listening" | "thinking" | "speaking";
 
 function VoiceWaveIcon({ className }: { className?: string }) {
@@ -59,15 +68,28 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 // credentials, messages, virtual classroom, group projects, grades,
 // hall tickets, house, and accommodations. See supabase/functions/
 // student-self-assistant/index.ts for the full implementation.
-async function getAssistantReply(userText: string, recentHistory: ChatMessage[]): Promise<string> {
+//
+// `mode` controls how topic-understanding questions get answered:
+// "text" -> a written explanation; "video" -> a relevant YouTube video
+// suggestion instead (personal-data questions always come back as text
+// regardless of mode, since a video can't show homework/grades/etc).
+async function getAssistantReply(
+  userText: string,
+  recentHistory: ChatMessage[],
+  mode: AnswerMode,
+): Promise<{ text: string; videos?: VideoResult[] }> {
   const { data, error } = await supabase.functions.invoke("student-self-assistant", {
     body: {
       message: userText,
+      mode,
       history: recentHistory.slice(-6).map((m) => ({ role: m.role, text: m.text })),
     },
   });
   if (error) throw error;
-  return data?.text || "I couldn't come up with an answer just now - please try again.";
+  return {
+    text: data?.text || "I couldn't come up with an answer just now - please try again.",
+    videos: Array.isArray(data?.videos) ? data.videos : undefined,
+  };
 }
 // ---------------------------------------------------------------------
 
@@ -78,6 +100,11 @@ export function AIStudentAssistantWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  // Lets the student choose how topic-understanding questions get
+  // answered: a written explanation, or a suggested YouTube video.
+  // Questions about their own records (homework, grades, etc.) always
+  // come back as text regardless of this - see student-self-assistant.
+  const [answerMode, setAnswerMode] = useState<AnswerMode>("text");
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(true);
@@ -117,16 +144,19 @@ export function AIStudentAssistantWidget() {
 
     // Ignore duplicate recognition results firing close together.
     if (voiceRequestInFlightRef.current) return;
-    // Ignore stray results if voice mode was exited in the meantime.
-    if (!voiceModeRef.current) return;
 
     // Lock immediately - this is a ref, so it takes effect synchronously,
     // unlike React state which could let a second transcript slip through.
     voiceRequestInFlightRef.current = true;
 
     setInput(text);
-    setVoiceState("thinking");
-    setVoiceError(null);
+    // These are only meaningful in full-screen voice mode - the plain
+    // mic button in the chat panel has no orb/voiceState to update, and
+    // should just send the transcript like a normal typed message.
+    if (voiceModeRef.current) {
+      setVoiceState("thinking");
+      setVoiceError(null);
+    }
     sendMessageWithTextRef.current(text);
   };
 
@@ -221,8 +251,12 @@ export function AIStudentAssistantWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startListeningSafely = () => {
-    if (!voiceModeRef.current) return;
+  const startListeningSafely = (force = false) => {
+    // `force` = a direct user tap (e.g. the plain mic button in the chat
+    // panel) should always start listening. Without force, this is the
+    // voice-mode auto-resume path, which should stay silent if the
+    // student has since exited voice mode.
+    if (!force && !voiceModeRef.current) return;
     if (voiceRequestInFlightRef.current) return;
     if (listeningInProgressRef.current) return;
     listeningInProgressRef.current = true;
@@ -302,7 +336,7 @@ export function AIStudentAssistantWidget() {
         SpeechRecognition.stop().catch(() => {});
         setIsListening(false);
       } else {
-        startListeningSafely();
+        startListeningSafely(true);
       }
       return;
     }
@@ -435,8 +469,10 @@ export function AIStudentAssistantWidget() {
 
   if (!isStudent) return null;
 
-  const say = (text: string) => {
-    setMessages((prev) => [...prev, { role: "assistant", text }]);
+  const say = (text: string, videos?: VideoResult[]) => {
+    setMessages((prev) => [...prev, { role: "assistant", text, videos }]);
+    // Voice mode can't play video results - it already only speaks the
+    // short intro text that comes back alongside them, so this is safe.
     if (voiceModeRef.current) speak(text);
   };
 
@@ -448,8 +484,8 @@ export function AIStudentAssistantWidget() {
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {
-      const reply = await withTimeout(getAssistantReply(text, messages), 20000, "AI assistant");
-      say(reply);
+      const { text: reply, videos } = await withTimeout(getAssistantReply(text, messages, answerMode), 20000, "AI assistant");
+      say(reply, videos);
     } catch (e: any) {
       const friendly = e?.message?.includes("timed out")
         ? "That took too long to respond. Let's try again."
@@ -612,12 +648,58 @@ export function AIStudentAssistantWidget() {
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-emerald-600 text-white" : "bg-muted"}`}>
                       <p>{m.text}</p>
+                      {m.videos && m.videos.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-2">
+                          {m.videos.map((v, vi) => (
+                            <a
+                              key={vi}
+                              href={v.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-md border border-border bg-background/60 p-1.5 hover:bg-background transition-colors"
+                            >
+                              {v.thumbnail ? (
+                                <img src={v.thumbnail} alt="" className="h-10 w-16 shrink-0 rounded object-cover" />
+                              ) : (
+                                <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded bg-red-600/10">
+                                  <Youtube className="h-5 w-5 text-red-600" />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="truncate font-medium text-foreground">{v.title}</p>
+                                <p className="truncate text-[10px] text-muted-foreground">{v.channel}</p>
+                              </div>
+                            </a>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
                 {loading && <p className="text-xs text-muted-foreground">Thinking...</p>}
               </div>
             </ScrollArea>
+
+            <div className="flex items-center gap-1 rounded-md bg-muted p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setAnswerMode("text")}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors ${
+                  answerMode === "text" ? "bg-background shadow-sm font-medium text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> Explain in text
+              </button>
+              <button
+                type="button"
+                onClick={() => setAnswerMode("video")}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded px-2 py-1 transition-colors ${
+                  answerMode === "video" ? "bg-background shadow-sm font-medium text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Youtube className="h-3.5 w-3.5" /> Find a video
+              </button>
+            </div>
 
             <div className="flex gap-2">
               <Input

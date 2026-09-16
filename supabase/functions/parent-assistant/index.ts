@@ -61,6 +61,98 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
   return null;
 }
 
+// ---- Topic-help classification (for video mode routing) ----
+// A cheap Gemini call decides whether the parent's message is genuinely
+// "help me understand an academic topic/concept" (which a video can
+// answer) vs a question about their own child's school records, which a
+// video can never answer - those always stay as text.
+async function classifyTopicIntent(message: string, keys: string[]): Promise<{ isTopic: boolean; query: string; topicWords: string[] }> {
+  const classifierPrompt = `You classify a parent's chat message to a school app assistant. Reply with ONLY raw JSON, no markdown fences, no extra words, in exactly this shape:
+{"is_topic_question": boolean, "search_query": "string", "topic_keywords": ["string", ...]}
+
+is_topic_question = true ONLY when the parent is asking to understand, learn about, or get an explanation of an academic concept/topic so they can help their child (e.g. "explain photosynthesis", "how does long division work", "what is a fraction", "help me understand Newton's third law").
+is_topic_question = false for anything about their child's OWN school records/logistics (bus, fees, report card, attendance, appointments, calendar, hall tickets, surveys, safeguarding, messages from school), or greetings/small talk/off-topic chat.
+
+When true: "search_query" is a short, effective YouTube search query for a good educational explainer video on that exact topic. "topic_keywords" is 2-5 lowercase single-word keywords that MUST appear (or close variants of them) in a genuinely relevant video's title for it to count as a real match - used to reject off-topic results.
+When false: "search_query" and "topic_keywords" can be empty.`;
+
+  const raw = await callGemini(classifierPrompt, message, keys, []);
+  if (!raw) return { isTopic: false, query: "", topicWords: [] };
+  try {
+    const cleaned = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(cleaned);
+    return {
+      isTopic: !!parsed.is_topic_question,
+      query: typeof parsed.search_query === "string" ? parsed.search_query.trim() : "",
+      topicWords: Array.isArray(parsed.topic_keywords) ? parsed.topic_keywords.map((w: any) => String(w).toLowerCase().trim()).filter(Boolean) : [],
+    };
+  } catch {
+    return { isTopic: false, query: "", topicWords: [] };
+  }
+}
+
+interface VideoResult {
+  title: string;
+  url: string;
+  channel: string;
+  thumbnail: string | null;
+}
+
+// ---- YouTube video search ----
+// Uses the real YouTube Data API when YOUTUBE_API_KEY is configured, then
+// STRICTLY filters results down to ones that actually match the topic -
+// a result only survives if its title (or description) contains at
+// least half of the classifier's topic keywords (min 1). This is what
+// guarantees "related videos only" - an off-topic top result is dropped
+// rather than shown. Falls back to a plain, guaranteed-valid YouTube
+// search-results link (never a fabricated/broken video id) when the API
+// key is absent, the call fails, or nothing passes the relevance check.
+function isRelevant(text: string, topicWords: string[]): boolean {
+  if (topicWords.length === 0) return true;
+  const lower = text.toLowerCase();
+  const hits = topicWords.filter((w) => lower.includes(w));
+  return hits.length >= Math.max(1, Math.ceil(topicWords.length / 2));
+}
+
+async function searchYouTube(query: string, topicWords: string[]): Promise<VideoResult[]> {
+  const apiKey = Deno.env.get("YOUTUBE_API_KEY");
+  if (apiKey) {
+    try {
+      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoEmbeddable=true&safeSearch=strict&maxResults=8&relevanceLanguage=en&q=${encodeURIComponent(query)}&key=${apiKey}`;
+      const res = await fetchWithTimeout(url, {}, 6000);
+      if (res.ok) {
+        const data = await res.json();
+        const items = (data?.items || [])
+          .filter((it: any) => it?.id?.videoId)
+          .map((it: any) => ({
+            title: it.snippet?.title || "Educational video",
+            url: `https://www.youtube.com/watch?v=${it.id.videoId}`,
+            channel: it.snippet?.channelTitle || "YouTube",
+            thumbnail: it.snippet?.thumbnails?.medium?.url || it.snippet?.thumbnails?.default?.url || null,
+            _desc: it.snippet?.description || "",
+          }))
+          // STRICT relevance filter - drop anything that doesn't actually
+          // mention the topic, rather than showing "close enough" results.
+          .filter((v: any) => isRelevant(`${v.title} ${v._desc}`, topicWords))
+          .slice(0, 3)
+          .map(({ _desc, ...v }: any) => v);
+        if (items.length > 0) return items;
+      }
+    } catch (e) {
+      console.error("[parent-assistant] YouTube API search failed:", e);
+    }
+  }
+  // Fallback: a guaranteed-valid search-results link for the exact topic -
+  // always on-topic since it's the parent's own topic used as the query,
+  // never a specific (possibly wrong) video id.
+  return [{
+    title: `Search YouTube for "${query}"`,
+    url: `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`,
+    channel: "YouTube search",
+    thumbnail: null,
+  }];
+}
+
 function timeStringToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
@@ -446,13 +538,32 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, mode } = await req.json();
+    const responseMode: "text" | "video" = mode === "video" ? "video" : "text";
 
     const keys = getGeminiKeys();
     if (keys.length === 0) {
       return new Response(JSON.stringify({ error: "No AI API keys configured." }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // ---- Video mode: only routes to a video when the message is truly a
+    // "help me understand a topic" question - anything about the child's
+    // own records falls straight through to the normal text flow below,
+    // since a video can never answer those. Checked before the (fairly
+    // expensive) per-child context build, since it doesn't need it.
+    if (responseMode === "video" && typeof message === "string" && message.trim()) {
+      const { isTopic, query, topicWords } = await classifyTopicIntent(message, keys);
+      if (isTopic && query) {
+        const videos = await searchYouTube(query, topicWords);
+        return new Response(JSON.stringify({
+          type: "video",
+          text: "Here's a video that should help explain this:",
+          videos,
+        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      // Not a topic question - fall through to the normal text answer.
     }
 
     const supabase = createClient(
@@ -555,7 +666,7 @@ serve(async (req) => {
     const childNames = children.map((c) => c.fullName).join(", ");
     const multiChild = children.length > 1;
 
-    const systemPrompt = `You are a warm, friendly assistant helping a parent keep track of ${multiChild ? `their children (${childNames})'` : `their child (${childNames})'s`} school life - transport, fees, report cards, attendance, appointments, the academic calendar, hall tickets/exam seating, surveys, safeguarding updates, and messages from school staff. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked, using the conversation so far for context.
+    const systemPrompt = `You are a warm, friendly assistant helping a parent keep track of ${multiChild ? `their children (${childNames})'` : `their child (${childNames})'s`} school life - transport, fees, report cards, attendance, appointments, the academic calendar, hall tickets/exam seating, surveys, safeguarding updates, and messages from school staff. You can also help the parent understand an academic topic/concept (e.g. "explain photosynthesis", "how does long division work") so they can support their child's learning - for that you may use your own general subject-matter knowledge, kept accurate and simple. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked, using the conversation so far for context.
 
 If the parent just greets you (e.g. "hello", "hi") without asking anything specific, greet them back warmly and briefly ask how you can help - do NOT dump details unprompted. Only bring up specific info once they actually ask about it.
 
@@ -563,7 +674,11 @@ ${multiChild ? `This parent has MULTIPLE children: ${childNames}. If their quest
 
 SECURITY: you have information ONLY about this parent's own child(ren) listed in the data below (${childNames}). If asked about any other student, class-wide data, or anything not tied to these specific children, say you don't have access to that information rather than guessing or inventing it.
 
-Answer ONLY using the data given below - never invent dates, amounts, scores, contact details, or seat numbers that aren't present. If something isn't available, say so plainly rather than guessing. Keep answers to 1-4 short, natural sentences.
+For questions about their child's own records/logistics: answer ONLY using the data given below - never invent dates, amounts, scores, contact details, or seat numbers that aren't present. If something isn't available, say so plainly rather than guessing. For topic/concept explanations, you may use general knowledge, but keep it accurate and easy for a parent to relay to their child. Keep answers to 1-4 short, natural sentences.${
+      responseMode === "video"
+        ? `\n- NOTE: The parent is currently in "video" answer mode, but this message isn't a topic question a video could answer (it's about their child's records, or it's small talk) - answer normally in text, and mention they can switch back to video mode for "explain a topic" style questions if relevant.`
+        : ""
+    }
 
 CURRENT DATA:
 ${context}`;
