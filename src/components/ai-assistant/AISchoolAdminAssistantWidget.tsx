@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,17 +49,21 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 }
 
 // ---------------------------------------------------------------------
-// ANSWERING LOGIC (placeholder)
+// ANSWERING LOGIC
 // ---------------------------------------------------------------------
-// TODO: wire this up to a real backend (e.g. a `school-admin-assistant`
-// Supabase edge function, similar to `principal-assistant` /
-// `hod-assistant`) once the actual answering behaviour is decided. For
-// now this just echoes a placeholder so the chat + voice UI can be
-// built and tested end-to-end without a backend dependency.
+// Backed by the `school-admin-assistant` Supabase edge function, which
+// verifies the caller's JWT, requires role "school_admin", and scopes
+// every query to that admin's own school.
+// See supabase/functions/school-admin-assistant/index.ts.
 async function getAssistantReply(userText: string, recentHistory: ChatMessage[]): Promise<string> {
-  void recentHistory; // will be sent to the backend once it exists
-  await new Promise((resolve) => setTimeout(resolve, 500));
-  return `You said: "${userText}". (School Admin Assistant is wired up for chat + voice - real answers coming soon.)`;
+  const { data, error } = await supabase.functions.invoke("school-admin-assistant", {
+    body: {
+      message: userText,
+      history: recentHistory.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+    },
+  });
+  if (error) throw error;
+  return data?.text || "I couldn't come up with an answer just now - please try again.";
 }
 // ---------------------------------------------------------------------
 
