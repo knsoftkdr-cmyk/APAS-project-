@@ -46,7 +46,10 @@ import {
   Accessibility,
   UserPlus,
   Bus,
-  Star
+  Star,
+  Target,
+  GitBranch,
+  Activity
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,6 +86,9 @@ const navItems: Array<{
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
+  { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["teacher"], module: "Analytics" },
+  { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["teacher"], module: "Analytics" },
+  { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["teacher"], module: "Analytics" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher"], module: "Attendance" },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["teacher"], module: "Academic Calendar" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher"], module: "Requests" },
@@ -107,6 +113,7 @@ const navItems: Array<{
   { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-academic-tests", module: "Academic Tests" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
+  { title: "My Mastery", icon: Target, path: "/my-mastery", roles: ["student"], module: "Assessments" },
   { title: "Worksheets", icon: FileText, path: "/worksheets", roles: ["student"], tourId: "nav-worksheets" },
   { title: "Homework", icon: LayoutDashboard, path: "/dashboard", roles: ["student"], tourId: "nav-home", module: "Homework" },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification", module: "Gamification" },
@@ -182,6 +189,9 @@ const navItems: Array<{
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["admin", "hod", "school_admin"], module: "Home" },
   { title: "School Quality Index", icon: Award, path: "/school-quality-index", roles: ["admin", "principal", "school_admin"], module: "School Quality Index" },
   { title: "Competency Heatmap", icon: BarChart3, path: "/competency-heatmap", roles: ["admin", "principal", "hod", "school_admin"] },
+  { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["admin", "principal", "hod", "school_admin"] },
+  { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["admin", "principal", "hod", "school_admin"] },
+  { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Competency Definitions", icon: ClipboardList, path: "/competency-definitions", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Competency Assessment", icon: ClipboardCheck, path: "/competency-assessment", roles: ["teacher"] },
   { title: "My Accommodations", icon: Accessibility, path: "/my-accommodations", roles: ["student"], module: "My Accommodations" },

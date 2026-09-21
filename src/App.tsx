@@ -108,6 +108,10 @@ const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
 const CompetencyDefinitions = lazy(() => import("./pages/CompetencyDefinitions"));
 const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
 const CompetencyHeatmap = lazy(() => import("./pages/CompetencyHeatmap"));
+const StudentMasteryEngine = lazy(() => import("./pages/StudentMasteryEngine"));
+const ClassMasteryDashboard = lazy(() => import("./pages/ClassMasteryDashboard"));
+const KnowledgeGraphEngine = lazy(() => import("./pages/KnowledgeGraphEngine"));
+const BktCalibration = lazy(() => import("./pages/BktCalibration"));
 const SchoolQualityIndexPage = lazy(() => import("./pages/SchoolQualityIndex"));
 const SkillsPassport = lazy(() => import("./pages/SkillsPassport"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
@@ -308,6 +312,10 @@ export default function App() {
                       <Route path="/competency-definitions" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyDefinitions /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-assessment" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><CompetencyAssessment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-heatmap" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyHeatmap /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/my-mastery" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentMasteryEngine /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/class-mastery" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassMasteryDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/concept-dependencies" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><KnowledgeGraphEngine /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/bkt-calibration" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><BktCalibration /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />

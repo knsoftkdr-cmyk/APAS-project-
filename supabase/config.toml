@@ -54,6 +54,36 @@ verify_jwt = false
 [functions.verify-otp]
 verify_jwt = false
 
+[functions.generate-learning-objectives]
+verify_jwt = false
+
+[functions.update-mastery]
+verify_jwt = false
+
+[functions.get-mastery-tree]
+verify_jwt = false
+
+[functions.get-class-mastery]
+verify_jwt = false
+
+[functions.generate-knowledge-graph]
+verify_jwt = false
+
+[functions.get-knowledge-graph]
+verify_jwt = false
+
+[functions.get-prerequisite-readiness]
+verify_jwt = false
+
+[functions.get-at-risk-concepts]
+verify_jwt = false
+
+[functions.get-mastery-history]
+verify_jwt = false
+
+[functions.calibrate-bkt-params]
+verify_jwt = false
+
 [functions.send-push-notification]
 enabled = true
 verify_jwt = false
