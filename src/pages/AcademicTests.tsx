@@ -37,12 +37,11 @@ const CLASS_OPTIONS = [
 
 const SECTION_OPTIONS = ["A", "B", "C", "D", "E"];
 
-// Map class value to storage folder name
-const getClassFolder = (classValue: string): string => {
-  const folderMap: Record<string, string> = { nursery: "nursery", lkg: "lkg", ukg: "ukg" };
-  for (let i = 1; i <= 10; i++) folderMap[`${i}`] = `class ${i}`;
-  return folderMap[classValue] || classValue;
-};
+// Map a CLASS_OPTIONS value ("1", "lkg", ...) to the class_name format
+// stored on the "books" table ("Class 1", "Lkg", ...). Same convention
+// used by the school-scoped subject lookups in EntryTicket.tsx / Curative.tsx.
+const getClassLabelForBooks = (classValue: string): string =>
+  classValue.match(/^\d+$/) ? `Class ${classValue}` : classValue.charAt(0).toUpperCase() + classValue.slice(1);
 
 const QUESTION_TYPE_OPTIONS = [
   { value: "mcq", label: "Multiple Choice (MCQ)" },
@@ -152,36 +151,33 @@ useEffect(() => {
   };
 }, []);
   
-  // Fetch subjects dynamically from TextBooks storage based on selected class
+  // Fetch subjects available for this student's school + class, from the
+  // "books" table (school_id + class_name + is_active), same source the
+  // Entry Ticket / Curative generators use. Subjects are the same across
+  // all sections of a class, so `section` doesn't add another filter here
+  // — it's kept in the query key only so the list re-derives cleanly if a
+  // per-section catalog is ever introduced.
   const { data: subjectOptions, isLoading: loadingSubjects } = useQuery({
-    queryKey: ["class-subjects-storage", studentClass],
+    queryKey: ["class-subjects-books", studentClass, section, profile?.school_id],
     queryFn: async () => {
-      if (!studentClass) return [];
-      const folder = getClassFolder(studentClass);
+      if (!studentClass || !profile?.school_id) return [];
+      const classLabel = getClassLabelForBooks(studentClass);
 
-      const { data: files, error } = await supabase.storage
-        .from("TextBooks")
-        .list(folder);
+      const { data, error } = await supabase
+        .from("books")
+        .select("subject")
+        .eq("class_name", classLabel)
+        .eq("school_id", profile.school_id)
+        .eq("is_active", true)
+        .order("subject", { ascending: true });
 
-      if (error || !files) return [];
+      if (error || !data) return [];
 
-      // Extract unique subjects from filenames
-      const subjects = Array.from(
-        new Map(
-          files
-            .filter((f) => f.name.endsWith(".pdf"))
-            .map<[string, string]>((f) => {
-              const nameWithoutExt = f.name.replace(/\.pdf$/i, "");
-              const subject = nameWithoutExt.split(/[\s_]/)[0];
-              const cleanSubject = subject.charAt(0).toUpperCase() + subject.slice(1).toLowerCase();
-              return [cleanSubject.toLowerCase(), cleanSubject];
-            }),
-        ).values(),
-      ).sort();
-
+      // De-dupe case-insensitively while keeping the original casing
+      const subjects = [...new Map(data.map((b) => [b.subject.toLowerCase(), b.subject])).values()];
       return subjects;
     },
-    enabled: !!studentClass,
+    enabled: !!studentClass && !!profile?.school_id,
   });
 
   // Reset subject when class changes
@@ -494,10 +490,11 @@ border-b-white/80"></div>
                 <label className="text-sm font-medium">
                   Subject <span className="text-red-500">*</span>
                 </label>
-                <Select value={subject} onValueChange={setSubject} disabled={!studentClass || loadingSubjects}>
+                <Select value={subject} onValueChange={setSubject} disabled={!studentClass || !profile?.school_id || loadingSubjects}>
                   <SelectTrigger>
                     <SelectValue placeholder={
                       !studentClass ? "Select a class first" :
+                      !profile?.school_id ? "No school linked to your profile" :
                       loadingSubjects ? "Loading subjects..." :
                       "Select Subject"
                     } />
@@ -507,7 +504,7 @@ border-b-white/80"></div>
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
                     {subjectOptions && subjectOptions.length === 0 && (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">No subjects available for this class</div>
+                      <div className="px-3 py-2 text-sm text-muted-foreground">No subjects available for this class at your school</div>
                     )}
                   </SelectContent>
                 </Select>
