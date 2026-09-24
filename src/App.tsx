@@ -136,7 +136,11 @@ const ERPLibraryManagement = lazy(() => import("./pages/ERPLibraryManagement"));
 const ERPTransport = lazy(() => import("./pages/ERPTransport"));
 const ERPInventory = lazy(() => import("./pages/ERPInventory"));
 const TransportManagement = lazy(() => import("./pages/TransportManagement"));
-
+const DailyReview = lazy(() => import("./pages/DailyReview"));
+const ForgettingForecast = lazy(() => import("./pages/ForgettingForecast"));
+const LearningPath = lazy(() => import("./pages/LearningPath"));
+const NextBestAction = lazy(() => import("./pages/NextBestAction"));
+const MisconceptionInsights = lazy(() => import("./pages/MisconceptionInsights"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
 import IDCardGenerator from "@/pages/IDCardGenerator";
@@ -319,6 +323,11 @@ export default function App() {
                       <Route path="/concept-dependencies" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><KnowledgeGraphEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/bkt-calibration" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><BktCalibration /></RoleGuard></ProtectedRoute>} />
                       <Route path="/adaptive-test" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AdaptiveTest /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/daily-review" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><DailyReview /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/forgetting-forecast" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><ForgettingForecast /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/learning-path" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningPath /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/next-best-action" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><NextBestAction /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/misconceptions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MisconceptionInsights /></RoleGuard></ProtectedRoute>} />
                       <Route path="/item-bank" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><ItemBankReview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />

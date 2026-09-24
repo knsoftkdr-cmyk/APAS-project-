@@ -50,7 +50,10 @@ import {
   Star,
   Target,
   GitBranch,
-  Activity
+  Activity,
+  Route,
+  Lightbulb,
+  Hourglass
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -117,6 +120,11 @@ const navItems: Array<{
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "My Mastery", icon: Target, path: "/my-mastery", roles: ["student"], module: "Assessments" },
   { title: "Adaptive Test", icon: Zap, path: "/adaptive-test", roles: ["student"], module: "Assessments" },
+  { title: "Daily Review", icon: RotateCw, path: "/daily-review", roles: ["student"], module: "Assessments" },
+  { title: "Forgetting Forecast", icon: Hourglass, path: "/forgetting-forecast", roles: ["student"], module: "Assessments" },
+  { title: "Learning Path", icon: Route, path: "/learning-path", roles: ["student"], module: "Assessments" },
+  { title: "What's Next", icon: Sparkles, path: "/next-best-action", roles: ["student"], module: "Assessments" },
+  { title: "Patterns to Watch", icon: Lightbulb, path: "/misconceptions", roles: ["student"], module: "Assessments" },
   { title: "Worksheets", icon: FileText, path: "/worksheets", roles: ["student"], tourId: "nav-worksheets" },
   { title: "Homework", icon: LayoutDashboard, path: "/dashboard", roles: ["student"], tourId: "nav-home", module: "Homework" },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification", module: "Gamification" },
