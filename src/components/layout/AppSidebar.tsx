@@ -53,7 +53,8 @@ import {
   Activity,
   Route,
   Lightbulb,
-  Hourglass
+  Hourglass,
+  Gauge
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -91,6 +92,7 @@ const navItems: Array<{
   { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
   { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["teacher"], module: "Analytics" },
+  { title: "Class Velocity", icon: Gauge, path: "/class-velocity", roles: ["teacher"], module: "Analytics" },
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["teacher"], module: "Analytics" },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["teacher"], module: "Analytics" },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["teacher"], module: "Analytics" },
@@ -125,6 +127,7 @@ const navItems: Array<{
   { title: "Learning Path", icon: Route, path: "/learning-path", roles: ["student"], module: "Assessments" },
   { title: "What's Next", icon: Sparkles, path: "/next-best-action", roles: ["student"], module: "Assessments" },
   { title: "Patterns to Watch", icon: Lightbulb, path: "/misconceptions", roles: ["student"], module: "Assessments" },
+  { title: "My Learning Pace", icon: Gauge, path: "/learning-velocity", roles: ["student"], module: "Assessments" },
   { title: "Worksheets", icon: FileText, path: "/worksheets", roles: ["student"], tourId: "nav-worksheets" },
   { title: "Homework", icon: LayoutDashboard, path: "/dashboard", roles: ["student"], tourId: "nav-home", module: "Homework" },
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification", module: "Gamification" },
@@ -201,6 +204,7 @@ const navItems: Array<{
   { title: "School Quality Index", icon: Award, path: "/school-quality-index", roles: ["admin", "principal", "school_admin"], module: "School Quality Index" },
   { title: "Competency Heatmap", icon: BarChart3, path: "/competency-heatmap", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["admin", "principal", "hod", "school_admin"] },
+  { title: "Class Velocity", icon: Gauge, path: "/class-velocity", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["admin", "principal", "hod", "school_admin"] },
