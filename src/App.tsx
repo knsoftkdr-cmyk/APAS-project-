@@ -143,6 +143,7 @@ const NextBestAction = lazy(() => import("./pages/NextBestAction"));
 const MisconceptionInsights = lazy(() => import("./pages/MisconceptionInsights"));
 const LearningVelocity = lazy(() => import("./pages/LearningVelocity"));
 const ClassVelocityDashboard = lazy(() => import("./pages/ClassVelocityDashboard"));
+const EarlyWarningDashboard = lazy(() => import("./pages/EarlyWarningDashboard"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
 import IDCardGenerator from "@/pages/IDCardGenerator";
@@ -332,6 +333,7 @@ export default function App() {
                       <Route path="/misconceptions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MisconceptionInsights /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningVelocity /></RoleGuard></ProtectedRoute>} />
                       <Route path="/class-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassVelocityDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/early-warning" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><EarlyWarningDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/item-bank" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><ItemBankReview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />

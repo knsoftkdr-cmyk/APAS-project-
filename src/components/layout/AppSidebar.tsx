@@ -54,7 +54,8 @@ import {
   Route,
   Lightbulb,
   Hourglass,
-  Gauge
+  Gauge,
+  Siren
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -93,6 +94,7 @@ const navItems: Array<{
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
   { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["teacher"], module: "Analytics" },
   { title: "Class Velocity", icon: Gauge, path: "/class-velocity", roles: ["teacher"], module: "Analytics" },
+  { title: "Early Warning", icon: Siren, path: "/early-warning", roles: ["teacher"], module: "Analytics" },
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["teacher"], module: "Analytics" },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["teacher"], module: "Analytics" },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["teacher"], module: "Analytics" },
@@ -205,6 +207,7 @@ const navItems: Array<{
   { title: "Competency Heatmap", icon: BarChart3, path: "/competency-heatmap", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Class Velocity", icon: Gauge, path: "/class-velocity", roles: ["admin", "principal", "hod", "school_admin"] },
+  { title: "Early Warning", icon: Siren, path: "/early-warning", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["admin", "principal", "hod", "school_admin"] },

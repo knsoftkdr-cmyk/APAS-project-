@@ -54,6 +54,8 @@ interface Props {
   riskLevel?: string;
   contributingFactors?: string[];
   suggestedTier?: 2 | 3; // pre-selects tier on a NEW intervention only; ignored when editing an existing one
+  suggestedPriority?: "low" | "medium" | "high"; // pre-selects priority on a NEW intervention only (e.g. from the Intervention Recommendation Engine, module 14)
+  suggestedActions?: string[]; // pre-checks these PRESET_ACTIONS (or adds them as custom actions) on a NEW intervention only
   interventions: Intervention[]; // FULL history for this student, newest first
   onSaved: () => void;
 }
@@ -106,7 +108,7 @@ function buildReasonFromFactors(factors?: string[]): string {
 type View = "list" | "form";
 type FormMode = "view" | "edit";
 
-export function InterventionDrawer({ open, onOpenChange, student, riskLevel, contributingFactors, suggestedTier, interventions, onSaved }: Props) {
+export function InterventionDrawer({ open, onOpenChange, student, riskLevel, contributingFactors, suggestedTier, suggestedPriority, suggestedActions, interventions, onSaved }: Props) {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -129,11 +131,12 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
   const resetFormFields = (iv: Intervention | null) => {
     setReason(iv?.reason ?? buildReasonFromFactors(contributingFactors));
-    setPriority(iv?.priority || "medium");
-    // Only apply the Analytics-suggested tier on a brand-new intervention;
-    // an existing one keeps whatever tier it was already saved with.
+    // Only apply the Analytics/Intervention-Engine-suggested priority, tier
+    // and action plan on a brand-new intervention; an existing one keeps
+    // whatever it was already saved with.
+    setPriority(iv?.priority || suggestedPriority || "medium");
     setTier(iv?.tier ?? suggestedTier ?? 2);
-    setActionPlan(iv?.action_plan || []);
+    setActionPlan(iv?.action_plan || suggestedActions || []);
     setCustomAction("");
     setExpectedOutcome(iv?.expected_outcome || "");
     setReviewDate(iv?.review_date || "");
