@@ -13,6 +13,7 @@ import { useClassInterventionRecommendations, type ClassInterventionRow } from "
 import { RiskBadge } from "@/components/risk/RiskBadge";
 import { RiskCauseList } from "@/components/risk/RiskCauseList";
 import { InterventionRecommendationList } from "@/components/risk/InterventionRecommendationList";
+import { InterventionEffectivenessSummary } from "@/components/risk/InterventionEffectivenessSummary";
 import { InterventionDrawer, Intervention } from "@/components/InterventionDrawer";
 
 interface ClassOption { id: string; label: string; name: string; section: string }
@@ -113,6 +114,8 @@ export default function EarlyWarningDashboard() {
             </Select>
           </CardContent>
         </Card>
+
+        <InterventionEffectivenessSummary classId={classId || undefined} />
 
         {!classId ? (
           <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">

@@ -45,6 +45,32 @@ export interface Intervention {
   status: "active" | "completed" | "cancelled";
   created_at: string;
   updated_at: string;
+  // Module 15 (Intervention Effectiveness Tracking) - populated automatically
+  // by DB triggers on insert / on completion, so any existing `.select("*")`
+  // on student_interventions already returns these; nothing to fetch.
+  baseline_metrics?: InterventionMetricsSnapshot | null;
+  followup_metrics?: InterventionMetricsSnapshot | null;
+  effectiveness?: "improved" | "no_change" | "worsened" | "insufficient_data" | null;
+  effectiveness_detail?: {
+    verdict: string;
+    signals_compared: number;
+    votes: number;
+    deltas: {
+      avg_mastery_delta?: number;
+      correctness_rate_14d_delta?: number;
+      risk_signal_count_delta?: number;
+      attempts_14d_delta?: number;
+    };
+  } | null;
+}
+
+export interface InterventionMetricsSnapshot {
+  captured_at: string;
+  avg_mastery: number | null;
+  mastery_objectives_tracked: number;
+  correctness_rate_14d: number | null;
+  attempts_14d: number;
+  risk_signal_count: number;
 }
 
 interface Props {
@@ -92,6 +118,43 @@ const TIER_LABEL: Record<number, string> = {
   2: "Tier 2 — Targeted",
   3: "Tier 3 — Intensive",
 };
+
+// Module 15: how a completed intervention's verdict renders.
+const EFFECTIVENESS_STYLES: Record<string, string> = {
+  improved: "bg-emerald-100 text-emerald-700",
+  no_change: "bg-slate-100 text-slate-600",
+  worsened: "bg-red-100 text-red-700",
+  insufficient_data: "bg-gray-100 text-gray-500",
+};
+
+const EFFECTIVENESS_LABEL: Record<string, string> = {
+  improved: "Improved",
+  no_change: "No Change",
+  worsened: "Worsened",
+  insufficient_data: "Not enough data",
+};
+
+// Turns the effectiveness_detail.deltas jsonb into short, readable lines.
+function describeEffectivenessDeltas(detail?: Intervention["effectiveness_detail"]): string[] {
+  if (!detail?.deltas) return [];
+  const d = detail.deltas;
+  const lines: string[] = [];
+  if (typeof d.avg_mastery_delta === "number") {
+    const pts = Math.round(d.avg_mastery_delta * 100);
+    lines.push(`Average mastery ${pts > 0 ? "up" : pts < 0 ? "down" : "unchanged"} ${pts !== 0 ? `${Math.abs(pts)} pts` : ""}`.trim());
+  }
+  if (typeof d.correctness_rate_14d_delta === "number") {
+    const pts = Math.round(d.correctness_rate_14d_delta * 100);
+    lines.push(`14-day correctness ${pts > 0 ? "up" : pts < 0 ? "down" : "unchanged"} ${pts !== 0 ? `${Math.abs(pts)} pts` : ""}`.trim());
+  }
+  if (typeof d.risk_signal_count_delta === "number" && d.risk_signal_count_delta !== 0) {
+    lines.push(`Active risk signals ${d.risk_signal_count_delta < 0 ? "down" : "up"} by ${Math.abs(d.risk_signal_count_delta)}`);
+  }
+  if (typeof d.attempts_14d_delta === "number" && d.attempts_14d_delta !== 0) {
+    lines.push(`Practice attempts (14d) ${d.attempts_14d_delta > 0 ? "up" : "down"} by ${Math.abs(d.attempts_14d_delta)}`);
+  }
+  return lines;
+}
 
 // Turn AI-generated contributing factors (e.g. "Homework completion is low (28%)")
 // into a readable, pre-filled Reason paragraph the teacher can edit before saving.
@@ -326,6 +389,11 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                     Tier {iv.tier}
                   </Badge>
                 )}
+                {iv.status === "completed" && iv.effectiveness && (
+                  <Badge className={EFFECTIVENESS_STYLES[iv.effectiveness] + " hover:opacity-90"}>
+                    {EFFECTIVENESS_LABEL[iv.effectiveness]}
+                  </Badge>
+                )}
               </div>
               <span className="text-xs text-muted-foreground shrink-0">
                 {iv.status === "completed"
@@ -447,6 +515,29 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
       <div className="rounded-xl border border-green-100 bg-green-50/30 p-3.5">
         <label className="text-[10px] font-semibold text-green-700 uppercase tracking-wide">Outcome</label>
         <p className="text-sm mt-1.5 text-slate-700">{selected.outcome}</p>
+      </div>
+    )}
+
+    {selected.status === "completed" && selected.effectiveness && (
+      <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
+        <div className="flex items-center justify-between">
+          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Effectiveness</label>
+          <Badge className={EFFECTIVENESS_STYLES[selected.effectiveness] + " hover:opacity-90"}>
+            {EFFECTIVENESS_LABEL[selected.effectiveness]}
+          </Badge>
+        </div>
+        {selected.effectiveness === "insufficient_data" ? (
+          <p className="text-xs text-muted-foreground mt-2">
+            Not enough comparable data between the start and end of this intervention to judge impact.
+          </p>
+        ) : (
+          <ul className="text-xs text-slate-600 mt-2 space-y-1 list-disc list-inside">
+            {describeEffectivenessDeltas(selected.effectiveness_detail).map((line, i) => <li key={i}>{line}</li>)}
+          </ul>
+        )}
+        <p className="text-[10px] text-muted-foreground mt-2">
+          Comparing signals from when this intervention started to when it was marked completed.
+        </p>
       </div>
     )}
 
