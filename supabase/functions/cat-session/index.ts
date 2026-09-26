@@ -6,7 +6,13 @@
 // The Computerized Adaptive Test driver. One endpoint, several actions:
 //
 //   availability  { scope_type, scope_id }                    how many items exist for a scope
-//   start         { scope_type, scope_id, max_items?, ... }   begin (or resume) a session
+//   start         { scope_type, scope_id, mode?, length?, source?, ... }  begin (or resume) a session
+//                 mode: "assessment" (default, precision-targeted, feeds
+//                 student_ability/scaled score) or "practice" (fixed
+//                 `length` items, e.g. 5 - still adapts every answer, just
+//                 doesn't chase a precision target). source: free-form
+//                 label for where a practice round was launched from
+//                 ("adaptive_homework" | "worksheet" | "ai_tutor" | ...).
 //   answer        { session_id, item_id, selected_option }    grade, update θ, serve next / finish
 //   state         { session_id }                              resync after reload / lost response
 //   result        { session_id }                              full report for a finished session
@@ -212,10 +218,21 @@ async function loadCandidates(
 
 async function publicItem(ctx: Ctx, itemId: string, seq: number) {
   const { data: item } = await ctx.admin
-    .from("question_bank").select("id, stem, options, bloom_level").eq("id", itemId).single();
+    .from("question_bank").select("id, stem, options, bloom_level, irt_b").eq("id", itemId).single();
   if (!item) throw new HttpError(500, "Item vanished");
-  // NOTE: correct_option / explanation deliberately not selected.
-  return { item_id: item.id, seq, stem: item.stem, options: item.options, bloom_level: item.bloom_level };
+  // NOTE: correct_option / explanation / the raw irt_b number deliberately
+  // not selected/returned - only a coarse, friendly label derived from it,
+  // safe to show alongside a question a student hasn't answered yet.
+  return {
+    item_id: item.id, seq, stem: item.stem, options: item.options, bloom_level: item.bloom_level,
+    difficulty_label: difficultyLabel(Number(item.irt_b)),
+  };
+}
+
+function difficultyLabel(b: number): "foundational" | "moderate" | "challenging" {
+  if (b < -0.5) return "foundational";
+  if (b < 0.5) return "moderate";
+  return "challenging";
 }
 
 function publicSession(s: Row) {
@@ -225,6 +242,8 @@ function publicSession(s: Row) {
     scope_id: s.scope_id,
     scope_label: s.scope_label,
     status: s.status,
+    mode: s.mode ?? "assessment",
+    source: s.source ?? null,
     items_administered: s.items_administered,
     correct_count: s.correct_count,
     min_items: s.min_items,
@@ -259,21 +278,30 @@ async function availability(ctx: Ctx, body: Row) {
 async function start(ctx: Ctx, body: Row) {
   const studentId = ctx.ownStudentId!;
   const { scopeType, scopeId } = parseScope(body);
+  const mode = body.mode === "practice" ? "practice" : "assessment";
+  const source = typeof body.source === "string" && body.source.trim() ? body.source.trim().slice(0, 40) : null;
 
   // Retire abandoned-looking sessions so they don't block a fresh start.
   const staleBefore = new Date(Date.now() - STALE_SESSION_HOURS * 3600_000).toISOString();
   await ctx.admin.from("cat_sessions").update({ status: "abandoned", updated_at: new Date().toISOString() })
-    .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId)
+    .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId).eq("mode", mode)
     .eq("status", "in_progress").lt("updated_at", staleBefore);
 
   const { data: live } = await ctx.admin.from("cat_sessions").select("*")
-    .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId).eq("status", "in_progress").maybeSingle();
+    .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId).eq("mode", mode)
+    .eq("status", "in_progress").maybeSingle();
   if (live) return { resumed: true, ...(await currentView(ctx, live)) };
 
   const label = await scopeLabel(ctx, scopeType, scopeId);
   const { candidates } = await loadCandidates(ctx, studentId, scopeType, scopeId, []);
 
-  const minItems = clampInt(body.min_items, 3, 30, DEFAULTS.minItems);
+  // Practice rounds are short and fixed-length: setting min_items = max_items
+  // means evaluateStopping() (unchanged) can only ever stop at "max_items",
+  // never early on precision - so it always runs exactly `length` items,
+  // with difficulty still adapting after every single answer.
+  const minItems = mode === "practice"
+    ? clampInt(body.length, 3, 10, 5)
+    : clampInt(body.min_items, 3, 30, DEFAULTS.minItems);
   if (candidates.length < minItems) {
     throw new HttpError(
       409,
@@ -282,10 +310,12 @@ async function start(ctx: Ctx, body: Row) {
       { active_items: candidates.length, min_required: minItems },
     );
   }
-  const maxItems = clampInt(body.max_items, minItems, 30, Math.max(DEFAULTS.maxItems, minItems));
-  const seTarget = clampNum(body.se_target, 0.25, 0.8, DEFAULTS.seTarget);
+  const maxItems = mode === "practice" ? minItems : clampInt(body.max_items, minItems, 30, Math.max(DEFAULTS.maxItems, minItems));
+  const seTarget = mode === "practice" ? 0.01 : clampNum(body.se_target, 0.25, 0.8, DEFAULTS.seTarget);
 
-  // Warm start: begin from this student's last ability in the scope, if any.
+  // Warm start: begin from this student's last ability in the scope, if any
+  // (shared between assessment and practice - both benefit from not
+  // starting a strong student back at the middle of the difficulty range).
   const { data: prev } = await ctx.admin.from("student_ability").select("theta")
     .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId).maybeSingle();
   const priorMean = prev ? clampNum(prev.theta, -3, 3, 0) : 0;
@@ -295,6 +325,7 @@ async function start(ctx: Ctx, body: Row) {
 
   const { data: created, error } = await ctx.admin.from("cat_sessions").insert({
     student_id: studentId, scope_type: scopeType, scope_id: scopeId, scope_label: label,
+    mode, source,
     theta: priorMean, se: 1, prior_mean: priorMean, prior_sd: 1,
     min_items: minItems, max_items: maxItems, se_target: seTarget,
     pending_item_id: first.id, pending_served_at: new Date().toISOString(),
@@ -303,7 +334,8 @@ async function start(ctx: Ctx, body: Row) {
   if (error) {
     // Lost a race with a concurrent Start - return the winner.
     const { data: winner } = await ctx.admin.from("cat_sessions").select("*")
-      .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId).eq("status", "in_progress").maybeSingle();
+      .eq("student_id", studentId).eq("scope_type", scopeType).eq("scope_id", scopeId).eq("mode", mode)
+      .eq("status", "in_progress").maybeSingle();
     if (winner) return { resumed: true, ...(await currentView(ctx, winner)) };
     throw new Error(error.message);
   }
@@ -531,9 +563,11 @@ async function buildResult(ctx: Ctx, sessionId: string) {
 async function list(ctx: Ctx, body: Row) {
   const studentId = ctx.isStudent ? ctx.ownStudentId! : String(body.student_id ?? "");
   if (!studentId) throw new HttpError(400, "student_id is required");
-  const { data } = await ctx.admin.from("cat_sessions")
-    .select("id, scope_type, scope_id, scope_label, status, theta, se, items_administered, correct_count, calibrated_fraction, started_at, completed_at")
+  let query = ctx.admin.from("cat_sessions")
+    .select("id, scope_type, scope_id, scope_label, status, mode, source, theta, se, items_administered, correct_count, calibrated_fraction, started_at, completed_at")
     .eq("student_id", studentId).order("started_at", { ascending: false }).limit(20);
+  if (body.mode === "practice" || body.mode === "assessment") query = query.eq("mode", body.mode);
+  const { data } = await query;
   return {
     sessions: (data ?? []).map((s: Row) => ({
       ...s,

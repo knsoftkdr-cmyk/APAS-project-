@@ -141,6 +141,8 @@ const ForgettingForecast = lazy(() => import("./pages/ForgettingForecast"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const NextBestAction = lazy(() => import("./pages/NextBestAction"));
 const MisconceptionInsights = lazy(() => import("./pages/MisconceptionInsights"));
+const AdaptiveHomework = lazy(() => import("./pages/AdaptiveHomework"));
+const AdaptiveHomeworkGenerator = lazy(() => import("./pages/AdaptiveHomeworkGenerator"));
 const LearningVelocity = lazy(() => import("./pages/LearningVelocity"));
 const ClassVelocityDashboard = lazy(() => import("./pages/ClassVelocityDashboard"));
 const EarlyWarningDashboard = lazy(() => import("./pages/EarlyWarningDashboard"));
@@ -330,6 +332,8 @@ export default function App() {
                       <Route path="/forgetting-forecast" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><ForgettingForecast /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-path" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningPath /></RoleGuard></ProtectedRoute>} />
                       <Route path="/next-best-action" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><NextBestAction /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/adaptive-homework" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AdaptiveHomework /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/adaptive-homework/generate" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><AdaptiveHomeworkGenerator /></RoleGuard></ProtectedRoute>} />
                       <Route path="/misconceptions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MisconceptionInsights /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningVelocity /></RoleGuard></ProtectedRoute>} />
                       <Route path="/class-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassVelocityDashboard /></RoleGuard></ProtectedRoute>} />

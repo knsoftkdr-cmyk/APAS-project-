@@ -6,11 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, User, Loader2, Sparkles, GraduationCap, Compass } from "lucide-react";
+import { Bot, Send, User, Loader2, Sparkles, GraduationCap, Compass, Zap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
 import landingairobot from "@/assets/landing-ai-robot.png"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AdaptivePracticeWidget } from "@/components/AdaptivePracticeWidget";
 
 interface Message {
   role: "user" | "assistant";
@@ -105,6 +108,11 @@ const AITutor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [gradeBand, setGradeBand] = useState<GradeBand | null>(null);
   const [gradeLoading, setGradeLoading] = useState(true);
+  const [practicePickerOpen, setPracticePickerOpen] = useState(false);
+  const [practiceBooks, setPracticeBooks] = useState<Array<{ id: number; subject: string; class_name: string | null }>>([]);
+  const [practiceChapters, setPracticeChapters] = useState<Array<{ id: number; chapter_name: string }>>([]);
+  const [practiceBookId, setPracticeBookId] = useState("");
+  const [practiceScope, setPracticeScope] = useState<{ id: number; label: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const activeConfig = MODE_CONFIG[mode];
@@ -250,6 +258,20 @@ const AITutor = () => {
         <PageHeader
           title={activeConfig.label}
           subtitle="Your personal 24/7 AI study companion"
+          action={
+            <Button
+              variant="outline" size="sm" className="gap-1.5"
+              onClick={async () => {
+                setPracticePickerOpen(true);
+                if (practiceBooks.length === 0) {
+                  const { data } = await supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject");
+                  setPracticeBooks(data ?? []);
+                }
+              }}
+            >
+              <Zap className="h-4 w-4" /> Adaptive Practice
+            </Button>
+          }
         />
 
         {/* Mode Toggle */}
@@ -381,6 +403,55 @@ const AITutor = () => {
           </Button>
         </div>
       </div>
+
+      <Dialog open={practicePickerOpen} onOpenChange={setPracticePickerOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-base">Adaptive Practice</DialogTitle></DialogHeader>
+          <p className="text-xs text-muted-foreground -mt-2">Pick a subject and chapter — questions get harder or easier as you answer.</p>
+          <div className="space-y-3">
+            <Select value={practiceBookId} onValueChange={(v) => { setPracticeBookId(v); setPracticeChapters([]); }}>
+              <SelectTrigger><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+              <SelectContent>
+                {practiceBooks.map((b) => (
+                  <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` (${b.class_name})` : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              disabled={!practiceBookId}
+              onValueChange={async (v) => {
+                if (v === "__load__") return;
+                const chapter = practiceChapters.find((c) => String(c.id) === v);
+                if (chapter) { setPracticeScope({ id: chapter.id, label: chapter.chapter_name }); setPracticePickerOpen(false); }
+              }}
+              onOpenChange={async (open) => {
+                if (open && practiceBookId && practiceChapters.length === 0) {
+                  const { data } = await supabase
+                    .from("curriculum_chapters").select("id, chapter_name, unit_id, units!inner(book_id)")
+                    .eq("units.book_id", Number(practiceBookId));
+                  setPracticeChapters((data as unknown as Array<{ id: number; chapter_name: string }>) ?? []);
+                }
+              }}
+            >
+              <SelectTrigger><SelectValue placeholder="Choose a chapter" /></SelectTrigger>
+              <SelectContent>
+                {practiceChapters.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.chapter_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {practiceScope && (
+        <AdaptivePracticeWidget
+          open={!!practiceScope}
+          onOpenChange={(open) => !open && setPracticeScope(null)}
+          scopeType="chapter"
+          scopeId={practiceScope.id}
+          scopeLabel={practiceScope.label}
+          source="ai_tutor"
+        />
+      )}
     </AppLayout>
   );
 };

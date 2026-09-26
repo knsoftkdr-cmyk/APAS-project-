@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Loader2, FileText, Send, Check, Download, ImageIcon, PenLine, Upload, Paperclip, X } from "lucide-react";
+import { Loader2, FileText, Send, Check, Download, ImageIcon, PenLine, Upload, Paperclip, X, Zap } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { assessFileClarity } from "@/lib/fileClarity";
 import * as pdfjsLib from "pdfjs-dist";
+import { AdaptivePracticeWidget } from "@/components/AdaptivePracticeWidget";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 interface WorksheetAssignment {
@@ -303,6 +304,26 @@ async function removeAnswerFile(submissionId: string, fileUrl: string): Promise<
   }
 }
 
+// Worksheets are free-text (chapter/subject as typed by whoever created
+// them), not linked to curriculum IDs - best-effort match against the
+// structured curriculum so "Adaptive Practice" can still work per chapter.
+// Returns null if no confident match is found (button quietly no-ops).
+async function resolveChapterScope(subject: string | null, chapter: string | null): Promise<{ id: number; label: string } | null> {
+  if (!chapter) return null;
+  let query = supabase
+    .from("curriculum_chapters")
+    .select("id, chapter_name, units!inner(book_id, books!inner(subject))")
+    .ilike("chapter_name", `%${chapter.trim()}%`)
+    .limit(5);
+  const { data } = await query;
+  if (!data || data.length === 0) return null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = data as any[];
+  const bySubject = subject ? rows.find((r) => r.units?.books?.subject?.toLowerCase() === subject.toLowerCase()) : null;
+  const match = bySubject ?? rows[0];
+  return match ? { id: match.id, label: match.chapter_name } : null;
+}
+
 export default function Worksheets() {
   const { user, profile } = useAuth();
   const { markWorksheetNotificationAsRead } = useNotifications();
@@ -313,6 +334,8 @@ export default function Worksheets() {
   const [isSubmittingWorksheet, setIsSubmittingWorksheet] = useState(false);
   const [uploadingId, setUploadingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [practiceScope, setPracticeScope] = useState<{ id: number; label: string } | null>(null);
+  const [resolvingPracticeFor, setResolvingPracticeFor] = useState<string | null>(null);
 
   const [answerPreviewOpen, setAnswerPreviewOpen] = useState(false);
   const [answerPreviewLoading, setAnswerPreviewLoading] = useState(false);
@@ -636,6 +659,25 @@ export default function Worksheets() {
                       >
                         <PenLine className="h-4 w-4" /> Practice Worksheet
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-2 rounded-xl border-amber-200 text-amber-700 hover:bg-amber-50"
+                        disabled={resolvingPracticeFor === ws.id}
+                        onClick={async () => {
+                          setResolvingPracticeFor(ws.id);
+                          const scope = await resolveChapterScope(ws.worksheets?.subject ?? null, ws.worksheets?.chapter ?? null);
+                          setResolvingPracticeFor(null);
+                          if (!scope) {
+                            toast.info("Adaptive practice isn't available for this chapter yet.");
+                            return;
+                          }
+                          setPracticeScope(scope);
+                        }}
+                      >
+                        {resolvingPracticeFor === ws.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                        Adaptive Practice
+                      </Button>
 
                       <input
                         type="file"
@@ -868,6 +910,17 @@ export default function Worksheets() {
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {practiceScope && (
+        <AdaptivePracticeWidget
+          open={!!practiceScope}
+          onOpenChange={(open) => !open && setPracticeScope(null)}
+          scopeType="chapter"
+          scopeId={practiceScope.id}
+          scopeLabel={practiceScope.label}
+          source="worksheet"
+        />
+      )}
     </AppLayout>
   );
 }
