@@ -11,12 +11,15 @@
 
 // deno-lint-ignore-file no-explicit-any
 import {
+  analyzeDistractors,
   belowChance,
   calibrateMML,
   detectMiskey,
   type CalibrationMode,
   type CalibrationResponse,
 } from "./irt.ts";
+
+const OPTION_LETTERS = ["A", "B", "C", "D"];
 
 type Row = Record<string, any>;
 type SupabaseAdmin = any; // the service-role client; typed loosely to avoid pulling in supabase-js's generics here
@@ -54,6 +57,7 @@ export interface CalibrationOutcome {
   newly_flagged_count: number;
   auto_suspended_count: number;
   mean_abs_b_shift: number;
+  distractor_issue_count: number;
   auto_suspended: string[];
   flagged: Row[];
   largest_changes: Row[];
@@ -95,14 +99,14 @@ export async function runCalibrationForScope(admin: SupabaseAdmin, opts: Calibra
     const subIds = (subs ?? []).map((s: Row) => s.subtopic_id as number);
     for (const chunk of chunks(subIds, 200)) {
       const { data } = await admin.from("question_bank")
-        .select("id, stem, status, correct_option, irt_a, irt_b, irt_c, b_prior, calibration_status, n_responses, review_flag")
+        .select("id, stem, status, correct_option, irt_a, irt_b, irt_c, b_prior, calibration_status, n_responses, review_flag, distractor_misconceptions")
         .in("subtopic_id", chunk).gt("n_responses", 0);
       items.push(...(data ?? []));
     }
   } else {
     for (let from = 0; ; from += PAGE) {
       const { data } = await admin.from("question_bank")
-        .select("id, stem, status, correct_option, irt_a, irt_b, irt_c, b_prior, calibration_status, n_responses, review_flag")
+        .select("id, stem, status, correct_option, irt_a, irt_b, irt_c, b_prior, calibration_status, n_responses, review_flag, distractor_misconceptions")
         .gt("n_responses", 0).order("id").range(from, from + PAGE - 1);
       items.push(...(data ?? []));
       if ((data?.length ?? 0) < PAGE) break;
@@ -154,6 +158,7 @@ export async function runCalibrationForScope(admin: SupabaseAdmin, opts: Calibra
   const flagged: Row[] = [];
   const changes: Row[] = [];
   const suspended: string[] = [];
+  const distractorRows: Row[] = [];
   let newlyFlagged = 0;
   const modeCounts: Record<CalibrationMode, number> = { prior: 0, rasch: 0, "2pl": 0 };
 
@@ -167,6 +172,27 @@ export async function runCalibrationForScope(admin: SupabaseAdmin, opts: Calibra
       .map((r) => ({ option: r.selected_option as string, theta: thetaBySession.get(r.session_id)! }));
     const miskey = detectMiskey(item.correct_option, obs);
     const chanceFail = belowChance(c.nCorrect, c.n, c.c);
+
+    // Per-option distractor functioning - same `obs` evidence as detectMiskey,
+    // classified per option instead of collapsed into one item-level verdict.
+    const distractorStats = analyzeDistractors(item.correct_option, OPTION_LETTERS, obs);
+    const dMap: Record<string, string> = item.distractor_misconceptions ?? {};
+    let distractorFlag: "ok" | "has_non_functioning" | "has_overperforming" | "insufficient_data" = "ok";
+    const nonKeyStatuses = distractorStats.filter((d) => !d.isCorrect).map((d) => d.status);
+    if (nonKeyStatuses.every((s) => s === "insufficient_data")) distractorFlag = "insufficient_data";
+    else if (nonKeyStatuses.includes("overperforming")) distractorFlag = "has_overperforming";
+    else if (nonKeyStatuses.includes("non_functioning")) distractorFlag = "has_non_functioning";
+
+    for (const d of distractorStats) {
+      const mcId = dMap[d.option];
+      distractorRows.push({
+        item_id: c.id, option_label: d.option, is_correct_option: d.isCorrect,
+        n_selected: d.n, selection_rate: round(d.selectionRate, 4),
+        mean_theta: d.meanTheta == null ? null : round(d.meanTheta, 3),
+        misconception_id: mcId != null ? Number(mcId) : null,
+        status: d.status, note: d.note, last_analyzed_at: now,
+      });
+    }
 
     let flag: string = "ok";
     let note: string | null = null;
@@ -186,6 +212,7 @@ export async function runCalibrationForScope(admin: SupabaseAdmin, opts: Calibra
         ...(suspend ? { status: "draft" } : {}),
         irt_a: round(c.a, 3), irt_b: round(c.b, 3), b_se: c.bSe == null ? null : round(c.bSe, 3),
         calibration_status: c.mode, review_flag: flag, review_note: note, last_calibrated_at: now,
+        distractor_flag: distractorFlag, distractor_checked_at: now,
       },
     });
     changes.push({ item_id: c.id, n: c.n, mode: c.mode, b_before: round(Number(item.irt_b), 2), b_after: round(c.b, 2), a_after: round(c.a, 2), delta_b: round(c.b - Number(item.irt_b), 2) });
@@ -202,15 +229,21 @@ export async function runCalibrationForScope(admin: SupabaseAdmin, opts: Calibra
       const failed = results.find((r: Row) => r.error);
       if (failed?.error) throw new Error(`update failed: ${failed.error.message}`);
     }
+    for (const batch of chunks(distractorRows, 100)) {
+      const { error } = await admin.from("question_option_stats").upsert(batch, { onConflict: "item_id,option_label" });
+      if (error) throw new Error(`distractor stats upsert failed: ${error.message}`);
+    }
   }
 
   const meanAbsShift = changes.length ? changes.reduce((s, c) => s + Math.abs(c.delta_b), 0) / changes.length : 0;
+  const distractorIssueCount = updates.filter((u) => u.patch.distractor_flag === "has_non_functioning" || u.patch.distractor_flag === "has_overperforming").length;
   const summary = {
     by_stage: modeCounts,
     flagged_count: flagged.length,
     newly_flagged_count: newlyFlagged,
     auto_suspended_count: suspended.length,
     mean_abs_b_shift: round(meanAbsShift, 3),
+    distractor_issue_count: distractorIssueCount,
   };
 
   await admin.from("irt_calibration_runs").insert({

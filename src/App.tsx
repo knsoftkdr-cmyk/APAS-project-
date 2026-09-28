@@ -114,6 +114,7 @@ const KnowledgeGraphEngine = lazy(() => import("./pages/KnowledgeGraphEngine"));
 const BktCalibration = lazy(() => import("./pages/BktCalibration"));
 const AdaptiveTest = lazy(() => import("./pages/AdaptiveTest"));
 const ItemBankReview = lazy(() => import("./pages/ItemBankReview"));
+const AssessmentPaperPrint = lazy(() => import("./pages/AssessmentPaperPrint"));
 const SchoolQualityIndexPage = lazy(() => import("./pages/SchoolQualityIndex"));
 const SkillsPassport = lazy(() => import("./pages/SkillsPassport"));
 const ParentDashboard = lazy(() => import("./pages/ParentDashboard"));
@@ -339,6 +340,7 @@ export default function App() {
                       <Route path="/class-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassVelocityDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/early-warning" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><EarlyWarningDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/item-bank" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><ItemBankReview /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/assessment-paper-print" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentPaperPrint /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />

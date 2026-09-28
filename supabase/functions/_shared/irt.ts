@@ -578,3 +578,89 @@ export function belowChance(nCorrect: number, n: number, c: number, z = 2, minN 
   const p = nCorrect / n;
   return p + z * Math.sqrt((c * (1 - c)) / n) < c;
 }
+
+// ─────────────────────────────────────────────────────────────────────────
+// Distractor analysis
+//
+// detectMiskey() above answers one yes/no question about the whole item
+// ("is the key probably wrong?"). This answers a narrower, per-option
+// question that matters even when the key is fine: is EACH wrong option
+// actually doing its job as a distractor? Same underlying evidence (which
+// option each student picked, and their ability at the time), grouped and
+// classified per option instead of collapsed into a single verdict:
+//
+//   non_functioning - almost nobody picks it. Too obviously wrong to be
+//                     testing anything; a rewrite candidate.
+//   overperforming  - picked by students of EQUAL OR HIGHER ability than
+//                     the correct answer. Not necessarily a mis-key (that's
+//                     detectMiskey's job, on the aggregate), but a strong
+//                     signal the option is arguably defensible or the item
+//                     is ambiguous - the same comparison detectMiskey makes,
+//                     just reported per-distractor instead of thrown away
+//                     after one boolean.
+//   functioning     - selected by a real share of students, predominantly
+//                     weaker ones. Working as intended.
+//   insufficient_data - too few total responses yet to judge anything.
+// ─────────────────────────────────────────────────────────────────────────
+
+export type DistractorStatus = "functioning" | "non_functioning" | "overperforming" | "insufficient_data" | "correct_option";
+
+export interface DistractorOptionStat {
+  option: string;
+  isCorrect: boolean;
+  n: number;
+  selectionRate: number;
+  meanTheta: number | null;
+  status: DistractorStatus;
+  note: string | null;
+}
+
+export function analyzeDistractors(
+  key: string,
+  validOptions: string[],
+  obs: OptionObservation[],
+  opts: { minTotal?: number; minPerOption?: number; nonFunctioningRate?: number; margin?: number } = {},
+): DistractorOptionStat[] {
+  const { minTotal = 20, minPerOption = 3, nonFunctioningRate = 0.05, margin = 0.5 } = opts;
+
+  const stats: Record<string, { n: number; meanTheta: number }> = {};
+  for (const o of obs) {
+    const s = (stats[o.option] ??= { n: 0, meanTheta: 0 });
+    s.meanTheta += o.theta;
+    s.n++;
+  }
+  for (const s of Object.values(stats)) s.meanTheta /= s.n;
+
+  const total = obs.length;
+  const keyMeanTheta = stats[key]?.meanTheta ?? null;
+
+  return validOptions.map((option) => {
+    const s = stats[option];
+    const n = s?.n ?? 0;
+    const selectionRate = total > 0 ? n / total : 0;
+    const meanTheta = s?.meanTheta ?? null;
+    const isCorrect = option === key;
+
+    if (isCorrect) {
+      return { option, isCorrect, n, selectionRate, meanTheta, status: "correct_option", note: null };
+    }
+    if (total < minTotal) {
+      return { option, isCorrect, n, selectionRate, meanTheta, status: "insufficient_data", note: null };
+    }
+    if (n < minPerOption || selectionRate < nonFunctioningRate) {
+      return {
+        option, isCorrect, n, selectionRate, meanTheta,
+        status: "non_functioning",
+        note: `Only ${Math.round(selectionRate * 100)}% of students chose this option - too implausible to be doing any work as a distractor`,
+      };
+    }
+    if (keyMeanTheta != null && meanTheta != null && meanTheta >= keyMeanTheta + margin) {
+      return {
+        option, isCorrect, n, selectionRate, meanTheta,
+        status: "overperforming",
+        note: "Chosen by students of equal-or-higher ability than the correct answer - may be ambiguous or defensible",
+      };
+    }
+    return { option, isCorrect, n, selectionRate, meanTheta, status: "functioning", note: null };
+  });
+}
