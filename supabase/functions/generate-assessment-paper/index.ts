@@ -27,6 +27,17 @@
 //     title?: string               -- defaults to "<blueprint title> - <date>"
 //   }
 //
+//   Exam Simulation: instead of hand-building a blueprint, pass
+//     exam_pattern_code: "cbse_10_science" | "cbse_10_maths_standard" | "unit_test_25" |
+//                        "half_yearly_50" | "annual_100" | <a custom pattern code>
+//     syllabus_weightage: [...]     -- which chapters/topics the mock covers (required)
+//     title?: string
+//   The pattern supplies total marks, duration, the section structure (e.g.
+//   20 x 1-mark MCQ, 6 x 2-mark ..., case-based sections), Bloom and difficulty
+//   mix, and the printed exam instructions. Each pattern section stays its own
+//   section on the paper, even when two sections share a question type.
+//   List patterns with: { list_exam_patterns: true }.
+//
 //   Inline blueprint shape:
 //   {
 //     title: string, subject?: string,
@@ -75,14 +86,55 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
 
+    if (body.list_exam_patterns === true) {
+      const { data, error } = await admin.from("exam_pattern_templates")
+        .select("code, name, board, grade, subject, description, total_marks, duration_minutes, question_type_mix, bloom_distribution, difficulty_distribution, instructions, is_system")
+        .eq("status", "active").order("is_system", { ascending: false }).order("name");
+      if (error) throw new Error(error.message);
+      return json({ patterns: data ?? [] });
+    }
+
     // ── Load or validate the blueprint ───────────────────────────────
     let blueprint: Row;
     let blueprintId: string | null = null;
-    if (body.blueprint_id) {
+    let examPatternCode: string | null = null;
+    if (body.exam_pattern_code) {
+      const { data: pattern } = await admin.from("exam_pattern_templates").select("*")
+        .eq("code", body.exam_pattern_code).eq("status", "active").maybeSingle();
+      if (!pattern) return json({ error: `Unknown exam pattern "${body.exam_pattern_code}"` }, 404);
+      if (!Array.isArray(body.syllabus_weightage) || !body.syllabus_weightage.length) {
+        return json({ error: "syllabus_weightage is required with exam_pattern_code - say which chapters/topics the mock should cover" }, 400);
+      }
+      for (const w of body.syllabus_weightage) {
+        if (!(Number(w?.scope_id) > 0) || !(Number(w?.weight_pct) > 0)) return json({ error: "each syllabus_weightage entry needs a scope_id and a positive weight_pct" }, 400);
+      }
+      blueprint = {
+        title: body.title || pattern.name, subject: body.subject ?? pattern.subject ?? null,
+        syllabus_weightage: body.syllabus_weightage, total_marks: pattern.total_marks,
+        duration_minutes: pattern.duration_minutes, bloom_distribution: pattern.bloom_distribution ?? {},
+        difficulty_distribution: pattern.difficulty_distribution ?? {}, question_type_mix: pattern.question_type_mix,
+        instructions: pattern.instructions ?? [], exam_pattern_code: pattern.code,
+      };
+      const validation = validateBlueprint(blueprint);
+      if (validation) return json({ error: validation }, 500);
+      examPatternCode = pattern.code;
+      if (body.save_as_blueprint === true) {
+        const { data, error } = await admin.from("assessment_blueprints").insert({
+          title: blueprint.title, subject: blueprint.subject, syllabus_weightage: blueprint.syllabus_weightage,
+          total_marks: blueprint.total_marks, duration_minutes: blueprint.duration_minutes,
+          bloom_distribution: blueprint.bloom_distribution, difficulty_distribution: blueprint.difficulty_distribution,
+          question_type_mix: blueprint.question_type_mix, exam_pattern_code: pattern.code,
+          instructions: blueprint.instructions, created_by: user.id,
+        }).select("id").single();
+        if (error) throw new Error(`Could not save blueprint: ${error.message}`);
+        blueprintId = data.id;
+      }
+    } else if (body.blueprint_id) {
       const { data, error } = await admin.from("assessment_blueprints").select("*").eq("id", body.blueprint_id).single();
       if (error || !data) return json({ error: "Blueprint not found" }, 404);
       blueprint = data;
       blueprintId = data.id;
+      examPatternCode = data.exam_pattern_code ?? null;
     } else if (body.blueprint) {
       const validation = validateBlueprint(body.blueprint);
       if (validation) return json({ error: validation }, 400);
@@ -137,7 +189,7 @@ serve(async (req) => {
 
           const picked = await pickBestItem(admin, {
             questionType: mix.question_type, subtopicIds: scope.subtopicIds,
-            preferredDifficulty, bloomTarget, bloomTally, exclude: usedItemIds,
+            preferredDifficulty, bloomTarget, bloomTally, exclude: usedItemIds, slotMarks: marksPerItem,
           });
 
           if (picked) {
@@ -146,6 +198,7 @@ serve(async (req) => {
             selected.push({
               item_table: mix.question_type === "mcq" ? "question_bank" : "question_bank_extended",
               item_id: picked.id, marks: marksPerItem, question_type: mix.question_type,
+              section_label: mix.section_label ?? null, bank_max_marks: picked.max_marks ?? null,
               difficulty: picked.difficulty, bloom_level: picked.bloom_level, scope_label: scope.label,
             });
           } else {
@@ -168,6 +221,7 @@ serve(async (req) => {
       blueprint_id: blueprintId, title: body.title || `${blueprint.title} - ${new Date().toISOString().slice(0, 10)}`,
       status: "draft", target_total_marks: blueprint.total_marks, assembled_total_marks: assembledMarks,
       coverage_report: coverageReport, generated_by: user.id,
+      exam_pattern_code: examPatternCode, instructions: blueprint.instructions ?? [],
     }).select().single();
     if (paperErr) throw new Error(paperErr.message);
 
@@ -175,12 +229,16 @@ serve(async (req) => {
       paper_id: paper.id,
       mcq_item_id: it.item_table === "question_bank" ? it.item_id : null,
       extended_item_id: it.item_table === "question_bank_extended" ? it.item_id : null,
-      section_label: sectionLabelFor(it.question_type), marks: it.marks, order_index: idx,
+      section_label: it.section_label || sectionLabelFor(it.question_type), marks: it.marks, order_index: idx,
     }));
     const { error: itemsErr } = await admin.from("generated_assessment_paper_items").insert(rows);
     if (itemsErr) throw new Error(itemsErr.message);
 
-    return json({ paper_id: paper.id, blueprint_id: blueprintId, assembled_total_marks: assembledMarks, item_count: selected.length, coverage_report: coverageReport });
+    return json({
+      paper_id: paper.id, blueprint_id: blueprintId, exam_pattern_code: examPatternCode,
+      duration_minutes: blueprint.duration_minutes ?? null, assembled_total_marks: assembledMarks,
+      item_count: selected.length, coverage_report: coverageReport,
+    });
   } catch (e) {
     console.error("generate-assessment-paper error", e);
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
@@ -197,6 +255,7 @@ function validateBlueprint(b: Row): string | null {
   if (!Array.isArray(b.question_type_mix) || !b.question_type_mix.length) return "blueprint.question_type_mix must be a non-empty array";
   for (const m of b.question_type_mix) {
     if (!(Number(m.marks_per_item) > 0) || !(Number(m.total_marks) > 0)) return `question_type_mix entry for "${m.question_type}" needs positive marks_per_item and total_marks`;
+    if (Math.abs(Number(m.total_marks) / Number(m.marks_per_item) - Math.round(Number(m.total_marks) / Number(m.marks_per_item))) > 1e-9) return `question_type_mix entry for "${m.question_type}": total_marks must be a whole multiple of marks_per_item`;
   }
   const mixTotal = b.question_type_mix.reduce((s: number, m: Row) => s + Number(m.total_marks), 0);
   if (Math.abs(mixTotal - Number(b.total_marks)) > 0.01) return `question_type_mix marks (${mixTotal}) must sum to total_marks (${b.total_marks})`;
@@ -279,12 +338,12 @@ function sectionLabelFor(type: string): string {
 
 async function pickBestItem(
   admin: ReturnType<typeof createClient>,
-  opts: { questionType: string; subtopicIds: number[]; preferredDifficulty: string; bloomTarget: Record<string, number>; bloomTally: Record<string, number>; exclude: Set<string> },
+  opts: { questionType: string; subtopicIds: number[]; preferredDifficulty: string; bloomTarget: Record<string, number>; bloomTally: Record<string, number>; exclude: Set<string>; slotMarks?: number },
 ): Promise<Row | null> {
   const table = opts.questionType === "mcq" ? "question_bank" : "question_bank_extended";
   const cols = table === "question_bank"
     ? "id, difficulty, bloom_level, quality_score, quality_flag, review_flag, distractor_flag, status, subtopic_id"
-    : "id, difficulty, bloom_level, quality_score, quality_flag, calibration_flag, status, subtopic_id, question_type";
+    : "id, difficulty, bloom_level, quality_score, quality_flag, calibration_flag, status, subtopic_id, question_type, max_marks";
 
   let q = admin.from(table).select(cols).in("subtopic_id", opts.subtopicIds).eq("status", "active").eq("difficulty", opts.preferredDifficulty);
   if (table === "question_bank_extended") q = q.eq("question_type", opts.questionType);
@@ -300,6 +359,9 @@ async function pickBestItem(
   if (!candidates.length) {
     let q2 = admin.from(table).select(cols).in("subtopic_id", opts.subtopicIds).eq("status", "active");
     if (table === "question_bank_extended") q2 = q2.eq("question_type", opts.questionType);
+    // Same quality gates as the primary query - a fallback must never spend a rejected item.
+    if (table === "question_bank") q2 = q2.or("quality_flag.is.null,quality_flag.neq.reject").or("review_flag.is.null,review_flag.eq.ok");
+    else q2 = q2.or("quality_flag.is.null,quality_flag.neq.reject");
     const { data: fallback } = await q2;
     candidates = (fallback ?? []).filter((c: Row) => !opts.exclude.has(c.id));
   }
@@ -313,7 +375,12 @@ async function pickBestItem(
     return targetShare - actualShare; // bigger = more under-represented = more desirable
   };
 
+  // A bank item whose own max_marks equals the paper slot needs no rescaling
+  // when graded, so it is a cleaner fit; prefer it before anything else.
+  const slotFit = (c: Row) => (opts.slotMarks == null || c.max_marks == null || Number(c.max_marks) === opts.slotMarks) ? 0 : 1;
   candidates.sort((a: Row, b: Row) => {
+    const fitDiff = slotFit(a) - slotFit(b);
+    if (fitDiff !== 0) return fitDiff;
     const gapDiff = bloomGap(b.bloom_level) - bloomGap(a.bloom_level);
     if (Math.abs(gapDiff) > 0.02) return gapDiff;
     return (Number(b.quality_score) || 50) - (Number(a.quality_score) || 50);

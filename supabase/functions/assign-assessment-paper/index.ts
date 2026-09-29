@@ -6,6 +6,11 @@
 // Staff only.
 //   Body: {
 //     paper_id: uuid
+//     is_mock?: boolean          -- run as a mock exam (Exam Simulation Mode)
+//     strict_timer?: boolean     -- server enforces started_at + time limit (+ grace); defaults to
+//                                   true for mock exams. Requires a time limit.
+//     grace_seconds?: number     -- network grace after the timer ends (default 60, max 600)
+//     opens_at?: string (ISO)    -- exam cannot be started before this
 //     class_id?: uuid            -- assign to this class's whole roster
 //     student_ids?: uuid[]       -- and/or these specific students (union with class_id's roster)
 //     title?: string             -- defaults to the paper's own title
@@ -18,6 +23,7 @@
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { canStaffAccessClass, canStaffAccessStudent, resolveCaller } from "../_shared/studentAccess.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,8 +53,8 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await asCaller.auth.getUser();
     if (userError || !user) return json({ error: "Not authenticated" }, 401);
 
-    const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
-    if (!profile || !STAFF_ROLES.includes(profile.role)) return json({ error: "Not permitted to assign assessments" }, 403);
+    const caller = await resolveCaller(admin, user.id);
+    if (!caller || !STAFF_ROLES.includes(caller.role)) return json({ error: "Not permitted to assign assessments" }, 403);
 
     const body = await req.json().catch(() => ({}));
     const { paper_id, class_id = null, due_at = null } = body;
@@ -61,10 +67,43 @@ serve(async (req) => {
     if (paperErr || !paper) return json({ error: "Paper not found" }, 404);
     if (paper.status === "archived") return json({ error: "This paper is archived and can't be assigned" }, 409);
 
+    // ── Exam-simulation rules ─────────────────────────────────────────
+    const isMock = body.is_mock === true;
+    const strictTimer = body.strict_timer === undefined ? isMock : body.strict_timer === true;
+    let graceSeconds = 60;
+    if (body.grace_seconds != null) {
+      graceSeconds = Number(body.grace_seconds);
+      if (!Number.isInteger(graceSeconds) || graceSeconds < 0 || graceSeconds > 600) return json({ error: "grace_seconds must be a whole number from 0 to 600" }, 400);
+    }
+    let opensAt: string | null = null;
+    if (body.opens_at != null && body.opens_at !== "") {
+      const t = new Date(body.opens_at);
+      if (Number.isNaN(t.getTime())) return json({ error: "opens_at must be a valid date-time" }, 400);
+      opensAt = t.toISOString();
+    }
+    if (due_at != null && Number.isNaN(new Date(due_at).getTime())) return json({ error: "due_at must be a valid date-time" }, 400);
+    if (opensAt && due_at && new Date(due_at) <= new Date(opensAt)) return json({ error: "due_at must be after opens_at" }, 400);
+    if (body.time_limit_minutes != null && !(Number(body.time_limit_minutes) > 0)) return json({ error: "time_limit_minutes must be positive" }, 400);
+
     let timeLimitMinutes = body.time_limit_minutes ?? null;
     if (timeLimitMinutes == null && paper.blueprint_id) {
       const { data: bp } = await admin.from("assessment_blueprints").select("duration_minutes").eq("id", paper.blueprint_id).single();
       timeLimitMinutes = bp?.duration_minutes ?? null;
+    }
+
+    if (strictTimer && timeLimitMinutes == null) {
+      return json({ error: "A strict timer needs a time limit - set time_limit_minutes, or use a paper whose blueprint has a duration" }, 400);
+    }
+
+    // Teachers may only assign to classes they teach / students on those rosters;
+    // school-bound staff only within their own school.
+    if (class_id) {
+      const access = await canStaffAccessClass(admin, caller, class_id);
+      if (!access.ok) return json({ error: access.error }, access.status ?? 403);
+    }
+    for (const sid of explicitStudentIds) {
+      const access = await canStaffAccessStudent(admin, caller, sid);
+      if (!access.ok) return json({ error: access.error }, access.status ?? 403);
     }
 
     // ── Resolve the roster ────────────────────────────────────────────
@@ -88,6 +127,7 @@ serve(async (req) => {
     const { data: assignment, error: assignErr } = await admin.from("generated_assessment_paper_assignments").insert({
       paper_id, title: body.title || paper.title, class_id, student_ids: [...rosterIds],
       due_at, time_limit_minutes: timeLimitMinutes, student_count: rosterIds.size, assigned_by: user.id,
+      is_mock: isMock, strict_timer: strictTimer, grace_seconds: graceSeconds, opens_at: opensAt,
     }).select().single();
     if (assignErr) throw new Error(assignErr.message);
 
@@ -98,7 +138,7 @@ serve(async (req) => {
     const { error: attemptErr } = await admin.from("generated_assessment_paper_attempts").insert(attemptRows);
     if (attemptErr) throw new Error(attemptErr.message);
 
-    return json({ assignment_id: assignment.id, student_count: rosterIds.size, mcq_max_marks: mcqMax, open_ended_max_marks: openMax });
+    return json({ assignment_id: assignment.id, is_mock: isMock, strict_timer: strictTimer, time_limit_minutes: timeLimitMinutes, student_count: rosterIds.size, mcq_max_marks: mcqMax, open_ended_max_marks: openMax });
   } catch (e) {
     console.error("assign-assessment-paper error", e);
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);

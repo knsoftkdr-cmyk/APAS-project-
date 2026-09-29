@@ -5,7 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle, BarChart3, Sparkles } from "lucide-react";
+import { ClassCohortView, ClassReadinessView } from "@/components/exam/ExamReadinessPanels";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useClassMastery, useGenerateLearningObjectives } from "@/hooks/useMastery";
@@ -22,8 +24,11 @@ export default function ClassMasteryDashboard() {
   const [classId, setClassId] = useState<string>("");
   const [bookId, setBookId] = useState<string>("");
   const [loadingOptions, setLoadingOptions] = useState(true);
+  const [view, setView] = useState<"mastery" | "readiness" | "cohort">("mastery");
+  const [blueprints, setBlueprints] = useState<{ id: string; title: string }[]>([]);
 
-  const { data: topics, isLoading, refetch } = useClassMastery(classId || undefined, bookId ? Number(bookId) : undefined);
+  const numericBookId = bookId && bookId !== "all" ? Number(bookId) : undefined;
+  const { data: topics, isLoading, refetch } = useClassMastery(classId || undefined, numericBookId);
   const generateObjectives = useGenerateLearningObjectives();
 
   useEffect(() => {
@@ -55,6 +60,14 @@ export default function ClassMasteryDashboard() {
     if (profile?.id) loadOptions();
   }, [profile?.id, profile?.role]);
 
+  // Saved exam blueprints, so readiness can be weighted the way a specific exam is.
+  useEffect(() => {
+    if (!profile?.id) return;
+    // deno-lint-ignore no-explicit-any
+    (supabase as any).from("assessment_blueprints").select("id, title").eq("status", "active").order("created_at", { ascending: false }).limit(50)
+      .then(({ data }: { data: { id: string; title: string }[] | null }) => setBlueprints(data ?? []));
+  }, [profile?.id]);
+
   const weakTopics = (topics ?? []).filter((t) => t.is_weak_spot);
 
   return (
@@ -69,7 +82,7 @@ export default function ClassMasteryDashboard() {
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-white">Class Mastery</h1>
               <p className="text-violet-100 text-xs md:text-sm mt-0.5">
-                Topic-by-topic mastery across your class, with weak spots flagged automatically.
+                Topic mastery, exam readiness and how your section compares with its grade and school.
               </p>
             </div>
           </div>
@@ -84,8 +97,9 @@ export default function ClassMasteryDashboard() {
               </SelectContent>
             </Select>
             <Select value={bookId} onValueChange={setBookId} disabled={loadingOptions}>
-              <SelectTrigger className="sm:w-64"><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+              <SelectTrigger className="sm:w-64"><SelectValue placeholder={view === "mastery" ? "Choose a subject" : "All subjects"} /></SelectTrigger>
               <SelectContent>
+                {view !== "mastery" && <SelectItem value="all">All subjects</SelectItem>}
                 {books.map((b) => (
                   <SelectItem key={b.id} value={String(b.id)}>
                     {b.subject} {b.class_name ? `(${b.class_name})` : ""}
@@ -96,7 +110,21 @@ export default function ClassMasteryDashboard() {
           </CardContent>
         </Card>
 
-        {!classId || !bookId ? (
+        <Tabs value={view} onValueChange={(v) => setView(v as typeof view)}>
+          <TabsList>
+            <TabsTrigger value="mastery">Mastery</TabsTrigger>
+            <TabsTrigger value="readiness">Exam readiness</TabsTrigger>
+            <TabsTrigger value="cohort">Cohort intelligence</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        {view === "readiness" ? (
+          classId ? <ClassReadinessView key={`r-${classId}-${numericBookId ?? "all"}`} classId={classId} bookId={numericBookId} blueprints={blueprints} />
+            : <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">Pick a class to see how ready its students are for the exam.</CardContent></Card>
+        ) : view === "cohort" ? (
+          classId ? <ClassCohortView key={`c-${classId}-${numericBookId ?? "all"}`} classId={classId} bookId={numericBookId} />
+            : <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">Pick a class to compare it with its grade and school.</CardContent></Card>
+        ) : !classId || !bookId || bookId === "all" ? (
           <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
             Pick a class and a subject to see mastery by topic.
           </CardContent></Card>

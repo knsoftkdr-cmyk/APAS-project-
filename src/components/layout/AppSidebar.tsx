@@ -56,6 +56,7 @@ import {
   Lightbulb,
   Hourglass,
   Gauge,
+  Timer,
   Siren
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -100,6 +101,7 @@ const navItems: Array<{
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["teacher"], module: "Analytics" },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["teacher"], module: "Analytics" },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["teacher"], module: "Analytics" },
+  { title: "Mock Exams", icon: Timer, path: "/mock-exams", roles: ["teacher"], module: "Analytics" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["teacher"], module: "Attendance" },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["teacher"], module: "Academic Calendar" },
   { title: "Requests", icon: Send, path: "/requests", roles: ["teacher"], module: "Requests" },
@@ -125,6 +127,8 @@ const navItems: Array<{
   { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-academic-tests", module: "Academic Tests" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "My Mastery", icon: Target, path: "/my-mastery", roles: ["student"], module: "Assessments" },
+  { title: "Exam Readiness", icon: Gauge, path: "/exam-readiness", roles: ["student"], module: "Assessments" },
+  { title: "My Exams", icon: ClipboardCheck, path: "/my-exams", roles: ["student"], module: "Assessments" },
   { title: "Adaptive Test", icon: Zap, path: "/adaptive-test", roles: ["student"], module: "Assessments" },
   { title: "Daily Review", icon: RotateCw, path: "/daily-review", roles: ["student"], module: "Assessments" },
   { title: "Forgetting Forecast", icon: Hourglass, path: "/forgetting-forecast", roles: ["student"], module: "Assessments" },
@@ -215,6 +219,7 @@ const navItems: Array<{
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["admin", "principal", "hod", "school_admin"] },
+  { title: "Mock Exams", icon: Timer, path: "/mock-exams", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Competency Definitions", icon: ClipboardList, path: "/competency-definitions", roles: ["admin", "principal", "hod", "school_admin"] },
   { title: "Competency Assessment", icon: ClipboardCheck, path: "/competency-assessment", roles: ["teacher"] },
   { title: "My Accommodations", icon: Accessibility, path: "/my-accommodations", roles: ["student"], module: "My Accommodations" },
