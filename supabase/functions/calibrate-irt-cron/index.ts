@@ -34,7 +34,19 @@ const json = (body: unknown, status = 200) =>
 // deno-lint-ignore no-explicit-any
 type Row = Record<string, any>;
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleOpenEndedCalibrationCron } from "../_shared/handlers/openEndedCalibrationCron.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  open_ended: { handler: handleOpenEndedCalibrationCron },
+};
+
 serve(async (req) => {
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES, "job");
+  if (merged) return merged;
+
   try {
     const expected = Deno.env.get("CRON_SECRET");
     const given = req.headers.get("x-cron-secret");

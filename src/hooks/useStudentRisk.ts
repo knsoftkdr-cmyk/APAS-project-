@@ -37,8 +37,8 @@ export function useStudentRisk(studentId?: string) {
   return useQuery<StudentRiskProfile>({
     queryKey: ["student-risk-profile", studentId ?? "self"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-student-risk-profile", {
-        body: { student_id: studentId },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "risk_profile", student_id: studentId },
       });
       if (error) throw error;
       return data as StudentRiskProfile;
@@ -52,8 +52,8 @@ export function useClassRisk(classId?: string) {
   return useQuery<ClassRiskStudentRow[]>({
     queryKey: ["class-risk-roster", classId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-class-risk-roster", {
-        body: { class_id: classId },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "risk_roster", class_id: classId },
       });
       if (error) throw error;
       return (data?.students ?? []) as ClassRiskStudentRow[];

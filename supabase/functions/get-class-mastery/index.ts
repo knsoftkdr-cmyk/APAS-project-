@@ -90,8 +90,30 @@ function anonymiseForStudent(cmp: Row): Row {
   return { ...cmp, levels, topics };
 }
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleStudentRiskProfile } from "../_shared/handlers/studentRiskProfile.ts";
+import { handleClassRiskRoster } from "../_shared/handlers/classRiskRoster.ts";
+import { handleInterventionRecommendations } from "../_shared/handlers/interventionRecommendations.ts";
+import { handleInterventionEffectivenessSummary } from "../_shared/handlers/interventionEffectivenessSummary.ts";
+import { handleClassVelocity } from "../_shared/handlers/classVelocity.ts";
+import { handleClassMisconceptionHotspots } from "../_shared/handlers/classMisconceptionHotspots.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  class_velocity: { handler: handleClassVelocity },
+  misconception_hotspots: { handler: handleClassMisconceptionHotspots },
+  risk_profile: { handler: handleStudentRiskProfile },
+  risk_roster: { handler: handleClassRiskRoster },
+  intervention_recs: { handler: handleInterventionRecommendations },
+  intervention_effectiveness: { handler: handleInterventionEffectivenessSummary },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES, "mode");
+  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");

@@ -190,7 +190,7 @@ export interface ExamPattern {
 export function useExamPatterns() {
   return useQuery<ExamPattern[]>({
     queryKey: ["exam-patterns"],
-    queryFn: async () => (await invokeFn<{ patterns: ExamPattern[] }>("generate-assessment-paper", { list_exam_patterns: true })).patterns,
+    queryFn: async () => (await invokeFn<{ patterns: ExamPattern[] }>("evaluate-assessment", { action: "generate_paper", list_exam_patterns: true })).patterns,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -204,8 +204,8 @@ export interface GeneratedMock {
 export function useGenerateMockExam() {
   return useMutation({
     mutationFn: (args: { examPatternCode: string; syllabusWeightage: { scope_type: "chapter" | "topic"; scope_id: number; label?: string; weight_pct: number }[]; title?: string; subject?: string }) =>
-      invokeFn<GeneratedMock>("generate-assessment-paper", {
-        exam_pattern_code: args.examPatternCode, syllabus_weightage: args.syllabusWeightage, title: args.title, subject: args.subject, save_as_blueprint: true,
+      invokeFn<GeneratedMock>("evaluate-assessment", {
+        action: "generate_paper", exam_pattern_code: args.examPatternCode, syllabus_weightage: args.syllabusWeightage, title: args.title, subject: args.subject, save_as_blueprint: true,
       }),
   });
 }
@@ -213,8 +213,8 @@ export function useGenerateMockExam() {
 export function useAssignMockExam() {
   return useMutation({
     mutationFn: (args: { paperId: string; classId: string; title?: string; opensAt?: string | null; dueAt?: string | null; timeLimitMinutes?: number | null; strictTimer: boolean; graceSeconds?: number }) =>
-      invokeFn<{ assignment_id: string; student_count: number; time_limit_minutes: number | null; strict_timer: boolean }>("assign-assessment-paper", {
-        paper_id: args.paperId, class_id: args.classId, is_mock: true, strict_timer: args.strictTimer, title: args.title,
+      invokeFn<{ assignment_id: string; student_count: number; time_limit_minutes: number | null; strict_timer: boolean }>("evaluate-assessment", {
+        action: "assign_paper", paper_id: args.paperId, class_id: args.classId, is_mock: true, strict_timer: args.strictTimer, title: args.title,
         opens_at: args.opensAt || undefined, due_at: args.dueAt || undefined,
         time_limit_minutes: args.timeLimitMinutes ?? undefined, grace_seconds: args.graceSeconds,
       }),
@@ -248,7 +248,7 @@ export interface AttemptPayload {
 export function useExamAttempt(assignmentId?: string) {
   return useQuery<AttemptPayload>({
     queryKey: ["exam-attempt", assignmentId],
-    queryFn: () => invokeFn<AttemptPayload>("get-assessment-paper-attempt", { assignment_id: assignmentId }),
+    queryFn: () => invokeFn<AttemptPayload>("cat-session", { action: "paper_attempt", assignment_id: assignmentId }),
     enabled: !!assignmentId,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
@@ -260,7 +260,8 @@ export function useSubmitExam() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: { attemptId: string; mcq: Record<string, string>; open: Record<string, string> }) =>
-      invokeFn<{ status: string; total_score: number; total_max_marks: number; auto_submitted: boolean; note?: string }>("submit-assessment-paper-attempt", {
+      invokeFn<{ status: string; total_score: number; total_max_marks: number; auto_submitted: boolean; note?: string }>("cat-session", {
+        action: "paper_submit",
         attempt_id: args.attemptId,
         mcq_answers: Object.entries(args.mcq).map(([item_id, selected_option]) => ({ item_id, selected_option })),
         open_responses: Object.entries(args.open).map(([item_id, answer_text]) => ({ item_id, answer_text })),

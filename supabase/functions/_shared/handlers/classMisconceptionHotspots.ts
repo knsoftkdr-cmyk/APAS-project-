@@ -1,16 +1,17 @@
-// supabase/functions/get-class-forgetting-risk/index.ts
+// supabase/functions/_shared/handlers/classMisconceptionHotspots.ts
 //
-// Deploy with:
-//   supabase functions deploy get-class-forgetting-risk
+// Formerly the standalone `get-class-misconception-hotspots` edge function. It is no longer deployed on its
+// own (Edge Function deployment limit): `get-class-mastery` routes to it via mode "misconception_hotspots"
+// - see _shared/mergedRouter.ts. Request/response contract is unchanged.
 //
 // Teacher/admin only. Aggregates every student in a class's roster
-// (class_students) against one subject/book and flags topics where many
-// students are about to forget them, via get_class_forgetting_risk().
-// Mirrors get-class-mastery's roster resolution exactly.
+// (class_students) against one subject/book and surfaces misconceptions
+// shared across the most students - "12 students all confuse X with Y" -
+// via get_class_misconception_hotspots(). Mirrors get-class-mastery's and
+// get-class-forgetting-risk's roster resolution exactly.
 //
-// Body: { class_id, book_id, threshold?, horizon_days? }
+// Body: { class_id, book_id, min_occurrences? }
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -18,22 +19,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
-import { handleForgettingForecast } from "../_shared/handlers/forgettingForecast.ts";
-import { handleRetentionCurve } from "../_shared/handlers/retentionCurve.ts";
-
-// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
-const MERGED_ROUTES: RouteTable = {
-  student_forecast: { handler: handleForgettingForecast },
-  retention_curve: { handler: handleRetentionCurve },
-};
-
-serve(async (req) => {
+export async function handleClassMisconceptionHotspots(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
-  const merged = await routeMerged(req, MERGED_ROUTES);
-  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -65,7 +52,7 @@ serve(async (req) => {
       });
     }
 
-    const { class_id, book_id, threshold, horizon_days } = await req.json().catch(() => ({}));
+    const { class_id, book_id, min_occurrences } = await req.json().catch(() => ({}));
     if (!class_id || !book_id) {
       return new Response(JSON.stringify({ error: "class_id and book_id are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -90,27 +77,26 @@ serve(async (req) => {
 
     const studentIds = (roster ?? []).map((r) => r.student_id);
     if (studentIds.length === 0) {
-      return new Response(JSON.stringify({ class_id, book_id, topics: [] }), {
+      return new Response(JSON.stringify({ class_id, book_id, hotspots: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data, error } = await supabaseClient.rpc("get_class_forgetting_risk", {
+    const { data, error } = await supabaseClient.rpc("get_class_misconception_hotspots", {
       p_student_ids: studentIds,
       p_book_id: book_id,
-      p_threshold: threshold ?? 0.5,
-      p_horizon_days: horizon_days ?? 14,
+      p_min_occurrences: min_occurrences ?? 2,
     });
     if (error) throw error;
 
-    return new Response(JSON.stringify({ class_id, book_id, roster_size: studentIds.length, topics: data ?? [] }), {
+    return new Response(JSON.stringify({ class_id, book_id, roster_size: studentIds.length, hotspots: data ?? [] }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("get-class-forgetting-risk error", e);
+    console.error("get-class-misconception-hotspots error", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
-});
+}

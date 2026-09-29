@@ -80,7 +80,7 @@ export default function AssessmentPaperPrint() {
     if (!paperId) return;
     setLoading(true);
     setError(null);
-    invokeFn<PaperPayload>("get-assessment-paper-full", { paper_id: paperId, include_answer_key: includeKey })
+    invokeFn<PaperPayload>("evaluate-assessment", { action: "get_paper_full", paper_id: paperId, include_answer_key: includeKey })
       .then(setData)
       .catch((e: Error) => { setError(e.message); toast.error(e.message); })
       .finally(() => setLoading(false));

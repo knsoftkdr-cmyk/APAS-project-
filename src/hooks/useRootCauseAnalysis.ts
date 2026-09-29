@@ -33,8 +33,8 @@ export function useRootCauseAnalysis(learningObjectiveId?: number, studentId?: s
   return useQuery<RootCauseAnalysis>({
     queryKey: ["root-cause-analysis", studentId ?? "self", learningObjectiveId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("root-cause-analysis", {
-        body: { learning_objective_id: learningObjectiveId, student_id: studentId },
+      const { data, error } = await supabase.functions.invoke("get-mastery-history", {
+        body: { action: "root_cause", learning_objective_id: learningObjectiveId, student_id: studentId },
       });
       if (error) {
         const { message } = await unwrapFunctionError(error, "Couldn't run root-cause analysis.");

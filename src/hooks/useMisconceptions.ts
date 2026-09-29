@@ -40,8 +40,8 @@ export function useStudentMisconceptions(args: { studentId?: string; minOccurren
   return useQuery<StudentMisconception[]>({
     queryKey: ["student-misconceptions", args.studentId ?? "self", args.minOccurrences ?? 2, args.bookId ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-student-misconceptions", {
-        body: { student_id: args.studentId, min_occurrences: args.minOccurrences, book_id: args.bookId },
+      const { data, error } = await supabase.functions.invoke("get-mastery-history", {
+        body: { action: "student_misconceptions", student_id: args.studentId, min_occurrences: args.minOccurrences, book_id: args.bookId },
       });
       if (error) {
         const { message } = await unwrapFunctionError(error, "Couldn't load misconception patterns.");
@@ -58,8 +58,8 @@ export function useClassMisconceptionHotspots(classId?: string, bookId?: number,
   return useQuery<ClassMisconceptionHotspot[]>({
     queryKey: ["class-misconception-hotspots", classId, bookId, minOccurrences ?? 2],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-class-misconception-hotspots", {
-        body: { class_id: classId, book_id: bookId, min_occurrences: minOccurrences },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "misconception_hotspots", class_id: classId, book_id: bookId, min_occurrences: minOccurrences },
       });
       if (error) {
         const { message } = await unwrapFunctionError(error, "Couldn't load class misconception hotspots.");

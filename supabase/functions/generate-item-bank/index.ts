@@ -68,8 +68,22 @@ interface CleanItem {
   distractorMisconceptions: Record<string, number>;
 }
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleGenerateOpenEndedItems } from "../_shared/handlers/generateOpenEndedItems.ts";
+import { handleScoreQuestionQuality } from "../_shared/handlers/scoreQuestionQuality.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  open_ended: { handler: handleGenerateOpenEndedItems },
+  score_quality: { handler: handleScoreQuestionQuality },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES);
+  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");

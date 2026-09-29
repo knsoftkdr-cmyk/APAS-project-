@@ -40,8 +40,8 @@ export function useInterventionRecommendations(studentId?: string) {
   return useQuery<StudentInterventionPlan>({
     queryKey: ["intervention-recommendations", studentId ?? "self"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-intervention-recommendations", {
-        body: { student_id: studentId },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "intervention_recs", student_id: studentId },
       });
       if (error) throw error;
       return data as StudentInterventionPlan;
@@ -55,8 +55,8 @@ export function useClassInterventionRecommendations(classId?: string) {
   return useQuery<ClassInterventionRow[]>({
     queryKey: ["class-intervention-recommendations", classId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-intervention-recommendations", {
-        body: { class_id: classId },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "intervention_recs", class_id: classId },
       });
       if (error) throw error;
       return (data?.students ?? []) as ClassInterventionRow[];

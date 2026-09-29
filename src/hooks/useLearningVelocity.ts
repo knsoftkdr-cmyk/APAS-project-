@@ -81,8 +81,8 @@ export function useVelocityTree(studentId?: string, bookId?: number) {
   return useQuery<VelocitySubject[]>({
     queryKey: ["learning-velocity", studentId ?? "self", bookId ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-learning-velocity", {
-        body: { student_id: studentId, book_id: bookId },
+      const { data, error } = await supabase.functions.invoke("get-mastery-history", {
+        body: { action: "student_velocity", student_id: studentId, book_id: bookId },
       });
       if (error) throw error;
       return (data?.subjects ?? []) as VelocitySubject[];
@@ -96,8 +96,8 @@ export function useClassVelocity(classId?: string, bookId?: number) {
   return useQuery<{ topics: ClassVelocityTopicRow[]; students: ClassVelocityStudentRow[] }>({
     queryKey: ["class-velocity", classId, bookId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-class-velocity", {
-        body: { class_id: classId, book_id: bookId },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "class_velocity", class_id: classId, book_id: bookId },
       });
       if (error) throw error;
       return {

@@ -1,16 +1,18 @@
-// supabase/functions/get-class-forgetting-risk/index.ts
+// supabase/functions/_shared/handlers/classVelocity.ts
 //
-// Deploy with:
-//   supabase functions deploy get-class-forgetting-risk
+// Formerly the standalone `get-class-velocity` edge function. It is no longer deployed on its
+// own (Edge Function deployment limit): `get-class-mastery` routes to it via mode "class_velocity"
+// - see _shared/mergedRouter.ts. Request/response contract is unchanged.
 //
 // Teacher/admin only. Aggregates every student in a class's roster
-// (class_students) against one subject/book and flags topics where many
-// students are about to forget them, via get_class_forgetting_risk().
-// Mirrors get-class-mastery's roster resolution exactly.
+// (class_students) against one subject/book, topic by topic, via
+// get_class_velocity() (module 12). Flags "pace concern" topics (class
+// average mastery gained per attempt < 0.08) and ranks the roster by
+// overall learning pace. Mirrors get-class-mastery's auth/roster
+// conventions exactly.
 //
-// Body: { class_id, book_id, threshold?, horizon_days? }
+// Body: { class_id: string, book_id: number }
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -18,57 +20,50 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
-import { handleForgettingForecast } from "../_shared/handlers/forgettingForecast.ts";
-import { handleRetentionCurve } from "../_shared/handlers/retentionCurve.ts";
-
-// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
-const MERGED_ROUTES: RouteTable = {
-  student_forecast: { handler: handleForgettingForecast },
-  retention_curve: { handler: handleRetentionCurve },
-};
-
-serve(async (req) => {
+export async function handleClassVelocity(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
-  const merged = await routeMerged(req, MERGED_ROUTES);
-  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Missing authorization" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } },
     );
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data: profile } = await supabaseAdmin.from("profiles").select("role").eq("id", user.id).single();
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("role").eq("id", user.id).single();
     if (!profile || !["admin", "teacher", "school_admin", "principal", "hod"].includes(profile.role)) {
       return new Response(JSON.stringify({ error: "Not permitted" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { class_id, book_id, threshold, horizon_days } = await req.json().catch(() => ({}));
+    const { class_id, book_id } = await req.json();
     if (!class_id || !book_id) {
       return new Response(JSON.stringify({ error: "class_id and book_id are required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -79,7 +74,8 @@ serve(async (req) => {
         .select("id").eq("class_id", class_id).eq("teacher_id", user.id).maybeSingle();
       if (!assignment) {
         return new Response(JSON.stringify({ error: "You are not assigned to this class" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
@@ -90,27 +86,31 @@ serve(async (req) => {
 
     const studentIds = (roster ?? []).map((r) => r.student_id);
     if (studentIds.length === 0) {
-      return new Response(JSON.stringify({ class_id, book_id, topics: [] }), {
+      return new Response(JSON.stringify({ class_id, book_id, topics: [], students: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { data, error } = await supabaseClient.rpc("get_class_forgetting_risk", {
+    const { data, error } = await supabaseClient.rpc("get_class_velocity", {
       p_student_ids: studentIds,
       p_book_id: book_id,
-      p_threshold: threshold ?? 0.5,
-      p_horizon_days: horizon_days ?? 14,
     });
     if (error) throw error;
 
-    return new Response(JSON.stringify({ class_id, book_id, roster_size: studentIds.length, topics: data ?? [] }), {
+    return new Response(JSON.stringify({
+      class_id,
+      book_id,
+      roster_size: studentIds.length,
+      topics: data?.topics ?? [],
+      students: data?.students ?? [],
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("get-class-forgetting-risk error", e);
+    console.error("get-class-velocity error", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
-});
+}

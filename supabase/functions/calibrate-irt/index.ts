@@ -44,8 +44,20 @@ const STAFF_ROLES = ["admin", "teacher", "school_admin", "principal", "hod"];
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleOpenEndedCalibration } from "../_shared/handlers/openEndedCalibration.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  open_ended: { handler: handleOpenEndedCalibration },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES, "item_type");
+  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");

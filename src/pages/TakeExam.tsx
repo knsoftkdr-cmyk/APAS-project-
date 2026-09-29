@@ -120,7 +120,7 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
     dirty.current = false;
     setSaveState("saving");
     try {
-      await invokeFn("get-assessment-paper-attempt", { attempt_id: attemptId, action: "save_draft", answers: answers.current });
+      await invokeFn("cat-session", { action: "paper_save_draft", attempt_id: attemptId, answers: answers.current });
       setSaveState(dirty.current ? "unsaved" : "saved");
     } catch (e) {
       dirty.current = true;

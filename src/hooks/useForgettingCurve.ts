@@ -52,8 +52,9 @@ export function useForgettingForecast(args: { studentId?: string; threshold?: nu
   return useQuery<ForgettingForecastItem[]>({
     queryKey: ["forgetting-forecast", args.studentId ?? "self", args.threshold ?? 0.5, args.horizonDays ?? 14, args.bookId ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-forgetting-forecast", {
+      const { data, error } = await supabase.functions.invoke("get-class-forgetting-risk", {
         body: {
+          action: "student_forecast",
           student_id: args.studentId,
           threshold: args.threshold,
           horizon_days: args.horizonDays,
@@ -72,8 +73,9 @@ export function useRetentionCurve(learningObjectiveId?: number, args: { studentI
   return useQuery<RetentionCurve | null>({
     queryKey: ["retention-curve", learningObjectiveId, args.studentId ?? "self", args.daysAhead ?? 30],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-retention-curve", {
+      const { data, error } = await supabase.functions.invoke("get-class-forgetting-risk", {
         body: {
+          action: "retention_curve",
           learning_objective_id: learningObjectiveId,
           student_id: args.studentId,
           days_ahead: args.daysAhead,

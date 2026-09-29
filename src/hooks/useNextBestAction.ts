@@ -35,8 +35,9 @@ export function useNextBestAction(args: { studentId?: string; minutesAvailable?:
   return useQuery<NextBestAction>({
     queryKey: ["next-best-action", args.studentId ?? "self", args.minutesAvailable ?? 15, args.maxSteps ?? 5],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("next-best-action", {
+      const { data, error } = await supabase.functions.invoke("cat-session", {
         body: {
+          action: "nba_get",
           student_id: args.studentId,
           minutes_available: args.minutesAvailable,
           max_steps: args.maxSteps,

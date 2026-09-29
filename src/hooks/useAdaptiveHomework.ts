@@ -44,7 +44,10 @@ export interface AdaptiveHomeworkItemRow {
 }
 
 async function invoke<T>(body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("adaptive-homework", { body });
+  // Served by update-mastery (Edge Function limit): "generate" -> "ah_generate", "submit_answer" -> "ah_submit_answer"
+  const { data, error } = await supabase.functions.invoke("update-mastery", {
+    body: { ...body, action: `ah_${String(body.action)}` },
+  });
   if (error) {
     const { message } = await unwrapFunctionError(error, "Adaptive homework request failed.");
     throw new Error(message);

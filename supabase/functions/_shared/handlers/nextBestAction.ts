@@ -1,14 +1,23 @@
-// supabase/functions/get-mastery-history/index.ts
+// supabase/functions/_shared/handlers/nextBestAction.ts
 //
-// Deploy with:
-//   supabase functions deploy get-mastery-history
+// Formerly the standalone `next-best-action` edge function. It is no longer deployed on its
+// own (Edge Function deployment limit): `cat-session` routes to it via action "nba_get"
+// - see _shared/mergedRouter.ts. Request/response contract is unchanged.
 //
-// Body: { learning_objective_id, student_id? } -> raw event history for one objective
-// Body: { subtopic_id, student_id? }           -> concept-level running-average trend
+// Body: { student_id?, minutes_available?, max_steps? }
+// Students: student_id is resolved from their own profile (any value they
+// pass is ignored). Staff: may pass student_id explicitly.
 //
-// Students: resolved to their own record. Staff: may pass student_id.
+// Cross-subject arbiter: scores every subject the student has a footprint
+// in (overdue reviews, imminent-forgetting risk, blocked/weak concepts),
+// picks the most urgent one, and delegates sequencing to
+// generate_learning_path() (module 8). Returns a single justified
+// next_action plus a short time-boxed session_plan.
+//
+// Grading is NOT handled here - the returned steps are exactly
+// module 8's step shape, so answer them via the existing
+// learning-path edge function's `answer` action.
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -16,24 +25,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
-import { handleRootCauseAnalysis } from "../_shared/handlers/rootCauseAnalysis.ts";
-import { handleLearningVelocity } from "../_shared/handlers/learningVelocity.ts";
-import { handleStudentMisconceptions } from "../_shared/handlers/studentMisconceptions.ts";
-
-// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
-const MERGED_ROUTES: RouteTable = {
-  student_velocity: { handler: handleLearningVelocity },
-  student_misconceptions: { handler: handleStudentMisconceptions },
-  root_cause: { handler: handleRootCauseAnalysis },
-};
-
-serve(async (req) => {
+export async function handleNextBestAction(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
-  const merged = await routeMerged(req, MERGED_ROUTES);
-  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -66,13 +59,7 @@ serve(async (req) => {
     }
 
     const isStaff = ["admin", "teacher", "school_admin", "principal", "hod"].includes(profile.role);
-    const { learning_objective_id, subtopic_id, student_id } = await req.json();
-
-    if (!learning_objective_id && !subtopic_id) {
-      return new Response(JSON.stringify({ error: "learning_objective_id or subtopic_id is required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { student_id, minutes_available, max_steps } = await req.json().catch(() => ({}));
 
     let targetStudentId: string | null = null;
     if (profile.role === "student") {
@@ -97,30 +84,24 @@ serve(async (req) => {
       });
     }
 
-    if (learning_objective_id) {
-      const { data, error } = await supabaseClient.rpc("get_mastery_history", {
-        p_student_id: targetStudentId,
-        p_learning_objective_id: learning_objective_id,
-      });
-      if (error) throw error;
-      return new Response(JSON.stringify({ scope: "objective", learning_objective_id, history: data ?? [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data, error } = await supabaseClient.rpc("get_concept_mastery_trend", {
+    // Service-role only (delegates to generate_learning_path, which joins
+    // question_bank) - the ownership check above is what keeps a student
+    // from passing someone else's student_id.
+    const { data, error } = await supabaseAdmin.rpc("get_next_best_action", {
       p_student_id: targetStudentId,
-      p_subtopic_id: subtopic_id,
+      p_minutes_available: minutes_available ?? 15,
+      p_max_steps: max_steps ?? 5,
     });
     if (error) throw error;
-    return new Response(JSON.stringify({ scope: "concept", subtopic_id, trend: data ?? [] }), {
+
+    return new Response(JSON.stringify({ student_id: targetStudentId, ...data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("get-mastery-history error", e);
+    console.error("next-best-action error", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
-});
+}

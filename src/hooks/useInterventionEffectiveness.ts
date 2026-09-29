@@ -46,8 +46,8 @@ export function useInterventionEffectivenessSummary(classId?: string) {
   return useQuery<InterventionEffectivenessSummary>({
     queryKey: ["intervention-effectiveness-summary", classId ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-intervention-effectiveness-summary", {
-        body: { class_id: classId },
+      const { data, error } = await supabase.functions.invoke("get-class-mastery", {
+        body: { mode: "intervention_effectiveness", class_id: classId },
       });
       if (error) throw error;
       return data as InterventionEffectivenessSummary;

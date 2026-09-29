@@ -35,8 +35,21 @@ interface EvidenceItem {
   student_id?: string | null;
 }
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleAdaptiveHomework } from "../_shared/handlers/adaptiveHomework.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  ah_generate: { handler: handleAdaptiveHomework, action: "generate" },
+  ah_submit_answer: { handler: handleAdaptiveHomework, action: "submit_answer" },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES);
+  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");

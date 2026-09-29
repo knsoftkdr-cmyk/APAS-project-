@@ -69,8 +69,34 @@ const json = (body: unknown, status = 200) =>
 // deno-lint-ignore no-explicit-any
 type Row = Record<string, any>;
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleSpacedRepetition } from "../_shared/handlers/spacedRepetition.ts";
+import { handleLearningPath } from "../_shared/handlers/learningPath.ts";
+import { handleNextBestAction } from "../_shared/handlers/nextBestAction.ts";
+import { handleAssessmentPaperAttempt } from "../_shared/handlers/assessmentPaperAttempt.ts";
+import { handleSubmitAssessmentPaperAttempt } from "../_shared/handlers/submitAssessmentPaperAttempt.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  sr_forecast: { handler: handleSpacedRepetition, action: "forecast" },
+  sr_due: { handler: handleSpacedRepetition, action: "due" },
+  sr_session_start: { handler: handleSpacedRepetition, action: "session-start" },
+  sr_session_answer: { handler: handleSpacedRepetition, action: "session-answer" },
+  sr_snooze: { handler: handleSpacedRepetition, action: "snooze" },
+  lp_generate: { handler: handleLearningPath, action: "generate" },
+  lp_answer: { handler: handleLearningPath, action: "answer" },
+  nba_get: { handler: handleNextBestAction },
+  paper_attempt: { handler: handleAssessmentPaperAttempt },
+  paper_save_draft: { handler: handleAssessmentPaperAttempt, action: "save_draft" },
+  paper_submit: { handler: handleSubmitAssessmentPaperAttempt },
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES);
+  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");

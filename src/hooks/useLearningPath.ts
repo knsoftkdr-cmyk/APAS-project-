@@ -52,7 +52,7 @@ export function useLearningPath(bookId?: number, args: { studentId?: string; len
   return useQuery<{ student_id: string; book_id: number; path: LearningPathStep[] }>({
     queryKey: ["learning-path", args.studentId ?? "self", bookId, args.length ?? 10],
     queryFn: () =>
-      invoke("learning-path", { action: "generate", student_id: args.studentId, book_id: bookId, length: args.length }),
+      invoke("cat-session", { action: "lp_generate", student_id: args.studentId, book_id: bookId, length: args.length }),
     enabled: !!bookId,
     staleTime: 5 * 60 * 1000, // the path is a recommendation snapshot, not a live feed
   });
@@ -69,8 +69,8 @@ export function useAnswerPathStep() {
       selectedOption: "A" | "B" | "C" | "D";
       scheduleId?: string;
     }) =>
-      invoke<PathAnswerFeedback>("learning-path", {
-        action: "answer",
+      invoke<PathAnswerFeedback>("cat-session", {
+        action: "lp_answer",
         step_type: step.stepType,
         learning_objective_id: step.learningObjectiveId,
         item_id: step.itemId,

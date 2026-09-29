@@ -1,14 +1,18 @@
-// supabase/functions/get-mastery-history/index.ts
+// supabase/functions/_shared/handlers/forgettingForecast.ts
 //
-// Deploy with:
-//   supabase functions deploy get-mastery-history
+// Formerly the standalone `get-forgetting-forecast` edge function. It is no longer deployed on its
+// own (Edge Function deployment limit): `get-class-forgetting-risk` routes to it via action "student_forecast"
+// - see _shared/mergedRouter.ts. Request/response contract is unchanged.
 //
-// Body: { learning_objective_id, student_id? } -> raw event history for one objective
-// Body: { subtopic_id, student_id? }           -> concept-level running-average trend
+// Body: { student_id?, threshold?, horizon_days?, book_id? }
+// Students: student_id is resolved from their own profile (any value they
+// pass is ignored). Staff: may pass student_id explicitly.
 //
-// Students: resolved to their own record. Staff: may pass student_id.
+// Every one of this student's scheduled objectives with a predicted
+// retention curve, soonest-to-be-forgotten first. threshold (default 0.5)
+// is the recall probability counted as "forgotten"; horizon_days (default
+// 14) is how soon that has to happen to be flagged is_at_risk.
 
-import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -16,24 +20,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
-import { handleRootCauseAnalysis } from "../_shared/handlers/rootCauseAnalysis.ts";
-import { handleLearningVelocity } from "../_shared/handlers/learningVelocity.ts";
-import { handleStudentMisconceptions } from "../_shared/handlers/studentMisconceptions.ts";
-
-// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
-const MERGED_ROUTES: RouteTable = {
-  student_velocity: { handler: handleLearningVelocity },
-  student_misconceptions: { handler: handleStudentMisconceptions },
-  root_cause: { handler: handleRootCauseAnalysis },
-};
-
-serve(async (req) => {
+export async function handleForgettingForecast(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
-  const merged = await routeMerged(req, MERGED_ROUTES);
-  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -66,13 +54,7 @@ serve(async (req) => {
     }
 
     const isStaff = ["admin", "teacher", "school_admin", "principal", "hod"].includes(profile.role);
-    const { learning_objective_id, subtopic_id, student_id } = await req.json();
-
-    if (!learning_objective_id && !subtopic_id) {
-      return new Response(JSON.stringify({ error: "learning_objective_id or subtopic_id is required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { student_id, threshold, horizon_days, book_id } = await req.json().catch(() => ({}));
 
     let targetStudentId: string | null = null;
     if (profile.role === "student") {
@@ -97,30 +79,22 @@ serve(async (req) => {
       });
     }
 
-    if (learning_objective_id) {
-      const { data, error } = await supabaseClient.rpc("get_mastery_history", {
-        p_student_id: targetStudentId,
-        p_learning_objective_id: learning_objective_id,
-      });
-      if (error) throw error;
-      return new Response(JSON.stringify({ scope: "objective", learning_objective_id, history: data ?? [] }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const { data, error } = await supabaseClient.rpc("get_concept_mastery_trend", {
+    const { data, error } = await supabaseClient.rpc("get_forgetting_forecast", {
       p_student_id: targetStudentId,
-      p_subtopic_id: subtopic_id,
+      p_threshold: threshold ?? 0.5,
+      p_horizon_days: horizon_days ?? 14,
+      p_book_id: book_id ?? null,
     });
     if (error) throw error;
-    return new Response(JSON.stringify({ scope: "concept", subtopic_id, trend: data ?? [] }), {
+
+    return new Response(JSON.stringify({ student_id: targetStudentId, forecast: data ?? [] }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("get-mastery-history error", e);
+    console.error("get-forgetting-forecast error", e);
     return new Response(
       JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
-});
+}

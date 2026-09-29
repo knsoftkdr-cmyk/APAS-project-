@@ -226,10 +226,29 @@ function mimeTypeForFile(fileName: string, fallback: string | null): string {
   return fallback || "application/octet-stream";
 }
 
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleGenerateAssessmentPaper } from "../_shared/handlers/generateAssessmentPaper.ts";
+import { handleAssignAssessmentPaper } from "../_shared/handlers/assignAssessmentPaper.ts";
+import { handleAssessmentPaperFull } from "../_shared/handlers/assessmentPaperFull.ts";
+import { handleGradeOpenResponse } from "../_shared/handlers/gradeOpenResponseHandler.ts";
+
+// Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: RouteTable = {
+  generate_paper: { handler: handleGenerateAssessmentPaper },
+  assign_paper: { handler: handleAssignAssessmentPaper },
+  get_paper_full: { handler: handleAssessmentPaperFull },
+  grade_open_response: { handler: handleGradeOpenResponse },
+  review_open_response: { handler: handleGradeOpenResponse },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  // Merged features are routed before this function's own auth/parsing; unmatched requests fall through.
+  const merged = await routeMerged(req, MERGED_ROUTES);
+  if (merged) return merged;
 
   try {
     const authHeader = req.headers.get("Authorization");

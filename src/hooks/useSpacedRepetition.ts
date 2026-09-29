@@ -52,7 +52,10 @@ export interface ReviewAnswerFeedback {
 }
 
 async function invoke<T>(body: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.functions.invoke("spaced-repetition", { body });
+  // Served by cat-session (Edge Function limit): "due" -> "sr_due", "session-answer" -> "sr_session_answer", ...
+  const { data, error } = await supabase.functions.invoke("cat-session", {
+    body: { ...body, action: `sr_${String(body.action).replace(/-/g, "_")}` },
+  });
   if (error) {
     const { message } = await unwrapFunctionError(error, "Spaced repetition request failed.");
     throw new Error(message);
