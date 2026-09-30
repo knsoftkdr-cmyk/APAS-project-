@@ -1,5 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleTeacherCopilot } from "../_shared/handlers/teacherCopilot.ts";
+
+// Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
+//   action "copilot": Teacher Copilot - lesson planning, assessment, remediation and student analysis.
+// A body WITHOUT a matching `action` (the existing { teacher_id, school_id } call) runs the original code below.
+const MERGED_ROUTES: RouteTable = {
+  copilot: { handler: handleTeacherCopilot },
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +18,9 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const merged = await routeMerged(req, MERGED_ROUTES, "action");
+  if (merged) return merged;
 
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

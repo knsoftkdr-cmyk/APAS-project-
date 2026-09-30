@@ -29,6 +29,14 @@
 //        receives aggregates - never another student's identity or score - and
 //        any comparison group with fewer than 5 ranked students is withheld.
 //
+// mode "peer_groups"        PEER GROUP IDENTIFICATION - staff only (handler: _shared/handlers/peerGroups.ts)
+//   Body: { mode: "peer_groups", class_id, book_id?, min_objectives?, similarity?, max_group_size? }
+//   Clusters students who share the same learning gaps; strong students are grouped for extension.
+//
+// mode "dynamic_groups"     DYNAMIC STUDENT GROUPING - staff only (handler: _shared/handlers/dynamicGroups.ts)
+//   Body: { mode: "dynamic_groups", op: "preview"|"apply"|"current"|"override", class_id, book_id?, ... }
+//   Remedial / regular / enrichment groups from live performance, with saved history.
+//
 // Access: teachers only reach classes they are assigned to and students on
 // those rosters; school-bound staff only their own school (see
 // _shared/studentAccess.ts).
@@ -97,6 +105,8 @@ import { handleInterventionRecommendations } from "../_shared/handlers/intervent
 import { handleInterventionEffectivenessSummary } from "../_shared/handlers/interventionEffectivenessSummary.ts";
 import { handleClassVelocity } from "../_shared/handlers/classVelocity.ts";
 import { handleClassMisconceptionHotspots } from "../_shared/handlers/classMisconceptionHotspots.ts";
+import { handlePeerGroups } from "../_shared/handlers/peerGroups.ts";
+import { handleDynamicGroups } from "../_shared/handlers/dynamicGroups.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -106,6 +116,8 @@ const MERGED_ROUTES: RouteTable = {
   risk_roster: { handler: handleClassRiskRoster },
   intervention_recs: { handler: handleInterventionRecommendations },
   intervention_effectiveness: { handler: handleInterventionEffectivenessSummary },
+  peer_groups: { handler: handlePeerGroups },
+  dynamic_groups: { handler: handleDynamicGroups },
 };
 
 serve(async (req) => {

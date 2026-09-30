@@ -38,6 +38,9 @@ deployed ("anchors"). No new function names exist and nothing new needs deployin
 | score-question-quality | generate-item-bank | action: `score_quality` |
 | calibrate-open-ended-items | calibrate-irt | item_type: `open_ended` |
 | calibrate-open-ended-items-cron | calibrate-irt-cron | job: `open_ended` (cron job repointed by migration 20261007000000) |
+| peer-group-identification | get-class-mastery | mode: `peer_groups` |
+| dynamic-student-grouping | get-class-mastery | mode: `dynamic_groups` (+ `op`: `preview` `apply` `current` `override`; needs migration 20261008000000) |
+| teacher-copilot | ai-teacher-assistant | action: `copilot` |
 
 Notes
 * `calibrate-irt-cron` must stay deployed with `--no-verify-jwt` (pg_net has no user JWT); the handler

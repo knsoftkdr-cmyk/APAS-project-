@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { InterventionDrawer, Intervention } from "@/components/InterventionDrawer";
+import { TeacherCopilotPanel } from "@/components/copilot/TeacherCopilotPanel";
 import {
   Sparkles, BookOpen, ClipboardList, BarChart3,
   Clock, Bell, CalendarDays, Lightbulb, RefreshCw,
@@ -43,6 +44,7 @@ export default function AITeacherAssistant() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const [view, setView] = useState<"today" | "copilot">("today");
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<any>(null);
   const [interventions, setInterventions] = useState<Map<string, Intervention>>(new Map());
@@ -143,6 +145,13 @@ export default function AITeacherAssistant() {
             <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
           </Button>
         </div>
+
+        <div className="flex gap-2" role="tablist" aria-label="Assistant view">
+          <Button size="sm" role="tab" aria-selected={view === "today"} variant={view === "today" ? "default" : "outline"} onClick={() => setView("today")}>Today's suggestions</Button>
+          <Button size="sm" role="tab" aria-selected={view === "copilot"} variant={view === "copilot" ? "default" : "outline"} onClick={() => setView("copilot")}>Copilot</Button>
+        </div>
+
+        {view === "copilot" ? <TeacherCopilotPanel /> : (<>
 
         {/* 1. Remedial Activities */}
         <Card className="border border-border/60">
@@ -311,6 +320,7 @@ export default function AITeacherAssistant() {
             </CardContent>
           </Card>
         )}
+        </>)}
       </div>
 
       {drawerStudent && (
