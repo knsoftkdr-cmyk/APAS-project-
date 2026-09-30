@@ -147,6 +147,7 @@ const LearningPath = lazy(() => import("./pages/LearningPath"));
 const NextBestAction = lazy(() => import("./pages/NextBestAction"));
 const MisconceptionInsights = lazy(() => import("./pages/MisconceptionInsights"));
 const AdaptiveHomework = lazy(() => import("./pages/AdaptiveHomework"));
+const Enrichment = lazy(() => import("./pages/Enrichment"));
 const AdaptiveHomeworkGenerator = lazy(() => import("./pages/AdaptiveHomeworkGenerator"));
 const LearningVelocity = lazy(() => import("./pages/LearningVelocity"));
 const ClassVelocityDashboard = lazy(() => import("./pages/ClassVelocityDashboard"));
@@ -338,6 +339,7 @@ export default function App() {
                       <Route path="/learning-path" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningPath /></RoleGuard></ProtectedRoute>} />
                       <Route path="/next-best-action" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><NextBestAction /></RoleGuard></ProtectedRoute>} />
                       <Route path="/adaptive-homework" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AdaptiveHomework /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/enrichment" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Enrichment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/adaptive-homework/generate" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><AdaptiveHomeworkGenerator /></RoleGuard></ProtectedRoute>} />
                       <Route path="/misconceptions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MisconceptionInsights /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningVelocity /></RoleGuard></ProtectedRoute>} />

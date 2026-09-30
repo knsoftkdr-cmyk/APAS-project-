@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, XCircle, Loader2, TrendingUp, TrendingDown, Minus, Trophy } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, TrendingUp, TrendingDown, Minus, Trophy, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   useAdaptivePractice, type PracticeScopeType, type DifficultyLabel,
@@ -36,7 +36,10 @@ interface AdaptivePracticeWidgetProps {
 export function AdaptivePracticeWidget({
   open, onOpenChange, scopeType, scopeId, scopeLabel, source = "direct", length = 5,
 }: AdaptivePracticeWidgetProps) {
-  const { session, item, feedback, result, loading, error, start, submit, acknowledgeFeedback, reset } = useAdaptivePractice();
+  const {
+    session, item, feedback, result, loading, error, start, submit, acknowledgeFeedback, reset,
+    hints, hintLoading, hintError, requestHint,
+  } = useAdaptivePractice();
   const [selected, setSelected] = useState<string | null>(null);
   const [prevDifficulty, setPrevDifficulty] = useState<DifficultyLabel | null>(null);
   const [trend, setTrend] = useState<"up" | "down" | "same" | null>(null);
@@ -167,6 +170,18 @@ export function AdaptivePracticeWidget({
               })}
             </div>
 
+            {!feedback && hints.length > 0 && (
+              <div className="space-y-1.5">
+                {hints.map((h) => (
+                  <div key={h.hint_level} className="rounded-lg border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900">
+                    <p className="text-[11px] font-semibold uppercase tracking-wide mb-0.5">Hint {h.hint_level} of {h.max_level}</p>
+                    <p>{h.hint}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!feedback && hintError && <p className="text-xs text-destructive">{hintError}</p>}
+
             {feedback && (
               <div className={cn(
                 "rounded-lg p-3 text-sm",
@@ -177,7 +192,13 @@ export function AdaptivePracticeWidget({
               </div>
             )}
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between gap-2">
+              {!feedback && (hints.length === 0 || hints[hints.length - 1].more_available) ? (
+                <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => requestHint()} disabled={hintLoading || loading}>
+                  {hintLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
+                  {hints.length === 0 ? "Need a hint?" : "Another hint"}
+                </Button>
+              ) : <span />}
               {!feedback ? (
                 <Button onClick={handleSubmit} disabled={!selected || loading} size="sm">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}Submit

@@ -1,0 +1,70 @@
+--- /home/claude/tutor-chat.orig.ts	2026-09-30 07:03:36.647545435 +0000
++++ index.ts	2026-09-30 07:03:36.726418333 +0000
+@@ -1,5 +1,6 @@
+ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
++import { languageDirective, resolveTeachingLanguage } from "../_shared/languages.ts";
+ 
+ const corsHeaders = {
+   "Access-Control-Allow-Origin": "*",
+@@ -29,7 +30,9 @@
+     if (!GROK_KEY) throw new Error("GROK_API_KEY not configured");
+ 
+     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+-    const { message, student_id, conversation_history = [] } = await req.json();
++    // `language` is optional; missing/unknown/"en" => English, i.e. unchanged behaviour.
++    const { message, student_id, conversation_history = [], language } = await req.json();
++    const teachingLang = resolveTeachingLanguage(language);
+ 
+     if (!message || !student_id) {
+       return new Response(JSON.stringify({ error: "message and student_id are required" }), {
+@@ -108,7 +111,7 @@
+ - When referencing textbook content, cite it naturally
+ - Keep responses concise but thorough (200-400 words max)
+ - Use markdown for formatting (headers, bold, lists) when helpful
+-- NEVER answer non-academic questions regardless of how the student phrases them`;
++- NEVER answer non-academic questions regardless of how the student phrases them${languageDirective(teachingLang)}`;
+ 
+     const messages = [
+       { role: "system", content: systemPrompt },
+@@ -116,8 +119,11 @@
+       { role: "user", content: message },
+     ];
+ 
+-    // Stream response
+-    const aiResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
++    // Stream response. English (and any request without a language) goes to Groq exactly as before.
++    // Non-English teaching prefers Gemini via the AI gateway - Llama 3.3 is noticeably weaker in Telugu
++    // and other Indic scripts - and falls back to Groq if the gateway key is missing or the call fails.
++    // Both return the same OpenAI-style SSE stream, so the client parser is unaffected.
++    const callGroq = () => fetch("https://api.groq.com/openai/v1/chat/completions", {
+       method: "POST",
+       headers: {
+         Authorization: `Bearer ${GROK_KEY}`,
+@@ -130,6 +136,26 @@
+       }),
+     });
+ 
++    let aiResp: Response | null = null;
++    const gatewayKey = Deno.env.get("LOVABLE_API_KEY");
++    if (teachingLang && gatewayKey) {
++      try {
++        const gw = await fetch(
++          Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions",
++          {
++            method: "POST",
++            headers: { Authorization: `Bearer ${gatewayKey}`, "Content-Type": "application/json" },
++            body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, stream: true }),
++          },
++        );
++        if (gw.ok && gw.body) aiResp = gw;
++        else console.error("Gateway tutor call failed, falling back to Groq:", gw.status);
++      } catch (e) {
++        console.error("Gateway tutor call threw, falling back to Groq:", e);
++      }
++    }
++    if (!aiResp) aiResp = await callGroq();
++
+     if (!aiResp.ok) {
+       const status = aiResp.status;
+       if (status === 429) {

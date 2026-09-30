@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { normaliseTutorLanguage } from "@/lib/tutorLanguages";
 
 export type PracticeScopeType = "concept" | "topic" | "chapter" | "subject";
 export type DifficultyLabel = "foundational" | "moderate" | "challenging";
@@ -30,6 +32,14 @@ export interface PracticeFeedback {
   explanation: string | null;
   mastery_before: number | null;
   mastery_after: number | null;
+}
+
+export interface PracticeHint {
+  hint_level: number;
+  hint: string;
+  max_level: number;
+  hints_used: number;
+  more_available: boolean;
 }
 
 export interface PracticeResult {
@@ -67,8 +77,15 @@ export function useAdaptivePractice() {
   // once the student dismisses the feedback.
   const [pendingNext, setPendingNext] = useState<{ session: PracticeSession; item: PracticeItem } | null>(null);
 
+  // Hint Engine: hints revealed so far for the question on screen (served by cat-session, action "practice_hint").
+  const { language: appLanguage } = useLanguage();
+  const [hints, setHints] = useState<PracticeHint[]>([]);
+  const [hintLoading, setHintLoading] = useState(false);
+  const [hintError, setHintError] = useState<string | null>(null);
+
   const reset = useCallback(() => {
     setSession(null); setItem(null); setFeedback(null); setResult(null); setError(null); setPendingNext(null);
+    setHints([]); setHintError(null);
   }, []);
 
   const start = useCallback(async (args: {
@@ -121,8 +138,30 @@ export function useAdaptivePractice() {
       setSession(pendingNext.session);
       setItem(pendingNext.item);
       setPendingNext(null);
+      setHints([]); setHintError(null); // new question, fresh ladder
     }
   }, [pendingNext]);
 
-  return { session, item, feedback, result, loading, error, start, submit, acknowledgeFeedback, reset };
+  // Ask for the next hint on the current question. The server decides the level (1 -> 2 -> 3).
+  const requestHint = useCallback(async () => {
+    if (!session || !item || feedback || hintLoading) return;
+    setHintLoading(true); setHintError(null);
+    try {
+      const data = await invoke<PracticeHint>({
+        action: "practice_hint", session_id: session.id, item_id: item.item_id,
+        language: normaliseTutorLanguage(appLanguage),
+      });
+      setHints((prev) => (prev.some((h) => h.hint_level === data.hint_level) ? prev : [...prev, data]));
+      return data;
+    } catch (e) {
+      setHintError(e instanceof Error ? e.message : "Couldn't get a hint");
+    } finally {
+      setHintLoading(false);
+    }
+  }, [session, item, feedback, hintLoading, appLanguage]);
+
+  return {
+    session, item, feedback, result, loading, error, start, submit, acknowledgeFeedback, reset,
+    hints, hintLoading, hintError, requestHint,
+  };
 }

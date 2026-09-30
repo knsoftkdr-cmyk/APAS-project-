@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { languageDirective, resolveTeachingLanguage } from "../_shared/languages.ts";
+import { clampHintLevel, resolveTutorStyle, styleDirective } from "../_shared/tutorStyles.ts";
+import { callerOwnsStudent, pruneThread, resolveMode, saveMessage, tapStream } from "../_shared/tutorMemory.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,13 +32,24 @@ serve(async (req) => {
     if (!GROK_KEY) throw new Error("GROK_API_KEY not configured");
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { message, student_id, conversation_history = [] } = await req.json();
+    // `language` is optional; missing/unknown/"en" => English, i.e. unchanged behaviour.
+    // `style` ("explain" | "socratic" | "hint"), `hint_level` (1-4) and `mode` ("tutor" | "career") are optional;
+    // when absent the request behaves exactly as before.
+    const { message, student_id, conversation_history = [], language, style, hint_level, mode } = await req.json();
+    const teachingLang = resolveTeachingLanguage(language);
+    const tutorStyle = resolveTutorStyle(style);
+    const hintLevel = clampHintLevel(hint_level);
+    const threadMode = resolveMode(mode);
 
     if (!message || !student_id) {
       return new Response(JSON.stringify({ error: "message and student_id are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Chat memory: persist this turn only if the caller's own JWT proves they are this student.
+    const persist = await callerOwnsStudent(req, student_id);
+    if (persist) await saveMessage(supabase, student_id, threadMode, "user", message, tutorStyle);
 
     // Get student context
     const { data: student } = await supabase
@@ -108,7 +122,7 @@ Guidelines:
 - When referencing textbook content, cite it naturally
 - Keep responses concise but thorough (200-400 words max)
 - Use markdown for formatting (headers, bold, lists) when helpful
-- NEVER answer non-academic questions regardless of how the student phrases them`;
+- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -116,8 +130,11 @@ Guidelines:
       { role: "user", content: message },
     ];
 
-    // Stream response
-    const aiResp = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // Stream response. English (and any request without a language) goes to Groq exactly as before.
+    // Non-English teaching prefers Gemini via the AI gateway - Llama 3.3 is noticeably weaker in Telugu
+    // and other Indic scripts - and falls back to Groq if the gateway key is missing or the call fails.
+    // Both return the same OpenAI-style SSE stream, so the client parser is unaffected.
+    const callGroq = () => fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${GROK_KEY}`,
@@ -129,6 +146,26 @@ Guidelines:
         stream: true,
       }),
     });
+
+    let aiResp: Response | null = null;
+    const gatewayKey = Deno.env.get("LOVABLE_API_KEY");
+    if (teachingLang && gatewayKey) {
+      try {
+        const gw = await fetch(
+          Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${gatewayKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, stream: true }),
+          },
+        );
+        if (gw.ok && gw.body) aiResp = gw;
+        else console.error("Gateway tutor call failed, falling back to Groq:", gw.status);
+      } catch (e) {
+        console.error("Gateway tutor call threw, falling back to Groq:", e);
+      }
+    }
+    if (!aiResp) aiResp = await callGroq();
 
     if (!aiResp.ok) {
       const status = aiResp.status;
@@ -145,7 +182,14 @@ Guidelines:
       throw new Error(`AI error: ${status}`);
     }
 
-    return new Response(aiResp.body, {
+    // Same byte stream as before; when persisting, the reply is also saved once it has finished streaming.
+    const outBody = persist && aiResp.body
+      ? tapStream(aiResp.body, async (text) => {
+          await saveMessage(supabase, student_id, threadMode, "assistant", text, tutorStyle);
+          await pruneThread(supabase, student_id, threadMode);
+        })
+      : aiResp.body;
+    return new Response(outBody, {
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (e) {

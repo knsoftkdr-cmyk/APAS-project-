@@ -71,11 +71,13 @@ interface CleanItem {
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleGenerateOpenEndedItems } from "../_shared/handlers/generateOpenEndedItems.ts";
 import { handleScoreQuestionQuality } from "../_shared/handlers/scoreQuestionQuality.ts";
+import { handleEnrichmentGenerator } from "../_shared/handlers/enrichmentGenerator.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
   open_ended: { handler: handleGenerateOpenEndedItems },
   score_quality: { handler: handleScoreQuestionQuality },
+  enrichment: { handler: handleEnrichmentGenerator },
 };
 
 serve(async (req) => {

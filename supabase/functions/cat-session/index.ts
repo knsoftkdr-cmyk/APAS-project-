@@ -75,6 +75,7 @@ import { handleLearningPath } from "../_shared/handlers/learningPath.ts";
 import { handleNextBestAction } from "../_shared/handlers/nextBestAction.ts";
 import { handleAssessmentPaperAttempt } from "../_shared/handlers/assessmentPaperAttempt.ts";
 import { handleSubmitAssessmentPaperAttempt } from "../_shared/handlers/submitAssessmentPaperAttempt.ts";
+import { handlePracticeHint } from "../_shared/handlers/practiceHint.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -89,6 +90,7 @@ const MERGED_ROUTES: RouteTable = {
   paper_attempt: { handler: handleAssessmentPaperAttempt },
   paper_save_draft: { handler: handleAssessmentPaperAttempt, action: "save_draft" },
   paper_submit: { handler: handleSubmitAssessmentPaperAttempt },
+  practice_hint: { handler: handlePracticeHint },
 };
 
 serve(async (req) => {

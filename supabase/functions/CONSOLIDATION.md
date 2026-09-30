@@ -36,6 +36,8 @@ deployed ("anchors"). No new function names exist and nothing new needs deployin
 | grade-open-response | evaluate-assessment | action: `grade_open_response` `review_open_response` |
 | generate-open-ended-items | generate-item-bank | action: `open_ended` |
 | score-question-quality | generate-item-bank | action: `score_quality` |
+| enrichment-generator (never standalone) | generate-item-bank | action: `enrichment` (needs migration 20261009000000) |
+| practice-hint (never standalone) | cat-session | action: `practice_hint` (needs migration 20261010000000) |
 | calibrate-open-ended-items | calibrate-irt | item_type: `open_ended` |
 | calibrate-open-ended-items-cron | calibrate-irt-cron | job: `open_ended` (cron job repointed by migration 20261007000000) |
 | peer-group-identification | get-class-mastery | mode: `peer_groups` |
