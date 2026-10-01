@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import AcademicWhatIf from "@/components/AcademicWhatIf";
 import * as XLSX from "xlsx";
 import {
   CalendarDays, Upload, Trash2, Eye, FileSpreadsheet,
@@ -1111,6 +1112,10 @@ try {
                     )}
                   </CardContent>
                 </Card>
+                {/* Academic outcomes what-if (extra classes / remedial periods / timetable changes) */}
+                <div className="mt-4">
+                  <AcademicWhatIf />
+                </div>
               </TabsContent>
               {/* Substitute Automation tab */}
               <TabsContent value="substitutes">

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   TrendingUp, TrendingDown, BarChart3, Users, Brain, Loader2,
-  AlertTriangle, GraduationCap, BookOpen, Sparkles, RefreshCw,
+  AlertTriangle, GraduationCap, BookOpen, Sparkles, RefreshCw, Network,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -20,10 +20,17 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import schoolIntelligencebanner from "@/assets/SchoolIntelligence-banner.png";
+import { useAuth } from "@/contexts/AuthContext";
+import SchoolDigitalTwin from "@/components/SchoolDigitalTwin";
+
+// The twin exposes student-level data, so it is staff-only (this page is also open to students and parents).
+const TWIN_ROLES = ["admin", "principal", "school_admin", "hod", "teacher"];
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
 const SchoolAnalytics = () => {
+  const { profile } = useAuth();
+  const canSeeTwin = !!profile?.role && TWIN_ROLES.includes(profile.role);
   const [runningDetection, setRunningDetection] = useState(false);
   const [runningPrediction, setRunningPrediction] = useState(false);
 
@@ -237,6 +244,11 @@ return (
               <TabsTrigger value="overview" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Overview</TabsTrigger>
               <TabsTrigger value="predictions" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Predictions</TabsTrigger>
               <TabsTrigger value="alerts" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
+              {canSeeTwin && (
+                <TabsTrigger value="twin" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">
+                  <Network className="h-4 w-4 mr-1 inline" />Digital Twin
+                </TabsTrigger>
+              )}
             </TabsList>
           </div>
 
@@ -394,6 +406,13 @@ return (
               </Card>
             )}
           </TabsContent>
+
+          {/* Digital Twin tab (staff only; React Query fetches only once the tab is opened) */}
+          {canSeeTwin && (
+            <TabsContent value="twin" className="space-y-4">
+              <SchoolDigitalTwin />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       </div>

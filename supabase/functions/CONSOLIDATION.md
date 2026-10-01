@@ -49,3 +49,15 @@ Notes
   checks `x-cron-secret` itself.
 * To add a feature later: write a handler in `_shared/handlers/`, add one entry to the anchor's
   `MERGED_ROUTES`. Do not add a function folder.
+
+## Digital Twin + What-If Academic Simulation (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| School Academic Digital Twin | whatif-timetable | mode: `twin_snapshot` |
+| What-If Academic Simulation (picker data) | whatif-timetable | mode: `academic_simulation_options` |
+| What-If Academic Simulation | whatif-timetable | mode: `academic_simulation` |
+
+Handler: `_shared/handlers/schoolTwin.ts`; pure model: `_shared/schoolTwinModel.ts` (unit-tested in
+`src/test/schoolTwinModel.test.ts`). The existing `teacher_absence` / `draft_preview` modes are unchanged.
+These three modes require a signed-in staff user and are read-only; `verify_jwt` for whatif-timetable is unchanged.

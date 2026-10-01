@@ -9,8 +9,28 @@
 //     -> Lists every class/period that teacher is scheduled for on that day,
 //        plus which other teachers are free at each of those exact slots
 //        (candidate substitutes).
+//
+// Merged in from the Digital Twin / Academic What-If work (no new edge function - see
+// _shared/mergedRouter.ts and CONSOLIDATION.md). Routed BEFORE the code below, which is untouched:
+//
+//   POST { mode: "twin_snapshot", class_id? }
+//     -> School Academic Digital Twin: students, teachers, classes, timetable, syllabus, performance.
+//   POST { mode: "academic_simulation_options" }
+//     -> Classes / subjects / teachers available to simulate.
+//   POST { mode: "academic_simulation", class_id, scenarios: [...] }
+//     -> Projected effect of extra classes, remedial periods or timetable changes (read-only).
+//   These three require a signed-in staff user (handler: _shared/handlers/schoolTwin.ts).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleSchoolTwin } from "../_shared/handlers/schoolTwin.ts";
+
+// Features merged in from the Digital Twin / What-If Academic Simulation work (Edge Function limit).
+const MERGED_ROUTES: RouteTable = {
+  twin_snapshot: { handler: handleSchoolTwin, action: "snapshot" },
+  academic_simulation_options: { handler: handleSchoolTwin, action: "options" },
+  academic_simulation: { handler: handleSchoolTwin, action: "simulate" },
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -79,6 +99,10 @@ type ResolvedCell = { className: string; section: string; day: string; period: s
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Merged features are routed before this function's own parsing; unmatched requests fall through unchanged.
+  const merged = await routeMerged(req, MERGED_ROUTES, "mode");
+  if (merged) return merged;
 
   try {
     const body = await req.json();
