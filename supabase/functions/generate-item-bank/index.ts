@@ -31,6 +31,7 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { priorDifficulty } from "../_shared/irt.ts";
+import { callAi, getAiConfig, type AiConfig } from "../_shared/aiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,8 +39,6 @@ const corsHeaders = {
 };
 
 const STAFF_ROLES = ["admin", "teacher", "school_admin", "principal", "hod"];
-const MODEL = "google/gemini-2.5-flash";
-const AI_URL = Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_OBJECTIVES_PER_CALL = 24;
 const CONCURRENCY = 4;
 const LETTERS = ["A", "B", "C", "D"] as const;
@@ -103,8 +102,7 @@ serve(async (req) => {
     const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
     if (!profile || !STAFF_ROLES.includes(profile.role)) return json({ error: "Not permitted to author questions" }, 403);
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const ai = getAiConfig(); // throws a clear message if no Gemini/Lovable key is set
 
     const body = await req.json().catch(() => ({}));
     const { subtopic_id, topic_id, learning_objective_id } = body;
@@ -154,7 +152,7 @@ serve(async (req) => {
       while (cursor < batch.length) {
         const { lo, need } = batch[cursor++];
         try {
-          perObjective.push(await generateForObjective({ admin, apiKey, userId: user.id, lo, need, ctx: contexts.get(lo.subtopic_id)!, autoActivate }));
+          perObjective.push(await generateForObjective({ admin, ai, userId: user.id, lo, need, ctx: contexts.get(lo.subtopic_id)!, autoActivate }));
         } catch (e) {
           perObjective.push({ learning_objective_id: lo.id, requested: need, inserted: 0, error: e instanceof Error ? e.message : String(e) });
         }
@@ -163,6 +161,9 @@ serve(async (req) => {
     await Promise.all(workers);
 
     const inserted = perObjective.reduce((s, r) => s + (r.inserted ?? 0), 0);
+    // Don't report "Generated 0 questions" when every objective actually failed - surface the real reason.
+    const firstError = perObjective.find((r) => r.error)?.error as string | undefined;
+    if (inserted === 0 && firstError) return json({ error: firstError, per_objective: perObjective }, 502);
     return json({
       inserted,
       status_of_new_items: autoActivate ? "active" : "draft",
@@ -216,11 +217,11 @@ async function loadContext(admin: ReturnType<typeof createClient>, los: Row[]): 
 }
 
 async function generateForObjective(a: {
-  admin: ReturnType<typeof createClient>; apiKey: string; userId: string;
+  admin: ReturnType<typeof createClient>; ai: AiConfig; userId: string;
   lo: Row; need: number; ctx: Ctx; autoActivate: boolean;
 }): Promise<Row> {
   const { admin, lo, need, ctx } = a;
-  const raw = await callModel(a.apiKey, buildPrompt(lo, need, ctx));
+  const { items: raw, model: usedModel } = await callModel(a.ai, buildPrompt(lo, need, ctx));
 
   const seenStems = new Set<string>();
   const clean: CleanItem[] = [];
@@ -250,7 +251,7 @@ async function generateForObjective(a: {
       status: a.autoActivate ? "active" : "draft",
       irt_a: 1, irt_b: b0, irt_c: 0.25, b_prior: b0,
       calibration_status: "prior",
-      ai_generated: true, generation_model: MODEL, created_by: a.userId,
+      ai_generated: true, generation_model: usedModel, created_by: a.userId,
     });
     if (!error) inserted++;
     else if (error.code === "23505") duplicates++;
@@ -291,22 +292,8 @@ Return ONLY a JSON array, no prose, no markdown fences:
 [{"stem":"...","options":{"A":"...","B":"...","C":"...","D":"..."},"correct":"A|B|C|D","explanation":"...","difficulty_target":"easy|medium|hard","distractor_misconceptions":{"<letter of a distractor>":<misconception id or null>}}]`;
 }
 
-async function callModel(apiKey: string, prompt: string): Promise<RawItem[]> {
-  const resp = await fetch(AI_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: "You output strict JSON only. No markdown, no commentary." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.6,
-    }),
-  });
-  if (!resp.ok) throw new Error(`AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
-  const data = await resp.json();
-  const text: string = data?.choices?.[0]?.message?.content ?? "[]";
+async function callModel(ai: AiConfig, prompt: string): Promise<{ items: RawItem[]; model: string }> {
+  const { text, model } = await callAi(ai, prompt, { temperature: 0.6, maxOutputTokens: 8192 });
   const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
   let parsed: unknown;
   try {
@@ -315,7 +302,7 @@ async function callModel(apiKey: string, prompt: string): Promise<RawItem[]> {
     throw new Error(`Could not parse AI response as JSON: ${cleaned.slice(0, 200)}`);
   }
   if (!Array.isArray(parsed)) throw new Error("AI response was not a JSON array");
-  return parsed as RawItem[];
+  return { items: parsed as RawItem[], model };
 }
 
 const BANNED_OPTION = /\b(all|none)\s+of\s+the\s+above\b|\bboth\s+[a-d]\s+and\s+[a-d]\b/i;

@@ -97,9 +97,14 @@ export function useClassMastery(classId?: string, bookId?: number) {
 export function useGenerateLearningObjectives() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (args: { subtopicId?: number; topicId?: number; overwrite?: boolean }) => {
+    mutationFn: async (args: { subtopicId?: number; topicId?: number; overwrite?: boolean; createMissingConcepts?: boolean }) => {
       const { data, error } = await supabase.functions.invoke("generate-learning-objectives", {
-        body: { subtopic_id: args.subtopicId, topic_id: args.topicId, overwrite: args.overwrite ?? false },
+        body: {
+          subtopic_id: args.subtopicId,
+          topic_id: args.topicId,
+          overwrite: args.overwrite ?? false,
+          create_missing_concepts: args.createMissingConcepts ?? false,
+        },
       });
       if (error) throw error;
       return data;

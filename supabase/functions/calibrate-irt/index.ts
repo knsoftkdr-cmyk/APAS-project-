@@ -96,7 +96,9 @@ serve(async (req) => {
     });
 
     if (!result.ok) {
-      return json({ error: result.message }, result.reason === "too_many_responses" ? 413 : 404);
+      // "No answered items yet" is a normal state (new bank), not a failure - answer 200 so the UI can say so.
+      if (result.reason === "no_data") return json({ no_data: true, message: result.message });
+      return json({ error: result.message }, 413);
     }
     const { ok, ...payload } = result;
     return json(payload);

@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  classKey, fetchClassOptions, fetchSchoolBooks, resolveSubjectsForClass,
+  type BookOption as ClassBookOption, type ClassOption, type SubjectOption,
+} from "@/lib/classSubjects";
 
 // ── Types ─────────────────────────────────────────────────────────────────
 type ScopeType = "concept" | "topic" | "chapter" | "subject";
@@ -76,8 +81,15 @@ async function invokeFn<T>(name: string, body: Record<string, unknown>): Promise
 
 export default function ItemBankReview() {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
 
-  // ── Scope picker (subject -> chapter -> topic -> concept) ────────────────
+  // ── Scope picker (class -> subject -> chapter -> topic -> concept) ───────
+  const [classId, setClassId] = useState("");
+  const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [schoolBooks, setSchoolBooks] = useState<ClassBookOption[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<SubjectOption[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [bookId, setBookId] = useState("");
   const [chapterId, setChapterId] = useState("");
   const [topicId, setTopicId] = useState("");
@@ -88,9 +100,41 @@ export default function ItemBankReview() {
   const [concepts, setConcepts] = useState<ConceptOption[]>([]);
 
   useEffect(() => {
-    supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }) => setBooks((data as BookOption[]) ?? []));
-  }, []);
+    if (!profile?.id) return;
+    let cancelled = false;
+    setLoadingClasses(true);
+    Promise.all([fetchClassOptions(profile), fetchSchoolBooks(profile.school_id)])
+      .then(([classList, bookList]) => {
+        if (cancelled) return;
+        setClasses(classList);
+        setSchoolBooks(bookList);
+        setBooks(bookList.map((b) => ({ id: b.id, subject: b.subject ?? "", class_name: b.class_name })));
+      })
+      .finally(() => { if (!cancelled) setLoadingClasses(false); });
+    return () => { cancelled = true; };
+  }, [profile?.id, profile?.role, profile?.school_id]);
+
+  // Subjects taught in the chosen class only.
+  const selectedClassKey = useMemo(
+    () => classKey(classes.find((c) => c.id === classId)?.name),
+    [classes, classId],
+  );
+  useEffect(() => {
+    let cancelled = false;
+    if (!classId || !selectedClassKey) { setSubjectOptions([]); return; }
+    setLoadingSubjects(true);
+    resolveSubjectsForClass(schoolBooks, selectedClassKey)
+      .then((list) => { if (!cancelled) setSubjectOptions(list); })
+      .catch(() => { if (!cancelled) setSubjectOptions([]); })
+      .finally(() => { if (!cancelled) setLoadingSubjects(false); });
+    return () => { cancelled = true; };
+  }, [schoolBooks, classId, selectedClassKey]);
+
+  const onClassChange = (v: string) => {
+    setClassId(v);
+    setBookId(""); setChapterId(""); setTopicId(""); setSubtopicId("");
+    setChapters([]); setTopics([]); setConcepts([]);
+  };
   const onBookChange = (v: string) => {
     setBookId(v); setChapterId(""); setTopicId(""); setSubtopicId(""); setChapters([]); setTopics([]); setConcepts([]);
     supabase.from("curriculum_chapters").select("id, chapter_name, unit_id, units!inner(book_id)").eq("units.book_id", Number(v))
@@ -185,23 +229,38 @@ export default function ItemBankReview() {
   // ── Calibration ───────────────────────────────────────────────────────
   const [calibrating, setCalibrating] = useState<ScopeType | null>(null);
   const runCalibrate = async (type: ScopeType, id: number, dryRun: boolean) => {
-    setCalibrating(type);
-    try {
-      const res = await invokeFn<{
-        items_calibrated: number; responses_used: number; converged: boolean;
-        flagged_count: number; auto_suspended_count: number; mean_abs_b_shift: number;
-      }>("calibrate-irt", { scope_type: type, scope_id: id, dry_run: dryRun });
-      toast.success(dryRun ? "Dry run complete" : "Calibration complete", {
-        description: `${res.items_calibrated} item${res.items_calibrated === 1 ? "" : "s"} re-estimated from ${res.responses_used} responses` +
-          (res.flagged_count > 0 ? ` — ${res.flagged_count} flagged for review${res.auto_suspended_count > 0 ? `, ${res.auto_suspended_count} auto-suspended` : ""}.` : "."),
+  setCalibrating(type);
+  try {
+    const res = await invokeFn<{
+      no_data?: boolean; message?: string;
+      items_considered: number; items_calibrated: number; responses_used: number;
+      flagged_count: number; auto_suspended_count: number;
+      thresholds: { min_n_rasch: number };
+    }>("calibrate-irt", { scope_type: type, scope_id: id, dry_run: dryRun });
+
+    if (res.no_data) {
+      toast.info("Nothing to calibrate yet", {
+        description: "No student has answered questions in this scope. Calibration needs real responses.",
       });
-      if (!dryRun) refresh();
-    } catch (e) {
-      toast.error("Calibration failed", { description: (e as Error).message });
-    } finally {
-      setCalibrating(null);
+      return;
     }
-  };
+    if (res.items_calibrated === 0) {
+      toast.info(dryRun ? "Preview: no changes yet" : "No items calibrated yet", {
+        description: `${res.items_considered} answered item(s), but none has reached ${res.thresholds.min_n_rasch} responses.`,
+      });
+      return;
+    }
+    toast.success(dryRun ? "Preview complete (nothing saved)" : "Calibration complete", {
+      description: `${res.items_calibrated} item(s) re-estimated from ${res.responses_used} responses` +
+        (res.flagged_count > 0 ? ` — ${res.flagged_count} flagged${res.auto_suspended_count > 0 ? `, ${res.auto_suspended_count} auto-suspended` : ""}.` : "."),
+    });
+    if (!dryRun) refresh();
+  } catch (e) {
+    toast.error("Calibration failed", { description: (e as Error).message });
+  } finally {
+    setCalibrating(null);
+  }
+};
 
   // ── Item mutations (direct table writes — teachers have full RLS access) ─
   const [busyItem, setBusyItem] = useState<string | null>(null);
@@ -263,13 +322,30 @@ export default function ItemBankReview() {
         </div>
 
         <Card>
-          <CardContent className="p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <CardContent className="p-4 md:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Class</label>
+              <Select value={classId} onValueChange={onClassChange} disabled={loadingClasses}>
+                <SelectTrigger><SelectValue placeholder={loadingClasses ? "Loading classes…" : "Choose a class"} /></SelectTrigger>
+                <SelectContent>
+                  {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
+                  {!loadingClasses && classes.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">No classes assigned to you.</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Subject</label>
-              <Select value={bookId} onValueChange={onBookChange}>
-                <SelectTrigger><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+              <Select value={bookId} onValueChange={onBookChange} disabled={!classId || loadingSubjects}>
+                <SelectTrigger>
+                  <SelectValue placeholder={!classId ? "Choose a class first" : loadingSubjects ? "Loading subjects…" : "Choose a subject"} />
+                </SelectTrigger>
                 <SelectContent>
-                  {books.map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` · Class ${b.class_name}` : ""}</SelectItem>)}
+                  {subjectOptions.map((b) => <SelectItem key={b.bookId} value={String(b.bookId)}>{b.subject}</SelectItem>)}
+                  {!loadingSubjects && subjectOptions.length === 0 && (
+                    <div className="px-3 py-2 text-xs text-muted-foreground">No subjects found for this class.</div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -299,7 +375,7 @@ export default function ItemBankReview() {
 
         {!scopeReady && (
           <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
-            Choose at least a subject, chapter and topic to see and manage its question bank.
+            Choose a class, subject, chapter and topic to see and manage its question bank.
           </CardContent></Card>
         )}
 

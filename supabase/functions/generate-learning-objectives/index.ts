@@ -5,9 +5,19 @@
 //
 // Admin/teacher only. Takes a subtopic_id (a "concept" in the mastery tree)
 // or a topic_id (batches across every subtopic under that topic) and asks
-// Gemini, via the Lovable AI Gateway, to produce 3-6 granular learning
+// Gemini to produce 3-6 granular learning
 // objectives per subtopic (the finest level of the Student Mastery Engine).
 // Each objective gets a BKT parameter row automatically via DB trigger.
+//
+// create_missing_concepts: when a topic_id has no concepts (subtopics) yet - the
+// textbook loader only extracts chapters and topics - the AI first proposes 3-6
+// concepts for that topic and they are saved, then objectives are generated.
+// Topics that already have concepts are never touched.
+//
+// AI provider: calls Gemini directly with the same keys the other APAS
+// functions use (GOOGLE_GEMINI_API_KEY_2 / GOOGLE_GEMINI_API_KEY /
+// GEMINI_KEY_2..4), rotating across keys and models on rate limits. Falls back
+// to the Lovable AI Gateway only if LOVABLE_API_KEY is set.
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -23,16 +33,123 @@ interface GeneratedObjective {
   difficulty: "easy" | "medium" | "hard";
 }
 
-const MODEL = "google/gemini-2.5-flash";
+const GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
+const LOVABLE_MODEL = "google/gemini-2.5-flash";
+
+interface AiConfig { geminiKeys: string[]; lovableKey: string | null }
+
+function getAiConfig(): AiConfig {
+  const geminiKeys = [
+    Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
+    Deno.env.get("GOOGLE_GEMINI_API_KEY"),
+    Deno.env.get("GEMINI_KEY_2"),
+    Deno.env.get("GEMINI_KEY_3"),
+    Deno.env.get("GEMINI_KEY_4"),
+  ].filter((k, i, a): k is string => !!k && k.trim().length > 0 && a.indexOf(k) === i);
+  return { geminiKeys, lovableKey: Deno.env.get("LOVABLE_API_KEY") || null };
+}
+
+const SYSTEM_PROMPT = "You output strict JSON only. No markdown, no commentary.";
+
+/** Returns the model's raw text plus the model that produced it. */
+async function callAi(cfg: AiConfig, prompt: string): Promise<{ text: string; model: string }> {
+  let lastError = "";
+
+  for (const key of cfg.geminiKeys) {
+    for (const model of GEMINI_MODELS) {
+      try {
+        const resp = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.4, maxOutputTokens: 2048, responseMimeType: "application/json" },
+            }),
+          },
+        );
+        if (resp.status === 429 || resp.status === 503) { lastError = `Gemini ${model} rate limited (${resp.status})`; break; } // next key
+        if (!resp.ok) { lastError = `Gemini ${model} error ${resp.status}: ${(await resp.text()).slice(0, 200)}`; continue; }
+        const data = await resp.json();
+        // deno-lint-ignore no-explicit-any
+        const text = (data?.candidates?.[0]?.content?.parts ?? []).map((p: any) => p?.text ?? "").join("");
+        if (text.trim()) return { text, model };
+        lastError = `Gemini ${model} returned an empty response`;
+      } catch (e) {
+        lastError = `Gemini ${model} network error: ${e instanceof Error ? e.message : String(e)}`;
+      }
+    }
+  }
+
+  if (cfg.lovableKey) {
+    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${cfg.lovableKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: LOVABLE_MODEL,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, { role: "user", content: prompt }],
+        temperature: 0.4,
+      }),
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      return { text: data?.choices?.[0]?.message?.content ?? "[]", model: LOVABLE_MODEL };
+    }
+    lastError = `AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 200)}`;
+  }
+
+  throw new Error(lastError || "No AI provider responded");
+}
+
+interface GeneratedConcept { name: string; description: string }
+
+async function generateConceptsForTopic(
+  ai: AiConfig,
+  topicName: string,
+  topicDescription: string,
+  chapterName: string,
+  subject: string,
+): Promise<GeneratedConcept[]> {
+  const prompt = `You are a curriculum design expert. Break the following textbook topic into
+3 to 6 distinct teachable concepts (the smallest units a teacher would plan and
+assess separately). Concepts must be specific to this topic, non-overlapping,
+and ordered from foundational to advanced. Use the topic description as the
+source of truth for what the textbook covers.
+
+Subject: ${subject}
+Chapter: ${chapterName}
+Topic: ${topicName}
+Topic description: ${(topicDescription || "(none provided)").slice(0, 3000)}
+
+Return ONLY a JSON array, no prose, no markdown fences, in this exact shape:
+[{"name": "short concept name", "description": "one sentence on what the concept covers"}]`;
+
+  const { text } = await callAi(ai, prompt);
+  const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
+  let parsed: GeneratedConcept[];
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new Error(`Could not parse concepts as JSON: ${cleaned.slice(0, 200)}`);
+  }
+  if (!Array.isArray(parsed)) throw new Error("AI concept response was not a JSON array");
+  const seen = new Set<string>();
+  return parsed
+    .map((c) => ({ name: String(c?.name ?? "").trim(), description: String(c?.description ?? "").trim() }))
+    .filter((c) => c.name && !seen.has(c.name.toLowerCase()) && seen.add(c.name.toLowerCase()))
+    .slice(0, 6);
+}
 
 async function generateForSubtopic(
-  lovableApiKey: string,
+  ai: AiConfig,
   subtopicName: string,
   subtopicDescription: string,
   topicName: string,
   chapterName: string,
   subject: string,
-): Promise<GeneratedObjective[]> {
+): Promise<{ objectives: GeneratedObjective[]; model: string }> {
   const prompt = `You are a curriculum design expert. Break the following concept down into
 3 to 6 granular, measurable learning objectives a student should be able to
 demonstrate. Each objective must start with an action verb (Bloom's taxonomy),
@@ -48,29 +165,7 @@ Concept description: ${subtopicDescription || "(none provided)"}
 Return ONLY a JSON array, no prose, no markdown fences, in this exact shape:
 [{"objective_text": "...", "bloom_level": "remember|understand|apply|analyze|evaluate|create", "difficulty": "easy|medium|hard"}]`;
 
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${lovableApiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: "You output strict JSON only. No markdown, no commentary." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.4,
-    }),
-  });
-
-  if (!resp.ok) {
-    const errText = await resp.text();
-    throw new Error(`AI gateway error ${resp.status}: ${errText}`);
-  }
-
-  const data = await resp.json();
-  const raw: string = data?.choices?.[0]?.message?.content ?? "[]";
+  const { text: raw, model } = await callAi(ai, prompt);
   const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
 
   let parsed: GeneratedObjective[];
@@ -80,7 +175,7 @@ Return ONLY a JSON array, no prose, no markdown fences, in this exact shape:
     throw new Error(`Could not parse AI response as JSON: ${cleaned.slice(0, 300)}`);
   }
   if (!Array.isArray(parsed)) throw new Error("AI response was not a JSON array");
-  return parsed.filter((o) => o.objective_text?.trim());
+  return { objectives: parsed.filter((o) => o.objective_text?.trim()), model };
 }
 
 serve(async (req) => {
@@ -123,10 +218,12 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const ai = getAiConfig();
+    if (ai.geminiKeys.length === 0 && !ai.lovableKey) {
+      throw new Error("No AI key configured. Set GOOGLE_GEMINI_API_KEY_2 (or GOOGLE_GEMINI_API_KEY / LOVABLE_API_KEY) in the Supabase function secrets.");
+    }
 
-    const { subtopic_id, topic_id, overwrite = false } = await req.json();
+    const { subtopic_id, topic_id, overwrite = false, create_missing_concepts = false } = await req.json();
     if (!subtopic_id && !topic_id) {
       return new Response(JSON.stringify({ error: "subtopic_id or topic_id is required" }), {
         status: 400,
@@ -136,6 +233,7 @@ serve(async (req) => {
 
     // Resolve the set of subtopics to generate for, each with full context for grounding
     let subtopicIds: number[] = [];
+    let conceptsCreated = 0;
     if (subtopic_id) {
       subtopicIds = [subtopic_id];
     } else {
@@ -143,6 +241,41 @@ serve(async (req) => {
         .from("subtopics").select("id").eq("topic_id", topic_id).eq("is_active", true);
       if (error) throw error;
       subtopicIds = (subtopics ?? []).map((s) => s.id);
+
+      if (subtopicIds.length === 0 && create_missing_concepts) {
+        const { data: t, error: tErr } = await supabaseAdmin
+          .from("topics")
+          .select(`id, topic_name, topic_description,
+            curriculum_chapters!inner ( chapter_name, units!inner ( books!inner ( subject ) ) )`)
+          .eq("id", topic_id)
+          .single();
+        if (tErr || !t) {
+          return new Response(JSON.stringify({ results: [{ topic_id, error: "Topic not found" }] }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        // deno-lint-ignore no-explicit-any
+        const ch = (t as any).curriculum_chapters;
+        try {
+          const concepts = await generateConceptsForTopic(
+            ai, t.topic_name, t.topic_description ?? "", ch?.chapter_name ?? "", ch?.units?.books?.subject ?? "",
+          );
+          if (concepts.length === 0) throw new Error("AI returned no concepts");
+          const { data: created, error: cErr } = await supabaseAdmin
+            .from("subtopics")
+            .insert(concepts.map((c) => ({
+              topic_id, subtopic_name: c.name, subtopic_description: c.description, is_active: true,
+            })))
+            .select("id");
+          if (cErr) throw cErr;
+          subtopicIds = (created ?? []).map((c) => c.id);
+          conceptsCreated = subtopicIds.length;
+        } catch (e) {
+          return new Response(JSON.stringify({
+            results: [{ topic_id, error: `Could not create concepts: ${e instanceof Error ? e.message : String(e)}` }],
+          }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
     }
 
     const results: Record<string, unknown>[] = [];
@@ -187,8 +320,8 @@ serve(async (req) => {
       const book = unit?.books;
 
       try {
-        const objectives = await generateForSubtopic(
-          LOVABLE_API_KEY,
+        const { objectives, model: usedModel } = await generateForSubtopic(
+          ai,
           ctx.subtopic_name,
           ctx.subtopic_description ?? "",
           topic?.topic_name ?? "",
@@ -208,7 +341,7 @@ serve(async (req) => {
           difficulty: o.difficulty ?? "medium",
           display_order: idx + 1,
           ai_generated: true,
-          generation_model: MODEL,
+          generation_model: usedModel,
         }));
 
         const { data: inserted, error: insertError } = await supabaseAdmin
@@ -224,7 +357,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ results }), {
+    return new Response(JSON.stringify({ results, concepts_created: conceptsCreated }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
