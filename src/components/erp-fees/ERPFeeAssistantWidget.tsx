@@ -6,7 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sparkles, X, Send, Mic, MicOff, Wallet } from "lucide-react";
-import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
+import { Capacitor } from "@capacitor/core";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
+import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
+import { RobotFace } from "@/components/ai-assistant/RobotFace";
+import robotAvatar from "@/assets/ai-assistant-robot.png";
+
+const isNativePlatform = Capacitor.isNativePlatform();
 
 type ActionConfirm =
   | { action: "resend_receipt"; fee_id: string; student_name: string }
@@ -78,7 +85,11 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(true);
   const recognitionRef = useRef<any>(null);
-  const listeningWatchdogRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const noSpeechRetryRef = useRef(0);
+  // Guards against a single utterance firing onresult more than once (a
+  // documented quirk in some browsers even with continuous=false) - only
+  // the recognition session's natural end (onend) is allowed to actually
+  // send the message, and only once per session.
   const resultHandledRef = useRef(false);
   const finalTranscriptRef = useRef("");
   const hadErrorRef = useRef(false);
@@ -87,8 +98,16 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
   const voiceModeRef = useRef(false);
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [voiceError, setVoiceError] = useState<string | null>(null);
-  const ttsSupported = typeof window !== "undefined" && "speechSynthesis" in window;
+  const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+
+  // Speech-synced mouth animation - see src/hooks/useLipSync.ts. Shape comes
+  // from a timing schedule built from the spoken text; on the web it's kept
+  // locked to the real voice via SpeechSynthesisUtterance's boundary event.
+  const lipSync = useLipSync();
+  // Guards against overlapping speak() calls fighting over the speech
+  // queue / lip-sync clock - only the latest call is allowed to act.
+  const speechGenerationRef = useRef(0);
 
   const updateVoiceMode = (v: boolean) => {
     voiceModeRef.current = v;
@@ -98,38 +117,65 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
   const sendMessageWithTextRef = useRef<(overrideText?: string) => Promise<void>>(async () => {});
 
   useEffect(() => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
+    if (isNativePlatform) {
+      let cancelled = false;
+      SpeechRecognition.available()
+        .then(({ available }: { available: boolean }) => {
+          if (!cancelled && !available) setVoiceSupported(false);
+        })
+        .catch(() => {
+          if (!cancelled) setVoiceSupported(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const BrowserSpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!BrowserSpeechRecognition) {
       setVoiceSupported(false);
       return;
     }
-    const recognition = new SpeechRecognition();
+    const recognition = new BrowserSpeechRecognition();
     recognition.lang = "en-US";
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (event: any) => {
+      clearTimeout(listeningTimeoutRef.current);
+      noSpeechRetryRef.current = 0;
+      // Accumulate every result this session reports instead of acting on
+      // the first one - some browsers fire onresult more than once for a
+      // single utterance, and reacting to each firing sent (and spoke) the
+      // same answer multiple times.
       let combined = "";
       for (let i = 0; i < event.results.length; i++) {
-        combined += event.results[i][0].transcript;
+        combined += event.results[i][0]?.transcript ?? "";
       }
-      combined = combined.trim();
-      finalTranscriptRef.current = combined;
-      setInput(combined);
-      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
-      listeningWatchdogRef.current = setTimeout(() => {
+      finalTranscriptRef.current = combined.trim();
+      setInput(finalTranscriptRef.current);
+      // Reset the "stop soon" timer each time new speech comes in, then
+      // let the session end naturally - onend below is what actually
+      // triggers sendMessage, exactly once.
+      listeningTimeoutRef.current = setTimeout(() => {
         try { recognitionRef.current?.stop(); } catch {}
       }, 1500);
     };
     recognition.onerror = (event: any) => {
-      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+      clearTimeout(listeningTimeoutRef.current);
       setIsListening(false);
+      hadErrorRef.current = true;
       console.error("SpeechRecognition error:", event.error);
       if (event.error === "aborted") return;
-      if (voiceModeRef.current && event.error === "no-speech") {
-        setTimeout(() => startListeningSafely(), 400);
-        return;
+
+      if (event.error === "no-speech") {
+        if (voiceModeRef.current || noSpeechRetryRef.current < 1) {
+          noSpeechRetryRef.current += 1;
+          setTimeout(() => startListeningSafely(), 400);
+          return;
+        }
+        noSpeechRetryRef.current = 0;
       }
-      hadErrorRef.current = true;
+
       const messagesMap: Record<string, string> = {
         "no-speech": "No speech detected. Please try again.",
         "not-allowed": "Microphone access was denied. Check the site permissions (padlock icon in the address bar) and allow microphone access.",
@@ -145,7 +191,7 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
       }
     };
     recognition.onend = () => {
-      if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
+      clearTimeout(listeningTimeoutRef.current);
       setIsListening(false);
       const transcript = finalTranscriptRef.current;
       finalTranscriptRef.current = "";
@@ -157,59 +203,118 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
       hadErrorRef.current = false;
     };
     recognitionRef.current = recognition;
-
-    return () => {
-      recognition.onresult = null;
-      recognition.onerror = null;
-      recognition.onend = null;
-      try { recognition.abort(); } catch {}
-      if (recognitionRef.current === recognition) recognitionRef.current = null;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startListeningSafely = () => {
+  const listeningTimeoutRef = useRef<any>(null);
+
+const startListeningSafely = () => {
+    if (isNativePlatform) {
+      setVoiceState("listening");
+      setVoiceError(null);
+      setIsListening(true);
+
+      SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {}).finally(() => {
+        setTimeout(() => {
+          clearTimeout(listeningTimeoutRef.current);
+          listeningTimeoutRef.current = setTimeout(() => {
+            SpeechRecognition.forceStop({ timeout: 800 }).catch(() => {});
+          }, 8000);
+
+          SpeechRecognition.requestPermissions()
+            .then(() =>
+              SpeechRecognition.start({
+                language: "en-US",
+                maxResults: 1,
+                partialResults: false,
+                popup: true,
+              })
+            )
+            .then((result: { matches?: string[] }) => {
+              clearTimeout(listeningTimeoutRef.current);
+              setIsListening(false);
+              const transcript = result?.matches?.[0];
+              if (!transcript) {
+                const msg = "No speech detected. Please try again.";
+                if (voiceModeRef.current) {
+                  setVoiceError(msg);
+                  setVoiceState("idle");
+                } else {
+                  toast({ title: "Voice input error", description: msg, variant: "destructive" });
+                }
+                return;
+              }
+              noSpeechRetryRef.current = 0;
+              setInput(transcript);
+              if (voiceModeRef.current) {
+                setVoiceState("thinking");
+                setVoiceError(null);
+              }
+              setTimeout(() => sendMessageWithTextRef.current(transcript), 100);
+            })
+            .catch((err: any) => {
+              clearTimeout(listeningTimeoutRef.current);
+              setIsListening(false);
+              console.error("SpeechRecognition error:", err);
+              const msg = "Could not hear you clearly. Please try again or type instead.";
+              if (voiceModeRef.current) {
+                setVoiceError(msg);
+                setVoiceState("idle");
+              } else {
+                toast({ title: "Voice input error", description: msg, variant: "destructive" });
+              }
+            });
+        }, 300);
+      });
+      return;
+    }
+
     if (!recognitionRef.current) return;
     try {
       setVoiceState("listening");
       setVoiceError(null);
       setIsListening(true);
-      recognitionRef.current.start();
       resultHandledRef.current = false;
       hadErrorRef.current = false;
       finalTranscriptRef.current = "";
-      if (listeningWatchdogRef.current) clearTimeout(listeningWatchdogRef.current);
-      listeningWatchdogRef.current = setTimeout(() => {
-        try { recognitionRef.current?.stop(); } catch {}
-        setIsListening(false);
-        if (voiceModeRef.current) {
-          setVoiceError("Didn't catch that in time - the mic seems stuck. Tap to try again or switch to typing.");
-          setVoiceState("idle");
+      recognitionRef.current.start();
+      clearTimeout(listeningTimeoutRef.current);
+      listeningTimeoutRef.current = setTimeout(() => {
+        if (recognitionRef.current) {
+          try { recognitionRef.current.stop(); } catch {}
         }
       }, 8000);
-    } catch (err: any) {
-      if (err?.name === "InvalidStateError") {
-        try { recognitionRef.current.stop(); } catch {}
-        setTimeout(() => startListeningSafely(), 150);
-      }
+    } catch {
+      // already started - ignore
     }
   };
 
   const toggleListening = () => {
+    if (isNativePlatform) {
+      if (isListening) {
+        SpeechRecognition.stop().catch(() => {});
+        setIsListening(false);
+      } else {
+        startListeningSafely();
+      }
+      return;
+    }
     if (!recognitionRef.current) return;
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
       setIsListening(true);
-      recognitionRef.current.start();
       resultHandledRef.current = false;
       hadErrorRef.current = false;
       finalTranscriptRef.current = "";
+      recognitionRef.current.start();
     }
   };
 
   const forSpeech = (text: string): string => {
+    // Space out alphanumeric codes (e.g. IDs and codes) so TTS reads
+    // them character-by-character instead of as one garbled number.
     return text.replace(/\b(?=[A-Za-z]*\d)(?=\d*[A-Za-z])[A-Za-z0-9]{4,}\b/g, (token) =>
       token.split("").join(" ")
     );
@@ -218,7 +323,7 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
   const preferredVoiceRef = useRef<SpeechSynthesisVoice | null>(null);
 
   useEffect(() => {
-    if (!ttsSupported) return;
+    if (!ttsSupported || isNativePlatform) return;
     const pickVoice = () => {
       const voices = window.speechSynthesis.getVoices();
       if (!voices.length) return;
@@ -254,24 +359,71 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
   }, []);
 
   const speak = (text: string) => {
+    const myGeneration = ++speechGenerationRef.current;
+
     if (!ttsSupported || !voiceModeRef.current) {
       if (voiceModeRef.current) startListeningSafely();
       return;
     }
+
+if (isNativePlatform) {
+  setVoiceState("speaking");
+  const spokenText = forSpeech(text);
+  const estimatedMs = Math.max(1200, spokenText.split(/\s+/).length * 380);
+  // Native TTS gives no audio stream or word events, so the mouth is
+  // driven off the same estimated duration used to schedule when to
+  // resume listening - keeps them in lockstep.
+  lipSync.start(spokenText, estimatedMs);
+
+  TextToSpeech.speak({
+    text: spokenText,
+    lang: "en-US",
+    rate: 0.97,
+    pitch: 1.02,
+    volume: 1,
+    category: "playback",
+  }).catch(() => {});
+
+  setTimeout(() => {
+    if (speechGenerationRef.current !== myGeneration) return; // superseded
+    lipSync.stop();
+    if (voiceModeRef.current) startListeningSafely();
+  }, estimatedMs);
+  return;
+}
+
     const doSpeak = () => {
-      const utterance = new SpeechSynthesisUtterance(forSpeech(text));
+      if (speechGenerationRef.current !== myGeneration) return; // superseded
+      const spokenText = forSpeech(text);
+      const utterance = new SpeechSynthesisUtterance(spokenText);
       utteranceRef.current = utterance;
       if (preferredVoiceRef.current) utterance.voice = preferredVoiceRef.current;
       utterance.rate = 0.97;
       utterance.pitch = 1.02;
       utterance.volume = 1;
-      utterance.onstart = () => setVoiceState("speaking");
+      utterance.onstart = () => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        setVoiceState("speaking");
+        // Browsers never expose speechSynthesis audio to the Web Audio API,
+        // so mouth movement is scheduled against an estimated duration and
+        // corrected live via onboundary below.
+        lipSync.start(spokenText, estimateSpeechDurationMs(spokenText));
+      };
+      utterance.onboundary = (event: SpeechSynthesisEvent) => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        lipSync.reanchor(event.charIndex ?? 0, spokenText.length);
+      };
       utterance.onend = () => {
+        if (speechGenerationRef.current !== myGeneration) return;
         utteranceRef.current = null;
+        lipSync.stop();
         if (voiceModeRef.current) startListeningSafely();
       };
-      utterance.onerror = () => {
+      utterance.onerror = (e: any) => {
+        if (speechGenerationRef.current !== myGeneration) return;
         utteranceRef.current = null;
+        lipSync.stop();
+        if (e?.error === "interrupted" || e?.error === "canceled") return;
         if (voiceModeRef.current) startListeningSafely();
       };
       window.speechSynthesis.speak(utterance);
@@ -279,18 +431,15 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
         if (window.speechSynthesis.paused) window.speechSynthesis.resume();
       }, 60);
       setTimeout(() => {
-        if (utteranceRef.current === utterance && voiceModeRef.current) {
+        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
           utteranceRef.current = null;
+          lipSync.stop();
           startListeningSafely();
         }
       }, 15000);
     };
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
-      window.speechSynthesis.cancel();
-      setTimeout(doSpeak, 80);
-    } else {
-      doSpeak();
-    }
+    window.speechSynthesis.cancel();
+    setTimeout(doSpeak, 80);
   };
 
   const enterVoiceMode = () => {
@@ -305,13 +454,19 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
   };
 
   const exitVoiceMode = () => {
-    if (listeningWatchdogRef.current) { clearTimeout(listeningWatchdogRef.current); listeningWatchdogRef.current = null; }
     updateVoiceMode(false);
     setVoiceState("idle");
     setVoiceError(null);
-    window.speechSynthesis?.cancel();
+    lipSync.stop();
+    if (isNativePlatform) {
+      TextToSpeech.stop().catch(() => {});
+    } else {
+      window.speechSynthesis?.cancel();
+    }
     utteranceRef.current = null;
-    if (recognitionRef.current && isListening) {
+    if (isNativePlatform) {
+      if (isListening) SpeechRecognition.stop().catch(() => {});
+    } else if (recognitionRef.current && isListening) {
       recognitionRef.current.stop();
     }
     setIsListening(false);
@@ -469,6 +624,13 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
     speaking: "Speaking...",
   };
 
+  const orbClasses: Record<VoiceState, string> = {
+    idle: "from-blue-400 via-indigo-400 to-purple-400 animate-pulse",
+    listening: "from-blue-400 via-cyan-300 to-indigo-400 animate-pulse",
+    thinking: "from-indigo-500 via-purple-400 to-blue-500 animate-spin",
+    speaking: "from-sky-300 via-blue-200 to-indigo-300 animate-bounce",
+  };
+
   if (!isFeesTab && !open) return null;
 
   return (
@@ -493,15 +655,55 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
             <X className="h-5 w-5" />
           </button>
 
-          <div className="h-64 w-64">
-            <VoicePoweredOrb
-              enableVoiceControl={voiceState === "listening" || voiceState === "speaking"}
-              hue={voiceState === "speaking" ? 300 : voiceState === "thinking" ? 260 : 0}
-              voiceSensitivity={1.5}
-              maxRotationSpeed={1.2}
-              maxHoverIntensity={0.8}
-              className="rounded-full overflow-hidden"
+          <div className="relative flex h-64 w-64 items-center justify-center">
+            {/* Ambient glow behind the avatar, colored per voice state and
+                pulsing in brightness while speaking, driven by the same
+                lip-sync intensity that drives the mouth. */}
+            <div
+              className={`absolute inset-0 rounded-full bg-gradient-to-br blur-2xl ${orbClasses[voiceState]}`}
+              style={{
+                opacity: voiceState === "speaking" ? 0.55 + lipSync.intensity * 0.4 : 0.7,
+                transition: "opacity 90ms ease-out",
+              }}
             />
+
+            {voiceState === "listening" && (
+              <div className="absolute inset-1 rounded-full border-2 border-cyan-300/60 animate-pulse" />
+            )}
+            {voiceState === "thinking" && (
+              <div className="absolute inset-1 rounded-full border-2 border-t-transparent border-indigo-300/70 animate-spin" />
+            )}
+            {voiceState === "speaking" && (
+              <div
+                className="absolute inset-0 rounded-full border-2 border-sky-300/60"
+                style={{
+                  transform: `scale(${1 + lipSync.intensity * 0.06})`,
+                  opacity: 0.5 + lipSync.intensity * 0.4,
+                  transition: "transform 90ms ease-out, opacity 90ms ease-out",
+                }}
+              />
+            )}
+
+            {/* Robot avatar - gets a gentle "talking" bob and scale while
+                speaking, and its mouth is replaced with a real speech-synced
+                overlay (see RobotFace / useLipSync). */}
+            <div
+              className="relative h-56 w-56 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/10"
+              style={{
+                transform:
+                  voiceState === "speaking"
+                    ? `scale(${1.015 + lipSync.intensity * 0.02}) translateY(${-lipSync.intensity * 2}px)`
+                    : "scale(1)",
+                transition: "transform 90ms ease-out",
+              }}
+            >
+              <RobotFace
+                src={robotAvatar}
+                viseme={lipSync.viseme}
+                intensity={lipSync.intensity}
+                active={voiceState === "speaking"}
+              />
+            </div>
           </div>
 
           <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
@@ -625,4 +827,3 @@ export function ERPFeeAssistantWidget({ schoolId, onNavigate, isFeesTab = true }
     </>
   );
 }
-
