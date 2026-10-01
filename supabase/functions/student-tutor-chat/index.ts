@@ -27,9 +27,19 @@ serve(async (req) => {
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const GROK_KEY = Deno.env.get("GROK_API_KEY");
     const OPENAI_KEY = Deno.env.get("OPEN_AI_KEY");
-    if (!GROK_KEY) throw new Error("GROK_API_KEY not configured");
+    const GATEWAY_KEY = Deno.env.get("LOVABLE_API_KEY");
+    // GROK_API_KEY may be a Groq key (gsk_...) or an xAI Grok key (xai-...): route by prefix.
+    const rawKey = (Deno.env.get("GROK_API_KEY") ?? Deno.env.get("GROQ_API_KEY") ?? "").trim();
+    const XAI_KEY = rawKey.startsWith("xai-") ? rawKey : "";
+    const GROQ_KEY = rawKey && !XAI_KEY ? rawKey : "";
+    const GEMINI_KEYS = [
+      "GEMINI_API_KEY", "GEMINI_API_KEY_1", "GOOGLE_GEMINI_API_KEY", "GOOGLE_GEMINI_API_KEY_2",
+      "GEMINI_KEY_2", "GEMINI_KEY_3", "GEMINI_KEY_4", "Worksheet_gemini_api_key",
+    ].map((n) => Deno.env.get(n)).filter((k): k is string => !!k);
+    if (!XAI_KEY && !GROQ_KEY && !GATEWAY_KEY && !GEMINI_KEYS.length) {
+      throw new Error("AI tutor is not configured: set GROK_API_KEY, a Gemini key or LOVABLE_API_KEY in Supabase secrets");
+    }
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     // `language` is optional; missing/unknown/"en" => English, i.e. unchanged behaviour.
@@ -56,13 +66,13 @@ serve(async (req) => {
       .from("students")
       .select("id, profile_id, grade, age, vark_type, zpd_score, curriculum, dominant_intelligence")
       .eq("profile_id", student_id)
-      .single();
+      .maybeSingle();
 
     const { data: profile } = await supabase
       .from("profiles")
       .select("full_name")
       .eq("id", student_id)
-      .single();
+      .maybeSingle();
 
     // Get recent test results for weak topics
     const { data: tests } = await supabase
@@ -73,7 +83,7 @@ serve(async (req) => {
       .limit(5);
 
     const weakTopics = (tests || [])
-      .filter(t => (t.score / t.total_questions) < 0.6)
+      .filter(t => t.total_questions > 0 && (t.score / t.total_questions) < 0.6)
       .map(t => t.subject);
 
     // Vector search for relevant content
@@ -120,8 +130,12 @@ Guidelines:
 - If the student is struggling with a weak topic, provide extra scaffolding
 - Encourage the student and celebrate progress
 - When referencing textbook content, cite it naturally
-- Keep responses concise but thorough (200-400 words max)
-- Use markdown for formatting (headers, bold, lists) when helpful
+- Keep responses concise but thorough (150-300 words max)
+- If the student's message is a broad topic request (e.g. "help me with fractions"), do NOT refuse and do NOT ask many questions: give a short friendly overview with one simple worked example, then ask ONE follow-up question (e.g. which part they want to practise)
+- Greet by first name only on the first reply, not every time
+- Format with markdown: short paragraphs, **bold** key terms, bullet or numbered lists for steps, and put each worked example on its own lines
+- Write maths in plain text (e.g. 1/2 + 1/4 = 3/4), never LaTeX or $...$ symbols
+- End with a short encouraging line or one question to check understanding
 - NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}`;
 
     const messages = [
@@ -134,52 +148,67 @@ Guidelines:
     // Non-English teaching prefers Gemini via the AI gateway - Llama 3.3 is noticeably weaker in Telugu
     // and other Indic scripts - and falls back to Groq if the gateway key is missing or the call fails.
     // Both return the same OpenAI-style SSE stream, so the client parser is unaffected.
-    const callGroq = () => fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${GROK_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "llama-3.3-70b-versatile",
-        messages,
-        stream: true,
-      }),
-    });
+    const openAiCompat = (url: string, key: string, model: string, extra: Record<string, unknown> = {}) =>
+      fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, messages, stream: true, temperature: 0.6, ...extra }),
+      });
+
+    const attempts: Array<{ name: string; run: () => Promise<Response> }> = [];
+    const addGemini = () => {
+      for (const k of GEMINI_KEYS) for (const m of ["gemini-2.5-flash", "gemini-2.0-flash"]) {
+        attempts.push({
+          name: `gemini:${m}`,
+          run: () => openAiCompat("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", k, m),
+        });
+      }
+    };
+    const addGateway = () => {
+      if (GATEWAY_KEY) attempts.push({
+        name: "gateway",
+        run: () => openAiCompat(
+          Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions",
+          GATEWAY_KEY, "google/gemini-2.5-flash"),
+      });
+    };
+    const addGrokOrGroq = () => {
+      if (XAI_KEY) for (const m of ["grok-3-mini", "grok-3", "grok-4"]) {
+        attempts.push({ name: `xai:${m}`, run: () => openAiCompat("https://api.x.ai/v1/chat/completions", XAI_KEY, m) });
+      }
+      if (GROQ_KEY) for (const m of ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]) {
+        attempts.push({ name: `groq:${m}`, run: () => openAiCompat("https://api.groq.com/openai/v1/chat/completions", GROQ_KEY, m, { max_tokens: 1200 }) });
+      }
+    };
+    // Non-English prefers Gemini (better Indic scripts); English prefers Grok/Groq. Everything else is a fallback.
+    if (teachingLang) { addGemini(); addGateway(); addGrokOrGroq(); }
+    else { addGrokOrGroq(); addGemini(); addGateway(); }
 
     let aiResp: Response | null = null;
-    const gatewayKey = Deno.env.get("LOVABLE_API_KEY");
-    if (teachingLang && gatewayKey) {
+    let lastStatus = 0;
+    const failures: string[] = [];
+    for (const a of attempts) {
       try {
-        const gw = await fetch(
-          Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${gatewayKey}`, "Content-Type": "application/json" },
-            body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, stream: true }),
-          },
-        );
-        if (gw.ok && gw.body) aiResp = gw;
-        else console.error("Gateway tutor call failed, falling back to Groq:", gw.status);
+        const r = await a.run();
+        if (r.ok && r.body) { aiResp = r; break; }
+        lastStatus = r.status;
+        const detail = (await r.text().catch(() => "")).slice(0, 200);
+        failures.push(`${a.name}=${r.status}`);
+        console.error(`Tutor provider ${a.name} failed:`, r.status, detail);
       } catch (e) {
-        console.error("Gateway tutor call threw, falling back to Groq:", e);
+        failures.push(`${a.name}=network`);
+        console.error(`Tutor provider ${a.name} threw:`, e);
       }
     }
-    if (!aiResp) aiResp = await callGroq();
-
-    if (!aiResp.ok) {
-      const status = aiResp.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      throw new Error(`AI error: ${status}`);
+    if (!aiResp) {
+      const only429 = failures.length > 0 && failures.every((f) => f.endsWith("=429"));
+      const msg = only429
+        ? "The AI is busy right now. Please try again in a minute."
+        : `The AI service could not be reached. Details: ${failures.join(", ")}. Check the API keys in Supabase secrets.`;
+      return new Response(JSON.stringify({ error: msg }), {
+        status: only429 ? 429 : 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Same byte stream as before; when persisting, the reply is also saved once it has finished streaming.

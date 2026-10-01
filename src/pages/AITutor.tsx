@@ -274,7 +274,10 @@ const AITutor = () => {
       if (!resp.ok || !resp.body) {
         if (resp.status === 429) throw new Error("Rate limit exceeded. Please wait a moment.");
         if (resp.status === 402) throw new Error("AI credits exhausted. Please contact your administrator.");
-        throw new Error("Failed to start chat");
+        let detail = "";
+        try { detail = (await resp.json())?.error ?? ""; } catch { /* non-JSON body */ }
+        console.error("Tutor chat failed:", resp.status, detail);
+        throw new Error(detail || `The tutor is unavailable right now (error ${resp.status}). Please try again.`);
       }
 
       const reader = resp.body.getReader();
@@ -315,7 +318,7 @@ const AITutor = () => {
         }
       }
     } catch (e: any) {
-      setMessages(prev => [...prev, { role: "assistant", content: `❌ ${e.message || "Something went wrong. Please try again."}` }]);
+      setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I couldn't answer just now. ${e.message || "Please try again."}` }]);
     }
     setIsLoading(false);
   };
@@ -475,7 +478,7 @@ const AITutor = () => {
                   }`}
                 >
                   {msg.role === "assistant" ? (
-                    <div className="prose prose-base dark:prose-invert max-w-none">
+                    <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-3 prose-headings:mb-2 prose-strong:text-foreground">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   ) : (
