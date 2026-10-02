@@ -37,7 +37,9 @@ import {
   Pencil,
   Trash2,
   ArrowLeft,
+  Sparkles,
 } from "lucide-react";
+import { IepGeneratorDialog } from "@/components/sen/IepGeneratorDialog";
 
 // ---------------------------------------------------------------------
 // Types
@@ -191,6 +193,7 @@ export default function SENManagement() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   const [planOpen, setPlanOpen] = useState(false);
+  const [iepGenOpen, setIepGenOpen] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planForm, setPlanForm] = useState({ title: "", start_date: "", end_date: "", status: "draft" });
 
@@ -862,7 +865,15 @@ export default function SENManagement() {
 
                     {/* IEP TAB */}
                     <TabsContent value="iep" className="space-y-3 mt-4">
-                      <div className="flex justify-end">
+                      <div className="flex flex-col sm:flex-row justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-xl w-full sm:w-auto"
+                          onClick={() => setIepGenOpen(true)}
+                        >
+                          <Sparkles className="h-4 w-4 mr-1" /> Generate IEP with AI
+                        </Button>
                         <Button
                           size="sm"
                           className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
@@ -1152,6 +1163,18 @@ export default function SENManagement() {
           <DialogFooter><Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={saveProfileEdit}>Save Changes</Button></DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI IEP generator */}
+      {selected && (
+        <IepGeneratorDialog
+          open={iepGenOpen}
+          onOpenChange={setIepGenOpen}
+          senStudentId={selected.id}
+          studentName={selected.student?.full_name || ""}
+          createdBy={profile?.id}
+          onSaved={() => loadDetail(selected.id)}
+        />
+      )}
 
       {/* IEP Plan Dialog */}
       <Dialog open={planOpen} onOpenChange={(o) => { setPlanOpen(o); if (!o) { setEditingPlanId(null); setPlanForm({ title: "", start_date: "", end_date: "", status: "draft" }); } }}>

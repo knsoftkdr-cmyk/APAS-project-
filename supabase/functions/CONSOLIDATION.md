@@ -102,3 +102,24 @@ Body: `{ action: "ptm_prep", appointment_id, refresh? }`. The existing `{ teache
   teacher_notes (this teacher's own), student_interventions, student_predictions, student_goals, previous appointments, and the mastery / misconception / risk RPCs.
 * Cache (optional, migration `20261012000000_ptm_prep_briefs.sql`): AI briefs are stored in `ptm_prep_briefs` for 12h (or until the agenda changes). It is a separate table with RLS
   on and no client policies on purpose - parents read `appointments` with `select("*")`, so a column there would leak teacher-side prep to them. Works without the migration.
+
+## Individual Education Plan (IEP) Generator (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| IEP Generator: drafts an IEP (goals, accommodations, strategies) for a SEN student | ai-teacher-assistant | action: `iep_generate` |
+
+Handler: `_shared/handlers/iepGenerator.ts`; pure model: `_shared/iepModel.ts` (unit-tested in `src/test/iepModel.test.ts`).
+Body: `{ action: "iep_generate", sen_student_id, duration_months?: 3-12, focus_domains?: string[], teacher_notes?: string }`.
+The existing `{ teacher_id, school_id }` dashboard call, `action: "copilot"` and `action: "ptm_prep"` are unchanged.
+
+* UI: a "Generate IEP with AI" button in the IEP tab of `SENManagement.tsx` (admin view) and `MySENStudents.tsx` (case manager only; therapists stay read-only),
+  using the shared `components/sen/IepGeneratorDialog.tsx`. No sidebar change. Frontend call: `generateIepDraft()` in `src/lib/iepGenerator.ts`.
+* No migration and no new table. The function returns a DRAFT and saves nothing. The dialog lets the case manager edit it, then saves through the same
+  `iep_plans` / `iep_goals` / `sen_accommodations` inserts the screen already used (plan saved with status `draft`; if the goals insert fails the empty plan is removed).
+* Access: admin / principal / hod / school_admin in the SEN student's school, or the teacher who is that student's case manager. Everyone else gets 403.
+* Dates are computed in code, never by the model. Model output is checked against the allowed domains / accommodation types / `applies_to` values;
+  unusable output, no AI key, or an AI failure -> a template-based draft (`source: "rules"`) that says so on screen.
+* Privacy: the student's name is replaced by `STU_01` before the model call. SEN category and case notes are sent (they are the input), unlike PTM prep.
+* Data read (all optional, a missing table becomes a "data gap"): sen_students, students, attendance_records, student_marks, behaviour_records, iep_plans/goals/reviews,
+  sen_accommodations, therapy_sessions, and the `get_student_mastery_tree` RPC (as the caller).
