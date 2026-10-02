@@ -21,6 +21,8 @@ import { handleRootCauseAnalysis } from "../_shared/handlers/rootCauseAnalysis.t
 import { handleLearningVelocity } from "../_shared/handlers/learningVelocity.ts";
 import { handleStudentMisconceptions } from "../_shared/handlers/studentMisconceptions.ts";
 import { handleStudentTwin } from "../_shared/handlers/studentTwin.ts";
+import { handleAccessibility } from "../_shared/handlers/accessibility.ts";
+import { handlePronunciation } from "../_shared/handlers/pronunciation.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -28,6 +30,13 @@ const MERGED_ROUTES: RouteTable = {
   student_misconceptions: { handler: handleStudentMisconceptions },
   root_cause: { handler: handleRootCauseAnalysis },
   student_twin: { handler: handleStudentTwin },
+  // Accessibility Engine preferences (any signed-in user, own row only) - see handlers/accessibility.ts.
+  accessibility_get: { handler: handleAccessibility, action: "get" },
+  accessibility_save: { handler: handleAccessibility, action: "save" },
+  // Pronunciation Assessment (students, own attempts only) - see handlers/pronunciation.ts.
+  pronunciation_assess: { handler: handlePronunciation, action: "assess" },
+  pronunciation_history: { handler: handlePronunciation, action: "history" },
+  pronunciation_passage: { handler: handlePronunciation, action: "passage" },
 };
 
 serve(async (req) => {

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { languageDirective, resolveTeachingLanguage } from "../_shared/languages.ts";
 import { clampHintLevel, resolveTutorStyle, styleDirective } from "../_shared/tutorStyles.ts";
+import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
 import { callerOwnsStudent, pruneThread, resolveMode, saveMessage, tapStream } from "../_shared/tutorMemory.ts";
 
 const corsHeaders = {
@@ -45,7 +46,7 @@ serve(async (req) => {
     // `language` is optional; missing/unknown/"en" => English, i.e. unchanged behaviour.
     // `style` ("explain" | "socratic" | "hint"), `hint_level` (1-4) and `mode` ("tutor" | "career") are optional;
     // when absent the request behaves exactly as before.
-    const { message, student_id, conversation_history = [], language, style, hint_level, mode } = await req.json();
+    const { message, student_id, conversation_history = [], language, style, hint_level, mode, accessibility } = await req.json();
     const teachingLang = resolveTeachingLanguage(language);
     const tutorStyle = resolveTutorStyle(style);
     const hintLevel = clampHintLevel(hint_level);
@@ -136,7 +137,7 @@ Guidelines:
 - Format with markdown: short paragraphs, **bold** key terms, bullet or numbered lists for steps, and put each worked example on its own lines
 - Write maths in plain text (e.g. 1/2 + 1/4 = 3/4), never LaTeX or $...$ symbols
 - End with a short encouraging line or one question to check understanding
-- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}`;
+- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}${accessibilityDirective(accessibility)}`;
 
     const messages = [
       { role: "system", content: systemPrompt },

@@ -123,3 +123,31 @@ The existing `{ teacher_id, school_id }` dashboard call, `action: "copilot"` and
 * Privacy: the student's name is replaced by `STU_01` before the model call. SEN category and case notes are sent (they are the input), unlike PTM prep.
 * Data read (all optional, a missing table becomes a "data gap"): sen_students, students, attendance_records, student_marks, behaviour_records, iep_plans/goals/reviews,
   sen_accommodations, therapy_sessions, and the `get_student_mastery_tree` RPC (as the caller).
+
+## Accessibility Engine (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Load a user's accessibility preferences (+ suggestion from SEN accommodations for students) | get-mastery-history | action: `accessibility_get` |
+| Save a user's accessibility preferences | get-mastery-history | action: `accessibility_save` |
+
+Handler: `_shared/handlers/accessibility.ts`; pure model: `_shared/accessibilityModel.ts` (unit-tested in
+`src/test/accessibilityModel.test.ts`). Any signed-in user, own row only (user id comes from the verified JWT).
+Storage: `user_accessibility_preferences` (migration 20261013000000, RLS on, service role only). The feature works
+without that migration: settings stay cached on the device and `accessibility_save` answers 503 `persistence_unavailable`.
+
+Existing functions changed (additive, optional field, unchanged behaviour when absent):
+* `student-tutor-chat` and `student-self-assistant` accept `accessibility: { dyslexia?: true, screen_reader?: true }`
+  and append plain-language writing guidance to the system prompt (`accessibilityDirective`).
+
+Frontend: `src/lib/accessibility.ts`, `src/lib/accessibilityDom.ts`, `src/contexts/AccessibilityContext.tsx`,
+`src/components/accessibility/AccessibilityPanel.tsx`, styles at the end of `src/index.css`.
+After merging, redeploy `get-mastery-history`, `student-tutor-chat` and `student-self-assistant` (no new functions).
+
+## Pronunciation Assessment (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Score a spoken reading + AI tips (needs migration 20261014000000 to save results) | get-mastery-history | action: `pronunciation_assess` |
+| Pronunciation history + tricky words | get-mastery-history | action: `pronunciation_history` |
+| AI practice passage in any teaching language | get-mastery-history | action: `pronunciation_passage` |

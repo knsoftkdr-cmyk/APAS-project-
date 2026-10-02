@@ -11,6 +11,7 @@
 // data back.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -588,7 +589,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, history, mode } = await req.json();
+    // `accessibility` ({ dyslexia?, screen_reader? }) is optional; when absent the prompt is unchanged.
+    const { message, history, mode, accessibility } = await req.json();
     if (!message || typeof message !== "string") {
       return new Response(JSON.stringify({ type: "message", text: "I didn't catch a question there - could you try again?" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -707,7 +709,7 @@ ANSWERING RULES:
     }
 
 CURRENT DATA (this student's own records only):
-${context}`;
+${context}${accessibilityDirective(accessibility)}`;
 
     const reply = await callGemini(systemPrompt, message, keys, Array.isArray(history) ? history.slice(-6) : []);
 

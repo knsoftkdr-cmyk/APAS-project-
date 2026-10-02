@@ -13,6 +13,7 @@ import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
 import robotAvatar from "@/assets/ai-assistant-robot.png";
 import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
+import { getAiAccessibilityFlags } from "@/lib/accessibility";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -83,6 +84,7 @@ async function getAssistantReply(
       message: userText,
       mode,
       history: recentHistory.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+      accessibility: getAiAccessibilityFlags(),
     },
   });
   if (error) throw error;

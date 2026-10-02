@@ -8,6 +8,8 @@ import BlogPost from "./pages/BlogPost";
 import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
+import { AccessibilityPanel, SignedOutAccessibilityLauncher } from "@/components/accessibility/AccessibilityPanel";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -150,6 +152,7 @@ const AdaptiveHomework = lazy(() => import("./pages/AdaptiveHomework"));
 const Enrichment = lazy(() => import("./pages/Enrichment"));
 const AdaptiveHomeworkGenerator = lazy(() => import("./pages/AdaptiveHomeworkGenerator"));
 const LearningVelocity = lazy(() => import("./pages/LearningVelocity"));
+const PronunciationAssessment = lazy(() => import("./pages/PronunciationAssessment"));
 const ClassVelocityDashboard = lazy(() => import("./pages/ClassVelocityDashboard"));
 const EarlyWarningDashboard = lazy(() => import("./pages/EarlyWarningDashboard"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
@@ -211,8 +214,11 @@ export default function App() {
           <Sonner />
           <BrowserRouter>
             <AuthProvider>
+              <AccessibilityProvider>
               <LanguageProvider>
                 <NotificationProvider>
+                  <AccessibilityPanel />
+                  <SignedOutAccessibilityLauncher />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                       <Route path="/" element={<Landing />} />
@@ -342,6 +348,7 @@ export default function App() {
                       <Route path="/enrichment" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><Enrichment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/adaptive-homework/generate" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><AdaptiveHomeworkGenerator /></RoleGuard></ProtectedRoute>} />
                       <Route path="/misconceptions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MisconceptionInsights /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/pronunciation" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><PronunciationAssessment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningVelocity /></RoleGuard></ProtectedRoute>} />
                       <Route path="/class-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassVelocityDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/early-warning" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><EarlyWarningDashboard /></RoleGuard></ProtectedRoute>} />
@@ -377,6 +384,7 @@ export default function App() {
                   </Suspense>
                 </NotificationProvider>
               </LanguageProvider>
+              </AccessibilityProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

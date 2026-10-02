@@ -81,7 +81,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         }`}
       >
         <AppHeader onToggleSidebar={() => setMobileOpen(!mobileOpen)} />
-        <main className="flex-1 overflow-auto p-4 pb-20 md:p-6 md:pb-6 animate-fade-in" key={location.pathname}>
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-4 pb-20 md:p-6 md:pb-6 animate-fade-in focus:outline-none" key={location.pathname}>
           {children}
         </main>
       </div>

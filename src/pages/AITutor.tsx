@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AdaptivePracticeWidget } from "@/components/AdaptivePracticeWidget";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { TUTOR_LANGUAGES, normaliseTutorLanguage } from "@/lib/tutorLanguages";
+import { getAiAccessibilityFlags } from "@/lib/accessibility";
 
 interface Message {
   role: "user" | "assistant";
@@ -268,6 +269,7 @@ const AITutor = () => {
           language: teachingLanguage,
           style: activeStyle,
           hint_level: levelForThisMessage,
+          accessibility: getAiAccessibilityFlags(),
         }),
       });
 

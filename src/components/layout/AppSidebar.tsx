@@ -1,4 +1,5 @@
 import {
+  Mic,
   CalendarDays,
   TrendingUp,
   UserCheck,
@@ -143,6 +144,7 @@ const navItems: Array<{
   { title: "Gamification", icon: Trophy, path: "/gamification", roles: ["student"], tourId: "nav-gamification", module: "Gamification" },
   { title: "Leaderboard", icon: Trophy, path: "/leaderboard", roles: ["student"], module: "Leaderboard" },
   { title: "Enrichment", icon: Rocket, path: "/enrichment", roles: ["student"], module: "AI Tutor" },
+  { title: "Pronunciation", icon: Mic, path: "/pronunciation", roles: ["student"], module: "AI Tutor" },
   { title: "AI Tutor", icon: Bot, path: "/ai-tutor", roles: ["student"], tourId: "nav-ai-tutor", module: "AI Tutor", subItem: { title: "AI Career Coach", path: "/ai-tutor?mode=career", icon: Compass } },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["student"], module: "Attendance" },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["student"], module: "Home" },

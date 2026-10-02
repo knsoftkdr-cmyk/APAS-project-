@@ -3,6 +3,7 @@ import {
   Info, CheckCircle, XCircle, AlertTriangle, BellOff,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { AccessibilityLauncher } from "@/components/accessibility/AccessibilityPanel";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -19,6 +20,7 @@ const pageTitles: Record<string, string> = {
   "/settings": "Settings",
   "/alerts": "Alerts",
   "/requests": "Diagnostic Requests",
+  "/pronunciation": "Pronunciation Practice",
 };
 
 // ─── Per-type icon + colour config ───────────────────────────────────────────
@@ -110,6 +112,8 @@ console.log("Bell Unread Count:", unreadCount);
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
+
+        <AccessibilityLauncher />
 
         {/* ── Bell ─────────────────────────────────────────────────────────── */}
         <div ref={bellRef} className="relative">

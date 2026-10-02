@@ -339,3 +339,102 @@
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-8px); }
 }
+
+
+/* ==========================================================================
+   Accessibility Engine
+   Classes are toggled on <html> by src/lib/accessibility.ts (applyPrefsToDocument):
+     .a11y-dyslexia     dyslexia-friendly mode
+     .a11y-screenreader screen reader mode
+     .a11y-keyboard     keyboard navigation (strong focus outline)
+     .a11y-scaled       text size above 100% (also scales the fixed-px layout variables)
+   ========================================================================== */
+
+/* Skip link: first Tab stop on every page, visible only when focused. */
+.a11y-skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10000;
+  padding: 0.6rem 1rem;
+  border-radius: 0.5rem;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-250%);
+  transition: transform 0.15s ease-out;
+}
+.a11y-skip-link:focus {
+  transform: translateY(0);
+}
+
+/* ---- Text size: keep the fixed-px shell (sidebar, header) in proportion with rem-sized text ---- */
+html.a11y-scaled {
+  --sidebar-width: calc(240px * var(--a11y-scale, 1));
+  --sidebar-collapsed: calc(64px * var(--a11y-scale, 1));
+  --header-height: calc(80px * var(--a11y-scale, 1));
+}
+
+/* ---- Keyboard navigation / screen reader mode: always-visible, high-visibility focus ---- */
+html.a11y-keyboard :focus-visible,
+html.a11y-screenreader :focus-visible {
+  outline: 3px solid hsl(var(--ring)) !important;
+  outline-offset: 2px !important;
+}
+
+/* ---- Calm the page: no motion for screen reader or dyslexia mode ---- */
+html.a11y-screenreader *,
+html.a11y-screenreader *::before,
+html.a11y-screenreader *::after,
+html.a11y-dyslexia *,
+html.a11y-dyslexia *::before,
+html.a11y-dyslexia *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ---- Dyslexia-friendly mode ---- */
+html.a11y-dyslexia {
+  --a11y-font: 'Lexend', 'Atkinson Hyperlegible', 'Verdana', 'Trebuchet MS', sans-serif;
+}
+/* Soft, low-glare background. */
+html.a11y-dyslexia {
+  --background: 48 55% 94%;
+  --card: 48 45% 97%;
+  --popover: 48 45% 97%;
+  --secondary: 45 30% 89%;
+  --muted: 45 30% 89%;
+  --foreground: 215 30% 15%;
+  --muted-foreground: 215 20% 28%;
+}
+html.a11y-dyslexia body,
+html.a11y-dyslexia body :where(*:not(code, pre, kbd, samp, svg, svg *)) {
+  font-family: var(--a11y-font) !important;
+}
+html.a11y-dyslexia body {
+  letter-spacing: 0.05em;
+  word-spacing: 0.16em;
+  line-height: 1.7;
+}
+html.a11y-dyslexia body :where(p, li, dd, dt, td, th, label, blockquote, figcaption, textarea) {
+  letter-spacing: 0.05em !important;
+  word-spacing: 0.16em !important;
+  line-height: 1.8 !important;
+}
+html.a11y-dyslexia body :where(p) {
+  margin-bottom: 1em;
+}
+/* Italics, ALL CAPS and justified text are harder to read. */
+html.a11y-dyslexia body :where(em, i, cite, .italic) {
+  font-style: normal !important;
+  font-weight: 600;
+}
+html.a11y-dyslexia body :where(.uppercase) {
+  text-transform: none !important;
+}
+html.a11y-dyslexia body :where([class*="text-justify"]) {
+  text-align: left !important;
+}

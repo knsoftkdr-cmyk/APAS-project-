@@ -3,6 +3,10 @@ import App from "./App.tsx";
 import "./index.css";
 import { App as CapacitorApp } from "@capacitor/app";
 import { HelmetProvider } from "react-helmet-async";
+import { applyPrefsToDocument, loadLocalPrefs } from "@/lib/accessibility";
+
+// Accessibility Engine: apply the device's saved settings before React renders, so there is no flash.
+applyPrefsToDocument(loadLocalPrefs());
 console.log("🔍 main.tsx: Starting app initialization...");
 const rootElement = document.getElementById("root");
 console.log("🔍 main.tsx: Root element found:", rootElement ? "✓" : "✗");
