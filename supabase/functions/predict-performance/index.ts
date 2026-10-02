@@ -1,5 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+// Self-contained bundle (generated from _shared/handlers/academicForecast.ts) so this function deploys
+// from the dashboard editor too, which does not upload ../_shared.
+import { routeMerged, handleAcademicForecast } from "./forecastBundle.js";
+
+// Features merged in from the Academic Forecasting Engine (no new edge function) - see _shared/mergedRouter.ts.
+const MERGED_ROUTES: Record<string, { handler: (req: Request) => Promise<Response> }> = {
+  forecast_overview: { handler: handleAcademicForecast },
+};
  
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -176,6 +184,10 @@ async function saveResults(supabase: any, results: StudentPredictionResult[], sc
  
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Routed before this function's own parsing; unmatched requests fall through unchanged.
+  const merged = await routeMerged(req, MERGED_ROUTES);
+  if (merged) return merged;
  
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;

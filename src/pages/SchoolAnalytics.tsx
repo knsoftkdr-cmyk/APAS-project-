@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import schoolIntelligencebanner from "@/assets/SchoolIntelligence-banner.png";
 import { useAuth } from "@/contexts/AuthContext";
 import SchoolDigitalTwin from "@/components/SchoolDigitalTwin";
+import AcademicForecastPanel from "@/components/AcademicForecastPanel";
 
 // The twin exposes student-level data, so it is staff-only (this page is also open to students and parents).
 const TWIN_ROLES = ["admin", "principal", "school_admin", "hod", "teacher"];
@@ -245,6 +246,11 @@ return (
               <TabsTrigger value="predictions" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Predictions</TabsTrigger>
               <TabsTrigger value="alerts" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
               {canSeeTwin && (
+                <TabsTrigger value="forecast" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">
+                  <TrendingUp className="h-4 w-4 mr-1 inline" />Forecast
+                </TabsTrigger>
+              )}
+              {canSeeTwin && (
                 <TabsTrigger value="twin" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">
                   <Network className="h-4 w-4 mr-1 inline" />Digital Twin
                 </TabsTrigger>
@@ -406,6 +412,13 @@ return (
               </Card>
             )}
           </TabsContent>
+
+          {/* Academic Forecast tab (staff only; fetches only once the tab is opened) */}
+          {canSeeTwin && (
+            <TabsContent value="forecast" className="space-y-4">
+              <AcademicForecastPanel />
+            </TabsContent>
+          )}
 
           {/* Digital Twin tab (staff only; React Query fetches only once the tab is opened) */}
           {canSeeTwin && (

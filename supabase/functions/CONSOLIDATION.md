@@ -61,3 +61,24 @@ Notes
 Handler: `_shared/handlers/schoolTwin.ts`; pure model: `_shared/schoolTwinModel.ts` (unit-tested in
 `src/test/schoolTwinModel.test.ts`). The existing `teacher_absence` / `draft_preview` modes are unchanged.
 These three modes require a signed-in staff user and are read-only; `verify_jwt` for whatif-timetable is unchanged.
+
+## Academic Forecasting Engine + Student Digital Learning Twin (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Academic Forecasting Engine (school / subject / class trends, student watch-list) | predict-performance | action: `forecast_overview` |
+| Student Digital Learning Twin (ability, preferences, progression) | get-mastery-history | action: `student_twin` |
+
+Handlers: `_shared/handlers/academicForecast.ts`, `_shared/handlers/studentTwin.ts`; pure models:
+`_shared/academicForecastModel.ts`, `_shared/studentTwinModel.ts` (unit-tested in `src/test/academicForecastModel.test.ts`
+and `src/test/studentTwinModel.test.ts`). Requests without these actions fall through to the anchors' original code unchanged.
+
+* Forecast: staff only, pinned to the caller's own school; teachers only see classes they are assigned to. Read-only.
+  Refuses to forecast with under 3 months / 5 tests of data and says so.
+* Twin: students see their own, parents see linked children (`parent_students`), staff follow `studentAccess.ts`.
+  Stores one snapshot per student per day in `student_learning_twin_snapshots` (migration 20261011000000); the twin
+  works without that migration, it just shows no history.
+* `predict-performance` is self-contained: it imports `forecastBundle.js` (generated with esbuild from the _shared sources, because the dashboard editor does not upload `_shared`). After editing `academicForecast.ts` / `academicForecastModel.ts` / `studentAccess.ts`, rebuild it:
+  `npx esbuild <entry re-exporting routeMerged + handleAcademicForecast> --bundle --format=esm --platform=neutral --external:https://* --outfile=supabase/functions/predict-performance/forecastBundle.js`
+* UI: a Forecast tab in School Intelligence (`SchoolAnalytics.tsx`) and a Learning Twin tab in `Student360Profile.tsx`.
+  No sidebar change.

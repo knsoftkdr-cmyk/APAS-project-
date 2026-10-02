@@ -20,12 +20,14 @@ import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleRootCauseAnalysis } from "../_shared/handlers/rootCauseAnalysis.ts";
 import { handleLearningVelocity } from "../_shared/handlers/learningVelocity.ts";
 import { handleStudentMisconceptions } from "../_shared/handlers/studentMisconceptions.ts";
+import { handleStudentTwin } from "../_shared/handlers/studentTwin.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
   student_velocity: { handler: handleLearningVelocity },
   student_misconceptions: { handler: handleStudentMisconceptions },
   root_cause: { handler: handleRootCauseAnalysis },
+  student_twin: { handler: handleStudentTwin },
 };
 
 serve(async (req) => {
