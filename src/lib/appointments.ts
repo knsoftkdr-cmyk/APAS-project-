@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { unwrapFunctionError } from "@/lib/edgeFunctionError";
 
 // ============================================================
 // TYPES
@@ -531,6 +532,84 @@ export async function updateAppointmentStatus(
     .eq("id", appointmentId);
 
   if (error) throw error;
+}
+
+// ============================================================
+// 9. PARENT-TEACHER MEETING PREP (teacher view)
+//    Served by the existing ai-teacher-assistant edge function, action "ptm_prep"
+//    (no separate function - see supabase/functions/CONSOLIDATION.md).
+// ============================================================
+
+export type PtmCategory =
+  | "agenda"
+  | "academics"
+  | "attendance"
+  | "homework"
+  | "behaviour"
+  | "wellbeing"
+  | "support"
+  | "strengths";
+export type PtmPriority = "high" | "medium" | "low";
+
+export interface PtmDiscussionPoint {
+  title: string;
+  category: PtmCategory;
+  priority: PtmPriority;
+  evidence: string[];
+  approach: string;
+  signal_ids: string[];
+}
+
+export interface PtmSnapshot {
+  attendance_rate_pct: number | null;
+  attendance_days_recorded: number;
+  avg_marks_pct: number | null;
+  subjects: Array<{ subject: string; pct: number; trend: "up" | "down" | "flat" | null }>;
+  homework_completion_pct: number | null;
+  behaviour: { positive: number; negative: number; net_points: number };
+  active_interventions: number;
+  risk_level: string | null;
+  last_meeting: { date: string; reason: string | null } | null;
+}
+
+export interface PtmPrep {
+  summary: string;
+  agenda: { reason: string; note: string | null; raised_by: "parent" | "teacher" };
+  discussion_points: PtmDiscussionPoint[];
+  questions_for_parent: string[];
+  strengths: Array<{ title: string; evidence: string }>;
+  proposed_next_steps: string[];
+  snapshot: PtmSnapshot;
+  data_gaps: string[];
+}
+
+export interface PtmPrepResponse {
+  appointment_id: string;
+  student_name: string;
+  generated_at: string;
+  /** "ai" = AI-worded; "rules" = built from records only (AI unavailable). */
+  source: "ai" | "rules";
+  cached: boolean;
+  prep: PtmPrep;
+  warnings: string[];
+}
+
+export async function getPtmPrep(
+  appointmentId: string,
+  opts?: { refresh?: boolean }
+): Promise<PtmPrepResponse> {
+  const { data, error } = await supabase.functions.invoke("ai-teacher-assistant", {
+    body: { action: "ptm_prep", appointment_id: appointmentId, refresh: opts?.refresh === true },
+  });
+  if (error) {
+    const { message } = await unwrapFunctionError(error, "Couldn't prepare this meeting.");
+    throw new Error(message);
+  }
+  const payload = data as (PtmPrepResponse & { error?: string }) | null;
+  if (!payload || payload.error) {
+    throw new Error(payload?.error ?? "Couldn't prepare this meeting.");
+  }
+  return payload;
 }
 
 // ============================================================

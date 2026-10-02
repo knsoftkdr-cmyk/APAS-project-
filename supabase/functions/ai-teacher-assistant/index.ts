@@ -2,12 +2,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleTeacherCopilot } from "../_shared/handlers/teacherCopilot.ts";
+import { handlePtmPrep } from "../_shared/handlers/ptmPrep.ts";
 
 // Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
 //   action "copilot": Teacher Copilot - lesson planning, assessment, remediation and student analysis.
+//   action "ptm_prep": Parent-Teacher Meeting Intelligence - discussion points for a booked meeting.
 // A body WITHOUT a matching `action` (the existing { teacher_id, school_id } call) runs the original code below.
 const MERGED_ROUTES: RouteTable = {
   copilot: { handler: handleTeacherCopilot },
+  ptm_prep: { handler: handlePtmPrep },
 };
 
 const corsHeaders = {

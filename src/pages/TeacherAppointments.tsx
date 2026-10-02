@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Check, X, CalendarCheck, Clock, MapPin, Video, Loader2 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { PtmPrepPanel } from "@/components/appointments/PtmPrepPanel";
 
 type TabKey = "book" | "upcoming" | "history";
 
@@ -474,6 +475,11 @@ export default function TeacherAppointmentsPage() {
                 <Clock className="h-3 w-3" /> You requested this meeting — waiting for the parent to confirm.
               </p>
             )}
+            <PtmPrepPanel
+              appointmentId={appt.id}
+              appointmentDate={appt.appointmentDate}
+              studentName={appt.studentName}
+            />
           </div>
 
                     {awaitingTeacher && decliningId !== appt.id && (

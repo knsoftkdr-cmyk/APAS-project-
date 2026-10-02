@@ -82,3 +82,23 @@ and `src/test/studentTwinModel.test.ts`). Requests without these actions fall th
   `npx esbuild <entry re-exporting routeMerged + handleAcademicForecast> --bundle --format=esm --platform=neutral --external:https://* --outfile=supabase/functions/predict-performance/forecastBundle.js`
 * UI: a Forecast tab in School Intelligence (`SchoolAnalytics.tsx`) and a Learning Twin tab in `Student360Profile.tsx`.
   No sidebar change.
+
+## Parent-Teacher Meeting Intelligence (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| PTM prep: discussion points for a booked parent-teacher meeting | ai-teacher-assistant | action: `ptm_prep` |
+
+Handler: `_shared/handlers/ptmPrep.ts`; pure model: `_shared/ptmPrepModel.ts` (unit-tested in `src/test/ptmPrepModel.test.ts`).
+Body: `{ action: "ptm_prep", appointment_id, refresh? }`. The existing `{ teacher_id, school_id }` dashboard call and `action: "copilot"` are unchanged.
+
+* UI: a collapsible "Meeting prep" panel on each Pending & Upcoming card in `TeacherAppointments.tsx` (`components/appointments/PtmPrepPanel.tsx`).
+  Meetings within 2 days open and load automatically. No sidebar change. Frontend call: `getPtmPrep()` in `src/lib/appointments.ts`.
+* Access: the appointment's own teacher (who must still teach the student), or admin / principal / hod / school_admin of the appointment's school.
+* Grounding: findings ("signals") are computed from records first; the model only phrases the "how to raise it" guidance. A model point that cites no real
+  signal id is dropped, and the evidence shown is always taken from the signals, never from model text. No AI key / AI failure -> a rules-based brief (`source: "rules"`).
+* Privacy: the student's name is replaced by `STU_01` before the model call; the parent's name is never sent. Safeguarding, medical, SEN/IEP and fee data are NOT read.
+* Data read (all optional, a missing table becomes a "data gap"): attendance_records, student_marks, academic_tests, homework_assignments/submissions, behaviour_records,
+  teacher_notes (this teacher's own), student_interventions, student_predictions, student_goals, previous appointments, and the mastery / misconception / risk RPCs.
+* Cache (optional, migration `20261012000000_ptm_prep_briefs.sql`): AI briefs are stored in `ptm_prep_briefs` for 12h (or until the agenda changes). It is a separate table with RLS
+  on and no client policies on purpose - parents read `appointments` with `select("*")`, so a column there would leak teacher-side prep to them. Works without the migration.

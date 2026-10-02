@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,9 +9,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useClassVelocity } from "@/hooks/useLearningVelocity";
 import { VelocityBadge } from "@/components/mastery/VelocityBadge";
+import {
+  classKey, fetchClassOptions, fetchSchoolBooks, resolveSubjectsForClass,
+  type BookOption as ClassBookOption, type SubjectOption,
+} from "@/lib/classSubjects";
 
-interface ClassOption { id: string; label: string }
-interface BookOption { id: number; subject: string; class_name: string | null }
+interface ClassOption { id: string; label: string; name: string }
 
 function fmtGain(g: number | null) {
   if (g === null || g === undefined) return "—";
@@ -21,7 +24,9 @@ function fmtGain(g: number | null) {
 export default function ClassVelocityDashboard() {
   const { profile } = useAuth();
   const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [books, setBooks] = useState<BookOption[]>([]);
+  const [schoolBooks, setSchoolBooks] = useState<ClassBookOption[]>([]);
+  const [subjects, setSubjects] = useState<SubjectOption[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [classId, setClassId] = useState<string>("");
   const [bookId, setBookId] = useState<string>("");
   const [loadingOptions, setLoadingOptions] = useState(true);
@@ -46,33 +51,36 @@ export default function ClassVelocityDashboard() {
   }, [JSON.stringify(students.map((s) => s.student_id))]);
 
   useEffect(() => {
-    async function loadOptions() {
-      setLoadingOptions(true);
-      const isStaffAdmin = ["admin", "principal", "school_admin", "hod"].includes(profile?.role ?? "");
+    if (!profile?.id) return;
+    let cancelled = false;
+    setLoadingOptions(true);
+    Promise.all([fetchClassOptions(profile), fetchSchoolBooks(profile.school_id)])
+      .then(([classList, bookList]) => {
+        if (cancelled) return;
+        setClasses(classList);
+        setSchoolBooks(bookList);
+      })
+      .finally(() => { if (!cancelled) setLoadingOptions(false); });
+    return () => { cancelled = true; };
+  }, [profile?.id, profile?.role, profile?.school_id]);
 
-      const classQuery = isStaffAdmin
-        ? supabase.from("classes").select("id, name, section")
-        : supabase.from("class_teachers").select("class_id, classes(id, name, section)").eq("teacher_id", profile?.id ?? "");
+  // Subjects taught in the chosen class only.
+  const selectedClassKey = useMemo(
+    () => classKey(classes.find((c) => c.id === classId)?.name),
+    [classes, classId],
+  );
+  useEffect(() => {
+    let cancelled = false;
+    if (!classId || !selectedClassKey) { setSubjects([]); return; }
+    setLoadingSubjects(true);
+    resolveSubjectsForClass(schoolBooks, selectedClassKey)
+      .then((list) => { if (!cancelled) setSubjects(list); })
+      .catch(() => { if (!cancelled) setSubjects([]); })
+      .finally(() => { if (!cancelled) setLoadingSubjects(false); });
+    return () => { cancelled = true; };
+  }, [schoolBooks, classId, selectedClassKey]);
 
-      const [{ data: classData }, { data: bookData }] = await Promise.all([
-        classQuery,
-        supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject"),
-      ]);
-
-      const classOptions: ClassOption[] = isStaffAdmin
-        // deno-lint-ignore no-explicit-any
-        ? (classData as any[] ?? []).map((c) => ({ id: c.id, label: `${c.name}${c.section ? " - " + c.section : ""}` }))
-        // deno-lint-ignore no-explicit-any
-        : (classData as any[] ?? [])
-            .filter((c) => c.classes)
-            .map((c) => ({ id: c.classes.id, label: `${c.classes.name}${c.classes.section ? " - " + c.classes.section : ""}` }));
-
-      setClasses(classOptions);
-      setBooks((bookData as BookOption[]) ?? []);
-      setLoadingOptions(false);
-    }
-    if (profile?.id) loadOptions();
-  }, [profile?.id, profile?.role]);
+  const onClassChange = (v: string) => { setClassId(v); setBookId(""); };
 
   const paceConcerns = topics.filter((t) => t.is_pace_concern);
   const slowStudents = students.filter((s) => s.pace_label === "slow");
@@ -98,20 +106,23 @@ export default function ClassVelocityDashboard() {
 
         <Card>
           <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
-            <Select value={classId} onValueChange={setClassId} disabled={loadingOptions}>
+            <Select value={classId} onValueChange={onClassChange} disabled={loadingOptions}>
               <SelectTrigger className="sm:w-56"><SelectValue placeholder="Choose a class" /></SelectTrigger>
               <SelectContent>
                 {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={bookId} onValueChange={setBookId} disabled={loadingOptions}>
-              <SelectTrigger className="sm:w-64"><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+            <Select value={bookId} onValueChange={setBookId} disabled={!classId || loadingSubjects || subjects.length === 0}>
+              <SelectTrigger className="sm:w-64">
+                <SelectValue placeholder={
+                  !classId ? "Choose a class first"
+                    : loadingSubjects ? "Loading subjects…"
+                    : subjects.length === 0 ? "No subjects for this class"
+                    : "Choose a subject"
+                } />
+              </SelectTrigger>
               <SelectContent>
-                {books.map((b) => (
-                  <SelectItem key={b.id} value={String(b.id)}>
-                    {b.subject} {b.class_name ? `(${b.class_name})` : ""}
-                  </SelectItem>
-                ))}
+                {subjects.map((b) => <SelectItem key={b.bookId} value={String(b.bookId)}>{b.subject}</SelectItem>)}
               </SelectContent>
             </Select>
           </CardContent>
