@@ -4,6 +4,7 @@ import { languageDirective, resolveTeachingLanguage } from "../_shared/languages
 import { clampHintLevel, resolveTutorStyle, styleDirective } from "../_shared/tutorStyles.ts";
 import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
 import { callerOwnsStudent, pruneThread, resolveMode, saveMessage, tapStream } from "../_shared/tutorMemory.ts";
+import { emitLearningEvent } from "../_shared/learningEvents.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -74,6 +75,15 @@ serve(async (req) => {
       .select("full_name")
       .eq("id", student_id)
       .maybeSingle();
+
+    // Learning event stream: record THAT the student asked the tutor (length + mode only, never the text).
+    // Only when the caller's own JWT proved they are this student; failures are swallowed inside the helper.
+    if (persist && student?.id) {
+      await emitLearningEvent(supabase, {
+        studentId: student.id, eventType: "tutor_message", source: threadMode,
+        payload: { chars: String(message).length, language: teachingLang?.code ?? "en", style: tutorStyle },
+      });
+    }
 
     // Get recent test results for weak topics
     const { data: tests } = await supabase

@@ -23,6 +23,7 @@ import { handleStudentMisconceptions } from "../_shared/handlers/studentMisconce
 import { handleStudentTwin } from "../_shared/handlers/studentTwin.ts";
 import { handleAccessibility } from "../_shared/handlers/accessibility.ts";
 import { handlePronunciation } from "../_shared/handlers/pronunciation.ts";
+import { handleLearningEventStream } from "../_shared/handlers/learningEventStream.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -37,6 +38,10 @@ const MERGED_ROUTES: RouteTable = {
   pronunciation_assess: { handler: handlePronunciation, action: "assess" },
   pronunciation_history: { handler: handlePronunciation, action: "history" },
   pronunciation_passage: { handler: handlePronunciation, action: "passage" },
+  // Real-Time Learning Event Stream (student telemetry; own / linked child / own class) - see handlers/learningEventStream.ts.
+  lel_ingest: { handler: handleLearningEventStream, action: "ingest" },
+  lel_stream: { handler: handleLearningEventStream, action: "stream" },
+  lel_summary: { handler: handleLearningEventStream, action: "summary" },
 };
 
 serve(async (req) => {

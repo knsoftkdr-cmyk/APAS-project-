@@ -10,6 +10,7 @@ import { AlertTriangle, BarChart3, Loader2, Sparkles } from "lucide-react";
 import { ClassCohortView, ClassReadinessView } from "@/components/exam/ExamReadinessPanels";
 import { PeerGroupsPanel } from "@/components/grouping/PeerGroupsPanel";
 import { LearningGroupsPanel } from "@/components/grouping/LearningGroupsPanel";
+import LiveLearningFeed from "@/components/telemetry/LiveLearningFeed";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useClassMastery, useGenerateLearningObjectives } from "@/hooks/useMastery";
@@ -124,7 +125,7 @@ export default function ClassMasteryDashboard() {
   const [bookId, setBookId] = useState<string>("");
   const [chapterId, setChapterId] = useState<string>("all");
   const [loadingOptions, setLoadingOptions] = useState(true);
-  const [view, setView] = useState<"mastery" | "readiness" | "cohort" | "peers" | "groups">("mastery");
+  const [view, setView] = useState<"mastery" | "readiness" | "cohort" | "peers" | "groups" | "activity">("mastery");
   const [blueprints, setBlueprints] = useState<{ id: string; title: string }[]>([]);
 
   const numericBookId = bookId && bookId !== "all" ? Number(bookId) : undefined;
@@ -383,6 +384,7 @@ export default function ClassMasteryDashboard() {
             <TabsTrigger value="cohort">Cohort intelligence</TabsTrigger>
             <TabsTrigger value="peers">Peer groups</TabsTrigger>
             <TabsTrigger value="groups">Learning groups</TabsTrigger>
+            <TabsTrigger value="activity">Live activity</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -395,6 +397,9 @@ export default function ClassMasteryDashboard() {
         ) : view === "peers" ? (
           classId ? <PeerGroupsPanel key={`p-${classId}-${numericBookId ?? "all"}`} classId={classId} bookId={numericBookId} />
             : <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">Pick a class to find students who share the same learning gaps.</CardContent></Card>
+        ) : view === "activity" ? (
+          classId ? <LiveLearningFeed key={`a-${classId}`} classId={classId} />
+            : <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">Pick a class to see what its students are doing right now.</CardContent></Card>
         ) : view === "groups" ? (
           classId ? <LearningGroupsPanel key={`g-${classId}-${numericBookId ?? "all"}`} classId={classId} bookId={numericBookId} />
             : <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">Pick a class to see its remedial, regular and enrichment groups.</CardContent></Card>

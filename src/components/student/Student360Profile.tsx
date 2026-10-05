@@ -47,6 +47,7 @@ import {
   Stethoscope as DiagnosisIcon,
   Target as GoalIcon,
   Brain,
+  Activity as ActivityIcon,
   Target,
   ShieldCheck,
   CalendarPlus,
@@ -75,6 +76,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { getStudentOverview, updateStudentCore, upsertParentProfile, deleteParentProfile, getMedicalRecord, upsertMedicalRecord, deleteMedicalRecord, getTransportAssignment, upsertTransportAssignment, deleteTransportAssignment, getTransportLiveInfo, getBehaviourRecords, createBehaviourRecord, updateBehaviourRecord, deleteBehaviourRecord, getLearningSupportRecords, createLearningSupportRecord, updateLearningSupportRecord, deleteLearningSupportRecord, getEmergencyContacts, createEmergencyContact, updateEmergencyContact, deleteEmergencyContact, getStudentDocuments, uploadStudentDocument, deleteStudentDocument, getStudentDocumentSignedUrl, syncParentProfileAcrossSiblings, syncEmergencyContactAcrossSiblings, getStudentGoals, createStudentGoal, updateStudentGoal, deleteStudentGoal, type StudentGoal, getIepPlansForStudent, type IepPlanRecord, APP_CONFIG, type StudentCore, type ParentProfile, type MedicalRecord, type TransportAssignment, type TransportLiveInfo, type BehaviourRecord, type LearningSupportRecord, type EmergencyContact, type StudentDocument } from "@/lib/studentProfile";
 import StudentLearningTwin from "@/components/student/StudentLearningTwin";
+import LiveLearningFeed from "@/components/telemetry/LiveLearningFeed";
 import { getImprovementPlan, type ImprovementPlan } from "@/lib/improvementPlan";
 
 export type ProfileRole = "student" | "parent" | "staff";
@@ -94,6 +96,7 @@ const TABS = [
   { value: "behaviour", label: "Behaviour", icon: Star, color: "text-yellow-600", hint: "Behaviour records & score" },
   { value: "improvement-plan", label: "Improvement Plan", icon: GoalIcon, color: "text-teal-600", hint: "Personalized growth plan from predictions, attendance & competencies" },
   { value: "learning-twin", label: "Learning Twin", icon: Brain, color: "text-cyan-600", hint: "Ability, preferences and progression, updated from tests, adaptive sessions and mastery" },
+  { value: "live-activity", label: "Live Activity", icon: ActivityIcon, color: "text-green-600", hint: "Real-time learning activity: answers, tutor use, tests and time on the platform" },
   { value: "learning-support", label: "Learning Support", icon: HeartHandshake, color: "text-pink-600", hint: "IEP / support plans & accommodations" },
   { value: "emergency", label: "Emergency", icon: Phone, color: "text-red-600", hint: "Emergency contact numbers" },
   { value: "goals", label: "Goals", icon: Target, color: "text-purple-600", hint: "Student goals & progress tracking" },
@@ -208,6 +211,9 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
         </TabsContent>
         <TabsContent value="learning-twin" className="mt-4">
           <StudentLearningTwin studentId={studentId} />
+        </TabsContent>
+        <TabsContent value="live-activity" className="mt-4">
+          <LiveLearningFeed studentId={studentId} isOwnView={role === "student"} />
         </TabsContent>
         <TabsContent value="learning-support" className="mt-4">
           <LearningSupportTab

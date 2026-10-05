@@ -11,6 +11,7 @@ import { AISchoolAdminAssistantWidget } from "@/components/ai-assistant/AISchool
 import { ParentBusAssistantWidget } from "@/components/parent-transport/ParentBusAssistantWidget";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useLearningTelemetry } from "@/hooks/useLearningTelemetry";
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Homework � APAS",
@@ -32,6 +33,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, profile } = useAuth();
+  useLearningTelemetry(); // students only: page views + active-time heartbeat for the learning event stream
   const [childProfileId, setChildProfileId] = useState<string | null>(null);
   const [childName, setChildName] = useState<string | null>(null);
 

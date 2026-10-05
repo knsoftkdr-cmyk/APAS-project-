@@ -38,6 +38,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { aiGradeOpenResponse, GRADING_MODEL } from "../gradeOpenResponse.ts";
 import { buildAttemptResult, scaleToSlot } from "../examAnalysis.ts";
+import { emitLearningEvent } from "../learningEvents.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -251,6 +252,15 @@ export async function handleSubmitAssessmentPaperAttempt(req: Request): Promise<
       });
       if (error) console.error("record_mastery_evidence failed", error.message);
     }
+
+    // Learning event stream (after the commit, never able to fail the submission).
+    await emitLearningEvent(admin, {
+      studentId: student.id, eventType: "assessment_submitted", source: "assessment_paper", refId: String(attempt_id),
+      score: attempt.total_max_marks ? Math.round((totalScore / Number(attempt.total_max_marks)) * 100) : null,
+      durationSeconds: Number.isFinite(Number(timeTaken)) ? Math.max(0, Math.round(Number(timeTaken))) : null,
+      payload: { total_score: totalScore, total_max_marks: attempt.total_max_marks, status, auto_submitted: pastStrictDeadline },
+      dedupeKey: `paper:${attempt_id}`,
+    });
 
     return json({
       attempt_id, status,

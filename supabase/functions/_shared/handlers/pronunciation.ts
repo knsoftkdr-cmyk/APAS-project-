@@ -23,6 +23,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveCaller, studentIdForProfile } from "../studentAccess.ts";
+import { emitLearningEvent } from "../learningEvents.ts";
 import { callAi, getAiConfig } from "../aiClient.ts";
 import { TEACHING_LANGUAGES, resolveTeachingLanguage } from "../languages.ts";
 import { assessPronunciation, normaliseWord, summariseHistory, tokenise, type WordResult } from "../pronunciationModel.ts";
@@ -191,6 +192,15 @@ Return JSON only: {"text": string}`;
           words: result.words, extra_words: result.extra_words, coaching, model_version: result.model_version,
         });
         if (wErr) console.warn("pronunciation_attempts write failed:", wErr.message); else saved = true;
+      }
+
+      // Learning event stream: a saved attempt is practice activity (scores only, never the transcript).
+      if (saved) {
+        await emitLearningEvent(admin, {
+          studentId, eventType: "pronunciation_attempt", source: lang.code, score: result.overall,
+          durationSeconds: durationSeconds !== null ? Math.round(durationSeconds) : null,
+          payload: { language: lang.code, words_per_minute: result.words_per_minute ?? null },
+        });
       }
 
       return json({

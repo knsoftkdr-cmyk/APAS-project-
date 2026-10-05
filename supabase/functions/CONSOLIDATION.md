@@ -151,3 +151,41 @@ After merging, redeploy `get-mastery-history`, `student-tutor-chat` and `student
 | Score a spoken reading + AI tips (needs migration 20261014000000 to save results) | get-mastery-history | action: `pronunciation_assess` |
 | Pronunciation history + tricky words | get-mastery-history | action: `pronunciation_history` |
 | AI practice passage in any teaching language | get-mastery-history | action: `pronunciation_passage` |
+
+## Real-Time Learning Event Stream (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Browser telemetry (page views, active-time heartbeat, resource open/complete) - students, own row only | get-mastery-history | action: `lel_ingest` |
+| Live event feed for a student or a class (cursor polling) | get-mastery-history | action: `lel_stream` |
+| Activity summary: volume, accuracy, active minutes, sessions, status; class roster rollup | get-mastery-history | action: `lel_summary` |
+
+Handler: `_shared/handlers/learningEventStream.ts`; pure model: `_shared/learningEventModel.ts` (unit-tested in
+`src/test/learningEventModel.test.ts`); one-line emit helper for other functions: `_shared/learningEvents.ts`.
+Storage: `learning_events` (migration 20261015000000). The feature works without that migration: endpoints answer
+`persistence: "unavailable"`, the UI says it isn't switched on, and the emit helper is a silent no-op.
+
+How events get in
+* **Every graded answer** (practice, homework, daily review, adaptive test, exam paper, AI tutor, diagnostic) becomes a
+  `question_answered` event through a trigger on `mastery_evidence_log`, so flows added later are captured with no wiring.
+* Existing functions emit with `emitLearningEvent()` (additive, never throws, runs after the original work):
+  `student-tutor-chat` (`tutor_message`: length/mode only, never the text), `cat-session` (`adaptive_test_started` /
+  `adaptive_test_completed`), `submit-assessment-paper-attempt` handler (`assessment_submitted`), `pronunciation` handler
+  (`pronunciation_attempt`: scores only, never the transcript).
+* The browser (students only) sends whitelisted types through `lel_ingest`. Fields are sanitised (no query strings, no free
+  text beyond a short title, timestamps clamped), capped at 20 per request and 400 per hour per student.
+
+Access (same rules as the Learning Twin): student -> self; parent -> linked children; staff -> own school, teachers only
+students/classes they teach (`studentAccess.ts`). Class scope is staff only. `learning_events` has RLS on with ONE policy: a
+student may SELECT their own rows (so Realtime can push to their own browser). No client can write; staff and parents read only
+through the edge function.
+
+Existing functions changed (additive): `get-mastery-history` (3 routes), `student-tutor-chat`, `cat-session`. Redeploy those
+three; no new functions. The pronunciation / exam-paper handlers ship inside `get-mastery-history` and `cat-session`.
+
+Frontend: `src/lib/learningEvents.ts`, `src/hooks/useLearningEventStream.ts`, `src/hooks/useLearningTelemetry.ts` (mounted in
+`AppLayout`), `src/components/telemetry/LiveLearningFeed.tsx`. UI: a "Live Activity" tab in `Student360Profile.tsx` and a
+"Live activity" tab in `ClassMasteryDashboard.tsx`. No sidebar change.
+
+Retention: `public.prune_learning_events()` deletes heartbeats after 30 days and everything after a year; schedule it with
+pg_cron if wanted (commented example in the migration).

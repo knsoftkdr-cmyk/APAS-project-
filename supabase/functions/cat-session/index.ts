@@ -70,6 +70,7 @@ const json = (body: unknown, status = 200) =>
 type Row = Record<string, any>;
 
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { emitLearningEvent } from "../_shared/learningEvents.ts";
 import { handleSpacedRepetition } from "../_shared/handlers/spacedRepetition.ts";
 import { handleLearningPath } from "../_shared/handlers/learningPath.ts";
 import { handleNextBestAction } from "../_shared/handlers/nextBestAction.ts";
@@ -367,6 +368,10 @@ async function start(ctx: Ctx, body: Row) {
     if (winner) return { resumed: true, ...(await currentView(ctx, winner)) };
     throw new Error(error.message);
   }
+  await emitLearningEvent(ctx.admin, {
+    studentId, eventType: "adaptive_test_started", source: mode, refId: String(created.id),
+    payload: { mode, scope_type: scopeType, scope_label: label ?? null }, dedupeKey: `cat_start:${created.id}`,
+  });
   return { resumed: false, session: publicSession(created), item: await publicItem(ctx, first.id, 1) };
 }
 
@@ -491,6 +496,12 @@ async function finalize(ctx: Ctx, session: Row, reason: string) {
     theta: session.theta, se: session.se, n_items: session.items_administered,
     last_session_id: session.id, updated_at: now,
   }, { onConflict: "student_id,scope_type,scope_id" });
+
+  await emitLearningEvent(ctx.admin, {
+    studentId: session.student_id, eventType: "adaptive_test_completed", source: session.mode ?? null, refId: String(session.id),
+    durationSeconds: session.started_at ? Math.max(0, Math.round((Date.parse(now) - Date.parse(session.started_at)) / 1000)) : null,
+    payload: { reason, items: n, scope_label: session.scope_label ?? null }, dedupeKey: `cat_done:${session.id}`,
+  });
 }
 
 // ── state (resume / resync) ──────────────────────────────────────────────
