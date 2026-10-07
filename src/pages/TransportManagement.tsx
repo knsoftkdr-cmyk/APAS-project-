@@ -717,7 +717,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
 
   return (
     <GlowCard>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
             <Bus className="h-4 w-4 text-white" />
@@ -740,7 +740,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                 <Input value={form.registration_number}
                   onChange={(e) => setForm({ ...form, registration_number: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Type</Label>
                   <Select value={form.vehicle_type} onValueChange={(v) => setForm({ ...form, vehicle_type: v })}>
@@ -758,7 +758,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                     onChange={(e) => setForm({ ...form, capacity: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <Label>Insurance Expiry</Label>
                   <Input type="date" value={form.insurance_expiry}
@@ -800,7 +800,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">RC & Identification</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>Fuel Type</Label>
                     <Select value={form.fuel_type} onValueChange={(v) => setForm({ ...form, fuel_type: v })}>
@@ -838,7 +838,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                       onChange={(e) => setForm({ ...form, gps_device_id: e.target.value })} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                   <div>
                     <Label>Chassis Number</Label>
                     <Input value={form.chassis_number}
@@ -850,7 +850,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                       onChange={(e) => setForm({ ...form, engine_number: e.target.value })} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
                   <div>
                     <Label>RC Owner Name</Label>
                     <Input value={form.rc_owner_name}
@@ -913,7 +913,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Pollution Certificate (PUC)</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>PUC Number</Label>
                     <Input value={form.puc_number}
@@ -1128,7 +1128,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
 
   return (
     <GlowCard>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
             <UserRound className="h-4 w-4 text-white" />
@@ -1150,7 +1150,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                 <Label>Name</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Phone</Label>
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
@@ -1161,7 +1161,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                     onChange={(e) => setForm({ ...form, license_number: e.target.value })} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>License Expiry</Label>
                   <Input type="date" value={form.license_expiry}
@@ -1196,7 +1196,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Verification</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>License Verification Status</Label>
                     <Select value={form.license_verification_status}
@@ -1247,7 +1247,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Medical Certificate</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>Certificate Number</Label>
                     <Input value={form.medical_certificate_number}
@@ -1274,7 +1274,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Emergency Contact</p>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
                     <Label>Name</Label>
                     <Input value={form.emergency_contact_name}
@@ -1297,7 +1297,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                   <p className="text-xs font-medium text-muted-foreground">
                     App Login (optional — enables live GPS tracking for this driver)
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <Label>Email</Label>
                       <Input type="email" value={form.email}
@@ -1503,7 +1503,7 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
 
   return (
     <GlowCard>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2">
           <div className="rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 p-2">
             <UserCheck className="h-4 w-4 text-white" />
@@ -1525,7 +1525,7 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
                 <Label>Name</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Phone</Label>
                   <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
@@ -1543,7 +1543,7 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
               </div>
               <div className="border-t pt-3">
                 <p className="text-xs font-medium text-muted-foreground mb-2">Certification</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>Certificate Number</Label>
                     <Input value={form.certificate_number}
@@ -2217,14 +2217,14 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
 
   return (
     <GlowCard>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
             <RouteIcon className="h-4 w-4 text-white" />
           </div>
           Routes & Stops
         </CardTitle>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" onClick={() => setTemplatesOpen(true)} className="gap-1.5">
           <LayoutTemplate className="h-4 w-4" /> Templates
         </Button>
@@ -2239,7 +2239,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
               <DialogTitle>{editing ? "Edit Route" : "Add Route"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Route Name</Label>
                   <Input value={routeName} onChange={(e) => setRouteName(e.target.value)} />
@@ -2249,7 +2249,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                   <Input value={routeNumber} onChange={(e) => setRouteNumber(e.target.value)} />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Vehicle</Label>
                   <Select value={vehicleId} onValueChange={setVehicleId}>
@@ -2582,9 +2582,9 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
               branchFilter === "shared" ? !r.branch_id :
               r.branch_id === branchFilter
             ).map((r) => (
-              <div key={r.id} className="rounded-xl border p-4">
-                <div className="flex items-center justify-between">
-                  <div>
+              <div key={r.id} className="rounded-xl border p-3 sm:p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
                     <p className="font-semibold">{r.route_name} {r.route_number && <span className="text-muted-foreground text-sm">({r.route_number})</span>}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {r.route_stops.length} stop{r.route_stops.length !== 1 ? "s" : ""}
@@ -2595,7 +2595,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                         ` · ${r.days_of_week.map((d) => DAY_LABELS.find((l) => l.value === d)?.label).join(", ")}`}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {r.branch_id ? (
                       <Badge variant="outline">{branches?.find((b) => b.id === r.branch_id)?.name || "—"}</Badge>
                     ) : (
@@ -2857,7 +2857,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
 
   return (
     <GlowCard>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <CardTitle className="flex items-center gap-2">
           <div className="rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 p-2">
             <Users className="h-4 w-4 text-white" />
@@ -2945,7 +2945,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
               </div>
               {routeId && (
                 <div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <Label>Seat Number</Label>
                     {routeCapacity != null && (
                       <span className={`text-xs font-medium ${seatsFilledCount >= routeCapacity ? "text-red-600" : "text-muted-foreground"}`}>
@@ -2981,7 +2981,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                 </div>
               )}
               {selectedRoute && selectedRoute.route_stops.length > 0 && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label>Pickup Stop</Label>
                     <Select value={pickupStopId} onValueChange={setPickupStopId}>
@@ -3006,7 +3006,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label>Transport Fee</Label>
                   <Input type="number" value={fee} onChange={(e) => setFee(e.target.value)} />

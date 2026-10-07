@@ -210,7 +210,7 @@ export default function UtilizationReportsSubTab({ schoolId }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           Capacity fill reflects current active assignments; trip counts and hours cover the last {range} days.
         </p>

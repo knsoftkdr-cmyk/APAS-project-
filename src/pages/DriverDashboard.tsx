@@ -1071,7 +1071,7 @@ export default function DriverDashboard() {
             <Button
               variant="destructive"
               size="lg"
-              className="flex-1 gap-2 text-base font-semibold h-14 min-w-[140px]"
+              className="w-full basis-full sm:flex-1 sm:basis-0 gap-2 text-base font-semibold h-auto min-h-14 py-2 whitespace-normal text-center"
               onClick={() => setSosOpen(true)}
             >
               <AlertTriangle className="h-5 w-5" /> SOS — Emergency Alert
@@ -1079,7 +1079,7 @@ export default function DriverDashboard() {
             <Button
               variant="outline"
               size="lg"
-              className="flex-1 gap-2 text-base font-semibold h-14 min-w-[140px]"
+              className="flex-1 basis-[calc(50%-0.25rem)] sm:basis-0 gap-2 text-base font-semibold h-auto min-h-14 py-2 whitespace-normal text-center"
               onClick={() => setIncidentOpen(true)}
             >
               <FileWarning className="h-5 w-5" /> Report Incident
@@ -1087,7 +1087,7 @@ export default function DriverDashboard() {
             <Button
               variant="outline"
               size="lg"
-              className="flex-1 gap-2 text-base font-semibold h-14 min-w-[140px]"
+              className="flex-1 basis-[calc(50%-0.25rem)] sm:basis-0 gap-2 text-base font-semibold h-auto min-h-14 py-2 whitespace-normal text-center"
               onClick={() => setFuelOpen(true)}
             >
               <Fuel className="h-5 w-5" /> Log Fuel
@@ -1323,11 +1323,11 @@ export default function DriverDashboard() {
                       const isExpanded = expandedStopId === s.id;
                       return (
                         <div key={s.id} className="border-b last:border-b-0 pb-2 last:pb-0">
-                          <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center justify-between gap-2 text-sm">
                             <button
                               type="button"
                               onClick={() => setExpandedStopId(isExpanded ? null : s.id)}
-                              className="flex items-center text-left"
+                              className="flex min-w-0 flex-1 flex-wrap items-center text-left"
                             >
                               <span className="text-muted-foreground mr-1.5">{idx + 1}.</span>
                               {s.stop_name}
@@ -1340,7 +1340,7 @@ export default function DriverDashboard() {
                                 </span>
                               )}
                             </button>
-                            <span className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 text-right text-xs text-muted-foreground">
                               {s.pickup_time && `Pickup ${s.pickup_time}`}
                               {s.pickup_time && s.drop_time && " · "}
                               {s.drop_time && `Drop ${s.drop_time}`}

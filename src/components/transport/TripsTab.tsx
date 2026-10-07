@@ -172,7 +172,7 @@ export function TripsTab({ schoolId }: { schoolId?: string }) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+        <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
           <CardTitle className="flex items-center gap-2">
             <MapPinned className="h-5 w-5" /> Trips
           </CardTitle>
@@ -210,7 +210,7 @@ export function TripsTab({ schoolId }: { schoolId?: string }) {
                   <Label className="text-xs">Date</Label>
                   <Input type="date" value={form.tripDate} onChange={(e) => setForm({ ...form, tripDate: e.target.value })} />
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <div>
                     <Label className="text-xs">Start time</Label>
                     <Input type="time" value={form.startTime} onChange={(e) => setForm({ ...form, startTime: e.target.value })} />

@@ -632,7 +632,7 @@ export function EmergencyManagementTab({ schoolId }: { schoolId?: string }) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="alerts" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="h-auto w-full max-w-2xl sm:grid sm:grid-cols-4">
             <TabsTrigger value="alerts" className="gap-1.5"><Siren className="h-4 w-4" /> Active Alerts</TabsTrigger>
             <TabsTrigger value="map" className="gap-1.5"><MapPin className="h-4 w-4" /> Live Map</TabsTrigger>
             <TabsTrigger value="log" className="gap-1.5"><History className="h-4 w-4" /> Incident Log</TabsTrigger>

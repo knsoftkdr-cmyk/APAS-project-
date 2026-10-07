@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.webkit.PermissionRequest;
-import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
@@ -12,6 +11,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.BridgeWebChromeClient;
 
 public class MainActivity extends BridgeActivity {
 
@@ -42,18 +42,19 @@ public class MainActivity extends BridgeActivity {
 
         // Let the WebView itself grant any in-page mic permission requests
         // (this is what the browser's SpeechRecognition/getUserMedia API needs).
-        webView.setWebChromeClient(new WebChromeClient() {
+        // Extend Capacitor's own client (a bare WebChromeClient drops the file
+        // chooser and geolocation prompt handling).
+        webView.setWebChromeClient(new BridgeWebChromeClient(getBridge()) {
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(() -> {
-                    for (String resource : request.getResources()) {
-                        if (PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resource)) {
-                            request.grant(new String[]{PermissionRequest.RESOURCE_AUDIO_CAPTURE});
-                            return;
-                        }
-                    }
-                    request.deny();
-                });
+                String[] resources = request.getResources();
+                if (resources.length == 1
+                        && PermissionRequest.RESOURCE_AUDIO_CAPTURE.equals(resources[0])) {
+                    runOnUiThread(() -> request.grant(resources));
+                    return;
+                }
+                // Camera and everything else: let Capacitor handle it.
+                super.onPermissionRequest(request);
             }
         });
     }

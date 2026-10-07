@@ -71,7 +71,7 @@ function LiveSpeedView({ schoolId }: { schoolId?: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
         <CardTitle className="flex items-center gap-2"><Gauge className="h-5 w-5" /> Live Speed</CardTitle>
         <p className="text-xs text-muted-foreground">
           Auto-refreshes every 12s{dataUpdatedAt ? ` · last updated ${new Date(dataUpdatedAt).toLocaleTimeString()}` : ""}

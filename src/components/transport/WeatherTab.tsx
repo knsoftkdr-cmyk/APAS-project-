@@ -293,7 +293,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
 
       {subView === "live" && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Live Conditions by Route</CardTitle>
             <Button size="sm" variant="ghost" onClick={refreshAllRoutes} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -380,7 +380,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
 
       {subView === "impact" && (
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Route Impact Analysis</CardTitle>
             <Button size="sm" variant="ghost" onClick={computeRouteImpact} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -395,7 +395,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
             )}
             {impacts.map((imp) => (
               <div key={imp.routeId} className="rounded-lg border p-3 space-y-1">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <p className="font-medium text-sm">{imp.routeName}</p>
                   <Badge className={SEVERITY_COLOR[imp.severity] ?? ""}>{imp.severity}</Badge>
                 </div>

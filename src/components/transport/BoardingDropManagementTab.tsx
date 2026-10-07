@@ -86,17 +86,17 @@ function LogList({ schoolId, fixedDirection }: { schoolId?: string; fixedDirecti
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-end">
-        <div>
+        <div className="w-full sm:w-auto">
           <Label className="text-xs">Date</Label>
-          <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-[160px]" />
+          <Input type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="w-full sm:w-[160px]" />
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <Label className="text-xs">Student name</Label>
           <Input
             value={studentSearch}
             onChange={(e) => setStudentSearch(e.target.value)}
             placeholder="Search..."
-            className="w-[180px]"
+            className="w-full sm:w-[180px]"
           />
         </div>
         {dateFilter && (
@@ -263,7 +263,7 @@ export function BoardingDropManagementTab({ schoolId }: { schoolId?: string }) {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="boarding" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+          <TabsList className="h-auto w-full max-w-2xl sm:grid sm:grid-cols-4">
             <TabsTrigger value="boarding">Boarding Logs</TabsTrigger>
             <TabsTrigger value="drop">Drop Logs</TabsTrigger>
             <TabsTrigger value="missed">Missed Boarding</TabsTrigger>

@@ -494,7 +494,7 @@ export function MultiRoutePlanner({ schoolId }: { schoolId?: string }) {
 
           {plans && (
             <div className="space-y-3 pt-2 border-t">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-sm font-medium">Proposed plan</p>
                 <Button size="sm" onClick={() => setConfirmOpen(true)} disabled={applying}>
                   Apply Plan
@@ -503,7 +503,7 @@ export function MultiRoutePlanner({ schoolId }: { schoolId?: string }) {
               <div className="grid gap-3 sm:grid-cols-2">
                 {plans.map((plan) => (
                   <div key={plan.routeId} className="rounded-lg border p-3 space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <p className="text-sm font-semibold flex items-center gap-1.5">
                         <Bus className="h-4 w-4" /> {plan.routeName}
                         {plan.vehicleRegistration && (

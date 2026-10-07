@@ -165,7 +165,7 @@ function MaintenanceScheduleView({ schoolId }: { schoolId?: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
         <CardTitle className="flex items-center gap-2">
           <CalendarClock className="h-5 w-5" /> Maintenance Schedule
         </CardTitle>
@@ -359,7 +359,7 @@ function ServiceHistoryView({ schoolId }: { schoolId?: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
         <CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5" /> Service History</CardTitle>
         <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5"><Plus className="h-4 w-4" /> Log Service</Button>
       </CardHeader>
@@ -409,7 +409,7 @@ function ServiceHistoryView({ schoolId }: { schoolId?: string }) {
               <Label className="text-xs">Service Type</Label>
               <Input value={form.serviceType} onChange={(e) => setForm({ ...form, serviceType: e.target.value })} placeholder="e.g. General service, Brake repair" />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Vendor</Label>
                 <Input value={form.vendorName} onChange={(e) => setForm({ ...form, vendorName: e.target.value })} />
@@ -585,7 +585,7 @@ function AmcManagementView({ schoolId }: { schoolId?: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
         <CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5" /> AMC Management</CardTitle>
         <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5"><Plus className="h-4 w-4" /> Add Contract</Button>
       </CardHeader>
@@ -639,7 +639,7 @@ function AmcManagementView({ schoolId }: { schoolId?: string }) {
               <Label className="text-xs">Contract Number (optional)</Label>
               <Input value={form.contractNumber} onChange={(e) => setForm({ ...form, contractNumber: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Start Date</Label>
                 <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />

@@ -203,7 +203,7 @@ function FuelLogsView({ schoolId }: { schoolId?: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
         <CardTitle className="flex items-center gap-2"><Fuel className="h-5 w-5" /> Fuel Logs</CardTitle>
         <Button size="sm" onClick={() => setOpen(true)} className="gap-1.5"><Plus className="h-4 w-4" /> Log Fuel</Button>
       </CardHeader>
@@ -253,7 +253,7 @@ function FuelLogsView({ schoolId }: { schoolId?: string }) {
               <Label className="text-xs">Fill Date</Label>
               <Input type="date" value={form.fillDate} onChange={(e) => setForm({ ...form, fillDate: e.target.value })} />
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Odometer (km)</Label>
                 <Input type="number" value={form.odometer} onChange={(e) => setForm({ ...form, odometer: e.target.value })} />
@@ -263,7 +263,7 @@ function FuelLogsView({ schoolId }: { schoolId?: string }) {
                 <Input type="number" value={form.liters} onChange={(e) => setForm({ ...form, liters: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div>
                 <Label className="text-xs">Cost (₹)</Label>
                 <Input type="number" value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} />
@@ -424,7 +424,7 @@ function FuelAnalyticsView({ schoolId }: { schoolId?: string }) {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+        <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between flex-wrap gap-2">
           <CardTitle className="text-base">Mileage Trend</CardTitle>
           <Select value={selectedVehicle} onValueChange={setSelectedVehicle}>
             <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>

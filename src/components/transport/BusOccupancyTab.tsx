@@ -180,7 +180,7 @@ export default function BusOccupancyTab({ schoolId }: BusOccupancyTabProps) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base">Live Occupancy & Seat Availability</CardTitle>
           <Button size="sm" variant="ghost" onClick={fetchOccupancy} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -199,7 +199,7 @@ export default function BusOccupancyTab({ schoolId }: BusOccupancyTabProps) {
 
             return (
               <div key={route.id} className="rounded-lg border p-3 space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <div>
@@ -231,7 +231,7 @@ export default function BusOccupancyTab({ schoolId }: BusOccupancyTabProps) {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   {occ?.source === "manual" && occ.recordedAt && (
                     <p className="text-xs text-muted-foreground">
                       Set manually at {new Date(occ.recordedAt).toLocaleTimeString()}

@@ -399,7 +399,7 @@ export default function DriverCommunicationCenter() {
 
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-100px)] flex flex-col">
+      <div className="h-[calc(100dvh-var(--header-height)-6.5rem)] md:h-[calc(100vh-100px)] flex flex-col">
         <div className="rounded-2xl p-5 md:p-6 mb-4 relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shrink-0">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
@@ -614,7 +614,7 @@ export default function DriverCommunicationCenter() {
                         Recording {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")}
                       </div>
                     )}
-                    <div className="flex items-end gap-2">
+                    <div className="flex flex-wrap items-end gap-1 sm:gap-2">
                       <input
                         type="file"
                         ref={fileInputRef}
@@ -656,12 +656,12 @@ export default function DriverCommunicationCenter() {
                           }
                         }}
                         placeholder="Type a message..."
-                        className="resize-none min-h-[40px] max-h-28 rounded-2xl text-sm"
+                        className="order-first w-full basis-full min-w-0 resize-none min-h-[40px] max-h-28 rounded-2xl text-sm sm:order-none sm:w-auto sm:basis-0 sm:flex-1"
                         rows={1}
                       />
                       <Button
                         size="icon"
-                        className="shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:opacity-90"
+                        className="ml-auto shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:opacity-90 sm:ml-0"
                         disabled={sending || uploadingFile}
                         onClick={handleSend}
                       >

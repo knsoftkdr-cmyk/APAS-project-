@@ -126,7 +126,7 @@ const navItems: Array<{
   { title: "Home", icon: LineChart, path: "/student-dashboard", roles: ["student"], tourId: "nav-dashboard", module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/parent-dashboard", roles: ["parent"], module: "Home" },
   { title: "Student Profile", icon: UserCircle, path: "/student-profile", roles: ["student", "parent"], tourId: "nav-profile", module: "Student Profile" },
-  { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student", "admin", "principal", "hod", "teacher", "parent"], tourId: "nav-academic-tests", module: "Academic Tests" },
+  { title: "Academic Tests", icon: ClipboardList, path: "/academic-tests", roles: ["student", "hod", "teacher", "parent"], tourId: "nav-academic-tests", module: "Academic Tests" },
   { title: "Assessments", icon: Brain, path: "/diagnostic", studentTitle: "Assessments", roles: ["student"], tourId: "nav-assessments", module: "Assessments" },
   { title: "My Mastery", icon: Target, path: "/my-mastery", roles: ["student"], module: "Assessments" },
   { title: "Exam Readiness", icon: Gauge, path: "/exam-readiness", roles: ["student"], module: "Assessments" },

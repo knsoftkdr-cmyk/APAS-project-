@@ -9,7 +9,7 @@ import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
-import { AccessibilityPanel, SignedOutAccessibilityLauncher } from "@/components/accessibility/AccessibilityPanel";
+import { AccessibilityPanel } from "@/components/accessibility/AccessibilityPanel";
 import { LanguageProvider } from "@/i18n/LanguageContext";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -218,7 +218,6 @@ export default function App() {
               <LanguageProvider>
                 <NotificationProvider>
                   <AccessibilityPanel />
-                  <SignedOutAccessibilityLauncher />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                       <Route path="/" element={<Landing />} />

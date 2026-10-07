@@ -177,7 +177,7 @@ export function GeofenceZonesTab({ schoolId }: { schoolId?: string }) {
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" /> Geofence Zones
           </CardTitle>

@@ -639,8 +639,8 @@ export function AIStudentAssistantWidget() {
           </CardHeader>
 
           <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden p-3">
-            <ScrollArea className="flex-1 pr-2" ref={scrollRef}>
-              <div className="flex flex-col gap-3">
+            <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block" ref={scrollRef}>
+              <div className="flex flex-col gap-3 pr-2">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
                     Hi! I'm your Study Buddy. Ask me anything, or tap the green icon above for hands-free voice mode.
@@ -648,7 +648,7 @@ export function AIStudentAssistantWidget() {
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-emerald-600 text-white" : "bg-muted"}`}>
+                    <div className={`max-w-[85%] min-w-0 break-words rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-emerald-600 text-white" : "bg-muted"}`}>
                       <p>{m.text}</p>
                       {m.videos && m.videos.length > 0 && (
                         <div className="mt-2 flex flex-col gap-2">

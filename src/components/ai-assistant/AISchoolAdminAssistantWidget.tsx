@@ -598,8 +598,8 @@ export function AISchoolAdminAssistantWidget() {
           </CardHeader>
 
           <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden p-3">
-            <ScrollArea className="flex-1 pr-2" ref={scrollRef}>
-              <div className="flex flex-col gap-3">
+            <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block" ref={scrollRef}>
+              <div className="flex flex-col gap-3 pr-2">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
                     Hi! I'm your School Admin Assistant. Ask me anything, or tap the amber icon above for hands-free voice mode.
@@ -607,7 +607,7 @@ export function AISchoolAdminAssistantWidget() {
                 )}
                 {messages.map((m, i) => (
                   <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-amber-600 text-white" : "bg-muted"}`}>
+                    <div className={`max-w-[85%] min-w-0 break-words rounded-lg px-3 py-2 text-xs ${m.role === "user" ? "bg-amber-600 text-white" : "bg-muted"}`}>
                       <p>{m.text}</p>
                     </div>
                   </div>

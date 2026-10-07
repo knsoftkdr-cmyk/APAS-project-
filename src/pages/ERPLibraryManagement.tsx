@@ -134,7 +134,7 @@ const ERPLibraryManagement = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+        <TabsList className="h-auto w-full justify-start overflow-x-auto overflow-y-hidden p-1 sm:w-auto">
           <TabsTrigger value="catalog">Catalog</TabsTrigger>
           <TabsTrigger value="circulation">Circulation</TabsTrigger>
           <TabsTrigger value="digital">Digital Library</TabsTrigger>
@@ -246,7 +246,7 @@ function CatalogTab({
   return (
     <div className="space-y-4 mt-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative flex-1 min-w-[180px] max-w-sm">
+        <div className="relative w-full basis-full min-w-0 sm:basis-auto sm:flex-1 sm:max-w-sm">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by title, author, subject..."
@@ -356,8 +356,8 @@ function CatalogTab({
             )}
             {pagedItems.map((item) => (
               <TableRow key={item.id} className="border-0 border-b border-slate-100 last:border-0 hover:bg-slate-50/70 transition-colors">
-                <TableCell className="font-medium text-slate-900 py-3">{item.title}</TableCell>
-                <TableCell className="text-slate-700">{item.author || "-"}</TableCell>
+                <TableCell className="min-w-[150px] font-medium text-slate-900 py-3">{item.title}</TableCell>
+                <TableCell className="min-w-[120px] text-slate-700">{item.author || "-"}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{item.item_type.replace("_", " ")}</Badge>
                 </TableCell>
@@ -378,9 +378,9 @@ function CatalogTab({
         </Table>
 
         {items && items.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50">
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span>Rows per page</span>
+          <div className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 border-t border-slate-200 bg-slate-50/50">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+              <span className="whitespace-nowrap">Rows per page</span>
               <Select
                 value={String(pageSize)}
                 onValueChange={(v) => { setPageSize(parseInt(v)); setPage(1); }}
@@ -392,15 +392,15 @@ function CatalogTab({
                   ))}
                 </SelectContent>
               </Select>
-              <span className="ml-2">
+              <span className="ml-2 whitespace-nowrap">
                 {rangeStart}–{rangeEnd} of {items.length}
               </span>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <div className="flex w-full gap-2 sm:w-auto">
+              <Button className="flex-1 sm:flex-none" size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                 Previous
               </Button>
-              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+              <Button className="flex-1 sm:flex-none" size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
                 Next
               </Button>
             </div>
@@ -619,9 +619,9 @@ function CirculationTab({ schoolId }: { schoolId: string }) {
         </Table>
 
         {records && records.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 bg-slate-50/50">
-            <div className="flex items-center gap-2 text-sm text-slate-600">
-              <span>Rows per page</span>
+          <div className="flex flex-col gap-3 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4 border-t border-slate-200 bg-slate-50/50">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+              <span className="whitespace-nowrap">Rows per page</span>
               <Select
                 value={String(pageSize)}
                 onValueChange={(v) => { setPageSize(parseInt(v)); setPage(1); }}
@@ -633,15 +633,15 @@ function CirculationTab({ schoolId }: { schoolId: string }) {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="ml-2">
+              <span className="ml-2 whitespace-nowrap">
                 {rangeStart}–{rangeEnd} of {records.length}
               </span>
             </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
+            <div className="flex w-full gap-2 sm:w-auto">
+              <Button className="flex-1 sm:flex-none" size="sm" variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                 Previous
               </Button>
-              <Button size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+              <Button className="flex-1 sm:flex-none" size="sm" variant="outline" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
                 Next
               </Button>
             </div>

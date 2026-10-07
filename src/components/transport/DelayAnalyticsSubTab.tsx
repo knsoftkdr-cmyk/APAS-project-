@@ -137,7 +137,7 @@ export default function DelayAnalyticsSubTab({ schoolId }: Props) {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
           Based on {trips.length} completed trip{trips.length === 1 ? "" : "s"} with a schedule, over the last {range} days.
         </p>

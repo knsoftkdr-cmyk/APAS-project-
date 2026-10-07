@@ -40,6 +40,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
     <!-- Needed so the file-upload / import pickers (<input type="file">) can
@@ -54,6 +56,10 @@
     <queries>
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <!-- Lets in-app speech recognition (no popup) find the device recognizer on Android 11+. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
         </intent>
         <!-- Package-visibility entries (Android 11+) so the system file
              chooser reliably lists apps that can fulfil GET_CONTENT /

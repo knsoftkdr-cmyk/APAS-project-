@@ -131,7 +131,7 @@ console.log("Bell Unread Count:", unreadCount);
           </button>
 
           {bellOpen && (
-            <div className="absolute right-0 top-full mt-2 w-[380px] max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-card shadow-2xl z-50 overflow-hidden">
+            <div className="fixed left-3 right-3 top-[calc(var(--header-height)+0.5rem)] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] rounded-xl border border-border bg-card shadow-2xl z-50 overflow-hidden">
 
               {/* Panel header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
@@ -156,7 +156,7 @@ console.log("Bell Unread Count:", unreadCount);
               </div>
 
               {/* Notification list */}
-              <div className="max-h-[400px] overflow-y-auto divide-y divide-border">
+              <div className="max-h-[60vh] sm:max-h-[400px] overflow-y-auto overscroll-contain divide-y divide-border">
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-14 px-6 text-center">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
@@ -196,7 +196,7 @@ console.log("Bell Unread Count:", unreadCount);
                           <p className="text-sm font-semibold text-foreground leading-snug">
                             {n.title}
                           </p>
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed">
+                          <p className="text-xs text-muted-foreground mt-0.5 break-words sm:line-clamp-2 leading-relaxed">
                             {n.message}
                           </p>
                           <p className="text-[11px] text-muted-foreground/60 mt-1">
