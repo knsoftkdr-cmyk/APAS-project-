@@ -37,11 +37,16 @@ interface EvidenceItem {
 
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleAdaptiveHomework } from "../_shared/handlers/adaptiveHomework.ts";
+import { handleGamification2 } from "../_shared/handlers/gamification2.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
   ah_generate: { handler: handleAdaptiveHomework, action: "generate" },
   ah_submit_answer: { handler: handleAdaptiveHomework, action: "submit_answer" },
+  // Gamification 2.0 (students, own data only) - see handlers/gamification2.ts.
+  g2_state: { handler: handleGamification2, action: "state" },
+  g2_event: { handler: handleGamification2, action: "event" },
+  g2_claim: { handler: handleGamification2, action: "claim" },
 };
 
 serve(async (req) => {

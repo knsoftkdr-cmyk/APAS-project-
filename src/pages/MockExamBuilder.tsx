@@ -19,15 +19,36 @@ import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, CheckCircle2, Printer, Timer, Wand2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Loader2, Printer, Timer, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useClassSubjectPicker } from "@/hooks/useClassSubjectPicker";
+import { classKey } from "@/lib/Classsubjects";
 import { useAssignMockExam, useExamPatterns, useGenerateMockExam, type GeneratedMock } from "@/hooks/useExamIntelligence";
 
-interface BookOpt { id: number; subject: string; class_name: string | null }
 interface ChapterOpt { id: number; chapter_name: string }
-interface ClassOpt { id: string; label: string }
+/** What a chapter can actually feed into a paper: concepts (subtopics) and active questions in the item bank. */
+interface ChapterStat { concepts: number; byType: Record<string, number> } // byType: "mcq" + the open-ended types
+
+const TYPE_LABEL: Record<string, string> = {
+  mcq: "MCQ", descriptive: "Short/long", case_based: "Case-based", hots: "HOTS", competency: "Competency", scenario: "Scenario",
+};
+const typeLabel = (t: string) => TYPE_LABEL[t] ?? t;
+
+/** PostgREST returns at most 1000 rows per request, so page through bigger result sets. */
+// deno-lint-ignore no-explicit-any
+async function fetchAll(build: (from: number, to: number) => PromiseLike<{ data: any[] | null; error: any }>) {
+  // deno-lint-ignore no-explicit-any
+  const out: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await build(from, from + 999);
+    if (error) throw error;
+    out.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return out;
+}
 
 // deno-lint-ignore no-explicit-any
 const db = supabase as any;
@@ -39,15 +60,18 @@ export default function MockExamBuilder() {
   const assign = useAssignMockExam();
 
   const [patternCode, setPatternCode] = useState("");
-  const [books, setBooks] = useState<BookOpt[]>([]);
-  const [bookId, setBookId] = useState("");
+  const {
+    classes, classId, setClassId, selectedClass,
+    subjects, bookId, setBookId, selectedSubject,
+    loadingClasses, loadingSubjects,
+  } = useClassSubjectPicker();
   const [chapters, setChapters] = useState<ChapterOpt[]>([]);
+  const [chapterStats, setChapterStats] = useState<Record<number, ChapterStat> | null>(null); // null = not loaded yet
   const [chapterWeights, setChapterWeights] = useState<Record<number, string>>({}); // selected chapter -> weight text
   const [title, setTitle] = useState("");
   const [result, setResult] = useState<GeneratedMock | null>(null);
 
-  const [classes, setClasses] = useState<ClassOpt[]>([]);
-  const [classId, setClassId] = useState("");
+  const [assignClassId, setAssignClassId] = useState(""); // which section receives the paper (step 3)
   const [opensAt, setOpensAt] = useState("");
   const [dueAt, setDueAt] = useState("");
   const [strict, setStrict] = useState(true);
@@ -55,38 +79,88 @@ export default function MockExamBuilder() {
 
   const pattern = patterns?.find((p) => p.code === patternCode);
 
-  useEffect(() => {
-    db.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }: { data: BookOpt[] | null }) => setBooks(data ?? []));
-  }, []);
+  // A different class or subject means a different paper: clear anything built for the previous one.
+  useEffect(() => { setResult(null); setAssigned(null); }, [classId, bookId]);
+
+  // Step 3 defaults to the class chosen in step 2; the other sections of the same grade are offered too.
+  useEffect(() => { setAssignClassId(classId); setAssigned(null); }, [classId]);
+  const sameGradeClasses = useMemo(() => {
+    const key = classKey(selectedClass?.name);
+    return key ? classes.filter((c) => classKey(c.name) === key) : selectedClass ? [selectedClass] : [];
+  }, [classes, selectedClass]);
 
   useEffect(() => {
-    if (!profile?.id) return;
-    const staffAdmin = ["admin", "principal", "school_admin", "hod"].includes(profile.role ?? "");
-    const q = staffAdmin
-      ? db.from("classes").select("id, name, section")
-      : db.from("class_teachers").select("class_id, classes(id, name, section)").eq("teacher_id", profile.id);
-    q.then(({ data }: { data: any[] | null }) => {
-      const rows = staffAdmin ? (data ?? []) : (data ?? []).map((r) => r.classes).filter(Boolean);
-      setClasses(rows.map((c: any) => ({ id: c.id, label: `${c.name}${c.section ? " - " + c.section : ""}` })));
-    });
-  }, [profile?.id, profile?.role]);
-
-  useEffect(() => {
-    setChapters([]); setChapterWeights({});
+    setChapters([]); setChapterWeights({}); setChapterStats(null);
     if (!bookId) return;
+    let cancelled = false;
     (async () => {
-      const { data: units } = await db.from("units").select("id").eq("book_id", Number(bookId));
+      const { data: units, error: unitsError } = await db.from("units").select("id").eq("book_id", Number(bookId));
+      if (unitsError) { toast.error(`Couldn't load chapters: ${unitsError.message}`); return; }
       const unitIds = (units ?? []).map((u: { id: number }) => u.id);
       if (!unitIds.length) return;
-      const { data } = await db.from("curriculum_chapters").select("id, chapter_name").in("unit_id", unitIds).eq("is_active", true).order("id");
-      setChapters(data ?? []);
+      const { data, error } = await db.from("curriculum_chapters").select("id, chapter_name").in("unit_id", unitIds).eq("is_active", true).order("id");
+      if (error) { toast.error(`Couldn't load chapters: ${error.message}`); return; }
+      if (cancelled) return;
+      const list: ChapterOpt[] = data ?? [];
+      setChapters(list);
+
+      // Which chapters can really produce a paper? chapter -> topics -> concepts -> active questions.
+      try {
+        const chapterIds = list.map((c) => c.id);
+        const topics = chapterIds.length ? await fetchAll((a, b) => db.from("topics").select("id, chapter_id").in("chapter_id", chapterIds).range(a, b)) : [];
+        const topicIds = topics.map((t) => t.id);
+        const subs = topicIds.length ? await fetchAll((a, b) => db.from("subtopics").select("id, topic_id").in("topic_id", topicIds).range(a, b)) : [];
+        const chapterOfTopic = new Map<number, number>(topics.map((t) => [t.id, t.chapter_id]));
+        const subIdsByChapter = new Map<number, number[]>();
+        for (const sub of subs) {
+          const ch = chapterOfTopic.get(sub.topic_id);
+          if (ch != null) subIdsByChapter.set(ch, [...(subIdsByChapter.get(ch) ?? []), sub.id]);
+        }
+        const stats: Record<number, ChapterStat> = {};
+        await Promise.all(list.map(async (c) => {
+          const ids = subIdsByChapter.get(c.id) ?? [];
+          if (!ids.length) { stats[c.id] = { concepts: 0, byType: {} }; return; }
+          // same quality gates the paper generator applies
+          const mcq = await db.from("question_bank").select("id", { count: "exact", head: true }).in("subtopic_id", ids).eq("status", "active")
+            .or("quality_flag.is.null,quality_flag.neq.reject").or("review_flag.is.null,review_flag.eq.ok");
+          const ext = await fetchAll((x, y) => db.from("question_bank_extended").select("question_type").in("subtopic_id", ids).eq("status", "active")
+            .or("quality_flag.is.null,quality_flag.neq.reject").range(x, y));
+          const byType: Record<string, number> = { mcq: mcq.count ?? 0 };
+          for (const row of ext) byType[row.question_type] = (byType[row.question_type] ?? 0) + 1;
+          stats[c.id] = { concepts: ids.length, byType };
+        }));
+        if (!cancelled) setChapterStats(stats);
+      } catch {
+        // If the check itself fails, don't block the teacher — the generator still validates on the server.
+        if (!cancelled) setChapterStats(null);
+      }
     })();
+    return () => { cancelled = true; };
   }, [bookId]);
 
   const selected = useMemo(() => Object.keys(chapterWeights).map(Number), [chapterWeights]);
   const weightTotal = selected.reduce((s, id) => s + (Number(chapterWeights[id]) || 0), 0);
   const weightsValid = selected.length > 0 && selected.every((id) => Number(chapterWeights[id]) > 0);
+
+  // Question types the chosen exam pattern asks for (e.g. mcq, descriptive, case_based).
+  const neededTypes = useMemo(() => [...new Set((pattern?.question_type_mix ?? []).map((m) => m.question_type as string))], [pattern]);
+  const countFor = (st: ChapterStat, types: string[] = neededTypes) =>
+    (types.length ? types : Object.keys(st.byType)).reduce((sum, t) => sum + (st.byType[t] ?? 0), 0);
+
+  const blockedReason = (id: number): string | null => {
+    const st = chapterStats?.[id];
+    if (!st) return null;
+    if (st.concepts === 0) return "No concepts yet";
+    if (countFor(st) === 0) return neededTypes.length ? "No questions for this pattern" : "No questions yet";
+    return null;
+  };
+  const usableCount = chapterStats ? chapters.filter((c) => !blockedReason(c.id)).length : chapters.length;
+
+  // Types the pattern needs that none of the ticked chapters can supply: those sections will come out empty.
+  const missingTypes = useMemo(() => {
+    if (!chapterStats || !neededTypes.length || !selected.length) return [] as string[];
+    return neededTypes.filter((t) => selected.every((id) => (chapterStats[id]?.byType[t] ?? 0) === 0));
+  }, [chapterStats, neededTypes, selected]);
 
   function toggleChapter(id: number, on: boolean) {
     setChapterWeights((prev) => {
@@ -104,9 +178,8 @@ export default function MockExamBuilder() {
     if (!pattern || !weightsValid) return;
     setResult(null); setAssigned(null);
     try {
-      const book = books.find((b) => String(b.id) === bookId);
       const res = await generate.mutateAsync({
-        examPatternCode: pattern.code, title: title.trim() || undefined, subject: book?.subject,
+        examPatternCode: pattern.code, title: title.trim() || undefined, subject: selectedSubject?.subject,
         syllabusWeightage: selected.map((id) => ({
           scope_type: "chapter" as const, scope_id: id, label: chapters.find((c) => c.id === id)?.chapter_name, weight_pct: Number(chapterWeights[id]),
         })),
@@ -114,15 +187,18 @@ export default function MockExamBuilder() {
       setResult(res);
       toast.success(`Assembled ${res.item_count} questions (${res.assembled_total_marks} marks)`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not generate the paper");
+      const msg = e instanceof Error ? e.message : "Could not generate the paper";
+      toast.error(/resolved to any concepts/i.test(msg)
+        ? "The ticked chapters have no concepts yet, so there is nothing to build questions from."
+        : msg);
     }
   }
 
   async function onAssign() {
-    if (!result || !classId) return;
+    if (!result || !assignClassId) return;
     try {
       const r = await assign.mutateAsync({
-        paperId: result.paper_id, classId, strictTimer: strict,
+        paperId: result.paper_id, classId: assignClassId, strictTimer: strict,
         opensAt: opensAt ? new Date(opensAt).toISOString() : null, dueAt: dueAt ? new Date(dueAt).toISOString() : null,
       });
       setAssigned({ students: r.student_count });
@@ -132,6 +208,7 @@ export default function MockExamBuilder() {
     }
   }
 
+  const noClasses = !loadingClasses && classes.length === 0;
   const shortfalls = result?.coverage_report?.shortfalls ?? [];
   const short = result ? result.assembled_total_marks < (pattern?.total_marks ?? 0) : false;
 
@@ -174,29 +251,66 @@ export default function MockExamBuilder() {
 
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">2. Choose what it covers</CardTitle>
-            <CardDescription className="text-xs">Tick the chapters and set how much of the marks each carries.</CardDescription></CardHeader>
+            <CardDescription className="text-xs">Choose the class and subject, then tick the chapters and set how much of the marks each carries.</CardDescription></CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Select value={bookId} onValueChange={setBookId}>
-                <SelectTrigger className="sm:w-64"><SelectValue placeholder="Choose a subject" /></SelectTrigger>
-                <SelectContent>{books.map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` (${b.class_name})` : ""}</SelectItem>)}</SelectContent>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center">
+              <Select value={classId} onValueChange={setClassId} disabled={loadingClasses || noClasses}>
+                <SelectTrigger className="sm:w-52" aria-label="Class and section">
+                  <SelectValue placeholder={loadingClasses ? "Loading classes…" : noClasses ? "No classes assigned" : "Choose a class"} />
+                </SelectTrigger>
+                <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}</SelectContent>
               </Select>
-              <Input placeholder="Paper title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} className="sm:w-72" maxLength={120} />
+              <Select value={bookId} onValueChange={setBookId} disabled={!classId || loadingSubjects || subjects.length === 0}>
+                <SelectTrigger className="sm:w-56" aria-label="Subject">
+                  <SelectValue placeholder={!classId ? "Choose a class first" : loadingSubjects ? "Loading subjects…" : subjects.length === 0 ? "No subjects for this class" : "Choose a subject"} />
+                </SelectTrigger>
+                <SelectContent>{subjects.map((b) => <SelectItem key={b.bookId} value={String(b.bookId)}>{b.subject}</SelectItem>)}</SelectContent>
+              </Select>
+              {loadingSubjects && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+              <Input placeholder="Paper title (optional)" value={title} onChange={(e) => setTitle(e.target.value)} className="sm:w-64" maxLength={120} />
             </div>
+            {noClasses && <p className="text-sm text-muted-foreground">You aren't assigned to any class yet. Ask your school admin to assign you to a class and section.</p>}
+            {classId && !loadingSubjects && subjects.length === 0 && <p className="text-sm text-muted-foreground">No textbook is set up for {selectedClass?.label ?? "this class"} yet, so there are no subjects to build a paper from.</p>}
             {bookId && chapters.length === 0 && <p className="text-sm text-muted-foreground">This subject has no chapters yet.</p>}
             <div className="grid gap-2 sm:grid-cols-2">
               {chapters.map((c) => {
                 const on = c.id in chapterWeights;
+                const blocked = blockedReason(c.id);
+                const st = chapterStats?.[c.id];
                 return (
-                  <div key={c.id} className="flex items-center gap-2 rounded-md border p-2">
-                    <Checkbox id={`ch-${c.id}`} checked={on} onCheckedChange={(v) => toggleChapter(c.id, v === true)} />
-                    <Label htmlFor={`ch-${c.id}`} className="flex-1 text-sm truncate cursor-pointer">{c.chapter_name}</Label>
-                    {on && (<div className="flex items-center gap-1"><Input aria-label={`Weight for ${c.chapter_name}`} type="number" min={0.1} max={100} step={0.5} className="h-8 w-20"
-                      value={chapterWeights[c.id]} onChange={(e) => setChapterWeights((w) => ({ ...w, [c.id]: e.target.value }))} /><span className="text-xs text-muted-foreground">%</span></div>)}
+                  <div key={c.id} className={`flex items-center gap-2 rounded-md border p-2 ${blocked ? "opacity-60" : ""}`}>
+                    <Checkbox id={`ch-${c.id}`} checked={on} disabled={!!blocked} onCheckedChange={(v) => toggleChapter(c.id, v === true)} />
+                    <Label htmlFor={`ch-${c.id}`} className={`flex-1 text-sm truncate ${blocked ? "cursor-not-allowed" : "cursor-pointer"}`} title={c.chapter_name}>{c.chapter_name}</Label>
+                    {on ? (
+                      <div className="flex items-center gap-1"><Input aria-label={`Weight for ${c.chapter_name}`} type="number" min={0.1} max={100} step={0.5} className="h-8 w-20"
+                        value={chapterWeights[c.id]} onChange={(e) => setChapterWeights((w) => ({ ...w, [c.id]: e.target.value }))} /><span className="text-xs text-muted-foreground">%</span></div>
+                    ) : blocked ? (
+                      <span className="text-[11px] text-amber-700 shrink-0">{blocked}</span>
+                    ) : st ? (
+                      <span className="text-[11px] text-muted-foreground shrink-0" title="Active questions in the item bank, by type">
+                        {(neededTypes.length ? neededTypes : ["mcq"]).map((t) => `${typeLabel(t)} ${st.byType[t] ?? 0}`).join(" · ")}
+                      </span>
+                    ) : null}
                   </div>
                 );
               })}
             </div>
+            {chapterStats && chapters.length > 0 && usableCount === 0 && (
+              <div className="text-sm rounded-md bg-amber-50 border border-amber-200 p-3 text-amber-800">
+                None of this subject's chapters can be used for this exam pattern yet. A chapter needs concepts (from the curriculum extraction) and questions of the types the pattern uses in the
+                <Link to="/item-bank" className="underline mx-1">Item Bank</Link>
+                before it can be tested.
+              </div>
+            )}
+            {chapterStats && usableCount > 0 && usableCount < chapters.length && (
+              <p className="text-xs text-muted-foreground">Chapters marked “No concepts yet” or “No questions for this pattern” can't be ticked until they're set up.</p>
+            )}
+            {missingTypes.length > 0 && (
+              <div className="text-xs rounded-md bg-amber-50 border border-amber-200 p-3 text-amber-800">
+                The ticked chapters have no {missingTypes.map(typeLabel).join(", ")} questions in the item bank, so those sections of the paper will be left empty.
+                Add them in the <Link to="/item-bank" className="underline">Item Bank</Link>, or tick chapters that have them.
+              </div>
+            )}
             {selected.length > 0 && Math.abs(weightTotal - 100) > 0.5 && (
               <p className="text-xs text-muted-foreground">Weights add up to {weightTotal.toFixed(1)}% — they're scaled to 100% automatically.</p>
             )}
@@ -225,15 +339,15 @@ export default function MockExamBuilder() {
               <div className="border-t pt-3 space-y-3">
                 <p className="text-sm font-medium">3. Run it as a mock exam</p>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Class</Label>
-                    <Select value={classId} onValueChange={setClassId}><SelectTrigger><SelectValue placeholder="Choose a class" /></SelectTrigger>
-                      <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}</SelectContent></Select></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Assign to class / section</Label>
+                    <Select value={assignClassId} onValueChange={(v) => { setAssignClassId(v); setAssigned(null); }}><SelectTrigger><SelectValue placeholder="Choose a class" /></SelectTrigger>
+                      <SelectContent>{sameGradeClasses.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}</SelectContent></Select></div>
                   <div className="space-y-1.5"><Label htmlFor="opens" className="text-xs">Opens at (optional)</Label><Input id="opens" type="datetime-local" value={opensAt} onChange={(e) => setOpensAt(e.target.value)} /></div>
                   <div className="space-y-1.5"><Label htmlFor="due" className="text-xs">Due by (optional)</Label><Input id="due" type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></div>
                 </div>
                 <div className="flex items-center gap-3"><Switch id="strict" checked={strict} onCheckedChange={setStrict} />
                   <Label htmlFor="strict" className="text-sm">Enforce the {result.duration_minutes ?? pattern?.duration_minutes}-minute timer on the server <span className="text-muted-foreground text-xs">(unsaved work after time-up is auto-submitted from the last autosave)</span></Label></div>
-                <Button onClick={onAssign} disabled={!classId || assign.isPending || !!assigned}>{assign.isPending ? "Assigning…" : assigned ? "Assigned" : "Assign mock exam"}</Button>
+                <Button onClick={onAssign} disabled={!assignClassId || assign.isPending || !!assigned}>{assign.isPending ? "Assigning…" : assigned ? "Assigned" : "Assign mock exam"}</Button>
                 {assigned && <p className="text-sm text-emerald-700">Assigned to {assigned.students} students. They'll find it under My Exams.</p>}
               </div>
             </CardContent>

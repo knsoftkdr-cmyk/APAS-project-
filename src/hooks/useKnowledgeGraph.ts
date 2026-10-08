@@ -1,5 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+
+/** Calls an edge function and throws an Error carrying the function's real message (not supabase-js's generic one). */
+async function invokeOrThrow<T>(name: string, body: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.functions.invoke(name, { body });
+  if (error) throw new Error((await unwrapFunctionError(error, "Request failed")).message);
+  if (data?.error) throw new Error(String(data.error));
+  return data as T;
+}
 
 export interface GraphNode {
   id: number;
@@ -57,8 +66,7 @@ export function useTopicGraph(bookId?: number) {
   return useQuery<{ nodes: GraphNode[]; edges: GraphEdge[] }>({
     queryKey: ["knowledge-graph-topics", bookId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-knowledge-graph", { body: { book_id: bookId } });
-      if (error) throw error;
+      const data = await invokeOrThrow<any>("get-knowledge-graph", { book_id: bookId });
       return { nodes: data?.nodes ?? [], edges: data?.edges ?? [] };
     },
     enabled: !!bookId,
@@ -71,8 +79,7 @@ export function useConceptGraph(topicId?: number) {
   return useQuery<{ nodes: GraphNode[]; edges: GraphEdge[]; misconceptions: Misconception[] }>({
     queryKey: ["knowledge-graph-concepts", topicId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-knowledge-graph", { body: { topic_id: topicId } });
-      if (error) throw error;
+      const data = await invokeOrThrow<any>("get-knowledge-graph", { topic_id: topicId });
       return { nodes: data?.nodes ?? [], edges: data?.edges ?? [], misconceptions: data?.misconceptions ?? [] };
     },
     enabled: !!topicId,
@@ -85,11 +92,7 @@ export function useGenerateKnowledgeGraph() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (args: { bookId?: number; topicId?: number }) => {
-      const { data, error } = await supabase.functions.invoke("generate-knowledge-graph", {
-        body: { book_id: args.bookId, topic_id: args.topicId },
-      });
-      if (error) throw error;
-      return data;
+      return await invokeOrThrow<any>("generate-knowledge-graph", { book_id: args.bookId, topic_id: args.topicId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["knowledge-graph-topics"] });
@@ -103,11 +106,7 @@ export function usePrerequisiteReadiness(subtopicId?: number, studentId?: string
   return useQuery<ReadinessResult>({
     queryKey: ["prerequisite-readiness", subtopicId, studentId ?? "self"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-prerequisite-readiness", {
-        body: { subtopic_id: subtopicId, student_id: studentId },
-      });
-      if (error) throw error;
-      return data as ReadinessResult;
+      return await invokeOrThrow<ReadinessResult>("get-prerequisite-readiness", { subtopic_id: subtopicId, student_id: studentId });
     },
     enabled: !!subtopicId,
     staleTime: 60 * 1000,
@@ -119,10 +118,7 @@ export function useAtRiskConcepts(bookId?: number, studentId?: string) {
   return useQuery<AtRiskConcept[]>({
     queryKey: ["at-risk-concepts", bookId, studentId ?? "self"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-at-risk-concepts", {
-        body: { book_id: bookId, student_id: studentId },
-      });
-      if (error) throw error;
+      const data = await invokeOrThrow<any>("get-at-risk-concepts", { book_id: bookId, student_id: studentId });
       return (data?.at_risk ?? []) as AtRiskConcept[];
     },
     enabled: !!bookId,

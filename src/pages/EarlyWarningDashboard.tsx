@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,7 +20,7 @@ interface ClassOption { id: string; label: string; name: string; section: string
 type RiskRow = import("@/hooks/useStudentRisk").ClassRiskStudentRow;
 type MergedRow = RiskRow & { recommendation?: ClassInterventionRow };
 
-export default function EarlyWarningDashboard() {
+export default function EarlyWarningDashboard({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, profile } = useAuth();
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [classId, setClassId] = useState<string>("");
@@ -87,7 +87,7 @@ export default function EarlyWarningDashboard() {
   };
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-4xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-rose-600 to-orange-500 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -200,7 +200,7 @@ export default function EarlyWarningDashboard() {
         interventions={drawerInterventions}
         onSaved={() => drawerStudent && openIntervention(drawerRow!)}
       />
-    </AppLayout>
+    </PageShell>
   );
 }
 

@@ -8,38 +8,27 @@
 //   { topic_id } -> concept-level prerequisite graph + misconceptions for
 //                   every subtopic under that topic
 //
-// Uses the same Lovable AI Gateway pattern as generate-learning-objectives.
+// AI provider: the shared client in _shared/aiClient.ts (Gemini keys first, same secrets as
+// generate-learning-objectives; Lovable gateway only as a fallback).
 // Edges that would create a cycle are silently skipped (the DB trigger
 // rejects them; we catch that specific error per-edge so one bad edge
 // doesn't fail the whole batch).
 
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { errorMessage } from "../_shared/errorMessage.ts";
+import { callAi, getAiConfig, type AiConfig } from "../_shared/aiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const MODEL = "google/gemini-2.5-flash";
-
-async function callGemini(lovableApiKey: string, systemPrompt: string, userPrompt: string) {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${lovableApiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature: 0.3,
-    }),
-  });
-  if (!resp.ok) throw new Error(`AI gateway error ${resp.status}: ${await resp.text()}`);
-  const data = await resp.json();
-  const raw: string = data?.choices?.[0]?.message?.content ?? "{}";
-  const cleaned = raw.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
+// Uses the shared AI client: your Gemini keys first (the same ones generate-learning-objectives uses),
+// the Lovable gateway only as a fallback if LOVABLE_API_KEY happens to be set.
+async function callGemini(ai: AiConfig, systemPrompt: string, userPrompt: string) {
+  const { text } = await callAi(ai, userPrompt, { system: systemPrompt, temperature: 0.3 });
+  const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
   try {
     return JSON.parse(cleaned);
   } catch {
@@ -80,8 +69,7 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const ai = getAiConfig(); // throws a clear "No AI key configured…" message if no provider key is set
 
     const { book_id, topic_id } = await req.json();
     if (!book_id && !topic_id) {
@@ -104,6 +92,7 @@ serve(async (req) => {
         });
       }
 
+      const topicIds = new Set<number>(topics.map((t) => t.id));
       const topicList = topics.map((t) => ({
         id: t.id, name: t.topic_name,
         // deno-lint-ignore no-explicit-any
@@ -111,7 +100,7 @@ serve(async (req) => {
       }));
 
       const result = await callGemini(
-        LOVABLE_API_KEY,
+        ai,
         "You are a curriculum sequencing expert. You output strict JSON only, no markdown, no commentary.",
         `Subject: ${book?.subject}. Here are its topics with their real database ids:
 ${JSON.stringify(topicList)}
@@ -133,6 +122,7 @@ Return ONLY JSON in this exact shape:
       const skipped: unknown[] = [];
       for (const e of edges) {
         if (!e.topic_id || !e.prerequisite_topic_id || e.topic_id === e.prerequisite_topic_id) continue;
+        if (!topicIds.has(e.topic_id) || !topicIds.has(e.prerequisite_topic_id)) continue; // ids the model made up
         const { data, error } = await supabaseAdmin
           .from("topic_prerequisites")
           .upsert({
@@ -167,7 +157,7 @@ Return ONLY JSON in this exact shape:
     const conceptList = concepts.map((c) => ({ id: c.id, name: c.subtopic_name, description: c.subtopic_description }));
 
     const result = await callGemini(
-      LOVABLE_API_KEY,
+      ai,
       "You are a curriculum design and misconception-analysis expert. You output strict JSON only, no markdown, no commentary.",
       // deno-lint-ignore no-explicit-any
       `Topic: ${topic?.topic_name} (chapter: ${(topic as any)?.curriculum_chapters?.chapter_name}).
@@ -196,10 +186,12 @@ Return ONLY JSON in this exact shape:
       correction_hint?: string; severity?: string;
     }> = result?.misconceptions ?? [];
 
+    const validIds = new Set<number>(concepts.map((c) => c.id));
     const insertedEdges: unknown[] = [];
     const skippedEdges: unknown[] = [];
     for (const e of edges) {
       if (!e.subtopic_id || !e.prerequisite_subtopic_id || e.subtopic_id === e.prerequisite_subtopic_id) continue;
+      if (!validIds.has(e.subtopic_id) || !validIds.has(e.prerequisite_subtopic_id)) continue; // ids the model made up
       const { data, error } = await supabaseAdmin
         .from("concept_prerequisites")
         .upsert({
@@ -215,7 +207,7 @@ Return ONLY JSON in this exact shape:
     }
 
     const misconceptionRows = misconceptions
-      .filter((m) => m.subtopic_id && m.misconception_text?.trim())
+      .filter((m) => validIds.has(m.subtopic_id) && m.misconception_text?.trim())
       .map((m) => ({
         subtopic_id: m.subtopic_id,
         misconception_text: m.misconception_text.trim(),
@@ -225,11 +217,25 @@ Return ONLY JSON in this exact shape:
         ai_generated: true,
       }));
 
+    // Re-running must REPLACE the earlier AI-written misconceptions, not stack a second copy on top of them.
+    // Insert the new set first, then remove only the previous AI-generated rows (teacher-written ones stay);
+    // if the insert fails the old set is left untouched.
     let insertedMisconceptions = 0;
     if (misconceptionRows.length > 0) {
+      const subtopicIds = [...new Set(misconceptionRows.map((m) => m.subtopic_id))];
+      const { data: previous, error: prevError } = await supabaseAdmin
+        .from("concept_misconceptions").select("id").in("subtopic_id", subtopicIds).eq("ai_generated", true);
+      if (prevError) throw prevError;
+
       const { data, error } = await supabaseAdmin.from("concept_misconceptions").insert(misconceptionRows).select("id");
       if (error) throw error;
       insertedMisconceptions = data?.length ?? 0;
+
+      const oldIds = (previous ?? []).map((r: { id: number }) => r.id);
+      if (oldIds.length > 0) {
+        const { error: delError } = await supabaseAdmin.from("concept_misconceptions").delete().in("id", oldIds);
+        if (delError) console.error("could not remove previous AI misconceptions", delError);
+      }
     }
 
     return new Response(JSON.stringify({
@@ -241,7 +247,7 @@ Return ONLY JSON in this exact shape:
   } catch (e) {
     console.error("generate-knowledge-graph error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: errorMessage(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

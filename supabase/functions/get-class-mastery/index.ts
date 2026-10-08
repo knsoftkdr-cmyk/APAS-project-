@@ -107,6 +107,7 @@ import { handleClassVelocity } from "../_shared/handlers/classVelocity.ts";
 import { handleClassMisconceptionHotspots } from "../_shared/handlers/classMisconceptionHotspots.ts";
 import { handlePeerGroups } from "../_shared/handlers/peerGroups.ts";
 import { handleDynamicGroups } from "../_shared/handlers/dynamicGroups.ts";
+import { errorMessage } from "../_shared/errorMessage.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -246,6 +247,6 @@ serve(async (req) => {
     return json({ class_id: classId, book_id, roster_size: studentIds.length, topics: data ?? [] });
   } catch (e) {
     console.error("get-class-mastery error", e);
-    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return json({ error: errorMessage(e) }, 500);
   }
 });

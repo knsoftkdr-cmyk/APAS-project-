@@ -2,6 +2,11 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGamification } from "@/hooks/useGamification";
+import { useGamification2 } from "@/hooks/useGamification2";
+import { recordGameRound, G2Awarded } from "@/lib/gamification2";
+import {
+  Gamification2Header, Gamification2Tabs, Gamification2Panel, RoundRewardsCard, HubTab,
+} from "@/components/gamification/hub/Gamification2Hub";
 import {
   GamePhase, GameResult, TIER_BADGES,
 } from "@/components/gamification/types";
@@ -209,6 +214,10 @@ type AdaptivePhase = "SETUP" | GamePhase;
 const Gamification = () => {
   const { profile } = useAuth();
   const { awardXp } = useGamification();
+  const g2 = useGamification2();
+  const [hubTab, setHubTab] = useState<HubTab>("play");
+  const [sessionRewards, setSessionRewards] = useState<G2Awarded[]>([]);
+  const roundIdRef = useRef<string>("");
   const studentName = profile?.full_name || "Student";
 
   // Setup state
@@ -265,6 +274,8 @@ const Gamification = () => {
   };
 
   const startRound = () => {
+    roundIdRef.current = (typeof crypto !== "undefined" && "randomUUID" in crypto) ? crypto.randomUUID() : String(Date.now());
+    setSessionRewards([]);
     startTimeRef.current = Date.now();
     timerActive.current = true;
     setElapsedTime(0);
@@ -276,6 +287,28 @@ const Gamification = () => {
   const handleGameComplete = (result: GameResult) => {
     setResults(prev => [...prev, result]);
     setPhase("POST_GAME");
+
+    // Gamification 2.0: report the round. Fire-and-forget - a failure here must never interrupt the game.
+    const cfg = selectedGames[result.gameIndex];
+    if (cfg) {
+      recordGameRound({
+        game_id: cfg.id,
+        subject: subject || null,
+        accuracy: result.accuracy,
+        score: result.rawScore,
+        max_score: result.maxScore,
+        questions_attempted: result.questionsAttempted,
+        duration_seconds: result.timeUsed,
+      }, `${roundIdRef.current}:${result.gameIndex}`)
+        .then(res => {
+          g2.applyState(res.state);
+          if (res.awarded) {
+            setSessionRewards(prev => [...prev, res.awarded!]);
+            g2.announce(res.awarded);
+          }
+        })
+        .catch(() => { /* Gamification 2.0 unavailable or offline: the round itself is unaffected */ });
+    }
   };
 
   const goToNextGame = () => {
@@ -411,7 +444,32 @@ const Gamification = () => {
 
         {/* ─── SETUP ─── */}
         {phase === "SETUP" && (
-          <GameSetupScreen onStart={handleSetupComplete} />
+          <div className="w-full max-w-2xl mx-auto space-y-5">
+            {!g2.unavailable && (
+              <>
+                <Gamification2Header state={g2.state} />
+                <Gamification2Tabs
+                  tab={hubTab}
+                  onChange={setHubTab}
+                  claimable={g2.state ? [...g2.state.missions.daily, ...g2.state.missions.weekly].filter(m => m.status === "completed").length : 0}
+                />
+              </>
+            )}
+            {hubTab === "play" || g2.unavailable ? (
+              <GameSetupScreen onStart={handleSetupComplete} />
+            ) : (
+              <Gamification2Panel
+                tab={hubTab}
+                state={g2.state}
+                loading={g2.loading}
+                unavailable={g2.unavailable}
+                error={g2.error}
+                onClaim={g2.claim}
+                claimingId={g2.claimingId}
+                onRetry={g2.refresh}
+              />
+            )}
+          </div>
         )}
 
         {/* ─── WELCOME ─── */}
@@ -785,8 +843,10 @@ const Gamification = () => {
               </table>
             </GlassCard>
 
+            <RoundRewardsCard rewards={sessionRewards} />
+
             <div className="flex gap-3 justify-center">
-              <button onClick={() => { setPhase("SETUP"); setResults([]); setCurrentGame(0); setElapsedTime(0); setTermsAccepted(false); setSelectedGames([]); }}
+              <button onClick={() => { setPhase("SETUP"); setHubTab("play"); setResults([]); setCurrentGame(0); setElapsedTime(0); setTermsAccepted(false); setSelectedGames([]); setSessionRewards([]); g2.refresh(); }}
                 className="group px-8 py-4 rounded-2xl font-black text-sm transition-all duration-300 hover:scale-105"
                 style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)", color: "#F1F5F9" }}>
                 <span className="flex items-center gap-2">🔄 New Round</span>

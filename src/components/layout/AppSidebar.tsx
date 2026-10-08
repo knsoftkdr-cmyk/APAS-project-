@@ -61,6 +61,7 @@ import {
   Timer,
   Siren
 } from "lucide-react";
+import { useCallback, useLayoutEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -78,6 +79,8 @@ const navItems: Array<{
   tourId?: string;
   module?: string;
   subItem?: { title: string; path: string; icon: any };
+  /** other routes that belong to this item (e.g. its second tab) and should keep it highlighted */
+  alsoActiveOn?: string[];
 }> = [
   { title: "Home", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "school_admin"], tourId: "nav-home", module: "Home" },
@@ -96,10 +99,8 @@ const navItems: Array<{
   { title: "Worksheet Submissions", icon: ClipboardCheck, path: "/submissions", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Assessment Evaluation", icon: Sparkles, path: "/assessment-evaluation", roles: ["teacher"], module: "Lesson Plans" },
   { title: "Analytics", icon: BarChart3, path: "/analytics", roles: ["teacher"], module: "Analytics" },
-  { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["teacher"], module: "Analytics" },
+  { title: "Class Mastery", icon: Target, path: "/class-mastery", roles: ["teacher"], module: "Analytics", alsoActiveOn: ["/class-velocity"] },
   { title: "Adaptive Homework", icon: Wand2, path: "/adaptive-homework/generate", roles: ["teacher"], module: "Homework" },
-  { title: "Class Velocity", icon: Gauge, path: "/class-velocity", roles: ["teacher"], module: "Analytics" },
-  { title: "Early Warning", icon: Siren, path: "/early-warning", roles: ["teacher"], module: "Analytics" },
   { title: "Concept Dependencies", icon: GitBranch, path: "/concept-dependencies", roles: ["teacher"], module: "Analytics" },
   { title: "BKT Calibration", icon: Activity, path: "/bkt-calibration", roles: ["teacher"], module: "Analytics" },
   { title: "Item Bank", icon: Layers, path: "/item-bank", roles: ["teacher"], module: "Analytics" },
@@ -162,7 +163,7 @@ const navItems: Array<{
   { title: "Courses", icon: BookOpen, path: "/student/courses", roles: ["student"], module: "Courses" },
   { title: "Credentials", icon: Award, path: "/student/credentials", roles: ["student"], module: "Credentials" },
   { title: "My Electives", icon: Users2, path: "/teacher-electives", roles: ["teacher"] },
-  { title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"] },
+  { title: "At-Risk Students", icon: AlertTriangle, path: "/teacher-at-risk", roles: ["teacher"], alsoActiveOn: ["/early-warning"] },
   { title: "Behaviour", icon: Bell, path: "/teacher-behaviour", roles: ["teacher"] },
   { title: "Communication", icon: MessageSquare, path: "/student-communication", roles: ["student"] },
   { title: "Communication", icon: MessageSquare, path: "/admin-communication", roles: ["admin", "hod", "school_admin"] },
@@ -327,6 +328,48 @@ function SidebarWaveBackground({ collapsed }: { collapsed?: boolean }) {
   );
 }
 
+const isNavItemActive = (item: { path: string; alsoActiveOn?: string[] }, pathname: string) =>
+  pathname === item.path || !!item.alsoActiveOn?.includes(pathname);
+
+// ---------------------------------------------------------------------------------------------
+// Sidebar scroll memory.
+// Every page renders its own <AppLayout>, so navigating unmounts and recreates the sidebar and its
+// scroll container resets to the top. The position is kept at module level (survives remounts) and
+// restored once the nav items exist (they are empty while permissions load). If the active item is
+// then outside the visible area it is nudged into view — the minimum scroll needed, nothing more.
+// ---------------------------------------------------------------------------------------------
+const sidebarScrollTop = { desktop: 0, mobile: 0 };
+
+function useRememberedSidebarScroll(key: "desktop" | "mobile", itemCount: number, pathname: string) {
+  const ref = useRef<HTMLElement | null>(null);
+  const ignoreScrollUntil = useRef(0);
+
+  useLayoutEffect(() => {
+    const nav = ref.current;
+    if (!nav || itemCount === 0 || nav.clientHeight === 0) return; // hidden variant (desktop vs mobile): leave its saved position alone
+
+    ignoreScrollUntil.current = performance.now() + 150; // programmatic scrolls below must not overwrite the saved value
+    nav.scrollTop = sidebarScrollTop[key];
+
+    const active = nav.querySelector<HTMLElement>('a[data-sidebar-active="true"], a[aria-current="page"]');
+    if (active) {
+      const navBox = nav.getBoundingClientRect();
+      const box = active.getBoundingClientRect();
+      const pad = 8;
+      if (box.bottom > navBox.bottom - pad) nav.scrollTop += box.bottom - navBox.bottom + pad;
+      else if (box.top < navBox.top + pad) nav.scrollTop -= navBox.top - box.top + pad;
+    }
+    sidebarScrollTop[key] = nav.scrollTop;
+  }, [key, itemCount, pathname]);
+
+  const onScroll = useCallback(() => {
+    if (performance.now() < ignoreScrollUntil.current) return;
+    if (ref.current) sidebarScrollTop[key] = ref.current.scrollTop;
+  }, [key]);
+
+  return { ref, onScroll };
+}
+
 export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: AppSidebarProps) {
   const { profile, signOut } = useAuth();
   const { can, loading: permsLoading } = usePermissions();
@@ -360,6 +403,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       }
       return true;
     });
+
+  const desktopScroll = useRememberedSidebarScroll("desktop", visibleItems.length, location.pathname);
+  const mobileScroll = useRememberedSidebarScroll("mobile", visibleItems.length, location.pathname);
 
   const handleLogout = async () => {
     await signOut();
@@ -403,9 +449,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
             )}
           </div>
 
-          <nav className={cn("flex-1 min-h-0 overflow-y-auto py-4 scrollbar-hide", collapsed ? "px-2 space-y-2" : "px-3 space-y-1")}>
+          <nav ref={desktopScroll.ref} onScroll={desktopScroll.onScroll} className={cn("flex-1 min-h-0 overflow-y-auto py-4 scrollbar-hide", collapsed ? "px-2 space-y-2" : "px-3 space-y-1")}>
             {visibleItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = isNavItemActive(item, location.pathname);
               const isSubActive =
                 item.subItem &&
                 location.pathname === "/ai-tutor" &&
@@ -414,6 +460,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                 <div key={item.path}>
                   <NavLink
                     to={item.path}
+                    data-sidebar-active={isActive ? "true" : undefined}
                     data-tour-id={item.tourId}
                     title={collapsed ? getItemLabel(item) : undefined}
                     className={cn(
@@ -518,9 +565,9 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
           <div className="flex h-[var(--header-height)] items-center justify-center border-b border-sidebar-border px-4 shrink-0">
             <img src={apasLogo} alt="APAS" className="h-10 w-auto object-contain" />
           </div>
-          <nav className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
+          <nav ref={mobileScroll.ref} onScroll={mobileScroll.onScroll} className="flex-1 min-h-0 overflow-y-auto px-3 py-4 space-y-1 scrollbar-hide">
             {visibleItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = isNavItemActive(item, location.pathname);
               const isSubActive =
                 item.subItem &&
                 location.pathname === "/ai-tutor" &&
@@ -529,6 +576,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                 <div key={item.path}>
                   <NavLink
                     to={item.path}
+                    data-sidebar-active={isActive ? "true" : undefined}
                     onClick={onMobileClose}
                     className={cn(
                       "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",

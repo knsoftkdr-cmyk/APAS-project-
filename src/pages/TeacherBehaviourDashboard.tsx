@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,7 @@ const NOTE_TYPE_STYLES: Record<string, string> = {
   incident: "bg-red-100 text-red-700",
 };
 
-export default function TeacherBehaviourDashboard() {
+export default function TeacherBehaviourDashboard({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, profile } = useAuth();
   const { toast } = useToast();
 
@@ -322,7 +322,7 @@ const [noteType, setNoteType] = useState("observation");
     activeRiskLevel === "high" ? 3 : activeRiskLevel === "medium" ? 2 : undefined;
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-600 via-sky-500 to-blue-500 p-8 shadow-xl">
         {/* Decorative Circles */}
         <div className="absolute top-6 right-10 h-24 w-24 rounded-full bg-white/10"></div>
@@ -627,7 +627,7 @@ const [noteType, setNoteType] = useState("observation");
           }}
         />
       )}
-    </AppLayout>
+    </PageShell>
   );
 }
 

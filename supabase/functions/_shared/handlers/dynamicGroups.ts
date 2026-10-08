@@ -21,12 +21,13 @@
 
 // deno-lint-ignore-file no-explicit-any
 import { canStaffAccessClass } from "../studentAccess.ts";
+import { errorMessage } from "../errorMessage.ts";
 import {
   assignTiers, summariseTiers, validateTierOptions, TIER_ORDER,
   type PriorPlacement, type Tier, type TierOptions,
 } from "../learningGroupsCore.ts";
 import {
-  authenticateStaff, corsHeaders, json, loadClassSignals, parseBookId, parseMinObjectives, UUID_RE,
+  authenticateStaff, corsHeaders, json, loadClassSignals, loadStudentNames, parseBookId, parseMinObjectives, UUID_RE,
   type AuthContext,
 } from "../learningGroupsData.ts";
 
@@ -121,8 +122,7 @@ export async function handleDynamicGroups(req: Request): Promise<Response> {
         .order("changed_at", { ascending: false }).limit(60);
 
       const ids = [...new Set([...(rows ?? []).map((r: Row) => r.student_id), ...(hist ?? []).map((h: Row) => h.student_id)])];
-      const { data: names } = ids.length ? await admin.from("students").select("id, full_name").in("id", ids) : { data: [] };
-      const nameBy = new Map<string, string>((names ?? []).map((n: Row) => [n.id, n.full_name ?? "Student"]));
+      const nameBy = await loadStudentNames(admin, ids);
 
       const placements = (rows ?? []).filter((r: Row) => rosterSet.has(r.student_id))
         .map((r: Row) => ({ ...r, full_name: nameBy.get(r.student_id) ?? "Student" }));
@@ -233,6 +233,6 @@ export async function handleDynamicGroups(req: Request): Promise<Response> {
     });
   } catch (e) {
     console.error("dynamic_groups error", e);
-    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return json({ error: errorMessage(e) }, 500);
   }
 }

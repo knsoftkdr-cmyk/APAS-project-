@@ -15,6 +15,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { canStaffAccessClass } from "../studentAccess.ts";
 import { clusterPeerGroups, type PeerGroupOptions } from "../learningGroupsCore.ts";
+import { errorMessage } from "../errorMessage.ts";
 import {
   authenticateStaff, json, loadClassSignals, parseBookId, parseMinObjectives, corsHeaders, UUID_RE,
 } from "../learningGroupsData.ts";
@@ -115,6 +116,6 @@ export async function handlePeerGroups(req: Request): Promise<Response> {
     });
   } catch (e) {
     console.error("peer_groups error", e);
-    return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
+    return json({ error: errorMessage(e) }, 500);
   }
 }

@@ -13,6 +13,7 @@
 // Body: { class_id, book_id, min_occurrences? }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { errorMessage } from "../errorMessage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +96,7 @@ export async function handleClassMisconceptionHotspots(req: Request): Promise<Re
   } catch (e) {
     console.error("get-class-misconception-hotspots error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: errorMessage(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

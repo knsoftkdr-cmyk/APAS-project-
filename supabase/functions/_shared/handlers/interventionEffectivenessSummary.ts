@@ -30,6 +30,7 @@
 //                                         (optionally narrowed to any class
 //                                         in that school)
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { errorMessage } from "../errorMessage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -116,7 +117,7 @@ export async function handleInterventionEffectivenessSummary(req: Request): Prom
   } catch (e) {
     console.error("get-intervention-effectiveness-summary error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: errorMessage(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

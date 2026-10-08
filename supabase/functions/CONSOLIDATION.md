@@ -189,3 +189,32 @@ Frontend: `src/lib/learningEvents.ts`, `src/hooks/useLearningEventStream.ts`, `s
 
 Retention: `public.prune_learning_events()` deletes heartbeats after 30 days and everything after a year; schedule it with
 pg_cron if wanted (commented example in the migration).
+
+## Gamification 2.0 (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Snapshot: progression, streak, missions, badges, insights | update-mastery | action: `g2_state` |
+| Record a finished game round (awards XP, streak, mission progress, badges) | update-mastery | action: `g2_event` |
+| Claim a completed mission's reward (once) | update-mastery | action: `g2_claim` |
+
+Handler: `_shared/handlers/gamification2.ts`; pure model: `_shared/gamification2Model.ts` (unit-tested in
+`src/test/gamification2Model.test.ts`). The existing `ah_generate` / `ah_submit_answer` routes and the plain mastery body are unchanged.
+Bodies: `{ action: "g2_state", tz_offset_minutes? }`, `{ action: "g2_event", round: { game_id, subject?, accuracy, score, max_score, questions_attempted, duration_seconds }, dedupe_key?, tz_offset_minutes? }`,
+`{ action: "g2_claim", mission_id, tz_offset_minutes? }`.
+
+* UI: new tabs (Play / Missions / Badges / Progress) on the existing `/gamification` page, a streak + level header, and a rewards card on the
+  results screen. **No sidebar change** and no new route. The "Play" tab is the unchanged setup screen. Frontend: `src/lib/gamification2.ts`,
+  `src/hooks/useGamification2.ts`, `src/components/gamification/hub/Gamification2Hub.tsx`.
+* Storage (migration `20261016000000_gamification_2.sql`): `gamification_events`, `gamification_missions`, three additive columns on `user_gamification`
+  (`streak_freezes`, `last_freeze_date`, `freeze_earned_at_streak`), and 16 badge rows (`g2_*` keys) in the EXISTING `achievement_definitions`. XP, level and
+  earned badges still live in `user_gamification` / `xp_transactions` / `user_achievements`, so the Leaderboard and the legacy `awardXp()` flow are unchanged.
+  Without the migration every g2 action answers 503 `persistence_unavailable` and the page hides the new tabs (games and XP work as before).
+* Adaptive: missions are generated per student per day / week from their last 14-28 days (typical rounds per day, average accuracy, weakest subject with 2+
+  rounds, game types not played this week); new students get gentle defaults. Badges are tiered (Bronze/Silver/Gold) plus adaptive ones (Comeback, Personal
+  Best, Steady Climber, Explorer).
+* Streaks use the student's own day (`tz_offset_minutes`). A freeze is earned every 7 streak days (max 2) and automatically bridges ONE missed day.
+* Access: students only, own data only (user id from the verified JWT). Writes use the service role; RLS lets a student read only their own new rows.
+* Limits: round results come from the browser, so XP is bounded rather than proven (min 3 questions for full XP, 200 round-XP/day cap, `dedupe_key` per
+  round). The legacy client-side `awardXp()` path still writes XP directly and can still use the UTC day for `last_activity_date`.
+* Deploy: apply the migration, then redeploy `update-mastery` only (`supabase functions deploy update-mastery`). No new functions.

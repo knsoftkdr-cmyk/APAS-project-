@@ -25,6 +25,7 @@
 // (Same auth rules as get-student-risk-profile / get-class-risk-roster.)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { errorMessage } from "../errorMessage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -345,7 +346,7 @@ export async function handleInterventionRecommendations(req: Request): Promise<R
   } catch (e) {
     console.error("get-intervention-recommendations error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: errorMessage(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

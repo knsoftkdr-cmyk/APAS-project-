@@ -72,6 +72,31 @@ const num = (v: unknown): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
+
+/**
+ * student_id -> display name. Names live on `profiles` (students.profile_id -> profiles.full_name); some
+ * deployments also have a denormalised students.full_name, so it is tried too but never required.
+ * A lookup failure never breaks a request: callers fall back to "Student".
+ */
+export async function loadStudentNames(admin: any, ids: string[]): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  if (!ids.length) return out;
+  const { data: studs, error } = await admin.from("students").select("id, profile_id").in("id", ids);
+  if (error) { console.error("student name lookup failed (non-fatal)", error); return out; }
+  const profileIds = [...new Set(((studs ?? []) as Row[]).map((r) => r.profile_id).filter(Boolean))];
+  const nameByProfile = new Map<string, string>();
+  if (profileIds.length) {
+    const { data: profs, error: pErr } = await admin.from("profiles").select("id, full_name").in("id", profileIds);
+    if (pErr) console.error("profile name lookup failed (non-fatal)", pErr);
+    for (const r of (profs ?? []) as Row[]) if (r.full_name) nameByProfile.set(r.id, r.full_name);
+  }
+  for (const r of (studs ?? []) as Row[]) {
+    const n = nameByProfile.get(r.profile_id);
+    if (n) out.set(r.id, n);
+  }
+  return out;
+}
+
 export interface ClassSignals {
   classId: string;
   className: string | null;
@@ -101,8 +126,8 @@ export async function loadClassSignals(
   const { classId, studentIds, bookId, minObjectives } = args;
   const warnings: string[] = [];
 
-  const [{ data: names }, { data: cls }] = await Promise.all([
-    admin.from("students").select("id, full_name").in("id", studentIds),
+  const [nameBy, { data: cls }] = await Promise.all([
+    loadStudentNames(admin, studentIds),
     admin.from("classes").select("name, section, school_id").eq("id", classId).maybeSingle(),
   ]);
   const schoolId = cls?.school_id ?? caller.schoolId ?? null;
@@ -141,8 +166,6 @@ export async function loadClassSignals(
   }
   const riskBy = new Map<string, RiskLevel | null>();
   for (const core of (Array.isArray(riskRes.data) ? riskRes.data : []) as Row[]) riskBy.set(core.student_id, riskFromCauses(core));
-
-  const nameBy = new Map<string, string>(((names ?? []) as Row[]).map((n) => [n.id, n.full_name ?? "Student"]));
 
   const signals = studentIds.map((id) => {
     const p = paceBy.get(id);

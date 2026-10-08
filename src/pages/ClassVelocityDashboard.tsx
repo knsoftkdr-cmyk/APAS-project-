@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +21,7 @@ function fmtGain(g: number | null) {
   return `${g >= 0 ? "+" : ""}${Math.round(g * 1000) / 10}%/attempt`;
 }
 
-export default function ClassVelocityDashboard() {
+export default function ClassVelocityDashboard({ embedded = false }: { embedded?: boolean } = {}) {
   const { profile } = useAuth();
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [schoolBooks, setSchoolBooks] = useState<ClassBookOption[]>([]);
@@ -87,7 +87,7 @@ export default function ClassVelocityDashboard() {
   const fastStudents = students.filter((s) => s.pace_label === "fast");
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-cyan-600 to-sky-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -218,6 +218,6 @@ export default function ClassVelocityDashboard() {
           </>
         )}
       </div>
-    </AppLayout>
+    </PageShell>
   );
 }

@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -37,7 +37,7 @@ interface RiskRow {
   contributing_factors: any;
 }
 
-export default function TeacherAtRiskStudents() {
+export default function TeacherAtRiskStudents({ embedded = false }: { embedded?: boolean } = {}) {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -185,16 +185,16 @@ const runPredictions = async () => {
 
   if (loading) {
     return (
-      <AppLayout>
+      <PageShell embedded={embedded}>
         <div className="flex min-h-[60vh] items-center justify-center">
           <LoadingSpinner size="lg" />
         </div>
-      </AppLayout>
+      </PageShell>
     );
   }
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-500 via-red-500 to-orange-500 p-8 shadow-xl">
             {/* Decorative circles */}
@@ -437,6 +437,6 @@ const runPredictions = async () => {
         interventions={drawerInterventions}
         onSaved={() => fetchInterventions(rows.map(r => r.student_id))}
       />
-    </AppLayout>
+    </PageShell>
   );
 }

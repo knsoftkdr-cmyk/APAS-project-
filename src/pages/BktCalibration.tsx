@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Sparkles, Activity } from "lucide-react";
+import { Sparkles, Activity, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useCalibrateBktParams } from "@/hooks/useMasteryHistory";
+import { useClassSubjectPicker } from "@/hooks/useClassSubjectPicker";
 
-interface BookOption { id: number; subject: string; class_name: string | null }
+const errText = (e: unknown) => (e instanceof Error ? e.message : (e as { message?: string })?.message ?? "Something went wrong");
+
 interface TopicOption { id: number; topic_name: string }
 interface ConceptOption { id: number; subtopic_name: string }
 interface ObjectiveRow {
@@ -27,47 +29,67 @@ export default function BktCalibration() {
   const { toast } = useToast();
   const calibrate = useCalibrateBktParams();
 
-  const [books, setBooks] = useState<BookOption[]>([]);
+  const {
+    classes, classId, setClassId, subjects, bookId, setBookId,
+    loadingClasses, loadingSubjects,
+  } = useClassSubjectPicker();
   const [topics, setTopics] = useState<TopicOption[]>([]);
   const [concepts, setConcepts] = useState<ConceptOption[]>([]);
   const [objectives, setObjectives] = useState<ObjectiveRow[]>([]);
 
-  const [bookId, setBookId] = useState("");
   const [topicId, setTopicId] = useState("");
   const [subtopicId, setSubtopicId] = useState("");
   const [loadingObjectives, setLoadingObjectives] = useState(false);
   const [calibratingId, setCalibratingId] = useState<number | "batch" | null>(null);
 
   useEffect(() => {
-    supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }) => setBooks((data as BookOption[]) ?? []));
-  }, []);
-
-  useEffect(() => {
     setTopicId(""); setSubtopicId(""); setConcepts([]); setObjectives([]);
     if (!bookId) { setTopics([]); return; }
+    let cancelled = false;
     supabase
       .from("topics")
       .select("id, topic_name, curriculum_chapters!inner(unit_id, units!inner(book_id))")
       .eq("curriculum_chapters.units.book_id", Number(bookId))
-      .then(({ data }) => setTopics((data as TopicOption[]) ?? []));
+      .order("topic_name")
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { toast({ title: "Couldn't load topics", description: errText(error), variant: "destructive" }); setTopics([]); return; }
+        setTopics((data as TopicOption[]) ?? []);
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookId]);
 
   useEffect(() => {
     setSubtopicId(""); setObjectives([]);
     if (!topicId) { setConcepts([]); return; }
-    supabase.from("subtopics").select("id, subtopic_name").eq("topic_id", Number(topicId)).eq("is_active", true)
-      .then(({ data }) => setConcepts((data as ConceptOption[]) ?? []));
+    let cancelled = false;
+    supabase.from("subtopics").select("id, subtopic_name").eq("topic_id", Number(topicId)).eq("is_active", true).order("subtopic_name")
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) { toast({ title: "Couldn't load concepts", description: errText(error), variant: "destructive" }); setConcepts([]); return; }
+        setConcepts((data as ConceptOption[]) ?? []);
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [topicId]);
+
+  const noClasses = !loadingClasses && classes.length === 0;
 
   const loadObjectives = async () => {
     if (!subtopicId) return;
     setLoadingObjectives(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("learning_objectives")
       .select("id, objective_text, mastery_bkt_params(p_init, p_transit, p_slip, p_guess, is_calibrated, calibration_sample_size, calibration_log_likelihood)")
       .eq("subtopic_id", Number(subtopicId))
       .eq("status", "active");
+    if (error) {
+      toast({ title: "Couldn't load learning objectives", description: errText(error), variant: "destructive" });
+      setObjectives([]);
+      setLoadingObjectives(false);
+      return;
+    }
     // deno-lint-ignore no-explicit-any
     const rows: ObjectiveRow[] = (data as any[] ?? []).map((r) => ({
       id: r.id,
@@ -98,8 +120,8 @@ export default function BktCalibration() {
           : `Needs at least 5 students and 20 attempts — currently ${r?.student_count ?? 0} students, ${r?.event_count ?? 0} attempts.`,
       });
       loadObjectives();
-    } catch {
-      toast({ title: "Calibration failed", variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Calibration failed", description: errText(e), variant: "destructive" });
     } finally {
       setCalibratingId(null);
     }
@@ -113,8 +135,8 @@ export default function BktCalibration() {
       const calibrated = results.filter((r) => r.calibrated).length;
       toast({ title: `Calibrated ${calibrated}/${results.length} objectives` });
       loadObjectives();
-    } catch {
-      toast({ title: "Batch calibration failed", variant: "destructive" });
+    } catch (e) {
+      toast({ title: "Batch calibration failed", description: errText(e), variant: "destructive" });
     } finally {
       setCalibratingId(null);
     }
@@ -139,21 +161,39 @@ export default function BktCalibration() {
         </div>
 
         <Card>
-          <CardContent className="p-4 flex flex-col sm:flex-row gap-3">
-            <Select value={bookId} onValueChange={setBookId}>
-              <SelectTrigger className="sm:w-60"><SelectValue placeholder="Subject" /></SelectTrigger>
+          <CardContent className="p-4 flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:items-center">
+            <Select value={classId} onValueChange={setClassId} disabled={loadingClasses || noClasses}>
+              <SelectTrigger className="sm:w-52" aria-label="Class">
+                <SelectValue placeholder={loadingClasses ? "Loading classes…" : noClasses ? "No classes assigned" : "Class"} />
+              </SelectTrigger>
               <SelectContent>
-                {books.map((b) => <SelectItem key={b.id} value={String(b.id)}>{b.subject} {b.class_name ? `(${b.class_name})` : ""}</SelectItem>)}
+                {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
+            <Select value={bookId} onValueChange={setBookId} disabled={!classId || loadingSubjects || subjects.length === 0}>
+              <SelectTrigger className="sm:w-52" aria-label="Subject">
+                <SelectValue
+                  placeholder={
+                    !classId ? "Choose a class first"
+                    : loadingSubjects ? "Loading subjects…"
+                    : subjects.length === 0 ? "No subjects for this class"
+                    : "Subject"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((b) => <SelectItem key={b.bookId} value={String(b.bookId)}>{b.subject}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {loadingSubjects && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             <Select value={topicId} onValueChange={setTopicId} disabled={!bookId}>
-              <SelectTrigger className="sm:w-60"><SelectValue placeholder="Topic" /></SelectTrigger>
+              <SelectTrigger className="sm:w-52" aria-label="Topic"><SelectValue placeholder={bookId && topics.length === 0 ? "No topics in this subject" : "Topic"} /></SelectTrigger>
               <SelectContent>
                 {topics.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.topic_name}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={subtopicId} onValueChange={setSubtopicId} disabled={!topicId}>
-              <SelectTrigger className="sm:w-60"><SelectValue placeholder="Concept" /></SelectTrigger>
+              <SelectTrigger className="sm:w-52" aria-label="Concept"><SelectValue placeholder={topicId && concepts.length === 0 ? "No concepts in this topic" : "Concept"} /></SelectTrigger>
               <SelectContent>
                 {concepts.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.subtopic_name}</SelectItem>)}
               </SelectContent>
@@ -163,7 +203,11 @@ export default function BktCalibration() {
 
         {!subtopicId ? (
           <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
-            Pick a subject, topic and concept to see and calibrate its learning objectives.
+            {noClasses
+              ? "You aren't assigned to any class yet. Ask your school admin to assign you to a class and section."
+              : !classId ? "Choose a class, then a subject, topic and concept to see and calibrate its learning objectives."
+              : !bookId ? "Choose a subject, then a topic and concept to see and calibrate its learning objectives."
+              : "Choose a topic and concept to see and calibrate its learning objectives."}
           </CardContent></Card>
         ) : loadingObjectives ? (
           <Card><CardContent className="p-6 space-y-2">

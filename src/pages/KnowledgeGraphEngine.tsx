@@ -4,37 +4,86 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GitBranch, Sparkles, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, ArrowLeft, GitBranch, Loader2, Sparkles } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useClassSubjectPicker } from "@/hooks/useClassSubjectPicker";
 import {
   useTopicGraph, useConceptGraph, useGenerateKnowledgeGraph,
 } from "@/hooks/useKnowledgeGraph";
 import { GraphCanvas } from "@/components/knowledge-graph/GraphCanvas";
 import { MisconceptionsList } from "@/components/knowledge-graph/MisconceptionsList";
 
-interface BookOption { id: number; subject: string; class_name: string | null }
+const errText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
+
+function ErrorNote({ title, error, onRetry }: { title: string; error: unknown; onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-2 py-8 text-center">
+      <AlertTriangle className="h-5 w-5 text-destructive" />
+      <p className="text-sm font-medium">{title}</p>
+      <p className="text-xs text-muted-foreground max-w-md break-words">{errText(error)}</p>
+      <Button size="sm" variant="outline" onClick={onRetry}>Try again</Button>
+    </div>
+  );
+}
 
 export default function KnowledgeGraphEngine() {
   const { toast } = useToast();
-  const [books, setBooks] = useState<BookOption[]>([]);
-  const [bookId, setBookId] = useState<string>("");
+  const {
+    classes, classId, setClassId,
+    subjects, bookId, setBookId, selectedClass, selectedSubject,
+    loadingClasses, loadingSubjects,
+  } = useClassSubjectPicker();
   const [selectedTopicId, setSelectedTopicId] = useState<number | null>(null);
   const [selectedConceptId, setSelectedConceptId] = useState<number | null>(null);
 
   const generate = useGenerateKnowledgeGraph();
-  const { data: topicGraph, isLoading: topicsLoading, refetch: refetchTopics } = useTopicGraph(bookId ? Number(bookId) : undefined);
-  const { data: conceptGraph, isLoading: conceptsLoading, refetch: refetchConcepts } =
-    useConceptGraph(selectedTopicId ?? undefined);
+  const numericBookId = bookId ? Number(bookId) : undefined;
+  const topics = useTopicGraph(numericBookId);
+  const concepts = useConceptGraph(selectedTopicId ?? undefined);
+  const topicGraph = topics.data;
+  const conceptGraph = concepts.data;
 
-  useEffect(() => {
-    supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }) => setBooks((data as BookOption[]) ?? []));
-  }, []);
+  // A different class or subject always starts from the topic overview again.
+  useEffect(() => { setSelectedTopicId(null); setSelectedConceptId(null); }, [classId, bookId]);
 
   const selectedMisconceptions = (conceptGraph?.misconceptions ?? []).filter(
     (m) => selectedConceptId == null || m.subtopic_id === selectedConceptId,
   );
+
+  async function generateTopicGraph() {
+    if (!numericBookId) return;
+    toast({ title: "Mapping topic dependencies…", description: "This can take a minute for a whole subject." });
+    try {
+      const res = await generate.mutateAsync({ bookId: numericBookId });
+      const skipped = Array.isArray(res?.skipped) ? res.skipped.length : 0;
+      toast({
+        title: `Saved ${res?.inserted ?? 0} prerequisite link${res?.inserted === 1 ? "" : "s"}`,
+        description: skipped ? `${skipped} suggested link${skipped === 1 ? " was" : "s were"} left out because they would have formed a loop.` : undefined,
+      });
+    } catch (e) {
+      toast({ title: "Couldn't generate the topic graph", description: errText(e), variant: "destructive" });
+    }
+  }
+
+  async function generateConceptGraph() {
+    if (!selectedTopicId) return;
+    toast({ title: "Mapping concepts & misconceptions…" });
+    try {
+      const res = await generate.mutateAsync({ topicId: selectedTopicId });
+      const skipped = Array.isArray(res?.edges_skipped) ? res.edges_skipped.length : 0;
+      toast({
+        title: `Saved ${res?.edges_inserted ?? 0} link${res?.edges_inserted === 1 ? "" : "s"} and ${res?.misconceptions_inserted ?? 0} misconception${res?.misconceptions_inserted === 1 ? "" : "s"}`,
+        description: skipped ? `${skipped} suggested link${skipped === 1 ? " was" : "s were"} left out because they would have formed a loop.` : undefined,
+      });
+    } catch (e) {
+      toast({ title: "Couldn't generate concepts", description: errText(e), variant: "destructive" });
+    }
+  }
+
+  const noClasses = !loadingClasses && classes.length === 0;
+  const noSubjects = !!classId && !loadingSubjects && subjects.length === 0;
+  const nodeCount = topicGraph?.nodes.length ?? 0;
+  const edgeCount = topicGraph?.edges.length ?? 0;
 
   return (
     <AppLayout>
@@ -55,49 +104,90 @@ export default function KnowledgeGraphEngine() {
         </div>
 
         <Card>
-          <CardContent className="p-4 flex flex-col sm:flex-row gap-3 items-center">
-            <Select value={bookId} onValueChange={(v) => { setBookId(v); setSelectedTopicId(null); setSelectedConceptId(null); }}>
-              <SelectTrigger className="sm:w-72"><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+          <CardContent className="p-4 flex flex-col sm:flex-row gap-3 sm:items-center">
+            <Select value={classId} onValueChange={setClassId} disabled={loadingClasses || noClasses}>
+              <SelectTrigger className="sm:w-60" aria-label="Class">
+                <SelectValue placeholder={loadingClasses ? "Loading classes…" : noClasses ? "No classes assigned" : "Choose a class"} />
+              </SelectTrigger>
               <SelectContent>
-                {books.map((b) => (
-                  <SelectItem key={b.id} value={String(b.id)}>
-                    {b.subject} {b.class_name ? `(${b.class_name})` : ""}
-                  </SelectItem>
-                ))}
+                {classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
-            {bookId && !selectedTopicId && (
-              <Button
-                size="sm" variant="outline" disabled={generate.isPending}
-                onClick={async () => {
-                  toast({ title: "Mapping topic dependencies…", description: "This can take a minute for a whole subject." });
-                  const res = await generate.mutateAsync({ bookId: Number(bookId) });
-                  toast({ title: `Added ${res.inserted ?? 0} prerequisite links` });
-                  refetchTopics();
-                }}
-              >
-                <Sparkles className="h-4 w-4 mr-1.5" /> Generate topic graph
+
+            <Select value={bookId} onValueChange={setBookId} disabled={!classId || loadingSubjects || subjects.length === 0}>
+              <SelectTrigger className="sm:w-64" aria-label="Subject">
+                <SelectValue
+                  placeholder={
+                    !classId ? "Choose a class first"
+                    : loadingSubjects ? "Loading subjects…"
+                    : subjects.length === 0 ? "No subjects for this class"
+                    : "Choose a subject"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((s) => <SelectItem key={s.bookId} value={String(s.bookId)}>{s.subject}</SelectItem>)}
+              </SelectContent>
+            </Select>
+
+            {loadingSubjects && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+
+            {numericBookId && !selectedTopicId && (
+              <Button size="sm" variant="outline" className="sm:ml-auto" disabled={generate.isPending || topics.isLoading} onClick={generateTopicGraph}>
+                {generate.isPending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+                {edgeCount > 0 ? "Refresh topic graph" : "Generate topic graph"}
               </Button>
             )}
           </CardContent>
         </Card>
 
-        {!bookId ? (
+        {noClasses ? (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
+            You aren't assigned to any class yet. Ask your school admin to assign you to a class and section.
+          </CardContent></Card>
+        ) : !classId ? (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
+            Choose a class, then a subject, to see how its topics depend on each other.
+          </CardContent></Card>
+        ) : noSubjects ? (
+          <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
+            No textbook is set up for {selectedClass?.label ?? "this class"} yet, so there are no subjects to show.
+          </CardContent></Card>
+        ) : !numericBookId ? (
           <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
             Pick a subject to see how its topics depend on each other.
           </CardContent></Card>
         ) : !selectedTopicId ? (
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Topic dependency graph</CardTitle></CardHeader>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">
+                Topic dependency graph
+                <span className="font-normal text-muted-foreground">
+                  {" — "}{selectedSubject?.subject}{selectedClass ? `, ${selectedClass.label}` : ""}
+                </span>
+              </CardTitle>
+            </CardHeader>
             <CardContent>
-              {topicsLoading ? <Skeleton className="h-64 w-full" /> : (
-                <GraphCanvas
-                  nodes={topicGraph?.nodes ?? []}
-                  edges={topicGraph?.edges ?? []}
-                  onSelect={(id) => setSelectedTopicId(id)}
-                />
-              )}
-              <p className="text-xs text-muted-foreground mt-2">Click a topic to drill into its concepts.</p>
+              {topics.isLoading ? <Skeleton className="h-64 w-full" />
+                : topics.isError ? <ErrorNote title="Couldn't load the topic graph" error={topics.error} onRetry={() => topics.refetch()} />
+                : (
+                  <>
+                    <GraphCanvas
+                      nodes={topicGraph?.nodes ?? []}
+                      edges={topicGraph?.edges ?? []}
+                      onSelect={(id) => setSelectedTopicId(id)}
+                      emptyMessage="This subject has no topics yet. Upload or re-run the textbook loader so its units, chapters and topics are extracted."
+                    />
+                    {nodeCount > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {nodeCount} topic{nodeCount === 1 ? "" : "s"}, {edgeCount} prerequisite link{edgeCount === 1 ? "" : "s"}.{" "}
+                        {edgeCount === 0
+                          ? "No links yet — use “Generate topic graph” to map which topics build on each other."
+                          : "Click a topic to drill into its concepts."}
+                      </p>
+                    )}
+                  </>
+                )}
             </CardContent>
           </Card>
         ) : (
@@ -108,31 +198,27 @@ export default function KnowledgeGraphEngine() {
 
             <div className="grid md:grid-cols-3 gap-4">
               <Card className="md:col-span-2">
-                <CardHeader className="pb-2 flex-row items-center justify-between">
+                <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-sm">
                     {topicGraph?.nodes.find((n) => n.id === selectedTopicId)?.name ?? "Concepts"}
                   </CardTitle>
-                  <Button
-                    size="sm" variant="outline" disabled={generate.isPending}
-                    onClick={async () => {
-                      toast({ title: "Mapping concepts & misconceptions…" });
-                      const res = await generate.mutateAsync({ topicId: selectedTopicId });
-                      toast({ title: `Added ${res.edges_inserted ?? 0} links, ${res.misconceptions_inserted ?? 0} misconceptions` });
-                      refetchConcepts();
-                    }}
-                  >
-                    <Sparkles className="h-4 w-4 mr-1.5" /> Generate
+                  <Button size="sm" variant="outline" disabled={generate.isPending || concepts.isLoading} onClick={generateConceptGraph}>
+                    {generate.isPending ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Sparkles className="h-4 w-4 mr-1.5" />}
+                    {(conceptGraph?.edges.length ?? 0) > 0 ? "Refresh" : "Generate"}
                   </Button>
                 </CardHeader>
                 <CardContent>
-                  {conceptsLoading ? <Skeleton className="h-64 w-full" /> : (
-                    <GraphCanvas
-                      nodes={conceptGraph?.nodes ?? []}
-                      edges={conceptGraph?.edges ?? []}
-                      selectedId={selectedConceptId}
-                      onSelect={(id) => setSelectedConceptId(id)}
-                    />
-                  )}
+                  {concepts.isLoading ? <Skeleton className="h-64 w-full" />
+                    : concepts.isError ? <ErrorNote title="Couldn't load the concepts" error={concepts.error} onRetry={() => concepts.refetch()} />
+                    : (
+                      <GraphCanvas
+                        nodes={conceptGraph?.nodes ?? []}
+                        edges={conceptGraph?.edges ?? []}
+                        selectedId={selectedConceptId}
+                        onSelect={(id) => setSelectedConceptId(id)}
+                        emptyMessage="This topic has no concepts yet."
+                      />
+                    )}
                 </CardContent>
               </Card>
 

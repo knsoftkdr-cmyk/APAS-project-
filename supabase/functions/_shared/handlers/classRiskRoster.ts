@@ -14,6 +14,7 @@
 // ranked by composite early-warning risk in a single request.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { errorMessage } from "../errorMessage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -153,7 +154,7 @@ export async function handleClassRiskRoster(req: Request): Promise<Response> {
   } catch (e) {
     console.error("get-class-risk-roster error", e);
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: errorMessage(e) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }

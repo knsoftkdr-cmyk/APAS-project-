@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -112,7 +112,7 @@ async function describeInvokeError(err: unknown): Promise<string> {
   return err instanceof Error ? err.message : "Request failed";
 }
 
-export default function ClassMasteryDashboard() {
+export default function ClassMasteryDashboard({ embedded = false }: { embedded?: boolean } = {}) {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -323,7 +323,7 @@ export default function ClassMasteryDashboard() {
   const chapterName = chapterOptions.find((c) => c.id === numericChapterId)?.name;
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -469,6 +469,6 @@ export default function ClassMasteryDashboard() {
           </>
         )}
       </div>
-    </AppLayout>
+    </PageShell>
   );
 }

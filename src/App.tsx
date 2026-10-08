@@ -86,8 +86,6 @@ const CacheManagementDashboard = lazy(() => import("./pages/CacheManagementDashb
 const OCRProcessingDashboard = lazy(() => import("./pages/OCRProcessingDashboard"));
 const NotificationDashboard = lazy(() => import("./pages/NotificationDashboard"));
 const RiskPredictionDashboard = lazy(() => import("./pages/RiskPredictionDashboard"));
-const TeacherAtRiskStudents = lazy(() => import("./pages/TeacherAtRiskStudents"));
-const TeacherBehaviourDashboard = lazy(() => import("./pages/TeacherBehaviourDashboard"));
 const TeacherProfessionalDevelopment = lazy(() => import("./pages/TeacherProfessionalDevelopment"));
 const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicationCenter"));
 const StudentCommunicationCenter = lazy(() => import("./pages/StudentCommunicationCenter"));
@@ -111,7 +109,7 @@ const CompetencyDefinitions = lazy(() => import("./pages/CompetencyDefinitions")
 const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
 const CompetencyHeatmap = lazy(() => import("./pages/CompetencyHeatmap"));
 const StudentMasteryEngine = lazy(() => import("./pages/StudentMasteryEngine"));
-const ClassMasteryDashboard = lazy(() => import("./pages/ClassMasteryDashboard"));
+const ClassInsightsRoute = lazy(() => import("./pages/ClassInsightsRoute"));
 const KnowledgeGraphEngine = lazy(() => import("./pages/KnowledgeGraphEngine"));
 const BktCalibration = lazy(() => import("./pages/BktCalibration"));
 const AdaptiveTest = lazy(() => import("./pages/AdaptiveTest"));
@@ -153,8 +151,9 @@ const Enrichment = lazy(() => import("./pages/Enrichment"));
 const AdaptiveHomeworkGenerator = lazy(() => import("./pages/AdaptiveHomeworkGenerator"));
 const LearningVelocity = lazy(() => import("./pages/LearningVelocity"));
 const PronunciationAssessment = lazy(() => import("./pages/PronunciationAssessment"));
-const ClassVelocityDashboard = lazy(() => import("./pages/ClassVelocityDashboard"));
-const EarlyWarningDashboard = lazy(() => import("./pages/EarlyWarningDashboard"));
+const EarlyWarningRoute = lazy(() => import("./pages/EarlyWarningRoute"));
+const TeacherBehaviourDashboard = lazy(() => import("./pages/TeacherBehaviourDashboard"));
+const TeacherStudentWatch = lazy(() => import("./pages/TeacherStudentWatch"));
 import AttendanceMarking from "@/pages/AttendanceMarking";
 import StudentTransfers from "@/pages/StudentTransfers";
 import IDCardGenerator from "@/pages/IDCardGenerator";
@@ -239,7 +238,7 @@ export default function App() {
                       <Route path="/teacher-workspace" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherWorkspaceDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/virtual-classrooms" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherVirtualClassroom /></RoleGuard></ProtectedRoute>} />
                       <Route path="/virtual-classroom" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentVirtualClassroom /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/teacher-at-risk" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherAtRiskStudents /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/teacher-at-risk" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherStudentWatch /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-behaviour" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherBehaviourDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherCommunicationCenter /></RoleGuard></ProtectedRoute>} />
                       <Route path="/parent-communication" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ParentCommunicationCenter /></RoleGuard></ProtectedRoute>} />
@@ -335,7 +334,7 @@ export default function App() {
                       <Route path="/competency-assessment" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><CompetencyAssessment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-heatmap" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyHeatmap /></RoleGuard></ProtectedRoute>} />
                       <Route path="/my-mastery" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentMasteryEngine /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/class-mastery" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassMasteryDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/class-mastery" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassInsightsRoute /></RoleGuard></ProtectedRoute>} />
                       <Route path="/concept-dependencies" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><KnowledgeGraphEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/bkt-calibration" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><BktCalibration /></RoleGuard></ProtectedRoute>} />
                       <Route path="/adaptive-test" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AdaptiveTest /></RoleGuard></ProtectedRoute>} />
@@ -349,8 +348,8 @@ export default function App() {
                       <Route path="/misconceptions" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MisconceptionInsights /></RoleGuard></ProtectedRoute>} />
                       <Route path="/pronunciation" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><PronunciationAssessment /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningVelocity /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/class-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassVelocityDashboard /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/early-warning" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><EarlyWarningDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/class-velocity" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassInsightsRoute /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/early-warning" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><EarlyWarningRoute /></RoleGuard></ProtectedRoute>} />
                       <Route path="/item-bank" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><ItemBankReview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/assessment-paper-print" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentPaperPrint /></RoleGuard></ProtectedRoute>} />
                       <Route path="/exam-readiness" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><ExamReadiness /></RoleGuard></ProtectedRoute>} />
