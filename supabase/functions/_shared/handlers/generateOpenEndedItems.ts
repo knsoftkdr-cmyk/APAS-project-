@@ -31,6 +31,7 @@
 // gets that item.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { callAi, getAiConfig, type AiConfig } from "../aiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,8 +39,6 @@ const corsHeaders = {
 };
 
 const STAFF_ROLES = ["admin", "teacher", "school_admin", "principal", "hod"];
-const MODEL = "google/gemini-2.5-flash";
-const AI_URL = Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions";
 const MAX_TASKS_PER_CALL = 12;
 const CONCURRENCY = 3;
 
@@ -83,8 +82,8 @@ export async function handleGenerateOpenEndedItems(req: Request): Promise<Respon
     const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
     if (!profile || !STAFF_ROLES.includes(profile.role)) return json({ error: "Not permitted to author questions" }, 403);
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    // Same provider setup as MCQ generation: Gemini keys first, Lovable gateway only as a fallback.
+    const ai = getAiConfig();
 
     const body = await req.json().catch(() => ({}));
     const { subtopic_id, topic_id, learning_objective_id, competency_id } = body;
@@ -182,7 +181,7 @@ export async function handleGenerateOpenEndedItems(req: Request): Promise<Respon
       while (cursor < batch.length) {
         const task = batch[cursor++];
         try {
-          results.push(await runTask({ admin, apiKey, userId: user.id, task, need: task.need, difficulty, autoActivate }));
+          results.push(await runTask({ admin, ai, userId: user.id, task, need: task.need, difficulty, autoActivate }));
         } catch (e) {
           results.push({
             question_type: task.type,
@@ -253,7 +252,7 @@ async function loadLoContext(admin: ReturnType<typeof createClient>, los: Row[])
 // Generation + insertion, one (objective|competency, type) task at a time
 
 async function runTask(a: {
-  admin: ReturnType<typeof createClient>; apiKey: string; userId: string;
+  admin: ReturnType<typeof createClient>; ai: AiConfig; userId: string;
   task:
     | { kind: "lo"; type: Exclude<QuestionType, "competency">; lo: Row; ctx: LoCtx; need: number }
     | { kind: "competency"; type: "competency"; competency: Row; need: number };
@@ -265,7 +264,7 @@ async function runTask(a: {
     ? buildLoPrompt(task.type, need, task.lo, task.ctx, difficulty)
     : buildCompetencyPrompt(need, task.competency, difficulty);
 
-  const raw = await callModel(a.apiKey, prompt);
+  const { items: raw, model: usedModel } = await callModel(a.ai, prompt);
 
   const seenStems = new Set<string>();
   const clean: CleanItem[] = [];
@@ -290,7 +289,7 @@ async function runTask(a: {
       max_marks: c.maxMarks,
       difficulty: c.difficulty,
       status: autoActivate ? "active" : "draft",
-      ai_generated: true, generation_model: MODEL, created_by: a.userId,
+      ai_generated: true, generation_model: usedModel, created_by: a.userId,
     };
     if (task.kind === "lo") {
       insertRow.learning_objective_id = task.lo.id;
@@ -404,22 +403,8 @@ Return ONLY a JSON array, no prose, no markdown fences. Shape:
 
 // ─────────────────────────────────────────────────────────────────────────
 
-async function callModel(apiKey: string, prompt: string): Promise<Row[]> {
-  const resp = await fetch(AI_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: "You output strict JSON only. No markdown, no commentary." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.6,
-    }),
-  });
-  if (!resp.ok) throw new Error(`AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
-  const data = await resp.json();
-  const text: string = data?.choices?.[0]?.message?.content ?? "[]";
+async function callModel(ai: AiConfig, prompt: string): Promise<{ items: Row[]; model: string }> {
+  const { text, model } = await callAi(ai, prompt, { temperature: 0.6, maxOutputTokens: 8192 });
   const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
   let parsed: unknown;
   try {
@@ -428,7 +413,7 @@ async function callModel(apiKey: string, prompt: string): Promise<Row[]> {
     throw new Error(`Could not parse AI response as JSON: ${cleaned.slice(0, 200)}`);
   }
   if (!Array.isArray(parsed)) throw new Error("AI response was not a JSON array");
-  return parsed as Row[];
+  return { items: parsed as Row[], model };
 }
 
 function cleanItem(type: QuestionType, r: Row): CleanItem | null {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -62,6 +62,30 @@ interface QuestionRow {
 }
 interface MisconceptionRow { id: number; subtopic_id: number; misconception_text: string }
 
+/** Free-response items (question_bank_extended): short/long answer, case-based, HOTS, scenario. */
+interface ExtendedRow {
+  id: string;
+  learning_objective_id: number | null;
+  question_type: string;
+  stem: string;
+  context_passage: string | null;
+  sub_questions: { id: string; text: string; max_marks: number }[];
+  rubric: { criterion: string; description?: string; max_marks: number }[];
+  model_answer: string | null;
+  max_marks: number;
+  difficulty: string | null;
+  bloom_level: string | null;
+  status: ItemStatus;
+  ai_generated: boolean;
+}
+type GenKind = "mcq" | "descriptive" | "case_based" | "open_both";
+const EXT_TYPE_LABEL: Record<string, string> = {
+  descriptive: "Short/long answer", case_based: "Case-based", hots: "HOTS", scenario: "Scenario",
+};
+
+// deno-lint-ignore no-explicit-any
+const db = supabase as any; // question_bank_extended isn't in the generated client types
+
 const FLAG_STYLES: Record<Exclude<ReviewFlag, null | "ok">, { label: string; className: string }> = {
   review_key: { label: "Check answer key", className: "bg-red-100 text-red-800 border-red-300" },
   low_discrimination: { label: "Weak item", className: "bg-amber-100 text-amber-800 border-amber-300" },
@@ -79,7 +103,13 @@ async function invokeFn<T>(name: string, body: Record<string, unknown>): Promise
   return data as T;
 }
 
-export default function ItemBankReview() {
+
+/** Standalone pages wrap themselves in AppLayout; inside the Assessments hub the hub already provides it. */
+function Shell({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? <>{children}</> : <AppLayout>{children}</AppLayout>;
+}
+
+export default function ItemBankReview({ embedded = false }: { embedded?: boolean } = {}) {
   const queryClient = useQueryClient();
   const { profile } = useAuth();
 
@@ -176,7 +206,7 @@ export default function ItemBankReview() {
         subtopicIds = (subs ?? []).map((s: { id: number }) => s.id);
         subtopicNames = new Map((subs ?? []).map((s: { id: number; subtopic_name: string }) => [s.id, s.subtopic_name]));
       }
-      if (subtopicIds.length === 0) return { objectives: [] as LearningObjectiveRow[], items: [] as QuestionRow[], subtopicNames, misconceptions: new Map<number, string>() };
+      if (subtopicIds.length === 0) return { objectives: [] as LearningObjectiveRow[], items: [] as QuestionRow[], extItems: [] as ExtendedRow[], subtopicNames, misconceptions: new Map<number, string>() };
 
       const [{ data: objectives }, { data: mcs }] = await Promise.all([
         supabase.from("learning_objectives").select("id, subtopic_id, objective_text, bloom_level, difficulty")
@@ -189,11 +219,17 @@ export default function ItemBankReview() {
             .select("id, learning_objective_id, stem, options, correct_option, explanation, distractor_misconceptions, bloom_level, status, irt_a, irt_b, calibration_status, n_responses, n_correct, review_flag, review_note, ai_generated")
             .in("learning_objective_id", loIds).neq("status", "retired").order("created_at", { ascending: false })
         : { data: [] };
+      const { data: extItems } = loIds.length
+        ? await db.from("question_bank_extended")
+            .select("id, learning_objective_id, question_type, stem, context_passage, sub_questions, rubric, model_answer, max_marks, difficulty, bloom_level, status, ai_generated")
+            .in("learning_objective_id", loIds).neq("status", "retired").neq("question_type", "competency").order("created_at", { ascending: false })
+        : { data: [] };
       // Retired items are hidden from the default view to keep the list focused;
       // they're never served anyway and the audit trail lives in the DB.
       return {
         objectives: (objectives ?? []) as LearningObjectiveRow[],
         items: (items ?? []) as QuestionRow[],
+        extItems: (extItems ?? []) as ExtendedRow[],
         subtopicNames,
         misconceptions: new Map(((mcs ?? []) as MisconceptionRow[]).map((m) => [m.id, m.misconception_text])),
       };
@@ -206,10 +242,48 @@ export default function ItemBankReview() {
   const [targetPerObjective, setTargetPerObjective] = useState(8);
   const [autoActivate, setAutoActivate] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [genKind, setGenKind] = useState<GenKind>("mcq");
+  const [targetOpen, setTargetOpen] = useState(3);
+  const [wholeChapter, setWholeChapter] = useState(false);
+
+  /** Short/long-answer and case-based generation (edge function action "open_ended"). */
+  const runGenerateOpen = async () => {
+    const types = genKind === "open_both" ? ["descriptive", "case_based"] : [genKind];
+    const scopes: { topic_id?: number; subtopic_id?: number }[] =
+      wholeChapter && topics.length > 1 ? topics.map((t) => ({ topic_id: t.id })) : [genScope];
+    let inserted = 0, failedTasks = 0, skippedScopes = 0, lastError = "";
+    for (const scope of scopes) {
+      try {
+        // One call handles at most 12 (objective, type) tasks, so keep going until nothing remains.
+        for (let round = 0; round < 12; round++) {
+          const res = await invokeFn<{ inserted: number; remaining_tasks?: number; per_task?: { error?: string }[] }>(
+            "generate-item-bank",
+            { action: "open_ended", ...scope, question_types: types, target_per_type: targetOpen, auto_activate: autoActivate },
+          );
+          inserted += res.inserted ?? 0;
+          failedTasks += (res.per_task ?? []).filter((t) => t.error).length;
+          if (!res.remaining_tasks || !res.inserted) break;
+        }
+      } catch (e) {
+        if (scopes.length === 1) throw e; // single scope: show the real error
+        skippedScopes++; lastError = (e as Error).message; // chapter mode: keep going with the other topics
+      }
+    }
+    if (inserted === 0 && skippedScopes > 0) throw new Error(lastError || "Nothing could be generated.");
+    const what = genKind === "case_based" ? "case-based" : genKind === "descriptive" ? "short/long-answer" : "short/long and case-based";
+    toast.success(`Generated ${inserted} ${what} question${inserted === 1 ? "" : "s"}`, {
+      description: [
+        autoActivate ? "They're active and can be used in mock exams now." : "They're drafts — approve them below so mock exams can use them.",
+        skippedScopes ? `${skippedScopes} topic${skippedScopes === 1 ? "" : "s"} skipped (${lastError})` : "",
+        failedTasks ? `${failedTasks} item set${failedTasks === 1 ? "" : "s"} failed — run again to retry.` : "",
+      ].filter(Boolean).join(" "),
+    });
+  };
 
   const runGenerate = async () => {
     setGenerating(true);
     try {
+      if (genKind !== "mcq") { await runGenerateOpen(); refresh(); return; }
       const res = await invokeFn<{ inserted: number; objectives_processed: number; remaining_objectives: number }>(
         "generate-item-bank", { ...genScope, target_per_objective: targetPerObjective, auto_activate: autoActivate },
       );
@@ -283,6 +357,16 @@ export default function ItemBankReview() {
     refresh();
   };
 
+  const setExtStatus = async (ids: string[], status: ItemStatus) => {
+    if (!ids.length) return;
+    setBusyItem(ids[0]);
+    const { error } = await db.from("question_bank_extended").update({ status }).in("id", ids);
+    setBusyItem(null);
+    if (error) { toast.error("Couldn't update those questions", { description: error.message }); return; }
+    if (ids.length > 1) toast.success(`${ids.length} questions approved`);
+    refresh();
+  };
+
   const grouped = useMemo(() => {
     if (!bankQuery.data) return [];
     const byLo = new Map<number, QuestionRow[]>();
@@ -291,7 +375,24 @@ export default function ItemBankReview() {
       arr.push(it);
       byLo.set(it.learning_objective_id, arr);
     }
-    return bankQuery.data.objectives.map((lo) => ({ lo, items: byLo.get(lo.id) ?? [] }));
+    const extByLo = new Map<number, ExtendedRow[]>();
+    for (const it of bankQuery.data.extItems) {
+      if (it.learning_objective_id == null) continue;
+      const arr = extByLo.get(it.learning_objective_id) ?? [];
+      arr.push(it);
+      extByLo.set(it.learning_objective_id, arr);
+    }
+    return bankQuery.data.objectives.map((lo) => ({ lo, items: byLo.get(lo.id) ?? [], ext: extByLo.get(lo.id) ?? [] }));
+  }, [bankQuery.data]);
+
+  const extTotals = useMemo(() => {
+    const ext = bankQuery.data?.extItems ?? [];
+    const count = (type: string, status: ItemStatus) => ext.filter((i) => i.question_type === type && i.status === status).length;
+    return {
+      descActive: count("descriptive", "active"), descDraft: count("descriptive", "draft"),
+      caseActive: count("case_based", "active"), caseDraft: count("case_based", "draft"),
+      draftIds: ext.filter((i) => i.status === "draft").map((i) => i.id),
+    };
   }, [bankQuery.data]);
 
   const totals = useMemo(() => {
@@ -304,7 +405,7 @@ export default function ItemBankReview() {
   }, [bankQuery.data]);
 
   return (
-    <AppLayout>
+    <Shell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -385,22 +486,48 @@ export default function ItemBankReview() {
               <Card>
                 <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Sparkles className="h-4 w-4 text-indigo-600" /> Generate questions</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <label className="text-xs text-muted-foreground shrink-0">Question type</label>
+                    <Select value={genKind} onValueChange={(v) => setGenKind(v as GenKind)}>
+                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mcq">Multiple choice (MCQ)</SelectItem>
+                        <SelectItem value="descriptive">Short / long answer</SelectItem>
+                        <SelectItem value="case_based">Case-based</SelectItem>
+                        <SelectItem value="open_both">Short/long + Case-based</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    Tops up every learning objective in {subtopicId ? "this concept" : "this topic"} to the target below. Already-full objectives are skipped.
+                    {genKind === "mcq"
+                      ? <>Tops up every learning objective in {subtopicId ? "this concept" : "this topic"} to the target below. Already-full objectives are skipped.</>
+                      : <>Writes rubric-graded questions (with a model answer) for every learning objective in {wholeChapter && topics.length > 1 ? "this chapter" : subtopicId ? "this concept" : "this topic"}. Needed for mock-exam sections B, C and D.</>}
                   </p>
                   <div className="flex items-center gap-3">
-                    <label className="text-xs text-muted-foreground shrink-0">Target per objective</label>
-                    <Input type="number" min={2} max={12} value={targetPerObjective}
-                      onChange={(e) => setTargetPerObjective(Math.min(12, Math.max(2, Number(e.target.value) || 8)))}
-                      className="h-8 w-20" />
+                    <label className="text-xs text-muted-foreground shrink-0">{genKind === "mcq" ? "Target per objective" : "Target per type, per objective"}</label>
+                    {genKind === "mcq" ? (
+                      <Input type="number" min={2} max={12} value={targetPerObjective}
+                        onChange={(e) => setTargetPerObjective(Math.min(12, Math.max(2, Number(e.target.value) || 8)))}
+                        className="h-8 w-20" />
+                    ) : (
+                      <Input type="number" min={1} max={8} value={targetOpen}
+                        onChange={(e) => setTargetOpen(Math.min(8, Math.max(1, Number(e.target.value) || 3)))}
+                        className="h-8 w-20" />
+                    )}
                   </div>
+                  {genKind !== "mcq" && topics.length > 1 && (
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                      <Checkbox checked={wholeChapter} onCheckedChange={(v) => setWholeChapter(v === true)} />
+                      Do the whole chapter ({topics.length} topics), not just the selected topic
+                    </label>
+                  )}
                   <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
                     <Checkbox checked={autoActivate} onCheckedChange={(v) => setAutoActivate(v === true)} />
                     Activate immediately (skip draft review)
                   </label>
                   <Button size="sm" onClick={runGenerate} disabled={generating} className="w-full">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                    Generate
+                    {generating ? (genKind === "mcq" ? "Generating…" : "Generating — this can take a minute…") : "Generate"}
                   </Button>
                 </CardContent>
               </Card>
@@ -432,6 +559,13 @@ export default function ItemBankReview() {
               <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300">{totals.active} active</Badge>
               <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-300">{totals.draft} draft</Badge>
               {totals.flagged > 0 && <Badge variant="outline" className="bg-red-100 text-red-800 border-red-300">{totals.flagged} need review</Badge>}
+              <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300">Short/long: {extTotals.descActive} active · {extTotals.descDraft} draft</Badge>
+              <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300">Case-based: {extTotals.caseActive} active · {extTotals.caseDraft} draft</Badge>
+              {extTotals.draftIds.length > 0 && (
+                <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busyItem != null} onClick={() => setExtStatus(extTotals.draftIds, "active")}>
+                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve all {extTotals.draftIds.length} short/case drafts
+                </Button>
+              )}
             </div>
 
             {bankQuery.isLoading && (
@@ -448,9 +582,10 @@ export default function ItemBankReview() {
 
             {bankQuery.data && grouped.length > 0 && (
               <Accordion type="multiple" className="space-y-2">
-                {grouped.map(({ lo, items }) => {
+                {grouped.map(({ lo, items, ext }) => {
                   const active = items.filter((i) => i.status === "active").length;
                   const draft = items.filter((i) => i.status === "draft").length;
+                  const extActive = ext.filter((i) => i.status === "active").length;
                   const flagged = items.filter((i) => i.status === "active" && i.review_flag && i.review_flag !== "ok").length;
                   return (
                     <AccordionItem key={lo.id} value={String(lo.id)} className="border rounded-xl px-4">
@@ -467,14 +602,24 @@ export default function ItemBankReview() {
                             <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-300">{active}</Badge>
                             <Badge variant="outline" className="text-xs bg-slate-100 text-slate-700 border-slate-300">{draft}</Badge>
                             {flagged > 0 && <Badge variant="outline" className="text-xs bg-red-100 text-red-800 border-red-300">{flagged}</Badge>}
+                            {ext.length > 0 && <Badge variant="outline" className="text-xs bg-sky-50 text-sky-700 border-sky-300" title="Short/long + case-based questions (active / total)">{extActive}/{ext.length} S+C</Badge>}
                           </div>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
-                        {items.length === 0 ? (
+                        {items.length === 0 && ext.length === 0 ? (
                           <p className="text-xs text-muted-foreground py-2">No questions yet — use Generate above.</p>
                         ) : (
                           <div className="space-y-3 pb-2">
+                            {ext.length > 0 && <p className="text-xs font-semibold text-muted-foreground pt-1">Short-answer &amp; case-based</p>}
+                            {ext.map((item) => (
+                              <ExtendedItemCard
+                                key={item.id} item={item} busy={busyItem === item.id}
+                                onApprove={() => setExtStatus([item.id], "active")}
+                                onRetire={() => setExtStatus([item.id], "retired")}
+                              />
+                            ))}
+                            {items.length > 0 && ext.length > 0 && <p className="text-xs font-semibold text-muted-foreground pt-1">Multiple choice</p>}
                             {items.map((item) => (
                               <ItemCard
                                 key={item.id} item={item} busy={busyItem === item.id}
@@ -496,7 +641,7 @@ export default function ItemBankReview() {
           </>
         )}
       </div>
-    </AppLayout>
+    </Shell>
   );
 }
 
@@ -593,6 +738,71 @@ function ItemCard({ item, busy, misconceptions, onApprove, onRetire, onFixKey, o
           )}
         </div>
       )}
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────
+function ExtendedItemCard({ item, busy, onApprove, onRetire }: {
+  item: ExtendedRow; busy: boolean; onApprove: () => void; onRetire: () => void;
+}) {
+  return (
+    <div className="rounded-xl border-2 border-border p-3.5 space-y-2.5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1.5 min-w-0">
+          <p className="text-sm font-medium leading-snug">{item.stem}</p>
+          {item.context_passage && (
+            <p className="text-xs leading-relaxed rounded-lg bg-muted/50 border px-2.5 py-2">{item.context_passage}</p>
+          )}
+          {item.sub_questions.length > 0 && (
+            <ol className="space-y-1">
+              {item.sub_questions.map((q) => (
+                <li key={q.id} className="text-xs flex gap-2">
+                  <span className="font-semibold uppercase shrink-0">({q.id})</span>
+                  <span className="flex-1">{q.text}</span>
+                  <span className="text-muted-foreground shrink-0">[{q.max_marks}]</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+        <Badge variant="outline" className={cn("text-xs shrink-0", item.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-300" : item.status === "draft" ? "bg-slate-100 text-slate-700 border-slate-300" : "bg-muted text-muted-foreground")}>
+          {item.status}
+        </Badge>
+      </div>
+
+      <div className="flex items-center gap-1.5 flex-wrap">
+        <Badge variant="outline" className="text-xs bg-sky-50 text-sky-700 border-sky-300">{EXT_TYPE_LABEL[item.question_type] ?? item.question_type}</Badge>
+        <Badge variant="outline" className="text-xs">{item.max_marks} marks</Badge>
+        {item.difficulty && <Badge variant="outline" className="text-xs capitalize">{item.difficulty}</Badge>}
+        {item.bloom_level && <Badge variant="outline" className="text-xs capitalize">{item.bloom_level}</Badge>}
+        {item.ai_generated && <Badge variant="outline" className="text-xs">AI-authored</Badge>}
+      </div>
+
+      {(item.model_answer || item.rubric.length > 0) && (
+        <details className="text-xs">
+          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">Model answer &amp; marking scheme (teachers only)</summary>
+          <div className="mt-2 space-y-2">
+            {item.model_answer && <p className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-2 leading-relaxed">{item.model_answer}</p>}
+            {item.rubric.map((r, i) => (
+              <div key={i} className="flex gap-2">
+                <span className="flex-1"><span className="font-medium">{r.criterion}</span>{r.description ? ` — ${r.description}` : ""}</span>
+                <span className="text-muted-foreground shrink-0">{r.max_marks}</span>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      <div className="flex gap-2 pt-0.5">
+        {item.status === "draft" && (
+          <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busy} onClick={onApprove}>
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
+          </Button>
+        )}
+        <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
+          {item.status === "draft" ? <><XCircle className="h-3.5 w-3.5 mr-1" /> Discard</> : <><Archive className="h-3.5 w-3.5 mr-1" /> Retire</>}
+        </Button>
+      </div>
     </div>
   );
 }

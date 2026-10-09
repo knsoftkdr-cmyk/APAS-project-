@@ -7,7 +7,7 @@
 //   generate-assessment-paper  (exam_pattern_code + syllabus_weightage)
 //   assign-assessment-paper    (is_mock / strict_timer / opens_at)
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +53,13 @@ async function fetchAll(build: (from: number, to: number) => PromiseLike<{ data:
 // deno-lint-ignore no-explicit-any
 const db = supabase as any;
 
-export default function MockExamBuilder() {
+
+/** Standalone pages wrap themselves in AppLayout; inside the Assessments hub the hub already provides it. */
+function Shell({ embedded, children }: { embedded: boolean; children: ReactNode }) {
+  return embedded ? <>{children}</> : <AppLayout>{children}</AppLayout>;
+}
+
+export default function MockExamBuilder({ embedded = false }: { embedded?: boolean } = {}) {
   const { profile } = useAuth();
   const { data: patterns, isLoading: patternsLoading, error: patternsError } = useExamPatterns();
   const generate = useGenerateMockExam();
@@ -213,7 +219,7 @@ export default function MockExamBuilder() {
   const short = result ? result.assembled_total_marks < (pattern?.total_marks ?? 0) : false;
 
   return (
-    <AppLayout>
+    <Shell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-rose-600 to-orange-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -303,7 +309,7 @@ export default function MockExamBuilder() {
               </div>
             )}
             {chapterStats && usableCount > 0 && usableCount < chapters.length && (
-              <p className="text-xs text-muted-foreground">Chapters marked “No concepts yet” or “No questions for this pattern” can't be ticked until they're set up.</p>
+              <p className="text-xs text-muted-foreground">Chapters marked “No concepts yet” or “No questions for this pattern” can't be ticked until they're set up. Add short-answer and case-based questions in the <Link to="/item-bank" className="underline font-medium">Item Bank</Link> tab.</p>
             )}
             {missingTypes.length > 0 && (
               <div className="text-xs rounded-md bg-amber-50 border border-amber-200 p-3 text-amber-800">
@@ -354,6 +360,6 @@ export default function MockExamBuilder() {
           </Card>
         )}
       </div>
-    </AppLayout>
+    </Shell>
   );
 }
