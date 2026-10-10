@@ -10,6 +10,7 @@ import knsoftLogo from "@/assets/knsoft-logo.png";
 import LoginSplash from "./LoginSplash";
 import { getPendingFCMToken } from "@/services/pushNotifications";
 import { saveFCMToken } from "@/services/deviceService";
+import { reportSecurityEvent } from "@/lib/securityEvents";
 
 const Login = () => {
   const [identifier, setIdentifier] = useState("");
@@ -45,6 +46,7 @@ if (showSplash) {
       });
 
       if (error || !data?.success || !data?.session?.access_token || !data?.session?.refresh_token) {
+        reportSecurityEvent({ event: "login_failed", identifier, role_attempted: "student" });
         toast({
           title: "Login failed",
           description: data?.error || "Invalid login. Use your Student ID and either your existing password or your Date of Birth in DDMMYYYY format.",
@@ -65,6 +67,7 @@ if (showSplash) {
         return;
       }
 
+      reportSecurityEvent({ event: "login_success" });
       // ✅ Record student login history
       await supabase.from("login_history").insert({
         user_id: data.session.user.id,
@@ -106,6 +109,7 @@ setLoading(false);
     const { data, error } = await supabase.auth.signInWithPassword({ email: identifier, password });
 
     if (error) {
+      reportSecurityEvent({ event: "login_failed", identifier, role_attempted: selectedRole });
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
       setLoading(false);
       return;
@@ -144,11 +148,13 @@ if (!role || !erpAccessOk || (selectedRole !== "ERP" && !roleMap[selectedRole]?.
     variant: "destructive",
   });
 
+  reportSecurityEvent({ event: "login_failed", identifier, role_attempted: selectedRole });
   await supabase.auth.signOut();
   setLoading(false);
   return;
 }
 
+    reportSecurityEvent({ event: "login_success" });
     // ✅ Record staff login history with role
     await supabase.from("login_history").insert({
       user_id: data.session.user.id,

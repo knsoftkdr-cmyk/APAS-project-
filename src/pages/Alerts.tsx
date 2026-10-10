@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { reportSecurityEvent } from "@/lib/securityEvents";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,8 @@ const exportCSV = async () => {
     .join("\n");
 
   const csvContent = header + rows;
+
+  reportSecurityEvent({ event: "data_export", resource: "learning_alerts", count: filtered.length });
 
   // Browser
   if (!Capacitor.isNativePlatform()) {

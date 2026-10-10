@@ -4,6 +4,7 @@ import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
 import { supabase } from "@/integrations/supabase/client";
 import { getGradeSortRank } from "@/types/admission";
+import { reportSecurityEvent } from "@/lib/securityEvents";
 
 interface SelectedApplicantRow {
   full_name: string;
@@ -61,5 +62,6 @@ export async function exportSelectedApplicants(schoolId: string): Promise<{ erro
     XLSX.writeFile(workbook, fileName);
   }
 
+  reportSecurityEvent({ event: "data_export", resource: "admission_applicants", count: rows.length });
   return { error: null };
 }

@@ -6,7 +6,8 @@
 // here only controls UI affordances (edit buttons, etc.), it is
 // NOT a security boundary by itself.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { reportRecordView } from "@/lib/securityEvents";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   User,
@@ -107,6 +108,11 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
   const [activeTab, setActiveTab] = useState<string>("overview");
   const canEdit = role === "student" || role === "parent";
   const canDelete = role === "parent";
+
+  // Security anomaly detection: count staff opening student records (not students/parents viewing their own).
+  useEffect(() => {
+    if (studentId && role !== "student" && role !== "parent") reportRecordView("student_profile", studentId);
+  }, [studentId, role]);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["student-overview", studentId],

@@ -218,3 +218,67 @@ Bodies: `{ action: "g2_state", tz_offset_minutes? }`, `{ action: "g2_event", rou
 * Limits: round results come from the browser, so XP is bounded rather than proven (min 3 questions for full XP, 200 round-XP/day cap, `dedupe_key` per
   round). The legacy client-side `awardXp()` path still writes XP directly and can still use the UTC day for `last_activity_date`.
 * Deploy: apply the migration, then redeploy `update-mastery` only (`supabase functions deploy update-mastery`). No new functions.
+
+## Security Anomaly Detection (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Record a login / failed login / data export / record view | log-audit | **mode**: `sec_record` |
+| Anomaly alerts + real sign-in activity for a school (or all schools, platform admin) | log-audit | **mode**: `sec_list` |
+| Acknowledge / resolve / mark false positive / reopen an alert | log-audit | **mode**: `sec_update` |
+
+Note the key: `log-audit` already uses `action` for the audit action name, so this anchor routes on `mode`
+(`routeMerged(req, MERGED_ROUTES, "mode")`). A body with no matching `mode` is the original audit-log insert, unchanged.
+
+Handler: `_shared/handlers/securityAnomaly.ts`; pure rules: `_shared/securityAnomalyModel.ts` (unit-tested in
+`src/test/securityAnomalyModel.test.ts`). Storage: `security_events`, `security_alerts` (migration 20261017000000, RLS on,
+no client policies). Works without the migration: `sec_record` answers ok with `persistence: "unavailable"`, `sec_list`
+returns an empty list and the panel says detection is not switched on.
+
+Rules (deterministic, no AI call, thresholds in `THRESHOLDS`): brute force (5 failures / 15 min on one id), password spray
+(8 ids from one address / 15 min), success after 3+ failures, new device AND network for someone with 3+ earlier logins
+(high for admin/principal), 3 networks in an hour, overnight staff login that is unusual for that person (IST), many exports
+in an hour (>= 5 and 3x the user's own peak), one very large export (500 / 5000 rows), mass record access (30 distinct
+records/hour for staff, 60 for leadership, or 3x own peak).
+
+* Events come from: `Login.tsx` (success + failure), `exportSelectedApplicants.ts` and `Alerts.tsx` CSV (exports), and
+  `Student360Profile.tsx` (staff opening a student record, once per record per 10 min). Client helper: `src/lib/securityEvents.ts`
+  (fire-and-forget; can never block the action it reports). Add more by calling `reportSecurityEvent({ event: "data_export", resource, count })`.
+* Alerts are raised when an event is recorded and re-checked on every `sec_list`. `dedupe_key` + `ignoreDuplicates` means a
+  re-scan never duplicates an alert and never reopens one a person already reviewed. Reviews are copied into `audit_logs`
+  (`security_alert_reviewed`) so the Security Center "All Logs" tab shows them.
+* Access: admin / principal / school_admin -> their own school only; knsoft_admin -> all schools. Everyone else gets 403.
+* Privacy: login ids are stored as a SHA-256 hash plus a masked hint (`te***`); passwords are never seen; device is a coarse
+  "browser|os" label. Failed logins are unauthenticated by nature, so they are rate-limited to 100 stored per address per hour.
+* UI: an "Anomaly Alerts" tab in the existing Security Center (`SecurityCenter.tsx`, admin / principal) and in the existing
+  Security Dashboard (`SecurityDashboard.tsx`, knsoft_admin). **No sidebar change.** Panel: `components/security/SecurityAnomalyPanel.tsx`.
+* Redeploy only `log-audit` (it now imports `_shared`, so deploy with the CLI, not the dashboard editor). No new function.
+* Retention: `public.prune_security_data()` (events 180 days, closed alerts 1 year); schedule with pg_cron if wanted.
+
+## Session & Device Management (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Register this device + learn if its login was ended | log-audit | **mode**: `sess_heartbeat` |
+| List my active devices | log-audit | **mode**: `sess_list` |
+| Sign one of my other devices out | log-audit | **mode**: `sess_revoke` |
+| Sign out all my other devices | log-audit | **mode**: `sess_revoke_others` |
+| Admin: sign a user out everywhere | log-audit | **mode**: `sess_admin_revoke_user` |
+
+Handler: `_shared/handlers/sessionManagement.ts`; pure helpers: `_shared/sessionModel.ts` (tests: `src/test/sessionModel.test.ts`).
+Storage: Supabase's own `auth.sessions` (via service-role-only RPCs `list_auth_sessions` / `revoke_auth_sessions`) plus
+`user_sessions` for labels and a revoke trail (migration 20261018000000, RLS on, no client policies). Works without the
+migration: heartbeat answers ok, the panel says device management is not switched on.
+
+* Revoking deletes the row in `auth.sessions`, which cascades to its refresh tokens, so the device cannot renew its login.
+  Its current access token verifies until it expires (Supabase default 1 hour), so `useSessionGuard` (mounted in `AuthContext`)
+  sends a heartbeat every 5 minutes and when the tab becomes visible, and signs the device out the moment the server says "revoked".
+  It never signs out on a network error: only on an explicit `revoked`, or a 401/403 that `auth.getUser()` confirms.
+* The current device is identified by the `session_id` claim of the caller's JWT; it can't be revoked from the list and
+  "sign out others" refuses to run if the claim is missing.
+* Access: everyone manages their own devices. `sess_admin_revoke_user` needs admin / principal / school_admin (same school
+  only, never a knsoft_admin) or knsoft_admin. Every revoke is copied to `audit_logs` (`session_revoked`, `session_revoked_by_admin`).
+* UI: a "My Devices" tab in the existing Security Center (`/security`, all roles) and Security Dashboard (knsoft_admin); a
+  "Sign out everywhere" button on Anomaly Alerts that name a user. **No sidebar change.**
+* Redeploy only `log-audit`. No new function. Retention: `public.prune_session_data()` (90 days).
+* Not touched: push tokens in `user_devices`. A revoked phone keeps its FCM token until that table is cleaned up separately.

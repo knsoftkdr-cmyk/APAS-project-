@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSessionGuard } from "@/hooks/useSessionGuard";
 
 interface Profile {
   id: string;
@@ -117,6 +118,9 @@ const fetchProfile = async (userId: string) => {
     subscription.unsubscribe(); // ✅ actually runs now
   };
 }, [isSupabaseInitialized]);
+
+  // Session & Device Management: register this device and honour "sign out from another device".
+  useSessionGuard(session);
 
   const signOut = async () => {
     await supabase.auth.signOut();

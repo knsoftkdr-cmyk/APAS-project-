@@ -9,8 +9,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Shield, Activity, AlertTriangle, Download } from "lucide-react";
 import { format } from "date-fns";
 import securitycenterbanner from "@/assets/securitycenter-banner.png";
+import { useAuth } from "@/contexts/AuthContext";
+import { SecurityAnomalyPanel } from "@/components/security/SecurityAnomalyPanel";
+import { MyDevicesPanel } from "@/components/security/MyDevicesPanel";
 
 const SecurityCenter = () => {
+  const { profile } = useAuth();
+  // The server enforces this too; the tab is only shown to people who can use it.
+  const canSeeAnomalies = profile?.role === "admin" || profile?.role === "principal";
   const { data: auditLogs, isLoading } = useQuery({
     queryKey: ["audit-logs"],
     queryFn: async () => {
@@ -120,6 +126,10 @@ const SecurityCenter = () => {
         <TabsList>
           <TabsTrigger value="all" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">All Logs</TabsTrigger>
           <TabsTrigger value="suspicious" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Suspicious Activity</TabsTrigger>
+          <TabsTrigger value="devices" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">My Devices</TabsTrigger>
+          {canSeeAnomalies && (
+            <TabsTrigger value="anomalies" className="gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Anomaly Alerts</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="all">
@@ -181,6 +191,10 @@ const SecurityCenter = () => {
             </Card>
           )}
         </TabsContent>
+        <TabsContent value="devices"><MyDevicesPanel /></TabsContent>
+        {canSeeAnomalies && (
+          <TabsContent value="anomalies"><SecurityAnomalyPanel /></TabsContent>
+        )}
       </Tabs>
       </div>
     </AppLayout>

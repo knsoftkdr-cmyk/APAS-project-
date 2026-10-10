@@ -16,6 +16,8 @@ import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Shield, AlertTriangle, Users, Activity, Search, Lock, Eye, CheckCircle } from "lucide-react";
 import securitybanner from "@/assets/security-banner.png";
+import { SecurityAnomalyPanel } from "@/components/security/SecurityAnomalyPanel";
+import { MyDevicesPanel } from "@/components/security/MyDevicesPanel";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface AuditLog {
@@ -63,7 +65,7 @@ const SecurityDashboard = () => {
   const [rolePerms, setRolePerms] = useState<RolePermRow[]>([]);
   const [loginEvents, setLoginEvents] = useState<LoginEvent[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState<"overview" | "audit" | "sessions" | "roles">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "audit" | "sessions" | "roles" | "anomalies" | "devices">("overview");
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -162,6 +164,8 @@ const SecurityDashboard = () => {
     { id: "sessions", label: "Login Sessions" },
     { id: "audit", label: "Audit Logs" },
     { id: "roles", label: "Role Permissions" },
+    { id: "anomalies", label: "Anomaly Alerts" },
+    { id: "devices", label: "My Devices" },
   ] as const;
 
   return (
@@ -427,6 +431,10 @@ const SecurityDashboard = () => {
         )}
 
         {/* ── ROLE PERMISSIONS ──────────────────────────────────────────────── */}
+        {activeTab === "anomalies" && <SecurityAnomalyPanel />}
+
+        {activeTab === "devices" && <MyDevicesPanel />}
+
         {activeTab === "roles" && (
           <Card>
             <CardHeader>
