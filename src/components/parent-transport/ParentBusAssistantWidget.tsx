@@ -13,6 +13,8 @@ import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
 import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
 import robotAvatar from "@/assets/ai-assistant-robot.png";
+import { cleanForSpeech } from "@/lib/speechText";
+import { speakChunked } from "@/lib/speakChunked";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -164,6 +166,12 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   // Questions about their child's own records always come back as text
   // regardless of this - see the parent-assistant edge function.
   const [answerMode, setAnswerMode] = useState<AnswerMode>("text");
+  // Voice/recognition callbacks are created once (useEffect []), so they capture
+  // the FIRST render's state. Read the latest via refs so conversation memory works.
+  const messagesRef = useRef<ChatMessage[]>([]);
+  const answerModeRef = useRef<AnswerMode>("text");
+  messagesRef.current = messages;
+  answerModeRef.current = answerMode;
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const resultHandledRef = useRef(false);
@@ -389,6 +397,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
   };
 
   const speak = (text: string) => {
+    text = cleanForSpeech(text); // never read * # _ etc. aloud
     const myGeneration = ++speechGenerationRef.current;
 
     if (!ttsSupported || !voiceModeRef.current) {
@@ -404,6 +413,17 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       // resume listening - keeps them in lockstep.
       lipSync.start(text, estimatedMs);
 
+      let nativeDone = false;
+      const finishNative = () => {
+        if (nativeDone) return;
+        nativeDone = true;
+        if (speechGenerationRef.current !== myGeneration) return; // superseded
+        lipSync.stop();
+        // short delay so the speaker tail isn't picked up as the next question
+        setTimeout(() => {
+          if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
+        }, 350);
+      };
       TextToSpeech.speak({
         text,
         lang: "en-US",
@@ -411,59 +431,36 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         pitch: 1.05,
         volume: 1,
         category: "playback",
-      }).catch(() => {});
-
-      setTimeout(() => {
-        if (speechGenerationRef.current !== myGeneration) return; // superseded
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      }, estimatedMs);
+      }).then(() => finishNative()).catch(() => finishNative());
+      // Fallback only if the plugin never resolves - generous so long answers aren't cut off.
+      setTimeout(finishNative, Math.round(estimatedMs * 1.8) + 4000);
       return;
     }
 
     const doSpeak = () => {
       if (speechGenerationRef.current !== myGeneration) return; // superseded
-      const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
-      const preferredVoice = pickFemaleVoice(); if (preferredVoice) utterance.voice = preferredVoice;
-      utterance.rate = 0.95;
-      utterance.pitch = 1.05;
-      utterance.onstart = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        setVoiceState("speaking");
-        // Browsers never expose speechSynthesis audio to the Web Audio API,
-        // so mouth movement is scheduled against an estimated duration and
-        // corrected live via onboundary below.
-        lipSync.start(text, estimateSpeechDurationMs(text));
-      };
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        lipSync.reanchor(event.charIndex ?? 0, text.length);
-      };
-      utterance.onend = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      utterance.onerror = (e: any) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (e?.error === "interrupted" || e?.error === "canceled") return;
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      window.speechSynthesis.speak(utterance);
-      setTimeout(() => {
-        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-      }, 60);
-      setTimeout(() => {
-        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
-          utteranceRef.current = null;
+      // Speak in short chunks so long answers are never cut off, and only open the
+      // mic after the LAST chunk has really finished (see src/lib/speakChunked.ts).
+      speakChunked(text, {
+        voice: pickFemaleVoice(),
+        rate: 0.95,
+        pitch: 1.05,
+        isCurrent: () => speechGenerationRef.current === myGeneration,
+        onUtterance: (u) => { utteranceRef.current = u; },
+        onStart: () => {
+          setVoiceState("speaking");
+          lipSync.start(text, estimateSpeechDurationMs(text));
+        },
+        onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
+        onDone: () => {
           lipSync.stop();
-          startListeningSafely();
-        }
-      }, 15000);
+          if (voiceModeRef.current) startListeningSafely();
+        },
+        onFail: () => {
+          lipSync.stop();
+          if (voiceModeRef.current) startListeningSafely();
+        },
+      });
     };
     window.speechSynthesis.cancel();
     setTimeout(doSpeak, 80);
@@ -528,8 +525,8 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         supabase.functions.invoke("parent-assistant", {
           body: {
             message: text,
-            mode: answerMode,
-            history: messages.slice(-6).map((m) => ({ role: m.role, text: m.text })),
+            mode: answerModeRef.current,
+            history: messagesRef.current.slice(-10).map((m) => ({ role: m.role, text: m.text })),
           },
         }),
         20000,

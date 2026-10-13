@@ -9,12 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Sparkles, Wand2, Loader2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
+import { useClassSubjectPicker } from "@/hooks/useClassSubjectPicker";
+import { HomeworkBatches } from "@/components/adaptive-homework/HomeworkResults";
 import { supabase } from "@/integrations/supabase/client";
 import { useGenerateAdaptiveHomework, useAdaptiveHomeworkAssignments, type MasteryBand } from "@/hooks/useAdaptiveHomework";
 
-interface ClassOption { id: string; label: string }
-interface BookOption { id: number; subject: string; class_name: string | null }
 interface ChapterOption { id: number; chapter_name: string }
 
 const BAND_META: Record<MasteryBand, { label: string; className: string }> = {
@@ -25,48 +24,17 @@ const BAND_META: Record<MasteryBand, { label: string; className: string }> = {
 };
 
 export default function AdaptiveHomeworkGenerator() {
-  const { profile } = useAuth();
-  const [classes, setClasses] = useState<ClassOption[]>([]);
-  const [books, setBooks] = useState<BookOption[]>([]);
+  // Classes = this school's classes; Subjects = only the textbooks that belong to the chosen class.
+  const {
+    classes, classId, setClassId, subjects, bookId, setBookId, loadingClasses, loadingSubjects,
+  } = useClassSubjectPicker();
   const [chapters, setChapters] = useState<ChapterOption[]>([]);
-  const [classId, setClassId] = useState("");
-  const [bookId, setBookId] = useState("");
   const [chapterId, setChapterId] = useState("");
   const [title, setTitle] = useState("");
   const [itemsPerStudent, setItemsPerStudent] = useState(6);
-  const [loadingOptions, setLoadingOptions] = useState(true);
 
   const generate = useGenerateAdaptiveHomework();
   const { data: pastAssignments, refetch: refetchAssignments } = useAdaptiveHomeworkAssignments(classId || undefined);
-
-  useEffect(() => {
-    async function loadOptions() {
-      setLoadingOptions(true);
-      const isStaffAdmin = ["admin", "principal", "school_admin", "hod"].includes(profile?.role ?? "");
-
-      const classQuery = isStaffAdmin
-        ? supabase.from("classes").select("id, name, section")
-        : supabase.from("class_teachers").select("class_id, classes(id, name, section)").eq("teacher_id", profile?.id ?? "");
-
-      const [{ data: classData }, { data: bookData }] = await Promise.all([
-        classQuery,
-        supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject"),
-      ]);
-
-      const classOptions: ClassOption[] = isStaffAdmin
-        // deno-lint-ignore no-explicit-any
-        ? (classData as any[] ?? []).map((c) => ({ id: c.id, label: `${c.name}${c.section ? " - " + c.section : ""}` }))
-        // deno-lint-ignore no-explicit-any
-        : (classData as any[] ?? [])
-            .filter((c) => c.classes)
-            .map((c) => ({ id: c.classes.id, label: `${c.classes.name}${c.classes.section ? " - " + c.classes.section : ""}` }));
-
-      setClasses(classOptions);
-      setBooks((bookData as BookOption[]) ?? []);
-      setLoadingOptions(false);
-    }
-    if (profile?.id) loadOptions();
-  }, [profile?.id, profile?.role]);
 
   useEffect(() => {
     setChapterId("");
@@ -118,19 +86,19 @@ export default function AdaptiveHomeworkGenerator() {
             <div className="grid sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Class</Label>
-                <Select value={classId} onValueChange={setClassId} disabled={loadingOptions}>
-                  <SelectTrigger><SelectValue placeholder="Choose a class" /></SelectTrigger>
+                <Select value={classId} onValueChange={setClassId} disabled={loadingClasses || classes.length === 0}>
+                  <SelectTrigger><SelectValue placeholder={loadingClasses ? "Loading classes…" : classes.length === 0 ? "No classes found" : "Choose a class"} /></SelectTrigger>
                   <SelectContent>{classes.map((c) => <SelectItem key={c.id} value={c.id}>{c.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
                 <Label>Subject</Label>
-                <Select value={bookId} onValueChange={setBookId} disabled={loadingOptions}>
-                  <SelectTrigger><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+                <Select value={bookId} onValueChange={setBookId} disabled={!classId || loadingSubjects || subjects.length === 0}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={!classId ? "Choose a class first" : loadingSubjects ? "Loading subjects…" : subjects.length === 0 ? "No subjects for this class" : "Choose a subject"} />
+                  </SelectTrigger>
                   <SelectContent>
-                    {books.map((b) => (
-                      <SelectItem key={b.id} value={String(b.id)}>{b.subject} {b.class_name ? `(${b.class_name})` : ""}</SelectItem>
-                    ))}
+                    {subjects.map((sub) => <SelectItem key={sub.bookId} value={String(sub.bookId)}>{sub.subject}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -176,32 +144,7 @@ export default function AdaptiveHomeworkGenerator() {
           </CardContent>
         </Card>
 
-        {classId && (pastAssignments ?? []).length > 0 && (
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Previously generated for this class</CardTitle></CardHeader>
-            <CardContent className="space-y-2">
-              {(pastAssignments ?? []).map((a) => (
-                <div key={a.id} className="flex items-center justify-between text-sm border-b last:border-0 pb-2 last:pb-0">
-                  <div>
-                    <p className="font-medium">{a.title}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(a.created_at).toLocaleDateString()} · {a.student_count} students</p>
-                  </div>
-                  <div className="flex flex-wrap gap-1 justify-end">
-                    {(Object.keys(BAND_META) as MasteryBand[]).map((band) => {
-                      const count = a.band_counts?.[band] ?? 0;
-                      if (!count) return null;
-                      return (
-                        <Badge key={band} variant="outline" className={cn("text-[10px]", BAND_META[band].className)}>
-                          {count}
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+        {classId && (pastAssignments ?? []).length > 0 && <HomeworkBatches assignments={pastAssignments ?? []} />}
       </div>
     </AppLayout>
   );

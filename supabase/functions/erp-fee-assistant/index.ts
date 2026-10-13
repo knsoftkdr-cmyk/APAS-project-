@@ -1,5 +1,6 @@
 ﻿import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeHistory, historyToContents, type HistoryTurn } from "../_shared/history.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,8 @@ const FEE_TOOL = {
               "One of: fee_summary, pending_list, overdue_list, collections_summary, student_lookup, resend_receipt, add_fee, record_payment, delete_fee, navigate, chat",
           },
           student_name: { type: "STRING", description: "Student name mentioned, if any." },
+          class_name: { type: "STRING", description: "Class/grade of the student if mentioned - also when it comes as a short follow-up like 'Class one' or '1 A'. Plain value, e.g. 'one' -> '1', 'Class 1' -> '1', 'UKG'." },
+          section: { type: "STRING", description: "Section letter of the student if mentioned, e.g. 'A'." },
           amount: { type: "NUMBER", description: "A rupee amount mentioned, for add_fee or record_payment." },
           category: {
             type: "STRING",
@@ -52,7 +55,71 @@ const FEE_TOOL = {
   ],
 };
 
-async function callGemini(systemPrompt: string, userPrompt: string, keys: string[]): Promise<any | null> {
+const jsonRes = (obj: unknown) =>
+  new Response(JSON.stringify(obj), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+// ---- class / section matching (handles "Class one", "1st", "Grade 1", "1 A", "UKG") ----
+const WORD_NUM: Record<string, string> = {
+  one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12",
+  first: "1", second: "2", third: "3", fourth: "4", fifth: "5", sixth: "6", seventh: "7", eighth: "8", ninth: "9", tenth: "10", eleventh: "11", twelfth: "12",
+};
+function normClass(v: unknown): string {
+  let t = String(v ?? "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/\b(class|grade|std|standard)\b/g, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/\b(\d+)(st|nd|rd|th)\b/g, "$1");
+  t = t.split(" ").map((w) => WORD_NUM[w] ?? w).join(" ");
+  return t.replace(/\s+/g, "");
+}
+function narrowByClass<T>(rows: T[], cls: (r: T) => unknown, sec: (r: T) => unknown, args: any): T[] {
+  const wantClass = normClass(args.class_name);
+  const wantSec = normClass(args.section);
+  if (!wantClass && !wantSec) return rows;
+  return rows.filter((r) => {
+    const rc = normClass(cls(r));
+    const rs = normClass(sec(r));
+    const classOk = !wantClass || wantClass === rc || wantClass === rc + rs; // "1" or "1a"
+    const secOk = !wantSec || wantSec === rs;
+    return classOk && secOk;
+  });
+}
+const classLabel = (cls: unknown, sec: unknown) => (cls ? ` (${cls}${sec ? ` ${sec}` : ""})` : "");
+
+// For fee_payments rows: narrow by class/section if given, then make sure only ONE student remains.
+function resolveFeeRows(rows: any[], args: any): { rows: any[]; message?: string } {
+  const narrowed = narrowByClass(rows, (r) => r.class_grade, (r) => r.section, args);
+  const uniqLabels = (list: any[]) =>
+    [...new Set(list.map((r) => `${r.student_name}${classLabel(r.class_grade, r.section)}`))].join(", ");
+  if (rows.length > 0 && narrowed.length === 0) {
+    return { rows: [], message: `I couldn't find "${args.student_name}" in that class. Students with that name: ${uniqLabels(rows)}.` };
+  }
+  const keys = new Set(narrowed.map((r) => `${String(r.student_name).toLowerCase()}|${normClass(r.class_grade)}|${normClass(r.section)}`));
+  if (keys.size > 1) {
+    return { rows: [], message: `I found multiple students matching "${args.student_name}": ${uniqLabels(narrowed)}. Which class (and section) do you mean?` };
+  }
+  return { rows: narrowed };
+}
+
+// If the last assistant turn asked "which student?" and the user just replied with a short
+// class/section answer, glue it back onto the ORIGINAL request so nothing gets lost.
+const AMBIG_RE = /I found multiple students matching/i;
+const wordCount = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
+function mergeClarification(message: string, history: HistoryTurn[]): string {
+  let i = history.length - 1;
+  if (!(i >= 1 && history[i].role === "assistant" && AMBIG_RE.test(history[i].text) && wordCount(message) <= 8)) return message;
+  const clarifications = [message.trim()];
+  let original = "";
+  while (i >= 1 && history[i].role === "assistant" && AMBIG_RE.test(history[i].text) && history[i - 1]?.role === "user") {
+    const u = history[i - 1].text;
+    const earlierAmbig = i - 2 >= 1 && history[i - 2].role === "assistant" && AMBIG_RE.test(history[i - 2].text);
+    if (earlierAmbig && wordCount(u) <= 8) { clarifications.unshift(u); i -= 2; continue; }
+    original = u;
+    break;
+  }
+  if (!original) return message;
+  return `${original}\n(Which student: ${clarifications.join(", ")})`;
+}
+
+async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = []): Promise<any | null> {
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
   for (const key of keys) {
     for (const model of models) {
@@ -64,7 +131,7 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
-              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+              contents: [...historyToContents(history), { role: "user", parts: [{ text: userPrompt }] }],
               tools: [FEE_TOOL],
               toolConfig: { functionCallingConfig: { mode: "ANY" } },
               generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
@@ -102,7 +169,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, school_id } = await req.json();
+    const { message, school_id, history: rawHistory } = await req.json();
+    const history = sanitizeHistory(rawHistory);
     if (!school_id) {
       return new Response(JSON.stringify({ type: "message", text: "I need to know which school this is for." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -138,9 +206,12 @@ Classify the message and call handle_fee_query with the right intent:
 - record_payment: asking to record/log a payment a student has made (extract student_name and amount)
 - delete_fee: asking to delete/remove a fee record for a student (extract student_name, and due_date if they specify which record)
 - navigate: asking to go to/open/show a specific screen (extract target_tab from the list above)
-- chat: ONLY for greetings, small talk, or truly unrelated questions - reply briefly in chat_reply. Do NOT use chat to say a fee-related action is unsupported; every fee-related request maps to one of the intents above.`;
+- chat: ONLY for greetings, small talk, or truly unrelated questions - reply briefly in chat_reply. Do NOT use chat to say a fee-related action is unsupported; every fee-related request maps to one of the intents above.
 
-    const candidate = await callGemini(systemPrompt, message, keys);
+Whenever the user mentions a class or section for the student - even as a short reply such as "Class one" or "1 A" - set class_name (and section). Always keep the other fields (student_name, amount, category, due_date) from the original request.\n\nCONVERSATION MEMORY: Earlier turns are provided. If the user's message is a short follow-up (e.g. just a student name, an amount, "yes that one", "and for him?"), combine it with what was asked earlier and pick the intent and fields for the ORIGINAL request - do not treat it as a new unrelated message.`;
+
+    const effectiveMessage = mergeClarification(message, history);
+    const candidate = await callGemini(systemPrompt, effectiveMessage, keys, history);
     const parts = candidate?.content?.parts || [];
     const fnCall = parts.find((p: any) => p.functionCall)?.functionCall;
 
@@ -242,83 +313,74 @@ Classify the message and call handle_fee_query with the right intent:
       }
 
       case "student_lookup": {
-        if (!args.student_name) {
-          return new Response(JSON.stringify({ type: "message", text: "Which student's fees would you like me to look up?" }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        const { data: records } = await supabase
+        if (!args.student_name) return jsonRes({ type: "message", text: "Which student's fees would you like me to look up?" });
+        const { data: rows } = await supabase
           .from("fee_payments")
           .select("student_name, class_grade, section, amount_due, amount_paid, due_date, status")
           .eq("school_id", school_id)
           .ilike("student_name", `%${args.student_name}%`)
           .order("due_date", { ascending: false })
-          .limit(1);
-        if (!records || records.length === 0) {
-          return new Response(JSON.stringify({ type: "message", text: `No fee record found for "${args.student_name}".` }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        const f = records[0] as any;
+          .limit(30);
+        if (!rows || rows.length === 0) return jsonRes({ type: "message", text: `No fee record found for "${args.student_name}".` });
+        const r = resolveFeeRows(rows as any[], args);
+        if (r.message) return jsonRes({ type: "message", text: r.message });
+        const f = r.rows[0] as any;
         const balance = Math.max((f.amount_due || 0) - (f.amount_paid || 0), 0);
-        const text = `${f.student_name}${f.class_grade ? ` (${f.class_grade}${f.section ? ` ${f.section}` : ""})` : ""}: ${inr(f.amount_due)} due, ${inr(f.amount_paid)} paid, balance ${inr(balance)}. Status: ${f.status}${f.due_date ? `, due ${new Date(f.due_date).toLocaleDateString()}` : ""}.`;
-        return new Response(JSON.stringify({ type: "message", text }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const text = `${f.student_name}${classLabel(f.class_grade, f.section)}: ${inr(f.amount_due)} due, ${inr(f.amount_paid)} paid, balance ${inr(balance)}. Status: ${f.status}${f.due_date ? `, due ${new Date(f.due_date).toLocaleDateString()}` : ""}.`;
+        return jsonRes({ type: "message", text });
       }
 
       case "resend_receipt": {
-        if (!args.student_name) {
-          return new Response(JSON.stringify({ type: "message", text: "Which student's receipt would you like resent?" }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        const { data: paidRecord } = await supabase
+        if (!args.student_name) return jsonRes({ type: "message", text: "Which student's receipt would you like resent?" });
+        const { data: rows } = await supabase
           .from("fee_payments")
-          .select("id, student_name")
+          .select("id, student_name, class_grade, section")
           .eq("school_id", school_id)
           .eq("status", "paid")
           .ilike("student_name", `%${args.student_name}%`)
           .order("due_date", { ascending: false })
-          .maybeSingle();
-        if (!paidRecord) {
-          return new Response(JSON.stringify({ type: "message", text: `I couldn't find a paid fee record for "${args.student_name}" to resend a receipt for.` }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          .limit(30);
+        if (!rows || rows.length === 0) {
+          return jsonRes({ type: "message", text: `I couldn't find a paid fee record for "${args.student_name}" to resend a receipt for.` });
         }
-        return new Response(JSON.stringify({
+        const r = resolveFeeRows(rows as any[], args);
+        if (r.message) return jsonRes({ type: "message", text: r.message });
+        const paidRecord = r.rows[0] as any;
+        return jsonRes({
           type: "action_confirm",
           action: "resend_receipt",
-          fee_id: (paidRecord as any).id,
-          student_name: (paidRecord as any).student_name,
-          text: `Resend the payment receipt to ${(paidRecord as any).student_name}?`,
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          fee_id: paidRecord.id,
+          student_name: paidRecord.student_name,
+          text: `Resend the payment receipt to ${paidRecord.student_name}${classLabel(paidRecord.class_grade, paidRecord.section)}?`,
+        });
       }
 
       case "add_fee": {
         if (!args.student_name || !args.amount) {
-          return new Response(JSON.stringify({ type: "message", text: "Tell me the student's name and the fee amount to add." }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonRes({ type: "message", text: "Tell me the student's name and the fee amount to add." });
         }
         const amount = Number(args.amount);
-        if (!amount || amount <= 0) {
-          return new Response(JSON.stringify({ type: "message", text: "That doesn't look like a valid amount." }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
+        if (!amount || amount <= 0) return jsonRes({ type: "message", text: "That doesn't look like a valid amount." });
         const category = VALID_CATEGORIES.includes(args.category) ? args.category : "other";
         const { data: students } = await supabase
           .from("students")
           .select("id, full_name, class, section")
           .eq("school_id", school_id)
           .ilike("full_name", `%${args.student_name}%`)
-          .limit(5);
-        const list = students || [];
+          .limit(30);
+        const all = (students || []) as any[];
+        if (all.length === 0) return jsonRes({ type: "message", text: `No student found matching "${args.student_name}".` });
+        const list = narrowByClass(all, (s: any) => s.class, (s: any) => s.section, args);
+        const labels = (l: any[]) => l.map((s: any) => `${s.full_name}${classLabel(s.class, s.section)}`).join(", ");
         if (list.length === 0) {
-          return new Response(JSON.stringify({ type: "message", text: `No student found matching "${args.student_name}".` }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonRes({ type: "message", text: `I couldn't find "${args.student_name}" in that class. Students with that name: ${labels(all)}.` });
         }
         if (list.length > 1) {
-          const names = list.map((s: any) => `${s.full_name}${s.class ? ` (${s.class}${s.section ? ` ${s.section}` : ""})` : ""}`).join(", ");
-          return new Response(JSON.stringify({ type: "message", text: `I found multiple students matching "${args.student_name}": ${names}. Could you specify which one, e.g. with their class?` }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonRes({ type: "message", text: `I found multiple students matching "${args.student_name}": ${labels(list)}. Could you specify which one, e.g. with their class and section?` });
         }
         const student = list[0] as any;
         const dueDate = typeof args.due_date === "string" && args.due_date.length > 0 ? args.due_date : null;
-        return new Response(JSON.stringify({
+        return jsonRes({
           type: "action_confirm",
           action: "add_fee",
           student_id: student.id,
@@ -328,44 +390,29 @@ Classify the message and call handle_fee_query with the right intent:
           amount,
           category,
           due_date: dueDate,
-          text: `Add a ${CATEGORY_LABELS[category]} fee of ${inr(amount)} for ${student.full_name}${dueDate ? ` due ${new Date(dueDate).toLocaleDateString()}` : " with no due date set"}?`,
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          text: `Add a ${CATEGORY_LABELS[category]} fee of ${inr(amount)} for ${student.full_name}${classLabel(student.class, student.section)}${dueDate ? ` due ${new Date(dueDate).toLocaleDateString()}` : " with no due date set"}?`,
+        });
       }
 
       case "record_payment": {
         if (!args.student_name || !args.amount) {
-          return new Response(JSON.stringify({ type: "message", text: "Tell me the student's name and how much they paid." }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          return jsonRes({ type: "message", text: "Tell me the student's name and how much they paid." });
         }
         const amount = Number(args.amount);
-        if (!amount || amount <= 0) {
-          return new Response(JSON.stringify({ type: "message", text: "That doesn't look like a valid amount." }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        const { data: openRecords } = await supabase
+        if (!amount || amount <= 0) return jsonRes({ type: "message", text: "That doesn't look like a valid amount." });
+        const { data: rows } = await supabase
           .from("fee_payments")
-          .select("id, student_name, amount_due, amount_paid, due_date, status")
+          .select("id, student_name, class_grade, section, amount_due, amount_paid, due_date, status")
           .eq("school_id", school_id)
           .ilike("student_name", `%${args.student_name}%`)
-          .in("status", ["pending", "overdue"])
           .order("due_date", { ascending: true })
-          .limit(1);
-        let record = (openRecords || [])[0] as any;
-        if (!record) {
-          const { data: anyRecords } = await supabase
-            .from("fee_payments")
-            .select("id, student_name, amount_due, amount_paid, due_date, status")
-            .eq("school_id", school_id)
-            .ilike("student_name", `%${args.student_name}%`)
-            .order("due_date", { ascending: false })
-            .limit(1);
-          record = (anyRecords || [])[0];
-        }
-        if (!record) {
-          return new Response(JSON.stringify({ type: "message", text: `No fee record found for "${args.student_name}".` }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        return new Response(JSON.stringify({
+          .limit(30);
+        if (!rows || rows.length === 0) return jsonRes({ type: "message", text: `No fee record found for "${args.student_name}".` });
+        const r = resolveFeeRows(rows as any[], args);
+        if (r.message) return jsonRes({ type: "message", text: r.message });
+        // earliest open (pending/overdue) record, otherwise the latest record
+        const record = (r.rows.find((x: any) => x.status === "pending" || x.status === "overdue") ?? r.rows[r.rows.length - 1]) as any;
+        return jsonRes({
           type: "action_confirm",
           action: "record_payment",
           fee_id: record.id,
@@ -374,47 +421,43 @@ Classify the message and call handle_fee_query with the right intent:
           amount_due: record.amount_due,
           current_paid: record.amount_paid,
           due_date: record.due_date,
-          text: `Record a payment of ${inr(amount)} for ${record.student_name}${record.due_date ? ` (due ${new Date(record.due_date).toLocaleDateString()})` : ""}?`,
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          text: `Record a payment of ${inr(amount)} for ${record.student_name}${classLabel(record.class_grade, record.section)}${record.due_date ? ` (due ${new Date(record.due_date).toLocaleDateString()})` : ""}?`,
+        });
       }
 
       case "delete_fee": {
-        if (!args.student_name) {
-          return new Response(JSON.stringify({ type: "message", text: "Which student's fee record should I delete?" }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
-        const { data: records } = await supabase
+        if (!args.student_name) return jsonRes({ type: "message", text: "Which student's fee record should I delete?" });
+        const { data: rows } = await supabase
           .from("fee_payments")
-          .select("id, student_name, amount_due, amount_paid, due_date, status")
+          .select("id, student_name, class_grade, section, amount_due, amount_paid, due_date, status")
           .eq("school_id", school_id)
           .ilike("student_name", `%${args.student_name}%`)
           .order("due_date", { ascending: false })
-          .limit(5);
-        const list = (records || []) as any[];
-        if (list.length === 0) {
-          return new Response(JSON.stringify({ type: "message", text: `No fee record found for "${args.student_name}".` }),
-            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        }
+          .limit(30);
+        if (!rows || rows.length === 0) return jsonRes({ type: "message", text: `No fee record found for "${args.student_name}".` });
+        const r = resolveFeeRows(rows as any[], args);
+        if (r.message) return jsonRes({ type: "message", text: r.message });
+        const list = r.rows.slice(0, 5) as any[];
         let target = list[0];
         if (args.due_date) {
-          const match = list.find((r) => r.due_date === args.due_date);
+          const match = list.find((x) => x.due_date === args.due_date);
           if (match) target = match;
         } else {
-          const openOnes = list.filter((r) => r.status !== "paid");
+          const openOnes = list.filter((x) => x.status !== "paid");
           if (openOnes.length > 0) target = openOnes[0];
         }
         const multipleNote = list.length > 1
           ? " This student has more than one fee record - if this isn't the one you meant, cancel and tell me the due date of the record to delete."
           : "";
-        return new Response(JSON.stringify({
+        return jsonRes({
           type: "action_confirm",
           action: "delete_fee",
           fee_id: target.id,
           student_name: target.student_name,
           amount_due: target.amount_due,
           due_date: target.due_date,
-          text: `Delete the fee record for ${target.student_name} (${inr(target.amount_due)} due${target.due_date ? `, due ${new Date(target.due_date).toLocaleDateString()}` : ""})? This cannot be undone.${multipleNote}`,
-        }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          text: `Delete the fee record for ${target.student_name}${classLabel(target.class_grade, target.section)} (${inr(target.amount_due)} due${target.due_date ? `, due ${new Date(target.due_date).toLocaleDateString()}` : ""})? This cannot be undone.${multipleNote}`,
+        });
       }
 
       default:

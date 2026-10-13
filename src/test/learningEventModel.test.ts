@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  sanitizeClientEvent, describeEvent, summarizeEvents, rollupByStudent, cleanPath, activityStatus, clampTzOffset, localDate, summarizeCohort,
+  sanitizeClientEvent, describeEvent, friendlyPageName, summarizeEvents, rollupByStudent, cleanPath, activityStatus, clampTzOffset, localDate, summarizeCohort,
 } from "../../supabase/functions/_shared/learningEventModel";
 
 const MIN = 60_000;
@@ -68,6 +68,19 @@ describe("describeEvent", () => {
     expect(d.label).toBe("Answered correctly");
     expect(d.detail).toContain("daily review");
     expect(d.detail).toContain("+15 pts");
+  });
+  it("names the page that was opened instead of saying 'a page'", () => {
+    const d = (path?: string) => describeEvent({ event_type: "page_view", payload: path ? { path } : {}, occurred_at: iso(0) });
+    expect(d("/student-dashboard")).toEqual({ label: "Opened Student Dashboard", detail: null });
+    expect(d("/my-exams").label).toBe("Opened My Exams");
+    expect(d("/forgetting-forecast").label).toBe("Opened Forgetting Forecast");
+    expect(d().label).toBe("Opened a page");
+  });
+  it("names sub-pages after their parent and unknown pages from the path", () => {
+    expect(friendlyPageName("/student/courses/3f2a9c1e-1111-4222-8333-444455556666")).toBe("Courses");
+    expect(friendlyPageName("/my-exams?tab=past")).toBe("My Exams");
+    expect(friendlyPageName("/some-new_page")).toBe("Some New Page");
+    expect(friendlyPageName("not-a-path")).toBeNull();
   });
   it("does not crash on unknown types or empty payloads", () => {
     expect(describeEvent({ event_type: "something_new", occurred_at: iso(0) }).label).toBe("something new");

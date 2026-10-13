@@ -27,6 +27,23 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Pro
   }
 }
 
+// Gemini needs a clean alternating history that starts with a user turn.
+// Drops leading assistant turns (e.g. the greeting), merges same-role runs.
+function sanitizeHistory(raw: unknown): { role: string; text: string }[] {
+  if (!Array.isArray(raw)) return [];
+  const out: { role: string; text: string }[] = [];
+  for (const m of raw.slice(-10)) {
+    const role = m?.role === "assistant" ? "assistant" : "user";
+    const text = typeof m?.text === "string" ? m.text.trim() : "";
+    if (!text) continue;
+    const last = out[out.length - 1];
+    if (last && last.role === role) last.text += "\n" + text;
+    else out.push({ role, text });
+  }
+  while (out.length && out[0].role !== "user") out.shift();
+  return out;
+}
+
 async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: { role: string; text: string }[] = []): Promise<string | null> {
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
   for (const key of keys) {
@@ -666,6 +683,9 @@ serve(async (req) => {
     const childNames = children.map((c) => c.fullName).join(", ");
     const multiChild = children.length > 1;
 
+    const earlierUserTurns = sanitizeHistory(history).filter((m) => m.role === "user");
+    const pendingQuestion = earlierUserTurns.length ? earlierUserTurns[earlierUserTurns.length - 1].text.slice(0, 300) : "";
+
     const systemPrompt = `You are a warm, friendly assistant helping a parent keep track of ${multiChild ? `their children (${childNames})'` : `their child (${childNames})'s`} school life - transport, fees, report cards, attendance, appointments, the academic calendar, hall tickets/exam seating, surveys, safeguarding updates, and messages from school staff. You can also help the parent understand an academic topic/concept (e.g. "explain photosynthesis", "how does long division work") so they can support their child's learning - for that you may use your own general subject-matter knowledge, kept accurate and simple. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked, using the conversation so far for context.
 
 If the parent just greets you (e.g. "hello", "hi") without asking anything specific, greet them back warmly and briefly ask how you can help - do NOT dump details unprompted. Only bring up specific info once they actually ask about it.
@@ -683,7 +703,8 @@ For questions about their child's own records/logistics: answer ONLY using the d
 CURRENT DATA:
 ${context}`;
 
-    const reply = await callGemini(systemPrompt, message, keys, Array.isArray(history) ? history.slice(-6) : []);
+    const cleanHistory = sanitizeHistory(history);
+    const reply = await callGemini(systemPrompt, message, keys, cleanHistory);
 
     return new Response(JSON.stringify({
       type: "message",

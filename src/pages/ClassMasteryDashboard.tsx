@@ -12,6 +12,7 @@ import { PeerGroupsPanel } from "@/components/grouping/PeerGroupsPanel";
 import { LearningGroupsPanel } from "@/components/grouping/LearningGroupsPanel";
 import LiveLearningFeed from "@/components/telemetry/LiveLearningFeed";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchSchoolClasses } from "@/lib/schoolClasses";
 import { supabase } from "@/integrations/supabase/client";
 import { useClassMastery, useGenerateLearningObjectives } from "@/hooks/useMastery";
 import { useToast } from "@/hooks/use-toast";
@@ -138,8 +139,9 @@ export default function ClassMasteryDashboard({ embedded = false }: { embedded?:
       setLoadingOptions(true);
       const isStaffAdmin = ["admin", "principal", "school_admin", "hod"].includes(profile?.role ?? "");
 
+      // Staff/admins: only their own school's classes (the table is shared across schools).
       const classQuery = isStaffAdmin
-        ? supabase.from("classes").select("id, name, section")
+        ? fetchSchoolClasses(profile?.school_id).then((data) => ({ data }))
         : supabase.from("class_teachers").select("class_id, classes(id, name, section)").eq("teacher_id", profile?.id ?? "");
 
       const [{ data: classData }, bookData] = await Promise.all([

@@ -63,7 +63,11 @@ export async function handleLearningEventStream(req: Request): Promise<Response>
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !user) return json({ error: "Not authenticated" }, 401);
+    if (userErr || !user) {
+      // Shows up in the function logs so the real cause (expired token, bad key, ...) is visible.
+      console.error("learning event stream: auth failed:", userErr?.message ?? "no user", "| has auth header:", !!authHeader);
+      return json({ error: "Not authenticated" }, 401);
+    }
 
     const caller = await resolveCaller(admin, user.id);
     if (!caller) return json({ error: "Profile not found" }, 403);

@@ -7,6 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button";
 import { ShieldAlert, ChevronDown, ClipboardList } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchSchoolClasses } from "@/lib/schoolClasses";
 import { supabase } from "@/integrations/supabase/client";
 import { useClassRisk } from "@/hooks/useStudentRisk";
 import { useClassInterventionRecommendations, type ClassInterventionRow } from "@/hooks/useInterventionRecommendations";
@@ -41,7 +42,7 @@ export default function EarlyWarningDashboard({ embedded = false }: { embedded?:
       const isStaffAdmin = ["admin", "principal", "school_admin", "hod"].includes(profile?.role ?? "");
 
       const classQuery = isStaffAdmin
-        ? supabase.from("classes").select("id, name, section")
+        ? fetchSchoolClasses(profile?.school_id).then((data) => ({ data }))
         : supabase.from("class_teachers").select("class_id, classes(id, name, section)").eq("teacher_id", profile?.id ?? "");
 
       const { data: classData } = await classQuery;
@@ -58,7 +59,7 @@ export default function EarlyWarningDashboard({ embedded = false }: { embedded?:
       setLoadingOptions(false);
     }
     if (profile?.id) loadOptions();
-  }, [profile?.id, profile?.role]);
+  }, [profile?.id, profile?.role, profile?.school_id]);
 
   const recByStudentId = new Map((recommendations ?? []).map((r) => [r.student_id, r]));
   const mergedStudents: MergedRow[] = (students ?? []).map((s) => ({ ...s, recommendation: recByStudentId.get(s.student_id) }));

@@ -406,7 +406,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
 
   return (
     <Shell embedded={embedded}>
-      <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+      <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-5 max-w-5xl mx-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-6">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
@@ -486,10 +486,10 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
               <Card>
                 <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Sparkles className="h-4 w-4 text-indigo-600" /> Generate questions</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
                     <label className="text-xs text-muted-foreground shrink-0">Question type</label>
                     <Select value={genKind} onValueChange={(v) => setGenKind(v as GenKind)}>
-                      <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-10 sm:h-8 w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="mcq">Multiple choice (MCQ)</SelectItem>
                         <SelectItem value="descriptive">Short / long answer</SelectItem>
@@ -503,7 +503,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                       ? <>Tops up every learning objective in {subtopicId ? "this concept" : "this topic"} to the target below. Already-full objectives are skipped.</>
                       : <>Writes rubric-graded questions (with a model answer) for every learning objective in {wholeChapter && topics.length > 1 ? "this chapter" : subtopicId ? "this concept" : "this topic"}. Needed for mock-exam sections B, C and D.</>}
                   </p>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-3">
                     <label className="text-xs text-muted-foreground shrink-0">{genKind === "mcq" ? "Target per objective" : "Target per type, per objective"}</label>
                     {genKind === "mcq" ? (
                       <Input type="number" min={2} max={12} value={targetPerObjective}
@@ -525,7 +525,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                     <Checkbox checked={autoActivate} onCheckedChange={(v) => setAutoActivate(v === true)} />
                     Activate immediately (skip draft review)
                   </label>
-                  <Button size="sm" onClick={runGenerate} disabled={generating} className="w-full">
+                  <Button onClick={runGenerate} disabled={generating} className="w-full h-10 sm:h-9">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     {generating ? (genKind === "mcq" ? "Generating…" : "Generating — this can take a minute…") : "Generate"}
                   </Button>
@@ -540,12 +540,12 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                   </p>
                   {calibScopeLevels.map((lvl) => (
                     <div key={lvl.type} className="flex items-center justify-between gap-2 text-sm rounded-lg border px-3 py-2">
-                      <span className="truncate">{lvl.label}</span>
+                      <span className="min-w-0 flex-1 break-words">{lvl.label}</span>
                       <div className="flex gap-1.5 shrink-0">
-                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs" disabled={calibrating === lvl.type} onClick={() => runCalibrate(lvl.type, lvl.id, true)}>
+                        <Button size="sm" variant="outline" className="h-9 sm:h-7 px-3 sm:px-2 text-xs" disabled={calibrating === lvl.type} onClick={() => runCalibrate(lvl.type, lvl.id, true)}>
                           {calibrating === lvl.type ? <Loader2 className="h-3 w-3 animate-spin" /> : "Preview"}
                         </Button>
-                        <Button size="sm" className="h-7 px-2 text-xs" disabled={calibrating === lvl.type} onClick={() => runCalibrate(lvl.type, lvl.id, false)}>
+                        <Button size="sm" className="h-9 sm:h-7 px-3 sm:px-2 text-xs" disabled={calibrating === lvl.type} onClick={() => runCalibrate(lvl.type, lvl.id, false)}>
                           Run
                         </Button>
                       </div>
@@ -562,7 +562,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
               <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300">Short/long: {extTotals.descActive} active · {extTotals.descDraft} draft</Badge>
               <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300">Case-based: {extTotals.caseActive} active · {extTotals.caseDraft} draft</Badge>
               {extTotals.draftIds.length > 0 && (
-                <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busyItem != null} onClick={() => setExtStatus(extTotals.draftIds, "active")}>
+                <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" disabled={busyItem != null} onClick={() => setExtStatus(extTotals.draftIds, "active")}>
                   <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve all {extTotals.draftIds.length} short/case drafts
                 </Button>
               )}
@@ -588,16 +588,17 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                   const extActive = ext.filter((i) => i.status === "active").length;
                   const flagged = items.filter((i) => i.status === "active" && i.review_flag && i.review_flag !== "ok").length;
                   return (
-                    <AccordionItem key={lo.id} value={String(lo.id)} className="border rounded-xl px-4">
-                      <AccordionTrigger className="hover:no-underline py-3">
-                        <div className="flex items-center justify-between gap-3 w-full pr-2 text-left">
+                    <AccordionItem key={lo.id} value={String(lo.id)} className="border rounded-xl px-3 sm:px-4">
+                      <AccordionTrigger className="hover:no-underline py-3 gap-2 text-left">
+                        {/* Phone: text on top, badges wrap underneath. Laptop: text left, badges right. */}
+                        <div className="flex flex-1 min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 text-left">
                           <div className="min-w-0">
-                            <p className="text-sm font-medium truncate">{lo.objective_text}</p>
+                            <p className="text-sm font-medium break-words">{lo.objective_text}</p>
                             {!subtopicId && (
-                              <p className="text-xs text-muted-foreground truncate">{bankQuery.data.subtopicNames.get(lo.subtopic_id)}</p>
+                              <p className="text-xs font-normal text-muted-foreground break-words">{bankQuery.data.subtopicNames.get(lo.subtopic_id)}</p>
                             )}
                           </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
+                          <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 sm:justify-end">
                             {lo.bloom_level && <Badge variant="outline" className="text-xs capitalize">{lo.bloom_level}</Badge>}
                             <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-300">{active}</Badge>
                             <Badge variant="outline" className="text-xs bg-slate-100 text-slate-700 border-slate-300">{draft}</Badge>
@@ -658,7 +659,7 @@ function ItemCard({ item, busy, misconceptions, onApprove, onRetire, onFixKey, o
   return (
     <div className={cn("rounded-xl border-2 p-3.5 space-y-2.5", flagged ? "border-red-300 bg-red-50/40" : "border-border")}>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm font-medium leading-snug">{item.stem}</p>
+        <p className="text-sm font-medium leading-snug min-w-0 flex-1 break-words">{item.stem}</p>
         <div className="flex items-center gap-1.5 shrink-0">
           <Badge variant="outline" className={cn("text-xs", item.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-300" : item.status === "draft" ? "bg-slate-100 text-slate-700 border-slate-300" : "bg-muted text-muted-foreground")}>
             {item.status}
@@ -701,13 +702,13 @@ function ItemCard({ item, busy, misconceptions, onApprove, onRetire, onFixKey, o
       )}
 
       {flagged && !fixing && (
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setFixing(true)}>Fix answer key</Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={onDismissFlag} disabled={busy}>Looks fine, keep active</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" onClick={() => setFixing(true)}>Fix answer key</Button>
+          <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" onClick={onDismissFlag} disabled={busy}>Looks fine, keep active</Button>
         </div>
       )}
       {fixing && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Select value={newKey} onValueChange={(v) => setNewKey(v as QuestionRow["correct_option"])}>
             <SelectTrigger className="h-8 w-24"><SelectValue /></SelectTrigger>
             <SelectContent>{(["A", "B", "C", "D"] as const).map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}</SelectContent>
@@ -722,17 +723,17 @@ function ItemCard({ item, busy, misconceptions, onApprove, onRetire, onFixKey, o
       {!flagged && (
         <div className="flex gap-2 pt-0.5">
           {item.status === "draft" && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busy} onClick={onApprove}>
+            <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" disabled={busy} onClick={onApprove}>
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
             </Button>
           )}
           {item.status === "active" && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
+            <Button size="sm" variant="ghost" className="h-9 sm:h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
               <Archive className="h-3.5 w-3.5 mr-1" /> Retire
             </Button>
           )}
           {item.status === "draft" && (
-            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
+            <Button size="sm" variant="ghost" className="h-9 sm:h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
               <XCircle className="h-3.5 w-3.5 mr-1" /> Discard
             </Button>
           )}
@@ -749,9 +750,9 @@ function ExtendedItemCard({ item, busy, onApprove, onRetire }: {
     <div className="rounded-xl border-2 border-border p-3.5 space-y-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-1.5 min-w-0">
-          <p className="text-sm font-medium leading-snug">{item.stem}</p>
+          <p className="text-sm font-medium leading-snug break-words">{item.stem}</p>
           {item.context_passage && (
-            <p className="text-xs leading-relaxed rounded-lg bg-muted/50 border px-2.5 py-2">{item.context_passage}</p>
+            <p className="text-xs leading-relaxed rounded-lg bg-muted/50 border px-2.5 py-2 break-words">{item.context_passage}</p>
           )}
           {item.sub_questions.length > 0 && (
             <ol className="space-y-1">
@@ -795,11 +796,11 @@ function ExtendedItemCard({ item, busy, onApprove, onRetire }: {
 
       <div className="flex gap-2 pt-0.5">
         {item.status === "draft" && (
-          <Button size="sm" variant="outline" className="h-7 text-xs" disabled={busy} onClick={onApprove}>
+          <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" disabled={busy} onClick={onApprove}>
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
           </Button>
         )}
-        <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
+        <Button size="sm" variant="ghost" className="h-9 sm:h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
           {item.status === "draft" ? <><XCircle className="h-3.5 w-3.5 mr-1" /> Discard</> : <><Archive className="h-3.5 w-3.5 mr-1" /> Retire</>}
         </Button>
       </div>

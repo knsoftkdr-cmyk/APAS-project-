@@ -12,6 +12,8 @@ import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
 import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
 import robotAvatar from "@/assets/ai-assistant-robot.png";
+import { cleanForSpeech } from "@/lib/speechText";
+import { speakChunked } from "@/lib/speakChunked";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -313,6 +315,7 @@ const startListeningSafely = () => {
   };
 
   const forSpeech = (text: string): string => {
+    text = cleanForSpeech(text); // never read * # _ etc. aloud
     // Space out alphanumeric codes (e.g. IDs and codes) so TTS reads
     // them character-by-character instead of as one garbled number.
     return text.replace(/\b(?=[A-Za-z]*\d)(?=\d*[A-Za-z])[A-Za-z0-9]{4,}\b/g, (token) =>
@@ -375,68 +378,56 @@ if (isNativePlatform) {
   // resume listening - keeps them in lockstep.
   lipSync.start(spokenText, estimatedMs);
 
-  TextToSpeech.speak({
+  let nativeDone = false;
+      const finishNative = () => {
+        if (nativeDone) return;
+        nativeDone = true;
+        if (speechGenerationRef.current !== myGeneration) return; // superseded
+        lipSync.stop();
+        // short delay so the speaker tail isn't picked up as the next question
+        setTimeout(() => {
+          if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
+        }, 350);
+      };
+      TextToSpeech.speak({
     text: spokenText,
     lang: "en-US",
     rate: 0.97,
     pitch: 1.02,
     volume: 1,
     category: "playback",
-  }).catch(() => {});
-
-  setTimeout(() => {
-    if (speechGenerationRef.current !== myGeneration) return; // superseded
-    lipSync.stop();
-    if (voiceModeRef.current) startListeningSafely();
-  }, estimatedMs);
+  }).then(() => finishNative()).catch(() => finishNative());
+      // Fallback only if the plugin never resolves - generous so long answers aren't cut off.
+      setTimeout(finishNative, Math.round(estimatedMs * 1.8) + 4000);
   return;
 }
 
     const doSpeak = () => {
       if (speechGenerationRef.current !== myGeneration) return; // superseded
       const spokenText = forSpeech(text);
-      const utterance = new SpeechSynthesisUtterance(spokenText);
-      utteranceRef.current = utterance;
-      if (preferredVoiceRef.current) utterance.voice = preferredVoiceRef.current;
-      utterance.rate = 0.97;
-      utterance.pitch = 1.02;
-      utterance.volume = 1;
-      utterance.onstart = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        setVoiceState("speaking");
-        // Browsers never expose speechSynthesis audio to the Web Audio API,
-        // so mouth movement is scheduled against an estimated duration and
-        // corrected live via onboundary below.
-        lipSync.start(spokenText, estimateSpeechDurationMs(spokenText));
-      };
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        lipSync.reanchor(event.charIndex ?? 0, spokenText.length);
-      };
-      utterance.onend = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      utterance.onerror = (e: any) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (e?.error === "interrupted" || e?.error === "canceled") return;
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      window.speechSynthesis.speak(utterance);
-      setTimeout(() => {
-        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-      }, 60);
-      setTimeout(() => {
-        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
-          utteranceRef.current = null;
+      // Speak in short chunks so long answers are never cut off, and only open the
+      // mic after the LAST chunk has really finished (see src/lib/speakChunked.ts).
+      speakChunked(spokenText, {
+        voice: preferredVoiceRef.current,
+        rate: 0.97,
+        pitch: 1.02,
+        volume: 1,
+        isCurrent: () => speechGenerationRef.current === myGeneration,
+        onUtterance: (u) => { utteranceRef.current = u; },
+        onStart: () => {
+          setVoiceState("speaking");
+          lipSync.start(spokenText, estimateSpeechDurationMs(spokenText));
+        },
+        onBoundary: (charIndex) => lipSync.reanchor(charIndex, spokenText.length),
+        onDone: () => {
           lipSync.stop();
-          startListeningSafely();
-        }
-      }, 15000);
+          if (voiceModeRef.current) startListeningSafely();
+        },
+        onFail: () => {
+          lipSync.stop();
+          if (voiceModeRef.current) startListeningSafely();
+        },
+      });
     };
     window.speechSynthesis.cancel();
     setTimeout(doSpeak, 80);
@@ -585,7 +576,7 @@ if (isNativePlatform) {
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {
       const { data, error } = await withTimeout(
-        supabase.functions.invoke("erp-fee-assistant", { body: { message: text, school_id: schoolId } }),
+        supabase.functions.invoke("erp-fee-assistant", { body: { message: text, school_id: schoolId, history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })) } }),
         20000,
         "Fee assistant"
       );

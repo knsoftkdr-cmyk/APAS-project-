@@ -27,8 +27,9 @@ export default function AssessmentHub() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto px-4 pt-6">
-        <div role="tablist" aria-label="Assessments" className="inline-flex flex-wrap gap-1 rounded-xl bg-muted p-1">
+      {/* Same width as the pages below, so the tabs line up with the content on a laptop */}
+      <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
+        <div role="tablist" aria-label="Assessments" className="flex w-full gap-1 rounded-xl bg-muted p-1 sm:inline-flex sm:w-auto">
           {TABS.map((t) => {
             const selected = t.key === active.key;
             return (
@@ -39,7 +40,7 @@ export default function AssessmentHub() {
                 aria-selected={selected}
                 onClick={() => !selected && navigate(t.path)}
                 className={cn(
-                  "inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                  "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 sm:py-2 text-sm font-medium transition-colors sm:flex-none",
                   selected ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
                 )}
               >

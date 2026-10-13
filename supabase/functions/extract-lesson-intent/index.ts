@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { sanitizeHistory, historyToContents, type HistoryTurn } from "../_shared/history.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,7 +56,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, ms: number): 
 // which always forces the lesson-plan tool schema and returns a raw
 // candidate object rather than a text string. This one is used only for
 // the video-intent classifier.
-async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: string[]): Promise<string | null> {
+async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = []): Promise<string | null> {
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
   for (const key of keys) {
     for (const model of models) {
@@ -67,7 +68,7 @@ async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: s
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
-              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+              contents: [...historyToContents(history), { role: "user", parts: [{ text: userPrompt }] }],
               generationConfig: { temperature: 0.1, maxOutputTokens: 300 },
             }),
           },
@@ -95,7 +96,7 @@ async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: s
 // teacher has already explicitly selected "Find a video" mode, this
 // defaults to treating the message as a video request unless it clearly
 // needs the lesson-builder or platform Q&A instead.
-async function classifyVideoIntent(message: string, keys: string[]): Promise<{ isVideo: boolean; query: string; topicWords: string[] }> {
+async function classifyVideoIntent(message: string, keys: string[], history: HistoryTurn[] = []): Promise<{ isVideo: boolean; query: string; topicWords: string[] }> {
   const classifierPrompt = `You classify a teacher's chat message to a school app assistant that is currently in "find a video" mode - the teacher has explicitly asked for a YouTube video suggestion. Reply with ONLY raw JSON, no markdown fences, no extra words, in exactly this shape:
 {"is_video_request": boolean, "search_query": "string", "topic_keywords": ["string", ...]}
 
@@ -105,7 +106,7 @@ is_video_request = false ONLY for: (a) a request to CREATE/GENERATE a lesson pla
 When true: "search_query" is a short, effective YouTube search query for a good, appropriate video on that exact topic. "topic_keywords" is 2-5 lowercase single-word keywords (the core subject words) that a genuinely relevant video's title/description should contain - used to reject off-topic results.
 When false: "search_query" and "topic_keywords" can be empty.`;
 
-  const raw = await callGeminiPlain(classifierPrompt, message, keys);
+  const raw = await callGeminiPlain(classifierPrompt, message, keys, history);
   if (!raw) return { isVideo: false, query: "", topicWords: [] };
   try {
     const cleaned = raw.replace(/```json|```/g, "").trim();
@@ -176,7 +177,7 @@ async function searchYouTube(query: string, topicWords: string[]): Promise<Video
   }];
 }
 
-async function callGemini(systemPrompt: string, userPrompt: string, keys: string[]): Promise<any | null> {
+async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = []): Promise<any | null> {
   // Trimmed to the two fastest/most reliable models - this endpoint only needs
   // to extract a few fields, not generate long content, so a heavier fallback
   // chain just adds latency without adding value.
@@ -191,7 +192,7 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
-              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+              contents: [...historyToContents(history), { role: "user", parts: [{ text: userPrompt }] }],
               tools: [INTENT_TOOL],
               generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
             }),
@@ -223,7 +224,8 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { message, mode } = await req.json();
+    const { message, mode, history: rawHistory } = await req.json();
+    const history = sanitizeHistory(rawHistory);
     const keys = getGeminiKeys();
 
     if (keys.length === 0) {
@@ -236,7 +238,7 @@ serve(async (req) => {
     // a lesson-plan creation request or a platform question - those keep
     // working exactly as before regardless of the toggle.
     if (mode === "video" && typeof message === "string" && message.trim()) {
-      const { isVideo, query, topicWords } = await classifyVideoIntent(message, keys);
+      const { isVideo, query, topicWords } = await classifyVideoIntent(message, keys, history);
       if (isVideo && query) {
         const videos = await searchYouTube(query, topicWords);
         return new Response(JSON.stringify({
@@ -271,6 +273,8 @@ You can mention you're able to build lesson plans if it fits naturally, but don'
 NEVER include a URL, hyperlink, or "[Video Link: ...]" style placeholder in your response, for any reason, even if asked directly for a link. You have no ability to browse or verify real links, so any link you wrote would be fabricated. Actual video links are only ever attached separately by the app itself when the teacher uses "Find a video" mode - if they want a video, tell them to tap "Find a video" and ask again, rather than describing or linking one yourself.
 ${mode === "video" ? `\nNOTE: The teacher is currently in "video" answer mode, but this message didn't need a video (it's a lesson-plan request, a platform question, or small talk) - answer normally in text, with no links.` : ""}
 
+CONVERSATION MEMORY: Earlier turns are provided. Use them to resolve short follow-ups such as "give me an example", "explain it simpler", "for class 7", "and for section B" - they refer to the earlier topic or request. If the teacher is supplying missing details for a lesson plan requested earlier, call create_lesson_plan_intent combining the earlier details with the new ones.
+
 VOICE CONVERSATION RULES:
 - Treat every user message as exactly one conversation turn.
 - Answer only the user's current message.
@@ -280,7 +284,7 @@ VOICE CONVERSATION RULES:
 - For greetings such as "hi", "hello", or "hey", give one short friendly response and nothing more.`;
 
     const startedAt = Date.now();
-    const candidate = await callGemini(systemPrompt, message, keys);
+    const candidate = await callGemini(systemPrompt, message, keys, history);
     console.log(`extract-lesson-intent resolved in ${Date.now() - startedAt}ms`);
 
     const parts = candidate?.content?.parts || [];

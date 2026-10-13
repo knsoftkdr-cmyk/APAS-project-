@@ -142,6 +142,47 @@ const SOURCE_LABEL: Record<string, string> = {
 const pretty = (s: string) => SOURCE_LABEL[s] ?? s.replace(/_/g, " ");
 const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
+// Page names shown in the live feed ("Opened My Exams" instead of "Opened a page" + "/my-exams").
+const PAGE_NAMES: Record<string, string> = {
+  "/": "Home",
+  "/student-dashboard": "Student Dashboard", "/parent-dashboard": "Parent Dashboard", "/student-profile": "Student Profile",
+  "/academic-tests": "Academic Tests", "/diagnostic": "Assessments", "/my-mastery": "My Mastery",
+  "/exam-readiness": "Exam Readiness", "/my-exams": "My Exams", "/adaptive-test": "Adaptive Test",
+  "/daily-review": "Daily Review", "/forgetting-forecast": "Forgetting Forecast", "/learning-path": "Learning Path",
+  "/next-best-action": "What's Next", "/adaptive-homework": "Adaptive Homework", "/misconceptions": "Patterns to Watch",
+  "/learning-velocity": "My Learning Pace", "/worksheets": "Worksheets", "/dashboard": "Homework",
+  "/gamification": "Gamification", "/leaderboard": "Leaderboard", "/enrichment": "Enrichment",
+  "/pronunciation": "Pronunciation", "/ai-tutor": "AI Tutor", "/attendance": "Attendance", "/timetable": "Timetable",
+  "/academic-calendar": "Academic Calendar", "/report-cards": "Report Cards", "/hall-tickets": "Hall Tickets",
+  "/parent-communication": "Communication", "/student-communication": "Communication", "/appointments": "Appointments",
+  "/surveys": "Surveys", "/electives": "Electives", "/student/courses": "Courses", "/student/credentials": "Credentials",
+  "/student/group-projects": "Group Projects", "/virtual-classroom": "Virtual Classroom", "/requests": "Requests",
+  "/alerts": "Alerts", "/my-accommodations": "My Accommodations", "/marketplace": "Marketplace", "/houses": "Houses",
+  "/class-mastery": "Class Mastery", "/early-warning": "Early Warning", "/teacher-at-risk": "At-Risk Students",
+  "/item-bank": "Item Bank", "/mock-exams": "Mock Exams",
+};
+
+/**
+ * "/my-exams" -> "My Exams". Known pages use the names above; sub-pages ("/student/courses/123") use their
+ * parent page; anything else is made readable from the path ("/some-new-page" -> "Some New Page").
+ */
+export function friendlyPageName(path: string | null | undefined): string | null {
+  const clean = cleanPath(path);
+  if (!clean) return null;
+  const trimmed = clean.length > 1 ? clean.replace(/\/+$/, "") : clean;
+  if (PAGE_NAMES[trimmed]) return PAGE_NAMES[trimmed];
+  const parts = trimmed.split("/").filter(Boolean);
+  for (let n = parts.length - 1; n >= 1; n--) {            // longest known parent, e.g. /student/courses
+    const parent = PAGE_NAMES["/" + parts.slice(0, n).join("/")];
+    if (parent) return parent;
+  }
+  const readable = parts
+    .filter((seg) => !/^[0-9a-f-]{8,}$/i.test(seg) && !/^\d+$/.test(seg))   // drop ids
+    .map((seg) => seg.replace(/[-_]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()))
+    .join(" ");
+  return readable || null;
+}
+
 export function describeEvent(e: FeedEvent): { label: string; detail: string | null } {
   const p = (e.payload ?? {}) as Record<string, unknown>;
   switch (e.event_type) {
@@ -170,8 +211,10 @@ export function describeEvent(e: FeedEvent): { label: string; detail: string | n
     }
     case "pronunciation_attempt":
       return { label: "Practised pronunciation", detail: num(e.score) !== null ? `score ${Math.round(e.score as number)}` : null };
-    case "page_view":
-      return { label: "Opened a page", detail: typeof p.title === "string" ? p.title : typeof p.path === "string" ? p.path : null };
+    case "page_view": {
+      const name = friendlyPageName(typeof p.path === "string" ? p.path : null);
+      return { label: name ? `Opened ${name}` : "Opened a page", detail: null };
+    }
     case "resource_opened":
       return { label: "Opened learning material", detail: [p.resource_type, p.title].filter((x) => typeof x === "string").join(" · ") || null };
     case "resource_completed":

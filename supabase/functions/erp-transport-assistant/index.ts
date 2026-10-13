@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sanitizeHistory, historyToContents, type HistoryTurn } from "../_shared/history.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,8 @@ const TRANSPORT_TOOL = {
           },
           route_name: { type: "STRING", description: "Route name or number mentioned, if any." },
           student_name: { type: "STRING", description: "Student name mentioned, if any." },
+          class_name: { type: "STRING", description: "Class/grade of the student if mentioned - also as a short follow-up like 'Class one' or '1 A'. Plain value, e.g. 'one' -> '1', 'UKG'." },
+          section: { type: "STRING", description: "Section letter of the student if mentioned, e.g. 'A'." },
           vehicle_registration: { type: "STRING", description: "Vehicle registration number mentioned, if any." },
           new_status: { type: "STRING", description: "For vehicle_status_update only: active, inactive, or maintenance." },
           target_tab: {
@@ -53,7 +56,53 @@ const TRANSPORT_TOOL = {
   ],
 };
 
-async function callGemini(systemPrompt: string, userPrompt: string, keys: string[]): Promise<any | null> {
+// ---- class / section matching (handles "Class one", "1st", "Grade 1", "1 A", "UKG") ----
+const WORD_NUM: Record<string, string> = {
+  one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12",
+  first: "1", second: "2", third: "3", fourth: "4", fifth: "5", sixth: "6", seventh: "7", eighth: "8", ninth: "9", tenth: "10", eleventh: "11", twelfth: "12",
+};
+function normClass(v: unknown): string {
+  let t = String(v ?? "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/\b(class|grade|std|standard)\b/g, " ").replace(/\s+/g, " ").trim();
+  t = t.replace(/\b(\d+)(st|nd|rd|th)\b/g, "$1");
+  t = t.split(" ").map((w) => WORD_NUM[w] ?? w).join(" ");
+  return t.replace(/\s+/g, "");
+}
+function narrowByClass<T>(rows: T[], cls: (r: T) => unknown, sec: (r: T) => unknown, args: any): T[] {
+  const wantClass = normClass(args.class_name);
+  const wantSec = normClass(args.section);
+  if (!wantClass && !wantSec) return rows;
+  return rows.filter((r) => {
+    const rc = normClass(cls(r));
+    const rs = normClass(sec(r));
+    const classOk = !wantClass || wantClass === rc || wantClass === rc + rs; // "1" or "1a"
+    const secOk = !wantSec || wantSec === rs;
+    return classOk && secOk;
+  });
+}
+const classLabel = (cls: unknown, sec: unknown) => (cls ? ` (${cls}${sec ? ` ${sec}` : ""})` : "");
+
+// If the last assistant turn asked "which student?" and the user just replied with a short
+// class/section answer, glue it back onto the ORIGINAL request so nothing gets lost.
+const AMBIG_RE = /I found multiple students matching/i;
+const wordCount = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
+function mergeClarification(message: string, history: HistoryTurn[]): string {
+  let i = history.length - 1;
+  if (!(i >= 1 && history[i].role === "assistant" && AMBIG_RE.test(history[i].text) && wordCount(message) <= 8)) return message;
+  const clarifications = [message.trim()];
+  let original = "";
+  while (i >= 1 && history[i].role === "assistant" && AMBIG_RE.test(history[i].text) && history[i - 1]?.role === "user") {
+    const u = history[i - 1].text;
+    const earlierAmbig = i - 2 >= 1 && history[i - 2].role === "assistant" && AMBIG_RE.test(history[i - 2].text);
+    if (earlierAmbig && wordCount(u) <= 8) { clarifications.unshift(u); i -= 2; continue; }
+    original = u;
+    break;
+  }
+  if (!original) return message;
+  return `${original}\n(Which student: ${clarifications.join(", ")})`;
+}
+
+async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = []): Promise<any | null> {
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
   for (const key of keys) {
     for (const model of models) {
@@ -65,7 +114,7 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
-              contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+              contents: [...historyToContents(history), { role: "user", parts: [{ text: userPrompt }] }],
               tools: [TRANSPORT_TOOL],
               generationConfig: { temperature: 0.2, maxOutputTokens: 512 },
             }),
@@ -95,7 +144,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { message, school_id } = await req.json();
+    const { message, school_id, history: rawHistory } = await req.json();
+    const history = sanitizeHistory(rawHistory);
     if (!school_id) {
       return new Response(JSON.stringify({ type: "message", text: "I need to know which school this is for." }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -124,9 +174,11 @@ Classify the message and call handle_transport_query with the right intent:
 - delay_forecast: asking about delays, which routes run late, punctuality
 - navigate: asking to go to/open/show a specific screen (extract target_tab from the list above)
 - vehicle_status_update: asking to change a vehicle's status, e.g. mark a bus as under maintenance (extract vehicle_registration and new_status)
-- chat: greetings, small talk, or anything else - reply briefly and naturally in chat_reply`;
+- chat: greetings, small talk, or anything else - reply briefly and naturally in chat_reply
 
-    const candidate = await callGemini(systemPrompt, message, keys);
+Whenever the user mentions a class or section for the student - even as a short reply such as "Class one" or "1 A" - set class_name (and section), and keep student_name from the original request.\n\nCONVERSATION MEMORY: Earlier turns are provided. If the user's message is a short follow-up (e.g. just a student name, an amount, "yes that one", "and for him?"), combine it with what was asked earlier and pick the intent and fields for the ORIGINAL request - do not treat it as a new unrelated message.`;
+
+    const candidate = await callGemini(systemPrompt, mergeClarification(message, history), keys, history);
     const parts = candidate?.content?.parts || [];
     const fnCall = parts.find((p: any) => p.functionCall)?.functionCall;
 
@@ -234,13 +286,23 @@ Classify the message and call handle_transport_query with the right intent:
             { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
         const { data: students } = await supabase
-          .from("students").select("id, full_name, class").eq("school_id", school_id)
-          .ilike("full_name", `%${args.student_name}%`).limit(3);
+          .from("students").select("id, full_name, class, section").eq("school_id", school_id)
+          .ilike("full_name", `%${args.student_name}%`).limit(30);
         if (!students || students.length === 0) {
           return new Response(JSON.stringify({ type: "message", text: `No student found matching "${args.student_name}".` }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } });
         }
-        const student = students[0];
+        const matched = narrowByClass(students as any[], (x: any) => x.class, (x: any) => x.section, args);
+        const labelOf = (l: any[]) => l.map((x: any) => `${x.full_name}${classLabel(x.class, x.section)}`).join(", ");
+        if (matched.length === 0) {
+          return new Response(JSON.stringify({ type: "message", text: `I couldn't find "${args.student_name}" in that class. Students with that name: ${labelOf(students as any[])}.` }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        if (matched.length > 1) {
+          return new Response(JSON.stringify({ type: "message", text: `I found multiple students matching "${args.student_name}": ${labelOf(matched)}. Could you specify which one, e.g. with their class and section?` }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const student = matched[0] as any;
         const { data: assignment } = await supabase
           .from("transport_assignments")
           .select("seat_number, fee_status, route_id, pickup_stop_id")

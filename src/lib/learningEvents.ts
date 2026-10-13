@@ -66,9 +66,19 @@ const scopeBody = (s: StreamScope) => ({
   ...(s.classId ? { class_id: s.classId } : {}),
 });
 
-async function call<T>(body: Record<string, unknown>): Promise<T> {
+async function call<T>(body: Record<string, unknown>, retried = false): Promise<T> {
   const { data, error } = await supabase.functions.invoke("get-mastery-history", { body });
-  if (error) throw new Error((await unwrapFunctionError(error, "Couldn't load learning activity.")).message);
+  if (error) {
+    // A 401 usually means the browser's session token went stale (tab left open, app resumed from the
+    // background). Refresh it and try once more before giving up.
+    const status = (error as { context?: Response } | null)?.context?.status;
+    if (status === 401 && !retried) {
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (!refreshError) return call<T>(body, true);
+    }
+    const { message } = await unwrapFunctionError(error, "Couldn't load learning activity.");
+    throw new Error(status === 401 ? "Your sign-in has expired. Please sign out and sign in again." : message);
+  }
   return data as T;
 }
 

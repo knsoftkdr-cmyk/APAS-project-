@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fetchSchoolClasses } from "./schoolClasses";
 
 export interface ClassOption { id: string; label: string; name: string }
 export interface BookOption { id: number; subject: string | null; class_name: string | null }
@@ -23,11 +24,12 @@ const subjectKey = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 const chunk = <T,>(arr: T[], n: number): T[][] =>
   Array.from({ length: Math.ceil(arr.length / n) }, (_, i) => arr.slice(i * n, i * n + n));
 
-/** Classes the user can work with: every class for staff/admins, assigned classes for teachers. */
-export async function fetchClassOptions(profile?: { id?: string; role?: string } | null): Promise<ClassOption[]> {
+/** Classes the user can work with: their own school's classes for staff/admins, assigned classes for teachers. */
+export async function fetchClassOptions(profile?: { id?: string; role?: string; school_id?: string | null } | null): Promise<ClassOption[]> {
   const isStaffAdmin = ["admin", "principal", "school_admin", "hod"].includes(profile?.role ?? "");
   if (isStaffAdmin) {
-    const { data } = await supabase.from("classes").select("id, name, section");
+    // Only this school's classes — `classes` is shared across schools, so never list the whole table.
+    const data = await fetchSchoolClasses(profile?.school_id);
     // deno-lint-ignore no-explicit-any
     return ((data ?? []) as any[]).map((c) => ({ id: c.id, name: c.name, label: `${c.name}${c.section ? " - " + c.section : ""}` }));
   }

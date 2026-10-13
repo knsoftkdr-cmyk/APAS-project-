@@ -1,4 +1,5 @@
 // Accessibility Engine - DOM helpers that can't be done with CSS alone.
+import { cleanForSpeech } from "@/lib/speechText";
 
 // ── screen-reader mode: tidy the accessibility tree ─────────────────────────────────────────────
 // Conservative on purpose. It only (a) hides purely decorative lucide icons from assistive tech (charts and
@@ -72,7 +73,7 @@ export function textToRead(): string {
 export function readAloud(text: string, opts: { lang?: string; onEnd?: () => void } = {}): boolean {
   if (!speechSupported() || !text) return false;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
+  const u = new SpeechSynthesisUtterance(cleanForSpeech(text));
   u.lang = opts.lang || document.documentElement.lang || "en";
   u.rate = 0.95;
   u.onend = () => opts.onEnd?.();

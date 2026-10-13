@@ -13,6 +13,8 @@ import { SpeechRecognition } from "@capgo/capacitor-speech-recognition";
 import robotAvatar from "@/assets/ai-assistant-robot.png";
 import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
+import { cleanForSpeech } from "@/lib/speechText";
+import { speakChunked } from "@/lib/speakChunked";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -328,6 +330,7 @@ export function AIPrincipalAssistantWidget() {
   };
 
   const speak = (text: string) => {
+    text = cleanForSpeech(text); // never read * # _ etc. aloud
     // Every call to speak() gets its own generation id, so only the
     // LATEST call is allowed to actually speak or react to its
     // utterance events - avoids competing/duplicate utterances.
@@ -342,6 +345,17 @@ export function AIPrincipalAssistantWidget() {
       setVoiceState("speaking");
       const estimatedMs = Math.max(1200, text.split(/\s+/).length * 380);
       lipSync.start(text, estimatedMs);
+      let nativeDone = false;
+      const finishNative = () => {
+        if (nativeDone) return;
+        nativeDone = true;
+        if (speechGenerationRef.current !== myGeneration) return; // superseded
+        lipSync.stop();
+        // short delay so the speaker tail isn't picked up as the next question
+        setTimeout(() => {
+          if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
+        }, 350);
+      };
       TextToSpeech.speak({
         text,
         lang: "en-US",
@@ -349,56 +363,36 @@ export function AIPrincipalAssistantWidget() {
         pitch: 1,
         volume: 1,
         category: "playback",
-      }).catch(() => {});
-      setTimeout(() => {
-        if (speechGenerationRef.current !== myGeneration) return; // superseded
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      }, estimatedMs);
+      }).then(() => finishNative()).catch(() => finishNative());
+      // Fallback only if the plugin never resolves - generous so long answers aren't cut off.
+      setTimeout(finishNative, Math.round(estimatedMs * 1.8) + 4000);
       return;
     }
 
     const doSpeak = () => {
       if (speechGenerationRef.current !== myGeneration) return; // superseded - don't speak stale text
-      const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      utterance.onstart = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        setVoiceState("speaking");
-        lipSync.start(text, estimateSpeechDurationMs(text));
-      };
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        lipSync.reanchor(event.charIndex ?? 0, text.length);
-      };
-      utterance.onend = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      utterance.onerror = (e: any) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (e?.error === "interrupted" || e?.error === "canceled") return;
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      window.speechSynthesis.speak(utterance);
-      setTimeout(() => {
-        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-      }, 60);
-      // Safety net: if the browser never fires onstart/onend at all (silent
-      // TTS failure), don't let the orb (or the mouth) sit stuck forever.
-      setTimeout(() => {
-        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
-          utteranceRef.current = null;
+      // Speak in short chunks so long answers are never cut off, and only open the
+      // mic after the LAST chunk has really finished (see src/lib/speakChunked.ts).
+      speakChunked(text, {
+        voice: null,
+        rate: 1,
+        pitch: 1,
+        isCurrent: () => speechGenerationRef.current === myGeneration,
+        onUtterance: (u) => { utteranceRef.current = u; },
+        onStart: () => {
+          setVoiceState("speaking");
+          lipSync.start(text, estimateSpeechDurationMs(text));
+        },
+        onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
+        onDone: () => {
           lipSync.stop();
-          startListeningSafely();
-        }
-      }, 15000);
+          if (voiceModeRef.current) startListeningSafely();
+        },
+        onFail: () => {
+          lipSync.stop();
+          if (voiceModeRef.current) startListeningSafely();
+        },
+      });
     };
 
     window.speechSynthesis.cancel();

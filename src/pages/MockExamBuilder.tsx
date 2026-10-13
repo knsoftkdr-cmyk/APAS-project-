@@ -220,7 +220,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
 
   return (
     <Shell embedded={embedded}>
-      <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
+      <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-5 max-w-5xl mx-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-6">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-rose-600 to-orange-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
@@ -284,16 +284,16 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
                 const blocked = blockedReason(c.id);
                 const st = chapterStats?.[c.id];
                 return (
-                  <div key={c.id} className={`flex items-center gap-2 rounded-md border p-2 ${blocked ? "opacity-60" : ""}`}>
+                  <div key={c.id} className={`flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border p-2.5 ${blocked ? "opacity-60" : ""}`}>
                     <Checkbox id={`ch-${c.id}`} checked={on} disabled={!!blocked} onCheckedChange={(v) => toggleChapter(c.id, v === true)} />
-                    <Label htmlFor={`ch-${c.id}`} className={`flex-1 text-sm truncate ${blocked ? "cursor-not-allowed" : "cursor-pointer"}`} title={c.chapter_name}>{c.chapter_name}</Label>
+                    <Label htmlFor={`ch-${c.id}`} className={`flex-1 min-w-[9rem] text-sm break-words ${blocked ? "cursor-not-allowed" : "cursor-pointer"}`} title={c.chapter_name}>{c.chapter_name}</Label>
                     {on ? (
                       <div className="flex items-center gap-1"><Input aria-label={`Weight for ${c.chapter_name}`} type="number" min={0.1} max={100} step={0.5} className="h-8 w-20"
                         value={chapterWeights[c.id]} onChange={(e) => setChapterWeights((w) => ({ ...w, [c.id]: e.target.value }))} /><span className="text-xs text-muted-foreground">%</span></div>
                     ) : blocked ? (
-                      <span className="text-[11px] text-amber-700 shrink-0">{blocked}</span>
+                      <span className="text-[11px] text-amber-700 basis-full pl-7 sm:basis-auto sm:pl-0">{blocked}</span>
                     ) : st ? (
-                      <span className="text-[11px] text-muted-foreground shrink-0" title="Active questions in the item bank, by type">
+                      <span className="text-[11px] text-muted-foreground basis-full pl-7 sm:basis-auto sm:pl-0" title="Active questions in the item bank, by type">
                         {(neededTypes.length ? neededTypes : ["mcq"]).map((t) => `${typeLabel(t)} ${st.byType[t] ?? 0}`).join(" · ")}
                       </span>
                     ) : null}
@@ -320,7 +320,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
             {selected.length > 0 && Math.abs(weightTotal - 100) > 0.5 && (
               <p className="text-xs text-muted-foreground">Weights add up to {weightTotal.toFixed(1)}% — they're scaled to 100% automatically.</p>
             )}
-            <Button onClick={onGenerate} disabled={!pattern || !weightsValid || generate.isPending}>
+            <Button className="w-full sm:w-auto h-10 sm:h-9" onClick={onGenerate} disabled={!pattern || !weightsValid || generate.isPending}>
               <Wand2 className="h-4 w-4 mr-1.5" />{generate.isPending ? "Assembling…" : "Generate paper"}
             </Button>
           </CardContent>
@@ -353,7 +353,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
                 </div>
                 <div className="flex items-center gap-3"><Switch id="strict" checked={strict} onCheckedChange={setStrict} />
                   <Label htmlFor="strict" className="text-sm">Enforce the {result.duration_minutes ?? pattern?.duration_minutes}-minute timer on the server <span className="text-muted-foreground text-xs">(unsaved work after time-up is auto-submitted from the last autosave)</span></Label></div>
-                <Button onClick={onAssign} disabled={!assignClassId || assign.isPending || !!assigned}>{assign.isPending ? "Assigning…" : assigned ? "Assigned" : "Assign mock exam"}</Button>
+                <Button className="w-full sm:w-auto" onClick={onAssign} disabled={!assignClassId || assign.isPending || !!assigned}>{assign.isPending ? "Assigning…" : assigned ? "Assigned" : "Assign mock exam"}</Button>
                 {assigned && <p className="text-sm text-emerald-700">Assigned to {assigned.students} students. They'll find it under My Exams.</p>}
               </div>
             </CardContent>

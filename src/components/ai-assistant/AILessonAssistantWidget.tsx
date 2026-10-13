@@ -15,6 +15,8 @@ import { createPortal } from "react-dom";
 import robotAvatar from "@/assets/ai-assistant-robot.png";
 import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
+import { cleanForSpeech } from "@/lib/speechText";
+import { speakChunked } from "@/lib/speakChunked";
 const isNativePlatform = Capacitor.isNativePlatform();
 
 interface VideoResult {
@@ -50,10 +52,21 @@ function classLabelFor(classLevel: string) {
   return classLevel.match(/^\d+$/) ? `Class ${classLevel}` : classLevel.charAt(0).toUpperCase() + classLevel.slice(1);
 }
 
+const NUMBER_WORDS: Record<string, string> = {
+  one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12",
+  first: "1", second: "2", third: "3", fourth: "4", fifth: "5", sixth: "6", seventh: "7", eighth: "8", ninth: "9", tenth: "10", eleventh: "11", twelfth: "12",
+};
+
 function normalizeClassLevel(text: string): string {
-  let stripped = text.trim().replace(/^(class|grade|std\.?|standard)\s+/i, "").trim();
-  // "4th" / "1st" / "2nd" / "3rd" -> "4" / "1" / "2" / "3"
+  // Keep the original casing (e.g. "LKG") - only compare case-insensitively.
+  let stripped = text.trim().replace(/[.,!?]+$/g, "");
+  // spoken fillers: "for class 7", "it's class 7", "in grade 7"
+  stripped = stripped.replace(/^(?:it'?s|its|it is|this is|for|in|the|of)\s+/i, "").replace(/^(class|grade|std\.?|standard)\s+/i, "").trim();
+  // "4th" / "1st" / "2nd" / "3rd" -> digits
   stripped = stripped.replace(/^(\d+)\s*(st|nd|rd|th)$/i, "$1");
+  // "five" / "fifth" -> digits
+  const word = NUMBER_WORDS[stripped.toLowerCase()];
+  if (word) stripped = word;
   return stripped || text.trim();
 }
 
@@ -382,6 +395,7 @@ export function AILessonAssistantWidget() {
   };
 
   const speak = (text: string) => {
+    text = cleanForSpeech(text); // never read * # _ etc. aloud
     // Every call to speak() gets its own generation id. If two speak()
     // calls happen close together (e.g. the widget mounted twice - React
     // StrictMode double-invoking in dev, or the widget rendered in two
@@ -407,6 +421,17 @@ export function AILessonAssistantWidget() {
       // mouth off the same estimated duration already used to schedule
       // when to resume listening - keeps them in lockstep.
       lipSync.start(text, estimatedMs);
+      let nativeDone = false;
+      const finishNative = () => {
+        if (nativeDone) return;
+        nativeDone = true;
+        if (speechGenerationRef.current !== myGeneration) return; // superseded
+        lipSync.stop();
+        // short delay so the speaker tail isn't picked up as the next question
+        setTimeout(() => {
+          if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
+        }, 350);
+      };
       TextToSpeech.speak({
         text,
         lang: "en-US",
@@ -414,73 +439,37 @@ export function AILessonAssistantWidget() {
         pitch: 1,
         volume: 1,
         category: "playback",
-      }).catch(() => {});
-      setTimeout(() => {
-        if (speechGenerationRef.current !== myGeneration) return; // superseded
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      }, estimatedMs);
+      }).then(() => finishNative()).catch(() => finishNative());
+      // Fallback only if the plugin never resolves - generous so long answers aren't cut off.
+      setTimeout(finishNative, Math.round(estimatedMs * 1.8) + 4000);
       return;
     }
 
     const doSpeak = () => {
       if (speechGenerationRef.current !== myGeneration) return; // superseded - don't speak stale text
       console.debug("[voice] speaking:", text);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      utterance.onstart = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        console.debug("[voice] tts started");
-        setVoiceState("speaking");
-        // Browsers never expose speechSynthesis audio to the Web Audio
-        // API, so we schedule mouth movement against an estimated
-        // duration and correct drift live via onboundary below.
-        lipSync.start(text, estimateSpeechDurationMs(text));
-      };
-      utterance.onboundary = (event: SpeechSynthesisEvent) => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        // Fires per-word (in browsers that support it) with the real
-        // character offset - use it to keep the mouth locked to the
-        // actual voice instead of drifting from the estimate.
-        lipSync.reanchor(event.charIndex ?? 0, text.length);
-      };
-      utterance.onend = () => {
-        if (speechGenerationRef.current !== myGeneration) return;
-        console.debug("[voice] tts ended");
-        utteranceRef.current = null;
-        lipSync.stop();
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      utterance.onerror = (e: any) => {
-        console.error("[voice] tts error:", e);
-        // A stale/superseded call's utterance was cancelled by a newer
-        // speak() - that's expected and not a real failure, so it must
-        // not touch state or restart listening.
-        if (speechGenerationRef.current !== myGeneration) return;
-        utteranceRef.current = null;
-        lipSync.stop();
-        // "interrupted"/"canceled" mean something else deliberately cut
-        // this utterance off (a newer speak() call, or exitVoiceMode).
-        // Whatever caused that already handles resuming listening itself.
-        if (e?.error === "interrupted" || e?.error === "canceled") return;
-        if (voiceModeRef.current) startListeningSafely();
-      };
-      window.speechSynthesis.speak(utterance);
-      setTimeout(() => {
-        if (window.speechSynthesis.paused) window.speechSynthesis.resume();
-      }, 60);
-      // Safety net: if the browser never fires onstart/onend at all (silent
-      // TTS failure), don't let the orb (or the mouth) sit stuck forever.
-      setTimeout(() => {
-        if (speechGenerationRef.current === myGeneration && utteranceRef.current === utterance && voiceModeRef.current) {
-          console.warn("[voice] tts appears stuck, forcing recovery");
-          utteranceRef.current = null;
+      // Speak in short chunks so long answers are never cut off, and only open the
+      // mic after the LAST chunk has really finished (see src/lib/speakChunked.ts).
+      speakChunked(text, {
+        voice: null,
+        rate: 1,
+        pitch: 1,
+        isCurrent: () => speechGenerationRef.current === myGeneration,
+        onUtterance: (u) => { utteranceRef.current = u; },
+        onStart: () => {
+          setVoiceState("speaking");
+          lipSync.start(text, estimateSpeechDurationMs(text));
+        },
+        onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
+        onDone: () => {
           lipSync.stop();
-          startListeningSafely();
-        }
-      }, 15000);
+          if (voiceModeRef.current) startListeningSafely();
+        },
+        onFail: () => {
+          lipSync.stop();
+          if (voiceModeRef.current) startListeningSafely();
+        },
+      });
     };
 
     // Cancel once, synchronously, and do not chase it with retries - the
@@ -687,7 +676,7 @@ export function AILessonAssistantWidget() {
         // failure, which can otherwise leave the orb stuck on "Thinking..."
         // for a long time with no feedback.
         const { data, error } = await withTimeout(
-          supabase.functions.invoke("extract-lesson-intent", { body: { message: text, mode: answerMode } }),
+          supabase.functions.invoke("extract-lesson-intent", { body: { message: text, mode: answerMode, history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })) } }),
           20000,
           "AI assistant"
         );
