@@ -38,6 +38,7 @@ interface EvidenceItem {
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleAdaptiveHomework } from "../_shared/handlers/adaptiveHomework.ts";
 import { handleGamification2 } from "../_shared/handlers/gamification2.ts";
+import { handleCompetencyMissions } from "../_shared/handlers/competencyMissions.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -47,6 +48,9 @@ const MERGED_ROUTES: RouteTable = {
   g2_state: { handler: handleGamification2, action: "state" },
   g2_event: { handler: handleGamification2, action: "event" },
   g2_claim: { handler: handleGamification2, action: "claim" },
+  // Competency Missions: gamification tied to verified mastery (students, own data only) - see handlers/competencyMissions.ts.
+  cm_state: { handler: handleCompetencyMissions, action: "state" },
+  cm_claim: { handler: handleCompetencyMissions, action: "claim" },
 };
 
 serve(async (req) => {

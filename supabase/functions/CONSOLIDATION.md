@@ -282,3 +282,31 @@ migration: heartbeat answers ok, the panel says device management is not switche
   "Sign out everywhere" button on Anomaly Alerts that name a user. **No sidebar change.**
 * Redeploy only `log-audit`. No new function. Retention: `public.prune_session_data()` (90 days).
 * Not touched: push tokens in `user_devices`. A revoked phone keeps its FCM token until that table is cleaned up separately.
+
+## Competency Missions (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| A student's mastery missions, re-checked against real mastery | update-mastery | **action**: `cm_state` |
+| Pay a verified mission's XP once | update-mastery | **action**: `cm_claim` |
+
+Handler: `_shared/handlers/competencyMissions.ts`; pure rules: `_shared/competencyMissionModel.ts` (tests: `src/test/competencyMissionModel.test.ts`).
+Storage: `competency_missions`, `competency_xp_awards` (migration 20261019000000, RLS on, no client policies). XP goes into the existing
+`user_gamification` + `xp_transactions`, so levels and the Leaderboard need no change. Without the migration both actions answer
+503 `persistence_unavailable` and the UI section hides itself.
+
+* Missions come from the student's own `student_mastery` rows: "level up" a skill to the next tier (>= 0.10 above where they are;
+  Developing 0.35 / Proficient 0.60 / Mastered 0.85, same bands as `student_mastery_labeled`), at most 3 at a time, one per topic;
+  plus one "topic quest" (raise a whole topic's average through 50% / 65% / 80% across at least 60% of its skills).
+* Nothing the browser reports can complete one. Every `cm_state` recomputes from `student_mastery` + `mastery_evidence_log`.
+  Complete = score reached target AND >= 3 answers (2 correct) since the mission started (topic quest: 6 / 4) AND those answers
+  on >= 2 different local days (1 day for the Developing tier). Mastery alone, however high, does not complete a mission.
+* XP: 25 / 60 / 100 per skill tier, 80 / 120 / 180 per topic target. Paid once per skill tier or topic target ever
+  (`UNIQUE(user_id, scope_key)`), so forgetting and re-learning can't be farmed. Capped at 400 mastery XP per local day; a claim
+  over the cap waits (429 `daily_cap`) and the mission stays completed. Missions expire after 21 days and are re-offered fresh.
+* UI: a "Competency missions" section at the top of the existing **Gamification -> Missions** tab (students). No new route, no sidebar change.
+  Needs Gamification 2.0 switched on (the Missions tab lives behind it).
+* Redeploy only `update-mastery`. No new function.
+* Known limit: mastery is only as trustworthy as the flows that write it. `useMastery`'s direct `update-mastery` call sends
+  client-judged `is_correct`, so a determined student could still inflate a score; the evidence/multi-day rules and the daily cap
+  make that slow and bounded, not impossible. Grading every flow server-side is the real fix.

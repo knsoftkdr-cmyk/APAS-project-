@@ -1,5 +1,6 @@
 import { Flame, Snowflake, Loader2, Check, Gift, Target } from "lucide-react";
 import type { G2Awarded, G2Badge, G2Mission, G2State } from "@/lib/gamification2";
+import { CompetencyMissionsSection } from "@/components/gamification/hub/CompetencyMissions";
 
 // Gamification 2.0 panels for the existing Gamification page (no new route, no new sidebar entry).
 // Styled to match that page's dark glass look.
@@ -268,7 +269,15 @@ export function Gamification2Panel({
       </Glass>
     );
   }
-  if (tab === "missions") return <MissionsPanel state={state} onClaim={onClaim} claimingId={claimingId} />;
+  if (tab === "missions") {
+    return (
+      <div className="space-y-6">
+        {/* Competency missions: tied to verified mastery. onRetry refreshes the level / XP header after a reward. */}
+        <CompetencyMissionsSection onXpChange={onRetry} />
+        <MissionsPanel state={state} onClaim={onClaim} claimingId={claimingId} />
+      </div>
+    );
+  }
   if (tab === "badges") return <BadgesPanel state={state} />;
   return <ProgressPanel state={state} />;
 }
