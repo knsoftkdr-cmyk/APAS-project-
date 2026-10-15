@@ -10,6 +10,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+import { useAuth } from "@/contexts/AuthContext";
 
 export async function invokeFn<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(name, { body });
@@ -246,10 +247,12 @@ export interface AttemptPayload {
 }
 
 export function useExamAttempt(assignmentId?: string) {
+  // The assignment id is shared by the whole class, so the cache key must say WHOSE attempt this is.
+  const { user } = useAuth();
   return useQuery<AttemptPayload>({
-    queryKey: ["exam-attempt", assignmentId],
+    queryKey: ["exam-attempt", assignmentId, user?.id ?? "anon"],
     queryFn: () => invokeFn<AttemptPayload>("cat-session", { action: "paper_attempt", assignment_id: assignmentId }),
-    enabled: !!assignmentId,
+    enabled: !!assignmentId && !!user?.id,
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     retry: false,

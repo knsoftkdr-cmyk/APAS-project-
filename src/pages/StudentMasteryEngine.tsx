@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +8,7 @@ import { useMasteryTree } from "@/hooks/useMastery";
 import { useAtRiskConcepts } from "@/hooks/useKnowledgeGraph";
 import { MasteryTree } from "@/components/mastery/MasteryTree";
 
-export default function StudentMasteryEngine() {
+export default function StudentMasteryEngine({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: subjects, isLoading, error } = useMasteryTree();
   const [activeBook, setActiveBook] = useState<string | null>(null);
 
@@ -17,7 +17,7 @@ export default function StudentMasteryEngine() {
   const atRiskSubtopicIds = new Set((atRisk ?? []).map((a) => a.subtopic_id));
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -75,6 +75,6 @@ export default function StudentMasteryEngine() {
           </>
         )}
       </div>
-    </AppLayout>
+    </PageShell>
   );
 }

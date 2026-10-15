@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,14 +16,14 @@ import { Gauge, ClipboardCheck } from "lucide-react";
 import { useMasteryTree } from "@/hooks/useMastery";
 import { StudentCohortView, StudentReadinessView } from "@/components/exam/ExamReadinessPanels";
 
-export default function ExamReadiness() {
+export default function ExamReadiness({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: subjects } = useMasteryTree();
   const [bookId, setBookId] = useState<string>("all");
   const [view, setView] = useState<"readiness" | "cohort">("readiness");
   const numericBook = bookId === "all" ? undefined : Number(bookId);
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-fuchsia-600 shadow-lg">
           <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
@@ -56,6 +56,6 @@ export default function ExamReadiness() {
           ? <StudentReadinessView key={`r-${bookId}`} bookId={numericBook} />
           : <StudentCohortView key={`c-${bookId}`} bookId={numericBook} />}
       </div>
-    </AppLayout>
+    </PageShell>
   );
 }

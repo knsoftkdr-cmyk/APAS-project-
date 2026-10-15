@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
@@ -121,6 +121,16 @@ const fetchProfile = async (userId: string) => {
 
   // Session & Device Management: register this device and honour "sign out from another device".
   useSessionGuard(session);
+
+  // Never let one person's cached data reach the next person on the same browser tab. Many query keys are
+  // shared by the whole class (e.g. an exam assignment) or are "self" keys, so when the signed-in user
+  // changes - or signs out - drop everything cached. A token refresh keeps the same user id and is untouched.
+  const lastUserId = useRef<string | null>(null);
+  useEffect(() => {
+    const id = session?.user?.id ?? null;
+    if (lastUserId.current !== null && lastUserId.current !== id) queryClient.clear();
+    lastUserId.current = id;
+  }, [session?.user?.id, queryClient]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
