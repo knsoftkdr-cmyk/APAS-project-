@@ -10,8 +10,9 @@ function formatTick(iso: string) {
   }
 }
 
-// Ebbinghaus-style decay curve for one learning objective: today's position
-// on the curve, projected forward to the next review date and beyond.
+// Decay curve for one learning objective: predicted recall = how well you know it (mastery) x how much of
+// it you still remember (Ebbinghaus decay). So it starts at your mastery level, not at 100%.
+// Today's position is marked, projected forward to the next review date and beyond.
 export function ForgettingCurveChart({ curve, height = 220 }: { curve: RetentionCurve | null; height?: number }) {
   if (!curve || curve.points.length === 0) {
     return (
@@ -36,6 +37,13 @@ export function ForgettingCurveChart({ curve, height = 220 }: { curve: Retention
       : closest,
   );
 
+  // Where the "next review" marker sits: on the curve itself, at the point nearest the due date.
+  const dueTime = new Date(curve.due_at).getTime();
+  const duePoint = data.reduce((closest, p) =>
+    Math.abs(new Date(p.date).getTime() - dueTime) < Math.abs(new Date(closest.date).getTime() - dueTime) ? p : closest,
+  );
+  const masteryPct = curve.p_mastery != null ? Math.round(curve.p_mastery * 100) : null;
+
   return (
     <div className="space-y-2">
       <ResponsiveContainer width="100%" height={height}>
@@ -52,8 +60,8 @@ export function ForgettingCurveChart({ curve, height = 220 }: { curve: Retention
           <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="4 4" opacity={0.5} label={{ value: "50%", fontSize: 10, position: "insideTopLeft" }} />
           {!isPast(new Date(curve.due_at)) && (
             <ReferenceDot
-              x={formatTick(curve.due_at)}
-              y={90}
+              x={duePoint.label}
+              y={duePoint.pct}
               r={4}
               fill="hsl(var(--primary))"
               stroke="none"
@@ -62,7 +70,7 @@ export function ForgettingCurveChart({ curve, height = 220 }: { curve: Retention
           )}
           <Tooltip
             formatter={(value: number, _name, item) => [
-              `${value}% predicted retention`,
+              `${value}% predicted recall`,
               item.payload.isFuture ? "Projected" : "Past",
             ]}
             labelFormatter={(label) => label}
@@ -71,8 +79,13 @@ export function ForgettingCurveChart({ curve, height = 220 }: { curve: Retention
         </AreaChart>
       </ResponsiveContainer>
       <p className="text-xs text-muted-foreground text-center">
-        Estimated half-life: ~{Math.round(curve.half_life_days)} day{Math.round(curve.half_life_days) === 1 ? "" : "s"} · today ~{Math.round(todayPoint.retention * 100)}% predicted retention
+        Estimated half-life: ~{Math.round(curve.half_life_days)} day{Math.round(curve.half_life_days) === 1 ? "" : "s"} · today ~{Math.round(todayPoint.retention * 100)}% predicted recall
       </p>
+      {masteryPct != null && (
+        <p className="text-[11px] text-muted-foreground text-center">
+          Starts from your current mastery of this concept ({masteryPct}%) and fades as time passes without review.
+        </p>
+      )}
     </div>
   );
 }

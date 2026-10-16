@@ -438,3 +438,31 @@ html.a11y-dyslexia body :where(.uppercase) {
 html.a11y-dyslexia body :where([class*="text-justify"]) {
   text-align: left !important;
 }
+
+/* ------------------------------------------------------------------
+   Voice-mode overlay (shared by all AI assistant widgets).
+   Soft white background with a gentle blue/teal tint and dark slate
+   text for strong contrast.
+------------------------------------------------------------------- */
+@layer utilities {
+  .voice-overlay-bg {
+    background-color: #f8fafc;
+    background-image:
+      radial-gradient(55rem 38rem at 10% 5%, rgba(129, 140, 248, 0.22), transparent 60%),
+      radial-gradient(50rem 36rem at 95% 15%, rgba(56, 189, 248, 0.20), transparent 60%),
+      radial-gradient(55rem 40rem at 50% 105%, rgba(45, 212, 191, 0.22), transparent 60%),
+      linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+  }
+  .voice-overlay-btn {
+    background: #ffffff;
+    border: 1px solid #94a3b8;
+    color: #0f172a;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.10);
+    transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
+  }
+  .voice-overlay-btn:hover {
+    background: #eef2ff;
+    border-color: #818cf8;
+    transform: translateY(-1px);
+  }
+}

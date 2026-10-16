@@ -484,10 +484,10 @@ export function AISchoolAdminAssistantWidget() {
       )}
 
       {open && voiceMode && (
-        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-black">
+        <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center voice-overlay-bg">
           <button
             onClick={exitVoiceMode}
-            className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+            className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full voice-overlay-btn"
             aria-label="Exit voice mode"
           >
             <X className="h-5 w-5" />
@@ -520,7 +520,7 @@ export function AISchoolAdminAssistantWidget() {
             )}
 
             <div
-              className="relative h-48 w-48 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white/10"
+              className="relative h-48 w-48 overflow-hidden rounded-full bg-white shadow-2xl ring-4 ring-white shadow-indigo-200/60"
               style={{
                 transform:
                   voiceState === "speaking"
@@ -538,30 +538,30 @@ export function AISchoolAdminAssistantWidget() {
             </div>
           </div>
 
-          <p className="mt-8 text-sm font-medium tracking-wide text-white/70">{orbStateLabel[voiceState]}</p>
+          <p className="mt-8 text-sm tracking-wide text-slate-950 font-semibold">{orbStateLabel[voiceState]}</p>
 
           {voiceError && (
-            <p className="mt-4 max-w-md px-6 text-center text-xs text-red-400">
+            <p className="mt-4 max-w-md px-6 text-center text-sm font-semibold text-red-700">
               {voiceError}
             </p>
           )}
 
           {!voiceError && messages.length > 0 && (
-            <p className="mt-4 max-w-md px-6 text-center text-xs text-white/40">
+            <p className="mt-4 max-w-md px-6 text-center text-sm text-slate-800">
               {messages[messages.length - 1].text}
             </p>
           )}
 
           <button
             onClick={() => startListeningSafely()}
-            className="mt-6 rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:bg-white/10 transition-colors"
+            className="mt-6 rounded-full px-5 py-2 text-xs font-semibold voice-overlay-btn"
           >
             Tap to retry listening
           </button>
 
           <button
             onClick={exitVoiceMode}
-            className="mt-3 rounded-full border border-white/20 px-5 py-2 text-xs text-white/70 hover:bg-white/10 transition-colors"
+            className="mt-3 rounded-full px-5 py-2 text-xs font-semibold voice-overlay-btn"
           >
             Switch to typing
           </button>

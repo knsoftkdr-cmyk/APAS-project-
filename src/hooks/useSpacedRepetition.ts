@@ -13,6 +13,10 @@ export interface ReviewForecast {
   long_retention_count: number;
   recent_lapses: number;
   last_reviewed_at: string | null;
+  /** due, but no practice question exists for the objective yet (so it can't be served) */
+  due_without_questions?: number;
+  /** the next time something becomes reviewable (null when nothing is scheduled ahead) */
+  next_due_at?: string | null;
 }
 
 export interface ReviewItem {

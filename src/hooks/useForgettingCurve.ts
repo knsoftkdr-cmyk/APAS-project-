@@ -15,7 +15,10 @@ export interface ForgettingForecastItem {
   chapter_name: string;
   subject: string;
   class_name: string | null;
+  /** predicted recall now = mastery x memory decay (0-1) */
   retention_now: number;
+  /** current mastery estimate (0-1); the curve starts here, not at 100% */
+  p_mastery?: number;
   due_at: string;
   forgetting_date: string;
   days_until_forgotten: number;
@@ -35,7 +38,26 @@ export interface RetentionCurve {
   last_reviewed_at: string;
   due_at: string;
   half_life_days: number;
+  /** mastery the curve starts from (0-1) */
+  p_mastery?: number;
   points: RetentionCurvePoint[];
+}
+
+/** A concept that was answered but isn't learned yet - there is nothing to forget, so it gets no forecast. */
+export interface StillLearningItem {
+  learning_objective_id: number;
+  objective_text: string;
+  difficulty: "easy" | "medium" | "hard";
+  subtopic_id: number;
+  subtopic_name: string;
+  topic_id: number;
+  topic_name: string;
+  chapter_name: string;
+  subject: string;
+  class_name: string | null;
+  p_mastery: number;
+  last_reviewed_at: string;
+  reason: "answered_incorrectly" | "low_mastery";
 }
 
 export interface ClassForgettingRiskTopic {
@@ -63,6 +85,31 @@ export function useForgettingForecast(args: { studentId?: string; threshold?: nu
       });
       if (error) throw error;
       return (data?.forecast ?? []) as ForgettingForecastItem[];
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+// ── The Forgetting Forecast page: concepts you know (with forecasts) + concepts still to learn ─────────
+export function useForgettingOverview(args: { studentId?: string; threshold?: number; horizonDays?: number; bookId?: number } = {}) {
+  return useQuery<{ forecast: ForgettingForecastItem[]; stillLearning: StillLearningItem[] }>({
+    queryKey: ["forgetting-overview", args.studentId ?? "self", args.threshold ?? 0.5, args.horizonDays ?? 14, args.bookId ?? "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("get-class-forgetting-risk", {
+        body: {
+          action: "student_forecast",
+          include_unlearned: true,
+          student_id: args.studentId,
+          threshold: args.threshold,
+          horizon_days: args.horizonDays,
+          book_id: args.bookId,
+        },
+      });
+      if (error) throw error;
+      return {
+        forecast: (data?.forecast ?? []) as ForgettingForecastItem[],
+        stillLearning: (data?.still_learning ?? []) as StillLearningItem[],
+      };
     },
     staleTime: 60 * 1000,
   });

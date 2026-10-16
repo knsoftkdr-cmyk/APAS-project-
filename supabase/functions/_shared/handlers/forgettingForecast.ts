@@ -4,14 +4,16 @@
 // own (Edge Function deployment limit): `get-class-forgetting-risk` routes to it via action "student_forecast"
 // - see _shared/mergedRouter.ts. Request/response contract is unchanged.
 //
-// Body: { student_id?, threshold?, horizon_days?, book_id? }
+// Body: { student_id?, threshold?, horizon_days?, book_id?, include_unlearned? }
 // Students: student_id is resolved from their own profile (any value they
 // pass is ignored). Staff: may pass student_id explicitly.
 //
-// Every one of this student's scheduled objectives with a predicted
-// retention curve, soonest-to-be-forgotten first. threshold (default 0.5)
-// is the recall probability counted as "forgotten"; horizon_days (default
-// 14) is how soon that has to happen to be flagged is_at_risk.
+// The concepts this student has actually LEARNED (last answer correct and mastery >= 0.60), each with
+// a predicted-recall curve (mastery x memory decay), soonest-to-be-forgotten first. threshold (default
+// 0.5) is the recall probability counted as "forgotten"; horizon_days (default 14) is how soon that has
+// to happen to be flagged is_at_risk.
+// include_unlearned: true additionally returns `still_learning` - concepts that were answered but not
+// learned yet (nothing to forget), which the student page lists separately.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -54,7 +56,7 @@ export async function handleForgettingForecast(req: Request): Promise<Response> 
     }
 
     const isStaff = ["admin", "teacher", "school_admin", "principal", "hod"].includes(profile.role);
-    const { student_id, threshold, horizon_days, book_id } = await req.json().catch(() => ({}));
+    const { student_id, threshold, horizon_days, book_id, include_unlearned } = await req.json().catch(() => ({}));
 
     let targetStudentId: string | null = null;
     if (profile.role === "student") {
@@ -87,7 +89,21 @@ export async function handleForgettingForecast(req: Request): Promise<Response> 
     });
     if (error) throw error;
 
-    return new Response(JSON.stringify({ student_id: targetStudentId, forecast: data ?? [] }), {
+    let stillLearning: unknown[] | undefined;
+    if (include_unlearned) {
+      const { data: unlearned, error: unlearnedError } = await supabaseClient.rpc("get_forgetting_unlearned", {
+        p_student_id: targetStudentId,
+        p_book_id: book_id ?? null,
+      });
+      if (unlearnedError) throw unlearnedError;
+      stillLearning = (unlearned as unknown[]) ?? [];
+    }
+
+    return new Response(JSON.stringify({
+      student_id: targetStudentId,
+      forecast: data ?? [],
+      ...(stillLearning ? { still_learning: stillLearning } : {}),
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

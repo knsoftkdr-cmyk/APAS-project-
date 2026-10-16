@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,16 +7,16 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   RotateCw, CheckCircle2, XCircle, ChevronRight, Trophy, Loader2,
-  Flame, CalendarClock, Clock3, AlarmClockOff,
+  Flame, CalendarClock, Clock3, AlarmClock, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   useDueReviews, useAnswerReview, useSnoozeReview, useReviewForecast,
-  type DueReview,
+  type DueReview, type ReviewForecast,
 } from "@/hooks/useSpacedRepetition";
 
-type Phase = "loading" | "empty" | "review" | "feedback" | "done";
+type Phase = "loading" | "error" | "empty" | "review" | "feedback" | "done";
 
 const DIFFICULTY_STYLES: Record<DueReview["difficulty"], string> = {
   easy: "bg-emerald-100 text-emerald-800 border-emerald-300",
@@ -24,21 +24,45 @@ const DIFFICULTY_STYLES: Record<DueReview["difficulty"], string> = {
   hard: "bg-red-100 text-red-800 border-red-300",
 };
 
+/** "in 35 min" / "in 5 hours" / "in 3 days (Fri, 17 Oct)" */
+function formatWhen(iso: string): string {
+  const mins = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  if (mins < 60) return `in ${Math.max(1, mins)} min`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `in ${hours} hour${hours === 1 ? "" : "s"}`;
+  const days = Math.round(hours / 24);
+  const date = new Date(iso).toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" });
+  return `in ${days} day${days === 1 ? "" : "s"} (${date})`;
+}
+
 export default function DailyReview() {
-  const { data: queueData, isLoading, refetch } = useDueReviews({ limit: 20 });
+  const { data: queueData, isLoading, isError, error, isFetching, refetch } = useDueReviews({ limit: 20 });
   const { data: forecast } = useReviewForecast();
   const answerReview = useAnswerReview();
   const snoozeReview = useSnoozeReview();
+
+  // The queue for THIS session is frozen when it first loads. Answering a review reschedules it, so the
+  // live query drops that item as soon as it refetches - if the screen followed the live list, the
+  // question under the student would be swapped for the next one while its feedback was still showing,
+  // and every "Next" would then skip an item. Waiting for !isFetching means a stale cached list from an
+  // earlier visit is never used.
+  const [session, setSession] = useState<DueReview[] | null>(null);
+  useEffect(() => {
+    if (session === null && queueData && !isFetching) setSession(queueData.reviews ?? []);
+  }, [queueData, isFetching, session]);
 
   const [index, setIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<"A" | "B" | "C" | "D" | null>(null);
   const [feedback, setFeedback] = useState<Awaited<ReturnType<typeof answerReview.mutateAsync>> | null>(null);
   const [sessionStats, setSessionStats] = useState({ answered: 0, correct: 0 });
+  const [checking, setChecking] = useState(false);
 
-  const reviews = queueData?.reviews ?? [];
+  const reviews = session ?? [];
   const current = reviews[index];
 
-  const phase: Phase = isLoading
+  const phase: Phase = isError && session === null
+    ? "error"
+    : isLoading || session === null
     ? "loading"
     : reviews.length === 0
     ? "empty"
@@ -77,9 +101,27 @@ export default function DailyReview() {
     try {
       await snoozeReview.mutateAsync({ learningObjectiveId: current.learning_objective_id, days: 1 });
       toast.success("Pushed to tomorrow.");
+      setSelectedOption(null); // don't carry a half-made choice over to the next question
       setIndex((i) => i + 1);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't snooze that review.");
+    }
+  };
+
+  const handleCheckForMore = async () => {
+    setChecking(true);
+    try {
+      const r = await refetch();
+      if (r.isError || !r.data) throw r.error ?? new Error("Couldn't check for more reviews.");
+      setSession(r.data.reviews ?? []);
+      setIndex(0);
+      setFeedback(null);
+      setSelectedOption(null);
+      setSessionStats({ answered: 0, correct: 0 });
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't check for more reviews.");
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -104,17 +146,18 @@ export default function DailyReview() {
           </CardContent></Card>
         )}
 
-        {phase === "empty" && (
+        {phase === "error" && (
           <Card>
-            <CardContent className="p-8 text-center space-y-2">
-              <Trophy className="h-10 w-10 text-emerald-500 mx-auto" />
-              <p className="font-medium">Nothing due right now</p>
-              <p className="text-sm text-muted-foreground">
-                Everything you've learned is scheduled for later review. Come back when it's due.
-              </p>
+            <CardContent className="p-8 text-center space-y-3">
+              <AlertTriangle className="h-10 w-10 text-amber-500 mx-auto" />
+              <p className="font-medium">Couldn't load your reviews</p>
+              <p className="text-sm text-muted-foreground">{error instanceof Error ? error.message : "Something went wrong."}</p>
+              <Button variant="outline" onClick={() => refetch()}>Try again</Button>
             </CardContent>
           </Card>
         )}
+
+        {phase === "empty" && <EmptyState forecast={forecast} />}
 
         {(phase === "review" || phase === "feedback") && current && (
           <>
@@ -150,13 +193,8 @@ export default function DailyReview() {
               <p className="text-sm text-muted-foreground">
                 {sessionStats.correct} of {sessionStats.answered} correct this session.
               </p>
-              <Button
-                onClick={() => {
-                  setIndex(0);
-                  setSessionStats({ answered: 0, correct: 0 });
-                  refetch();
-                }}
-              >
+              <Button onClick={handleCheckForMore} disabled={checking}>
+                {checking && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
                 Check for more
               </Button>
             </CardContent>
@@ -168,11 +206,41 @@ export default function DailyReview() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-function ForecastStrip({ forecast }: { forecast: { due_now: number; due_today: number; due_next_7_days: number; long_retention_count: number } }) {
+/** Says WHY nothing is queued, so an empty screen never contradicts the numbers above it. */
+function EmptyState({ forecast }: { forecast?: ReviewForecast }) {
+  const waiting = forecast?.due_without_questions ?? 0;
+  let title = "You're all caught up";
+  let body: string;
+  if (waiting > 0) {
+    title = "Nothing to practise yet";
+    body = `${waiting} concept${waiting === 1 ? " is" : "s are"} due for review but ${waiting === 1 ? "has" : "have"} no practice questions yet. ${
+      waiting === 1 ? "It" : "They"
+    } will show up here as soon as questions are added.`;
+    if (forecast?.next_due_at) body += ` Your next other review is due ${formatWhen(forecast.next_due_at)}.`;
+  } else if (forecast?.next_due_at) {
+    body = `Your next review is due ${formatWhen(forecast.next_due_at)}. Come back then.`;
+  } else if (forecast && forecast.total_scheduled > 0) {
+    body = "Everything you've learned is scheduled for later review. Come back when it's due.";
+  } else {
+    body = "Reviews appear here after you answer questions in tests, homework or the adaptive test.";
+  }
+  return (
+    <Card>
+      <CardContent className="p-8 text-center space-y-2">
+        <Trophy className="h-10 w-10 text-emerald-500 mx-auto" />
+        <p className="font-medium">{title}</p>
+        <p className="text-sm text-muted-foreground">{body}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+function ForecastStrip({ forecast }: { forecast: ReviewForecast }) {
   const stats = useMemo(
     () => [
-      { icon: AlarmClockOff, label: "Overdue", value: forecast.due_now },
-      { icon: Clock3, label: "Due today", value: forecast.due_today },
+      { icon: AlarmClock, label: "Due now", value: forecast.due_now },
+      { icon: Clock3, label: "Later today", value: forecast.due_today },
       { icon: CalendarClock, label: "Next 7 days", value: forecast.due_next_7_days },
       { icon: Flame, label: "Locked in (21d+)", value: forecast.long_retention_count },
     ],
