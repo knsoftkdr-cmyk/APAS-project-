@@ -4,6 +4,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AccessibilityLauncher } from "@/components/accessibility/AccessibilityPanel";
+import { UniversalSearch } from "@/components/search/UniversalSearch";
+import { clearAllRecentSearches } from "@/lib/universalSearch";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
@@ -86,6 +88,7 @@ console.log("Bell Unread Count:", unreadCount);
 
   const handleLogout = async () => {
     setMenuOpen(false);
+    clearAllRecentSearches(); // search history is per-user and must not outlive the session on a shared device
     await signOut();
     navigate("/login");
   };
@@ -112,6 +115,8 @@ console.log("Bell Unread Count:", unreadCount);
       <div className="flex-1" />
 
       <div className="flex items-center gap-2">
+
+        <UniversalSearch />
 
         <AccessibilityLauncher />
 
