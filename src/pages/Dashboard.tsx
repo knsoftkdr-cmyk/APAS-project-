@@ -302,7 +302,7 @@ const TeacherHome = () => {
         actions={<HeroCalendarButton />}
       />
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+      <div data-tour="dashboard-stats" className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
         <DashStatCard
           label="Assessments Completed"
           value={assessmentCount ?? 0}
@@ -486,7 +486,7 @@ const AdminHome = () => {
         description="APAS (Adaptive Pedagogy & Analytics System) is a futuristic AI Operating System designed to personalise learning at scale. As an admin, you oversee classes, teachers, students, diagnostics, and system-wide analytics from one place."
       />
 
-      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+      <div data-tour="dashboard-stats" className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
         <DashStatCard label="Classes" value={stats?.classes ?? 0} icon={Book} accent="blue" loading={isLoading} />
         <DashStatCard label="Students" value={stats?.students ?? 0} icon={Users} accent="pink" loading={isLoading} />
         <DashStatCard label="Teachers" value={stats?.teachers ?? 0} icon={GraduationCap} accent="emerald" loading={isLoading} />

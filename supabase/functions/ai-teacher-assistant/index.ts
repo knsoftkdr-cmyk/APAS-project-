@@ -4,16 +4,19 @@ import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleTeacherCopilot } from "../_shared/handlers/teacherCopilot.ts";
 import { handlePtmPrep } from "../_shared/handlers/ptmPrep.ts";
 import { handleIepGenerator } from "../_shared/handlers/iepGenerator.ts";
+import { handleCommandBar } from "../_shared/handlers/commandBar.ts";
 
 // Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
 //   action "copilot": Teacher Copilot - lesson planning, assessment, remediation and student analysis.
 //   action "ptm_prep": Parent-Teacher Meeting Intelligence - discussion points for a booked meeting.
 //   action "iep_generate": Individual Education Plan generator - drafts an IEP for a SEN student (saves nothing).
+//   action "command_bar": AI Command Bar - resolves a typed command and runs a fixed, scoped, READ-ONLY lookup (any signed-in role).
 // A body WITHOUT a matching `action` (the existing { teacher_id, school_id } call) runs the original code below.
 const MERGED_ROUTES: RouteTable = {
   copilot: { handler: handleTeacherCopilot },
   ptm_prep: { handler: handlePtmPrep },
   iep_generate: { handler: handleIepGenerator },
+  command_bar: { handler: handleCommandBar },
 };
 
 const corsHeaders = {

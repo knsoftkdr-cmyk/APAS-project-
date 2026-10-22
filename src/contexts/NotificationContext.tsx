@@ -10,6 +10,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import {
+  inferCategory, isDuplicateOfRecent, mapGovernanceRow, mergeNotifications,
+  type NotificationCategory,
+} from "@/lib/notificationModel";
 
 // ---------------------------------------- Types ---------------------------------------------------
 
@@ -27,6 +31,14 @@ export interface Notification {
   assignment_id?: string;
   worksheet_assignment_id?: string;
   sender_id?: string;
+
+  /** governance_notifications.event_type, or a short name for notifications raised in the browser. */
+  event_type?: string;
+  category?: NotificationCategory;
+  /** "db" = backed by a governance_notifications row, so read/dismiss are saved there. */
+  source?: "db" | "local";
+  /** Identity for the live duplicate guard (e.g. the sender, so two senders' messages never merge). */
+  dedupe_key?: string;
 }
 
 interface NotificationContextType {
@@ -38,6 +50,8 @@ interface NotificationContextType {
 markWorksheetNotificationAsRead: (worksheetAssignmentId: string) => void;
   markMessageNotificationsAsRead: (senderId: string) => void;
   setActiveMessageThreadId: (id: string | null) => void;
+  /** Remove a notification from the bell and inbox. Saved to the database for database-backed rows. */
+  dismiss: (id: string) => void;
 }
 
 // ------------------------------------ Context ------------------------------------------
@@ -51,9 +65,36 @@ const NotificationContext = createContext<NotificationContextType>({
   markWorksheetNotificationAsRead: () => {},
   markMessageNotificationsAsRead: () => {},
   setActiveMessageThreadId: () => {},
+  dismiss: () => {},
 });
 
 // -------------------------------------- Helper ------------------------------------------------
+const MAX_NOTIFICATIONS = 200;
+
+/** Fire-and-forget banner for a new notification. */
+function announce(n: { type: NotificationType; title: string; message: string }) {
+  const toastFn =
+    n.type === "success" ? toast.success : n.type === "warning" ? toast.warning : n.type === "error" ? toast.error : toast.info;
+  toastFn(n.title, { description: n.message, duration: 4000 });
+}
+
+function loadIdSet(key: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(key);
+    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveIdSet(key: string, ids: Set<string>) {
+  try {
+    localStorage.setItem(key, JSON.stringify(Array.from(ids).slice(-200)));
+  } catch {
+    /* ignore */
+  }
+}
+
 
 function makeNotification(
   overrides: Omit<Notification, "id" | "is_read" | "created_at">
@@ -83,7 +124,7 @@ function loadFromStorage(userId: string): Notification[] {
 
 function saveToStorage(userId: string, notifications: Notification[]) {
   try {
-    localStorage.setItem(storageKey(userId), JSON.stringify(notifications.slice(0, 50)));
+    localStorage.setItem(storageKey(userId), JSON.stringify(notifications.slice(0, MAX_NOTIFICATIONS)));
   } catch {
     // storage quota exceeded - ignore
   }
@@ -139,6 +180,9 @@ function saveNotifiedWorksheets(
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  // Always-current copy of the list, so callbacks that must not re-create on every change can still read it.
+  const notificationsRef = useRef<Notification[]>([]);
+  notificationsRef.current = notifications;
   
   // useEffect(() => {
   //   if (!user) { setNotifications([]); return; }
@@ -169,39 +213,43 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     if (!user) return;
     saveToStorage(user.id, notifications);
   }, [notifications, user?.id]);
-  // ------------------------------------ Load unread governance_notifications (e.g. substitute approvals) on login ------------------------------------
+  // ------------------------------------ Load this user's recent governance_notifications on login ------------------------------------
+  // Newest 100 rows, read AND unread, so the inbox has history. RLS returns only this user's own rows.
+  // The database now holds read/dismissed state, so it wins; the one exception is anything already read on this
+  // device before read state was saved to the database, which stays read (and is synced up below).
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("governance_notifications")
-        .select("id, event_type, title, message, is_read, created_at")
-        .eq("user_id", user.id)
-        .eq("is_read", false)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      if (data && data.length > 0) {
-        setNotifications((prev) => {
-          const existingIds = new Set(prev.map((n) => n.id));
-          const mapped: Notification[] = data
-            .filter((row) => !existingIds.has(row.id))
-            .map((row) => ({
-              id: row.id,
-              title: row.title,
-              message: row.message,
-              type: row.event_type.includes("rejected")
-                ? "warning"
-                : row.event_type.includes("approved")
-                ? "success"
-                : "info",
-              is_read: row.is_read,
-              created_at: row.created_at,
-            }));
-          return [...mapped, ...prev].slice(0, 50);
-        });
+      const cols = "id, event_type, title, message, is_read, created_at";
+      const query = (select: string) =>
+        (supabase as any).from("governance_notifications").select(select).eq("user_id", user.id).order("created_at", { ascending: false }).limit(100);
+      let res = await query(`${cols}, dismissed_at`);
+      // dismissed_at comes from migration 20261024000000; keep working until it is applied.
+      if (res.error) res = await query(cols);
+      const rows = (res.data ?? null) as Array<Record<string, any>> | null;
+      if (cancelled || !rows) return;
+
+      const dismissed = new Set(rows.filter((r) => r.dismissed_at).map((r) => r.id as string));
+      const live = rows.filter((r) => !r.dismissed_at);
+      const localRead = new Set(notificationsRef.current.filter((n) => n.is_read).map((n) => n.id));
+
+      const toSync = live.filter((r) => !r.is_read && localRead.has(r.id)).map((r) => r.id as string);
+      if (toSync.length > 0) {
+        void (supabase as any).from("governance_notifications").update({ is_read: true }).in("id", toSync).eq("user_id", user.id);
       }
+
+      setNotifications((prev) => {
+        const prevRead = new Set(prev.filter((n) => n.is_read).map((n) => n.id));
+        const mapped: Notification[] = live.map((r) => {
+          const n = mapGovernanceRow(r as any, profile?.role) as Notification;
+          return prevRead.has(n.id) ? { ...n, is_read: true } : n;
+        });
+        return mergeNotifications(mapped, prev.filter((n) => !dismissed.has(n.id))).slice(0, MAX_NOTIFICATIONS) as Notification[];
+      });
     })();
-  }, [user?.id]);
+    return () => { cancelled = true; };
+  }, [user?.id, profile?.role]);
 
   const classIdsRef = useRef<string[]>([]);
   const homeworkAssignmentIdsRef = useRef<string[]>([]);
@@ -216,20 +264,27 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const push = useCallback(
     (n: Omit<Notification, "id" | "is_read" | "created_at">) => {
-      const notif = makeNotification(n);
-      setNotifications((prev) => [notif, ...prev].slice(0, 50));
-      const toastFn =
-        n.type === "success"
-          ? toast.success
-          : n.type === "warning"
-          ? toast.warning
-          : n.type === "error"
-          ? toast.error
-          : toast.info;
-      toastFn(n.title, { description: n.message, duration: 4000 });
+      const notif: Notification = {
+        ...makeNotification(n),
+        source: n.source ?? "local",
+        category: n.category ?? inferCategory({ event_type: n.event_type, title: n.title, link: n.link }),
+      };
+      // The same event arriving twice (two channels, a re-subscribed channel) notifies once.
+      if (isDuplicateOfRecent(notificationsRef.current, notif)) return;
+      notificationsRef.current = [notif, ...notificationsRef.current];
+      setNotifications((prev) => [notif, ...prev].slice(0, MAX_NOTIFICATIONS));
+      announce(notif);
     },
     []
   );
+
+  /** A new governance_notifications row delivered by realtime. De-duplicated by its database id. */
+  const pushRow = useCallback((notif: Notification) => {
+    if (notificationsRef.current.some((n) => n.id === notif.id)) return;
+    notificationsRef.current = [notif, ...notificationsRef.current];
+    setNotifications((prev) => (prev.some((n) => n.id === notif.id) ? prev : [notif, ...prev].slice(0, MAX_NOTIFICATIONS)));
+    if (!notif.is_read) announce(notif);
+  }, []);
 
   // ---------- Load teacher's class_ids and homework assignment_ids (school-scoped) -------
   const loadTeacherContext = useCallback(async () => {
@@ -488,47 +543,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(diagChannel);
 
-    // 5. Request approved / rejected
-    const requestChannel = supabase
-      .channel("notif_request_status")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "diagnostic_requests",
-          filter: `teacher_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const oldRow = payload.old as { status: string };
-          const newRow = payload.new as {
-            status: string;
-            subject: string;
-            class_name: string;
-            admin_notes: string | null;
-          };
-          if (oldRow.status === newRow.status) return;
-
-          if (newRow.status === "approved") {
-            push({
-              type: "success",
-              title: "Diagnostic request approved",
-              message: `Your ${newRow.subject} request for ${newRow.class_name} was approved.${newRow.admin_notes ? ` Note: ${newRow.admin_notes}` : ""}`,
-              link: "/requests",
-            });
-          } else if (newRow.status === "rejected") {
-            push({
-              type: "error",
-              title: "Diagnostic request rejected",
-              message: `Your ${newRow.subject} request for ${newRow.class_name} was rejected.${newRow.admin_notes ? ` Reason: ${newRow.admin_notes}` : ""}`,
-              link: "/requests",
-            });
-          }
-        }
-      )
-      .subscribe();
-    channels.push(requestChannel);
-
     // 6. AI lesson plan ready
     const lessonChannel = supabase
       .channel("notif_ai_lesson")
@@ -559,83 +573,78 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       .subscribe();
     channels.push(lessonChannel);
 
-    // 7. AI content approved (via governance_notifications)
-    const govChannel = supabase
-      .channel("notif_gov_approved")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "governance_notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const row = payload.new as {
-            event_type: string;
-            title: string;
-            message: string;
-          };
-          if (!row.event_type.includes("approved")) return;
-          push({
-            type: "success",
-            title: row.title || "AI content approved",
-            message: row.message || "Your AI-generated content has been approved.",
-            link: "/curative",
-          });
-        }
-      )
-      .subscribe();
-    channels.push(govChannel);
-
-    // 8. Transport boarding/drop alerts (via governance_notifications)
-    const transportChannel = supabase
-      .channel("notif_transport_alerts")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "governance_notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const row = payload.new as {
-            event_type: string;
-            title: string;
-            message: string;
-          };
-          if (!row.event_type.startsWith("transport_")) return;
-          push({
-            type: "info",
-            title: row.title || "Transport update",
-            message: row.message || "Your child's bus status has been updated.",
-            link: "/parent-dashboard",
-          });
-        }
-      )
-      .subscribe();
-    channels.push(transportChannel);
-
     return () => {
       channels.forEach((ch) => supabase.removeChannel(ch));
     };
   }, [user, profile, push, loadTeacherContext]);
 
+  // --------------------------- Realtime: this user's governance_notifications (ALL roles) ---------------------------
+  // Replaces the teacher-only "approved" and "transport" channels (which also pushed a second copy of rows the
+  // login load already shows) and the old admin-only diagnostic channel (the database trigger already writes that
+  // notification to each admin). Realtime delivers only rows matching user_id = this user, and RLS applies on top.
+  useEffect(() => {
+    if (!user) return;
+    const ch = supabase
+      .channel(`notif_governance_${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "governance_notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const row = payload.new as any;
+          if (!row || row.user_id !== user.id || row.dismissed_at) return;
+          pushRow(mapGovernanceRow(row, profile?.role) as Notification);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "governance_notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          // Read or dismissed on another device/tab.
+          const row = payload.new as any;
+          if (!row || row.user_id !== user.id) return;
+          if (row.dismissed_at) {
+            setNotifications((prev) => prev.filter((n) => n.id !== row.id));
+          } else if (row.is_read) {
+            setNotifications((prev) => prev.map((n) => (n.id === row.id && !n.is_read ? { ...n, is_read: true } : n)));
+          }
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id, profile?.role, pushRow]);
+
   // -------------------------------- Read state -------------------------------------------
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-   const markAsRead = useCallback((id: string) => {
-     setNotifications((prev) =>
-       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
-     );
-   }, []);
-
+  const markAsRead = useCallback((id: string) => {
+    const target = notificationsRef.current.find((n) => n.id === id);
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)));
+    // Database-backed rows keep their read state across devices.
+    if (user && target?.source === "db" && !target.is_read) {
+      void (supabase as any).from("governance_notifications").update({ is_read: true }).eq("id", id).eq("user_id", user.id);
+    }
+  }, [user?.id]);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    //setNotifications([]);
-  }, []);
+    if (user) {
+      // Covers every unread row of this user, including ones older than what is loaded in memory.
+      void (supabase as any).from("governance_notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
+    }
+  }, [user?.id]);
+
+  const dismiss = useCallback((id: string) => {
+    const target = notificationsRef.current.find((n) => n.id === id);
+    notificationsRef.current = notificationsRef.current.filter((n) => n.id !== id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (user && target?.source === "db") {
+      void (async () => {
+        // Soft dismiss (the row stays for analytics). Falls back to "read" if dismissed_at is not migrated yet.
+        const r = await (supabase as any).from("governance_notifications").update({ is_read: true, dismissed_at: new Date().toISOString() }).eq("id", id).eq("user_id", user.id);
+        if (r.error) await (supabase as any).from("governance_notifications").update({ is_read: true }).eq("id", id).eq("user_id", user.id);
+      })();
+    }
+  }, [user?.id]);
 
 const markHomeworkNotificationAsRead = useCallback((assignmentId: string) => {
   console.log("Looking for assignment:", assignmentId);
@@ -877,97 +886,156 @@ return () => {
 
 }, [user, profile, push]);
 
-  // ── Admin/Principal: notify when a teacher submits a new diagnostic request ──
+  // Student: notify when an exam is assigned (polling, like homework/worksheets above). RLS returns only the
+  // assignments this student can see (their class or named students, status active).
+  const examPollSetupRef = useRef<string | null>(null);
   useEffect(() => {
-    const adminRoles = ["admin", "school_admin", "principal", "hod"];
-    if (!user || !profile?.role) return;
-    if (!adminRoles.includes(profile.role.toLowerCase())) return;
-    if (!profile?.school_id) return;
-    const ch = supabase
-      .channel("notif_diag_request_admin")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "diagnostic_requests" },
-        async (payload) => {
-          const row = payload.new as any;
-          const { data: teacherProf } = await supabase
-            .from("profiles")
-            .select("full_name, school_id")
-            .eq("id", row.teacher_id)
-            .maybeSingle();
-          if (teacherProf.school_id !== profile.school_id) return;
-          // single tenant - all admins see all requests
-
-          push({
-            type: "warning",
-            title: "New Diagnostic Request",
-            message: `${teacherProf.full_name || "A teacher"} submitted a diagnostic request for ${row.class_name} - ${row.section} (${row.subject}).`,
-            link: "/admin-panel",
-          });
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(ch); };
+    if (!user || profile?.role !== "student") return;
+    if (examPollSetupRef.current === user.id) return;
+    examPollSetupRef.current = user.id;
+    const key = `apas_notified_exams_${user.id}`;
+    let cancelled = false;
+    const check = async () => {
+      if (cancelled) return;
+      const { data, error } = await (supabase as any)
+        .from("generated_assessment_paper_assignments")
+        .select("id, title, due_at, created_at")
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error || !data || cancelled) return;
+      const seen = loadIdSet(key);
+      const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+      let changed = false;
+      for (const row of data as Array<{ id: string; title: string; due_at: string | null; created_at: string }>) {
+        if (seen.has(row.id)) continue;
+        seen.add(row.id);
+        changed = true;
+        if (Date.parse(row.created_at) < weekAgo) continue; // never announce old exams just because this is the first check
+        push({
+          type: "info",
+          title: "New exam assigned",
+          message: `${row.title}${row.due_at ? ` - due ${new Date(row.due_at).toLocaleDateString()}` : ""}.`,
+          link: "/my-exams",
+          event_type: "exam_assigned",
+          category: "academics",
+          dedupe_key: `exam:${row.id}`,
+        });
+      }
+      if (changed) saveIdSet(key, seen);
+    };
+    void check();
+    const intervalId = setInterval(check, 60000);
+    return () => { cancelled = true; clearInterval(intervalId); examPollSetupRef.current = null; };
   }, [user, profile, push]);
 
-  // ── New message received (works for any recipient role: student, parent, admin) ──
+  // ── Messages from teachers / admins (works for any recipient role: student, parent, admin) ──
+  // Two sources feed the bell, both keyed by the message row id (`msg-<id>`) so nothing shows twice:
+  //   1. a catch-up read of the user's UNREAD teacher_messages when they sign in, so a message sent while
+  //      they were offline (the push on the phone) is also in the bell. Realtime alone only fires while the
+  //      app is open, which is why the push arrived but the in-app list was empty.
+  //   2. the live realtime INSERT, for messages that arrive while the app is open.
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
 
+    const messageLink =
+      profile?.role === "parent" ? "/parent-communication"
+      : profile?.role === "teacher" ? "/teacher-communication"
+      : profile?.role === "student" ? "/student-communication"
+      : ["admin", "principal", "hod", "school_admin"].includes(profile?.role ?? "") ? "/admin-communication"
+      : profile?.role === "driver" ? "/driver/communication"
+      : undefined;
+
+    type MsgRow = {
+      id: string; sender_id: string; message_type: string; message: string | null;
+      broadcast_label?: string | null; created_at: string;
+    };
+
+    const nameCache: Record<string, string> = {};
+    const senderName = async (id: string) => {
+      if (nameCache[id]) return nameCache[id];
+      const { data } = await supabase.from("profiles").select("full_name").eq("id", id).maybeSingle();
+      return (nameCache[id] = data?.full_name || "Someone");
+    };
+
+    const toNotification = async (row: MsgRow, isRead: boolean): Promise<Notification> => {
+      const name = await senderName(row.sender_id);
+      const where = row.broadcast_label ? ` to ${row.broadcast_label}` : "";
+      const title =
+        row.message_type === "meeting_request" ? `Meeting request from ${name}`
+        : row.message_type === "appreciation" ? `Appreciation note from ${name}`
+        : row.message_type === "behaviour" ? `Behaviour update from ${name}`
+        : `${name} sent a message${where}`;
+      const body = (row.message || "").trim();
+      return {
+        id: `msg-${row.id}`,
+        title,
+        message: body ? (body.length > 140 ? `${body.slice(0, 140)}…` : body) : "Open Communication Center to view it.",
+        type: "info",
+        is_read: isRead,
+        created_at: row.created_at || new Date().toISOString(),
+        link: messageLink,
+        sender_id: row.sender_id,
+        event_type: "message",
+        category: "messages",
+        source: "local",
+        dedupe_key: `msg:${row.id}`,
+      };
+    };
+
+    const addSilently = (list: Notification[]) => {
+      const fresh = list.filter((n) => !notificationsRef.current.some((e) => e.id === n.id));
+      if (fresh.length === 0) return;
+      notificationsRef.current = mergeNotifications(fresh, notificationsRef.current) as Notification[];
+      setNotifications((prev) => {
+        const have = new Set(prev.map((n) => n.id));
+        return (mergeNotifications(fresh.filter((n) => !have.has(n.id)), prev) as Notification[]).slice(0, MAX_NOTIFICATIONS);
+      });
+    };
+
+    // 1. catch-up on sign-in (and every 2 min as a safety net if realtime is not enabled on the table)
+    const catchUp = async () => {
+      const { data, error } = await supabase
+        .from("teacher_messages" as any)
+        .select("id, sender_id, message_type, message, broadcast_label, created_at")
+        .eq("recipient_id", user.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (cancelled || error || !data) return;
+      const rows = (data as unknown as MsgRow[]).filter((r) => activeMessageThreadIdRef.current !== r.sender_id);
+      addSilently(await Promise.all(rows.map((r) => toNotification(r, false))));
+    };
+    void catchUp();
+    const intervalId = setInterval(() => void catchUp(), 120000);
+
+    // 2. live
     const ch = supabase
       .channel("notif_teacher_message")
       .on(
         "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "teacher_messages",
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const row = payload.new as {
-            sender_id: string;
-            message_type: string;
-          };
-
+        { event: "INSERT", schema: "public", table: "teacher_messages", filter: `recipient_id=eq.${user.id}` },
+        async (payload) => {
+          const row = payload.new as MsgRow;
           // Already viewing this exact conversation — no need to notify
           if (activeMessageThreadIdRef.current === row.sender_id) return;
-
-          const typeLabel =
-            row.message_type === "meeting_request"
-              ? "New meeting request"
-              : row.message_type === "appreciation"
-              ? "New appreciation note"
-              : row.message_type === "behaviour"
-              ? "New behaviour update"
-              : "You have a new message";
-
-          const messageLink =
-            profile?.role === "parent"
-              ? "/parent-communication"
-              : profile?.role === "teacher"
-              ? "/teacher-communication"
-              : undefined;
-
-          push({
-            type: "info",
-            title: typeLabel,
-            message: "Open Communication Center to view it.",
-            link: messageLink,
-            sender_id: row.sender_id,
-          });
+          const notif = await toNotification(row, false);
+          if (!cancelled) pushRow(notif);
         }
       )
       .subscribe();
 
     return () => {
+      cancelled = true;
+      clearInterval(intervalId);
       supabase.removeChannel(ch);
     };
-  }, [user, profile, push]);
+  }, [user, profile, pushRow]);
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, markAsRead, markAllAsRead, markHomeworkNotificationAsRead, markWorksheetNotificationAsRead, markMessageNotificationsAsRead, setActiveMessageThreadId }}
+      value={{ notifications, unreadCount, markAsRead, markAllAsRead, dismiss, markHomeworkNotificationAsRead, markWorksheetNotificationAsRead, markMessageNotificationsAsRead, setActiveMessageThreadId }}
     >
       {children}
     </NotificationContext.Provider>

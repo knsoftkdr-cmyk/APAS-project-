@@ -85,6 +85,7 @@ const AICostMonitoringDashboard = lazy(() => import("./pages/AICostMonitoringDas
 const CacheManagementDashboard = lazy(() => import("./pages/CacheManagementDashboard"));
 const OCRProcessingDashboard = lazy(() => import("./pages/OCRProcessingDashboard"));
 const NotificationDashboard = lazy(() => import("./pages/NotificationDashboard"));
+const NotificationInbox = lazy(() => import("./pages/NotificationInbox"));
 const RiskPredictionDashboard = lazy(() => import("./pages/RiskPredictionDashboard"));
 const TeacherProfessionalDevelopment = lazy(() => import("./pages/TeacherProfessionalDevelopment"));
 const TeacherCommunicationCenter = lazy(() => import("./pages/TeacherCommunicationCenter"));
@@ -283,6 +284,7 @@ export default function App() {
                       <Route path="/cache-management" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><CacheManagementDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/ocr-processing" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><OCRProcessingDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/notification-dashboard" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><NotificationDashboard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/notifications" element={<ProtectedRoute><NotificationInbox /></ProtectedRoute>} />
                       <Route path="/risk-prediction" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><RiskPredictionDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/knowledge-graph" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><KnowledgeGraphDashboard /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-intelligence" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin"]}><SchoolIntelligenceDashboard /></RoleGuard></ProtectedRoute>} />

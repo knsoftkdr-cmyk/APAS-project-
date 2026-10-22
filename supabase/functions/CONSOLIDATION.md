@@ -310,3 +310,9 @@ Storage: `competency_missions`, `competency_xp_awards` (migration 20261019000000
 * Known limit: mastery is only as trustworthy as the flows that write it. `useMastery`'s direct `update-mastery` call sends
   client-judged `is_correct`, so a determined student could still inflate a score; the evidence/multi-day rules and the daily cap
   make that slow and bounded, not impossible. Grading every flow server-side is the real fix.
+
+## AI Command Bar (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| AI Command Bar (resolve + read-only lookups + action previews; no writes) | ai-teacher-assistant | action: `command_bar` (any signed-in role; the handler authenticates the caller's JWT itself, uses the caller's RLS-bound client, never the service role) |

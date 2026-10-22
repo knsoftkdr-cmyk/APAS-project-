@@ -477,7 +477,7 @@ const TeacherWorkspaceDashboard = () => {
         <div className="relative z-10 space-y-6 pb-10 p-4 md:p-6">
 
           {/* ── Hero ────────────────────────────────────────────────────────── */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500 px-5 py-6 md:px-9 md:py-10 text-white shadow-elevated">
+          <div data-tour="dashboard-hero" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500 px-5 py-6 md:px-9 md:py-10 text-white shadow-elevated">
             {/* decorative constellation, echoes the banner motif used elsewhere in the app */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
               <div className="absolute -top-10 -right-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
@@ -525,7 +525,7 @@ const TeacherWorkspaceDashboard = () => {
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
               At a Glance
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+            <div data-tour="dashboard-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               <DashStatCard
                 label="Today's Classes"
                 value={classCount ?? 0}

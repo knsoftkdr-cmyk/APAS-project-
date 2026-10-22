@@ -183,7 +183,8 @@ BEGIN
              COALESCE(NULLIF(btrim(s.full_name), ''), sp.full_name, 'Student')::text,
              NULLIF(btrim(
                CASE WHEN COALESCE(s.class, sp.class_grade) IS NOT NULL
-                    THEN 'Class ' || COALESCE(s.class, sp.class_grade)
+                    THEN CASE WHEN btrim(COALESCE(s.class, sp.class_grade)) ~* '^(class|grade|std|standard)' THEN btrim(COALESCE(s.class, sp.class_grade))
+                              WHEN btrim(COALESCE(s.class, sp.class_grade)) ~ '^[0-9]' THEN 'Class ' || btrim(COALESCE(s.class, sp.class_grade)) ELSE btrim(COALESCE(s.class, sp.class_grade)) END
                          || COALESCE(' - ' || NULLIF(COALESCE(s.section, ''), ''), '')
                     ELSE '' END
              ), '')::text,
@@ -273,7 +274,7 @@ BEGIN
              a.title::text,
              NULLIF(btrim(concat_ws(' · ',
                  NULLIF(btrim(COALESCE(bp.subject, '')), ''),
-                 CASE WHEN c.id IS NOT NULL THEN 'Class ' || c.name || '-' || c.section END,
+                 CASE WHEN c.id IS NOT NULL THEN (CASE WHEN btrim(c.name) ~* '^(class|grade|std|standard)' THEN btrim(c.name) WHEN btrim(c.name) ~ '^[0-9]' THEN 'Class ' || btrim(c.name) ELSE btrim(c.name) END || '-' || c.section) END,
                  CASE WHEN a.due_at IS NOT NULL THEN 'Due ' || to_char(a.due_at, 'DD Mon YYYY') END)), '')::text,
              jsonb_build_object('status', a.status, 'due_at', a.due_at),
              CASE WHEN lower(a.title) = v_lc THEN 0
@@ -311,7 +312,7 @@ BEGIN
              h.title::text,
              NULLIF(btrim(concat_ws(' · ',
                  NULLIF(btrim(COALESCE(h.subject, '')), ''),
-                 'Class ' || h.class_level || '-' || h.section)), '')::text,
+                 (CASE WHEN btrim(h.class_level) ~* '^(class|grade|std|standard)' THEN btrim(h.class_level) WHEN btrim(h.class_level) ~ '^[0-9]' THEN 'Class ' || btrim(h.class_level) ELSE btrim(h.class_level) END || '-' || h.section))), '')::text,
              jsonb_build_object('assigned_at', COALESCE(h.assigned_at, h.created_at)),
              CASE WHEN lower(h.title) = v_lc THEN 0
                   WHEN lower(h.title) LIKE v_pre  ESCAPE '\' THEN 1
@@ -336,7 +337,7 @@ BEGIN
     RETURN QUERY
       SELECT 'classes'::text,
              mc.id::text,
-             ('Class ' || mc.name || ' - ' || mc.section)::text,
+             (CASE WHEN btrim(mc.name) ~* '^(class|grade|std|standard)' THEN btrim(mc.name) WHEN btrim(mc.name) ~ '^[0-9]' THEN 'Class ' || btrim(mc.name) ELSE btrim(mc.name) END || ' - ' || mc.section)::text,
              NULL::text,
              '{}'::jsonb,
              CASE WHEN lower(mc.name || ' ' || mc.section) = v_lc

@@ -334,7 +334,7 @@ const KNSoftAdminPanel = () => {
 </div>
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="flex flex-wrap gap-1 h-auto">
+          <TabsList data-tour="platform-tabs" className="flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="overview" className="gap-1.5"><BarChart3 className="h-4 w-4" />Overview</TabsTrigger>
             <TabsTrigger value="schools" className="gap-1.5"><Building2 className="h-4 w-4" />Schools</TabsTrigger>
             <TabsTrigger value="admins" className="gap-1.5"><ShieldCheck className="h-4 w-4" />Assign Admins</TabsTrigger>

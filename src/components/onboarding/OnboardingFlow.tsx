@@ -6,17 +6,16 @@ import { useStudentProfile } from "@/hooks/useProfileCompletion";
 import { GenderStep } from "./GenderStep";
 import { AvatarStep } from "./AvatarStep";
 import { ClassStep } from "./ClassStep";
-import { GuidedTour } from "./GuidedTour";
 import type { Gender } from "./avatars";
 import { toast } from "sonner";
 
-type OnboardingStep = "gender" | "class" | "avatar" | "tour" | "done";
+// The product tour itself now lives in ProductTour (all roles); this flow only collects the student profile.
+type OnboardingStep = "gender" | "class" | "avatar" | "done";
 
 function resolveInitialStep(extProfile: any): OnboardingStep {
   if (!extProfile.gender) return "gender";
   if (!extProfile.class_grade) return "class";
   if (!extProfile.avatar_url && !extProfile.onboarding_completed) return "avatar";
-  if (!extProfile.tour_completed && extProfile.onboarding_completed) return "tour";
   return "done";
 }
 
@@ -81,7 +80,7 @@ export function OnboardingFlow() {
       if (error) throw error;
 
       // ✅ Advance immediately
-      setStep("tour");
+      setStep("done");
       toast.success("Profile picture saved");
 
       refresh().catch(console.error);
@@ -100,30 +99,12 @@ export function OnboardingFlow() {
       if (error) throw error;
 
       // ✅ Advance immediately
-      setStep("tour");
+      setStep("done");
 
       refresh().catch(console.error);
     } catch (err: any) {
       console.error("Skip avatar error:", err);
       toast.error(err?.message || "Failed to skip");
-    }
-  };
-
-  const finishTour = async () => {
-    // ✅ Close tour immediately
-    setStep("done");
-
-    try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ tour_completed: true })
-        .eq("id", user.id);
-      if (error) throw error;
-
-      refresh().catch(console.error);
-    } catch (err: any) {
-      console.error("Finish tour error:", err);
-      toast.error(err?.message || "Failed to finish tour");
     }
   };
 
@@ -164,11 +145,6 @@ export function OnboardingFlow() {
         userId={user.id}
         onSave={saveAvatar}
         onSkip={skipAvatar}
-      />
-      <GuidedTour
-        open={step === "tour"}
-        onFinish={finishTour}
-        onSkip={finishTour}
       />
     </>
   );

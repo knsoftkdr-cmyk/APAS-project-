@@ -1,10 +1,13 @@
 import {
   Menu, Bell, ChevronDown, User, Settings, LogOut,
-  Info, CheckCircle, XCircle, AlertTriangle, BellOff,
+  Info, CheckCircle, XCircle, AlertTriangle, BellOff, HelpCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { AccessibilityLauncher } from "@/components/accessibility/AccessibilityPanel";
 import { UniversalSearch } from "@/components/search/UniversalSearch";
+import { CommandBar } from "@/components/command-bar/CommandBar";
+import { tourRoleFor } from "@/components/onboarding/tourSteps";
+import { startProductTour } from "@/components/onboarding/tourEvents";
 import { clearAllRecentSearches } from "@/lib/universalSearch";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,13 +24,15 @@ const pageTitles: Record<string, string> = {
   "/teacher": "Teacher Panel",
   "/settings": "Settings",
   "/alerts": "Alerts",
+  "/notifications": "Notifications",
   "/requests": "Diagnostic Requests",
   "/pronunciation": "Pronunciation Practice",
 };
 
 // ─── Per-type icon + colour config ───────────────────────────────────────────
 
-const typeConfig = {
+// Exported so the Notification Inbox page shows the same icons/colours as the bell.
+export const typeConfig = {
   info: {
     icon: <Info className="h-4 w-4" />,
     dot: "bg-blue-500",
@@ -61,8 +66,6 @@ interface AppHeaderProps {
 export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
   const { profile, signOut } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
-  console.log("Bell Notifications:", notifications);
-console.log("Bell Unread Count:", unreadCount);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -73,6 +76,9 @@ console.log("Bell Unread Count:", unreadCount);
   const bellRef = useRef<HTMLDivElement>(null);
 
   const pageTitle = pageTitles[location.pathname] || "APAS";
+
+  // Only roles that have a guided tour get the help button / menu item
+  const hasTour = !!tourRoleFor(profile?.role);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -116,12 +122,29 @@ console.log("Bell Unread Count:", unreadCount);
 
       <div className="flex items-center gap-2">
 
-        <UniversalSearch />
+        <div data-tour="header-search">
+          <UniversalSearch />
+        </div>
+
+        <CommandBar />
 
         <AccessibilityLauncher />
 
+        {/* ── Help: replay the guided tour ─────────────────────────────────── */}
+        {hasTour && (
+          <button
+            onClick={startProductTour}
+            data-tour="header-help"
+            className="rounded-button p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            aria-label="Help: take a tour"
+            title="Help: take a tour"
+          >
+            <HelpCircle className="h-5 w-5" />
+          </button>
+        )}
+
         {/* ── Bell ─────────────────────────────────────────────────────────── */}
-        <div ref={bellRef} className="relative">
+        <div ref={bellRef} className="relative" data-tour="header-bell">
           <button
             onClick={() => setBellOpen((v) => !v)}
             className="relative rounded-button p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -222,6 +245,16 @@ console.log("Bell Unread Count:", unreadCount);
                   })
                 )}
               </div>
+
+              {/* Footer: the full inbox */}
+              <div className="border-t border-border px-4 py-2.5 text-center">
+                <button
+                  onClick={() => { setBellOpen(false); navigate("/notifications"); }}
+                  className="text-xs font-medium text-accent hover:underline"
+                >
+                  View all notifications
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -230,6 +263,7 @@ console.log("Bell Unread Count:", unreadCount);
         <div ref={menuRef} className="relative">
           <button
             onClick={() => setMenuOpen((v) => !v)}
+            data-tour="header-profile"
             className="flex items-center gap-2 rounded-button px-2 py-1.5 text-sm transition-colors hover:bg-secondary"
           >
             {profile?.avatar_url ? (
@@ -270,6 +304,15 @@ console.log("Bell Unread Count:", unreadCount);
                 <Settings className="h-4 w-4 text-muted-foreground" />
                 Settings
               </button>
+              {hasTour && (
+                <button
+                  onClick={() => { setMenuOpen(false); startProductTour(); }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-foreground transition-colors hover:bg-secondary"
+                >
+                  <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  Take a tour again
+                </button>
+              )}
               <div className="my-1 border-t border-border" />
               <button
                 onClick={handleLogout}

@@ -525,7 +525,7 @@ const SuperAdminPanel = () => {
 
 
         <Tabs defaultValue="overview" className="space-y-4">
-          <TabsList className="flex flex-wrap gap-1 h-auto">
+          <TabsList data-tour="admin-tabs" className="flex flex-wrap gap-1 h-auto">
             <TabsTrigger value="overview" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><BarChart3 className="h-5 w-5" />Overview</TabsTrigger>
             <TabsTrigger value="accounts" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Users className="h-5 w-5" />Accounts</TabsTrigger>
             <TabsTrigger value="permissions" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Lock className="h-5 w-5" />Permissions</TabsTrigger>

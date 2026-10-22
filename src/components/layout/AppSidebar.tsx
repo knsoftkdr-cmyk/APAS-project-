@@ -458,6 +458,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     to={item.path}
                     data-sidebar-active={isActive ? "true" : undefined}
                     data-tour-id={item.tourId}
+                    data-tour-nav={item.path}
                     title={collapsed ? getItemLabel(item) : undefined}
                     className={cn(
                       "group relative flex items-center transition-all duration-300 ease-out",
@@ -573,6 +574,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   <NavLink
                     to={item.path}
                     data-sidebar-active={isActive ? "true" : undefined}
+                    data-tour-nav={item.path}
                     onClick={onMobileClose}
                     className={cn(
                       "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",

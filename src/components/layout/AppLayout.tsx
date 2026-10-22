@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { AppHeader } from "./AppHeader";
 import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
+import { ProductTour } from "@/components/onboarding/ProductTour";
 import { AILessonAssistantWidget } from "@/components/ai-assistant/AILessonAssistantWidget";
 import { AIStudentAssistantWidget } from "@/components/ai-assistant/AIStudentAssistantWidget";
 import { AIHODAssistantWidget } from "@/components/ai-assistant/AIHODAssistantWidget";
@@ -88,6 +89,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </main>
       </div>
       <OnboardingFlow />
+      <ProductTour onNeedSidebar={setMobileOpen} />
       <AILessonAssistantWidget />
       <AIStudentAssistantWidget />
       <AIHODAssistantWidget />
