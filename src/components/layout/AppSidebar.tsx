@@ -154,6 +154,7 @@ const navItems: Array<{
   { title: "Appointments", icon: CalendarCheck, path: "/appointments", roles: ["parent"], module: "Appointments" },
   { title: "Consent Center", icon: ShieldCheck, path: "/consent-center", roles: ["parent"], module: "Consent Center" },
   { title: "Home Learning", icon: Lightbulb, path: "/home-learning", roles: ["parent"], module: "Home Learning" },
+  { title: "Learning Evidence", icon: TrendingUp, path: "/learning-evidence", roles: ["student", "parent"] },
   { title: "Concept Visualizer", icon: Sparkles, path: "/concept-visualizer", roles: ["student", "teacher", "hod", "principal", "admin", "school_admin"] },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["parent"], module: "Academic Calendar" },
   { title: "Surveys", icon: ClipboardList, path: "/surveys", roles: ["parent"] },

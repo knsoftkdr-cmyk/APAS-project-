@@ -78,7 +78,7 @@ import { handleAssessmentPaperAttempt } from "../_shared/handlers/assessmentPape
 import { handleSubmitAssessmentPaperAttempt } from "../_shared/handlers/submitAssessmentPaperAttempt.ts";
 import { handlePracticeHint } from "../_shared/handlers/practiceHint.ts";
 import { handleConceptVisual } from "../_shared/handlers/conceptVisual.ts";
-
+import { handleMasteryEvidenceReport } from "../_shared/handlers/masteryEvidenceReport.ts";
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
   sr_forecast: { handler: handleSpacedRepetition, action: "forecast" },
@@ -94,6 +94,7 @@ const MERGED_ROUTES: RouteTable = {
   paper_submit: { handler: handleSubmitAssessmentPaperAttempt },
   practice_hint: { handler: handlePracticeHint },
   concept_visual: { handler: handleConceptVisual },
+  mastery_evidence: { handler: handleMasteryEvidenceReport },
 };
 
 serve(async (req) => {
