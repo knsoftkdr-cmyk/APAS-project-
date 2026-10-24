@@ -128,6 +128,7 @@ const ConsentCenter = lazy(() => import("./pages/ConsentCenter"));
 const HomeLearningGuidance = lazy(() => import("./pages/HomeLearningGuidance"));
 const LearningEvidenceReport = lazy(() => import("./pages/LearningEvidenceReport"));
 const CampusComparison = lazy(() => import("./pages/CampusComparison"));
+const SchoolForecasts = lazy(() => import("./pages/SchoolForecasts"));
 const ConceptVisualizer = lazy(() => import("./pages/ConceptVisualizer"));
 const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const UpdatePassword = lazy(() => import("./pages/UpdatePassword"));
@@ -251,6 +252,7 @@ export default function App() {
                       <Route path="/admin/electives" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><AdminElectivesPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin/branches" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><BranchManagementPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin/campus-comparison" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><CampusComparison /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/admin/forecasts" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin"]}><SchoolForecasts /></RoleGuard></ProtectedRoute>} />
                       <Route path="/admin/facilities" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "knsoft_admin"]}><FacilitiesManagementPage /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/teacher/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "school_admin", "hod", "principal"]}><TeacherAppointmentsPage /></RoleGuard></ProtectedRoute>} />
