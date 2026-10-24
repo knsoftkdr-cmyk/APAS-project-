@@ -234,6 +234,7 @@ const navItems: Array<{
   { title: "Special Education (SEN)", icon: Accessibility, path: "/sen-management", roles: ["school_admin"], module: "SEN Management" },
   { title: "Electives", icon: GraduationCap, path: "/admin/electives", roles: ["school_admin"] },
   { title: "Branch Management", icon: Building2, path: "/admin/branches", roles: ["admin", "principal", "school_admin", "knsoft_admin"], module: "Branch Management" },
+  { title: "Campus Comparison", icon: Building2, path: "/admin/campus-comparison", roles: ["admin", "principal", "school_admin", "knsoft_admin"] },
   { title: "Resource Analytics", icon: BarChart3, path: "/admin/facilities", roles: ["admin", "principal", "school_admin", "knsoft_admin"], module: "Resource Analytics" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
