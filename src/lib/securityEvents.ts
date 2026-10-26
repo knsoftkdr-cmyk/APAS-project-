@@ -103,3 +103,24 @@ export async function updateSecurityAlert(alertId: string, status: AlertStatus, 
   if (error) throw new Error((await unwrapFunctionError(error, "Could not update the alert.")).message);
   return data.alert as SecurityAlert;
 }
+
+export interface AuditLogRow {
+  id: string;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  ip_address: string | null;
+  details: any;
+  created_at: string;
+  user_name: string | null;
+  user_role: string | null;
+}
+
+// Audit logs of the caller's own school (school_admin / principal / admin). Server filters by school.
+export async function getAuditLogs(limit = 100): Promise<AuditLogRow[]> {
+  const { data, error } = await supabase.functions.invoke("log-audit", {
+    body: { mode: "sec_audit_list", limit },
+  });
+  if (error) throw new Error((await unwrapFunctionError(error, "Could not load audit logs.")).message);
+  return (data?.logs ?? []) as AuditLogRow[];
+}
