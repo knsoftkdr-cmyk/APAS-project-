@@ -236,6 +236,7 @@ const navItems: Array<{
   { title: "Branch Management", icon: Building2, path: "/admin/branches", roles: ["admin", "principal", "school_admin", "knsoft_admin"], module: "Branch Management" },
   { title: "Campus Comparison", icon: Building2, path: "/admin/campus-comparison", roles: ["admin", "principal", "school_admin", "knsoft_admin"] },
   { title: "School Forecasts", icon: TrendingUp, path: "/admin/forecasts", roles: ["admin", "principal", "school_admin"] },
+  { title: "Consent Sheet", icon: ShieldCheck, path: "/consent-sheet", roles: ["school_admin"] },
   { title: "Resource Analytics", icon: BarChart3, path: "/admin/facilities", roles: ["admin", "principal", "school_admin", "knsoft_admin"], module: "Resource Analytics" },
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];

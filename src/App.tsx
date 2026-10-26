@@ -125,6 +125,7 @@ const ParentSafeguardingPage = lazy(() => import("./pages/ParentSafeguardingPage
 const ParentFeePayment = lazy(() => import("./pages/ParentFeePayment"));
 const AppointmentBooking = lazy(() => import("./pages/AppointmentBooking"));
 const ConsentCenter = lazy(() => import("./pages/ConsentCenter"));
+const ConsentSheet = lazy(() => import("./pages/ConsentSheet"));
 const HomeLearningGuidance = lazy(() => import("./pages/HomeLearningGuidance"));
 const LearningEvidenceReport = lazy(() => import("./pages/LearningEvidenceReport"));
 const CampusComparison = lazy(() => import("./pages/CampusComparison"));
@@ -325,6 +326,7 @@ export default function App() {
                       <Route path="/appointments" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><AppointmentBooking /></RoleGuard></ProtectedRoute>} />
                       
                       <Route path="/consent-center" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><ConsentCenter /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/consent-sheet" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><ConsentSheet /></RoleGuard></ProtectedRoute>} />
                       <Route path="/home-learning" element={<ProtectedRoute><RoleGuard allowedRoles={["parent"]}><HomeLearningGuidance /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-evidence" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><LearningEvidenceReport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/concept-visualizer" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "teacher", "hod", "principal", "admin", "school_admin"]}><ConceptVisualizer /></RoleGuard></ProtectedRoute>} />
