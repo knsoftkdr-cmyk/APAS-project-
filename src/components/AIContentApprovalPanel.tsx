@@ -7,8 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+// import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { CheckCircle2, XCircle, AlertCircle, Eye, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+const getAuthHeaders = async () => {
+  const { data } = await supabase.auth.getSession();
+  return {
+    "Content-Type": "application/json",
+    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    Authorization: `Bearer ${data.session?.access_token ?? ""}`,
+  };
+};
 
 interface ApprovalQueueItem {
   id: string;
@@ -23,7 +34,8 @@ interface ApprovalQueueItem {
 
 export const AIContentApprovalPanel = () => {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  // const { toast } = useToast();
+  
   const [items, setItems] = useState<ApprovalQueueItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<ApprovalQueueItem | null>(null);
@@ -46,11 +58,7 @@ export const AIContentApprovalPanel = () => {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-approval-workflow`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            "user_id": user?.id,
-          },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({
             action: "get_pending_approvals",
             limit: 50,
@@ -75,11 +83,7 @@ export const AIContentApprovalPanel = () => {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-approval-workflow`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            "user_id": user?.id,
-          },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({
             action: "get_approval_stats",
             days: 30,
@@ -102,11 +106,7 @@ export const AIContentApprovalPanel = () => {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-approval-workflow`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            "user_id": user?.id,
-          },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({
             action: "approve_content",
             queue_id: queueId,
@@ -136,11 +136,7 @@ export const AIContentApprovalPanel = () => {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-approval-workflow`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            "user_id": user?.id,
-          },
+          headers: await getAuthHeaders(),
           body: JSON.stringify({
             action: "reject_content",
             queue_id: queueId,
