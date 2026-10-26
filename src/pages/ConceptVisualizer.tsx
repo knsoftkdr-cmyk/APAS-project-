@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConceptDiagram } from "@/components/ConceptDiagram";
 
 const EXAMPLES = ["Photosynthesis", "Water cycle", "Fractions"];
 
@@ -131,6 +132,7 @@ export default function ConceptVisualizer() {
                 <CardDescription>{visual.summary}</CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="mb-6"><ConceptDiagram steps={visual.steps} title={visual.title} /></div>
                 <ol className="space-y-2">
                   {visual.steps.map((step, index) => (
                     <li key={`${index}-${step.label}`}>
