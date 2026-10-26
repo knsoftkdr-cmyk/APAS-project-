@@ -5,6 +5,20 @@ import { clampHintLevel, resolveTutorStyle, styleDirective } from "../_shared/tu
 import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
 import { callerOwnsStudent, pruneThread, resolveMode, saveMessage, tapStream } from "../_shared/tutorMemory.ts";
 import { emitLearningEvent } from "../_shared/learningEvents.ts";
+import { screenStudentMessage, sseFromText, voiceDirective } from "../_shared/voiceTutorSafety.ts";
+import { evaluateAndStore } from "../_shared/handlers/aiQualityControl.ts";
+
+// Share of finished replies sent to the AI quality & safety evaluator (sheet row 40). Voice replies are spoken
+// to younger children without a screen to re-read, so they are sampled more. Tunable via Supabase secrets.
+const QUALITY_SAMPLE_RATE = Number(Deno.env.get("AI_QUALITY_SAMPLE_RATE") ?? "0.2");
+const VOICE_QUALITY_SAMPLE_RATE = Number(Deno.env.get("AI_QUALITY_VOICE_SAMPLE_RATE") ?? "0.5");
+
+/** Runs work after the response is returned when the runtime supports it, so the student never waits on it. */
+function runInBackground(p: Promise<unknown>) {
+  const rt = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime;
+  if (rt?.waitUntil) rt.waitUntil(p.catch((e) => console.error("background task failed:", e)));
+  else p.catch((e) => console.error("background task failed:", e));
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,7 +61,9 @@ serve(async (req) => {
     // `language` is optional; missing/unknown/"en" => English, i.e. unchanged behaviour.
     // `style` ("explain" | "socratic" | "hint"), `hint_level` (1-4) and `mode` ("tutor" | "career") are optional;
     // when absent the request behaves exactly as before.
-    const { message, student_id, conversation_history = [], language, style, hint_level, mode, accessibility } = await req.json();
+    // `voice: true` = Voice conversational tutor: short, speakable, age-banded replies (see voiceTutorSafety.ts).
+    const { message, student_id, conversation_history = [], language, style, hint_level, mode, accessibility, voice, grade_band } = await req.json();
+    const voiceMode = voice === true;
     const teachingLang = resolveTeachingLanguage(language);
     const tutorStyle = resolveTutorStyle(style);
     const hintLevel = clampHintLevel(hint_level);
@@ -72,9 +88,28 @@ serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, school_id")
       .eq("id", student_id)
       .maybeSingle();
+
+    // Safeguards run before the model: worrying, unsafe or personal messages get a fixed, caring reply.
+    const screen = screenStudentMessage(String(message));
+    if (screen.kind !== "ok" && screen.reply) {
+      if (persist) {
+        await saveMessage(supabase, student_id, threadMode, "assistant", screen.reply, tutorStyle);
+        // A disclosure of distress or abuse must reach a person: flag it to the school's safeguarding lead.
+        if (screen.kind === "distress" && student?.id && profile?.school_id) {
+          const { error: sgErr } = await supabase.from("safeguarding_incidents").insert({
+            school_id: profile.school_id, student_id: student.id, category: "emotional", severity: "high",
+            description: `Automatic flag from the AI Tutor${voiceMode ? " (voice mode)" : ""}: the student's message matched distress / abuse keywords. ` +
+              `The tutor showed Childline (1098) and asked the student to speak to a trusted adult. Message: "${String(message).slice(0, 500)}"`,
+            reported_by: student_id, is_anonymous: false,
+          });
+          if (sgErr) console.error("safeguarding auto-flag failed:", sgErr.message);
+        }
+      }
+      return new Response(sseFromText(screen.reply), { headers: { ...corsHeaders, "Content-Type": "text/event-stream" } });
+    }
 
     // Learning event stream: record THAT the student asked the tutor (length + mode only, never the text).
     // Only when the caller's own JWT proved they are this student; failures are swallowed inside the helper.
@@ -147,7 +182,7 @@ Guidelines:
 - Format with markdown: short paragraphs, **bold** key terms, bullet or numbered lists for steps, and put each worked example on its own lines
 - Write maths in plain text (e.g. 1/2 + 1/4 = 3/4), never LaTeX or $...$ symbols
 - End with a short encouraging line or one question to check understanding
-- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}${accessibilityDirective(accessibility)}`;
+- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}${accessibilityDirective(accessibility)}${voiceMode ? voiceDirective(grade_band) : ""}`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -227,6 +262,14 @@ Guidelines:
       ? tapStream(aiResp.body, async (text) => {
           await saveMessage(supabase, student_id, threadMode, "assistant", text, tutorStyle);
           await pruneThread(supabase, student_id, threadMode);
+          // AI quality & safety: score a sample of finished replies (hallucination, bias, alignment, privacy, age).
+          if (text.trim() && Math.random() < (voiceMode ? VOICE_QUALITY_SAMPLE_RATE : QUALITY_SAMPLE_RATE)) {
+            runInBackground(evaluateAndStore(supabase, {
+              content: text, question: String(message), reference: relevantContext || null,
+              gradeBand: grade_band ?? student?.grade ?? null, subject: null,
+              source: voiceMode ? "voice_tutor" : "ai_tutor", schoolId: profile?.school_id ?? null,
+            }));
+          }
         })
       : aiResp.body;
     return new Response(outBody, {

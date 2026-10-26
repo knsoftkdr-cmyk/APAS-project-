@@ -19,6 +19,7 @@ import { format, isToday, isTomorrow, parseISO, isAfter } from "date-fns";
 import { MyTasksWidget } from "@/components/MyTasksWidget";
 import { cn } from "@/lib/utils";
 import { TeacherGroupProjectsSummary } from "@/components/collaboration/TeacherGroupProjectsSummary";
+import { AIClassBriefingCard } from "@/components/teacher/AIClassBriefingCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -519,6 +520,9 @@ const TeacherWorkspaceDashboard = () => {
               </div>
             </div>
           </div>
+
+          {/* ── AI Class Briefing ─────────────────────────────────────────── */}
+          <AIClassBriefingCard />
 
           {/* ── At a Glance Stats ──────────────────────────────────────────── */}
           <div>

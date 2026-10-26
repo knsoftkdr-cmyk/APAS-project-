@@ -11,6 +11,17 @@
 //             violations: [{ hook_key, severity, reason, action }], sanitized? }
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleAiQualityControl } from "../_shared/handlers/aiQualityControl.ts";
+
+// Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
+//   action "quality_evaluate" | "quality_list" | "quality_review": AI quality and safety control (evaluator + log).
+// The anchor's own actions ("validate", "list") run the original code below.
+const MERGED_ROUTES: RouteTable = {
+  quality_evaluate: { handler: handleAiQualityControl, action: "evaluate" },
+  quality_list: { handler: handleAiQualityControl, action: "list" },
+  quality_review: { handler: handleAiQualityControl, action: "review" },
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -133,6 +144,9 @@ function runHook(
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const merged = await routeMerged(req, MERGED_ROUTES, "action");
+  if (merged) return merged;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,

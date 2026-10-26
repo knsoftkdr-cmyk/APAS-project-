@@ -222,6 +222,25 @@ export function useAssignMockExam() {
   });
 }
 
+/** One-screen assessment builder: a paper from hand-picked item-bank questions (evaluate-assessment "build_paper"). */
+export function useBuildManualPaper() {
+  return useMutation({
+    mutationFn: (args: { title: string; instructions?: string[]; items: { kind: "mcq" | "extended"; id: string; marks: number; section_label?: string }[] }) =>
+      invokeFn<{ paper_id: string; item_count: number; total_marks: number }>("evaluate-assessment", { action: "build_paper", ...args }),
+  });
+}
+
+/** Assigns any paper as a regular test (not a mock); the timer is optional. */
+export function useAssignPaper() {
+  return useMutation({
+    mutationFn: (args: { paperId: string; classId: string; title?: string; opensAt?: string | null; dueAt?: string | null; timeLimitMinutes?: number | null; strictTimer: boolean }) =>
+      invokeFn<{ assignment_id: string; student_count: number }>("evaluate-assessment", {
+        action: "assign_paper", paper_id: args.paperId, class_id: args.classId, is_mock: false, strict_timer: args.strictTimer,
+        title: args.title, opens_at: args.opensAt || undefined, due_at: args.dueAt || undefined, time_limit_minutes: args.timeLimitMinutes ?? undefined,
+      }),
+  });
+}
+
 export interface ExamItem {
   item_id: string; question_type: string; order_index: number; section_label: string; marks: number;
   stem: string; options?: Record<string, string>; context_passage?: string | null;

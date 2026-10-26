@@ -1,13 +1,13 @@
 /**
- * AssessmentHub.tsx — one place for the two assessment tools staff use together:
- *   Item Bank (author + review questions) · Mock Exams (build papers from them) · Exam Reviews (confirm AI marks on written answers)
+ * AssessmentHub.tsx — one place for the assessment tools staff use together:
+ *   Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (confirm AI marks on written answers)
  *
  * The tab buttons are real routes (/item-bank, /mock-exams, /exam-reviews), so the sidebar link, the
  * browser back button and bookmarks all open the matching tab, and clicking a tab updates the URL.
  */
 import { lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ClipboardCheck, Layers, Timer } from "lucide-react";
+import { ClipboardCheck, ClipboardList, Layers, Timer } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { cn } from "@/lib/utils";
@@ -16,9 +16,11 @@ import { useExamReviewAttempts } from "@/hooks/useExamReviews";
 const ItemBankReview = lazy(() => import("./ItemBankReview"));
 const MockExamBuilder = lazy(() => import("./MockExamBuilder"));
 const ExamReviews = lazy(() => import("./ExamReviews"));
+const AssessmentBuilder = lazy(() => import("./AssessmentBuilder"));
 
 const TABS = [
   { key: "item-bank", label: "Item Bank", path: "/item-bank", icon: Layers },
+  { key: "builder", label: "Builder", path: "/assessment-builder", icon: ClipboardList },
   { key: "mock-exams", label: "Mock Exams", path: "/mock-exams", icon: Timer },
   { key: "exam-reviews", label: "Exam Reviews", path: "/exam-reviews", icon: ClipboardCheck },
 ] as const;
@@ -63,6 +65,7 @@ export default function AssessmentHub() {
 
       <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center"><LoadingSpinner size="lg" /></div>}>
         {active.key === "item-bank" && <ItemBankReview embedded />}
+        {active.key === "builder" && <AssessmentBuilder embedded />}
         {active.key === "mock-exams" && <MockExamBuilder embedded />}
         {active.key === "exam-reviews" && <ExamReviews embedded />}
       </Suspense>

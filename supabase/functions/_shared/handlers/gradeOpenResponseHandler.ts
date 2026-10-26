@@ -13,7 +13,10 @@
 //         returns the submission with status "ai_graded".
 //
 //   2. TEACHER FINALIZES a submission:
-//        Body: { submission_id: uuid, teacher_score: number, teacher_feedback?: string }
+//        Body: { submission_id: uuid, teacher_score: number, teacher_feedback?: string,
+//                teacher_rubric?: [{ criterion, max_marks, awarded, comment?, evidence? }] }
+//      -> with teacher_rubric (interactive rubric grading), the score is computed FROM the rubric
+//         (rescaled to the item's max_marks) so the stored mark always matches the ticked criteria.
 //      -> staff only. Overwrites nothing the AI wrote; just fills in
 //         teacher_score/teacher_feedback and flips status to "teacher_reviewed".
 //
@@ -23,6 +26,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { aiGradeOpenResponse, GRADING_MODEL } from "../gradeOpenResponse.ts";
+import { rubricScore, sanitiseTeacherRubric } from "../rubricGradingModel.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -118,10 +122,20 @@ async function finalizeAsTeacher(admin: ReturnType<typeof createClient>, userId:
   if (!profile || !STAFF_ROLES.includes(profile.role)) return json({ error: "Not permitted to grade" }, 403);
 
   const { submission_id, teacher_score, teacher_feedback } = body;
-  const score = Number(teacher_score);
+  let score = Number(teacher_score);
   if (!Number.isFinite(score) || score < 0) return json({ error: "teacher_score must be a non-negative number" }, 400);
 
+  const rubric = sanitiseTeacherRubric(body.teacher_rubric);
+  if (!rubric.ok) return json({ error: rubric.error }, 400);
+  if (rubric.rows) {
+    const { data: sub } = await admin.from("open_response_submissions").select("item_id").eq("id", submission_id).maybeSingle();
+    if (!sub) return json({ error: "Submission not found" }, 404);
+    const { data: item } = await admin.from("question_bank_extended").select("max_marks").eq("id", sub.item_id).maybeSingle();
+    score = rubricScore(rubric.rows, Number(item?.max_marks) || score);
+  }
+
   const { data: updated, error } = await admin.from("open_response_submissions").update({
+    ...(rubric.rows ? { teacher_rubric_scores: rubric.rows } : {}),
     teacher_score: score,
     teacher_feedback: typeof teacher_feedback === "string" ? teacher_feedback : null,
     status: "teacher_reviewed",

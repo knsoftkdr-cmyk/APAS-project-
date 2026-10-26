@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, User, Loader2, Sparkles, GraduationCap, Compass, Zap, Globe2, Rocket, Lightbulb, Trash2, RotateCcw } from "lucide-react";
+import { Bot, Send, User, Loader2, Sparkles, GraduationCap, Compass, Zap, Globe2, Rocket, Lightbulb, Trash2, RotateCcw, Mic, MicOff, Square, ShieldCheck, AudioLines } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
@@ -17,6 +17,7 @@ import { AdaptivePracticeWidget } from "@/components/AdaptivePracticeWidget";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { TUTOR_LANGUAGES, normaliseTutorLanguage } from "@/lib/tutorLanguages";
 import { getAiAccessibilityFlags } from "@/lib/accessibility";
+import { useVoiceTutor, voiceProfileFor } from "@/hooks/useVoiceTutor";
 
 interface Message {
   role: "user" | "assistant";
@@ -136,6 +137,17 @@ const AITutor = () => {
   const [practiceScope, setPracticeScope] = useState<{ id: number; label: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  // Voice conversational tutor: talk to the tutor and hear the reply. Hands-free = the mic re-opens after each reply.
+  const voice = useVoiceTutor(teachingLanguage);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [handsFree, setHandsFree] = useState(true);
+  const [voiceBreak, setVoiceBreak] = useState(false);
+  const voiceStartedAt = useRef<number | null>(null);
+  const voiceModeRef = useRef(voiceMode);
+  const handsFreeRef = useRef(handsFree);
+  voiceModeRef.current = voiceMode;
+  handsFreeRef.current = handsFree;
+
   const activeConfig = MODE_CONFIG[mode];
   const ModeIcon = activeConfig.icon;
 
@@ -213,6 +225,7 @@ const AITutor = () => {
   const handleModeChange = (newMode: ChatMode) => {
     if (newMode === mode || isLoading) return;
     if (newMode === "career" && isCareerDisabled) return;
+    voice.stopAll();
     setMode(newMode);
     setMessages(newMode === "career" ? getCareerIntroMessages(profile?.full_name) : []);
     setInput("");
@@ -270,6 +283,7 @@ const AITutor = () => {
           style: activeStyle,
           hint_level: levelForThisMessage,
           accessibility: getAiAccessibilityFlags(),
+          voice: voiceModeRef.current,
         }),
       });
 
@@ -323,6 +337,44 @@ const AITutor = () => {
       setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I couldn't answer just now. ${e.message || "Please try again."}` }]);
     }
     setIsLoading(false);
+    // Voice mode: read the reply aloud, then (hands-free) listen for the next question.
+    if (voiceModeRef.current && assistantSoFar) {
+      voice.speak(assistantSoFar, voiceProfileFor(gradeBand).rate, () => {
+        if (voiceModeRef.current && handsFreeRef.current) listenRef.current();
+      });
+    }
+  };
+
+  // Latest-closure refs so the speech callbacks always call the current sendMessage / startListening.
+  const sendRef = useRef(sendMessage);
+  sendRef.current = sendMessage;
+  const startListening = () => {
+    // Age-appropriate session length: suggest a break instead of talking on and on.
+    const { sessionMinutes, rate } = voiceProfileFor(gradeBand);
+    if (voiceStartedAt.current && Date.now() - voiceStartedAt.current > sessionMinutes * 60000) {
+      setVoiceBreak(true);
+      setHandsFree(false);
+      voiceStartedAt.current = Date.now(); // the next tap starts a fresh session
+      voice.speak("Great work today! Time for a short break. Stretch, drink some water, and come back when you're ready.", rate);
+      return;
+    }
+    voice.listen((t) => { interacted.current = true; sendRef.current(t); });
+  };
+  const listenRef = useRef(startListening);
+  listenRef.current = startListening;
+
+  const toggleVoiceMode = () => {
+    if (voiceMode) {
+      voice.stopAll();
+      setVoiceMode(false);
+      return;
+    }
+    voiceStartedAt.current = Date.now();
+    setVoiceBreak(false);
+    setHandsFree(true);
+    setVoiceMode(true);
+    voiceModeRef.current = true;
+    if (!isLoading) startListening();
   };
 
   return (
@@ -414,12 +466,47 @@ const AITutor = () => {
           {mode === "tutor" && style !== "explain" && (
             <span className="text-xs text-muted-foreground">{STYLE_CONFIG[style].help}</span>
           )}
+          {voice.supported && (
+            <Button
+              size="sm"
+              variant={voiceMode ? "default" : "outline"}
+              className="h-7 gap-1.5 text-xs"
+              onClick={toggleVoiceMode}
+              title="Talk to the tutor and hear the answers"
+            >
+              <AudioLines className="h-3.5 w-3.5" /> {voiceMode ? "Voice on" : "Voice mode"}
+            </Button>
+          )}
           {messages.length > 0 && (
             <Button variant="ghost" size="sm" className="ml-auto h-7 gap-1 text-xs text-muted-foreground" onClick={clearHistory} disabled={isLoading}>
               <Trash2 className="h-3.5 w-3.5" /> Clear chat
             </Button>
           )}
         </div>
+
+        {voiceMode && (
+          <div className="mb-3 rounded-xl border border-indigo-200 bg-indigo-50/70 px-3 py-2 text-xs text-slate-700 space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 font-medium text-indigo-800">
+                {voice.listening ? <><span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" /> Listening…</>
+                  : voice.speaking ? <><AudioLines className="h-3.5 w-3.5 animate-pulse" /> Tutor is speaking…</>
+                  : isLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Thinking…</>
+                  : <>Tap the mic and ask your question</>}
+              </span>
+              {voice.interim && <span className="italic text-muted-foreground truncate max-w-[50%]">"{voice.interim}"</span>}
+              <label className="ml-auto inline-flex items-center gap-1.5 cursor-pointer">
+                <input type="checkbox" className="accent-indigo-600" checked={handsFree} onChange={(e) => setHandsFree(e.target.checked)} />
+                Hands-free
+              </label>
+            </div>
+            <p className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-600 mt-px" />
+              Your voice is turned into text by your browser - no audio is recorded or saved. Only talk about your school subjects, and never say your address, phone number or passwords.
+            </p>
+            {voiceBreak && <p className="text-[11px] font-medium text-amber-700">Break time! Voice paused after a long session - tap the mic when you're ready to continue.</p>}
+            {voice.error && <p className="text-[11px] text-destructive">{voice.error}</p>}
+          </div>
+        )}
 
         {/* Chat Area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
@@ -536,6 +623,29 @@ const AITutor = () => {
             rows={1}
             className="min-h-[44px] max-h-32 resize-none"
           />
+          {voice.supported && (voice.speaking ? (
+            <Button onClick={voice.stopSpeaking} variant="outline" size="icon" className="shrink-0 h-11 w-11" title="Stop speaking" aria-label="Stop speaking">
+              <Square className="h-4 w-4" />
+            </Button>
+          ) : (
+            <Button
+              onClick={() => {
+                if (voice.listening) { voice.stopListening(); return; }
+                if (!voiceMode) { voiceStartedAt.current = Date.now(); setVoiceMode(true); voiceModeRef.current = true; }
+                setVoiceBreak(false);
+                voice.clearError();
+                startListening();
+              }}
+              disabled={isLoading}
+              variant={voice.listening ? "destructive" : "outline"}
+              size="icon"
+              className="shrink-0 h-11 w-11"
+              title={voice.listening ? "Stop listening" : "Speak your question"}
+              aria-label={voice.listening ? "Stop listening" : "Speak your question"}
+            >
+              {voice.listening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+            </Button>
+          ))}
           <Button onClick={() => sendMessage()} disabled={isLoading || !input.trim()} size="icon" className="shrink-0 h-11 w-11">
             <Send className="h-4 w-4" />
           </Button>

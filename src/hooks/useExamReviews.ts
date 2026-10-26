@@ -45,6 +45,8 @@ export interface ReviewAttempt {
 }
 
 export interface RubricRow { criterion: string; max_marks: number; awarded?: number; met?: boolean; reasoning?: string }
+/** Interactive rubric grading: what the teacher gave per criterion, why, and the quote that shows it. */
+export interface TeacherRubricRow { criterion: string; max_marks: number; awarded: number; comment: string | null; evidence: string | null }
 export interface SubQuestion { id?: string; label?: string; question?: string; text?: string; marks?: number }
 
 export interface ReviewItem {
@@ -67,6 +69,7 @@ export interface ReviewItem {
     aiFeedback: string | null;
     teacherScore: number | null;
     teacherFeedback: string | null;
+    teacherRubric: TeacherRubricRow[] | null;
     status: string;
   };
 }
@@ -171,6 +174,15 @@ export function useExamReviewAttempts(filter: ReviewFilter, enabled = true) {
   });
 }
 
+const SUB_COLS = "id, item_id, answer_text, ai_suggested_score, ai_rubric_scores, ai_feedback, teacher_score, teacher_feedback, status";
+
+/** Written answers of one attempt. Falls back gracefully if migration 20261024000000 (teacher_rubric_scores) isn't applied yet. */
+async function loadSubmissions(attemptId: string) {
+  const first = await db.from("open_response_submissions").select(`${SUB_COLS}, teacher_rubric_scores`).eq("source", "test").eq("source_id", attemptId);
+  if (!first.error || !/teacher_rubric_scores/.test(first.error.message ?? "")) return first;
+  return db.from("open_response_submissions").select(SUB_COLS).eq("source", "test").eq("source_id", attemptId);
+}
+
 export function useExamReviewDetail(attemptId: string | null) {
   return useQuery({
     queryKey: ["exam-reviews", "detail", attemptId],
@@ -192,9 +204,7 @@ export function useExamReviewDetail(attemptId: string | null) {
         extIds.length
           ? db.from("question_bank_extended").select("id, question_type, stem, context_passage, sub_questions, rubric, model_answer, max_marks").in("id", extIds)
           : Promise.resolve({ data: [], error: null }),
-        db.from("open_response_submissions")
-          .select("id, item_id, answer_text, ai_suggested_score, ai_rubric_scores, ai_feedback, teacher_score, teacher_feedback, status")
-          .eq("source", "test").eq("source_id", attemptId),
+        loadSubmissions(attemptId!),
       ]);
       if (bankErr) throw new Error(bankErr.message);
       if (subErr) throw new Error(subErr.message);
@@ -218,7 +228,8 @@ export function useExamReviewDetail(attemptId: string | null) {
           submission: s ? {
             id: s.id, answerText: s.answer_text, aiScore: num(s.ai_suggested_score),
             aiRubric: Array.isArray(s.ai_rubric_scores) ? s.ai_rubric_scores : [], aiFeedback: s.ai_feedback ?? null,
-            teacherScore: num(s.teacher_score), teacherFeedback: s.teacher_feedback ?? null, status: s.status,
+            teacherScore: num(s.teacher_score), teacherFeedback: s.teacher_feedback ?? null,
+            teacherRubric: Array.isArray(s.teacher_rubric_scores) ? s.teacher_rubric_scores : null, status: s.status,
           } : null,
         });
       });
@@ -236,12 +247,13 @@ export function useExamReviewDetail(attemptId: string | null) {
 export function useSaveReview(attemptId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { submissionId: string; score: number; feedback: string }) =>
+    mutationFn: (args: { submissionId: string; score: number; feedback: string; rubric?: TeacherRubricRow[] | null }) =>
       invokeFn<{ submission: Row }>("evaluate-assessment", {
         action: "review_open_response",
         submission_id: args.submissionId,
         teacher_score: args.score,
         teacher_feedback: args.feedback.trim() || null,
+        ...(args.rubric?.length ? { teacher_rubric: args.rubric } : {}),
       }),
     // Returning the promise makes mutateAsync wait until the lists/detail have refetched, so the caller
     // can read the fresh attempt status (the DB trigger may have just finalised it).
@@ -252,5 +264,42 @@ export function useSaveReview(attemptId: string | null) {
         ...(attemptId ? [qc.invalidateQueries({ queryKey: ["exam-reviews", "detail", attemptId] })] : []),
       ]);
     },
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// Bulk actions (evaluate-assessment "bulk_review"): preview -> apply -> undo, see _shared/handlers/bulkReview.ts
+
+export interface BulkPreview {
+  attempts: number; denied: number; will_confirm: number; will_skip: number; becomes_final: number;
+  per_attempt: Array<{ attempt_id: string; student: string; exam: string; pending: number; will_confirm: number; will_skip: number; ai_marks: number; becomes_final: boolean }>;
+}
+export interface BulkBatch { id: string; action: string; changed: number; skipped: number; attempts: number; created_at: string; undone_at: string | null; can_undo: boolean }
+
+export function useBulkReview() {
+  const qc = useQueryClient();
+  const refresh = () => Promise.all([qc.invalidateQueries({ queryKey: ["exam-reviews"] }), qc.invalidateQueries({ queryKey: ["my-exams"] })]);
+  return {
+    preview: (attemptIds: string[]) => invokeFn<BulkPreview>("evaluate-assessment", { action: "bulk_review", op: "preview", attempt_ids: attemptIds }),
+    apply: async (attemptIds: string[], feedback?: string) => {
+      const r = await invokeFn<BulkPreview & { batch_id: string; changed: number }>("evaluate-assessment", {
+        action: "bulk_review", op: "apply", attempt_ids: attemptIds, feedback: feedback?.trim() || undefined,
+      });
+      await refresh();
+      return r;
+    },
+    undo: async (batchId: string) => {
+      const r = await invokeFn<{ restored: number; not_restored: number }>("evaluate-assessment", { action: "bulk_review", op: "undo", batch_id: batchId });
+      await refresh();
+      return r;
+    },
+  };
+}
+
+export function useBulkBatches(enabled = true) {
+  return useQuery({
+    queryKey: ["exam-reviews", "batches"],
+    enabled,
+    queryFn: () => invokeFn<{ batches: BulkBatch[] }>("evaluate-assessment", { action: "bulk_review", op: "list" }).then((r) => r.batches),
   });
 }
