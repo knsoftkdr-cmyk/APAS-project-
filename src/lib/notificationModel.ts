@@ -54,6 +54,7 @@ export function inferCategory(n: Pick<NotificationLike, "event_type" | "title" |
   if (e) {
     if (SAFETY_EVENTS.has(e)) return "safety";
     if (TRANSPORT_PREFIXES.some((p) => e.startsWith(p))) return "transport";
+    if (e.startsWith("calendar_")) return "academics";
     if (e.startsWith("attendance")) return "attendance";
     if (e === "tutor_message" || e.includes("message")) return "messages";
     if (e.startsWith("diagnostic_request") || e.startsWith("substitute") || e.startsWith("transfer") || e === "promotion" || e === "alumni_conversion") return "approvals";
@@ -99,6 +100,7 @@ export function governanceLink(eventType: string, role: string | null | undefine
     if (SCHOOL_ADMIN_ROLES.includes(r)) return "/transport";
     return undefined;
   }
+  if (e.startsWith("calendar_")) return ["student", "parent", "teacher", "hod", ...SCHOOL_ADMIN_ROLES].includes(r) ? "/academic-calendar" : undefined;
   if (e === "attendance_marked") return r === "parent" || r === "student" ? "/attendance" : undefined;
   if (e === "diagnostic_request_approved") return ["teacher", "admin", "hod", "principal"].includes(r) ? "/curative" : undefined;
   if (e === "diagnostic_request_rejected") return ["teacher", "admin", "principal", "hod"].includes(r) ? "/requests" : undefined;

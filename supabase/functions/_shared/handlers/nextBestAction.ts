@@ -92,7 +92,8 @@ export async function handleNextBestAction(req: Request): Promise<Response> {
       p_minutes_available: minutes_available ?? 15,
       p_max_steps: max_steps ?? 5,
     });
-    if (error) throw error;
+    // PostgREST errors are plain objects, not Error instances - rethrow as Error so the real message reaches the client.
+    if (error) throw new Error(error.message || "get_next_best_action failed");
 
     return new Response(JSON.stringify({ student_id: targetStudentId, ...data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

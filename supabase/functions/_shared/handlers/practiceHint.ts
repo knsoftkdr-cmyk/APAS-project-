@@ -25,14 +25,13 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { languageDirective, normaliseLanguageCode, resolveTeachingLanguage } from "../languages.ts";
+import { callAi, getAiConfig, type AiConfig } from "../aiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const MODEL = "google/gemini-2.5-flash";
-const AI_URL = Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions";
 const AI_TIMEOUT_MS = 45_000;
 export const MAX_LEVEL = 3;
 
@@ -94,6 +93,7 @@ export async function handlePracticeHint(req: Request): Promise<Response> {
 
     // ── Hints: cache first, then generate all three at once ──
     let hints: string[] | null = null;
+    let hintModel = "unknown";
     let cacheUsable = true;
     {
       const { data: cached, error } = await admin.from("question_hints")
@@ -107,8 +107,7 @@ export async function handlePracticeHint(req: Request): Promise<Response> {
     }
 
     if (!hints) {
-      const apiKey = Deno.env.get("LOVABLE_API_KEY");
-      if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+      const aiCfg = getAiConfig();
 
       const { data: item } = await admin.from("question_bank")
         .select("id, stem, options, correct_option, explanation, learning_objective_id").eq("id", itemId).single();
@@ -117,12 +116,13 @@ export async function handlePracticeHint(req: Request): Promise<Response> {
       const { data: lo } = await admin.from("learning_objectives")
         .select("objective_text").eq("id", item.learning_objective_id).maybeSingle();
 
-      const raw = await callModel(apiKey, buildPrompt(item, lo?.objective_text ?? null, lang));
+      const { parsed: raw, model: usedModel } = await callModel(aiCfg, buildPrompt(item, lo?.objective_text ?? null, lang), 0.4, "Hints are busy right now. Please try again in a moment.", "Could not build a hint right now. Please try again.", "The hint took too long. Please try again.");
+      hintModel = usedModel;
       hints = screenHints(raw, item);
 
       if (cacheUsable) {
         const { error } = await admin.from("question_hints")
-          .insert({ item_id: itemId, language: langCode, hints, model: MODEL });
+          .insert({ item_id: itemId, language: langCode, hints, model: hintModel });
         if (error && error.code !== "23505") console.warn("question_hints write failed:", error.message);
       }
     }
@@ -169,39 +169,22 @@ Rules: each hint 1-3 short sentences; never write the correct option letter as t
 Return STRICT JSON ONLY, no markdown: {"hints": ["hint 1", "hint 2", "hint 3"]}`;
 }
 
-async function callModel(apiKey: string, prompt: string): Promise<unknown> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
+async function callModel(cfg: AiConfig, prompt: string, temperature: number, busyMsg: string, parseMsg: string, timeoutMsg: string): Promise<{ parsed: unknown; model: string }> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const resp = await fetch(AI_URL, {
-      method: "POST",
-      signal: ctrl.signal,
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: "You output strict JSON only. No markdown, no commentary." },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.4,
-      }),
-    });
-    if (resp.status === 429) throw new HttpError(429, "Hints are busy right now. Please try again in a moment.");
-    if (resp.status === 402) throw new HttpError(402, "AI credits exhausted. Please contact your administrator.");
-    if (!resp.ok) throw new Error(`AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
-    const data = await resp.json();
-    const text: string = data?.choices?.[0]?.message?.content ?? "{}";
+    const timeout = new Promise<never>((_, rej) => { timer = setTimeout(() => rej(new HttpError(504, timeoutMsg)), AI_TIMEOUT_MS); });
+    const { text, model } = await Promise.race([callAi(cfg, prompt, { temperature }), timeout]);
     const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
     try {
-      return JSON.parse(cleaned);
+      return { parsed: JSON.parse(cleaned), model };
     } catch {
-      throw new HttpError(502, "Could not build a hint right now. Please try again.");
+      throw new HttpError(502, parseMsg);
     }
   } catch (e) {
-    if (e instanceof DOMException && e.name === "AbortError") throw new HttpError(504, "The hint took too long. Please try again.");
+    if (e instanceof Error && /rate limited/.test(e.message) && !(e instanceof HttpError)) throw new HttpError(429, busyMsg);
     throw e;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -212,7 +195,7 @@ const SAFE_FALLBACK = [
   "Compare the options one by one against that rule and cross out any that clearly break it - the one that remains is worth choosing.",
 ];
 
-const norm = (s: string) => s.toLowerCase().replace(/[\s\p{P}]+/g, " ").trim();
+const norm = (s: string) => s.toLowerCase().replace(/[\s\p{P}]+/gu, " ").trim();
 
 /** True when `hint` gives the answer away: states the correct letter as the answer, or quotes the correct option. */
 export function leaksAnswer(hint: string, item: Row): boolean {

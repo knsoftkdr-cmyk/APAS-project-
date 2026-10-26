@@ -10,6 +10,7 @@ import { useCommandBar } from "@/hooks/useCommandBar";
 import { isSafeRoute, type CommandParams, type CommandView } from "@/lib/commandBar";
 import { MAX_COMMAND_LENGTH, type IntentKind } from "../../../supabase/functions/_shared/commandModel";
 import { cn } from "@/lib/utils";
+import { OPEN_COMMAND_BAR_EVENT } from "@/components/help/helpEvents";
 
 const PROMPT = "What would you like to do in APAS?";
 
@@ -192,8 +193,14 @@ export function CommandBar() {
       // Universal Search owns Ctrl/Cmd+K; step aside rather than stacking two dialogs.
       if (k === "k") setOpen(false);
     };
+    // The header help menu's "Ask APAS" item opens the same dialog.
+    const onOpenRequest = () => setOpen(true);
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener(OPEN_COMMAND_BAR_EVENT, onOpenRequest);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener(OPEN_COMMAND_BAR_EVENT, onOpenRequest);
+    };
   }, [userId]);
 
   useEffect(() => { setOpen(false); }, [userId]);

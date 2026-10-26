@@ -19,8 +19,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
-import { useAuth } from "@/contexts/AuthContext";
-import { classKey, fetchSchoolBooks, resolveSubjectsForClass } from "@/lib/classSubjects";
+import { useStudentSubjects } from "@/hooks/useStudentSubjects";
 
 // ── Types matching supabase/functions/cat-session/index.ts's response shapes ─
 
@@ -124,7 +123,6 @@ interface ConceptOption { id: number; subtopic_name: string }
 type Phase = "pick" | "question" | "feedback" | "result";
 
 export default function AdaptiveTest() {
-  const { profile } = useAuth();
   const [phase, setPhase] = useState<Phase>("pick");
   const [busyScope, setBusyScope] = useState<ScopeType | null>(null);
 
@@ -133,13 +131,11 @@ export default function AdaptiveTest() {
   const [chapterId, setChapterId] = useState("");
   const [topicId, setTopicId] = useState("");
   const [subtopicId, setSubtopicId] = useState("");
-  const [books, setBooks] = useState<BookOption[]>([]);
   const [chapters, setChapters] = useState<ChapterOption[]>([]);
   const [topics, setTopics] = useState<TopicOption[]>([]);
   const [concepts, setConcepts] = useState<ConceptOption[]>([]);
   // The student's own class: subjects are limited to what that class studies.
-  const [classLabel, setClassLabel] = useState<string | null>(null);
-  const [loadingSubjects, setLoadingSubjects] = useState(true);
+  const { subjects: books, classLabel, loading: loadingSubjects } = useStudentSubjects();
 
   // Live test state
   const [session, setSession] = useState<CatSessionPublic | null>(null);
@@ -151,45 +147,6 @@ export default function AdaptiveTest() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmExit, setConfirmExit] = useState(false);
 
-  // Find the student's class, then list only the subjects taught in it.
-  useEffect(() => {
-    if (!profile?.id) return;
-    let cancelled = false;
-    (async () => {
-      setLoadingSubjects(true);
-      try {
-        const { data: stu } = await supabase
-          .from("students").select("id, grade, class, section").eq("profile_id", profile.id).maybeSingle();
-        let className: string | null = null;
-        let section: string | null = null;
-        if (stu?.id) {
-          const { data: cs } = await supabase
-            .from("class_students").select("classes(name, section)").eq("student_id", stu.id).limit(1);
-          // deno-lint-ignore no-explicit-any
-          const cls = (cs as any[] | null)?.[0]?.classes;
-          if (cls?.name) { className = cls.name; section = cls.section ?? null; }
-        }
-        // Fallback for students not yet enrolled via class_students.
-        if (!className) {
-          className = stu?.class ?? stu?.grade ?? profile.class_grade ?? null;
-          section = stu?.section ?? profile.section ?? null;
-        }
-        if (cancelled) return;
-        if (!className) { setClassLabel(null); setBooks([]); return; }
-        setClassLabel(`${className}${section ? ` - ${section}` : ""}`);
-
-        const schoolBooks = await fetchSchoolBooks(profile.school_id);
-        const subjects = await resolveSubjectsForClass(schoolBooks, classKey(className));
-        if (cancelled) return;
-        setBooks(subjects.map((s) => ({ id: s.bookId, subject: s.subject, class_name: className })));
-      } catch {
-        if (!cancelled) { setBooks([]); toast.error("Couldn't load your subjects"); }
-      } finally {
-        if (!cancelled) setLoadingSubjects(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [profile?.id, profile?.school_id]);
   useEffect(() => {
     setChapterId(""); setTopicId(""); setSubtopicId(""); setChapters([]); setTopics([]); setConcepts([]);
     if (!bookId) return;

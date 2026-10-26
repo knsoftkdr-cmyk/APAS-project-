@@ -8,6 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useGamification } from "@/hooks/useGamification";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/drafts/DraftStatus";
+import { DraftRecoveryDialog } from "@/components/drafts/DraftRecoveryDialog";
+import { hashString } from "@/lib/drafts/draftStorage";
 
 interface StudentOption {
   id: string;
@@ -69,6 +73,28 @@ export function PerformanceEntryModal({
 
     setScoreDrafts(nextDrafts);
   }, [open, students, existingMap]);
+
+  // Auto-save & Recovery for the per-student score grid. performance_records is only written by Save.
+  const baselineDrafts = useMemo(() => {
+    const out: Record<string, ScoreDraft> = {};
+    students.forEach((student) => {
+      const pre = existingMap.get(student.id);
+      out[student.id] = { ...EMPTY_DRAFT, pretestScore: pre != null ? String(pre) : "" };
+    });
+    return out;
+  }, [students, existingMap]);
+  const scoreEntryDraft = useFormDraft<Record<string, ScoreDraft>>({
+    formType: "score_entry",
+    recordKey: open && lessonId ? `${lessonId}|${mode}` : null,
+    value: scoreDrafts,
+    baseline: baselineDrafts,
+    baseHash: hashString(JSON.stringify(baselineDrafts)),
+    onRestore: (p) => {
+      const merged: Record<string, ScoreDraft> = { ...baselineDrafts };
+      for (const st of students) if (p && p[st.id]) merged[st.id] = { ...EMPTY_DRAFT, ...p[st.id] };
+      setScoreDrafts(merged);
+    },
+  });
 
   const calcNormalizedGain = (pre: number, post: number): number => {
     if (pre >= 100) return 1.0;
@@ -224,6 +250,7 @@ export function PerformanceEntryModal({
         await checkMismatchAlert(lessonId);
       }
 
+      await scoreEntryDraft.markSubmitted(); // scores saved: drop the draft
       onSaved();
     } catch (err: any) {
       console.error(err);
@@ -379,7 +406,9 @@ export function PerformanceEntryModal({
           )}
         </div>
 
-        <DialogFooter>
+        <DraftRecoveryDialog draft={scoreEntryDraft} noun="scores draft" />
+        <DialogFooter className="items-center gap-2">
+          <DraftStatus draft={scoreEntryDraft} className="sm:mr-auto" />
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving || studentsToRender.length === 0}>
             {saving ? "Saving..." : "Save Class Scores"}

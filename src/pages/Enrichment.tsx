@@ -6,19 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Rocket, Loader2, Lightbulb, Globe2, FlaskConical, BookMarked, Lock, ChevronDown } from "lucide-react";
+import { Rocket, Loader2, Lightbulb, Globe2, FlaskConical, BookMarked, Lock, ChevronDown, GraduationCap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { TUTOR_LANGUAGES, normaliseTutorLanguage } from "@/lib/tutorLanguages";
 import { useGenerateEnrichment, type EnrichmentResponse } from "@/hooks/useEnrichment";
+import { useStudentSubjects } from "@/hooks/useStudentSubjects";
 
-interface BookRow { id: number; subject: string; class_name: string | null }
 interface ChapterRow { id: number; chapter_name: string }
 
 export default function Enrichment() {
   const { language: appLanguage } = useLanguage();
-  const [books, setBooks] = useState<BookRow[]>([]);
+  // Only the subjects of the student's own class.
+  const { subjects: books, classLabel, loading: loadingSubjects } = useStudentSubjects();
   const [chapters, setChapters] = useState<ChapterRow[]>([]);
   const [bookId, setBookId] = useState("");
   const [chapterId, setChapterId] = useState("");
@@ -27,11 +28,6 @@ export default function Enrichment() {
   const generate = useGenerateEnrichment();
 
   const language = langOverride ?? normaliseTutorLanguage(appLanguage);
-
-  useEffect(() => {
-    supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }) => setBooks((data as BookRow[]) ?? []));
-  }, []);
 
   useEffect(() => {
     setChapters([]);
@@ -69,12 +65,27 @@ export default function Enrichment() {
 
         <Card>
           <CardContent className="pt-6 space-y-3">
+            {classLabel && (
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-xs font-medium text-indigo-800">
+                <GraduationCap className="h-3.5 w-3.5" /> Your class: {classLabel}
+              </div>
+            )}
+            {!loadingSubjects && !classLabel && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                We couldn't find your class. Please ask your school admin to assign you to a class.
+              </div>
+            )}
+            {!loadingSubjects && classLabel && books.length === 0 && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                No subjects have been set up for {classLabel} yet.
+              </div>
+            )}
             <div className="grid gap-3 sm:grid-cols-3">
-              <Select value={bookId} onValueChange={setBookId}>
-                <SelectTrigger><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+              <Select value={bookId} onValueChange={setBookId} disabled={loadingSubjects || books.length === 0}>
+                <SelectTrigger><SelectValue placeholder={loadingSubjects ? "Loading your subjects…" : "Choose a subject"} /></SelectTrigger>
                 <SelectContent>
                   {books.map((b) => (
-                    <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` (${b.class_name})` : ""}</SelectItem>
+                    <SelectItem key={b.id} value={String(b.id)}>{b.subject}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

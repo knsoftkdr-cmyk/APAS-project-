@@ -8,6 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/drafts/DraftStatus";
+import { DraftRecoveryDialog } from "@/components/drafts/DraftRecoveryDialog";
+import { hashString } from "@/lib/drafts/draftStorage";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Sparkles, Loader2, Calendar, Clock, Lock, Unlock,
@@ -275,6 +279,26 @@ const PeriodPlanGenerator = () => {
     if (selectedLessonId) setCurrentLessonId(selectedLessonId);
   }, [selectedLessonId]);
 
+  // Auto-save & Recovery for the two period forms. The plan itself is only written to period_plans by the
+  // existing Save / Add Period buttons (savePlan); drafts live in form_drafts + this device.
+  const BLANK_MANUAL: PeriodPlan = { day: 1, period: 1, topic: "", objective: "", activity: "", materials: "", assessment: "", duration_minutes: 40 };
+  const manualDraft = useFormDraft<PeriodPlan>({
+    formType: "period_plan_manual",
+    recordKey: showManualAdd && selectedLessonId ? `${selectedLessonId}|manual` : null,
+    value: manualForm,
+    baseline: BLANK_MANUAL,
+    onRestore: (p) => setManualForm({ ...BLANK_MANUAL, ...p }),
+  });
+  const editingPlan = editingIndex != null ? periodPlans[editingIndex] : undefined;
+  const editDraft = useFormDraft<{ form: PeriodPlan | null }>({
+    formType: "period_plan_edit",
+    recordKey: selectedLessonId && editForm && editingIndex != null ? `${selectedLessonId}|edit|${editingIndex}` : null,
+    value: { form: editForm },
+    baseline: { form: editingPlan ?? null },
+    baseHash: hashString(JSON.stringify(editingPlan ?? null)),
+    onRestore: (p) => { if (p.form) setEditForm(p.form); },
+  });
+
   const handleGenerate = async () => {
     if (!selectedLesson?.lesson_content) {
       toast.error("Selected lesson plan has no content.");
@@ -415,6 +439,7 @@ const data = await resp.json();
     setEditingIndex(null);
     setEditForm(null);
     await savePlan(updated, isLocked);
+    await editDraft.markSubmitted(); // period saved: drop the draft
     toast.success("Period updated!");
   };
 
@@ -438,6 +463,7 @@ const data = await resp.json();
       materials: "", assessment: "", duration_minutes: 40,
     });
     await savePlan(updated, isLocked);
+    await manualDraft.markSubmitted(); // period added: drop the draft
     toast.success("Period added!");
   };
 
@@ -1009,7 +1035,9 @@ const data = await resp.json();
                   />
                 </div>
               </div>
-              <div className="flex gap-2">
+              <DraftRecoveryDialog draft={manualDraft} noun="period draft" />
+              <div className="flex gap-2 items-center flex-wrap">
+                <DraftStatus draft={manualDraft} className="order-last sm:ml-auto" />
                 <Button size="sm" onClick={handleAddManual} className="gap-1.5">
                   <Check className="h-3.5 w-3.5" /> Add Period
                 </Button>
@@ -1088,7 +1116,9 @@ const data = await resp.json();
                                   <Input value={editForm.assessment} onChange={(e) => setEditForm({ ...editForm, assessment: e.target.value })} />
                                 </div>
                               </div>
-                              <div className="flex gap-2">
+                              <DraftRecoveryDialog draft={editDraft} noun="period draft" />
+                              <div className="flex gap-2 items-center flex-wrap">
+                                <DraftStatus draft={editDraft} className="order-last sm:ml-auto" />
                                 <Button size="sm" onClick={() => handleSaveEdit(globalIdx)} className="gap-1.5">
                                   <Check className="h-3.5 w-3.5" /> Save
                                 </Button>

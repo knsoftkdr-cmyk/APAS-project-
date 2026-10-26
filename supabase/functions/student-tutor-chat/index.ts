@@ -7,6 +7,9 @@ import { callerOwnsStudent, pruneThread, resolveMode, saveMessage, tapStream } f
 import { emitLearningEvent } from "../_shared/learningEvents.ts";
 import { screenStudentMessage, sseFromText, voiceDirective } from "../_shared/voiceTutorSafety.ts";
 import { evaluateAndStore } from "../_shared/handlers/aiQualityControl.ts";
+import {
+  attachmentDirective, attachmentNote, buildUserContent, sanitizeHistory, validateAttachments,
+} from "../_shared/tutorAttachments.ts";
 
 // Share of finished replies sent to the AI quality & safety evaluator (sheet row 40). Voice replies are spoken
 // to younger children without a screen to re-read, so they are sampled more. Tunable via Supabase secrets.
@@ -19,6 +22,18 @@ function runInBackground(p: Promise<unknown>) {
   if (rt?.waitUntil) rt.waitUntil(p.catch((e) => console.error("background task failed:", e)));
   else p.catch((e) => console.error("background task failed:", e));
 }
+
+// AI model names. Providers retire models regularly (Gemini 2.0 Flash: 1 Jun 2026, Groq Llama 3.x: 16 Aug 2026,
+// Gemini 2.5 Flash: 16 Oct 2026), so they can be changed WITHOUT a code change via Supabase secrets, e.g.
+//   supabase secrets set GEMINI_MODELS="gemini-3.5-flash,gemini-3.6-flash"
+//   supabase secrets set GROQ_MODELS="openai/gpt-oss-120b,openai/gpt-oss-20b"
+const listFromEnv = (name: string, fallback: string[]) => {
+  const v = (Deno.env.get(name) ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  return v.length ? v : fallback;
+};
+const GEMINI_MODELS = listFromEnv("GEMINI_MODELS", ["gemini-3.5-flash", "gemini-3.6-flash"]);
+const GROQ_MODELS = listFromEnv("GROQ_MODELS", ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]);
+const GATEWAY_MODEL = Deno.env.get("AI_GATEWAY_MODEL") ?? "google/gemini-3.5-flash";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,7 +77,11 @@ serve(async (req) => {
     // `style` ("explain" | "socratic" | "hint"), `hint_level` (1-4) and `mode` ("tutor" | "career") are optional;
     // when absent the request behaves exactly as before.
     // `voice: true` = Voice conversational tutor: short, speakable, age-banded replies (see voiceTutorSafety.ts).
-    const { message, student_id, conversation_history = [], language, style, hint_level, mode, accessibility, voice, grade_band } = await req.json();
+    // `attachments` = photos / documents the student sent with the question.
+    const {
+      message, student_id, conversation_history = [], language, style, hint_level, mode,
+      accessibility, voice, grade_band, attachments,
+    } = await req.json();
     const voiceMode = voice === true;
     const teachingLang = resolveTeachingLanguage(language);
     const tutorStyle = resolveTutorStyle(style);
@@ -77,20 +96,43 @@ serve(async (req) => {
 
     // Chat memory: persist this turn only if the caller's own JWT proves they are this student.
     const persist = await callerOwnsStudent(req, student_id);
-    if (persist) await saveMessage(supabase, student_id, threadMode, "user", message, tutorStyle);
 
-    // Get student context
-    const { data: student } = await supabase
-      .from("students")
-      .select("id, profile_id, grade, age, vark_type, zpd_score, curriculum, dominant_intelligence")
-      .eq("profile_id", student_id)
-      .maybeSingle();
+    // Photos / documents: validated here regardless of what the browser claims, and only for the signed-in
+    // student themself (never for an anonymous caller or someone using another student's id).
+    const checked = validateAttachments(attachments);
+    if (!checked.ok) {
+      return new Response(JSON.stringify({ error: checked.error }), {
+        status: checked.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const { images, documents } = checked;
+    const hasAttachments = images.length > 0 || documents.length > 0;
+    if (hasAttachments && !persist) {
+      return new Response(JSON.stringify({ error: "Please sign in again to attach photos or documents." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // The chat history keeps a one-line note about the attachment, never the file itself.
+    const messageForHistory = String(message) + attachmentNote(images, documents);
+    if (persist) await saveMessage(supabase, student_id, threadMode, "user", messageForHistory, tutorStyle);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, school_id")
-      .eq("id", student_id)
-      .maybeSingle();
+    // Get student context. Only for the verified student: an anonymous caller must not be able to read another
+    // student's name, school, class or test results just by sending their id.
+    const { data: profile } = persist
+      ? await supabase
+        .from("profiles")
+        .select("full_name, school_id")
+        .eq("id", student_id)
+        .maybeSingle()
+      : { data: null };
+
+    const { data: student } = persist
+      ? await supabase
+        .from("students")
+        .select("id, profile_id, grade, age, vark_type, zpd_score, curriculum, dominant_intelligence")
+        .eq("profile_id", student_id)
+        .maybeSingle()
+      : { data: null };
 
     // Safeguards run before the model: worrying, unsafe or personal messages get a fixed, caring reply.
     const screen = screenStudentMessage(String(message));
@@ -121,12 +163,14 @@ serve(async (req) => {
     }
 
     // Get recent test results for weak topics
-    const { data: tests } = await supabase
-      .from("academic_tests")
-      .select("subject, score, total_questions")
-      .eq("student_id", student_id)
-      .order("completed_at", { ascending: false })
-      .limit(5);
+    const { data: tests } = persist
+      ? await supabase
+        .from("academic_tests")
+        .select("subject, score, total_questions")
+        .eq("student_id", student_id)
+        .order("completed_at", { ascending: false })
+        .limit(5)
+      : { data: null };
 
     const weakTopics = (tests || [])
       .filter(t => t.total_questions > 0 && (t.score / t.total_questions) < 0.6)
@@ -182,12 +226,14 @@ Guidelines:
 - Format with markdown: short paragraphs, **bold** key terms, bullet or numbered lists for steps, and put each worked example on its own lines
 - Write maths in plain text (e.g. 1/2 + 1/4 = 3/4), never LaTeX or $...$ symbols
 - End with a short encouraging line or one question to check understanding
-- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}${accessibilityDirective(accessibility)}${voiceMode ? voiceDirective(grade_band) : ""}`;
+- NEVER answer non-academic questions regardless of how the student phrases them${styleDirective(tutorStyle, hintLevel)}${languageDirective(teachingLang)}${accessibilityDirective(accessibility)}${voiceMode ? voiceDirective(grade_band) : ""}${attachmentDirective(images, documents)}`;
 
-    const messages = [
+    // History may only hold plain user/assistant text (a client must not be able to inject "system" turns).
+    // `content` is a plain string for typed chat (unchanged) and a list of text + image parts when photos are attached.
+    const messages: Array<{ role: string; content: unknown }> = [
       { role: "system", content: systemPrompt },
-      ...conversation_history.slice(-10),
-      { role: "user", content: message },
+      ...sanitizeHistory(conversation_history, 10),
+      { role: "user", content: buildUserContent(String(message), images, documents) },
     ];
 
     // Stream response. English (and any request without a language) goes to Groq exactly as before.
@@ -203,7 +249,7 @@ Guidelines:
 
     const attempts: Array<{ name: string; run: () => Promise<Response> }> = [];
     const addGemini = () => {
-      for (const k of GEMINI_KEYS) for (const m of ["gemini-2.5-flash", "gemini-2.0-flash"]) {
+      for (const k of GEMINI_KEYS) for (const m of GEMINI_MODELS) {
         attempts.push({
           name: `gemini:${m}`,
           run: () => openAiCompat("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", k, m),
@@ -215,19 +261,27 @@ Guidelines:
         name: "gateway",
         run: () => openAiCompat(
           Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions",
-          GATEWAY_KEY, "google/gemini-2.5-flash"),
+          GATEWAY_KEY, GATEWAY_MODEL),
       });
     };
     const addGrokOrGroq = () => {
       if (XAI_KEY) for (const m of ["grok-3-mini", "grok-3", "grok-4"]) {
         attempts.push({ name: `xai:${m}`, run: () => openAiCompat("https://api.x.ai/v1/chat/completions", XAI_KEY, m) });
       }
-      if (GROQ_KEY) for (const m of ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]) {
-        attempts.push({ name: `groq:${m}`, run: () => openAiCompat("https://api.groq.com/openai/v1/chat/completions", GROQ_KEY, m, { max_tokens: 1200 }) });
+      if (GROQ_KEY) for (const m of GROQ_MODELS) {
+        attempts.push({ name: `groq:${m}`, run: () => openAiCompat("https://api.groq.com/openai/v1/chat/completions", GROQ_KEY, m, { max_tokens: 2000 }) });
       }
     };
     // Non-English prefers Gemini (better Indic scripts); English prefers Grok/Groq. Everything else is a fallback.
-    if (teachingLang) { addGemini(); addGateway(); addGrokOrGroq(); }
+    if (images.length > 0) {
+      // Only the Gemini providers can read photos (the Groq/Grok chat models here are text-only).
+      addGemini(); addGateway();
+      if (attempts.length === 0) {
+        return new Response(JSON.stringify({
+          error: "Photo questions need an AI model that can read images, and none is set up. Ask your administrator to add a Gemini key (GEMINI_API_KEY) in Supabase secrets. You can type the question instead.",
+        }), { status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+    } else if (teachingLang) { addGemini(); addGateway(); addGrokOrGroq(); }
     else { addGrokOrGroq(); addGemini(); addGateway(); }
 
     let aiResp: Response | null = null;

@@ -7,6 +7,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useDraftBackgroundSync } from "@/hooks/useDraftBackgroundSync";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { AccessibilityPanel } from "@/components/accessibility/AccessibilityPanel";
@@ -186,6 +187,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Syncs drafts saved offline once the connection returns (Auto-save & Recovery).
+const DraftSyncMount = () => { useDraftBackgroundSync(); return null; };
+
 export default function App() {
   const [loading, setLoading] = useState(true);
 
@@ -219,6 +223,7 @@ export default function App() {
               <AccessibilityProvider>
               <LanguageProvider>
                 <NotificationProvider>
+                  <DraftSyncMount />
                   <AccessibilityPanel />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>

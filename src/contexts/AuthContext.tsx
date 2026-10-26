@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSessionGuard } from "@/hooks/useSessionGuard";
+import { clearSyncedLocalDrafts } from "@/lib/drafts/draftStorage";
 
 interface Profile {
   id: string;
@@ -133,6 +134,8 @@ const fetchProfile = async (userId: string) => {
   }, [session?.user?.id, queryClient]);
 
   const signOut = async () => {
+    // Shared devices: drop this user's already-synced local drafts. Unsynced ones are kept so no work is lost.
+    if (session?.user?.id) clearSyncedLocalDrafts(session.user.id);
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);

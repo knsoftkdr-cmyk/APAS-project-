@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,10 +6,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Gauge } from "lucide-react";
 import { useVelocityTree } from "@/hooks/useLearningVelocity";
 import { VelocityTree } from "@/components/mastery/VelocityTree";
+import { useStudentSubjects } from "@/hooks/useStudentSubjects";
+import { classKey } from "@/lib/Classsubjects";
 
 export default function LearningVelocity() {
-  const { data: subjects, isLoading, error } = useVelocityTree();
+  const { data: allSubjects, isLoading: loadingTree, error } = useVelocityTree();
+  const { className, loading: loadingClass } = useStudentSubjects();
+  const isLoading = loadingTree || loadingClass;
   const [activeBook, setActiveBook] = useState<string | null>(null);
+
+  // Only the student's own class, and one entry per subject (duplicate books of a subject collapse to
+  // the one with the most recent activity, then the most chapters).
+  const subjects = useMemo(() => {
+    if (!allSubjects || !className) return [];
+    const mine = allSubjects.filter((s) => classKey(s.class_name) === classKey(className));
+    const bySubject = new Map<string, (typeof mine)[number]>();
+    for (const s of mine) {
+      const key = s.subject.trim().toLowerCase().replace(/\s+/g, " ");
+      const cur = bySubject.get(key);
+      const better = !cur
+        || (s.last_evidence_at ?? "") > (cur.last_evidence_at ?? "")
+        || ((s.last_evidence_at ?? "") === (cur.last_evidence_at ?? "") && s.chapters.length > cur.chapters.length);
+      if (better) bySubject.set(key, s);
+    }
+    return [...bySubject.values()].sort((a, b) => a.subject.localeCompare(b.subject));
+  }, [allSubjects, className]);
 
   const activeSubject = subjects?.find((s) => String(s.book_id) === activeBook) ?? subjects?.[0];
 
