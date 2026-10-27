@@ -417,7 +417,7 @@ export default function StudentVirtualClassroom() {
           }
         }}
       >
-        <DialogContent className="max-w-6xl w-[calc(100%-2rem)] sm:w-full h-[85vh] p-0 overflow-hidden flex flex-col">
+        <DialogContent onEscapeKeyDown={(e) => e.preventDefault()} className="max-w-6xl w-[calc(100%-2rem)] sm:w-full h-[85vh] p-0 overflow-hidden flex flex-col">
           <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 shrink-0">
             <DialogHeader>
               <DialogTitle className="text-white text-base flex items-center gap-2">
@@ -438,6 +438,7 @@ export default function StudentVirtualClassroom() {
             ) : activeWhiteboardId && currentUserId ? (
               <WhiteboardCanvas
                 whiteboardId={activeWhiteboardId}
+                title={activeSessionForWhiteboard ? (activeSessionForWhiteboard.title || activeSessionForWhiteboard.subject) : "Whiteboard"}
                 lessonId={undefined}
                 currentUserId={currentUserId}
                 currentUserRole="student"

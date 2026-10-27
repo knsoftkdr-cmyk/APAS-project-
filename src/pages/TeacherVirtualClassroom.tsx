@@ -793,7 +793,7 @@ export default function TeacherVirtualClassroom() {
 
       {/* Whiteboard dialog */}
       <Dialog open={whiteboardOpen} onOpenChange={(open) => { setWhiteboardOpen(open); if (!open) setActiveWhiteboardId(null); }}>
-        <DialogContent className="max-w-6xl w-full sm:w-[calc(100%-2rem)] h-[100dvh] sm:h-[85vh] max-h-[100dvh] sm:max-h-[85vh] rounded-none sm:rounded-lg p-0 overflow-hidden flex flex-col">
+        <DialogContent onEscapeKeyDown={(e) => e.preventDefault()} className="max-w-6xl w-full sm:w-[calc(100%-2rem)] h-[100dvh] sm:h-[85vh] max-h-[100dvh] sm:max-h-[85vh] rounded-none sm:rounded-lg p-0 overflow-hidden flex flex-col">
   <div className="bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 shrink-0">
     <DialogHeader>
       <DialogTitle className="text-white text-sm sm:text-base flex items-center gap-2 min-w-0">
@@ -812,6 +812,7 @@ export default function TeacherVirtualClassroom() {
     ) : (
               <WhiteboardCanvas
                 whiteboardId={activeWhiteboardId}
+                title={activeSessionForWhiteboard ? (activeSessionForWhiteboard.title || activeSessionForWhiteboard.subject) : "Whiteboard"}
                 lessonId={undefined}
                 currentUserId={currentUserId}
                 currentUserRole="teacher"
