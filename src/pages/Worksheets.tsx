@@ -10,6 +10,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/drafts/DraftStatus";
+import { DraftRecoveryDialog } from "@/components/drafts/DraftRecoveryDialog";
+import { hashString } from "@/lib/drafts/draftStorage";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -522,6 +526,18 @@ export default function Worksheets() {
     }
   }, [existingSubmission]);
 
+  // Auto-save & Recovery for the student's in-progress worksheet answers (drafts never touch worksheet_submissions).
+  const savedAnswers = (existingSubmission?.answers ?? {}) as Record<number, string>;
+  const worksheetDraft = useFormDraft<Record<number, string>>({
+    formType: "worksheet_practice",
+    recordKey: practiceWorksheet?.id ?? null,
+    value: activityAnswers,
+    baseline: savedAnswers,
+    baseHash: hashString(JSON.stringify(savedAnswers)),
+    isEmpty: (v) => Object.values(v).every((x) => !String(x ?? "").trim()) && Object.keys(savedAnswers).length === 0,
+    onRestore: (p) => setActivityAnswers(p && typeof p === "object" ? p : {}),
+  });
+
   const handleSubmitWorksheetAnswers = async () => {
     if (!practiceWorksheet?.worksheets?.id || !user?.id) return;
     setIsSubmittingWorksheet(true);
@@ -558,6 +574,7 @@ export default function Worksheets() {
         queryKey: ["student-all-worksheet-submissions", user.id],
       });
       markWorksheetNotificationAsRead(practiceWorksheet.id);
+      await worksheetDraft.markSubmitted(); // submitted: drop the draft
       setPracticeWorksheet(null);
     } catch (err: any) {
       console.error("Failed to submit worksheet:", err);
@@ -835,7 +852,9 @@ export default function Worksheets() {
             </div>
           )}
 
-          <DialogFooter>
+          <DraftRecoveryDialog draft={worksheetDraft} noun="answers draft" />
+          <DialogFooter className="items-center gap-2">
+            <DraftStatus draft={worksheetDraft} className="sm:mr-auto" />
             <Button variant="outline" className="rounded-xl" onClick={() => setPracticeWorksheet(null)} disabled={isSubmittingWorksheet}>
               Cancel
             </Button>

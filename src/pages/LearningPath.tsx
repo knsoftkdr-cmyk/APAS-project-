@@ -11,10 +11,9 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useStudentSubjects } from "@/hooks/useStudentSubjects";
 import { useLearningPath, useAnswerPathStep, type LearningPathStep, type PathStepType } from "@/hooks/useLearningPath";
 
-interface BookOption { id: number; subject: string; class_name: string | null }
 
 const STEP_META: Record<PathStepType, { label: string; icon: typeof Route; className: string }> = {
   review: { label: "Review", icon: RotateCw, className: "bg-blue-100 text-blue-800 border-blue-300" },
@@ -24,15 +23,11 @@ const STEP_META: Record<PathStepType, { label: string; icon: typeof Route; class
 };
 
 export default function LearningPath() {
-  const [books, setBooks] = useState<BookOption[]>([]);
+  // Only the subjects of the student's own class.
+  const { subjects: books, classLabel, loading: loadingSubjects } = useStudentSubjects();
   const [bookId, setBookId] = useState<string>("");
 
-  useEffect(() => {
-    supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }) => setBooks((data as BookOption[]) ?? []));
-  }, []);
-
-  const { data, isLoading, refetch, isFetching } = useLearningPath(bookId ? Number(bookId) : undefined, { length: 8 });
+  const { data, isLoading, isError, error, refetch, isFetching } = useLearningPath(bookId ? Number(bookId) : undefined, { length: 8 });
   const answerStep = useAnswerPathStep();
 
   const [index, setIndex] = useState(0);
@@ -78,11 +73,18 @@ export default function LearningPath() {
           <h1 className="text-xl font-bold">Your Learning Path</h1>
         </div>
 
-        <Select value={bookId} onValueChange={setBookId}>
-          <SelectTrigger><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+        {classLabel && <p className="text-xs font-medium text-muted-foreground">Your class: {classLabel}</p>}
+        {!loadingSubjects && books.length === 0 && (
+          <p className="text-xs text-amber-700">
+            {classLabel ? `No subjects have been set up for ${classLabel} yet.` : "We couldn't find your class. Please ask your school admin to assign you to a class."}
+          </p>
+        )}
+
+        <Select value={bookId} onValueChange={setBookId} disabled={loadingSubjects || books.length === 0}>
+          <SelectTrigger><SelectValue placeholder={loadingSubjects ? "Loading your subjects…" : "Choose a subject"} /></SelectTrigger>
           <SelectContent>
             {books.map((b) => (
-              <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` · ${b.class_name}` : ""}</SelectItem>
+              <SelectItem key={b.id} value={String(b.id)}>{b.subject}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -98,7 +100,17 @@ export default function LearningPath() {
           </CardContent></Card>
         )}
 
-        {bookId && !isLoading && steps.length === 0 && (
+        {bookId && !isLoading && isError && (
+          <Card className="border-red-300 bg-red-50/50">
+            <CardContent className="p-6 text-center space-y-2">
+              <p className="font-medium text-red-800">Couldn't build your learning path</p>
+              <p className="text-sm text-red-700 break-words">{error instanceof Error ? error.message : "Something went wrong."}</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>Try again</Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {bookId && !isLoading && !isError && steps.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center space-y-2">
               <Trophy className="h-10 w-10 text-emerald-500 mx-auto" />

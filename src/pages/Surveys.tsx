@@ -25,6 +25,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/drafts/DraftStatus";
+import { DraftRecoveryDialog } from "@/components/drafts/DraftRecoveryDialog";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Plus, Trash2, ClipboardList, Users, Lock, Star, Play, Square, BarChart3, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -376,6 +379,33 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
   ]);
   const [saving, setSaving] = useState(false);
 
+  // Auto-save & Recovery for the survey being built. Nothing is created (not even a draft survey row) until
+  // "Create Survey" is pressed. Question keys are random per session, so they are left out of the draft.
+  const defaultTarget: TargetType = role === "teacher" ? "class_students" : "all_parents";
+  const surveyDraft = useFormDraft<{
+    title: string; description: string; isAnonymous: boolean; targetType: TargetType;
+    selectedClassName: string; selectedSections: string[]; questions: Omit<DraftQuestion, "key">[];
+  }>({
+    formType: "survey_builder",
+    recordKey: "new",
+    value: {
+      title, description, isAnonymous, targetType, selectedClassName, selectedSections,
+      questions: questions.map(({ key: _k, ...rest }) => rest),
+    },
+    baseline: {
+      title: "", description: "", isAnonymous: false, targetType: defaultTarget, selectedClassName: "", selectedSections: [],
+      questions: [{ question_text: "", question_type: "rating", options: [], required: true }],
+    },
+    onRestore: (p) => {
+      setTitle(p.title ?? ""); setDescription(p.description ?? ""); setIsAnonymous(!!p.isAnonymous);
+      setTargetType(p.targetType ?? defaultTarget); setSelectedClassName(p.selectedClassName ?? "");
+      setSelectedSections(Array.isArray(p.selectedSections) ? p.selectedSections : []);
+      setQuestions(Array.isArray(p.questions) && p.questions.length
+        ? p.questions.map((q) => ({ ...q, key: crypto.randomUUID() }))
+        : [{ key: crypto.randomUUID(), question_text: "", question_type: "rating", options: [], required: true }]);
+    },
+  });
+
   const { data: classes = [] } = useQuery({
     queryKey: ["survey-builder-classes", schoolId, role, userId],
     queryFn: async () => {
@@ -479,6 +509,7 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
       if (qError) throw qError;
 
       toast({ title: "Survey created as draft — activate it when ready" });
+      await surveyDraft.markSubmitted(); // survey created: drop the builder draft
       onCreated();
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
@@ -622,7 +653,9 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
           </div>
         </div>
 
-        <DialogFooter>
+        <DraftRecoveryDialog draft={surveyDraft} noun="survey draft" />
+        <DialogFooter className="items-center gap-2">
+          <DraftStatus draft={surveyDraft} className="sm:mr-auto" />
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleCreate} disabled={saving} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white">
             {saving ? "Creating..." : "Create Survey"}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useExpiringCountdown } from "@/hooks/useExpiringCountdown";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/drafts/DraftStatus";
+import { DraftRecoveryDialog } from "@/components/drafts/DraftRecoveryDialog";
 
 interface HomeworkQuestion {
   question: string;
@@ -164,28 +168,27 @@ const StudentHomework = () => {
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "submitted">("all");
 
-  // Timer effect
-  useEffect(() => {
-    if (!timerActive || timerSeconds <= 0) {
-      if (timerSeconds === 0 && timerActive) {
-        // Auto-submit when timer reaches 0
-        handleAutoSubmit();
-      }
-      return;
-    }
+  // Auto-save & Recovery: the student's in-progress answers for the open homework. Stored in form_drafts
+  // (+ this device), never in homework_submissions, so an unfinished draft can't look like a submission.
+  const homeworkDraft = useFormDraft<Record<number, string>>({
+    formType: "student_homework",
+    recordKey: currentView === "start" ? activeHomeworkId : null,
+    value: activeHomeworkId ? answers[activeHomeworkId] ?? {} : {},
+    isEmpty: (v) => Object.values(v).every((x) => !x?.trim()),
+    onRestore: (payload) => {
+      if (activeHomeworkId) setAnswers((prev) => ({ ...prev, [activeHomeworkId]: payload }));
+    },
+  });
 
-    const interval = setInterval(() => {
-      setTimerSeconds((prev) => {
-        if (prev <= 1) {
-          setTimerActive(false);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [timerActive, timerSeconds]);
+  // Countdown: when it reaches 00:00 the homework is submitted automatically (as the banner promises).
+  // Paused while the student decides about a recovered draft.
+  useExpiringCountdown({
+    active: timerActive,
+    seconds: timerSeconds,
+    setSeconds: setTimerSeconds,
+    paused: !!homeworkDraft.recovery,
+    onExpire: () => { void handleAutoSubmit(); },
+  });
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -319,6 +322,7 @@ try {
   console.error("Teacher notification failed:", notifError);
 }
       await queryClient.invalidateQueries({ queryKey: ["homework-submissions"] });
+      await homeworkDraft.markSubmitted(); // submission succeeded: remove the draft (device + server)
       markHomeworkNotificationAsRead(assignmentId);
       setCurrentView("list");
       setActiveHomeworkId(null);
@@ -652,6 +656,7 @@ try {
               <p className="text-sm text-muted-foreground mt-2">
                 {activeAssignment.subject} • {activeAssignment.topic || "General"}
               </p>
+              <DraftStatus draft={homeworkDraft} className="mt-1.5" />
             </div>
             <Button
               variant="ghost"
@@ -792,7 +797,7 @@ try {
         </Button>
         <Button
           onClick={() => setConfirmSubmitOpen(true)}
-          disabled={submitting === activeHomeworkId || timerSeconds === 0}
+          disabled={submitting === activeHomeworkId}
           className="flex-1 gap-2 bg-emerald-600 hover:bg-emerald-700"
         >
           {submitting === activeHomeworkId ? (
@@ -817,6 +822,8 @@ try {
           </CardContent>
         </Card>
       )}
+
+      <DraftRecoveryDialog draft={homeworkDraft} noun="answers draft" />
 
       {/* ─── CONFIRM SUBMIT DIALOG ─── */}
       <AlertDialog open={confirmSubmitOpen} onOpenChange={setConfirmSubmitOpen}>

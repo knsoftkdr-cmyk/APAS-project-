@@ -19,7 +19,7 @@ import pdfWorkerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
-type EventType = "holiday" | "exam" | "class_period" | "event";
+type EventType = "holiday" | "exam" | "class_period" | "event" | "homework";
 
 interface CalendarEvent {
   id: string;
@@ -29,6 +29,10 @@ interface CalendarEvent {
   start_date: string;
   end_date: string;
   school_id: string;
+  /** True for exam dates and homework deadlines that come from the exam schedule / homework, not from this calendar. Read-only here. */
+  derived?: boolean;
+  /** Extra line shown under the date (time, deadline, which child). */
+  note?: string;
 }
 
 const EVENT_COLORS: Record<EventType, { bg: string; text: string; badge: string; dot: string }> = {
@@ -36,6 +40,7 @@ const EVENT_COLORS: Record<EventType, { bg: string; text: string; badge: string;
   exam:         { bg: "bg-blue-50",   text: "text-blue-700",   badge: "bg-blue-100 text-blue-700 border-blue-200",   dot: "bg-blue-500" },
   class_period: { bg: "bg-green-50",  text: "text-green-700",  badge: "bg-green-100 text-green-700 border-green-200",  dot: "bg-green-500" },
   event:        { bg: "bg-yellow-50", text: "text-yellow-700", badge: "bg-yellow-100 text-yellow-700 border-yellow-200", dot: "bg-yellow-500" },
+  homework:     { bg: "bg-purple-50", text: "text-purple-700", badge: "bg-purple-100 text-purple-700 border-purple-200", dot: "bg-purple-500" },
 };
 
 const EVENT_LABELS: Record<EventType, string> = {
@@ -43,6 +48,7 @@ const EVENT_LABELS: Record<EventType, string> = {
   exam: "Exam",
   class_period: "Class Period",
   event: "Event",
+  homework: "Homework due",
 };
 
 const EMPTY_FORM = { title: "", description: "", event_type: "event" as EventType, start_date: "", end_date: "" };
@@ -65,19 +71,81 @@ export default function AcademicCalendar() {
   const [readingFile, setReadingFile] = useState(false);
   const [extractedEvents, setExtractedEvents] = useState<Omit<CalendarEvent, "id" | "school_id">[]>([]);
 
-  const fetchEvents = async () => {
+  const to12h = (hhmm?: string | null) => {
+    if (!hhmm) return "";
+    const [h, m] = hhmm.split(":").map(Number);
+    if (Number.isNaN(h)) return "";
+    return `${((h + 11) % 12) + 1}:${String(m ?? 0).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+  };
+
+  // Exam dates (exam schedule) and homework deadlines, already limited by the database to what this role should see.
+  const fetchFeed = async (): Promise<CalendarEvent[]> => {
+    const from = format(addMonths(new Date(), -2), "yyyy-MM-dd");
+    const to = format(addMonths(new Date(), 13), "yyyy-MM-dd");
+    const { data, error } = await (supabase as any).rpc("get_calendar_feed", { p_from: from, p_to: to });
+    if (error || !Array.isArray(data)) return [];
+    return data.map((r: any): CalendarEvent => {
+      const isHw = r.kind === "homework";
+      const when = isHw
+        ? (r.start_time ? `Due ${to12h(r.start_time)}` : "Due")
+        : [to12h(r.start_time), to12h(r.end_time)].filter(Boolean).join(" – ");
+      return {
+        id: `feed-${r.source}-${r.source_id}-${r.for_student ?? ""}`,
+        title: isHw ? `${r.title}${r.detail ? ` – ${r.detail}` : ""}` : `${r.title} exam`,
+        event_type: r.kind as EventType,
+        start_date: r.start_date,
+        end_date: r.end_date,
+        school_id: profile!.school_id as string,
+        derived: true,
+        note: [when, r.for_student].filter(Boolean).join(" · ") || undefined,
+      };
+    });
+  };
+
+  const fetchEvents = async (showSpinner = true) => {
     if (!profile?.school_id) return;
-    setLoading(true);
-    const { data } = await supabase
-      .from("academic_calendar_events")
-      .select("*")
-      .eq("school_id", profile.school_id)
-      .order("start_date");
-    setEvents((data as CalendarEvent[]) || []);
+    if (showSpinner) setLoading(true);
+    const [{ data }, feed] = await Promise.all([
+      supabase
+        .from("academic_calendar_events")
+        .select("*")
+        .eq("school_id", profile.school_id)
+        .order("start_date"),
+      fetchFeed(),
+    ]);
+    const merged = [...((data as CalendarEvent[]) || []), ...feed].sort((a, b) => a.start_date.localeCompare(b.start_date));
+    setEvents(merged);
     setLoading(false);
   };
 
   useEffect(() => { fetchEvents(); }, [profile?.school_id]);
+
+  // Keep the calendar current when a date changes: live changes (where the database sends them), plus a refresh when the
+  // tab comes back into view and every few minutes, so a missed realtime message never leaves stale dates.
+  useEffect(() => {
+    const schoolId = profile?.school_id;
+    if (!schoolId) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const refresh = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => fetchEvents(false), 800);
+    };
+    const channel = supabase
+      .channel(`calendar_live_${schoolId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "academic_calendar_events", filter: `school_id=eq.${schoolId}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "exam_schedules", filter: `school_id=eq.${schoolId}` }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "homework_assignments" }, refresh)
+      .subscribe();
+    const onVisible = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", onVisible);
+    const interval = setInterval(refresh, 5 * 60 * 1000);
+    return () => {
+      if (timer) clearTimeout(timer);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisible);
+      supabase.removeChannel(channel);
+    };
+  }, [profile?.school_id]);
 
   const daysInMonth = eachDayOfInterval({ start: startOfMonth(currentMonth), end: endOfMonth(currentMonth) });
   const startDayOfWeek = startOfMonth(currentMonth).getDay();
@@ -542,7 +610,7 @@ const notifyCalendarEvent = async (
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-1">
                             <p className="text-xs font-semibold text-foreground truncate">{e.title}</p>
-                            {isAdmin && (
+                            {isAdmin && !e.derived && (
                               <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button onClick={() => openEdit(e)} className="p-1 rounded hover:bg-indigo-50 text-indigo-500 transition-colors">
                                   <Pencil className="h-3 w-3" />
@@ -558,6 +626,7 @@ const notifyCalendarEvent = async (
                               ? format(parseISO(e.start_date), "MMM d, yyyy")
                               : `${format(parseISO(e.start_date), "MMM d")} – ${format(parseISO(e.end_date), "MMM d, yyyy")}`}
                           </p>
+                          {e.note && <p className="text-[10px] text-muted-foreground mt-0.5">{e.note}</p>}
                           <Badge className={`mt-1.5 text-[9px] py-0 px-1.5 h-4 border ${EVENT_COLORS[e.event_type].badge}`}>
                             {EVENT_LABELS[e.event_type]}
                           </Badge>

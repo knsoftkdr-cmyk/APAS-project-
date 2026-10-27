@@ -8,6 +8,7 @@ import { UniversalSearch } from "@/components/search/UniversalSearch";
 import { CommandBar } from "@/components/command-bar/CommandBar";
 import { tourRoleFor } from "@/components/onboarding/tourSteps";
 import { startProductTour } from "@/components/onboarding/tourEvents";
+import { HelpMenu } from "@/components/help/HelpMenu";
 import { clearAllRecentSearches } from "@/lib/universalSearch";
 import { useNotifications } from "@/contexts/NotificationContext";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -130,17 +131,11 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
 
         <AccessibilityLauncher />
 
-        {/* ── Help: replay the guided tour ─────────────────────────────────── */}
+        {/* ── Help: guided tour, help for this page, Ask APAS ───────────────── */}
         {hasTour && (
-          <button
-            onClick={startProductTour}
-            data-tour="header-help"
-            className="rounded-button p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-            aria-label="Help: take a tour"
-            title="Help: take a tour"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </button>
+          <div data-tour="header-help">
+            <HelpMenu canTakeTour={hasTour} />
+          </div>
         )}
 
         {/* ── Bell ─────────────────────────────────────────────────────────── */}
