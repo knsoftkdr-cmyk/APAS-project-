@@ -35,7 +35,9 @@ export function getAiConfig(): AiConfig {
   return cfg;
 }
 
-export interface CallOptions { system?: string; temperature?: number; maxOutputTokens?: number }
+// reasoning: let the model think before answering (default is minimal thinking, which is fine for writing
+// but not for checking arithmetic / working out a correct answer).
+export interface CallOptions { system?: string; temperature?: number; maxOutputTokens?: number; reasoning?: boolean }
 
 function geminiUrl(model: string, key: string) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
@@ -52,7 +54,7 @@ export async function callAi(cfg: AiConfig, prompt: string, opts: CallOptions = 
   for (const key of cfg.geminiKeys) {
     for (const model of geminiModels()) {
       // Ask for minimal thinking; if a model rejects that setting (400), retry once without it.
-      for (const withThinking of [true, false]) {
+      for (const withThinking of opts.reasoning ? [false] : [true, false]) {
         try {
           const generationConfig: Record<string, unknown> = { temperature, maxOutputTokens, responseMimeType: "application/json" };
           if (withThinking) {

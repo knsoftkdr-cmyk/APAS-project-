@@ -311,8 +311,33 @@ Storage: `competency_missions`, `competency_xp_awards` (migration 20261019000000
   client-judged `is_correct`, so a determined student could still inflate a score; the evidence/multi-day rules and the daily cap
   make that slow and bounded, not impossible. Grading every flow server-side is the real fix.
 
+<<<<<<< Updated upstream
 ## AI Command Bar (added later, same pattern)
 
 | Feature | Anchor (deployed) | Discriminator |
 |---|---|---|
 | AI Command Bar (resolve + read-only lookups + action previews; no writes) | ai-teacher-assistant | action: `command_bar` (any signed-in role; the handler authenticates the caller's JWT itself, uses the caller's RLS-bound client, never the service role) |
+=======
+## Teacher & AI suite - sheet rows 27, 28, 40, 41, 42, 43 (same pattern; migration 20261023000000)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| AI whiteboard (row 27) | ai-teacher-assistant | action: `whiteboard_draw` |
+| AI class briefing (row 41) | ai-teacher-assistant | action: `class_briefing` |
+| Digital classroom workspace (row 43) | ai-teacher-assistant | action: `classroom` (+ `op`) |
+| One-screen assessment builder (row 42) | evaluate-assessment | action: `build_paper` (then `assign_paper`) |
+| AI quality & safety control (row 40) | ai-hooks | action: `quality_evaluate` `quality_list` `quality_review` |
+| Voice conversational tutor (row 28) | student-tutor-chat | body flag `voice: true` (safeguards apply to every message) |
+
+Optional secrets: `AI_QUALITY_SAMPLE_RATE` (default 0.2) and `AI_QUALITY_VOICE_SAMPLE_RATE` (default 0.5) -
+the share of AI Tutor / Voice Tutor replies sent to the quality evaluator.
+
+## Teacher suite part 2 - sheet rows 44, 45, 46, 47 (migration 20261024000000)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Interactive rubric grading (row 44) | evaluate-assessment | action: `review_open_response` + `teacher_rubric` |
+| Bulk actions on exam reviews (row 45) | evaluate-assessment | action: `bulk_review` (+ `op`: `preview` `apply` `undo` `list`) |
+| AI-assisted differentiation (row 46) | ai-teacher-assistant | action: `differentiate` (+ `op`: `generate` `list` `get` `delete` `share`) |
+| Student intervention board (row 47) | - (client, existing RLS on student_interventions) | - |
+>>>>>>> Stashed changes

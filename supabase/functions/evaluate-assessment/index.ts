@@ -231,9 +231,13 @@ import { handleGenerateAssessmentPaper } from "../_shared/handlers/generateAsses
 import { handleAssignAssessmentPaper } from "../_shared/handlers/assignAssessmentPaper.ts";
 import { handleAssessmentPaperFull } from "../_shared/handlers/assessmentPaperFull.ts";
 import { handleGradeOpenResponse } from "../_shared/handlers/gradeOpenResponseHandler.ts";
+import { handleBuildManualPaper } from "../_shared/handlers/buildManualPaper.ts";
+import { handleBulkReview } from "../_shared/handlers/bulkReview.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
+  build_paper: { handler: handleBuildManualPaper },
+  bulk_review: { handler: handleBulkReview },
   generate_paper: { handler: handleGenerateAssessmentPaper },
   assign_paper: { handler: handleAssignAssessmentPaper },
   get_paper_full: { handler: handleAssessmentPaperFull },

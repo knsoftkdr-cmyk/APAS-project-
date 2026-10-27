@@ -5,18 +5,30 @@ import { handleTeacherCopilot } from "../_shared/handlers/teacherCopilot.ts";
 import { handlePtmPrep } from "../_shared/handlers/ptmPrep.ts";
 import { handleIepGenerator } from "../_shared/handlers/iepGenerator.ts";
 import { handleCommandBar } from "../_shared/handlers/commandBar.ts";
+import { handleClassBriefing } from "../_shared/handlers/classBriefing.ts";
+import { handleAiWhiteboard } from "../_shared/handlers/aiWhiteboard.ts";
+import { handleDigitalClassroom } from "../_shared/handlers/digitalClassroom.ts";
+import { handleDifferentiation } from "../_shared/handlers/differentiation.ts";
 
 // Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
 //   action "copilot": Teacher Copilot - lesson planning, assessment, remediation and student analysis.
 //   action "ptm_prep": Parent-Teacher Meeting Intelligence - discussion points for a booked meeting.
 //   action "iep_generate": Individual Education Plan generator - drafts an IEP for a SEN student (saves nothing).
 //   action "command_bar": AI Command Bar - resolves a typed command and runs a fixed, scoped, READ-ONLY lookup (any signed-in role).
+//   action "class_briefing": AI class briefing - today's classes, outstanding work and learning issues.
+//   action "whiteboard_draw": AI whiteboard - step-by-step drawings, equations and diagrams.
+//   action "classroom": Digital classroom workspace - stream, materials, assignments, attendance (teachers AND students).
+//   action "differentiate": AI-assisted differentiation - one lesson material at several levels / needs.
 // A body WITHOUT a matching `action` (the existing { teacher_id, school_id } call) runs the original code below.
 const MERGED_ROUTES: RouteTable = {
   copilot: { handler: handleTeacherCopilot },
   ptm_prep: { handler: handlePtmPrep },
   iep_generate: { handler: handleIepGenerator },
   command_bar: { handler: handleCommandBar },
+  class_briefing: { handler: handleClassBriefing },
+  whiteboard_draw: { handler: handleAiWhiteboard },
+  classroom: { handler: handleDigitalClassroom },
+  differentiate: { handler: handleDifferentiation },
 };
 
 const corsHeaders = {

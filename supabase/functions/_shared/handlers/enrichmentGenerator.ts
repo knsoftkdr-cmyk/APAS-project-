@@ -32,6 +32,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { languageDirective, normaliseLanguageCode, resolveTeachingLanguage } from "../languages.ts";
+import { callAi, getAiConfig, type AiConfig } from "../aiClient.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,8 +40,6 @@ const corsHeaders = {
 };
 
 const STAFF_ROLES = ["admin", "teacher", "school_admin", "principal", "hod"];
-const MODEL = "google/gemini-2.5-flash";
-const AI_URL = Deno.env.get("AI_GATEWAY_URL") ?? "https://ai.gateway.lovable.dev/v1/chat/completions";
 const AI_TIMEOUT_MS = 90_000;
 
 const ENRICHMENT_MIN_MASTERY = 0.8;
@@ -92,8 +91,7 @@ export async function handleEnrichmentGenerator(req: Request): Promise<Response>
       if (!ownStudentId) throw new HttpError(403, "Student record not found");
     }
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+    const aiCfg = getAiConfig();
 
     const body = await req.json().catch(() => ({}));
     const scopeType = String(body.scope_type ?? "") as ScopeType;
@@ -155,7 +153,7 @@ export async function handleEnrichmentGenerator(req: Request): Promise<Response>
     }
 
     // ── Generate ────────────────────────────────────────────────────────────
-    const raw = await callModel(apiKey, buildPrompt(scope, lang));
+    const { parsed: raw, model: usedModel } = await callModel(aiCfg, buildPrompt(scope, lang), 0.6, "AI is busy right now. Please try again in a moment.", "Could not parse the AI response. Please try again.", "The AI took too long. Please try again.");
     const content = cleanPack(raw);
     if (!content) throw new HttpError(502, "The AI returned an unusable enrichment pack. Please try again.");
 
@@ -164,7 +162,7 @@ export async function handleEnrichmentGenerator(req: Request): Promise<Response>
     if (cacheUsable) {
       const row = {
         scope_type: scopeType, scope_id: scopeId, language: langCode,
-        title: content.title, content, model: MODEL, created_by: user.id,
+        title: content.title, content, model: usedModel, created_by: user.id,
       };
       const table = admin.from("enrichment_packs");
       const write = refresh ? table.upsert(row, { onConflict: "scope_type,scope_id,language" }) : table.insert(row);
@@ -302,40 +300,22 @@ Return STRICT JSON ONLY (no markdown fences, no commentary) with exactly this sh
 Counts: deep_dive 2-4 items, challenge_problems 3-4 items, think_about_it 2-3, real_world_connections 2-3, key_terms 3-6.`;
 }
 
-async function callModel(apiKey: string, prompt: string): Promise<unknown> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
+async function callModel(cfg: AiConfig, prompt: string, temperature: number, busyMsg: string, parseMsg: string, timeoutMsg: string): Promise<{ parsed: unknown; model: string }> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    const resp = await fetch(AI_URL, {
-      method: "POST",
-      signal: ctrl.signal,
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: "You output strict JSON only. No markdown, no commentary." },
-          { role: "user", content: prompt },
-        ],
-        temperature: 0.6,
-      }),
-    });
-    if (resp.status === 429) throw new HttpError(429, "AI is busy right now. Please try again in a moment.");
-    if (resp.status === 402) throw new HttpError(402, "AI credits exhausted. Please contact your administrator.");
-    if (!resp.ok) throw new Error(`AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
-
-    const data = await resp.json();
-    const text: string = data?.choices?.[0]?.message?.content ?? "{}";
+    const timeout = new Promise<never>((_, rej) => { timer = setTimeout(() => rej(new HttpError(504, timeoutMsg)), AI_TIMEOUT_MS); });
+    const { text, model } = await Promise.race([callAi(cfg, prompt, { temperature }), timeout]);
     const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "");
     try {
-      return JSON.parse(cleaned);
+      return { parsed: JSON.parse(cleaned), model };
     } catch {
-      throw new HttpError(502, "Could not parse the AI response. Please try again.");
+      throw new HttpError(502, parseMsg);
     }
   } catch (e) {
-    if (e instanceof DOMException && e.name === "AbortError") throw new HttpError(504, "The AI took too long. Please try again.");
+    if (e instanceof Error && /rate limited/.test(e.message) && !(e instanceof HttpError)) throw new HttpError(429, busyMsg);
     throw e;
   } finally {
-    clearTimeout(timer);
+    if (timer) clearTimeout(timer);
   }
 }
 

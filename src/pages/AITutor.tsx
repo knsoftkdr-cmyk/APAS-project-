@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Bot, Send, User, Loader2, Sparkles, GraduationCap, Compass, Zap, Globe2, Rocket, Lightbulb, Trash2, RotateCcw } from "lucide-react";
+import { Bot, Send, User, Loader2, Sparkles, GraduationCap, Compass, Zap, Globe2, Rocket, Lightbulb, Trash2, RotateCcw, Mic, MicOff, Square, ShieldCheck, AudioLines } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
@@ -15,12 +15,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AdaptivePracticeWidget } from "@/components/AdaptivePracticeWidget";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useStudentSubjects } from "@/hooks/useStudentSubjects";
 import { TUTOR_LANGUAGES, normaliseTutorLanguage } from "@/lib/tutorLanguages";
 import { getAiAccessibilityFlags } from "@/lib/accessibility";
+import { useVoiceTutor, voiceProfileFor } from "@/hooks/useVoiceTutor";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
+import { limitProblem, prepareFile, speechLangFor, toRequestAttachments, type TutorAttachment } from "@/lib/tutorAttachments";
+import { AttachMenu, AttachmentChips, VoiceButton } from "@/components/tutor/TutorComposerTools";
+import { useToast } from "@/hooks/use-toast";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  /** Photos/documents the student sent with this message (display only; the files themselves are not kept). */
+  attachments?: Array<{ name: string; kind: "image" | "document"; preview?: string }>;
 }
 
 type ChatMode = "tutor" | "career";
@@ -127,14 +135,37 @@ const AITutor = () => {
   );
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  // Photos / documents attached to the question (kept for follow-ups until the student removes them).
+  const [attachments, setAttachments] = useState<TutorAttachment[]>([]);
+  const [preparing, setPreparing] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
+  const attachmentsRef = useRef<TutorAttachment[]>([]);
+  attachmentsRef.current = attachments;
+  const { toast } = useToast();
+  // Voice input: reuses the same speech hook as Pronunciation Assessment. The text lands in the box for the
+  // student to check and send - it is never sent automatically.
+  const speech = useSpeechRecognition();
+  const voiceBase = useRef("");
   const [gradeBand, setGradeBand] = useState<GradeBand | null>(null);
   const [gradeLoading, setGradeLoading] = useState(true);
   const [practicePickerOpen, setPracticePickerOpen] = useState(false);
-  const [practiceBooks, setPracticeBooks] = useState<Array<{ id: number; subject: string; class_name: string | null }>>([]);
+  // Adaptive Practice lists only the subjects of the student's own class.
+  const { subjects: practiceBooks, classLabel: practiceClassLabel, loading: practiceLoading } = useStudentSubjects();
   const [practiceChapters, setPracticeChapters] = useState<Array<{ id: number; chapter_name: string }>>([]);
   const [practiceBookId, setPracticeBookId] = useState("");
   const [practiceScope, setPracticeScope] = useState<{ id: number; label: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Voice conversational tutor: talk to the tutor and hear the reply. Hands-free = the mic re-opens after each reply.
+  const voice = useVoiceTutor(teachingLanguage);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [handsFree, setHandsFree] = useState(true);
+  const [voiceBreak, setVoiceBreak] = useState(false);
+  const voiceStartedAt = useRef<number | null>(null);
+  const voiceModeRef = useRef(voiceMode);
+  const handsFreeRef = useRef(handsFree);
+  voiceModeRef.current = voiceMode;
+  handsFreeRef.current = handsFree;
 
   const activeConfig = MODE_CONFIG[mode];
   const ModeIcon = activeConfig.icon;
@@ -213,9 +244,13 @@ const AITutor = () => {
   const handleModeChange = (newMode: ChatMode) => {
     if (newMode === mode || isLoading) return;
     if (newMode === "career" && isCareerDisabled) return;
+    voice.stopAll();
     setMode(newMode);
     setMessages(newMode === "career" ? getCareerIntroMessages(profile?.full_name) : []);
     setInput("");
+    speech.cancel();
+    setAttachments([]);
+    setAttachError(null);
   };
 
   const clearHistory = async () => {
@@ -227,6 +262,8 @@ const AITutor = () => {
     interacted.current = true;
     setMessages(mode === "career" ? getCareerIntroMessages(profile?.full_name) : []);
     setHintLevel(1);
+    setAttachments([]);
+    setAttachError(null);
   };
 
   const changeStyle = (next: TutorStyle) => {
@@ -235,12 +272,76 @@ const AITutor = () => {
     setHintLevel(1);
   };
 
+  // --- Photos & documents -------------------------------------------------------------------------
+  const addFiles = async (files: File[]) => {
+    if (mode !== "tutor" || files.length === 0) return;
+    setAttachError(null);
+    setPreparing(true);
+    const added: TutorAttachment[] = [];
+    const problems: string[] = [];
+    for (const file of files) {
+      const res = await prepareFile(file);
+      if (!res.ok) { problems.push(res.error); continue; }
+      const limit = limitProblem([...attachmentsRef.current, ...added], res.attachments);
+      if (limit) { problems.push(limit); continue; }
+      added.push(...res.attachments);
+    }
+    if (added.length) setAttachments((prev) => [...prev, ...added]);
+    if (problems.length) setAttachError(problems.join(" "));
+    setPreparing(false);
+
+    // Existing blur/darkness check on photos: runs after the photo is already attached (it loads the PDF
+    // engine, which can be slow on a phone) and only adds a warning - it never blocks sending.
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      const att = added.find((a) => a.kind === "image" && a.name === file.name);
+      if (!att) continue;
+      void (async () => {
+        try {
+          const { assessFileClarity } = await import("@/lib/fileClarity");
+          const clarity = await assessFileClarity(file);
+          if (!clarity.ok) {
+            const note = `Heads up: ${clarity.reason ?? "this photo may be hard to read"}`;
+            setAttachments((prev) => prev.map((a) => (a.id === att.id ? { ...a, note } : a)));
+          }
+        } catch { /* the check is optional */ }
+      })();
+    }
+  };
+
+  const removeAttachment = (id: string) => setAttachments((prev) => prev.filter((a) => a.id !== id));
+
+  // --- Voice input ----------------------------------------------------------------------------------
+  useEffect(() => {
+    if (!speech.listening) return;
+    const spoken = [speech.finalText, speech.interim].filter(Boolean).join(" ");
+    setInput((voiceBase.current ? voiceBase.current.trimEnd() + " " : "") + spoken);
+  }, [speech.listening, speech.finalText, speech.interim]);
+
+  const toggleVoice = () => {
+    if (speech.listening) { speech.stop(); return; }
+    speech.clearError();
+    voiceBase.current = input;
+    speech.start(speechLangFor(teachingLanguage), () => { /* the live text is already in the box */ });
+  };
+
   // `override` lets the "Next hint" button send a canned message without touching the text box.
   const sendMessage = async (override?: string) => {
-    const text = (override ?? input).trim();
-    if (!text || isLoading) return;
-    const userMsg: Message = { role: "user", content: text };
+    const typed = (override ?? input).trim();
+    const sending = mode === "tutor" ? attachmentsRef.current : [];
+    if ((!typed && sending.length === 0) || isLoading || preparing) return;
+    speech.cancel();
+    // A photo/file with no typed question still gets a sensible default question.
+    const text = typed || (sending.some((a) => a.kind === "image")
+      ? "Please help me with the attached photo. Explain what it shows and how to solve or understand it."
+      : "Please help me understand the attached document.");
+    const userMsg: Message = {
+      role: "user",
+      content: text,
+      attachments: sending.length ? sending.map((a) => ({ name: a.name, kind: a.kind, preview: a.preview })) : undefined,
+    };
     if (override === undefined) setInput("");
+    setAttachError(null);
     interacted.current = true;
     setMessages(prev => [...prev, userMsg]);
     setIsLoading(true);
@@ -263,13 +364,15 @@ const AITutor = () => {
         body: JSON.stringify({
           message: userMsg.content,
           student_id: user?.id,
-          conversation_history: messages.slice(-10),
+          conversation_history: messages.slice(-10).map((m) => ({ role: m.role, content: m.content })),
           mode,
           grade_band: gradeBand,
           language: teachingLanguage,
           style: activeStyle,
           hint_level: levelForThisMessage,
           accessibility: getAiAccessibilityFlags(),
+          voice: voiceModeRef.current,
+          ...(sending.length ? { attachments: toRequestAttachments(sending) } : {}),
         }),
       });
 
@@ -323,31 +426,60 @@ const AITutor = () => {
       setMessages(prev => [...prev, { role: "assistant", content: `Sorry, I couldn't answer just now. ${e.message || "Please try again."}` }]);
     }
     setIsLoading(false);
+    // Voice mode: read the reply aloud, then (hands-free) listen for the next question.
+    if (voiceModeRef.current && assistantSoFar) {
+      voice.speak(assistantSoFar, voiceProfileFor(gradeBand).rate, () => {
+        if (voiceModeRef.current && handsFreeRef.current) listenRef.current();
+      });
+    }
+  };
+
+  // Latest-closure refs so the speech callbacks always call the current sendMessage / startListening.
+  const sendRef = useRef(sendMessage);
+  sendRef.current = sendMessage;
+  const startListening = () => {
+    // Age-appropriate session length: suggest a break instead of talking on and on.
+    const { sessionMinutes, rate } = voiceProfileFor(gradeBand);
+    if (voiceStartedAt.current && Date.now() - voiceStartedAt.current > sessionMinutes * 60000) {
+      setVoiceBreak(true);
+      setHandsFree(false);
+      voiceStartedAt.current = Date.now(); // the next tap starts a fresh session
+      voice.speak("Great work today! Time for a short break. Stretch, drink some water, and come back when you're ready.", rate);
+      return;
+    }
+    voice.listen((t) => { interacted.current = true; sendRef.current(t); });
+  };
+  const listenRef = useRef(startListening);
+  listenRef.current = startListening;
+
+  const toggleVoiceMode = () => {
+    if (voiceMode) {
+      voice.stopAll();
+      setVoiceMode(false);
+      return;
+    }
+    voiceStartedAt.current = Date.now();
+    setVoiceBreak(false);
+    setHandsFree(true);
+    setVoiceMode(true);
+    voiceModeRef.current = true;
+    if (!isLoading) startListening();
   };
 
   return (
     <AppLayout>
-       <div className="relative flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto p-4 overflow-hidden">
+      <div className="relative flex flex-col h-[calc(100vh-4rem)] max-w-4xl mx-auto p-4 overflow-hidden">
         <PageHeader
           title={activeConfig.label}
           subtitle="Your personal 24/7 AI study companion"
           action={
             <div className="flex items-center gap-2">
-            <Button asChild variant="outline" size="sm" className="gap-1.5">
-              <Link to="/enrichment"><Rocket className="h-4 w-4" /> Enrichment</Link>
-            </Button>
-            <Button
-              variant="outline" size="sm" className="gap-1.5"
-              onClick={async () => {
-                setPracticePickerOpen(true);
-                if (practiceBooks.length === 0) {
-                  const { data } = await supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject");
-                  setPracticeBooks(data ?? []);
-                }
-              }}
-            >
-              <Zap className="h-4 w-4" /> Adaptive Practice
-            </Button>
+              <Button
+                variant="outline" size="sm" className="gap-1.5"
+                onClick={() => setPracticePickerOpen(true)}
+              >
+                <Zap className="h-4 w-4" /> Adaptive Practice
+              </Button>
             </div>
           }
         />
@@ -426,22 +558,22 @@ const AITutor = () => {
           {messages.length === 0 && (
             <div className="relative flex flex-col items-center justify-center h-full text-center gap-4 py-16">
               {/* Floating AI Robot */}
-
-<div className="relative mb-6">
-  <img
-    src={landingairobot}
-    alt="AI Robot"
-    className="relative
-      w-32
-      md:w-[400px]
-      animate-float
-      drop-shadow-2xl
-      left-32
-      top-[60px]
-    "
-  />
-  {/* Glow behind robot */}
-  <div className="absolute inset-0 bg-blue-300/20 blur-3xl rounded-full -z-10"/></div>
+              <div className="relative mb-6">
+                <img
+                  src={landingairobot}
+                  alt="AI Robot"
+                  className="relative
+                    w-32
+                    md:w-[400px]
+                    animate-float
+                    drop-shadow-2xl
+                    left-32
+                    top-[60px]
+                  "
+                />
+                {/* Glow behind robot */}
+                <div className="absolute inset-0 bg-blue-300/20 blur-3xl rounded-full -z-10" />
+              </div>
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
                 <ModeIcon className="h-8 w-8 text-primary" />
               </div>
@@ -484,7 +616,18 @@ const AITutor = () => {
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="text-base">{msg.content}</p>
+                    <>
+                      {msg.attachments && msg.attachments.length > 0 && (
+                        <div className="mb-2 flex flex-wrap gap-2">
+                          {msg.attachments.map((a, k) => (
+                            a.preview
+                              ? <img key={k} src={a.preview} alt={a.name} title={a.name} className="h-20 w-20 rounded-lg object-cover border border-primary-foreground/30" />
+                              : <span key={k} className="max-w-full truncate rounded-md bg-primary-foreground/15 px-2 py-1 text-xs">{a.name}</span>
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-base">{msg.content}</p>
+                    </>
                   )}
                 </div>
                 {msg.role === "user" && (
@@ -523,20 +666,34 @@ const AITutor = () => {
         )}
 
         {/* Input */}
+        {mode === "tutor" && <AttachmentChips items={attachments} onRemove={removeAttachment} disabled={isLoading} />}
+        {attachError && <p role="alert" className="mb-2 text-xs text-destructive" data-testid="attach-error">{attachError}</p>}
+        {speech.error && <p role="alert" className="mb-2 text-xs text-destructive" data-testid="voice-error">{speech.error}</p>}
         <div className="flex gap-2 items-end">
+          {mode === "tutor" && <AttachMenu onFiles={addFiles} disabled={isLoading || speech.listening} preparing={preparing} />}
+          <VoiceButton supported={speech.supported} listening={speech.listening} onToggle={toggleVoice} disabled={isLoading} />
           <Textarea
             placeholder={
-              mode === "tutor" && style === "hint"
-                ? (hintLevel <= 1 ? "Type the problem you're stuck on…" : "Try an answer, or tap “Give me the next hint”…")
+              speech.listening
+                ? "Listening... speak your question"
+                : mode === "tutor" && attachments.length > 0
+                ? "Ask a question about your photo or document (or just send it)"
+                : mode === "tutor" && style === "hint"
+                ? (hintLevel <= 1 ? "Type the problem you're stuck on" : "Try an answer, or tap Give me the next hint")
                 : activeConfig.placeholder
             }
             value={input}
+            readOnly={speech.listening}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            onPaste={(e) => {
+              const files = Array.from(e.clipboardData?.files ?? []);
+              if (mode === "tutor" && files.length) { e.preventDefault(); addFiles(files); } // paste a screenshot
+            }}
             rows={1}
-            className="min-h-[44px] max-h-32 resize-none"
+            className="min-h-[44px] max-h-32 resize-none min-w-0"
           />
-          <Button onClick={() => sendMessage()} disabled={isLoading || !input.trim()} size="icon" className="shrink-0 h-11 w-11">
+          <Button onClick={() => sendMessage()} disabled={isLoading || preparing || (!input.trim() && (mode !== "tutor" || attachments.length === 0))} size="icon" className="shrink-0 h-11 w-11" aria-label="Send">
             <Send className="h-4 w-4" />
           </Button>
         </div>
@@ -547,11 +704,19 @@ const AITutor = () => {
           <DialogHeader><DialogTitle className="text-base">Adaptive Practice</DialogTitle></DialogHeader>
           <p className="text-xs text-muted-foreground -mt-2">Pick a subject and chapter — questions get harder or easier as you answer.</p>
           <div className="space-y-3">
-            <Select value={practiceBookId} onValueChange={(v) => { setPracticeBookId(v); setPracticeChapters([]); }}>
-              <SelectTrigger><SelectValue placeholder="Choose a subject" /></SelectTrigger>
+            {practiceClassLabel && (
+              <p className="text-xs font-medium text-muted-foreground">Your class: {practiceClassLabel}</p>
+            )}
+            {!practiceLoading && practiceBooks.length === 0 && (
+              <p className="text-xs text-amber-700">
+                {practiceClassLabel ? `No subjects have been set up for ${practiceClassLabel} yet.` : "We couldn't find your class. Please ask your school admin to assign you to a class."}
+              </p>
+            )}
+            <Select value={practiceBookId} onValueChange={(v) => { setPracticeBookId(v); setPracticeChapters([]); }} disabled={practiceLoading || practiceBooks.length === 0}>
+              <SelectTrigger><SelectValue placeholder={practiceLoading ? "Loading your subjects…" : "Choose a subject"} /></SelectTrigger>
               <SelectContent>
                 {practiceBooks.map((b) => (
-                  <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` (${b.class_name})` : ""}</SelectItem>
+                  <SelectItem key={b.id} value={String(b.id)}>{b.subject}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

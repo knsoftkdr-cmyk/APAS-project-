@@ -78,7 +78,10 @@ export function useAnswerPathStep() {
         schedule_id: step.scheduleId,
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["learning-path"] });
+      // Deliberately NOT invalidating ["learning-path"]: the path is a snapshot the student is
+      // walking through. Refetching here would regenerate it mid-step, reset the page to step 1
+      // and wipe the answer feedback before the student can read it. "Refresh path" / "Generate
+      // a new path" refetch it on demand.
       queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
       queryClient.invalidateQueries({ queryKey: ["review-forecast"] });
       queryClient.invalidateQueries({ queryKey: ["forgetting-forecast"] });

@@ -8,9 +8,11 @@
  * Saving goes through evaluate-assessment/review_open_response; once every written answer on an
  * attempt is confirmed the database finalises the attempt and the student's "provisional" label goes.
  */
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, ClipboardCheck, Loader2, Search, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, ClipboardCheck, History, ListChecks, Loader2, Search, Sparkles } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkReviewDialog, RecentBatchesDialog } from "@/components/assessment/BulkReviewDialog";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,8 +26,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import {
   useExamReviewAttempts, useExamReviewDetail, useSaveReview,
-  type ReviewAttempt, type ReviewDetail, type ReviewItem,
+  type ReviewAttempt, type ReviewDetail, type ReviewItem, type TeacherRubricRow,
 } from "@/hooks/useExamReviews";
+import { HighlightedAnswer, RubricGradingPanel, feedbackFromRubric, initialRubricRows, rubricTotal } from "@/components/assessment/RubricGradingPanel";
 
 const r2 = (n: number) => Math.round(n * 100) / 100;
 const fmt = (n: number | null | undefined) => (n == null ? "–" : String(r2(n)));
@@ -42,6 +45,10 @@ export default function ExamReviews({ embedded = false }: { embedded?: boolean }
   const [examFilter, setExamFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  // Bulk actions: selected answer sheets (pending tab only)
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [batchesOpen, setBatchesOpen] = useState(false);
 
   const pending = useExamReviewAttempts("pending");
   const reviewed = useExamReviewAttempts("reviewed", filter === "reviewed");
@@ -89,7 +96,7 @@ export default function ExamReviews({ embedded = false }: { embedded?: boolean }
             {([["pending", `Needs review${pending.data ? ` (${pendingCount})` : ""}`], ["reviewed", "Reviewed"]] as const).map(([key, label]) => (
               <button
                 key={key} type="button" role="tab" aria-selected={filter === key}
-                onClick={() => { setFilter(key); setExamFilter("all"); }}
+                onClick={() => { setFilter(key); setExamFilter("all"); setSelected(new Set()); }}
                 className={cn("rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
                   filter === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}
               >{label}</button>
@@ -123,18 +130,46 @@ export default function ExamReviews({ embedded = false }: { embedded?: boolean }
               : "No attempts match these filters."}
           </CardContent></Card>
         ) : (
-          <div className="space-y-2">{rows.map((a) => <AttemptRow key={a.id} a={a} onOpen={() => setOpenId(a.id)} />)}</div>
+          <div className="space-y-2">
+            {filter === "pending" && (
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/30 px-3 py-2 text-sm">
+                <Checkbox
+                  aria-label="Select all shown"
+                  checked={rows.length > 0 && rows.every((r) => selected.has(r.id))}
+                  onCheckedChange={(v) => setSelected(v === true ? new Set(rows.map((r) => r.id)) : new Set())}
+                />
+                <span>{selected.size ? `${selected.size} selected` : "Select answer sheets to act on many at once"}</span>
+                <div className="ml-auto flex gap-2">
+                  <Button size="sm" variant="ghost" className="gap-1" onClick={() => setBatchesOpen(true)}><History className="h-3.5 w-3.5" />Recent</Button>
+                  <Button size="sm" className="gap-1" disabled={!selected.size || selected.size > 100} onClick={() => setBulkOpen(true)}>
+                    <ListChecks className="h-3.5 w-3.5" />Accept AI marks{selected.size ? ` (${selected.size})` : ""}
+                  </Button>
+                </div>
+                {selected.size > 100 && <p className="basis-full text-xs text-destructive">Select at most 100 sheets per batch.</p>}
+              </div>
+            )}
+            {rows.map((a) => (
+              <AttemptRow key={a.id} a={a} onOpen={() => setOpenId(a.id)}
+                selectable={filter === "pending"} selected={selected.has(a.id)}
+                onSelect={(on) => setSelected((prev) => { const n = new Set(prev); if (on) n.add(a.id); else n.delete(a.id); return n; })} />
+            ))}
+          </div>
         )}
+        <BulkReviewDialog open={bulkOpen} onOpenChange={setBulkOpen} attemptIds={[...selected]} onDone={() => setSelected(new Set())} />
+        <RecentBatchesDialog open={batchesOpen} onOpenChange={setBatchesOpen} />
       </div>
     </Shell>
   );
 }
 
-function AttemptRow({ a, onOpen }: { a: ReviewAttempt; onOpen: () => void }) {
+function AttemptRow({ a, onOpen, selectable, selected, onSelect }: {
+  a: ReviewAttempt; onOpen: () => void; selectable?: boolean; selected?: boolean; onSelect?: (on: boolean) => void;
+}) {
   const done = a.writtenPending === 0;
   return (
-    <Card className="hover:border-primary/40 transition-colors">
+    <Card className={cn("hover:border-primary/40 transition-colors", selected && "border-primary/60 bg-primary/5")}>
       <CardContent className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {selectable && <Checkbox aria-label={`Select ${a.studentName}`} checked={!!selected} onCheckedChange={(v) => onSelect?.(v === true)} />}
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">
             {a.studentName}
@@ -188,9 +223,9 @@ function ReviewDetailView({ attemptId, onBack }: { attemptId: string; onBack: ()
   const confirmed = answered.filter((i) => i.submission!.status === "teacher_reviewed").length;
   const final = data.status === "graded";
 
-  const onSave = async (item: ReviewItem, score: number, feedback: string) => {
+  const onSave = async (item: ReviewItem, score: number, feedback: string, rubric: TeacherRubricRow[] | null) => {
     try {
-      await save.mutateAsync({ submissionId: item.submission!.id, score, feedback });
+      await save.mutateAsync({ submissionId: item.submission!.id, score, feedback, rubric });
       const fresh = qc.getQueryData<ReviewDetail>(["exam-reviews", "detail", attemptId]);
       if (fresh?.status === "graded" && !final) toast.success("All written answers confirmed — the student's result is now final.");
       else toast.success(`Q${item.number} marks saved`);
@@ -228,10 +263,16 @@ function ReviewDetailView({ attemptId, onBack }: { attemptId: string; onBack: ()
 }
 
 function QuestionReviewCard({ item, saving, onSave }: {
-  item: ReviewItem; saving: boolean; onSave: (item: ReviewItem, score: number, feedback: string) => Promise<void>;
+  item: ReviewItem; saving: boolean; onSave: (item: ReviewItem, score: number, feedback: string, rubric: TeacherRubricRow[] | null) => Promise<void>;
 }) {
   const sub = item.submission;
   const reviewed = sub?.status === "teacher_reviewed";
+  const aiRowsAll = sub?.aiRubric?.length ? sub.aiRubric : [];
+  // Interactive rubric grading: on by default whenever the question has a rubric.
+  const [rubricRows, setRubricRows] = useState<TeacherRubricRow[]>(() => initialRubricRows(item.rubric, aiRowsAll, sub?.teacherRubric ?? null));
+  const [useRubric, setUseRubric] = useState(() => rubricRows.length > 0);
+  const [rubricDirty, setRubricDirty] = useState(false);
+  const answerRef = useRef<HTMLDivElement>(null);
   const [score, setScore] = useState(() => {
     if (!sub) return "";
     const v = reviewed ? sub.teacherScore : sub.aiScore;
@@ -240,20 +281,23 @@ function QuestionReviewCard({ item, saving, onSave }: {
   const [feedback, setFeedback] = useState(() => (sub ? (reviewed ? sub.teacherFeedback ?? sub.aiFeedback : sub.aiFeedback) ?? "" : ""));
   const [busy, setBusy] = useState(false);
 
-  const parsed = score.trim() === "" ? null : Number(score);
+  const parsed = useRubric && rubricRows.length ? rubricTotal(rubricRows, item.itemMax) : score.trim() === "" ? null : Number(score);
   const problem =
     parsed == null ? "Enter the marks" :
     Number.isNaN(parsed) ? "Enter a number" :
     parsed < 0 ? "Marks can't be negative" :
     parsed > item.itemMax ? `Maximum is ${item.itemMax}` : null;
-  const dirty = !reviewed || (sub != null && (parsed !== sub.teacherScore || feedback.trim() !== (sub.teacherFeedback ?? sub.aiFeedback ?? "").trim()));
+  const dirty = !reviewed || rubricDirty || (sub != null && (parsed !== sub.teacherScore || feedback.trim() !== (sub.teacherFeedback ?? sub.aiFeedback ?? "").trim()));
+  // Consistency check: a big gap from the AI's mark should be explained, so moderation and the student can see why.
+  const bigGap = parsed != null && sub?.aiScore != null && Math.abs(parsed - sub.aiScore) >= 0.3 * item.itemMax;
+  const unexplained = bigGap && useRubric && rubricRows.some((r) => !r.comment && !r.evidence);
   const slotNote = problem == null && parsed != null && item.slotMarks !== item.itemMax
     ? `counts as ${r2((parsed * item.slotMarks) / item.itemMax)} of ${item.slotMarks} on this paper` : null;
 
   const submit = async () => {
     if (!sub || problem || parsed == null) return;
     setBusy(true);
-    try { await onSave(item, parsed, feedback); } finally { setBusy(false); }
+    try { await onSave(item, parsed, feedback, useRubric && rubricRows.length ? rubricRows : null); setRubricDirty(false); } finally { setBusy(false); }
   };
 
   const aiRows = sub?.aiRubric?.length ? sub.aiRubric : [];
@@ -286,8 +330,8 @@ function QuestionReviewCard({ item, saving, onSave }: {
 
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-1">Student's answer</p>
-          <div className={cn("rounded-md border p-3 text-sm whitespace-pre-wrap break-words", !sub && "text-muted-foreground italic")}>
-            {sub ? sub.answerText : "No answer submitted — this question scores 0."}
+          <div ref={answerRef} className={cn("rounded-md border p-3 text-sm whitespace-pre-wrap break-words", !sub && "text-muted-foreground italic")}>
+            {sub ? <HighlightedAnswer text={sub.answerText} quotes={useRubric ? rubricRows.map((r) => r.evidence ?? "") : []} /> : "No answer submitted — this question scores 0."}
           </div>
         </div>
 
@@ -333,6 +377,17 @@ function QuestionReviewCard({ item, saving, onSave }: {
               </p>
             )}
 
+            {rubricRows.length > 0 && (
+              <label className="flex items-center gap-2 text-xs">
+                <input type="checkbox" className="accent-primary" checked={useRubric} onChange={(e) => { setUseRubric(e.target.checked); setRubricDirty(true); }} />
+                Mark with the rubric (marks are calculated from the criteria)
+              </label>
+            )}
+            {useRubric && rubricRows.length > 0 && (
+              <RubricGradingPanel rows={rubricRows} onChange={(r) => { setRubricRows(r); setRubricDirty(true); }} aiRows={aiRowsAll} answerRef={answerRef} itemMax={item.itemMax} />
+            )}
+
+            {!(useRubric && rubricRows.length > 0) && (
             <div className="flex flex-wrap items-end gap-3">
               <div>
                 <label htmlFor={`marks-${item.itemId}`} className="text-xs font-medium">Your marks</label>
@@ -352,11 +407,23 @@ function QuestionReviewCard({ item, saving, onSave }: {
                 <Button type="button" variant="outline" size="sm" onClick={() => setScore("0")}>Zero</Button>
               </div>
             </div>
+            )}
+            {bigGap && (
+              <p className={cn("flex items-start gap-1.5 text-xs", unexplained ? "text-amber-700" : "text-muted-foreground")}>
+                <AlertTriangle className="h-3.5 w-3.5 mt-px shrink-0" />
+                Your mark ({fmt(parsed)}) differs from the AI's ({fmt(sub?.aiScore)}) by a lot.{unexplained ? " Add a comment or evidence on each criterion so the decision is clear." : ""}
+              </p>
+            )}
             {score !== "" && problem && <p className="text-xs text-destructive">{problem}</p>}
             {slotNote && <p className="text-xs text-muted-foreground">{slotNote}</p>}
 
             <div>
-              <label htmlFor={`fb-${item.itemId}`} className="text-xs font-medium">Feedback the student will see</label>
+              <div className="flex items-center justify-between gap-2">
+                <label htmlFor={`fb-${item.itemId}`} className="text-xs font-medium">Feedback the student will see</label>
+                {useRubric && rubricRows.length > 0 && (
+                  <Button type="button" variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setFeedback(feedbackFromRubric(rubricRows))}>Build from rubric</Button>
+                )}
+              </div>
               <Textarea
                 id={`fb-${item.itemId}`} value={feedback} onChange={(e) => setFeedback(e.target.value)} rows={3} className="mt-1"
                 placeholder="Optional — a short note on what was good and what to improve"

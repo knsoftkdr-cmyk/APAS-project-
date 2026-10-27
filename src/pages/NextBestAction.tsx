@@ -25,7 +25,7 @@ const MINUTE_OPTIONS = [5, 10, 15, 30];
 
 export default function NextBestAction() {
   const [minutes, setMinutes] = useState(15);
-  const { data, isLoading, refetch, isFetching } = useNextBestAction({ minutesAvailable: minutes, maxSteps: 5 });
+  const { data, isLoading, isError, error, refetch, isFetching } = useNextBestAction({ minutesAvailable: minutes, maxSteps: 5 });
   const answerStep = useAnswerPathStep();
 
   const [index, setIndex] = useState(0);
@@ -87,6 +87,16 @@ export default function NextBestAction() {
             <Skeleton className="h-4 w-2/3" />
             <Skeleton className="h-20 w-full" />
           </CardContent></Card>
+        )}
+
+        {!isLoading && isError && (
+          <Card className="border-red-300 bg-red-50/50">
+            <CardContent className="p-6 text-center space-y-2">
+              <p className="font-medium text-red-800">Couldn't get a recommendation</p>
+              <p className="text-sm text-red-700 break-words">{error instanceof Error ? error.message : "Something went wrong."}</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>Try again</Button>
+            </CardContent>
+          </Card>
         )}
 
         {!isLoading && data && !data.has_recommendation && (

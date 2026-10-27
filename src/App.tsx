@@ -7,6 +7,7 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import { Suspense } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { useDraftBackgroundSync } from "@/hooks/useDraftBackgroundSync";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { AccessibilityPanel } from "@/components/accessibility/AccessibilityPanel";
@@ -115,6 +116,10 @@ const KnowledgeGraphEngine = lazy(() => import("./pages/KnowledgeGraphEngine"));
 const BktCalibration = lazy(() => import("./pages/BktCalibration"));
 const AdaptiveTest = lazy(() => import("./pages/AdaptiveTest"));
 const AssessmentHub = lazy(() => import("./pages/AssessmentHub"));
+const AIQualitySafety = lazy(() => import("./pages/AIQualitySafety"));
+const DigitalClassroom = lazy(() => import("./pages/DigitalClassroom"));
+const DifferentiationStudio = lazy(() => import("./pages/DifferentiationStudio"));
+const InterventionBoard = lazy(() => import("./pages/InterventionBoard"));
 const AssessmentPaperPrint = lazy(() => import("./pages/AssessmentPaperPrint"));
 const MyExams = lazy(() => import("./pages/MyExams"));
 const TakeExam = lazy(() => import("./pages/TakeExam"));
@@ -189,6 +194,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Syncs drafts saved offline once the connection returns (Auto-save & Recovery).
+const DraftSyncMount = () => { useDraftBackgroundSync(); return null; };
+
 export default function App() {
   const [loading, setLoading] = useState(true);
 
@@ -222,6 +230,7 @@ export default function App() {
               <AccessibilityProvider>
               <LanguageProvider>
                 <NotificationProvider>
+                  <DraftSyncMount />
                   <AccessibilityPanel />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
@@ -370,6 +379,12 @@ export default function App() {
                       <Route path="/exam-readiness" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentMasteryReadiness /></RoleGuard></ProtectedRoute>} />
                       <Route path="/my-exams" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><MyExams /></RoleGuard></ProtectedRoute>} />
                       <Route path="/exam/:assignmentId" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><TakeExam /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/assessment-builder" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentHub /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/ai-quality-safety" element={<ProtectedRoute><RoleGuard allowedRoles={["knsoft_admin", "admin", "principal", "school_admin", "hod"]}><AIQualitySafety /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/classroom" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><DigitalClassroom /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/differentiation" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><DifferentiationStudio /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/intervention-board" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><InterventionBoard /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/my-classroom" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><DigitalClassroom /></RoleGuard></ProtectedRoute>} />
                       <Route path="/mock-exams" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentHub /></RoleGuard></ProtectedRoute>} />
                       <Route path="/exam-reviews" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentHub /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />

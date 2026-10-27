@@ -1,13 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { Excalidraw, exportToBlob } from "@excalidraw/excalidraw";
 import "@excalidraw/excalidraw/index.css";
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useWhiteboardRealtime } from "@/hooks/useWhiteboardRealtime";
 import { toast } from "@/hooks/use-toast";
-import { Save, Lock, Unlock, Download } from "lucide-react";
+import { Save, Lock, Unlock, Download, Sparkles } from "lucide-react";
+import { AIDrawPanel } from "./AIDrawPanel";
 
 
 interface WhiteboardCanvasProps {
@@ -30,6 +31,7 @@ export function WhiteboardCanvas({
   const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
   const [mode, setMode] = useState(initialMode);
   const [saving, setSaving] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
   const initialSceneLoaded = useRef(false);
 
   const canEdit =
@@ -177,6 +179,18 @@ export function WhiteboardCanvas({
           {!canEdit && <span className="text-xs sm:text-sm text-muted-foreground">View only</span>}
         </div>
         <div className="flex items-center gap-2 shrink-0">
+          {canEdit && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setAiOpen(true)}
+              title="AI Draw: step-by-step diagrams and equations"
+              className="px-2 sm:px-3"
+            >
+              <Sparkles className="h-4 w-4 sm:mr-1 text-indigo-600" />
+              <span className="hidden sm:inline">AI Draw</span>
+            </Button>
+          )}
           {isOwner && (
             <Button
               size="sm"
@@ -211,6 +225,7 @@ export function WhiteboardCanvas({
           viewModeEnabled={!canEdit}
           onChange={handleChange}
         />
+        <AIDrawPanel api={excalidrawAPI} open={aiOpen} onOpenChange={setAiOpen} />
       </div>
     </div>
   );

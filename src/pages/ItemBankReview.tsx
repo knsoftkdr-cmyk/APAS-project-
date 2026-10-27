@@ -300,6 +300,33 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
     }
   };
 
+  // ── Answer-key check (AI solves each active question blind; mismatches go back to draft) ──
+  const [verifying, setVerifying] = useState(false);
+  const runVerifyKeys = async () => {
+    setVerifying(true);
+    let checked = 0, confirmed = 0, flagged = 0;
+    try {
+      for (let round = 0; round < 40; round++) {
+        const res = await invokeFn<{ checked: number; confirmed: number; flagged: number; unverified: number; remaining: number }>(
+          "generate-item-bank", { action: "verify_keys", ...genScope, limit: 24 },
+        );
+        checked += res.checked; confirmed += res.confirmed; flagged += res.flagged;
+        if (!res.remaining || res.confirmed + res.flagged === 0) break; // done, or nothing more can be checked right now
+      }
+      if (checked === 0) toast.info("Nothing to check", { description: "No active questions here that haven't been checked yet." });
+      else toast[flagged ? "warning" : "success"](`Checked ${checked} question${checked === 1 ? "" : "s"}`, {
+        description: flagged
+          ? `${flagged} had a different answer when solved independently and were moved back to draft with a "Check answer key" flag. ${confirmed} confirmed.`
+          : `All ${confirmed} answer keys confirmed.`,
+      });
+      refresh();
+    } catch (e) {
+      toast.error("Key check failed", { description: (e as Error).message });
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   // ── Calibration ───────────────────────────────────────────────────────
   const [calibrating, setCalibrating] = useState<ScopeType | null>(null);
   const runCalibrate = async (type: ScopeType, id: number, dryRun: boolean) => {
@@ -528,6 +555,19 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                   <Button onClick={runGenerate} disabled={generating} className="w-full h-10 sm:h-9">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     {generating ? (genKind === "mcq" ? "Generating…" : "Generating — this can take a minute…") : "Generate"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-indigo-600" /> Check answer keys</CardTitle></CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Has the AI solve every active question on its own, without seeing the stored answer. Any question where it disagrees goes back to draft so students stop seeing it.
+                  </p>
+                  <Button onClick={runVerifyKeys} disabled={verifying} variant="outline" className="w-full h-10 sm:h-9">
+                    {verifying ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+                    {verifying ? "Checking — this can take a few minutes…" : "Check answer keys"}
                   </Button>
                 </CardContent>
               </Card>

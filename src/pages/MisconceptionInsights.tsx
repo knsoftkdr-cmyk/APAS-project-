@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,10 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Lightbulb, AlertOctagon, TrendingUp, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
+import { useStudentSubjects } from "@/hooks/useStudentSubjects";
 import { useStudentMisconceptions, type StudentMisconception } from "@/hooks/useMisconceptions";
 
-interface BookOption { id: number; subject: string; class_name: string | null }
 
 const SEVERITY_STYLES: Record<string, string> = {
   high: "bg-red-100 text-red-800 border-red-300",
@@ -19,13 +18,9 @@ const SEVERITY_STYLES: Record<string, string> = {
 };
 
 export default function MisconceptionInsights() {
-  const [books, setBooks] = useState<BookOption[]>([]);
+  // Only the subjects of the student's own class.
+  const { subjects: books, loading: loadingSubjects } = useStudentSubjects();
   const [bookId, setBookId] = useState<string>("");
-
-  useEffect(() => {
-    supabase.from("books").select("id, subject, class_name").eq("is_active", true).order("subject")
-      .then(({ data }) => setBooks((data as BookOption[]) ?? []));
-  }, []);
 
   const { data, isLoading } = useStudentMisconceptions({ bookId: bookId ? Number(bookId) : undefined });
   const items = data ?? [];
@@ -41,11 +36,11 @@ export default function MisconceptionInsights() {
           Not just wrong answers — these are the same misunderstanding showing up more than once, across different questions.
         </p>
 
-        <Select value={bookId} onValueChange={setBookId}>
+        <Select value={bookId} onValueChange={setBookId} disabled={loadingSubjects || books.length === 0}>
           <SelectTrigger><SelectValue placeholder="All subjects" /></SelectTrigger>
           <SelectContent>
             {books.map((b) => (
-              <SelectItem key={b.id} value={String(b.id)}>{b.subject}{b.class_name ? ` · ${b.class_name}` : ""}</SelectItem>
+              <SelectItem key={b.id} value={String(b.id)}>{b.subject}</SelectItem>
             ))}
           </SelectContent>
         </Select>

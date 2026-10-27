@@ -32,6 +32,7 @@ import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { priorDifficulty } from "../_shared/irt.ts";
 import { callAi, getAiConfig, type AiConfig } from "../_shared/aiClient.ts";
+import { solveItems, keyConfirmed, mismatchNote } from "../_shared/itemKeyVerifier.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,12 +72,14 @@ import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleGenerateOpenEndedItems } from "../_shared/handlers/generateOpenEndedItems.ts";
 import { handleScoreQuestionQuality } from "../_shared/handlers/scoreQuestionQuality.ts";
 import { handleEnrichmentGenerator } from "../_shared/handlers/enrichmentGenerator.ts";
+import { handleVerifyItemKeys } from "../_shared/handlers/verifyItemKeys.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
   open_ended: { handler: handleGenerateOpenEndedItems },
   score_quality: { handler: handleScoreQuestionQuality },
   enrichment: { handler: handleEnrichmentGenerator },
+  verify_keys: { handler: handleVerifyItemKeys },
 };
 
 serve(async (req) => {
@@ -167,6 +170,7 @@ serve(async (req) => {
     return json({
       inserted,
       status_of_new_items: autoActivate ? "active" : "draft",
+      held_for_key_review: perObjective.reduce((n, r) => n + (r.held_for_key_review ?? 0), 0),
       objectives_processed: batch.length,
       objectives_already_full: (los as Row[]).length - work.length,
       remaining_objectives: remaining,
@@ -235,9 +239,17 @@ async function generateForObjective(a: {
     if (clean.length >= need) break;
   }
 
-  let inserted = 0, duplicates = 0;
-  for (const c of clean) {
-    const shuffled = shuffleOptions(c);
+  // Independent check: an item only goes live if a second model, solving it blind, reaches the same key.
+  // Anything else is saved as a draft flagged "review_key" - even when auto-activate was requested.
+  const shuffledAll = clean.map((c) => shuffleOptions(c));
+  const solved = await solveItems(a.ai, clean.map((c, i) => ({ stem: c.stem, options: shuffledAll[i].options })));
+
+  let inserted = 0, duplicates = 0, flagged = 0;
+  for (let i = 0; i < clean.length; i++) {
+    const c = clean[i];
+    const shuffled = shuffledAll[i];
+    const confirmed = keyConfirmed(solved[i], shuffled.correct);
+    if (!confirmed) flagged++;
     const b0 = priorDifficulty(c.difficulty, lo.bloom_level);
     const { error } = await admin.from("question_bank").insert({
       learning_objective_id: lo.id,
@@ -248,7 +260,9 @@ async function generateForObjective(a: {
       explanation: c.explanation,
       distractor_misconceptions: shuffled.distractorMisconceptions,
       bloom_level: lo.bloom_level,
-      status: a.autoActivate ? "active" : "draft",
+      status: a.autoActivate && confirmed ? "active" : "draft",
+      review_flag: confirmed ? null : "review_key",
+      review_note: confirmed ? null : mismatchNote(solved[i], shuffled.correct),
       irt_a: 1, irt_b: b0, irt_c: 0.25, b_prior: b0,
       calibration_status: "prior",
       ai_generated: true, generation_model: usedModel, created_by: a.userId,
@@ -257,7 +271,7 @@ async function generateForObjective(a: {
     else if (error.code === "23505") duplicates++;
     else throw new Error(`insert failed: ${error.message}`);
   }
-  return { learning_objective_id: lo.id, requested: need, inserted, rejected_invalid: rejected, skipped_duplicates: duplicates };
+  return { learning_objective_id: lo.id, requested: need, inserted, rejected_invalid: rejected, skipped_duplicates: duplicates, held_for_key_review: flagged };
 }
 
 function buildPrompt(lo: Row, n: number, ctx: Ctx): string {

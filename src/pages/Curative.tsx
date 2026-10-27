@@ -23,6 +23,10 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { useFormDraft } from "@/hooks/useFormDraft";
+import { DraftStatus } from "@/components/drafts/DraftStatus";
+import { DraftRecoveryDialog } from "@/components/drafts/DraftRecoveryDialog";
+import { hashString } from "@/lib/drafts/draftStorage";
 const CLASS_OPTIONS = [
   { value: "nursery", label: "Nursery" },
   { value: "lkg", label: "LKG" },
@@ -2544,13 +2548,45 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
     ? existingAtHomeAssignments.find((a: any) => a.period_number === parseInt(selectedPeriod))
     : null;
 
-  // Initialize edited questions when exit ticket changes
+  // If this period was already assigned, the questions that were actually assigned (possibly edited by the
+  // teacher) live in homework_assignments - show those, not the lesson's original exit ticket.
+  const assignedRecord: any = existingInClassAssignment || existingAtHomeAssignment || null;
+  const assignedQuestions: string[] | null = (() => {
+    if (!assignedRecord) return null;
+    const fromArray = Array.isArray(assignedRecord.questions)
+      ? assignedRecord.questions.filter((q: unknown) => typeof q === "string" && q.trim())
+      : [];
+    if (fromArray.length > 0) return fromArray as string[];
+    const fromText = extractQuestionsFromExitTicket(assignedRecord.exit_ticket_content || "");
+    return fromText.length > 0 ? fromText : null;
+  })();
+  const questionsBaseline = assignedQuestions ?? extractedQuestions;
+  const assignedKey = assignedQuestions ? assignedQuestions.join("\u0001") : "";
+
+  // Initialize edited questions when exit ticket changes (or when the assigned version becomes known)
   useEffect(() => {
-    if (selectedExitTicket && extractedQuestions.length > 0) {
-      setEditedQuestions(extractedQuestions);
+    if (selectedExitTicket && questionsBaseline.length > 0) {
+      setEditedQuestions(questionsBaseline);
+      setNewQuestions([]); // added questions belong to one period; don't carry them into the next
       setIsEditingQuestions(false);
     }
-  }, [selectedExitTicket]);
+  }, [selectedExitTicket, assignedKey]);
+
+  // Auto-save & Recovery: the teacher's edited / added exit-ticket questions for this lesson + period.
+  // Stored in form_drafts (+ this device); homework_assignments is only written by the Assign buttons.
+  const assignDraft = useFormDraft<{ edited: string[]; added: string[] }>({
+    formType: "teacher_homework_questions",
+    // Not for periods that are already assigned: their questions are final and shown as assigned.
+    recordKey: selectedLessonId && selectedPeriod && homeworkClass && homeworkSection && extractedQuestions.length > 0 && !assignedRecord
+      ? `${selectedLessonId}|${homeworkClass}|${homeworkSection}|${selectedPeriod}` : null,
+    value: { edited: editedQuestions, added: newQuestions },
+    baseline: { edited: extractedQuestions, added: [] },
+    baseHash: hashString(selectedExitTicket),
+    onRestore: (p) => {
+      setEditedQuestions(Array.isArray(p.edited) ? p.edited : []);
+      setNewQuestions(Array.isArray(p.added) ? p.added : []);
+    },
+  });
 
   // Get period info (title/topic)
   const selectedPeriodInfo = selectedLesson && selectedPeriod 
@@ -2618,6 +2654,7 @@ const AssignHomeworkTab = ({ user, profile, getClassLabel }: AssignHomeworkTabPr
       }
 
       toast.success(`? Assignment created for Period ${selectedPeriod} (In Class)\n? Class Performance Score: ${score}%\n? This will be used for analytics and performance tracking.`);
+      await assignDraft.markSubmitted(); // assignment saved: drop the draft
       setShowClassScoreModal(false);
       setClassPerformanceScore("");
       setAssignmentMode("none");
@@ -2769,6 +2806,7 @@ try {
 }
 
 toast.success(`✓ Homework assigned to ${studentNames.length} student...`);
+      await assignDraft.markSubmitted(); // homework assigned: drop the draft
       setAssignmentMode("none");
       setSelectedPeriod("");
       setEditedQuestions([]);
@@ -3062,6 +3100,8 @@ if (!Capacitor.isNativePlatform()) {
                             `Period ${selectedPeriod} — Assessment Questions / Exit Ticket Questions`
                           )}
                         </CardTitle>
+                        <DraftStatus draft={assignDraft} className="mt-1" />
+                        <DraftRecoveryDialog draft={assignDraft} noun="question edits" />
                       </CardHeader>
                       <CardContent className="p-4">
                         {extractedQuestions.length > 0 ? (
@@ -4235,6 +4275,7 @@ try {
         .eq("id", lesson.id);
       if (error) throw new Error(error.message);
       queryClient.invalidateQueries({ queryKey: ["generated-lessons-list", user?.id] });
+      await lessonDraft.markSubmitted(); // saved to the lesson: drop the draft
       toast.success("Lesson plan updated");
       setEditingId(null);
     } catch (err: any) {
@@ -4243,6 +4284,18 @@ try {
       setIsSavingEdit(false);
     }
   };
+
+  // Auto-save & Recovery for the lesson plan editor. The lesson row (lessons) is only updated by "Save Changes".
+  const editingLesson = lessonsList.find((l) => l.id === editingId) ?? null;
+  const lessonDraft = useFormDraft<{ content: string }>({
+    formType: "lesson_plan_edit",
+    recordKey: editingId,
+    enabled: !!editingLesson,
+    value: { content: editedContent },
+    baseline: { content: editingLesson?.lesson_content ?? "" },
+    baseHash: hashString(editingLesson?.lesson_content),
+    onRestore: (p) => setEditedContent(typeof p.content === "string" ? p.content : ""),
+  });
 
   const uniqueClasses = [...new Set(lessonsList.map((l) => l.class_level).filter(Boolean))];
 
@@ -4371,7 +4424,9 @@ try {
                         onChange={(e) => setEditedContent(e.target.value)}
                         className="min-h-[400px] font-mono text-xs leading-relaxed"
                       />
-                      <div className="flex gap-2 justify-end">
+                      <DraftRecoveryDialog draft={lessonDraft} noun="lesson plan draft" />
+                      <div className="flex gap-2 justify-end items-center flex-wrap">
+                        <DraftStatus draft={lessonDraft} className="mr-auto" />
                         <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSavingEdit}>
                           Cancel
                         </Button>
