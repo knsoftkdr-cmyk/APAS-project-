@@ -11,7 +11,6 @@ const MERGED_ROUTES: RouteTable = {
   sec_record: { handler: handleSecurityAnomaly, action: "record" },
   sec_list: { handler: handleSecurityAnomaly, action: "list" },
   sec_update: { handler: handleSecurityAnomaly, action: "update" },
-  sec_audit_list: { handler: handleSecurityAnomaly, action: "audit_list" },
   // Session & Device Management
   sess_heartbeat: { handler: handleSessionManagement, action: "heartbeat" },
   sess_list: { handler: handleSessionManagement, action: "list" },

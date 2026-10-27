@@ -12,7 +12,6 @@ import securitycenterbanner from "@/assets/securitycenter-banner.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { SecurityAnomalyPanel } from "@/components/security/SecurityAnomalyPanel";
 import { MyDevicesPanel } from "@/components/security/MyDevicesPanel";
-import { getAuditLogs } from "@/lib/securityEvents";
 
 const SecurityCenter = () => {
   const { profile } = useAuth();
@@ -20,8 +19,11 @@ const SecurityCenter = () => {
   const canSeeAnomalies = profile?.role === "admin" || profile?.role === "principal";
   const { data: auditLogs, isLoading } = useQuery({
     queryKey: ["audit-logs"],
-
-    queryFn: () => getAuditLogs(100),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("audit_logs").select("*").order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      return data;
+    },
   });
 
   const actionStats = auditLogs?.reduce((acc, log) => {

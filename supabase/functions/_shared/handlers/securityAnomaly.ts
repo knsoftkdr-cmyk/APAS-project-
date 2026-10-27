@@ -1,5 +1,3 @@
-
-
 // supabase/functions/_shared/handlers/securityAnomaly.ts
 //
 // Security Anomaly Detection: records login / data-access events and raises alerts for unusual patterns.
@@ -276,59 +274,10 @@ export async function handleSecurityAnomaly(req: Request): Promise<Response> {
       case "record": return await record(admin, req, body);
       case "list": return await list(admin, req, body);
       case "update": return await update(admin, req, body);
-      case "audit_list": return await auditList(admin, req, body);
       default: return json({ error: "Unknown action" }, 400);
     }
   } catch (e) {
     console.error("security anomaly handler error:", e);
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
-}
-
-
-// audit_list: audit logs of the caller's own school (no new table; school comes from profiles.school_id)
-async function auditList(admin: any, req: Request, body: any): Promise<Response> {
-  const a = await authorise(admin, req, body);
-  if (a.error) return a.error;
-  const { schoolId, platform } = a as any;
-
-  const n = Number(body?.limit);
-  const limit = Number.isFinite(n) ? Math.min(500, Math.max(1, Math.floor(n))) : 100;
-
-  const { data: rows, error } = await admin
-    .from("audit_logs")
-    // .select("id, user_id, action, resource_type, resource_id, details, created_at")
-    .select("id, user_id, action, resource_type, resource_id, details, ip_address, created_at")
-    .order("created_at", { ascending: false })
-    .limit(2000);
-  if (error) return json({ error: error.message }, 500);
-
-  const userIds = [...new Set((rows ?? []).map((r: any) => r.user_id).filter(Boolean))] as string[];
-  const people = new Map<string, { name: string | null; role: string | null; school_id: string | null }>();
-  for (let i = 0; i < userIds.length; i += 200) {
-    const { data: profs } = await admin
-      .from("profiles")
-      .select("id, full_name, role, school_id")
-      .in("id", userIds.slice(i, i + 200));
-    for (const p of profs ?? []) {
-      people.set(p.id, { name: p.full_name ?? null, role: p.role ?? null, school_id: p.school_id ?? null });
-    }
-  }
-
-  const logs = (rows ?? [])
-    .filter((r: any) => (platform && !schoolId) || people.get(r.user_id)?.school_id === schoolId)
-    .slice(0, limit)
-    .map((r: any) => ({
-      id: r.id,
-      action: r.action,
-      resource_type: r.resource_type,
-      resource_id: r.resource_id,
-      ip_address: r.ip_address ?? null,
-      details: r.details,
-      created_at: r.created_at,
-      user_name: people.get(r.user_id)?.name ?? null,
-      user_role: people.get(r.user_id)?.role ?? null,
-    }));
-
-  return json({ logs, count: logs.length });
 }
