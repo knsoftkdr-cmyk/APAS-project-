@@ -27,7 +27,9 @@ const normSection = (s: unknown) => String(s ?? "").trim().toUpperCase();
 
 function localParts(tz: string, d = new Date()) {
   const fmt = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-CA", { timeZone: tz, ...o }).format(d);
-  return { date: fmt({ year: "numeric", month: "2-digit", day: "2-digit" }), weekday: fmt({ weekday: "long" }) };
+  const hour = Number(fmt({ hour: "2-digit", hourCycle: "h23" }));
+  const part_of_day = hour < 12 ? "morning" as const : hour < 17 ? "afternoon" as const : "evening" as const;
+  return { date: fmt({ year: "numeric", month: "2-digit", day: "2-digit" }), weekday: fmt({ weekday: "long" }), part_of_day };
 }
 const hhmm = (iso: string, tz: string) =>
   new Intl.DateTimeFormat("en-GB", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
@@ -51,7 +53,7 @@ export async function handleClassBriefing(req: Request): Promise<Response> {
 
     let tz = typeof body.tz === "string" && body.tz ? body.tz : "Asia/Kolkata";
     try { new Intl.DateTimeFormat("en", { timeZone: tz }); } catch { tz = "Asia/Kolkata"; }
-    const { date, weekday } = localParts(tz);
+    const { date, weekday, part_of_day } = localParts(tz);
 
     if (body.refresh !== true) {
       const { data: cached } = await admin.from("teacher_class_briefings").select("payload, created_at")
@@ -150,7 +152,7 @@ export async function handleClassBriefing(req: Request): Promise<Response> {
     }
     classes.sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
 
-    const facts: BriefingFacts = { date, weekday, teacher_first_name: String(profile?.full_name ?? "Teacher").split(" ")[0], classes };
+    const facts: BriefingFacts = { date, weekday, part_of_day, teacher_first_name: String(profile?.full_name ?? "Teacher").split(" ")[0], classes };
 
     // ── AI summary (falls back to the rules briefing) ────────────────────────────────────────
     let briefing = rulesBriefing(facts);

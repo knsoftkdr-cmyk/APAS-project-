@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
 import { useAuth } from "@/contexts/AuthContext";
+import { useGenerateLearningObjectives } from "@/hooks/useMastery";
 import {
   classKey, fetchClassOptions, fetchSchoolBooks, resolveSubjectsForClass,
   type BookOption as ClassBookOption, type ClassOption, type SubjectOption,
@@ -237,6 +238,25 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
   });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["item-bank", topicId, subtopicId] });
+
+  // Item Bank questions hang off learning objectives; let the teacher create them here instead of on Class Mastery.
+  const genObjectives = useGenerateLearningObjectives();
+  const createObjectives = async () => {
+    try {
+      const res = await genObjectives.mutateAsync({ topicId: Number(topicId), createMissingConcepts: true });
+      const results = (res?.results ?? []) as Array<{ generated?: number; skipped?: boolean; error?: string }>;
+      const made = results.reduce((s, r) => s + (r.error || r.skipped ? 0 : r.generated ?? 0), 0);
+      const err = results.find((r) => r.error)?.error;
+      if (made > 0) toast.success(`Created ${made} learning objective${made === 1 ? "" : "s"} - now choose a question type and Generate`);
+      else if (err) toast.error(`Couldn't create learning objectives: ${err}`);
+      else toast.info("This topic has no concepts to create objectives for.");
+      const { data } = await supabase.from("subtopics").select("id, subtopic_name").eq("topic_id", Number(topicId)).eq("is_active", true);
+      setConcepts((data as ConceptOption[]) ?? []);
+      refresh();
+    } catch (e) {
+      toast.error((await unwrapFunctionError(e, "Couldn't create learning objectives.")).message);
+    }
+  };
 
   // ── Generation ────────────────────────────────────────────────────────
   const [targetPerObjective, setTargetPerObjective] = useState(8);
@@ -575,8 +595,12 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
             )}
 
             {bankQuery.data && grouped.length === 0 && (
-              <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
-                No learning objectives here yet — generate them from the Class Mastery page first, then come back to author questions.
+              <Card><CardContent className="p-6 text-sm text-muted-foreground text-center space-y-3">
+                <p>No learning objectives here yet. Questions are written per learning objective, so create those first.</p>
+                <Button size="sm" onClick={createObjectives} disabled={genObjectives.isPending}>
+                  {genObjectives.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                  {genObjectives.isPending ? "Creating learning objectives…" : "Create learning objectives for this topic"}
+                </Button>
               </CardContent></Card>
             )}
 

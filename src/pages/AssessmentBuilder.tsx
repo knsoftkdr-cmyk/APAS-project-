@@ -58,6 +58,13 @@ function Shell({ embedded, children }: { embedded: boolean; children: ReactNode 
   return embedded ? <>{children}</> : <AppLayout>{children}</AppLayout>;
 }
 
+/** MCQs store difficulty as an IRT b value (easy ≈ -1, medium ≈ 0, hard ≈ +1; see _shared/irt.ts priorDifficulty). */
+function difficultyFromIrt(b: unknown): string | null {
+  if (b == null || !Number.isFinite(Number(b))) return null;
+  const v = Number(b);
+  return v < -0.5 ? "easy" : v > 0.5 ? "hard" : "medium";
+}
+
 /** PostgREST returns at most 1000 rows per request, so page through bigger sets. */
 // deno-lint-ignore no-explicit-any
 async function fetchAll(build: (from: number, to: number) => PromiseLike<{ data: any[] | null; error: any }>) {
@@ -133,7 +140,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
         const subIds = subs.map((s) => s.id);
         if (!subIds.length) { if (!cancelled) setBank([]); return; }
         const [mcq, ext] = await Promise.all([
-          fetchAll((a, b) => db.from("question_bank").select("id, stem, options, correct_option, explanation, difficulty, bloom_level, subtopic_id")
+          fetchAll((a, b) => db.from("question_bank").select("id, stem, options, correct_option, explanation, irt_b, bloom_level, subtopic_id")
             .in("subtopic_id", subIds).eq("status", "active").or("quality_flag.is.null,quality_flag.neq.reject").range(a, b)),
           fetchAll((a, b) => db.from("question_bank_extended").select("id, question_type, stem, context_passage, sub_questions, model_answer, max_marks, difficulty, bloom_level, subtopic_id")
             .in("subtopic_id", subIds).eq("status", "active").or("quality_flag.is.null,quality_flag.neq.reject").range(a, b)),
@@ -141,7 +148,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
         const items: BankItem[] = [
           ...mcq.map((q) => ({
             key: `mcq:${q.id}`, kind: "mcq" as const, id: q.id, type: "mcq", stem: q.stem, options: q.options, correct_option: q.correct_option,
-            explanation: q.explanation, difficulty: q.difficulty ?? null, bloom_level: q.bloom_level, default_marks: 1, topic: topicOfSub.get(q.subtopic_id) ?? null,
+            explanation: q.explanation, difficulty: difficultyFromIrt(q.irt_b), bloom_level: q.bloom_level, default_marks: 1, topic: topicOfSub.get(q.subtopic_id) ?? null,
           })),
           ...ext.map((q) => ({
             key: `extended:${q.id}`, kind: "extended" as const, id: q.id, type: q.question_type, stem: q.stem, context_passage: q.context_passage,
@@ -151,7 +158,8 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
         ];
         if (!cancelled) setBank(items);
       } catch (e) {
-        if (!cancelled) { setBank([]); toast.error(`Couldn't load questions: ${e instanceof Error ? e.message : "unknown error"}`); }
+        const msg = e instanceof Error ? e.message : (e as { message?: string })?.message;
+        if (!cancelled) { setBank([]); toast.error(`Couldn't load questions: ${msg || "unknown error"}`); }
       } finally {
         if (!cancelled) setBankLoading(false);
       }

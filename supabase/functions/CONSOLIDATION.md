@@ -311,13 +311,12 @@ Storage: `competency_missions`, `competency_xp_awards` (migration 20261019000000
   client-judged `is_correct`, so a determined student could still inflate a score; the evidence/multi-day rules and the daily cap
   make that slow and bounded, not impossible. Grading every flow server-side is the real fix.
 
-<<<<<<< Updated upstream
 ## AI Command Bar (added later, same pattern)
 
 | Feature | Anchor (deployed) | Discriminator |
 |---|---|---|
 | AI Command Bar (resolve + read-only lookups + action previews; no writes) | ai-teacher-assistant | action: `command_bar` (any signed-in role; the handler authenticates the caller's JWT itself, uses the caller's RLS-bound client, never the service role) |
-=======
+
 ## Teacher & AI suite - sheet rows 27, 28, 40, 41, 42, 43 (same pattern; migration 20261023000000)
 
 | Feature | Anchor (deployed) | Discriminator |
@@ -340,4 +339,3 @@ the share of AI Tutor / Voice Tutor replies sent to the quality evaluator.
 | Bulk actions on exam reviews (row 45) | evaluate-assessment | action: `bulk_review` (+ `op`: `preview` `apply` `undo` `list`) |
 | AI-assisted differentiation (row 46) | ai-teacher-assistant | action: `differentiate` (+ `op`: `generate` `list` `get` `delete` `share`) |
 | Student intervention board (row 47) | - (client, existing RLS on student_interventions) | - |
->>>>>>> Stashed changes

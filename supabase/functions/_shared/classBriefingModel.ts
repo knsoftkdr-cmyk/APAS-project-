@@ -19,7 +19,10 @@ export interface ClassFacts {
   weak_topics: Array<{ topic: string; avg_mastery: number; students: number }>; // avg 0-100, weakest first
 }
 
-export interface BriefingFacts { date: string; weekday: string; teacher_first_name: string; classes: ClassFacts[] }
+export interface BriefingFacts {
+  date: string; weekday: string; teacher_first_name: string; classes: ClassFacts[];
+  part_of_day?: "morning" | "afternoon" | "evening";   // teacher's local time, so the greeting matches
+}
 
 export interface BriefingClass { class_id: string; label: string; summary: string; focus: string | null }
 export interface Briefing {
@@ -32,7 +35,7 @@ export interface Briefing {
 }
 
 export const BRIEFING_SYSTEM_PROMPT = [
-  "You are a helpful teaching assistant writing a teacher's morning briefing. You output strict JSON only, no markdown.",
+  "You are a helpful teaching assistant writing a teacher's daily briefing. You output strict JSON only, no markdown.",
   "Use ONLY the facts given. Never invent numbers, students, topics or events. Be concrete and brief; a teacher reads this in 30 seconds.",
   "Prioritise: safety/at-risk students and anything due today first, then grading backlog, then teaching focus for weak topics.",
 ].join("\n");
@@ -40,6 +43,7 @@ export const BRIEFING_SYSTEM_PROMPT = [
 export function buildBriefingPrompt(f: BriefingFacts): string {
   return [
     `TODAY: ${f.weekday}, ${f.date}. TEACHER: ${f.teacher_first_name}.`,
+    ...(f.part_of_day ? [`TIME OF DAY: ${f.part_of_day}. If the headline greets the teacher, say "Good ${f.part_of_day}" - never a different time of day.`] : []),
     "FACTS PER CLASS (JSON):",
     JSON.stringify(f.classes.map((c) => ({ ...c, attendance_unmarked: Math.max(0, c.roster - c.attendance_marked) }))),
     "",
