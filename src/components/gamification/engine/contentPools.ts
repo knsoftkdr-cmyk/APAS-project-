@@ -1,3 +1,8 @@
+// DEPRECATED as a question source (Gamification question-history work): these pools are keyed by four AGE BANDS, not by class,
+// and have no per-student memory, so they cannot satisfy "Class 1 gets Class 1 questions only" or "never repeat".
+// The games now receive their items from the server (src/lib/gamificationQuestions.ts -> update-mastery `gq_serve`).
+// Only the exported TYPES below are still used. The data and getters are unreferenced and safe to delete in a follow-up.
+
 import { AgeGroupId } from './ageGroups';
 
 export interface QuizQuestion {

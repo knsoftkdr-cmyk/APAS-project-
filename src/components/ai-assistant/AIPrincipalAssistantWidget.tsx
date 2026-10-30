@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,9 @@ import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
 import { cleanForSpeech } from "@/lib/speechText";
 import { speakChunked } from "@/lib/speakChunked";
+import { resolvePrincipalNavigation, getPrincipalDestinations, type NavResolution, type PrincipalDestination } from "@/lib/principalNavigation";
+import { createNavHandoff, once } from "@/lib/navHandoff";
+import { isSafeRoute } from "@/lib/commandBar";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -24,6 +29,10 @@ interface ChatMessage {
 }
 
 type VoiceState = "idle" | "listening" | "thinking" | "speaking";
+
+// When the assistant itself navigates ("Open attendance") the next page re-creates this widget; this parks the chat for a
+// few seconds so the confirmation and conversation carry over. Tied to the destination path (see src/lib/navHandoff.ts).
+const navHandoff = createNavHandoff<{ messages: ChatMessage[]; open: boolean }>();
 
 function VoiceWaveIcon({ className }: { className?: string }) {
   return (
@@ -80,9 +89,18 @@ async function getAssistantReply(userText: string, recentHistory: ChatMessage[])
 export function AIPrincipalAssistantWidget() {
   const { profile } = useAuth();
   const isPrincipal = profile?.role === "principal";
+  // The same per-school permission check the sidebar uses, so the assistant only opens pages this principal can see in their menu.
+  const { can, loading: permsLoading } = usePermissions();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const here = location.pathname + location.search;
+  const [open, setOpen] = useState(() => navHandoff.peek(here)?.open ?? false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => navHandoff.peek(here)?.messages ?? []);
+  const messagesRef = useRef<ChatMessage[]>(messages);
+  messagesRef.current = messages;
+  // Options from the last "which one do you mean?", so a short reply ("the second one", "yes") can be answered.
+  const pendingNavRef = useRef<PrincipalDestination[] | null>(null);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -329,7 +347,9 @@ export function AIPrincipalAssistantWidget() {
     recognition.start();
   };
 
-  const speak = (text: string) => {
+  // `onFinished` (optional) replaces the default "start listening again" once the speech has ended or could not run -
+  // navigation uses it to move to the page AFTER the confirmation has been spoken.
+  const speak = (text: string, onFinished?: () => void) => {
     text = cleanForSpeech(text); // never read * # _ etc. aloud
     // Every call to speak() gets its own generation id, so only the
     // LATEST call is allowed to actually speak or react to its
@@ -337,7 +357,8 @@ export function AIPrincipalAssistantWidget() {
     const myGeneration = ++speechGenerationRef.current;
 
     if (!ttsSupported || !voiceModeRef.current) {
-      if (voiceModeRef.current) startListeningSafely();
+      if (onFinished) onFinished();
+      else if (voiceModeRef.current) startListeningSafely();
       return;
     }
 
@@ -351,6 +372,7 @@ export function AIPrincipalAssistantWidget() {
         nativeDone = true;
         if (speechGenerationRef.current !== myGeneration) return; // superseded
         lipSync.stop();
+        if (onFinished) { onFinished(); return; }
         // short delay so the speaker tail isn't picked up as the next question
         setTimeout(() => {
           if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
@@ -386,11 +408,13 @@ export function AIPrincipalAssistantWidget() {
         onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
         onDone: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
         onFail: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
       });
     };
@@ -432,6 +456,11 @@ export function AIPrincipalAssistantWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // While a navigation hand-off is live, keep it in step with the conversation (the destination page may re-create this widget more than once).
+  useEffect(() => {
+    navHandoff.sync(here, { messages, open });
+  }, [messages, open, here]);
+
   if (!isPrincipal) return null;
 
   const say = (text: string) => {
@@ -439,11 +468,67 @@ export function AIPrincipalAssistantWidget() {
     if (voiceModeRef.current) speak(text);
   };
 
+  // ---------------------------------------------------------------------
+  // NAVIGATION ("Open school intelligence", "Take me to attendance")
+  // Resolved on the device from the sidebar's own menu (src/lib/principalNavigation.ts): no AI call, same for voice and
+  // typing, and it can only reach pages in THIS principal's sidebar. Anything that isn't a "go there" request - including
+  // every data question - falls through to the existing assistant below, unchanged.
+  // ---------------------------------------------------------------------
+  const goTo = (dest: PrincipalDestination) => {
+    if (!isSafeRoute(dest.path)) return; // defence in depth: only ever an in-app path
+    // The chat card covers almost the whole screen below the `sm` breakpoint, so on phones collapse it to reveal the page.
+    const keepOpen = typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+    navHandoff.start(dest.path, { messages: messagesRef.current, open: keepOpen });
+    // The full-screen voice overlay would hide the page we are navigating to.
+    if (voiceModeRef.current) exitVoiceMode();
+    setOpen(keepOpen);
+    navigate(dest.path);
+  };
+
+  const handleNavigation = (nav: Exclude<NavResolution, { kind: "none" }>, userText: string) => {
+    voiceRequestInFlightRef.current = false; // nothing is "in flight" - this never leaves the device
+    pendingNavRef.current = nav.kind === "clarify" ? nav.options : null;
+    if (nav.kind !== "navigate") {
+      say(nav.reply); // already-there / which-one / not available / not found - spoken, then the mic re-opens in voice mode
+      return;
+    }
+    const dest = nav.destination;
+    const finish = once(() => goTo(dest));
+    // When typing, goTo runs in this same tick, before React re-renders - so put this exchange into the ref the hand-off reads.
+    messagesRef.current = [...messagesRef.current, { role: "user", text: userText }, { role: "assistant", text: nav.reply }];
+    setMessages((prev) => [...prev, { role: "assistant", text: nav.reply }]);
+    if (voiceModeRef.current) {
+      speak(nav.reply, finish); // say "Opening Alerts." first, then move
+      setTimeout(finish, 4000); // never leave the principal waiting if speech doesn't report back
+    } else {
+      finish();
+    }
+  };
+
   const sendMessageWithText = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
     if (!text || loading) return;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
+
+    // Navigation first: a clear "go there" request opens the page; everything else is a question for the assistant.
+    let nav: NavResolution = { kind: "none" };
+    try {
+      nav = resolvePrincipalNavigation(text, {
+        currentPath: here,
+        pending: pendingNavRef.current,
+        // The sidebar's own per-school permission check; while it is still loading, the role-only list.
+        destinations: getPrincipalDestinations(permsLoading ? undefined : can),
+      });
+    } catch {
+      // A resolver problem must never break chat: treat it as a normal message.
+    }
+    pendingNavRef.current = null;
+    if (nav.kind !== "none") {
+      handleNavigation(nav, text);
+      return;
+    }
+
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {

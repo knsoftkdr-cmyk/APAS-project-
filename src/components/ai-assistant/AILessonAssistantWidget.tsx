@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,8 @@ import { useLipSync, estimateSpeechDurationMs } from "@/hooks/useLipSync";
 import { RobotFace } from "@/components/ai-assistant/RobotFace";
 import { cleanForSpeech } from "@/lib/speechText";
 import { speakChunked } from "@/lib/speakChunked";
+import { resolveTeacherNavigation, getTeacherDestinations, type NavResolution, type TeacherDestination } from "@/lib/teacherNavigation";
+import { isSafeRoute } from "@/lib/commandBar";
 const isNativePlatform = Capacitor.isNativePlatform();
 
 interface VideoResult {
@@ -33,6 +36,23 @@ interface ChatMessage {
 }
 
 type AnswerMode = "text" | "video";
+
+// ---------------------------------------------------------------------
+// NAVIGATION HAND-OFF
+// Every page renders its own <AppLayout>, so a page change re-creates this widget. When the agent itself navigates
+// ("Open my timetable"), we keep the conversation for a few seconds so the teacher still sees the confirmation (and can
+// keep chatting) on the new page. The hand-off is tied to the destination path, so navigating anywhere else (sidebar,
+// back button, or the lesson-plan flow below) starts the widget fresh exactly as it always did.
+// ---------------------------------------------------------------------
+interface NavHandoff { path: string; messages: ChatMessage[]; open: boolean; answerMode: AnswerMode; until: number }
+const HANDOFF_WINDOW_MS = 15_000;
+let navHandoff: NavHandoff | null = null;
+const peekHandoff = (path: string): NavHandoff | null =>
+  navHandoff && navHandoff.path === path && Date.now() < navHandoff.until ? navHandoff : null;
+const once = (fn: () => void) => {
+  let done = false;
+  return () => { if (!done) { done = true; fn(); } };
+};
 
 
 interface KnownIntent {
@@ -97,17 +117,21 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 
 export function AILessonAssistantWidget() {
   const { isTeacher, profile } = useAuth();
+  // The same per-school permission check the sidebar uses, so the agent only opens pages this teacher can see in their menu.
+  const { can, loading: permsLoading } = usePermissions();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const location = useLocation();
+  const here = location.pathname + location.search;
+  const [open, setOpen] = useState(() => peekHandoff(here)?.open ?? false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => peekHandoff(here)?.messages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   // Lets the teacher choose how topic-understanding questions get
   // answered: a written explanation, or a suggested YouTube video.
   // Lesson-plan creation requests and APAS platform questions always
   // come back as text regardless of this - see extract-lesson-intent.
-  const [answerMode, setAnswerMode] = useState<AnswerMode>("text");
+  const [answerMode, setAnswerMode] = useState<AnswerMode>(() => peekHandoff(here)?.answerMode ?? "text");
   const [known, setKnown] = useState<KnownIntent>({});
   const [awaiting, setAwaiting] = useState<AwaitingSlot>(null);
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
@@ -130,6 +154,12 @@ export function AILessonAssistantWidget() {
   const ttsSupported = isNativePlatform || (typeof window !== "undefined" && "speechSynthesis" in window);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  // Options from the last "which one do you mean?" so a short reply ("the second one", "yes") can be answered.
+  const pendingNavRef = useRef<TeacherDestination[] | null>(null);
+  const messagesRef = useRef<ChatMessage[]>(messages);
+  messagesRef.current = messages;
+  const answerModeRef = useRef<AnswerMode>(answerMode);
+  answerModeRef.current = answerMode;
   const knownRef = useRef<KnownIntent>({});
   const awaitingRef = useRef<AwaitingSlot>(null);
   const chapterOptionsRef = useRef<string[]>([]);
@@ -394,7 +424,9 @@ export function AILessonAssistantWidget() {
     recognition.start();
   };
 
-  const speak = (text: string) => {
+  // `onFinished` (optional) replaces the default "start listening again" once the speech has ended or could not run -
+  // navigation uses it to move to the page AFTER the confirmation has been spoken.
+  const speak = (text: string, onFinished?: () => void) => {
     text = cleanForSpeech(text); // never read * # _ etc. aloud
     // Every call to speak() gets its own generation id. If two speak()
     // calls happen close together (e.g. the widget mounted twice - React
@@ -410,7 +442,8 @@ export function AILessonAssistantWidget() {
     if (!ttsSupported || !voiceModeRef.current) {
       // Voice mode active but TTS unsupported/unavailable - don't leave the UI
       // stuck on "thinking" with no way forward, resume listening immediately.
-      if (voiceModeRef.current) startListeningSafely();
+      if (onFinished) onFinished();
+      else if (voiceModeRef.current) startListeningSafely();
       return;
     }
 
@@ -427,6 +460,7 @@ export function AILessonAssistantWidget() {
         nativeDone = true;
         if (speechGenerationRef.current !== myGeneration) return; // superseded
         lipSync.stop();
+        if (onFinished) { onFinished(); return; }
         // short delay so the speaker tail isn't picked up as the next question
         setTimeout(() => {
           if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
@@ -463,11 +497,13 @@ export function AILessonAssistantWidget() {
         onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
         onDone: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
         onFail: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
       });
     };
@@ -513,6 +549,12 @@ export function AILessonAssistantWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // While a navigation hand-off is live, keep it in step with the conversation (the destination page may re-create this
+  // widget more than once while it loads).
+  useEffect(() => {
+    if (navHandoff && navHandoff.path === here && Date.now() < navHandoff.until) navHandoff = { ...navHandoff, messages, open, answerMode };
+  }, [messages, open, answerMode, here]);
+
   if (!isTeacher) return null;
 
   const say = (text: string, videos?: VideoResult[]) => {
@@ -520,6 +562,50 @@ export function AILessonAssistantWidget() {
     // Voice mode only ever speaks the short intro text that comes back
     // alongside video results, so this is safe even when videos is set.
     if (voiceModeRef.current) speak(text);
+  };
+
+  // ---------------------------------------------------------------------
+  // NAVIGATION ("Open my timetable", "Take me to attendance", "Go to the lesson plan generator")
+  // Resolved on the device from the sidebar's own menu (src/lib/teacherNavigation.ts): no AI call, same for voice and
+  // typing, and it can only reach pages in THIS teacher's sidebar. Anything that isn't a "go there" request - including
+  // every lesson-plan request - falls through to the existing flow below, unchanged.
+  // ---------------------------------------------------------------------
+  const goTo = (dest: TeacherDestination) => {
+    if (!isSafeRoute(dest.path)) return; // defence in depth: only ever an in-app path
+    // The chat card covers almost the whole screen below the `sm` breakpoint, so on phones collapse it to reveal the page.
+    const keepOpen = typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+    navHandoff = { path: dest.path, messages: messagesRef.current, open: keepOpen, answerMode: answerModeRef.current, until: Date.now() + HANDOFF_WINDOW_MS };
+    // The full-screen voice overlay would hide the page we are navigating to.
+    if (voiceModeRef.current) exitVoiceMode();
+    setOpen(keepOpen);
+    navigate(dest.path);
+  };
+
+  const handleNavigation = (nav: Exclude<NavResolution, { kind: "none" }>, userText: string) => {
+    voiceRequestInFlightRef.current = false; // nothing is "in flight" - this never leaves the device
+    pendingNavRef.current = nav.kind === "clarify" ? nav.options : null;
+
+    if (nav.kind !== "navigate") {
+      say(nav.reply); // already-there / which-one / not available / not found - spoken, then the mic re-opens in voice mode
+      return;
+    }
+
+    // Leaving for another page abandons any half-answered lesson-plan questions.
+    updateKnown({});
+    updateAwaiting(null);
+    updateChapterOptions([]);
+
+    const dest = nav.destination;
+    const finish = once(() => goTo(dest));
+    setMessages((prev) => [...prev, { role: "assistant", text: nav.reply }]);
+    // When typing, goTo runs in this same tick, before React re-renders - so put this exchange into the ref the hand-off reads.
+    messagesRef.current = [...messagesRef.current, { role: "user", text: userText }, { role: "assistant", text: nav.reply }];
+    if (voiceModeRef.current) {
+      speak(nav.reply, finish); // say "Opening Timetable." first, then move
+      setTimeout(finish, 4000); // never leave the teacher waiting if speech doesn't report back
+    } else {
+      finish();
+    }
   };
 
   const fetchSubjects = async (classLevel: string): Promise<string[]> => {
@@ -660,6 +746,28 @@ export function AILessonAssistantWidget() {
     if (!text || loading) return;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
+
+    // Navigation first. While the agent is in the middle of the lesson-plan questions (class / section / subject /
+    // chapter) the answer is almost always a slot value ("Open Circuits" is a chapter), so only a request that clearly
+    // names a page the teacher can open is allowed to interrupt it.
+    let nav: NavResolution = { kind: "none" };
+    try {
+      nav = resolveTeacherNavigation(text, {
+        currentPath: here,
+        pending: pendingNavRef.current,
+        // The sidebar's own per-school permission check; while it is still loading, the role-only list.
+        destinations: getTeacherDestinations(permsLoading ? undefined : can),
+      });
+    } catch {
+      // A resolver problem must never break chat: treat it as a normal message.
+    }
+    pendingNavRef.current = null;
+    if (awaitingRef.current && nav.kind !== "navigate" && nav.kind !== "already") nav = { kind: "none" };
+    if (nav.kind !== "none") {
+      handleNavigation(nav, text);
+      return;
+    }
+
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {

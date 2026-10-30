@@ -73,7 +73,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import apasLogo from "@/assets/APAS-logo.png";
 
-const navItems: Array<{
+export interface NavItem {
   title: string;
   icon: any;
   path: string;
@@ -84,7 +84,11 @@ const navItems: Array<{
   subItem?: { title: string; path: string; icon: any };
   /** other routes that belong to this item (e.g. its second tab) and should keep it highlighted */
   alsoActiveOn?: string[];
-}> = [
+}
+
+// Exported (not duplicated) so other features - e.g. the Study Buddy's "open <page>" voice/chat navigation -
+// resolve against exactly the menu the sidebar shows.
+export const navItems: NavItem[] = [
   { title: "Home", icon: UserCheck, path: "/hod-dashboard", roles: ["hod"], module: "Home" },
   { title: "Home", icon: LayoutDashboard, path: "/dashboard", roles: ["teacher", "admin", "principal", "school_admin"], tourId: "nav-home", module: "Home" },
   { title: "Admin Panel", icon: Shield, path: "/admin", roles: ["principal"], module: "Admin Panel" },
@@ -243,6 +247,25 @@ const navItems: Array<{
   { title: "Settings", icon: Settings, path: "/settings", tourId: "nav-settings" },
 ];
 
+// Which modules a student / parent sees in the sidebar. Items with no `module` (Settings, Worksheets, ...) always show.
+export const STUDENT_NAV_MODULES = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects", "Credentials", "My Accommodations", "Marketplace"];
+export const PARENT_NAV_MODULES = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication", "Safeguarding & Child Protection"];
+
+/**
+ * The role + module part of the sidebar's visibility rule. The sidebar uses this same function, so anything that
+ * asks "can this role see this menu item?" gets the sidebar's answer. (Staff roles are additionally filtered by
+ * per-school permissions in the sidebar itself; students and parents are not.)
+ */
+export function isNavItemAllowedForRole(item: NavItem, role?: string): boolean {
+  if (item.roles && (!role || !item.roles.includes(role))) return false;
+  if (role === "student" || role === "parent") {
+    if (!item.module) return true;
+    const allowed = role === "student" ? STUDENT_NAV_MODULES : PARENT_NAV_MODULES;
+    return allowed.includes(item.module);
+  }
+  return true;
+}
+
 const getMobileNavItems = (role?: string) => {
   if (role === "student") {
     return [
@@ -383,7 +406,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const location = useLocation();
 
   const isStudent = profile?.role === "student";
-  const getItemLabel = (item: (typeof navItems)[number]) => {
+  const getItemLabel = (item: NavItem) => {
     return isStudent && item.studentTitle ? item.studentTitle : item.title;
   };
   const mobileNavItems =
@@ -397,16 +420,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
   const visibleItems = (needsPermCheck && permsLoading) ? [] : navItems
     .filter((item) => {
-      if (item.roles && (!profile?.role || !item.roles.includes(profile.role))) return false;
-      if (profile?.role === "student" || profile?.role === "parent") {
-        if (!(item as any).module) return true; // items with no module (Settings etc) always show
-        const studentModules = ["Home", "Assessments", "Academic Tests", "Homework", "Gamification", "Leaderboard", "Predictions", "AI Tutor", "Academic Calendar", "Semester Engine", "Report Cards", "Houses", "Student Profile", "Hall Tickets", "Attendance", "Virtual Classroom", "Group Projects", "Credentials", "My Accommodations", "Marketplace"];
-        const parentModules = ["Home", "Student Profile", "Academic Calendar", "Report Cards", "Appointments", "Hall Tickets", "Attendance", "Communication", "Safeguarding & Child Protection"];
-        const allowed = profile?.role === "student" ? studentModules : parentModules;
-        return allowed.includes((item as any).module);
-      }
-      if (needsPermCheck && (item as any).module && !permsLoading) {
-        return can((item as any).module);
+      if (!isNavItemAllowedForRole(item, profile?.role)) return false;
+      if (profile?.role === "student" || profile?.role === "parent") return true;
+      if (needsPermCheck && item.module && !permsLoading) {
+        return can(item.module);
       }
       return true;
     });

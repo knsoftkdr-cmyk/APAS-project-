@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { getQuizQuestions, QuizQuestion } from "../engine/contentPools";
+import type { QuizQuestion } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
 
 interface Props {
+  /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
+  content: QuizQuestion[];
   onComplete: (result: GameResult) => void;
   studentName: string;
   ageGroup: AgeGroupId;
@@ -13,7 +15,7 @@ interface Props {
   timeLimit: number;
 }
 
-export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
+export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit, content }: Props) {
   const questions = useRef<QuizQuestion[]>([]);
   const [qIndex, setQIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -31,7 +33,7 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit 
   const MAX_QUESTIONS = 10;
 
   useEffect(() => {
-    const q = getQuizQuestions(subject, ageGroup);
+    const q = [...content];
     // Shuffle
     for (let i = q.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));

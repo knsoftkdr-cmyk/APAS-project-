@@ -1,90 +1,48 @@
-import { useState, useEffect, useMemo } from "react";
-import { AgeGroup, getAgeGroupByAge, AGE_GROUPS } from "../engine/ageGroups";
+import { useState, useEffect } from "react";
+import { AgeGroup, getAgeGroupById } from "../engine/ageGroups";
 import { selectGamesForStudent, selectGamesForGeneric, SelectedGame, GameMode } from "../engine/gameSelector";
-import { getSubjectsForClass } from "../engine/classSubjects";
-import { resetQuestionTracker } from "../engine/contentPools";
-import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, User, Layers, Puzzle } from "lucide-react";
+import { getGameContext, GameContext } from "@/lib/gamificationQuestions";
+import { Brain, Rocket, BookOpen, GraduationCap, Sparkles, Layers, Puzzle, Loader2 } from "lucide-react";
 
 interface Props {
+  /** Kept for backwards compatibility. Age is no longer typed in: the class comes from the student's record. */
   studentAge?: number;
   onStart: (selectedGames: SelectedGame[], ageGroup: AgeGroup, subject: string, studentClass: string, mode: GameMode) => void;
 }
 
-const CLASS_OPTIONS = [
-  { value: 'nursery', label: 'Nursery' },
-  { value: 'lkg', label: 'LKG' },
-  { value: 'ukg', label: 'UKG' },
-  ...Array.from({ length: 10 }, (_, i) => ({ value: String(i + 1), label: `Class ${i + 1}` })),
-];
-
-// ─── DEFINE DYNAMIC SUBJECT MAP ALIGNED FROM NURSERY UP TO CLASS 10 ───
-const DYNAMIC_SUBJECTS_BY_CLASS: Record<string, string[]> = {
-  nursery: ["English", "Maths"],
-  lkg: ["English", "Maths"],
-  ukg: ["English", "Maths"],
-  "1": ["English", "Maths", "Science"],
-  "2": ["English", "Maths", "Science"],
-  "3": ["English", "Maths", "Science", "Social"],
-  "4": ["English", "Maths", "Science", "Social"],
-  "5": ["English", "Maths", "Science", "Social"],
-  "6": ["English", "Maths", "Science"],
-  "7": ["English", "Maths", "Science"],
-  "8": ["English", "Maths", "Science"],
-  "9": ["English", "Maths", "Science"],
-  "10": ["English", "Maths", "Science"]
-};
-
-export function GameSetupScreen({ studentAge, onStart }: Props) {
-  const [age, setAge] = useState<string>(studentAge ? String(studentAge) : '');
-  const [selectedClass, setSelectedClass] = useState('');
-  const [subjects, setSubjects] = useState<string[]>([]);
+export function GameSetupScreen({ onStart }: Props) {
+  // Class and subjects come from the signed-in student's own record (server-side), never from user input.
+  const [ctx, setCtx] = useState<GameContext | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState('');
-  const [ageGroup, setAgeGroup] = useState<AgeGroup | null>(null);
   const [mode, setMode] = useState<GameMode>('subject');
 
   useEffect(() => {
-    const numAge = parseInt(age);
-    if (numAge >= 4 && numAge <= 18) {
-      setAgeGroup(getAgeGroupByAge(numAge));
-    } else {
-      setAgeGroup(null);
-    }
-  }, [age]);
+    let cancelled = false;
+    getGameContext()
+      .then(c => { if (!cancelled) setCtx(c); })
+      .catch(e => { if (!cancelled) setLoadError(e instanceof Error ? e.message : "Couldn't load your class."); });
+    return () => { cancelled = true; };
+  }, []);
 
-  // ─── EFFECT HANDLING SUBJECT LOADING DYNAMICALLY FROM NURSERY TO CLASS 10 ───
-  useEffect(() => {
-    if (!selectedClass) { 
-      setSubjects([]); 
-      setSelectedSubject(''); 
-      return; 
-    }
-    
-    setSelectedSubject('');
-    
-    if (DYNAMIC_SUBJECTS_BY_CLASS[selectedClass]) {
-      setSubjects(DYNAMIC_SUBJECTS_BY_CLASS[selectedClass]);
-    } else {
-      setSubjects(getSubjectsForClass(selectedClass));
-    }
-  }, [selectedClass]);
+  const ageGroup: AgeGroup | null = ctx ? getAgeGroupById(ctx.band) : null;
+  const subjects = ctx?.subjects.map(s => s.label) ?? [];
 
   const handleStart = () => {
-    if (!ageGroup || !selectedClass) return;
+    if (!ctx || !ageGroup) return;
     if (mode === 'subject' && !selectedSubject) return;
-
-    resetQuestionTracker();
 
     if (mode === 'subject') {
       const games = selectGamesForStudent(ageGroup.id, selectedSubject);
-      onStart(games, ageGroup, selectedSubject, selectedClass, 'subject');
+      onStart(games, ageGroup, selectedSubject, ctx.class.key, 'subject');
     } else {
       const games = selectGamesForGeneric(ageGroup.id);
-      onStart(games, ageGroup, 'General', selectedClass, 'generic');
+      onStart(games, ageGroup, 'General', ctx.class.key, 'generic');
     }
   };
 
-  const validAge = parseInt(age) >= 4 && parseInt(age) <= 18;
-  const canStart = validAge && selectedClass && ageGroup && (mode === 'generic' || selectedSubject);
+  const hasSubjects = subjects.length > 0;
+  const canStart = !!ctx && !!ageGroup && hasSubjects && (mode === 'generic' || !!selectedSubject);
 
   return (
     <div className="text-center max-w-xl mx-auto space-y-8 welcome-enter">
@@ -102,7 +60,7 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
           Adaptive Game Round
         </h1>
         <p className="text-sm mt-2" style={{ color: "rgba(241,245,249,0.5)" }}>
-          Games are personalized based on your age, class & preferences
+          Games are personalized for your class & preferences
         </p>
       </div>
 
@@ -146,74 +104,45 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
         </p>
       </div>
 
-      {/* Age Input */}
-      <div className="space-y-3">
-        <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
-          <User className="h-4 w-4" /> Enter Your Age
-        </label>
-        <div className="flex items-center justify-center gap-3">
-          <div className="relative">
-            <input
-              type="number"
-              min={4}
-              max={18}
-              value={age}
-              onChange={(e) => setAge(e.target.value)}
-              placeholder="e.g. 13"
-              className="w-32 text-center text-2xl font-black py-3 px-4 rounded-2xl outline-none transition-all duration-200 focus:scale-105"
-              style={{
-                background: "rgba(255,255,255,0.08)",
-                border: `2px solid ${validAge ? "rgba(99,102,241,0.6)" : age ? "rgba(239,68,68,0.4)" : "rgba(255,255,255,0.15)"}`,
-                color: "#F1F5F9",
-                caretColor: "#6366F1",
-              }}
-            />
-          </div>
-          <span className="text-sm font-medium" style={{ color: "rgba(241,245,249,0.4)" }}>years</span>
-        </div>
-        {age && !validAge && (
-          <p className="text-xs animate-fade-in" style={{ color: "#EF4444" }}>
-            Please enter an age between 4 and 18
-          </p>
-        )}
-      </div>
-
-      {/* Age Group Badge */}
-      {ageGroup && validAge && (
-        <div className="flex items-center justify-center gap-3 py-3 px-6 rounded-2xl mx-auto w-fit animate-fade-in"
-          style={{ background: `${ageGroup.color}15`, border: `1px solid ${ageGroup.color}30` }}>
-          <span className="text-2xl">{ageGroup.emoji}</span>
-          <div className="text-left">
-            <p className="text-sm font-bold" style={{ color: ageGroup.color }}>{ageGroup.label}</p>
-            <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{ageGroup.description} · Age {ageGroup.ageRange[0]}-{ageGroup.ageRange[1]}</p>
-          </div>
+      {/* Your class (read from your student record - not typed in) */}
+      {!ctx && !loadError && (
+        <div className="flex items-center justify-center gap-2 text-sm" style={{ color: "rgba(241,245,249,0.5)" }}>
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading your class…
         </div>
       )}
-
-      {/* Class Selection */}
-      {validAge && (
+      {loadError && (
+        <div className="rounded-2xl p-4 mx-auto max-w-md text-sm animate-fade-in"
+          style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#FCA5A5" }}>
+          {loadError}
+        </div>
+      )}
+      {ctx && ageGroup && (
         <div className="space-y-3 animate-fade-in">
           <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
-            <GraduationCap className="h-4 w-4" /> Select Your Class
+            <GraduationCap className="h-4 w-4" /> Your Class
           </label>
-          <div className="flex flex-wrap gap-2 justify-center">
-            {CLASS_OPTIONS.map(cls => (
-              <button key={cls.value} onClick={() => setSelectedClass(cls.value)}
-                className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 hover:scale-105 ${selectedClass === cls.value ? 'scale-105' : ''}`}
-                style={{
-                  background: selectedClass === cls.value ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.05)",
-                  border: `1px solid ${selectedClass === cls.value ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`,
-                  color: selectedClass === cls.value ? "#818CF8" : "rgba(241,245,249,0.6)",
-                }}>
-                {cls.label}
-              </button>
-            ))}
+          <div className="flex items-center justify-center gap-3 py-3 px-6 rounded-2xl mx-auto w-fit"
+            style={{ background: `${ageGroup.color}15`, border: `1px solid ${ageGroup.color}30` }}>
+            <span className="text-2xl">{ageGroup.emoji}</span>
+            <div className="text-left">
+              <p className="text-sm font-bold" style={{ color: ageGroup.color }}>{ctx.class.label}</p>
+              <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{ageGroup.label} · {ageGroup.description}</p>
+            </div>
           </div>
+          <p className="text-xs" style={{ color: "rgba(241,245,249,0.35)" }}>
+            Questions are chosen for {ctx.class.label} only.
+          </p>
+        </div>
+      )}
+      {ctx && !hasSubjects && (
+        <div className="rounded-2xl p-4 mx-auto max-w-md text-sm animate-fade-in"
+          style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#FCD34D" }}>
+          {ctx.message ?? "No subjects are set up for your class yet."}
         </div>
       )}
 
       {/* Subject Selection — only in subject mode */}
-      {mode === 'subject' && validAge && selectedClass && (
+      {mode === 'subject' && ctx && hasSubjects && (
         <div className="space-y-3 animate-fade-in">
           <label className="text-xs uppercase tracking-widest font-bold flex items-center justify-center gap-2" style={{ color: "rgba(241,245,249,0.4)" }}>
             <BookOpen className="h-4 w-4" /> Select Subject
@@ -235,7 +164,7 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
       )}
 
       {/* Generic mode info */}
-      {mode === 'generic' && validAge && selectedClass && (
+      {mode === 'generic' && ctx && hasSubjects && (
         <div className="animate-fade-in rounded-2xl p-4 mx-auto max-w-md"
           style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)" }}>
           <div className="flex items-start gap-3">
@@ -243,7 +172,7 @@ export function GameSetupScreen({ studentAge, onStart }: Props) {
             <div className="text-left space-y-1">
               <p className="text-sm font-bold" style={{ color: "#7DD3FC" }}>Generic Brain Training</p>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(241,245,249,0.5)" }}>
-                Includes cognitive games (memory, logic, speed, verbal) and mixed-subject quizzes pulling questions from all your class subjects.
+                Includes cognitive games (memory, logic, speed, verbal) and mixed-subject quizzes pulling questions from your class subjects. You won't see the same question twice.
               </p>
             </div>
           </div>

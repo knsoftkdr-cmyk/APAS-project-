@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,8 +17,27 @@ import { RobotFace } from "@/components/ai-assistant/RobotFace";
 import { getAiAccessibilityFlags } from "@/lib/accessibility";
 import { cleanForSpeech } from "@/lib/speechText";
 import { speakChunked } from "@/lib/speakChunked";
+import { resolveStudentNavigation, type NavResolution, type StudentDestination } from "@/lib/studentNavigation";
+import { isSafeRoute } from "@/lib/commandBar";
 
 const isNativePlatform = Capacitor.isNativePlatform();
+
+// ---------------------------------------------------------------------
+// NAVIGATION HAND-OFF
+// Every page renders its own <AppLayout>, so a page change re-creates this widget. When the Study Buddy itself
+// navigates ("Open Gamification"), we keep the conversation for a few seconds so the student still sees the
+// confirmation (and can keep chatting) on the new page. The hand-off is tied to the destination path, so
+// navigating anywhere else (sidebar, back button) starts the widget fresh exactly as it always did.
+// ---------------------------------------------------------------------
+interface NavHandoff { path: string; messages: ChatMessage[]; open: boolean; answerMode: AnswerMode; until: number }
+const HANDOFF_WINDOW_MS = 15_000;
+let navHandoff: NavHandoff | null = null;
+const peekHandoff = (path: string): NavHandoff | null =>
+  navHandoff && navHandoff.path === path && Date.now() < navHandoff.until ? navHandoff : null;
+const once = (fn: () => void) => {
+  let done = false;
+  return () => { if (!done) { done = true; fn(); } };
+};
 
 interface VideoResult {
   title: string;
@@ -100,16 +120,25 @@ async function getAssistantReply(
 export function AIStudentAssistantWidget() {
   const { isStudent } = useAuth();
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const location = useLocation();
+  const here = location.pathname + location.search;
+  const [open, setOpen] = useState(() => peekHandoff(here)?.open ?? false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => peekHandoff(here)?.messages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   // Lets the student choose how topic-understanding questions get
   // answered: a written explanation, or a suggested YouTube video.
   // Questions about their own records (homework, grades, etc.) always
   // come back as text regardless of this - see student-self-assistant.
-  const [answerMode, setAnswerMode] = useState<AnswerMode>("text");
+  const [answerMode, setAnswerMode] = useState<AnswerMode>(() => peekHandoff(here)?.answerMode ?? "text");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  // Options from the last "which one do you mean?" so a short reply ("the second one", "yes") can be answered.
+  const pendingNavRef = useRef<StudentDestination[] | null>(null);
+  const messagesRef = useRef<ChatMessage[]>(messages);
+  messagesRef.current = messages;
+  const answerModeRef = useRef<AnswerMode>(answerMode);
+  answerModeRef.current = answerMode;
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(true);
   const recognitionRef = useRef<any>(null);
@@ -360,7 +389,9 @@ export function AIStudentAssistantWidget() {
     recognition.start();
   };
 
-  const speak = (text: string) => {
+  // `onFinished` (optional) replaces the default "start listening again" once the speech has ended or could not run -
+  // navigation uses it to move to the page AFTER the confirmation has been spoken.
+  const speak = (text: string, onFinished?: () => void) => {
     text = cleanForSpeech(text); // never read * # _ etc. aloud
     // Every call to speak() gets its own generation id, so only the
     // LATEST call is allowed to actually speak or react to its
@@ -368,7 +399,8 @@ export function AIStudentAssistantWidget() {
     const myGeneration = ++speechGenerationRef.current;
 
     if (!ttsSupported || !voiceModeRef.current) {
-      if (voiceModeRef.current) startListeningSafely();
+      if (onFinished) onFinished();
+      else if (voiceModeRef.current) startListeningSafely();
       return;
     }
 
@@ -382,6 +414,7 @@ export function AIStudentAssistantWidget() {
         nativeDone = true;
         if (speechGenerationRef.current !== myGeneration) return; // superseded
         lipSync.stop();
+        if (onFinished) { onFinished(); return; }
         // short delay so the speaker tail isn't picked up as the next question
         setTimeout(() => {
           if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
@@ -417,11 +450,13 @@ export function AIStudentAssistantWidget() {
         onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
         onDone: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
         onFail: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
       });
     };
@@ -463,6 +498,12 @@ export function AIStudentAssistantWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // While a Study Buddy navigation hand-off is live, keep it in step with the conversation (the destination page may
+  // re-create this widget more than once while it loads).
+  useEffect(() => {
+    if (navHandoff && navHandoff.path === here && Date.now() < navHandoff.until) navHandoff = { ...navHandoff, messages, open, answerMode };
+  }, [messages, open, answerMode, here]);
+
   if (!isStudent) return null;
 
   const say = (text: string, videos?: VideoResult[]) => {
@@ -472,11 +513,63 @@ export function AIStudentAssistantWidget() {
     if (voiceModeRef.current) speak(text);
   };
 
+  // ---------------------------------------------------------------------
+  // NAVIGATION ("Open Gamification", "Take me to My Mastery", "Open my timetable")
+  // Resolved on the device from the sidebar's own menu (src/lib/studentNavigation.ts): no AI call, same for voice
+  // and typing, and it can only reach pages in the student's sidebar. Anything that isn't a "go there" request
+  // falls through to the normal student-self-assistant flow below, unchanged.
+  // ---------------------------------------------------------------------
+  const goTo = (dest: StudentDestination) => {
+    if (!isSafeRoute(dest.path)) return; // defence in depth: only ever an in-app path
+    // The chat card covers almost the whole screen below the `sm` breakpoint, so on phones collapse it to reveal the page.
+    const keepOpen = typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+    navHandoff = { path: dest.path, messages: messagesRef.current, open: keepOpen, answerMode: answerModeRef.current, until: Date.now() + HANDOFF_WINDOW_MS };
+    // The full-screen voice overlay would hide the page we are navigating to.
+    if (voiceModeRef.current) exitVoiceMode();
+    setOpen(keepOpen);
+    navigate(dest.path);
+  };
+
+  const handleNavigation = (nav: Exclude<NavResolution, { kind: "none" }>, userText: string) => {
+    voiceRequestInFlightRef.current = false; // nothing is "in flight" - this never leaves the device
+    pendingNavRef.current = nav.kind === "clarify" ? nav.options : null;
+
+    if (nav.kind !== "navigate") {
+      say(nav.reply); // already-there / which-one / not available / not found - spoken, then the mic re-opens in voice mode
+      return;
+    }
+
+    const dest = nav.destination;
+    const finish = once(() => goTo(dest));
+    setMessages((prev) => [...prev, { role: "assistant", text: nav.reply }]);
+    // When typing, goTo runs in this same tick, before React re-renders - so put this exchange into the ref the hand-off reads.
+    messagesRef.current = [...messagesRef.current, { role: "user", text: userText }, { role: "assistant", text: nav.reply }];
+    if (voiceModeRef.current) {
+      speak(nav.reply, finish); // say "Opening Timetable." first, then move
+      setTimeout(finish, 4000); // never leave the student waiting if speech doesn't report back
+    } else {
+      finish();
+    }
+  };
+
   const sendMessageWithText = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
     if (!text || loading) return;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
+
+    let nav: NavResolution = { kind: "none" };
+    try {
+      nav = resolveStudentNavigation(text, { currentPath: here, pending: pendingNavRef.current });
+    } catch {
+      // A resolver problem must never break chat: treat it as a normal question.
+    }
+    pendingNavRef.current = null;
+    if (nav.kind !== "none") {
+      handleNavigation(nav, text);
+      return;
+    }
+
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {

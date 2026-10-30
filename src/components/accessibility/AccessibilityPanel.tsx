@@ -1,4 +1,4 @@
-import { Accessibility, Minus, Plus, Square, Volume2 } from "lucide-react";
+import { Settings, Minus, Plus, Square, Volume2 } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ export function AccessibilityPanel() {
       <SheetContent side="right" className="w-full overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Accessibility className="h-5 w-5" /> Accessibility settings
+            <Settings className="h-5 w-5" /> Accessibility settings
           </SheetTitle>
           <SheetDescription>
             {savedTo === "account"
@@ -167,7 +167,7 @@ export function AccessibilityLauncher({ variant = "header" }: { variant?: "heade
       title="Accessibility settings (Alt+Shift+A)"
       className={base}
     >
-      <Accessibility className={variant === "floating" ? "h-6 w-6" : "h-5 w-5"} />
+      <Settings className={variant === "floating" ? "h-6 w-6" : "h-5 w-5"} />
       {suggestion && <span aria-hidden="true" className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />}
     </button>
   );

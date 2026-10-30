@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { getSpeedTapRules, SpeedTapRule } from "../engine/contentPools";
+import type { SpeedTapRule } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound } from "../sounds";
 
 interface Props {
+  /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
+  content: SpeedTapRule[];
   onComplete: (result: GameResult) => void;
   studentName: string;
   ageGroup: AgeGroupId;
@@ -21,7 +23,7 @@ interface DisplayItem {
   y: number;
 }
 
-export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
+export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit, content }: Props) {
   const rules = useRef<SpeedTapRule[]>([]);
   const [ruleIndex, setRuleIndex] = useState(0);
   const [items, setItems] = useState<DisplayItem[]>([]);
@@ -54,7 +56,7 @@ export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit }
   }, [ruleIndex]);
 
   useEffect(() => {
-    const r = getSpeedTapRules(subject, ageGroup);
+    const r = [...content];
     rules.current = r;
     startTime.current = Date.now();
     spawnInterval.current = setInterval(spawnItem, getSpawnRate());

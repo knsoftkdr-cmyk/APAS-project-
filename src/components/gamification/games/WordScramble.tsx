@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { getWordEntries, WordEntry } from "../engine/contentPools";
+import type { WordEntry } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
 
 interface Props {
+  /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
+  content: WordEntry[];
   onComplete: (result: GameResult) => void;
   studentName: string;
   ageGroup: AgeGroupId;
@@ -26,7 +28,7 @@ function shuffleWord(word: string): string[] {
   return letters;
 }
 
-export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
+export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLimit, content }: Props) {
   const words = useRef<WordEntry[]>([]);
   const [wordIndex, setWordIndex] = useState(0);
   const [scrambled, setScrambled] = useState<string[]>([]);
@@ -42,7 +44,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
   const wordStart = useRef(Date.now());
 
   useEffect(() => {
-    const w = getWordEntries(subject, ageGroup);
+    const w = [...content];
     for (let i = w.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [w[i], w[j]] = [w[j], w[i]];
@@ -106,7 +108,7 @@ export function WordScramble({ onComplete, ageGroup, subject, gameIndex, timeLim
         setSelected([]);
         setShowHint(false);
         const nextIdx = wordIndex + 1;
-        if (nextIdx >= MAX_QUESTIONS) {
+        if (nextIdx >= MAX_QUESTIONS || nextIdx >= words.current.length) {
           finishGame();
           return;
         }

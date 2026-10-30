@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { getMatchPairs } from "../engine/contentPools";
+import type { MatchPair } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
 
 interface Props {
+  /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
+  content: MatchPair[];
   onComplete: (result: GameResult) => void;
   studentName: string;
   ageGroup: AgeGroupId;
@@ -21,8 +23,8 @@ interface Card {
   matched: boolean;
 }
 
-export function MatchPairs({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
-  const pairsRef = useRef(getMatchPairs(subject, ageGroup));
+export function MatchPairs({ onComplete, ageGroup, subject, gameIndex, timeLimit, content }: Props) {
+  const pairsRef = useRef(content);
   const gridSize = ageGroup === 'early_learners' ? 3 : ageGroup === 'explorers' ? 4 : 5;
   const numPairs = Math.min(pairsRef.current.length, Math.floor((gridSize * (gridSize <= 3 ? 4 : gridSize)) / 2));
   

@@ -39,6 +39,7 @@ import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleAdaptiveHomework } from "../_shared/handlers/adaptiveHomework.ts";
 import { handleGamification2 } from "../_shared/handlers/gamification2.ts";
 import { handleCompetencyMissions } from "../_shared/handlers/competencyMissions.ts";
+import { handleGamificationQuestions } from "../_shared/handlers/gamificationQuestions.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -51,6 +52,9 @@ const MERGED_ROUTES: RouteTable = {
   // Competency Missions: gamification tied to verified mastery (students, own data only) - see handlers/competencyMissions.ts.
   cm_state: { handler: handleCompetencyMissions, action: "state" },
   cm_claim: { handler: handleCompetencyMissions, action: "claim" },
+  // Gamification questions: class-strict content + per-student never-repeat history (students, own data only) - see handlers/gamificationQuestions.ts.
+  gq_context: { handler: handleGamificationQuestions, action: "context" },
+  gq_serve: { handler: handleGamificationQuestions, action: "serve" },
 };
 
 serve(async (req) => {

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { getVisualMemorySets, VisualMemorySet } from "../engine/contentPools";
+import type { VisualMemorySet } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
 
 interface Props {
+  /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
+  content: VisualMemorySet[];
   onComplete: (result: GameResult) => void;
   studentName: string;
   ageGroup: AgeGroupId;
@@ -13,7 +15,7 @@ interface Props {
   timeLimit: number;
 }
 
-export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
+export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLimit, content }: Props) {
   const sets = useRef<VisualMemorySet[]>([]);
   const [setIndex, setSetIndex] = useState(0);
   const [phase, setPhase] = useState<'memorize' | 'question' | 'feedback'>('memorize');
@@ -31,7 +33,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
   const memorizeTime = ageGroup === 'early_learners' ? 8000 : ageGroup === 'explorers' ? 6000 : 4000;
 
   useEffect(() => {
-    const s = getVisualMemorySets(subject, ageGroup);
+    const s = [...content];
     sets.current = s;
     startTime.current = Date.now();
 
@@ -96,6 +98,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
       if (nextQ >= currentSet.questions.length) {
         // Move to next set
         const nextSet = setIndex + 1;
+        if (nextSet >= sets.current.length) { finishGame(); return; } // served sets used up: end rather than replay one
         setSetIndex(nextSet);
         setQIndex(0);
         setPhase('memorize');

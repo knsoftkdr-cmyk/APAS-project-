@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,9 @@ import { RobotFace } from "@/components/ai-assistant/RobotFace";
 import robotAvatar from "@/assets/ai-assistant-robot.png";
 import { cleanForSpeech } from "@/lib/speechText";
 import { speakChunked } from "@/lib/speakChunked";
+import { resolveParentNavigation, type NavResolution, type ParentDestination } from "@/lib/parentNavigation";
+import { createNavHandoff, once } from "@/lib/navHandoff";
+import { isSafeRoute } from "@/lib/commandBar";
 
 const isNativePlatform = Capacitor.isNativePlatform();
 
@@ -32,6 +36,10 @@ interface ChatMessage {
 }
 
 type AnswerMode = "text" | "video";
+
+// When the assistant itself navigates ("Open my child's report card") the next page re-creates this widget; this parks the
+// chat for a few seconds so the confirmation and conversation carry over. Tied to the destination path (src/lib/navHandoff.ts).
+const navHandoff = createNavHandoff<{ messages: ChatMessage[]; open: boolean; answerMode: AnswerMode }>();
 
 interface ParentBusAssistantWidgetProps {
   // Kept optional for backwards compatibility with existing callers - the
@@ -157,21 +165,28 @@ if (typeof window !== "undefined" && "speechSynthesis" in window) {
 
 export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAssistantWidgetProps) {
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const here = location.pathname + location.search;
+  const [open, setOpen] = useState(() => navHandoff.peek(here)?.open ?? false);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => navHandoff.peek(here)?.messages ?? []);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   // Lets the parent choose how topic-understanding questions get
   // answered: a written explanation, or a suggested YouTube video.
   // Questions about their child's own records always come back as text
   // regardless of this - see the parent-assistant edge function.
-  const [answerMode, setAnswerMode] = useState<AnswerMode>("text");
+  const [answerMode, setAnswerMode] = useState<AnswerMode>(() => navHandoff.peek(here)?.answerMode ?? "text");
   // Voice/recognition callbacks are created once (useEffect []), so they capture
   // the FIRST render's state. Read the latest via refs so conversation memory works.
   const messagesRef = useRef<ChatMessage[]>([]);
   const answerModeRef = useRef<AnswerMode>("text");
   messagesRef.current = messages;
   answerModeRef.current = answerMode;
+  // Same reason: where the parent is NOW, and the options from the last "which one do you mean?".
+  const hereRef = useRef(here);
+  hereRef.current = here;
+  const pendingNavRef = useRef<ParentDestination[] | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
   const resultHandledRef = useRef(false);
@@ -396,12 +411,15 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     }
   };
 
-  const speak = (text: string) => {
+  // `onFinished` (optional) replaces the default "start listening again" once the speech has ended or could not run -
+  // navigation uses it to move to the page AFTER the confirmation has been spoken.
+  const speak = (text: string, onFinished?: () => void) => {
     text = cleanForSpeech(text); // never read * # _ etc. aloud
     const myGeneration = ++speechGenerationRef.current;
 
     if (!ttsSupported || !voiceModeRef.current) {
-      if (voiceModeRef.current) startListeningSafely();
+      if (onFinished) onFinished();
+      else if (voiceModeRef.current) startListeningSafely();
       return;
     }
 
@@ -419,6 +437,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         nativeDone = true;
         if (speechGenerationRef.current !== myGeneration) return; // superseded
         lipSync.stop();
+        if (onFinished) { onFinished(); return; }
         // short delay so the speaker tail isn't picked up as the next question
         setTimeout(() => {
           if (speechGenerationRef.current === myGeneration && voiceModeRef.current) startListeningSafely();
@@ -454,11 +473,13 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         onBoundary: (charIndex) => lipSync.reanchor(charIndex, text.length),
         onDone: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
         onFail: () => {
           lipSync.stop();
-          if (voiceModeRef.current) startListeningSafely();
+          if (onFinished) onFinished();
+          else if (voiceModeRef.current) startListeningSafely();
         },
       });
     };
@@ -501,6 +522,11 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, loading]);
 
+  // While a navigation hand-off is live, keep it in step with the conversation (the destination page may re-create this widget more than once).
+  useEffect(() => {
+    navHandoff.sync(here, { messages, open, answerMode });
+  }, [messages, open, answerMode, here]);
+
   const say = (text: string, videos?: VideoResult[]) => {
     setMessages((prev) => [...prev, { role: "assistant", text, videos }]);
     // Voice mode only ever speaks the short intro text that comes back
@@ -508,12 +534,63 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
     if (voiceModeRef.current) speak(text);
   };
 
+  // ---------------------------------------------------------------------
+  // NAVIGATION ("Open my child's report card", "Take me to attendance")
+  // Resolved on the device from the sidebar's own menu (src/lib/parentNavigation.ts): no AI call, same for voice and typing,
+  // and it can only reach pages in THIS parent's sidebar. Anything that isn't a "go there" request - questions about the
+  // child, fees, transport, topics - falls through to the existing parent-assistant below, unchanged.
+  // (Everything here reads refs: the voice callbacks that call sendMessageWithText are created once, on the first render.)
+  // ---------------------------------------------------------------------
+  const goTo = (dest: ParentDestination) => {
+    if (!isSafeRoute(dest.path)) return; // defence in depth: only ever an in-app path
+    // The chat card covers almost the whole screen below the `sm` breakpoint, so on phones collapse it to reveal the page.
+    const keepOpen = typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+    navHandoff.start(dest.path, { messages: messagesRef.current, open: keepOpen, answerMode: answerModeRef.current });
+    // The full-screen voice overlay would hide the page we are navigating to.
+    if (voiceModeRef.current) exitVoiceMode();
+    setOpen(keepOpen);
+    navigate(dest.path);
+  };
+
+  const handleNavigation = (nav: Exclude<NavResolution, { kind: "none" }>, userText: string) => {
+    pendingNavRef.current = nav.kind === "clarify" ? nav.options : null;
+    if (nav.kind !== "navigate") {
+      say(nav.reply); // already-there / which-one / not available / not found - spoken, then the mic re-opens in voice mode
+      return;
+    }
+    const dest = nav.destination;
+    const finish = once(() => goTo(dest));
+    // When typing, goTo runs in this same tick, before React re-renders - so put this exchange into the ref the hand-off reads.
+    messagesRef.current = [...messagesRef.current, { role: "user", text: userText }, { role: "assistant", text: nav.reply }];
+    setMessages((prev) => [...prev, { role: "assistant", text: nav.reply }]);
+    if (voiceModeRef.current) {
+      speak(nav.reply, finish); // say "Opening Attendance." first, then move
+      setTimeout(finish, 4000); // never leave the parent waiting if speech doesn't report back
+    } else {
+      finish();
+    }
+  };
+
   const sendMessageWithText = async (overrideText?: string) => {
     const text = (overrideText ?? input).trim();
     if (!text || loadingRef.current) return;
-    loadingRef.current = true;
     setInput("");
     setMessages((prev) => [...prev, { role: "user", text }]);
+
+    // Navigation first: a clear "go there" request opens the page; everything else is a question for the parent assistant.
+    let nav: NavResolution = { kind: "none" };
+    try {
+      nav = resolveParentNavigation(text, { currentPath: hereRef.current, pending: pendingNavRef.current });
+    } catch {
+      // A resolver problem must never break chat: treat it as a normal message.
+    }
+    pendingNavRef.current = null;
+    if (nav.kind !== "none") {
+      handleNavigation(nav, text);
+      return;
+    }
+
+    loadingRef.current = true;
     setLoading(true);
     if (voiceModeRef.current) { setVoiceState("thinking"); setVoiceError(null); }
     try {

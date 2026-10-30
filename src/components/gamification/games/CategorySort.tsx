@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
-import { getSortCategories, SortCategory } from "../engine/contentPools";
+import type { SortCategory } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound } from "../sounds";
 
 interface Props {
+  /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
+  content: SortCategory[];
   onComplete: (result: GameResult) => void;
   studentName: string;
   ageGroup: AgeGroupId;
@@ -13,7 +15,7 @@ interface Props {
   timeLimit: number;
 }
 
-export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLimit }: Props) {
+export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLimit, content }: Props) {
   const categories = useRef<SortCategory[]>([]);
   const [catIndex, setCatIndex] = useState(0);
   const [currentItem, setCurrentItem] = useState('');
@@ -27,20 +29,24 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
   const startTime = useRef(Date.now());
   const responseTimes = useRef<number[]>([]);
   const itemStart = useRef(Date.now());
+  const shownItems = useRef<Set<string>>(new Set());
 
   const spawnItem = useCallback((cat: SortCategory) => {
     const allItems = [
       ...cat.leftItems.map(i => ({ item: i, side: 'left' as const })),
       ...cat.rightItems.map(i => ({ item: i, side: 'right' as const })),
     ];
-    const pick = allItems[Math.floor(Math.random() * allItems.length)];
+    const fresh = allItems.filter(i => !shownItems.current.has(i.item));
+    const choices = fresh.length ? fresh : allItems;
+    const pick = choices[Math.floor(Math.random() * choices.length)];
+    shownItems.current.add(pick.item);
     setCurrentItem(pick.item);
     setCorrectSide(pick.side);
     itemStart.current = Date.now();
   }, []);
 
   useEffect(() => {
-    const cats = getSortCategories(subject, ageGroup);
+    const cats = [...content];
     categories.current = cats;
     if (cats.length > 0) spawnItem(cats[0]);
     startTime.current = Date.now();

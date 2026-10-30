@@ -19,6 +19,7 @@ import { VisualMemory } from "@/components/gamification/games/VisualMemory";
 import { GameSetupScreen } from "@/components/gamification/setup/GameSetupScreen";
 import { SelectedGame, GameMode } from "@/components/gamification/engine/gameSelector";
 import { AgeGroup } from "@/components/gamification/engine/ageGroups";
+import { serveGameContent, type GameType, type GameItemMap, type ServedContent } from "@/lib/gamificationQuestions";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer,
@@ -240,6 +241,37 @@ const Gamification = () => {
   const timerActive = useRef(false);
   const startTimeRef = useRef<number>(0);
 
+  // Fresh, class-strict questions for the game about to be played. Served (and recorded as seen) by the server per game.
+  type ContentState = { status: "idle" | "loading" | "ready" | "empty" | "error"; items: unknown[]; message: string | null };
+  const [content, setContent] = useState<ContentState>({ status: "idle", items: [], message: null });
+  const [contentRetry, setContentRetry] = useState(0);
+  // One request per (round, game): React StrictMode runs effects twice in dev, and a second request would burn a second set of questions.
+  const contentRequests = useRef<Map<string, Promise<ServedContent<unknown>>>>(new Map());
+
+  useEffect(() => {
+    if (phase !== "PRE_GAME") return;
+    const cfg = selectedGames[currentGame];
+    if (!cfg) return;
+    const key = `${roundIdRef.current}:${currentGame}:${contentRetry}`;
+    let cancelled = false;
+    let req = contentRequests.current.get(key);
+    if (!req) {
+      req = serveGameContent(cfg.id as GameType, { subject, mode: gameMode, sessionId: roundIdRef.current }) as Promise<ServedContent<unknown>>;
+      contentRequests.current.set(key, req);
+    }
+    setContent({ status: "loading", items: [], message: null });
+    req.then(res => {
+      if (cancelled) return;
+      if (res.meta.exhausted || res.items.length === 0) setContent({ status: "empty", items: [], message: res.message });
+      else setContent({ status: "ready", items: res.items, message: null });
+    }).catch(err => {
+      contentRequests.current.delete(key);
+      if (cancelled) return;
+      setContent({ status: "error", items: [], message: err instanceof Error ? err.message : "Couldn't load your questions." });
+    });
+    return () => { cancelled = true; };
+  }, [phase, currentGame, contentRetry]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!timerActive.current) return;
     const t = setInterval(() => {
@@ -317,8 +349,9 @@ const Gamification = () => {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 6000);
       setPhase("RESULTS");
-      awardXp("complete_assessment", "Completed Adaptive Gamification Round");
+      if (results.length > 0) awardXp("complete_assessment", "Completed Adaptive Gamification Round");
     } else {
+      setContent({ status: "idle", items: [], message: null });
       setCurrentGame(p => p + 1);
       setPhase("PRE_GAME");
     }
@@ -362,6 +395,7 @@ const Gamification = () => {
         return (
           <QuickQuiz
             {...commonProps}
+            content={content.items as GameItemMap["quick-quiz"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -370,6 +404,7 @@ const Gamification = () => {
         return (
           <WordScramble
             {...commonProps}
+            content={content.items as GameItemMap["word-scramble"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -378,6 +413,7 @@ const Gamification = () => {
         return (
           <MatchPairs
             {...commonProps}
+            content={content.items as GameItemMap["match-pairs"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -386,6 +422,7 @@ const Gamification = () => {
         return (
           <CategorySort
             {...commonProps}
+            content={content.items as GameItemMap["category-sort"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -394,6 +431,7 @@ const Gamification = () => {
         return (
           <SpeedTap
             {...commonProps}
+            content={content.items as GameItemMap["speed-tap"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -402,6 +440,7 @@ const Gamification = () => {
         return (
           <VisualMemory
             {...commonProps}
+            content={content.items as GameItemMap["visual-memory"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -410,6 +449,7 @@ const Gamification = () => {
         return (
           <QuickQuiz
             {...commonProps}
+            content={content.items as GameItemMap["quick-quiz"][]}
             onComplete={(res) => handleGameComplete(res)}
           />
         );
@@ -667,11 +707,37 @@ const Gamification = () => {
               </div>
             </div>
 
-            <button onClick={startCountdown}
-              className="group px-10 py-4 rounded-2xl font-black text-lg transition-all duration-300 hover:scale-110 active:scale-95"
-              style={{ background: currentGameConfig.color, color: "#0F172A", boxShadow: `0 0 40px ${currentGameConfig.color}50` }}>
-              <span className="flex items-center gap-2">Ready? Let's Go! <Zap className="h-5 w-5" /></span>
-            </button>
+            {(content.status === "empty" || content.status === "error") && (
+              <div className="rounded-2xl p-4 text-sm text-left"
+                style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#FCD34D" }}>
+                {content.message}
+              </div>
+            )}
+
+            {content.status === "empty" || content.status === "error" ? (
+              <div className="flex justify-center gap-3">
+                {content.status === "error" && (
+                  <button onClick={() => setContentRetry(n => n + 1)}
+                    className="px-6 py-3 rounded-2xl font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                    style={{ background: currentGameConfig.color, color: "#0F172A" }}>
+                    Try again
+                  </button>
+                )}
+                <button onClick={goToNextGame}
+                  className="px-6 py-3 rounded-2xl font-bold text-sm transition-all hover:scale-105 active:scale-95"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#F1F5F9" }}>
+                  {currentGame + 1 >= selectedGames.length ? "Finish round" : "Skip this game"}
+                </button>
+              </div>
+            ) : (
+              <button onClick={startCountdown} disabled={content.status !== "ready"}
+                className="group px-10 py-4 rounded-2xl font-black text-lg transition-all duration-300 hover:scale-110 active:scale-95 disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-wait"
+                style={{ background: currentGameConfig.color, color: "#0F172A", boxShadow: `0 0 40px ${currentGameConfig.color}50` }}>
+                <span className="flex items-center gap-2">
+                  {content.status === "ready" ? <>Ready? Let's Go! <Zap className="h-5 w-5" /></> : "Preparing your questions…"}
+                </span>
+              </button>
+            )}
           </div>
         )}
 
