@@ -16,6 +16,7 @@ export const TUTOR_LANGUAGES: TutorLanguage[] = [
   { code: "ml", name: "Malayalam", native: "മലയാളം" },
   { code: "mr", name: "Marathi", native: "मराठी" },
   { code: "bn", name: "Bengali", native: "বাংলা" },
+  { code: "ar", name: "Arabic", native: "العربية" },
 ];
 
 /** Falls back to English for anything unknown (e.g. a stored preference we don't offer). */

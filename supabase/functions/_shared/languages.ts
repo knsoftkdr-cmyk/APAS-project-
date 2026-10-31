@@ -23,6 +23,7 @@ export const TEACHING_LANGUAGES: Record<string, TeachingLanguage> = {
   ml: { code: "ml", name: "Malayalam", native: "മലയാളം" },
   mr: { code: "mr", name: "Marathi", native: "मराठी" },
   bn: { code: "bn", name: "Bengali", native: "বাংলা" },
+  ar: { code: "ar", name: "Arabic", native: "العربية" },
 };
 
 /** Returns a supported non-default language, or null for English / missing / unknown. */

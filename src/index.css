@@ -131,6 +131,19 @@
   }
 }
 
+/* ── Arabic typography ──
+   LanguageContext sets <html lang> and <html dir>. Noto Sans Arabic leads the
+   stack so Arabic script renders properly; Inter stays behind it for Latin
+   text (brand names, numbers, strings not translated yet). */
+html[lang="ar"] {
+  --font-sans: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+}
+
+html[lang="ar"] body,
+html[lang="ar"] .font-sans {
+  font-family: var(--font-sans);
+}
+
 @layer utilities {
   .animate-fade-in {
     animation: fadeInUp 0.6s ease-out both;

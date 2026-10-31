@@ -67,6 +67,8 @@ import {
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { navLabel } from "@/i18n/navLabels";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -404,10 +406,12 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
   const { profile, signOut } = useAuth();
   const { can, loading: permsLoading } = usePermissions();
   const location = useLocation();
+  const { language, t } = useLanguage();
 
   const isStudent = profile?.role === "student";
   const getItemLabel = (item: NavItem) => {
-    return isStudent && item.studentTitle ? item.studentTitle : item.title;
+    const label = isStudent && item.studentTitle ? item.studentTitle : item.title;
+    return navLabel(label, language);
   };
   const mobileNavItems =
     profile?.role === "parent"
@@ -517,7 +521,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                       )}
                     >
                       <item.subItem.icon className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-300", isSubActive ? "scale-110" : "group-hover:scale-110")} />
-                      <span>{item.subItem.title}</span>
+                      <span>{navLabel(item.subItem.title, language)}</span>
                     </NavLink>
                   )}
                 </div>
@@ -558,14 +562,14 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
             <button
               onClick={handleLogout}
-              title={collapsed ? "Logout" : undefined}
+              title={collapsed ? t.logout : undefined}
               className={cn(
                 "flex w-full items-center rounded-2xl border border-sidebar-border text-sm font-medium text-sidebar-accent transition-colors hover:bg-sidebar-hover",
                 collapsed ? "justify-center p-2" : "gap-3 px-3 py-2"
               )}
             >
               <LogOut className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Logout</span>}
+              {!collapsed && <span>{t.logout}</span>}
             </button>
 
             <button
@@ -629,7 +633,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                       )}
                     >
                       <item.subItem.icon className="h-3.5 w-3.5 shrink-0" />
-                      <span>{item.subItem.title}</span>
+                      <span>{navLabel(item.subItem.title, language)}</span>
                     </NavLink>
                   )}
                 </div>
@@ -667,7 +671,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
               className="flex w-full items-center gap-3 rounded-2xl border border-sidebar-border px-3 py-2 text-sm font-medium text-sidebar-accent transition-colors hover:bg-sidebar-hover"
             >
               <LogOut className="h-4 w-4 shrink-0" />
-              <span>Logout</span>
+              <span>{t.logout}</span>
             </button>
           </div>
         </div>
@@ -690,7 +694,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                   <span className="absolute -top-1 w-6 h-[3px] bg-accent rounded-b-full" />
                 )}
                 <item.icon className={cn("h-5 w-5 transition-transform duration-300", isActive && "animate-[fade-in_0.3s_ease-out]")} />
-                <span>{item.title}</span>
+                <span>{navLabel(item.title, language)}</span>
               </NavLink>
             );
           })}
