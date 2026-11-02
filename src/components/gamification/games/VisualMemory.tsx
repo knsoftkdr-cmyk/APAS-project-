@@ -3,6 +3,7 @@ import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
 import type { VisualMemorySet } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
+import { visualSize } from "../engine/visual";
 
 interface Props {
   /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
@@ -140,7 +141,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
             {currentSet.items.map((item, i) => (
               <div key={i} className="px-4 py-3 rounded-xl text-lg font-bold"
                 style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", color: "#F1F5F9" }}>
-                {item}
+                <span style={visualSize(item)}>{item}</span>
               </div>
             ))}
           </div>
@@ -158,7 +159,7 @@ export function VisualMemory({ onComplete, ageGroup, subject, gameIndex, timeLim
               <button key={i} onClick={() => handleAnswer(i)}
                 className="py-3 px-4 rounded-xl font-semibold text-sm transition-all hover:scale-105 active:scale-95"
                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,107,107,0.25)", color: "#F1F5F9" }}>
-                {opt}
+                <span style={visualSize(opt)}>{opt}</span>
               </button>
             ))}
           </div>

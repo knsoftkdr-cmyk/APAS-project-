@@ -3,6 +3,7 @@ import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
 import type { SpeedTapRule } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound } from "../sounds";
+import { visualSize } from "../engine/visual";
 
 interface Props {
   /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
@@ -43,16 +44,21 @@ export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit, 
     const rule = ruleIndex < rules.current.length ? rules.current[ruleIndex] : rules.current[0];
     if (!rule) return;
     const allPool = [...rule.targets, ...rule.distractors];
-    const text = allPool[Math.floor(Math.random() * allPool.length)];
-    const isTarget = rule.targets.includes(text);
-    const newItem: DisplayItem = {
-      id: itemCounter.current++,
-      text,
-      isTarget,
-      x: 10 + Math.random() * 70,
-      y: 10 + Math.random() * 60,
-    };
-    setItems(prev => [...prev.slice(-8), newItem]); // Keep max 9 items
+    const id = itemCounter.current++;
+    setItems(prev => {
+      const visible = prev.slice(-8);
+      // Never show the same item twice at once: only pick text that is not already on screen.
+      const onScreen = new Set(visible.map(i => i.text));
+      const choices = allPool.filter(t => !onScreen.has(t));
+      if (choices.length === 0) return visible;
+      const text = choices[Math.floor(Math.random() * choices.length)];
+      // Pick a spot that doesn't sit on top of another tile (tiles are ~22% wide, ~14% tall); best of 15 tries.
+      const clear = (x: number, y: number) => visible.every(i => Math.abs(i.x - x) >= 22 || Math.abs(i.y - y) >= 14);
+      let x = 10 + Math.random() * 70, y = 10 + Math.random() * 60;
+      for (let t = 0; t < 15 && !clear(x, y); t++) { x = 10 + Math.random() * 70; y = 10 + Math.random() * 60; }
+      if (!clear(x, y)) return visible; // screen is full: skip this spawn rather than stack tiles
+      return [...visible, { id, text, isTarget: rule.targets.includes(text), x, y }]; // keep max 9 items
+    });
   }, [ruleIndex]);
 
   useEffect(() => {
@@ -151,6 +157,7 @@ export function SpeedTap({ onComplete, ageGroup, subject, gameIndex, timeLimit, 
               border: "1px solid rgba(255,255,255,0.2)",
               color: "#F1F5F9",
               zIndex: 10,
+              ...visualSize(item.text),
             }}>
             {item.text}
           </button>

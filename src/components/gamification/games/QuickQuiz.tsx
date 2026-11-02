@@ -3,6 +3,7 @@ import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
 import type { QuizQuestion } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
+import { visualSize, speak } from "../engine/visual";
 
 interface Props {
   /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
@@ -146,7 +147,11 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit,
       ) : (
         <>
           <div className="w-full p-5 rounded-2xl text-center" style={{ background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.3)" }}>
-            <p className="text-base md:text-lg font-bold" style={{ color: "#F1F5F9" }}>{q.question}</p>
+            <p className="text-base md:text-lg font-bold" style={{ color: "#F1F5F9", ...visualSize(q.question) }}>{q.question}</p>
+            {ageGroup === "early_learners" && (
+              <button type="button" onClick={() => speak(q.question)} aria-label="Read the question aloud"
+                className="mt-2 px-3 py-1 rounded-full text-sm" style={{ background: "rgba(255,255,255,0.1)", color: "#F1F5F9" }}>🔊 Listen</button>
+            )}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
             {q.options.map((opt, i) => (
@@ -154,7 +159,7 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit,
                 className="py-4 px-4 rounded-xl font-semibold text-sm transition-all duration-200 hover:scale-105 active:scale-95"
                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(99,102,241,0.25)", color: "#F1F5F9" }}>
                 <span className="mr-2 text-xs font-bold" style={{ color: "#6366F1" }}>{String.fromCharCode(65 + i)}</span>
-                {opt}
+                <span style={visualSize(opt)}>{opt}</span>
               </button>
             ))}
           </div>

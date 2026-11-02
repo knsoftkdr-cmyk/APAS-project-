@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
-  bandForGrade, buildGenerationPrompt, candidatesFromGenerated, classGuard, classKey, difficultyFromAccuracy, exhaustedMessage,
+  bandForGrade, buildGenerationPrompt, preprimaryGuard, GAME_TYPES, candidatesFromGenerated, classGuard, classKey, difficultyFromAccuracy, exhaustedMessage,
   fingerprintOf, gradeLevel, normalizeText, parseGeneratedItems, pickUnseen, serveItems, serveSpec, validateItem,
   type Candidate, type GameType, type ServeDeps,
 } from "../../supabase/functions/_shared/gamificationQuestionModel";
+import { generateVisualItems, themeOf } from "../../supabase/functions/_shared/preprimaryVisualContent";
 
 // ── an in-memory stand-in for the DB with the same semantics the real one has ────────────────────────
 // pool rows are scoped by school + class + subject + game type; history is keyed by user + class + subject + fingerprint and the
@@ -385,5 +386,107 @@ describe("concurrent requests", () => {
 describe("normalisation edge cases", () => {
   it("normalizeText keeps non-Latin scripts", () => {
     expect(normalizeText("भारत की राजधानी क्या है?")).toBe("भारत की राजधानी क्या है");
+  });
+});
+
+describe("pre-primary (Nursery / LKG / UKG): pictures, not sentences", () => {
+  const N = { classKey: "nursery", level: -3 };
+  const L = { classKey: "lkg", level: -2 };
+  const U = { classKey: "ukg", level: -1 };
+  const q = (extra: any = {}) => ({ class: "Nursery", question: "Find the apple! 🍎", options: ["🍎 Apple", "🐱 Cat", "🚗 Car", "🌳 Tree"], correctIndex: 0, ...extra });
+
+  it("accepts picture content", () => {
+    expect(validateItem("quick-quiz", q(), N, { requireClassClaim: true }).ok).toBe(true);
+    expect(validateItem("match-pairs", { a: "🐶", b: "Dog" }, N).ok).toBe(true);
+    expect(validateItem("quick-quiz", q({ question: "How many? 🍎🍎🍎", options: ["1", "2", "3", "4"], correctIndex: 2 }), N).ok).toBe(true);
+  });
+  it("rejects text-only items, including the ones seen on screen", () => {
+    expect(validateItem("quick-quiz", q({ question: "What goes on paper in a collage?", options: ["Paper scraps", "Water", "Sand", "Dirt"] }), N, { requireClassClaim: true }).ok).toBe(false);
+    expect(validateItem("quick-quiz", q({ question: "What do we dip a okra cut-out into to make a floral print?", options: ["Paint", "Sand", "Mud", "Water"] }), N).ok).toBe(false);
+    expect(validateItem("speed-tap", { instruction: "Tap all the simple machines that are levers", targets: ["Scissors", "Nutcracker", "Seesaw", "Crowbar"], distractors: ["Ramp", "Flagpole pulley", "Car wheel", "Stairs"] }, N).ok).toBe(false);
+    expect(validateItem("visual-memory", { items: ["Torn red paper", "Torn yellow paper", "Torn green paper"], questions: [{ question: "Which colour? 👀", options: ["Red", "Blue", "Green", "Pink"], correctIndex: 0 }] }, N).ok).toBe(false);
+    expect(validateItem("quick-quiz", q({ question: "Which fruit is red?" }), N).ok).toBe(false);   // fine words, but no picture
+    expect(preprimaryGuard("quick-quiz", q({ question: "What is a noun? 🍎" }))).not.toBeNull();
+  });
+  it("single short words are allowed as answers from LKG, not in Nursery", () => {
+    const wordOpts = q({ question: "Which letter starts 🍎?", options: ["Apple", "Ball", "Cat", "Dog"] });
+    expect(validateItem("quick-quiz", wordOpts, N).ok).toBe(false);
+    expect(validateItem("quick-quiz", wordOpts, L).ok).toBe(true);
+  });
+  it("memory sets are 3-4 pictures for little ones, 4-8 above", () => {
+    const E = ["🍎", "🐱", "🚗", "🌳", "⚽", "🎈", "🐶", "🍌"];
+    const set = (n: number) => ({ items: E.slice(0, n), questions: [{ question: "Which one? 👀", options: ["🍎", "🐱", "🚗", "🌳"], correctIndex: 0 }] });
+    expect(validateItem("visual-memory", set(3), N).ok).toBe(true);
+    expect(validateItem("visual-memory", set(6), N).ok).toBe(false);
+    expect(validateItem("visual-memory", set(3), { classKey: "3", level: 3 }).ok).toBe(false);
+    expect(validateItem("visual-memory", set(6), { classKey: "3", level: 3 }).ok).toBe(true);
+  });
+  it("caps numbers by stage: Nursery 10, UKG 50", () => {
+    const n = (question: string, options: string[]) => q({ question, options, correctIndex: 0 });
+    expect(validateItem("quick-quiz", n("3 + 4 = ? 🍎", ["7", "6", "8", "5"]), N).ok).toBe(true);
+    expect(validateItem("quick-quiz", n("Count to 15 🍎", ["15", "14", "16", "13"]), N).ok).toBe(false);
+    expect(validateItem("quick-quiz", n("7 + 8 = ? 🍎", ["15", "14", "16", "13"]), U).ok).toBe(true);
+    expect(validateItem("quick-quiz", n("60 + 5 = ? 🍎", ["65", "64", "66", "63"]), U).ok).toBe(false);
+  });
+  it("does not affect older classes", () => {
+    const longQ = { class: "Class 4", question: "Which of these animals is a mammal that lives in water?", options: ["Dolphin", "Shark", "Octopus", "Goldfish"], correctIndex: 0 };
+    expect(validateItem("quick-quiz", longQ, { classKey: "4", level: 4 }, { requireClassClaim: true }).ok).toBe(true);
+  });
+  it("asks the AI for pictures, in plain terms", () => {
+    const { prompt } = buildGenerationPrompt({ gameType: "quick-quiz", classLabel: "Nursery", subject: "EVS", difficulty: "easy", count: 12, curriculum: [], avoid: [], seed: 1, level: -3 });
+    for (const w of ["PRE-PRIMARY", "NURSERY", "ONE or TWO", "NO science", "emoji"]) expect(prompt).toContain(w);
+  });
+});
+
+describe("built-in picture content for Nursery / LKG / UKG", () => {
+  const stages = [{ classKey: "nursery", level: -3 }, { classKey: "lkg", level: -2 }, { classKey: "ukg", level: -1 }];
+  const subjects = ["Maths", "English", "Art and Crafts", "EVS", "Music"];
+  // deterministic RNG so failures are reproducible
+  const seeded = (seed: number) => () => { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; };
+
+  it("every generated item passes validation, for every game, stage and subject", () => {
+    for (const g of GAME_TYPES) for (const st of stages) for (const subj of subjects) {
+      const { items, rejected } = candidatesFromGenerated(g, generateVisualItems(g, st, subj, 80, seeded(7)), st);
+      const bad = rejected.filter((r) => r.reason !== "duplicate inside batch");
+      expect(bad).toHaveLength(0);
+      expect(items.length).toBeGreaterThanOrEqual(g === "word-scramble" ? 25 : g === "category-sort" || g === "speed-tap" ? 20 : 30);
+    }
+  });
+  it("is varied: many distinct questions, not a handful", () => {
+    const st = stages[0];
+    const quiz = candidatesFromGenerated("quick-quiz", generateVisualItems("quick-quiz", st, "EVS", 600, seeded(3)), st).items;
+    expect(quiz.length).toBeGreaterThanOrEqual(150);
+    const visual = candidatesFromGenerated("visual-memory", generateVisualItems("visual-memory", st, "EVS", 200, seeded(3)), st).items;
+    expect(visual.length).toBeGreaterThanOrEqual(150);
+  });
+  it("matches the subject: Maths leans to counting, Art to colours", () => {
+    const st = stages[2];
+    const qs = (subj: string) => generateVisualItems("quick-quiz", st, subj, 300, seeded(11)).map((i: any) => i.question as string);
+    const share = (xs: string[], re: RegExp) => xs.filter((x) => re.test(x)).length / xs.length;
+    expect(share(qs("Maths"), /How many|\+ .* = \?/)).toBeGreaterThanOrEqual(0.45);
+    expect(share(qs("Art and Crafts"), /What colour/)).toBeGreaterThanOrEqual(0.3);
+    expect(themeOf("Art and Crafts")).toBe("art");
+    expect(themeOf("Mathematics")).toBe("maths");
+  });
+  it("never puts the same picture twice in one question's options", () => {
+    const st = stages[0];
+    for (const it of generateVisualItems("quick-quiz", st, "EVS", 400, seeded(5)) as any[]) {
+      expect(new Set(it.options).size).toBe(4);
+      expect(it.correctIndex).toBeGreaterThanOrEqual(0);
+    }
+  });
+  it("a Nursery child can play many rounds with no repeats, and with no AI at all", async () => {
+    const db = new FakeDb();
+    const SN: Who = { user: "nur-1", school: "school-A", classKey: "nursery", subject: "art and crafts", type: "quick-quiz" };
+    const ctx = { classKey: "nursery", level: -3 };
+    const rng = seeded(99); // one generator across calls, like Math.random in the real handler
+    const builtin: Ai = async (need) => candidatesFromGenerated("quick-quiz", generateVisualItems("quick-quiz", ctx, "Art and Crafts", need * 4, rng), ctx).items.slice(0, Math.max(need, 12));
+    const all: string[] = [];
+    for (let round = 0; round < 8; round++) {
+      const r = await serveItems(depsFor(db, SN, builtin), SPEC, "nursery");
+      expect(r.exhausted).toBe(false);
+      all.push(...fps(r.items));
+    }
+    expect(new Set(all).size).toBe(all.length);
   });
 });

@@ -3,6 +3,7 @@ import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
 import type { SortCategory } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound } from "../sounds";
+import { visualSize } from "../engine/visual";
 
 interface Props {
   /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
@@ -130,7 +131,7 @@ export function CategorySort({ onComplete, ageGroup, subject, gameIndex, timeLim
 
       <div className="w-36 h-36 flex items-center justify-center rounded-2xl text-2xl font-bold"
         style={{ background: "rgba(255,255,255,0.08)", border: "2px solid rgba(34,197,94,0.4)", color: "#F1F5F9" }}>
-        {feedback ? <span className="text-4xl">{feedback}</span> : currentItem}
+        {feedback ? <span className="text-4xl">{feedback}</span> : <span style={visualSize(currentItem)}>{currentItem}</span>}
       </div>
 
       <div className="flex gap-4 w-full">
