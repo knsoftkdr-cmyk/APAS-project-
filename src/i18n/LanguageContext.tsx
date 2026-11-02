@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import translations, { Language, isRtlLanguage, languages } from "./translations";
+import translations, { ENABLE_RTL_LAYOUT, Language, isRtlLanguage, languages } from "./translations";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -27,6 +27,13 @@ function normaliseLanguage(value: unknown): Language {
   return languages.some((l) => l.code === value) ? (value as Language) : "en";
 }
 
+/**
+ * Layout direction for <html dir>. Stays "ltr" for Arabic while
+ * ENABLE_RTL_LAYOUT is off — Arabic text still reads right-to-left on its own.
+ */
+const layoutDir = (lang: Language): "ltr" | "rtl" =>
+  ENABLE_RTL_LAYOUT && isRtlLanguage(lang) ? "rtl" : "ltr";
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [language, setLang] = useState<Language>("en");
@@ -37,11 +44,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, [profile]);
 
-  // Mirror the active language onto <html> so CSS can pick the Arabic font and
-  // the browser flips the layout for right-to-left scripts.
+  // Mirror the active language onto <html> so CSS can pick the Arabic font.
+  // Direction stays LTR until the layout is ready for the flip.
   useEffect(() => {
     document.documentElement.lang = language;
-    document.documentElement.dir = isRtlLanguage(language) ? "rtl" : "ltr";
+    document.documentElement.dir = layoutDir(language);
   }, [language]);
 
   const setLanguage = async (lang: Language) => {
@@ -60,7 +67,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         language,
         setLanguage,
         t: translations[language],
-        dir: isRtlLanguage(language) ? "rtl" : "ltr",
+        dir: layoutDir(language),
       }}
     >
       {children}
