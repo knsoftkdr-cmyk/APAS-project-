@@ -63,7 +63,7 @@ export function IntakeFormDialog({ onCreate }: IntakeFormDialogProps) {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700">
-          <Plus className="h-4 w-4 mr-1.5" />
+          <Plus className="h-4 w-4 me-1.5" />
           New Intake
         </Button>
       </DialogTrigger>
@@ -181,7 +181,7 @@ export function IntakeFormDialog({ onCreate }: IntakeFormDialogProps) {
       disabled={submitting}
       className="flex-1 sm:flex-none bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
     >
-      {submitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+      {submitting && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
       Create Intake
     </Button>
   </DialogFooter>

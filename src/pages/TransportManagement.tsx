@@ -188,10 +188,10 @@ function StopAddressSearch({
         value={query}
         onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
         onFocus={() => setShowResults(true)}
-        className={hasCoords ? "border-emerald-400 pr-7" : ""}
+        className={hasCoords ? "border-emerald-400 pe-7" : ""}
       />
       {loading && (
-        <Loader2 className="absolute right-2 top-2.5 h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        <Loader2 className="absolute end-2 top-2.5 h-3.5 w-3.5 animate-spin text-muted-foreground" />
       )}
       {showResults && results.length > 0 && (
         <div className="absolute z-20 w-72 mt-1 rounded-lg border bg-popover shadow-md max-h-48 overflow-y-auto">
@@ -199,7 +199,7 @@ function StopAddressSearch({
             <button
               key={i}
               type="button"
-              className="w-full text-left px-3 py-2 hover:bg-muted text-xs"
+              className="w-full text-start px-3 py-2 hover:bg-muted text-xs"
               onClick={() => {
                 onSelect(parseFloat(r.lat), parseFloat(r.lon), r.display_name);
                 setQuery(r.display_name.split(",")[0]);
@@ -321,8 +321,8 @@ export default function TransportManagement() {
       <div className="space-y-6">
         {/* Hero banner */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 p-8">
-          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-10 -start-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative flex items-center gap-4">
             <div className="rounded-xl bg-white/15 p-3">
               <Bus className="h-8 w-8 text-white" />
@@ -941,7 +941,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
             </div>
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!form.registration_number || saveMutation.isPending}>
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Save
               </Button>
             </DialogFooter>
@@ -974,7 +974,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Branch</TableHead>
                 <TableHead>Insurance Expiry</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-end">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1000,7 +1000,7 @@ export function VehiclesTab({ schoolId }: { schoolId?: string }) {
                       {v.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right space-x-1">
+                  <TableCell className="text-end space-x-1 rtl:space-x-reverse">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(v)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -1314,7 +1314,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
             </div>
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending}>
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Save
               </Button>
             </DialogFooter>
@@ -1349,7 +1349,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Status</TableHead>
                 <TableHead>Verification</TableHead>
                 <TableHead>App Login</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-end">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1398,7 +1398,7 @@ export function DriversTab({ schoolId }: { schoolId?: string }) {
                       <Badge variant="secondary">Not set up</Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right space-x-1">
+                  <TableCell className="text-end space-x-1 rtl:space-x-reverse">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(d)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -1571,7 +1571,7 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
             </div>
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!form.name || saveMutation.isPending}>
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Save
               </Button>
             </DialogFooter>
@@ -1590,7 +1590,7 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Certificate No.</TableHead>
                 <TableHead>Certificate Expiry</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-end">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1605,7 +1605,7 @@ export function AttendantsTab({ schoolId }: { schoolId?: string }) {
                       {a.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right space-x-1">
+                  <TableCell className="text-end space-x-1 rtl:space-x-reverse">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(a)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -2412,7 +2412,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                       <div className="relative w-24">
                         <Input
                           type="number"
-                          className="pr-6"
+                          className="pe-6"
                           min={25}
                           step={25}
                           title="Safe zone radius in meters — how close the bus must get to count as arrived"
@@ -2420,7 +2420,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
                           value={stop.radius_meters ?? 200}
                           onChange={(e) => updateStop(idx, { radius_meters: Number(e.target.value) || 200 })}
                         />
-                        <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                        <span className="pointer-events-none absolute end-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
                           m
                         </span>
                       </div>
@@ -2443,7 +2443,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
             </div>
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!routeName || saveMutation.isPending}>
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Save Route
               </Button>
             </DialogFooter>
@@ -2509,7 +2509,7 @@ export function RoutesTab({ schoolId }: { schoolId?: string }) {
           </div>
           <DialogFooter>
             <Button onClick={() => saveAsTemplateMutation.mutate()} disabled={!templateName || saveAsTemplateMutation.isPending}>
-              {saveAsTemplateMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+              {saveAsTemplateMutation.isPending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
               Save Template
             </Button>
           </DialogFooter>
@@ -3026,7 +3026,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
             </div>
             <DialogFooter>
               <Button onClick={() => saveMutation.mutate()} disabled={!selectedStudent || saveMutation.isPending}>
-                {saveMutation.isPending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {saveMutation.isPending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 {editing ? "Save Changes" : "Assign"}
               </Button>
             </DialogFooter>
@@ -3046,7 +3046,7 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                 <TableHead>Seat</TableHead>
                 <TableHead>Fee</TableHead>
                 <TableHead>Fee Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-end">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -3072,12 +3072,12 @@ export function AssignmentsTab({ schoolId }: { schoolId?: string }) {
                       return (
                         <Badge variant={displayStatus === "paid" ? "default" : "secondary"} className="capitalize">
                           {displayStatus || "—"}
-                          {feeMgmtStatus && <span className="ml-1 text-[10px] opacity-70 font-normal">(Fee Mgmt)</span>}
+                          {feeMgmtStatus && <span className="ms-1 text-[10px] opacity-70 font-normal">(Fee Mgmt)</span>}
                         </Badge>
                       );
                     })()}
                   </TableCell>
-                  <TableCell className="text-right space-x-1">
+                  <TableCell className="text-end space-x-1 rtl:space-x-reverse">
                     <Button size="icon" variant="ghost" onClick={() => openEdit(a)}>
                       <Pencil className="h-4 w-4" />
                     </Button>

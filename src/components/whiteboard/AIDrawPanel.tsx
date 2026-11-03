@@ -208,7 +208,7 @@ export function AIDrawPanel({ api, open, onOpenChange, onExplanation }: {
               ] as const).map(([value, Icon, name, hint]) => (
                 <button
                   key={value} type="button" role="radio" aria-checked={style === value} onClick={() => setStyle(value)}
-                  className={`rounded-lg border p-2 text-left transition-colors ${style === value ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40" : "hover:bg-muted"}`}
+                  className={`rounded-lg border p-2 text-start transition-colors ${style === value ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950/40" : "hover:bg-muted"}`}
                 >
                   <span className="flex items-center gap-1.5 text-sm font-medium"><Icon className="h-4 w-4 text-indigo-600" /> {name}</span>
                   <span className="block text-xs text-muted-foreground mt-0.5">{hint}</span>

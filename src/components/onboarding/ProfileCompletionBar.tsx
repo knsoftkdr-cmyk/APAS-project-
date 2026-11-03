@@ -33,7 +33,7 @@ export function ProfileCompletionBar({ percent, missing }: Props) {
           <Progress value={percent} className="h-2 flex-1" />
           <Button size="sm" className="flex-shrink-0 bg-blue-500 hover:bg-blue-700 text-white" asChild>
             <Link to="/settings">
-              Complete <ArrowRight className="ml-1 h-3 w-3" />
+              Complete <ArrowRight className="ms-1 h-3 w-3" />
             </Link>
           </Button>
         </div>

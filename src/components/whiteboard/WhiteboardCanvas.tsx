@@ -352,7 +352,7 @@ export function WhiteboardCanvas({
               title="AI Draw: step-by-step diagrams and equations"
               className="px-2 sm:px-3"
             >
-              <Sparkles className="h-4 w-4 sm:mr-1 text-indigo-600" />
+              <Sparkles className="h-4 w-4 sm:me-1 text-indigo-600" />
               <span className="hidden sm:inline">AI Draw</span>
             </Button>
           )}
@@ -364,7 +364,7 @@ export function WhiteboardCanvas({
               title={mode === "student_editable" ? "Lock to teacher" : "Allow students"}
               className="px-2 sm:px-3"
             >
-              {mode === "student_editable" ? <Lock className="h-4 w-4 sm:mr-1" /> : <Unlock className="h-4 w-4 sm:mr-1" />}
+              {mode === "student_editable" ? <Lock className="h-4 w-4 sm:me-1" /> : <Unlock className="h-4 w-4 sm:me-1" />}
               <span className="hidden sm:inline">
                 {mode === "student_editable" ? "Lock to teacher" : "Allow students"}
               </span>
@@ -378,7 +378,7 @@ export function WhiteboardCanvas({
               title="Save to Lesson"
               className="px-2 sm:px-3"
             >
-              <Save className="h-4 w-4 sm:mr-1" />
+              <Save className="h-4 w-4 sm:me-1" />
               <span className="hidden sm:inline">{saving ? "Saving..." : "Save to Lesson"}</span>
               <span className="sm:hidden">{saving ? "..." : ""}</span>
             </Button>
@@ -394,13 +394,13 @@ export function WhiteboardCanvas({
               aria-haspopup="menu"
               className="px-2 sm:px-3"
             >
-              <Download className="h-4 w-4 sm:mr-1" />
+              <Download className="h-4 w-4 sm:me-1" />
               <span className="hidden sm:inline">Export</span>
             </Button>
             {exportOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => !exporting && setExportOpen(false)} aria-hidden />
-                <div role="menu" className="absolute right-0 top-full mt-1 z-50 w-56 rounded-lg border bg-popover p-1 shadow-lg">
+                <div role="menu" className="absolute end-0 top-full mt-1 z-50 w-56 rounded-lg border bg-popover p-1 shadow-lg">
                   {EXPORTS.map(({ format, label, hint, Icon }) => (
                     <button
                       key={format}
@@ -408,7 +408,7 @@ export function WhiteboardCanvas({
                       type="button"
                       disabled={!!exporting}
                       onClick={() => handleExport(format)}
-                      className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm hover:bg-muted disabled:opacity-60"
+                      className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-start text-sm hover:bg-muted disabled:opacity-60"
                     >
                       {exporting === format ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4 text-muted-foreground" />}
                       <span className="flex-1">{label}</span>
@@ -434,7 +434,8 @@ export function WhiteboardCanvas({
         </div>
       </div>
 
-      <div className="flex-1 min-h-0" style={{ width: "100%", position: "relative" }}>
+      {/* Drawing canvas stays left-to-right in every language: its toolbars and coordinates assume it. */}
+      <div dir="ltr" className="flex-1 min-h-0" style={{ width: "100%", position: "relative" }}>
         <Excalidraw
           excalidrawAPI={(api) => setExcalidrawAPI(api)}
           viewModeEnabled={!canEdit}

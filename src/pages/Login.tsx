@@ -204,7 +204,7 @@ setLoading(false);
 return (
 <>
 <section
-  className="min-h-screen flex items-center justify-end pr-20"
+  className="min-h-screen flex items-center justify-end pe-20"
   style={{
     backgroundImage: "url('/classroom-bg.jpg')",
     backgroundSize: "cover",
@@ -213,7 +213,7 @@ return (
   }}
 >
             {/* 2. ADD THIS LOGO CODE HERE */}
-           <div className="absolute top-8 left-8 z-50">
+           <div className="absolute top-8 start-8 z-50">
             <img 
               src={knsoftLogo} 
               alt="KNSOFT Logo" 
@@ -278,7 +278,7 @@ return (
 </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                   <User className="h-4 w-4 text-[#2C3E50]/60" />
                 </div>
                 <input
@@ -286,13 +286,13 @@ return (
                   placeholder={selectedRole === "Student" ? "Student ID" : "Username or Email"}
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                   required
                 />
               </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                   <Lock className="h-4 w-4 text-[#2C3E50]/60" />
                 </div>
                 <input
@@ -300,13 +300,13 @@ return (
                   placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full h-12 pl-14 pr-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  className="w-full h-12 ps-14 pe-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+                  className="absolute inset-y-0 end-0 flex items-center pe-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

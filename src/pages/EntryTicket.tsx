@@ -370,25 +370,25 @@ export default function EntryTicket() {
     <AppLayout>
 <div className="min-h-screen relative overflow-hidden" style={{ background: "linear-gradient(135deg, #ffffff, #eef2ff, #faf5ff)", backgroundSize: "cover" }}>
   {/* Faint wave at top */}
-  <svg className="absolute top-0 left-0 w-full h-40 opacity-[0.06]" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <svg className="absolute top-0 start-0 w-full h-40 opacity-[0.06]" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,80 C240,140 480,20 720,60 C960,100 1200,20 1440,70 L1440,0 L0,0 Z" fill="#6366f1" />
   </svg>
-  <svg className="absolute top-0 left-0 w-full h-32 opacity-[0.05]" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <svg className="absolute top-0 start-0 w-full h-32 opacity-[0.05]" viewBox="0 0 1440 200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,40 C320,100 720,0 1440,50 L1440,0 L0,0 Z" fill="#8b5cf6" />
   </svg>
 
   {/* Floating circles, barely visible */}
-  <div className="absolute top-24 right-16 w-40 h-40 rounded-full bg-indigo-300 opacity-[0.05] blur-2xl" />
-  <div className="absolute top-96 left-10 w-56 h-56 rounded-full bg-violet-300 opacity-[0.04] blur-2xl" />
-  <div className="absolute bottom-20 right-1/3 w-32 h-32 rounded-full bg-indigo-200 opacity-[0.05] blur-xl" />
+  <div className="absolute top-24 end-16 w-40 h-40 rounded-full bg-indigo-300 opacity-[0.05] blur-2xl" />
+  <div className="absolute top-96 start-10 w-56 h-56 rounded-full bg-violet-300 opacity-[0.04] blur-2xl" />
+  <div className="absolute bottom-20 end-1/3 w-32 h-32 rounded-full bg-indigo-200 opacity-[0.05] blur-xl" />
 
   <div className="relative z-10 p-6">
       <div className="max-w-4xl lg:max-w-7xl mx-auto">
 
        {/* Header */}
 <div className="rounded-2xl p-6 mb-4 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full"></div>
-  <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full"></div>
+  <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full"></div>
+  <div className="absolute end-16 top-10 w-16 h-16 bg-white/10 rounded-full"></div>
   <div className="relative flex items-center gap-4">
     <Ticket className="h-10 w-10 text-white" />
     <div>
@@ -435,13 +435,13 @@ export default function EntryTicket() {
                 {pastSessions.map(s => {
                   const statusConfig =
                     s.status === "completed"
-                      ? { label: "Completed", classes: "bg-green-100 text-green-700", dot: "bg-green-500", border: "border-l-green-400" }
+                      ? { label: "Completed", classes: "bg-green-100 text-green-700", dot: "bg-green-500", border: "border-s-green-400" }
                       : s.status === "post"
-                      ? { label: "Awaiting Exit Ticket", classes: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-500", border: "border-l-yellow-400" }
-                      : { label: "Awaiting Pre-Score", classes: "bg-blue-100 text-blue-700", dot: "bg-blue-500", border: "border-l-blue-400" };
+                      ? { label: "Awaiting Exit Ticket", classes: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-500", border: "border-s-yellow-400" }
+                      : { label: "Awaiting Pre-Score", classes: "bg-blue-100 text-blue-700", dot: "bg-blue-500", border: "border-s-blue-400" };
                   const focusLabel = s.subtopic || s.topic || "—";
                   return (
-                    <div key={s.id} className={`flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors border-l-4 ${statusConfig.border}`}>
+                    <div key={s.id} className={`flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors border-s-4 ${statusConfig.border}`}>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <p className="font-semibold text-gray-800 text-sm truncate">{focusLabel}</p>
@@ -454,7 +454,7 @@ export default function EntryTicket() {
                           {s.subject} {s.topic ? `· ${s.topic}` : ""} · {s.class_level} - {s.section}
                         </p>
                       </div>
-                      <div className="flex gap-2 flex-shrink-0 ml-4">
+                      <div className="flex gap-2 flex-shrink-0 ms-4">
                         {s.status === "pre" && (
                           <button onClick={() => resumePreEntry(s)} className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium shadow-sm">
                             Enter Pre-Score
@@ -652,19 +652,19 @@ export default function EntryTicket() {
           <div className="space-y-4">
             {/* Summary */}
 <div className="grid grid-cols-3 gap-4 ">
-  <div className="bg-white rounded-xl border-l-4 border-indigo-400 border-t border-r border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
+  <div className="bg-white rounded-xl border-s-4 border-indigo-400 border-t border-e border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
     <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Class Normalized Gain</p>
     <p className={`text-2xl font-bold ${parseFloat(avgGain || "0") >= 0.7 ? "text-emerald-600" : parseFloat(avgGain || "0") >= 0.3 ? "text-amber-600" : "text-red-600"}`}>
       {avgGain}
     </p>
   </div>
-  <div className="bg-white rounded-xl border-l-4 border-emerald-400 border-t border-r border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
+  <div className="bg-white rounded-xl border-s-4 border-emerald-400 border-t border-e border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
     <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Pre → Post</p>
     <p className="text-2xl font-bold text-emerald-600">
       {responses[0]?.pre_score}/{responses[0]?.total_marks} → {responses[0]?.post_score}/{responses[0]?.total_marks}
     </p>
   </div>
-  <div className="bg-white rounded-xl border-l-4 border-amber-400 border-t border-r border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
+  <div className="bg-white rounded-xl border-s-4 border-amber-400 border-t border-e border-b border-gray-200 shadow-sm p-4 hover:-translate-y-2 hover:shadow-2xl hover:border-indigo-300">
     <p className="text-xs text-gray-500 mb-1 uppercase tracking-wide">Gain Level</p>
     {responses[0] && (
       <span className={`inline-block text-sm px-3 py-1 rounded-full font-medium ${gainBadge(responses[0].gain_level)}`}>
@@ -683,7 +683,7 @@ export default function EntryTicket() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="text-left px-4 py-2 text-gray-600 font-medium">Class / Section</th>
+                    <th className="text-start px-4 py-2 text-gray-600 font-medium">Class / Section</th>
                     <th className="text-center px-4 py-2 text-gray-600 font-medium">Pre Score</th>
                     <th className="text-center px-4 py-2 text-gray-600 font-medium">Post Score</th>
                     <th className="text-center px-4 py-2 text-gray-600 font-medium">Gain (g)</th>

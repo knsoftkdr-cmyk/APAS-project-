@@ -120,7 +120,7 @@ export function PtmPrepPanel({ appointmentId, appointmentDate, studentName }: Pr
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left"
+        className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-start"
       >
         <span className="flex items-center gap-2 text-sm font-semibold text-violet-800">
           <Sparkles className="h-4 w-4" />
@@ -197,7 +197,7 @@ export function PtmPrepPanel({ appointmentId, appointmentDate, studentName }: Pr
 
               {prep.questions_for_parent.length > 0 && (
                 <Section icon={<MessageCircleQuestion className="h-3.5 w-3.5 text-indigo-600" />} title="Questions to ask the parent">
-                  <ul className="list-disc pl-4 space-y-0.5">
+                  <ul className="list-disc ps-4 space-y-0.5">
                     {prep.questions_for_parent.map((q, i) => <li key={i} className="text-xs text-slate-700">{q}</li>)}
                   </ul>
                 </Section>
@@ -205,7 +205,7 @@ export function PtmPrepPanel({ appointmentId, appointmentDate, studentName }: Pr
 
               {prep.proposed_next_steps.length > 0 && (
                 <Section icon={<Target className="h-3.5 w-3.5 text-emerald-600" />} title="Proposed next steps">
-                  <ul className="list-disc pl-4 space-y-0.5">
+                  <ul className="list-disc ps-4 space-y-0.5">
                     {prep.proposed_next_steps.map((q, i) => <li key={i} className="text-xs text-slate-700">{q}</li>)}
                   </ul>
                 </Section>

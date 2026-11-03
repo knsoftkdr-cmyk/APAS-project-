@@ -144,6 +144,34 @@ html[lang="ar"] .font-sans {
   font-family: var(--font-sans);
 }
 
+/* ── Right-to-left: directional icons ──
+   Arrows and chevrons that mean "next/back/open" point the other way when the
+   layout mirrors. `scale` (not `transform`) so it composes with Tailwind's
+   transform utilities - an open chevron with rotate-90 keeps its rotation. */
+[dir="rtl"] :is(
+  .lucide-chevron-right, .lucide-chevron-left,
+  .lucide-chevrons-right, .lucide-chevrons-left,
+  .lucide-arrow-right, .lucide-arrow-left,
+  .lucide-arrow-big-right, .lucide-arrow-big-left,
+  .lucide-move-right, .lucide-move-left,
+  .lucide-log-out, .lucide-log-in,
+  .lucide-send, .lucide-reply,
+  .lucide-undo, .lucide-redo, .lucide-undo-2, .lucide-redo-2,
+  .lucide-panel-left, .lucide-panel-right,
+  .lucide-panel-left-close, .lucide-panel-left-open
+) {
+  scale: -1 1;
+}
+
+/* Numbers, codes and charts read left-to-right inside Arabic text. */
+[dir="rtl"] :is(input[type="email"], input[type="tel"], input[type="url"], input[type="number"], code, pre, kbd) {
+  direction: ltr;
+  text-align: start;
+}
+[dir="rtl"] .recharts-wrapper {
+  direction: ltr;
+}
+
 @layer utilities {
   .animate-fade-in {
     animation: fadeInUp 0.6s ease-out both;

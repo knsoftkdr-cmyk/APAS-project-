@@ -144,8 +144,8 @@ const DashStatCard = ({
       tones.wash,
       tones.border
     )}>
-      <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
-      <div className={cn("absolute -bottom-10 -left-10 w-28 h-28 rounded-full blur-3xl opacity-60 transition-transform duration-500 group-hover:scale-110", tones.glow)} />
+      <div className={cn("absolute -top-10 -end-10 w-32 h-32 rounded-full blur-3xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
+      <div className={cn("absolute -bottom-10 -start-10 w-28 h-28 rounded-full blur-3xl opacity-60 transition-transform duration-500 group-hover:scale-110", tones.glow)} />
       <CardContent className="relative p-5">
         <div className="flex items-start justify-between gap-2 mb-5">
           <div className="relative">
@@ -471,9 +471,9 @@ const TeacherWorkspaceDashboard = () => {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-24 right-10 w-72 h-72 rounded-full bg-blue-300 opacity-[0.08] blur-3xl" />
-        <div className="absolute top-[500px] left-6 w-80 h-80 rounded-full bg-emerald-200 opacity-[0.07] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-60 h-60 rounded-full bg-purple-200 opacity-[0.06] blur-3xl" />
+        <div className="absolute top-24 end-10 w-72 h-72 rounded-full bg-blue-300 opacity-[0.08] blur-3xl" />
+        <div className="absolute top-[500px] start-6 w-80 h-80 rounded-full bg-emerald-200 opacity-[0.07] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-60 h-60 rounded-full bg-purple-200 opacity-[0.06] blur-3xl" />
 
         <div className="relative z-10 space-y-6 pb-10 p-4 md:p-6">
 
@@ -481,11 +481,11 @@ const TeacherWorkspaceDashboard = () => {
           <div data-tour="dashboard-hero" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500 px-5 py-6 md:px-9 md:py-10 text-white shadow-elevated">
             {/* decorative constellation, echoes the banner motif used elsewhere in the app */}
             <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
-              <div className="absolute -top-10 -right-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
-              <div className="absolute bottom-0 right-24 h-32 w-32 rounded-full bg-indigo-300/10 blur-xl" />
-              <div className="absolute top-10 right-72 h-2 w-2 rounded-full bg-white/40" />
-              <div className="absolute top-24 right-52 h-1.5 w-1.5 rounded-full bg-white/30" />
-              <div className="absolute bottom-14 right-96 h-1.5 w-1.5 rounded-full bg-white/30" />
+              <div className="absolute -top-10 -end-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
+              <div className="absolute bottom-0 end-24 h-32 w-32 rounded-full bg-indigo-300/10 blur-xl" />
+              <div className="absolute top-10 end-72 h-2 w-2 rounded-full bg-white/40" />
+              <div className="absolute top-24 end-52 h-1.5 w-1.5 rounded-full bg-white/30" />
+              <div className="absolute bottom-14 end-96 h-1.5 w-1.5 rounded-full bg-white/30" />
             </div>
 
             <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-5 md:gap-6">
@@ -841,7 +841,7 @@ const TeacherWorkspaceDashboard = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-end">
                             <p className="text-xs font-semibold text-emerald-600">
                               {formatEventDate(ev.start_date)}
                             </p>

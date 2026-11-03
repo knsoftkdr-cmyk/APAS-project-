@@ -25,7 +25,7 @@ export function ExportSelectedApplicantsButton() {
 
   return (
     <Button variant="outline" size="sm" onClick={handleExport} disabled={exporting}>
-      {exporting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
+      {exporting ? <Loader2 className="h-4 w-4 me-1.5 animate-spin" /> : <Download className="h-4 w-4 me-1.5" />}
       Export Selected
     </Button>
   );

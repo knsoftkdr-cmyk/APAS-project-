@@ -312,7 +312,7 @@ export default function TeacherAppointmentsPage() {
                 ) : slots.length === 0 ? (
                   <EmptyState text="You have no open slots in the next 14 days. Add availability first." />
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto pe-1">
   {slots.map((slot) => {
     const isSelected =
       selectedSlot?.date === slot.date &&
@@ -321,7 +321,7 @@ export default function TeacherAppointmentsPage() {
       <button
         key={`${slot.date}_${slot.startTime}`}
         onClick={() => setSelectedSlot(slot)}
-        className={`rounded-xl border-2 px-2.5 py-2.5 text-xs text-left transition-all ${
+        className={`rounded-xl border-2 px-2.5 py-2.5 text-xs text-start transition-all ${
           isSelected
             ? "border-violet-500 bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm"
             : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
@@ -413,7 +413,7 @@ export default function TeacherAppointmentsPage() {
 >
                   {submitting ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending request...
+                      <Loader2 className="h-4 w-4 me-2 animate-spin" /> Sending request...
                     </>
                   ) : (
                     `Request meeting — ${formatDateShort(selectedSlot.date)} at ${selectedSlot.startTime}`
@@ -439,8 +439,8 @@ export default function TeacherAppointmentsPage() {
       return (
         <div
           key={appt.id}
-          className={`p-4 border-l-4 ${
-            appt.status === "confirmed" ? "border-l-emerald-400" : "border-l-amber-400"
+          className={`p-4 border-s-4 ${
+            appt.status === "confirmed" ? "border-s-emerald-400" : "border-s-amber-400"
           } border border-slate-200 rounded-xl shadow-sm bg-card flex flex-col justify-between`}
         >
           <div className="mb-4">
@@ -550,8 +550,8 @@ export default function TeacherAppointmentsPage() {
               {history.map((appt) => (
                 <div
                   key={appt.id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs p-3 rounded-xl border-l-4 ${
-                    appt.status === "completed" ? "border-l-blue-300 bg-blue-50/30" : "border-l-red-300 bg-red-50/30"
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 text-xs p-3 rounded-xl border-s-4 ${
+                    appt.status === "completed" ? "border-s-blue-300 bg-blue-50/30" : "border-s-red-300 bg-red-50/30"
                   } border border-slate-100`}
                 >
                   <div className="text-slate-600">

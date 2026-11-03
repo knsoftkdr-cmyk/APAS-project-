@@ -113,7 +113,7 @@ export default function AcademicForecastPanel() {
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`h-4 w-4 mr-1 ${isFetching ? "animate-spin" : ""}`} />Refresh
+          <RefreshCw className={`h-4 w-4 me-1 ${isFetching ? "animate-spin" : ""}`} />Refresh
         </Button>
       </div>
 

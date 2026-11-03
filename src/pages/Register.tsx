@@ -101,17 +101,17 @@ const handleLogin = async (e: React.FormEvent) => {
 };
 
   const inputBase =
-    "w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0";
+    "w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0";
 
   return (
     <div className="min-h-screen bg-[#EAF1FB] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-8xl bg-white rounded-2xl shadow-xl overflow-hidden relative">
-        <div className="absolute top-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+        <div className="absolute top-6 end-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
           {Array.from({ length: 25 }).map((_, i) => (
             <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
           ))}
         </div>
-        <div className="absolute bottom-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+        <div className="absolute bottom-6 end-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
           {Array.from({ length: 25 }).map((_, i) => (
             <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />
           ))}
@@ -127,35 +127,35 @@ const handleLogin = async (e: React.FormEvent) => {
 
 {/* Decorative Circles */}
 
-<div className="absolute top-12 left-24 w-14 h-14 rounded-full border border-white/20" />
+<div className="absolute top-12 start-24 w-14 h-14 rounded-full border border-white/20" />
 
-<div className="absolute top-24 right-32 w-10 h-10 rounded-full border border-white/25" />
+<div className="absolute top-24 end-32 w-10 h-10 rounded-full border border-white/25" />
 
-<div className="absolute top-48 left-[55%] w-8 h-8 rounded-full border border-white/20" />
+<div className="absolute top-48 start-[55%] w-8 h-8 rounded-full border border-white/20" />
 
-<div className="absolute top-[35%] left-16 w-12 h-12 rounded-full border border-white/15" />
+<div className="absolute top-[35%] start-16 w-12 h-12 rounded-full border border-white/15" />
 
-<div className="absolute top-[45%] right-20 w-16 h-16 rounded-full border border-white/20" />
+<div className="absolute top-[45%] end-20 w-16 h-16 rounded-full border border-white/20" />
 
-<div className="absolute bottom-[35%] left-24 w-10 h-10 rounded-full border border-white/25" />
+<div className="absolute bottom-[35%] start-24 w-10 h-10 rounded-full border border-white/25" />
 
-<div className="absolute bottom-[28%] right-36 w-14 h-14 rounded-full border border-white/20" />
+<div className="absolute bottom-[28%] end-36 w-14 h-14 rounded-full border border-white/20" />
 
-<div className="absolute bottom-40 left-[65%] w-8 h-8 rounded-full border border-white/25" />
+<div className="absolute bottom-40 start-[65%] w-8 h-8 rounded-full border border-white/25" />
 
-<div className="absolute bottom-20 left-12 w-16 h-16 rounded-full border border-white/15" />
+<div className="absolute bottom-20 start-12 w-16 h-16 rounded-full border border-white/15" />
 
-<div className="absolute bottom-12 right-20 w-12 h-12 rounded-full border border-white/20" />
+<div className="absolute bottom-12 end-20 w-12 h-12 rounded-full border border-white/20" />
 
 
             {/* Decorative Circles */}
-            <div className="absolute top-20 left-20 w-16 h-16 rounded-full border border-white/30" />
-            <div className="absolute top-40 right-32 w-8 h-8 rounded-full border border-white/30" />
-            <div className="absolute bottom-40 right-20 w-10 h-10 rounded-full border border-white/30" />
+            <div className="absolute top-20 start-20 w-16 h-16 rounded-full border border-white/30" />
+            <div className="absolute top-40 end-32 w-8 h-8 rounded-full border border-white/30" />
+            <div className="absolute bottom-40 end-20 w-10 h-10 rounded-full border border-white/30" />
 
 {/* Wave */}
 <svg
-  className="absolute right-[-1px] top-0 h-full w-[160px]"
+  className="absolute end-[-1px] top-0 h-full w-[160px]"
   viewBox="0 0 160 1000"
   preserveAspectRatio="none"
 >
@@ -173,7 +173,7 @@ const handleLogin = async (e: React.FormEvent) => {
   />
 </svg>
 <div
-  className="absolute right-[158px] top-0 h-full w-[2px]"
+  className="absolute end-[158px] top-0 h-full w-[2px]"
   style={{
     background:
       "linear-gradient(to bottom, transparent, rgba(0,0,0,0.08), transparent)",
@@ -200,7 +200,7 @@ const handleLogin = async (e: React.FormEvent) => {
                 </p>
               </div>
 
-              <div className="absolute bottom-[-20px] left-0 w-full flex justify-center">
+              <div className="absolute bottom-[-20px] start-0 w-full flex justify-center">
                 <img
                   src={registerSide}
                   alt="Teacher and Students"
@@ -229,7 +229,7 @@ const handleLogin = async (e: React.FormEvent) => {
 
 
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                    <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                       {usesEmail ? <Mail className="h-4 w-4 text-[#2C3E50]/60" /> : <IdCard className="h-4 w-4 text-[#2C3E50]/60" />}
                     </div>
                     <input
@@ -243,7 +243,7 @@ const handleLogin = async (e: React.FormEvent) => {
                   </div>
 
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                    <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                       <Lock className="h-4 w-4 text-[#2C3E50]/60" />
                     </div>
                     <input
@@ -251,13 +251,13 @@ const handleLogin = async (e: React.FormEvent) => {
                       placeholder="Password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={cn(inputBase, "pr-11")}
+                      className={cn(inputBase, "pe-11")}
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword((v) => !v)}
-                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+                      className="absolute inset-y-0 end-0 flex items-center pe-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
                       tabIndex={-1}
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}

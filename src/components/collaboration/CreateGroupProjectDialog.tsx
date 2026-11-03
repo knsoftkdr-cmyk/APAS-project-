@@ -113,7 +113,7 @@ export function CreateGroupProjectDialog({ onCreated }: CreateGroupProjectDialog
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm">
-          <Plus className="mr-2 h-4 w-4" />
+          <Plus className="me-2 h-4 w-4" />
           New Group Project
         </Button>
       </DialogTrigger>
@@ -234,7 +234,7 @@ export function CreateGroupProjectDialog({ onCreated }: CreateGroupProjectDialog
               disabled={submitting}
               className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
             >
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               Create Project
             </Button>
           </DialogFooter>

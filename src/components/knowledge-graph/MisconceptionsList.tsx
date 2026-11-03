@@ -25,7 +25,7 @@ export function MisconceptionsList({ misconceptions }: { misconceptions: Misconc
               {m.why && <p className="text-xs opacity-80">Why it happens: {m.why}</p>}
               {m.correction && <p className="text-xs opacity-80">Correction: {m.correction}</p>}
             </div>
-            <Badge variant="outline" className="ml-auto shrink-0 capitalize text-[10px]">{m.severity}</Badge>
+            <Badge variant="outline" className="ms-auto shrink-0 capitalize text-[10px]">{m.severity}</Badge>
           </div>
         </li>
       ))}

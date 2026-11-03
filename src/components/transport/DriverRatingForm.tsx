@@ -112,7 +112,7 @@ export function DriverRatingForm({ schoolId, parentId, driverId, studentId, rout
         rows={2}
       />
       <Button onClick={handleSubmit} disabled={rating === 0 || submitting} size="sm">
-        {submitting && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+        {submitting && <Loader2 className="h-3.5 w-3.5 me-1.5 animate-spin" />}
         Submit Rating
       </Button>
     </div>

@@ -28,7 +28,7 @@ export function GettingStartedBanner() {
             <div className="mt-3 flex gap-2">
               <Button size="sm" asChild>
                 <Link to="/diagnostic">
-                  Start Assessment <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  Start Assessment <ArrowRight className="h-3.5 w-3.5 ms-1" />
                 </Link>
               </Button>
             </div>

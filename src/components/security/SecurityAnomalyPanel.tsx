@@ -113,7 +113,7 @@ export function SecurityAnomalyPanel({ schoolId }: { schoolId?: string }) {
           ))}
         </div>
         <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
-          <RefreshCw className={`h-4 w-4 mr-1.5 ${isFetching ? "animate-spin" : ""}`} />Scan now
+          <RefreshCw className={`h-4 w-4 me-1.5 ${isFetching ? "animate-spin" : ""}`} />Scan now
         </Button>
       </div>
 
@@ -131,7 +131,7 @@ export function SecurityAnomalyPanel({ schoolId }: { schoolId?: string }) {
                   <Badge className={SEVERITY_STYLE[a.severity]}>{a.severity}</Badge>
                   <Badge variant="outline">{RULE_LABEL[a.rule] ?? a.rule}</Badge>
                   {a.status !== "open" && <Badge variant="secondary" className="capitalize">{a.status.replace("_", " ")}</Badge>}
-                  <span className="ml-auto text-xs text-muted-foreground">{format(new Date(a.detected_at), "MMM d, h:mm a")}</span>
+                  <span className="ms-auto text-xs text-muted-foreground">{format(new Date(a.detected_at), "MMM d, h:mm a")}</span>
                 </div>
                 <p className="font-medium flex items-center gap-1.5"><ShieldAlert className="h-4 w-4 text-orange-500" />{a.title}</p>
                 <p className="text-sm">{a.detail}</p>
@@ -142,7 +142,7 @@ export function SecurityAnomalyPanel({ schoolId }: { schoolId?: string }) {
                 {a.status === "open" ? (
                   <div className="flex flex-wrap gap-2 pt-1">
                     <Button size="sm" variant="outline" disabled={review.isPending} onClick={() => review.mutate({ id: a.id, next: "acknowledged" })}>Acknowledge</Button>
-                    <Button size="sm" disabled={review.isPending} onClick={() => review.mutate({ id: a.id, next: "resolved" })}><CheckCircle2 className="h-4 w-4 mr-1" />Resolve</Button>
+                    <Button size="sm" disabled={review.isPending} onClick={() => review.mutate({ id: a.id, next: "resolved" })}><CheckCircle2 className="h-4 w-4 me-1" />Resolve</Button>
                     <Button size="sm" variant="ghost" disabled={review.isPending} onClick={() => review.mutate({ id: a.id, next: "false_positive" })}>False positive</Button>
                     {a.user_id && (
                       <AlertDialog>

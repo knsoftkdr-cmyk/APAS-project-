@@ -450,7 +450,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 hidden h-screen flex-col transition-all duration-300 md:flex",
+          "fixed start-0 top-0 z-40 hidden h-screen flex-col transition-all duration-300 md:flex",
           collapsed ? "w-[var(--sidebar-collapsed)]" : "w-[var(--sidebar-width)]"
         )}
       >
@@ -499,11 +499,11 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                         : "gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium",
                       isActive && !isSubActive
                         ? cn("bg-sidebar-primary text-sidebar-primary-foreground shadow-md", !collapsed && "scale-[1.02]")
-                        : cn("text-sidebar-foreground hover:bg-sidebar-hover", !collapsed && "hover:translate-x-1")
+                        : cn("text-sidebar-foreground hover:bg-sidebar-hover", !collapsed && "hover:translate-x-1 rtl:hover:-translate-x-1")
                     )}
                   >
                     {isActive && !isSubActive && !collapsed && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-r-full animate-[scale-in_0.2s_ease-out]" />
+                      <span className="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-e-full animate-[scale-in_0.2s_ease-out]" />
                     )}
                     <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110 text-sidebar-primary-foreground" : "text-sidebar-icon group-hover:scale-110")} />
                     {!collapsed && (
@@ -514,10 +514,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                     <NavLink
                       to={item.subItem.path}
                       className={cn(
-                        "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                        "group relative flex items-center gap-2 rounded-xl py-2 ps-10 pe-3 text-xs font-medium transition-all duration-300 ease-out",
                         isSubActive
                           ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:translate-x-1"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:translate-x-1 rtl:hover:-translate-x-1"
                       )}
                     >
                       <item.subItem.icon className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-300", isSubActive ? "scale-110" : "group-hover:scale-110")} />
@@ -545,7 +545,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                       {(profile.full_name || "U").charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sidebar-accent" />
+                  <span className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sidebar-accent" />
                 </div>
                 {!collapsed && (
                   <div className="overflow-hidden">
@@ -584,8 +584,8 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen w-[var(--sidebar-width)] flex-col transition-transform duration-300 md:hidden",
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+          "fixed start-0 top-0 z-50 flex h-screen w-[var(--sidebar-width)] flex-col transition-transform duration-300 md:hidden",
+          mobileOpen ? "translate-x-0" : "-translate-x-full rtl:translate-x-full"
         )}
       >
         <SidebarWaveBackground />
@@ -612,11 +612,11 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                       "group relative flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out",
                       isActive && !isSubActive
                         ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-md scale-[1.02]"
-                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:translate-x-1"
+                        : "text-sidebar-foreground hover:bg-sidebar-hover hover:translate-x-1 rtl:hover:-translate-x-1"
                     )}
                   >
                     {isActive && !isSubActive && (
-                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-r-full" />
+                      <span className="absolute start-0 top-1/2 -translate-y-1/2 w-1 h-3/5 bg-sidebar-accent rounded-e-full" />
                     )}
                     <item.icon className={cn("h-5 w-5 shrink-0 transition-transform duration-300", isActive && !isSubActive ? "scale-110 text-sidebar-primary-foreground" : "text-sidebar-icon group-hover:scale-110")} />
                     <span>{getItemLabel(item)}</span>
@@ -626,10 +626,10 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                       to={item.subItem.path}
                       onClick={onMobileClose}
                       className={cn(
-                        "group relative flex items-center gap-2 rounded-xl py-2 pl-10 pr-3 text-xs font-medium transition-all duration-300 ease-out",
+                        "group relative flex items-center gap-2 rounded-xl py-2 ps-10 pe-3 text-xs font-medium transition-all duration-300 ease-out",
                         isSubActive
                           ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
-                          : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:translate-x-1"
+                          : "text-sidebar-foreground/70 hover:bg-sidebar-hover hover:translate-x-1 rtl:hover:-translate-x-1"
                       )}
                     >
                       <item.subItem.icon className="h-3.5 w-3.5 shrink-0" />
@@ -653,7 +653,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
                       {(profile.full_name || "U").charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sidebar-accent" />
+                  <span className="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-sidebar-accent" />
                 </div>
                 <div className="overflow-hidden">
                   <p className="truncate text-sm font-medium text-sidebar-foreground">
@@ -678,7 +678,7 @@ export function AppSidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: A
       </aside>
 
       {profile?.role !== "parent" && !mobileOpen && (
-        <nav className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
+        <nav className="fixed bottom-0 start-0 end-0 z-40 flex items-center justify-around border-t border-border bg-card py-1.5 md:hidden">
           {mobileNavItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (

@@ -172,22 +172,22 @@ function ResultCard({ r, showAllStudents }: { r: ScenarioResult; showAllStudents
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="text-left text-muted-foreground border-b">
-                  <th className="py-1 pr-2 font-normal">Student</th>
-                  <th className="py-1 px-2 font-normal text-right">Now</th>
-                  <th className="py-1 px-2 font-normal text-right">Projected</th>
-                  <th className="py-1 px-2 font-normal text-right">Change</th>
-                  <th className="py-1 pl-2 font-normal">Notes</th>
+                <tr className="text-start text-muted-foreground border-b">
+                  <th className="py-1 pe-2 font-normal">Student</th>
+                  <th className="py-1 px-2 font-normal text-end">Now</th>
+                  <th className="py-1 px-2 font-normal text-end">Projected</th>
+                  <th className="py-1 px-2 font-normal text-end">Change</th>
+                  <th className="py-1 ps-2 font-normal">Notes</th>
                 </tr>
               </thead>
               <tbody>
                 {shown.map((s) => (
                   <tr key={s.student_id} className="border-b last:border-0">
-                    <td className="py-1 pr-2">{s.name}</td>
-                    <td className="py-1 px-2 text-right tabular-nums">{s.before}</td>
-                    <td className="py-1 px-2 text-right tabular-nums">{s.after}</td>
-                    <td className={`py-1 px-2 text-right tabular-nums ${s.delta < 0 ? "text-red-600" : s.delta > 0 ? "text-green-600" : ""}`}>{signed(s.delta)}</td>
-                    <td className="py-1 pl-2 text-muted-foreground">{[s.targeted ? "remedial" : "", s.baseline_source === "other_subjects" ? "estimated baseline" : ""].filter(Boolean).join(", ")}</td>
+                    <td className="py-1 pe-2">{s.name}</td>
+                    <td className="py-1 px-2 text-end tabular-nums">{s.before}</td>
+                    <td className="py-1 px-2 text-end tabular-nums">{s.after}</td>
+                    <td className={`py-1 px-2 text-end tabular-nums ${s.delta < 0 ? "text-red-600" : s.delta > 0 ? "text-green-600" : ""}`}>{signed(s.delta)}</td>
+                    <td className="py-1 ps-2 text-muted-foreground">{[s.targeted ? "remedial" : "", s.baseline_source === "other_subjects" ? "estimated baseline" : ""].filter(Boolean).join(", ")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -197,7 +197,7 @@ function ResultCard({ r, showAllStudents }: { r: ScenarioResult; showAllStudents
       )}
 
       {r.assumptions && r.assumptions.length > 0 && (
-        <ul className="text-[11px] text-muted-foreground list-disc pl-4 space-y-0.5">
+        <ul className="text-[11px] text-muted-foreground list-disc ps-4 space-y-0.5">
           {r.assumptions.map((a, i) => <li key={i}>{a}</li>)}
         </ul>
       )}
@@ -274,7 +274,7 @@ export default function AcademicWhatIf() {
   return (
     <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm p-0">
       <div className="p-5 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-blue-600">
-        <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+        <div className="absolute -end-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
         <div className="relative flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
             <GraduationCap className="h-4.5 w-4.5 text-white" />
@@ -383,11 +383,11 @@ export default function AcademicWhatIf() {
             {ok.length > 1 && (
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full text-xs">
-                  <thead className="bg-muted/50 text-left">
+                  <thead className="bg-muted/50 text-start">
                     <tr>
                       <th className="p-2 font-medium">Option</th><th className="p-2 font-medium">Change</th>
-                      <th className="p-2 font-medium text-right">Avg gain</th><th className="p-2 font-medium text-right">High-risk after</th>
-                      <th className="p-2 font-medium text-right">Teacher load</th><th className="p-2 font-medium">Fits timetable?</th>
+                      <th className="p-2 font-medium text-end">Avg gain</th><th className="p-2 font-medium text-end">High-risk after</th>
+                      <th className="p-2 font-medium text-end">Teacher load</th><th className="p-2 font-medium">Fits timetable?</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -395,9 +395,9 @@ export default function AcademicWhatIf() {
                       <tr key={r.label} className={`border-t ${best === r ? "bg-green-50" : ""}`}>
                         <td className="p-2 font-medium">{r.label}{best === r ? " ★" : ""}</td>
                         <td className="p-2">{r.scenario ? describe(r.scenario) : ""}</td>
-                        <td className="p-2 text-right tabular-nums">{signed(r.projected!.avg_gain)}</td>
-                        <td className="p-2 text-right tabular-nums">{r.risk!.after.high} (was {r.risk!.before.high})</td>
-                        <td className="p-2 text-right tabular-nums">{r.teacher_load!.after}/wk</td>
+                        <td className="p-2 text-end tabular-nums">{signed(r.projected!.avg_gain)}</td>
+                        <td className="p-2 text-end tabular-nums">{r.risk!.after.high} (was {r.risk!.before.high})</td>
+                        <td className="p-2 text-end tabular-nums">{r.teacher_load!.after}/wk</td>
                         <td className="p-2">{r.feasibility?.feasible === null ? "Unknown" : r.feasibility?.feasible ? "Yes" : "Not fully"}</td>
                       </tr>
                     ))}
@@ -411,7 +411,7 @@ export default function AcademicWhatIf() {
             <details className="rounded-lg border bg-muted/30 p-3 text-xs">
               <summary className="cursor-pointer font-medium">How this estimate works</summary>
               <p className="mt-2 text-muted-foreground">{response.model.disclaimer}</p>
-              <ul className="mt-2 list-disc pl-4 space-y-1 text-muted-foreground">
+              <ul className="mt-2 list-disc ps-4 space-y-1 text-muted-foreground">
                 {response.model.assumptions.map((a, i) => <li key={i}>{a}</li>)}
               </ul>
             </details>

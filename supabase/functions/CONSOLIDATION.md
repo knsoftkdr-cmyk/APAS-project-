@@ -38,6 +38,7 @@ deployed ("anchors"). No new function names exist and nothing new needs deployin
 | score-question-quality | generate-item-bank | action: `score_quality` |
 | enrichment-generator (never standalone) | generate-item-bank | action: `enrichment` (needs migration 20261009000000) |
 | practice-hint (never standalone) | cat-session | action: `practice_hint` (needs migration 20261010000000) |
+| ui-translate (never standalone) | log-audit | mode: `ui_translate` (admin only; used by tools/translate-ui.mjs, needs secret CLOUD_TRANSLATION_API) |
 | calibrate-open-ended-items | calibrate-irt | item_type: `open_ended` |
 | calibrate-open-ended-items-cron | calibrate-irt-cron | job: `open_ended` (cron job repointed by migration 20261007000000) |
 | peer-group-identification | get-class-mastery | mode: `peer_groups` |

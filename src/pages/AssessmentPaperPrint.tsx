@@ -119,7 +119,7 @@ export default function AssessmentPaperPrint() {
             <Switch id="answer-key-toggle" checked={includeKey} onCheckedChange={setIncludeKey} />
           </div>
           <Button onClick={() => window.print()} disabled={!data}>
-            <Printer className="h-4 w-4 mr-2" /> Print / Save as PDF
+            <Printer className="h-4 w-4 me-2" /> Print / Save as PDF
           </Button>
         </div>
 
@@ -172,11 +172,11 @@ function QuestionBlock({ number, item, showKey }: { number: number; item: PaperI
       </div>
 
       {item.context_passage && (
-        <div className="ml-5 p-2 border-l-2 border-muted bg-muted/30 italic text-muted-foreground">{item.context_passage}</div>
+        <div className="ms-5 p-2 border-s-2 border-muted bg-muted/30 italic text-muted-foreground">{item.context_passage}</div>
       )}
 
       {item.question_type === "mcq" && item.options && (
-        <div className="ml-5 grid grid-cols-2 gap-1">
+        <div className="ms-5 grid grid-cols-2 gap-1">
           {OPTION_ORDER.map((letter) => (
             <span key={letter} className={showKey && item.correct_option === letter ? "font-semibold text-emerald-700" : ""}>
               ({letter}) {item.options?.[letter]}
@@ -187,7 +187,7 @@ function QuestionBlock({ number, item, showKey }: { number: number; item: PaperI
       )}
 
       {!!item.sub_questions?.length && (
-        <ol className="ml-5 list-[lower-alpha] space-y-1">
+        <ol className="ms-5 list-[lower-alpha] space-y-1">
           {item.sub_questions.map((sq) => (
             <li key={sq.id}>
               {sq.text} <span className="text-muted-foreground">[{sq.max_marks}m]</span>
@@ -196,16 +196,16 @@ function QuestionBlock({ number, item, showKey }: { number: number; item: PaperI
         </ol>
       )}
 
-      {showKey && item.explanation && <p className="ml-5 text-muted-foreground">Explanation: {item.explanation}</p>}
+      {showKey && item.explanation && <p className="ms-5 text-muted-foreground">Explanation: {item.explanation}</p>}
 
       {showKey && item.model_answer && (
-        <div className="ml-5 p-2 border border-dashed rounded text-muted-foreground">
+        <div className="ms-5 p-2 border border-dashed rounded text-muted-foreground">
           <span className="font-medium text-foreground">Model answer: </span>
           {item.model_answer}
         </div>
       )}
       {showKey && !!item.rubric?.length && (
-        <ul className="ml-5 list-disc text-muted-foreground">
+        <ul className="ms-5 list-disc text-muted-foreground">
           {item.rubric.map((c, i) => (
             <li key={i}>
               {c.criterion} {c.description ? `- ${c.description}` : ""} [{c.max_marks}m]

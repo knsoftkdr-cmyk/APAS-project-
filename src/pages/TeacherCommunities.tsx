@@ -279,8 +279,8 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
   return (
     <div className="container mx-auto px-4 py-6 space-y-4 max-w-5xl">
   <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-    <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-    <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+    <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+    <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
     <div className="relative flex items-center gap-3 md:gap-4">
       <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
         <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -336,7 +336,7 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
         className="border-slate-200 focus-visible:ring-indigo-400"
       />
     </div>
-    <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-12">
+    <div className="flex items-center gap-2 flex-wrap ps-0 sm:ps-12">
       <Select value={newPostType} onValueChange={(v: any) => { setNewPostType(v); setNewPostValue(""); }}>
         <SelectTrigger className="w-full xs:w-36 sm:w-36 border-slate-200"><SelectValue /></SelectTrigger>
         <SelectContent>
@@ -355,11 +355,11 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
       )}
       <Button
         size="sm"
-        className="ml-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
+        className="ms-auto bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
         onClick={handleCreatePost}
         disabled={posting}
       >
-        <Send className="h-3.5 w-3.5 mr-1.5" /> {posting ? "Posting..." : "Post"}
+        <Send className="h-3.5 w-3.5 me-1.5" /> {posting ? "Posting..." : "Post"}
       </Button>
     </div>
   </CardContent>
@@ -463,7 +463,7 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
                 </div>
               </div>
             ))}
-            <div className="flex gap-2 pl-8">
+            <div className="flex gap-2 ps-8">
               <Input
                 placeholder="Write a reply..."
                 value={commentDrafts[post.id] || ""}
@@ -489,7 +489,7 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
     className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white"
     onClick={() => setUploadOpen(true)}
   >
-    <Upload className="h-4 w-4 mr-1.5" /> Share a Resource
+    <Upload className="h-4 w-4 me-1.5" /> Share a Resource
   </Button>
 ) : (
   <Card className="overflow-hidden border-indigo-100 shadow-sm">
@@ -517,11 +517,11 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
                   {uploadFile ? (
   <div className="flex items-center gap-2 text-sm bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2">
     <FileText className="h-4 w-4 text-indigo-600" /> {uploadFile.name}
-    <button onClick={() => setUploadFile(null)} className="ml-auto"><X className="h-3.5 w-3.5" /></button>
+    <button onClick={() => setUploadFile(null)} className="ms-auto"><X className="h-3.5 w-3.5" /></button>
   </div>
 ) : (
   <Button variant="outline" size="sm" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => fileInputRef.current?.click()}>
-    <Upload className="h-3.5 w-3.5 mr-1.5" /> Choose File
+    <Upload className="h-3.5 w-3.5 me-1.5" /> Choose File
   </Button>
 )}
 <div className="flex gap-2 flex-wrap">
@@ -596,10 +596,10 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
           {r.grade && <Badge className="text-[10px] bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{r.grade}</Badge>}
         </div>
       </div>
-      {r.description && <p className="text-xs text-muted-foreground mb-2 ml-11">{r.description}</p>}
-      <p className="text-[10px] text-muted-foreground mb-2 ml-11">Uploaded by {r.uploader_name}</p>
+      {r.description && <p className="text-xs text-muted-foreground mb-2 ms-11">{r.description}</p>}
+      <p className="text-[10px] text-muted-foreground mb-2 ms-11">Uploaded by {r.uploader_name}</p>
 
-      <div className="flex items-center gap-3 mb-3 ml-11 flex-wrap">
+      <div className="flex items-center gap-3 mb-3 ms-11 flex-wrap">
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((n) => (
       <button key={n} onClick={() => rateResource(r, n)} title={r.my_rating ? `Your rating: ${r.my_rating}` : "Click to rate"}>
@@ -624,10 +624,10 @@ const [resourceScope, setResourceScope] = useState<"all" | "mine">("all");
       <Button
         size="sm"
         variant="outline"
-        className={`ml-11 ${isMine ? "border-indigo-200 text-indigo-700 hover:bg-indigo-50" : "border-amber-200 text-amber-700 hover:bg-amber-50"}`}
+        className={`ms-11 ${isMine ? "border-indigo-200 text-indigo-700 hover:bg-indigo-50" : "border-amber-200 text-amber-700 hover:bg-amber-50"}`}
         onClick={() => handleDownload(r)}
       >
-        <Download className="h-3.5 w-3.5 mr-1.5" /> Download
+        <Download className="h-3.5 w-3.5 me-1.5" /> Download
       </Button>
     </CardContent>
   </Card>

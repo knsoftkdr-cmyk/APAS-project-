@@ -245,7 +245,7 @@ export const AdminLessonPlansView = () => {
                     <span className="flex items-center gap-2">
                       <User className="h-3.5 w-3.5 text-muted-foreground" />
                       {t.full_name || "Unnamed"}
-                      <Badge variant="secondary" className="ml-1">
+                      <Badge variant="secondary" className="ms-1">
                         {t.lesson_count} plan{t.lesson_count === 1 ? "" : "s"}
                       </Badge>
                     </span>
@@ -257,12 +257,12 @@ export const AdminLessonPlansView = () => {
           <div className="space-y-1.5">
             <label className="text-sm font-medium">Search</label>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by title, subject, class..."
-                className="pl-9"
+                className="ps-9"
                 disabled={!selectedTeacher}
               />
             </div>
@@ -291,7 +291,7 @@ export const AdminLessonPlansView = () => {
               <button
                 key={l.id}
                 onClick={() => setOpenLesson(l)}
-                className="group rounded-lg border bg-card p-4 text-left transition hover:border-primary/50 hover:shadow-md"
+                className="group rounded-lg border bg-card p-4 text-start transition hover:border-primary/50 hover:shadow-md"
               >
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <h4 className="font-semibold text-foreground group-hover:text-primary line-clamp-2">{l.title}</h4>
@@ -299,9 +299,9 @@ export const AdminLessonPlansView = () => {
                 </div>
                 <div className="flex flex-wrap gap-1.5 text-xs">
                   {l.subject && <Badge variant="outline">{l.subject}</Badge>}
-                  {l.class_level && <Badge variant="outline"><GraduationCap className="mr-1 h-3 w-3" />Class {l.class_level}{l.section ? `-${l.section}` : ""}</Badge>}
+                  {l.class_level && <Badge variant="outline"><GraduationCap className="me-1 h-3 w-3" />Class {l.class_level}{l.section ? `-${l.section}` : ""}</Badge>}
                   {l.vark_target && <Badge variant="outline">{l.vark_target}</Badge>}
-                  {l.periods_count && l.periods_count > 1 && <Badge variant="outline"><Clock className="mr-1 h-3 w-3" />{l.periods_count} periods</Badge>}
+                  {l.periods_count && l.periods_count > 1 && <Badge variant="outline"><Clock className="me-1 h-3 w-3" />{l.periods_count} periods</Badge>}
                 </div>
                 <p className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="h-3 w-3" />
@@ -328,7 +328,7 @@ export const AdminLessonPlansView = () => {
               {openLesson?.periods_count && <Badge variant="outline">{openLesson.periods_count} periods</Badge>}
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="flex-1 min-h-0 pr-4 -mr-4">
+          <ScrollArea className="flex-1 min-h-0 pe-4 -me-4">
             <div className="space-y-4 pb-4">
               <div className="rounded-md bg-muted/40 p-3 text-xs text-muted-foreground">
                 <span className="font-medium">By:</span> {teacherName}
@@ -379,7 +379,7 @@ export const AdminLessonPlansView = () => {
       size="sm"
       onClick={() => openLesson && downloadLessonPdf(openLesson, teacherName)}
     >
-      <Download className="mr-1.5 h-4 w-4" />
+      <Download className="me-1.5 h-4 w-4" />
       Download
     </Button>
 
@@ -399,7 +399,7 @@ export const AdminLessonPlansView = () => {
       size="sm"
       onClick={() => openLesson && downloadMarkdown(openLesson, teacherName)}
     >
-      <FileText className="mr-1.5 h-4 w-4" />
+      <FileText className="me-1.5 h-4 w-4" />
       Markdown
     </Button>
 
@@ -408,7 +408,7 @@ export const AdminLessonPlansView = () => {
       size="sm"
       onClick={() => openLesson && downloadHtml(openLesson, teacherName)}
     >
-      <Download className="mr-1.5 h-4 w-4" />
+      <Download className="me-1.5 h-4 w-4" />
       HTML
     </Button>
 
@@ -417,7 +417,7 @@ export const AdminLessonPlansView = () => {
       size="sm"
       onClick={() => openLesson && printLesson(openLesson, teacherName)}
     >
-      <Printer className="mr-1.5 h-4 w-4" />
+      <Printer className="me-1.5 h-4 w-4" />
       Print / PDF
     </Button>
 

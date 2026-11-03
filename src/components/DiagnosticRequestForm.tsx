@@ -222,7 +222,7 @@ export const DiagnosticRequestForm = () => {
             <Textarea value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Describe why this diagnostic is needed, target learning outcomes, etc." rows={3} />
           </div>
           <Button onClick={handleSubmit} disabled={submitting} className="w-full md:w-auto">
-            {submitting ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4 mr-1" />}
+            {submitting ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4 me-1" />}
             Submit Request
           </Button>
         </CardContent>

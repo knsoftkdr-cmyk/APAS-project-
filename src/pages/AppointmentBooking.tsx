@@ -315,7 +315,7 @@ export default function AppointmentBooking() {
                   ) : slots.length === 0 ? (
                     <EmptyState text="No open slots in the next 14 days for this teacher." />
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto pr-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-64 overflow-y-auto pe-1">
                       {slots.map((slot) => {
                         const isSelected =
                           selectedSlot?.date === slot.date &&
@@ -324,7 +324,7 @@ export default function AppointmentBooking() {
                           <button
                             key={`${slot.date}_${slot.startTime}`}
                             onClick={() => setSelectedSlot(slot)}
-                            className={`rounded-xl border-2 px-2.5 py-2.5 text-xs text-left transition-all ${
+                            className={`rounded-xl border-2 px-2.5 py-2.5 text-xs text-start transition-all ${
                               isSelected
                                 ? "border-violet-500 bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm"
                                 : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/50"
@@ -421,7 +421,7 @@ export default function AppointmentBooking() {
 >
                     {submitting ? (
                       <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Requesting...
+                        <Loader2 className="h-4 w-4 me-2 animate-spin" /> Requesting...
                       </>
                     ) : (
                       `Request appointment — ${formatDateShort(selectedSlot.date)} at ${selectedSlot.startTime}`
@@ -510,16 +510,16 @@ function AppointmentCard({
   const isDeclining = decliningId === appt.id;
 
 const statusBorder: Record<string, string> = {
-  pending: "border-l-amber-400",
-  confirmed: "border-l-emerald-400",
-  rejected: "border-l-red-400",
-  cancelled: "border-l-slate-300",
-  completed: "border-l-blue-400",
-  no_show: "border-l-red-400",
+  pending: "border-s-amber-400",
+  confirmed: "border-s-emerald-400",
+  rejected: "border-s-red-400",
+  cancelled: "border-s-slate-300",
+  completed: "border-s-blue-400",
+  no_show: "border-s-red-400",
 };
 
 return (
-  <div className={`rounded-xl border-l-4 ${statusBorder[appt.status] || "border-l-slate-300"} border border-slate-200 bg-card shadow-sm p-4 flex flex-col gap-3`}>
+  <div className={`rounded-xl border-s-4 ${statusBorder[appt.status] || "border-s-slate-300"} border border-slate-200 bg-card shadow-sm p-4 flex flex-col gap-3`}>
     <div className="flex items-start justify-between gap-4">
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
@@ -566,7 +566,7 @@ return (
             onClick={() => onCancel(appt.id)}
             className="text-red-600 hover:text-red-700 hover:bg-red-50 shrink-0"
           >
-            <X className="h-4 w-4 mr-1" /> Cancel
+            <X className="h-4 w-4 me-1" /> Cancel
           </Button>
         )}
       </div>

@@ -118,7 +118,7 @@ export const DiagnosticAssignPanel = () => {
             <CardTitle className="flex items-center gap-2">
               <Send className="h-5 w-5" />
               Ready to Assign
-              <Badge variant="default" className="ml-2">{approvedRequests.length}</Badge>
+              <Badge variant="default" className="ms-2">{approvedRequests.length}</Badge>
             </CardTitle>
             <CardDescription>
               These requests have been approved by the Master User. Generate and assign diagnostic questions for your students.
@@ -250,12 +250,12 @@ export const DiagnosticAssignPanel = () => {
               {(previewRequest.questions as any[]).map((q: any, idx: number) => (
                 <div key={q.id || idx} className="border border-border rounded-lg p-4">
                   <p className="font-medium text-sm text-foreground mb-2">
-                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold mr-2">
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary text-primary-foreground text-xs font-bold me-2">
                       {idx + 1}
                     </span>
                     {q.question}
                   </p>
-                  <div className="grid grid-cols-2 gap-2 ml-8">
+                  <div className="grid grid-cols-2 gap-2 ms-8">
                     {Object.entries(q.options || {}).map(([key, val]) => (
                       <div
                         key={key}
@@ -265,7 +265,7 @@ export const DiagnosticAssignPanel = () => {
                             : "border-border text-muted-foreground"
                         }`}
                       >
-                        <span className="font-semibold mr-1">{key}.</span> {val as string}
+                        <span className="font-semibold me-1">{key}.</span> {val as string}
                       </div>
                     ))}
                   </div>

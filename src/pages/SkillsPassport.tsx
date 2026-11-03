@@ -491,7 +491,7 @@ export default function SkillsPassport() {
                             </p>
                           )}
                         </div>
-                        <div className="text-right shrink-0">
+                        <div className="text-end shrink-0">
                           {latest ? (
                             <>
                               <Badge

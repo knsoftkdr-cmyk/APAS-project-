@@ -194,7 +194,7 @@ return (
   return (
     <div
       key={row.id}
-      className="flex items-center justify-between gap-3 rounded-xl border-l-4 border-l-blue-400 border border-slate-200 bg-blue-50/20 p-3 group"
+      className="flex items-center justify-between gap-3 rounded-xl border-s-4 border-s-blue-400 border border-slate-200 bg-blue-50/20 p-3 group"
     >
       <div className="min-w-0">
         <p className="text-sm font-medium truncate text-slate-800">{primary}</p>

@@ -216,7 +216,7 @@ export const AssessmentReport = forwardRef<HTMLDivElement, AssessmentReportProps
               return (
                 <div
                   key={`${a.activity_index}-${i}`}
-                  className={`inline-flex items-center gap-1.5 rounded-full ${bg} text-white pl-3 pr-1 py-1 text-[11px] font-semibold leading-none break-inside-avoid`}
+                  className={`inline-flex items-center gap-1.5 rounded-full ${bg} text-white ps-3 pe-1 py-1 text-[11px] font-semibold leading-none break-inside-avoid`}
                 >
                   <span className="leading-none">Q{i + 1}</span>
                   <span className="text-[10px] leading-none">{a.student_score}</span>
@@ -245,7 +245,7 @@ export const AssessmentReport = forwardRef<HTMLDivElement, AssessmentReportProps
                   <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
                     <div className={`h-full ${style.bar}`} style={{ width: `${Math.max(4, t.proficiency_percent)}%` }} />
                   </div>
-                  <div className="text-[10px] text-slate-500 mt-1.5 text-right leading-none">{t.proficiency_percent}% proficiency</div>
+                  <div className="text-[10px] text-slate-500 mt-1.5 text-end leading-none">{t.proficiency_percent}% proficiency</div>
                 </div>
               );
             })}
@@ -269,7 +269,7 @@ export const AssessmentReport = forwardRef<HTMLDivElement, AssessmentReportProps
             </colgroup>
             <thead>
               <tr className="bg-blue-900 text-white">
-                <th className="text-left align-middle px-2 py-2 font-semibold leading-tight">Topic</th>
+                <th className="text-start align-middle px-2 py-2 font-semibold leading-tight">Topic</th>
                 {QUESTION_TYPES.map((qt) => (
                   <th key={qt} className="align-middle px-1 py-2 font-semibold uppercase text-[8px] leading-tight">
                     {QUESTION_TYPE_LABELS[qt]}
@@ -316,7 +316,7 @@ export const AssessmentReport = forwardRef<HTMLDivElement, AssessmentReportProps
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 leading-none">Study Plan</div>
           <div className="space-y-2.5">
             {sortedStudyPlan.map((item, i) => (
-              <div key={i} className="flex gap-3 border-l-4 border-emerald-600 rounded-r-lg p-3 bg-emerald-50/50 break-inside-avoid">
+              <div key={i} className="flex gap-3 border-s-4 border-emerald-600 rounded-e-lg p-3 bg-emerald-50/50 break-inside-avoid">
                 <div className="w-6 h-6 rounded-full bg-blue-900 text-white text-xs font-bold flex items-center justify-center shrink-0 leading-none">
                   {item.priority}
                 </div>

@@ -218,7 +218,7 @@ export function IncidentManagementTab({ schoolId }: { schoolId?: string }) {
                     key={inc.id}
                     type="button"
                     onClick={() => openDetail(inc)}
-                    className="w-full flex items-center justify-between rounded-lg border p-3 flex-wrap gap-2 text-left hover:bg-muted/40 transition-colors"
+                    className="w-full flex items-center justify-between rounded-lg border p-3 flex-wrap gap-2 text-start hover:bg-muted/40 transition-colors"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="rounded-full bg-muted p-2 shrink-0">
@@ -228,7 +228,7 @@ export function IncidentManagementTab({ schoolId }: { schoolId?: string }) {
                         <p className="text-sm font-medium truncate">
                           {TYPE_LABELS[inc.incident_type]}
                           {inc.student_name && (
-                            <span className="text-xs font-normal text-muted-foreground ml-1.5">
+                            <span className="text-xs font-normal text-muted-foreground ms-1.5">
                               — {inc.student_name}
                             </span>
                           )}
@@ -309,13 +309,13 @@ export function IncidentManagementTab({ schoolId }: { schoolId?: string }) {
                 <div className="flex justify-end gap-2 pt-2 border-t">
                   {detailIncident.status !== "acknowledged" && detailIncident.status !== "resolved" && (
                     <Button size="sm" variant="outline" onClick={() => updateStatus("acknowledged")} disabled={updatingStatus}>
-                      {updatingStatus && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                      {updatingStatus && <Loader2 className="h-3.5 w-3.5 me-1.5 animate-spin" />}
                       Acknowledge
                     </Button>
                   )}
                   {detailIncident.status !== "resolved" && (
                     <Button size="sm" onClick={() => updateStatus("resolved")} disabled={updatingStatus}>
-                      {updatingStatus && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />}
+                      {updatingStatus && <Loader2 className="h-3.5 w-3.5 me-1.5 animate-spin" />}
                       Mark Resolved
                     </Button>
                   )}

@@ -408,7 +408,7 @@ export function PerformanceEntryModal({
 
         <DraftRecoveryDialog draft={scoreEntryDraft} noun="scores draft" />
         <DialogFooter className="items-center gap-2">
-          <DraftStatus draft={scoreEntryDraft} className="sm:mr-auto" />
+          <DraftStatus draft={scoreEntryDraft} className="sm:me-auto" />
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving || studentsToRender.length === 0}>
             {saving ? "Saving..." : "Save Class Scores"}

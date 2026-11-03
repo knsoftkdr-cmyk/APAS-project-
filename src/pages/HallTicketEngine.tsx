@@ -284,15 +284,15 @@ export default function HallTicketEngine() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
 
         <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-6xl mx-auto">
           {/* Header */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                 <Ticket className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -368,7 +368,7 @@ export default function HallTicketEngine() {
                           disabled={generatingId === activeChild.id}
                           className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                         >
-                          {generatingId === activeChild.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                          {generatingId === activeChild.id ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Download className="h-4 w-4 me-2" />}
                           Download Hall Ticket
                         </Button>
                       </div>
@@ -410,7 +410,7 @@ export default function HallTicketEngine() {
                       disabled={generatingId === activeChild.id}
                       className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
                     >
-                      {generatingId === activeChild.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                      {generatingId === activeChild.id ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Download className="h-4 w-4 me-2" />}
                       Download Hall Ticket
                     </Button>
                   </div>
@@ -441,7 +441,7 @@ export default function HallTicketEngine() {
                       onClick={generateAllTickets}
                       disabled={bulkGenerating}
                     >
-                      {bulkGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Download className="h-4 w-4 mr-2" />}
+                      {bulkGenerating ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Download className="h-4 w-4 me-2" />}
                       Generate All Tickets
                     </Button>
                   </div>
@@ -485,7 +485,7 @@ export default function HallTicketEngine() {
                                   onClick={() => generateTicket(s)}
                                   disabled={generatingId === s.id}
                                 >
-                                  {generatingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ticket className="h-3.5 w-3.5 mr-1" />}
+                                  {generatingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Ticket className="h-3.5 w-3.5 me-1" />}
                                   Ticket
                                 </Button>
                               </TableCell>

@@ -313,9 +313,9 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right">
-  <DrawerContent className="h-[100dvh] w-full sm:max-w-lg ml-auto rounded-none sm:rounded-l-2xl p-0 flex flex-col">
+  <DrawerContent className="h-[100dvh] w-full sm:max-w-lg ms-auto rounded-none sm:rounded-s-2xl p-0 flex flex-col">
     <div className="w-full flex-1 min-h-0 overflow-y-auto pb-4">
-    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 md:px-6 pt-5 pb-4 sticky top-0 z-10 sm:rounded-tl-2xl">
+    <div className="bg-gradient-to-r from-cyan-600 to-blue-600 px-4 md:px-6 pt-5 pb-4 sticky top-0 z-10 sm:rounded-ss-2xl">
       <DrawerHeader className="p-0">
         <DrawerTitle className="text-white text-lg md:text-xl">
           {view === "list"
@@ -370,15 +370,15 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
 
         const rowClass =
           iv.status === "active"
-            ? "border-l-blue-500 bg-blue-50/30"
+            ? "border-s-blue-500 bg-blue-50/30"
             : iv.status === "completed"
-            ? "border-l-green-500 bg-green-50/30"
-            : "border-l-gray-400 bg-gray-50/30";
+            ? "border-s-green-500 bg-green-50/30"
+            : "border-s-gray-400 bg-gray-50/30";
 
         return (
           <div
             key={iv.id}
-            className={"rounded-xl border-l-4 border border-slate-200 p-3.5 shadow-sm " + rowClass}
+            className={"rounded-xl border-s-4 border border-slate-200 p-3.5 shadow-sm " + rowClass}
           >
             <div className="flex items-start justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -410,7 +410,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
               {iv.status === "active" ? (
                 <>
                   <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={() => openDetail(iv, "edit")}>
-                    <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+                    <Pencil className="h-3.5 w-3.5 me-1.5" /> Edit
                   </Button>
                   <Button size="sm" className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700" onClick={() => openDetail(iv, "view")}>
                     Mark Completed
@@ -422,7 +422,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                     View
                   </Button>
                   <Button size="sm" variant="outline" className="flex-1 sm:flex-none" onClick={openCreateForm}>
-                    <Plus className="h-3.5 w-3.5 mr-1.5" /> New Intervention
+                    <Plus className="h-3.5 w-3.5 me-1.5" /> New Intervention
                   </Button>
                 </>
               )}
@@ -437,7 +437,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
         className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700"
         onClick={openCreateForm}
       >
-        <Plus className="h-4 w-4 mr-1.5" /> Create New Intervention
+        <Plus className="h-4 w-4 me-1.5" /> Create New Intervention
       </Button>
     )}
   </div>
@@ -447,8 +447,8 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
             {view === "form" && (
               <>
                 {interventions.length > 0 && (
-                  <Button variant="ghost" size="sm" className="-ml-2 -mt-1" onClick={backToList}>
-                    <ChevronLeft className="h-4 w-4 mr-1" /> Back to History
+                  <Button variant="ghost" size="sm" className="-ms-2 -mt-1" onClick={backToList}>
+                    <ChevronLeft className="h-4 w-4 me-1" /> Back to History
                   </Button>
                 )}
 
@@ -560,7 +560,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
             {saving ? "Saving..." : "Mark as Completed"}
           </Button>
           <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setFormMode("edit")}>
-            <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+            <Pencil className="h-3.5 w-3.5 me-1.5" /> Edit
           </Button>
         </div>
       </div>
@@ -568,10 +568,10 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
     {selected.status !== "active" && (
       <div className="flex gap-2 flex-wrap">
         <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setFormMode("edit")}>
-          <Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit
+          <Pencil className="h-3.5 w-3.5 me-1.5" /> Edit
         </Button>
         <Button className="flex-1 sm:flex-none bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700" onClick={openCreateForm}>
-          <Plus className="h-3.5 w-3.5 mr-1.5" /> New Intervention
+          <Plus className="h-3.5 w-3.5 me-1.5" /> New Intervention
         </Button>
       </div>
     )}
@@ -594,7 +594,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
                         <label className="text-xs font-medium text-muted-foreground">
                           Tier
                           {suggestedTier && !selected && (
-                            <span className="ml-1 text-[10px] text-cyan-600 font-semibold">(suggested from Analytics)</span>
+                            <span className="ms-1 text-[10px] text-cyan-600 font-semibold">(suggested from Analytics)</span>
                           )}
                         </label>
                         <Select value={String(tier)} onValueChange={(v) => setTier(Number(v) as 2 | 3)}>
@@ -693,7 +693,7 @@ export function InterventionDrawer({ open, onOpenChange, student, riskLevel, con
           </div>
 
           {view === "form" && formMode === "edit" && (
-  <DrawerFooter className="px-4 md:px-6 sticky bottom-0 bg-white border-t border-slate-100 pt-3 pb-4 sm:rounded-bl-2xl">
+  <DrawerFooter className="px-4 md:px-6 sticky bottom-0 bg-white border-t border-slate-100 pt-3 pb-4 sm:rounded-es-2xl">
     <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700">
       {saving ? "Saving..." : "Save"}
     </Button>

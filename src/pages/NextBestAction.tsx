@@ -125,7 +125,7 @@ export default function NextBestAction() {
               {data.why_this_subject}
             </span>
             <Button variant="ghost" size="sm" className="h-6 text-xs shrink-0" onClick={() => refetch()} disabled={isFetching}>
-              {isFetching ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} Refresh
+              {isFetching ? <Loader2 className="h-3 w-3 animate-spin me-1" /> : null} Refresh
             </Button>
           </div>
         )}
@@ -201,7 +201,7 @@ function StepCard({
             <meta.icon className="h-3 w-3" /> {meta.label}
           </Badge>
           <span>{step.chapter_name} · {step.topic_name}</span>
-          <span className="ml-auto">{stepNumber} of {totalSteps}</span>
+          <span className="ms-auto">{stepNumber} of {totalSteps}</span>
         </div>
         <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded-md p-2 mb-2">
           <Info className="h-3.5 w-3.5 shrink-0 mt-0.5" />
@@ -216,7 +216,7 @@ function StepCard({
               key={key}
               onClick={() => !showAnswer && onSelect(key as "A" | "B" | "C" | "D")}
               disabled={showAnswer}
-              className={cn("w-full flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200", optionStyle(key))}
+              className={cn("w-full flex items-center gap-3 rounded-xl border-2 p-4 text-start transition-all duration-200", optionStyle(key))}
             >
               <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold transition-colors", optionBadgeStyle(key))}>
                 {showAnswer && key === feedback!.correct_option ? <CheckCircle2 className="h-5 w-5" />
@@ -242,12 +242,12 @@ function StepCard({
         <div className="flex justify-end pt-1">
           {!showAnswer ? (
             <Button onClick={onSubmit} disabled={!selectedOption || submitting || !item}>
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
               Submit
             </Button>
           ) : (
             <Button onClick={onContinue}>
-              {isLast ? <>Done <Trophy className="h-4 w-4 ml-1" /></> : <>Next <ChevronRight className="h-4 w-4 ml-1" /></>}
+              {isLast ? <>Done <Trophy className="h-4 w-4 ms-1" /></> : <>Next <ChevronRight className="h-4 w-4 ms-1" /></>}
             </Button>
           )}
         </div>

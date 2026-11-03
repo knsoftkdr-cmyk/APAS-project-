@@ -262,8 +262,8 @@ function ProfileHeader({ student }: { student: Awaited<ReturnType<typeof getStud
     <Card className="overflow-hidden border-0 shadow-md">
       <div className="relative bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 px-6 py-6">
         {/* decorative accents, matching the workspace banner */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10" />
-        <div className="pointer-events-none absolute right-12 bottom-5 h-1.5 w-1.5 rounded-full bg-white/40" />
+        <div className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute end-12 bottom-5 h-1.5 w-1.5 rounded-full bg-white/40" />
 
         <div className="relative flex items-center gap-4">
           <Avatar className="h-14 w-14 ring-2 ring-white/40 shrink-0">
@@ -797,7 +797,7 @@ function ParentCard({
           </span>
           {isNew ? "New Parent / Guardian" : parent!.relation}
           {parent?.is_primary_contact && (
-            <Badge className="ml-1 bg-violet-100 text-violet-800 hover:bg-violet-100 border-violet-200">Primary</Badge>
+            <Badge className="ms-1 bg-violet-100 text-violet-800 hover:bg-violet-100 border-violet-200">Primary</Badge>
           )}
         </CardTitle>
         <div className="flex gap-1">
@@ -961,7 +961,7 @@ function TagInput({
               <button
                 type="button"
                 onClick={() => removeTag(tag)}
-                className="ml-1 hover:text-destructive"
+                className="ms-1 hover:text-destructive"
               >
                 ×
               </button>
@@ -2165,7 +2165,7 @@ function EmergencyContactCard({
           </span>
           {isNew ? "New Emergency Contact" : contact!.relation}
           {!isNew && contact!.priority_order === 1 && (
-            <Badge className="ml-1 bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Primary</Badge>
+            <Badge className="ms-1 bg-red-100 text-red-800 hover:bg-red-100 border-red-200">Primary</Badge>
           )}
         </CardTitle>
         <div className="flex gap-1">
@@ -2503,7 +2503,7 @@ function InfoRow({
         {Icon && <Icon className={`h-3.5 w-3.5 ${iconColor}`} />}
         {label}
       </span>
-      <span className="font-medium text-slate-800 text-right">{value || "—"}</span>
+      <span className="font-medium text-slate-800 text-end">{value || "—"}</span>
     </div>
   );
 }

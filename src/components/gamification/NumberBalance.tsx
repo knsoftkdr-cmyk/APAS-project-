@@ -201,7 +201,7 @@ export function NumberBalance({ onComplete }: GameProps) {
                 {question.left.map((item, i) => (
                   <div key={i} className="px-3 py-2 rounded-lg text-lg font-bold" style={{ background: "rgba(255,255,255,0.1)", color: "#F1F5F9" }}>
                     {item.value}
-                    {item.multiplier > 1 && <span className="text-xs ml-1" style={{ color: "#F59E0B" }}>×{item.multiplier}</span>}
+                    {item.multiplier > 1 && <span className="text-xs ms-1" style={{ color: "#F59E0B" }}>×{item.multiplier}</span>}
                   </div>
                 ))}
               </div>
@@ -215,7 +215,7 @@ export function NumberBalance({ onComplete }: GameProps) {
                 {question.right.map((item, i) => (
                   <div key={i} className="px-3 py-2 rounded-lg text-lg font-bold" style={{ background: "rgba(255,255,255,0.1)", color: "#F1F5F9" }}>
                     {item.value}
-                    {item.multiplier > 1 && <span className="text-xs ml-1" style={{ color: "#F59E0B" }}>×{item.multiplier}</span>}
+                    {item.multiplier > 1 && <span className="text-xs ms-1" style={{ color: "#F59E0B" }}>×{item.multiplier}</span>}
                   </div>
                 ))}
               </div>

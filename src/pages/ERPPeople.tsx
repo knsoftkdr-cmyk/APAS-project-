@@ -223,7 +223,7 @@ const ERPPeople = () => {
             onClick={() => setAddOpen(true)}
             className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white rounded-full px-5"
           >
-            <Plus className="h-4 w-4 mr-1" /> Add
+            <Plus className="h-4 w-4 me-1" /> Add
           </Button>
           <Button variant="outline" size="icon" className="rounded-lg" onClick={handleImportClick}>
             <MoreHorizontal className="h-4 w-4" />
@@ -250,7 +250,7 @@ const ERPPeople = () => {
                 Add Employee
               </Button>
               <Button variant="outline" className="rounded-full px-6" onClick={handleImportClick}>
-                <Upload className="h-4 w-4 mr-1.5" />
+                <Upload className="h-4 w-4 me-1.5" />
                 <span className="hidden sm:inline">Import Employees</span>
                 <span className="sm:hidden">Import</span>
               </Button>

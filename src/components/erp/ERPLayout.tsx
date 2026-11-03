@@ -134,7 +134,7 @@ const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: E
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => setMobileNavOpen(true)}
-              className="md:hidden shrink-0 p-2 -ml-1 rounded-lg text-slate-600 hover:bg-slate-100"
+              className="md:hidden shrink-0 p-2 -ms-1 rounded-lg text-slate-600 hover:bg-slate-100"
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -145,10 +145,10 @@ const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: E
           </div>
 
           <div className="flex-1 max-w-md mx-8 relative hidden sm:block">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               placeholder="Search..."
-              className="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 ps-9 pe-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -166,20 +166,20 @@ const ERPLayout = ({ orgName, activePath, tabLabel, children, headerActions }: E
                   className="fixed inset-0 z-10"
                   onClick={() => setOrgMenuOpen(false)}
                 />
-                <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
+                <div className="absolute end-0 top-full mt-2 w-52 rounded-lg border border-slate-200 bg-white shadow-lg z-20 overflow-hidden">
                   <button
                     onClick={() => {
                       setOrgMenuOpen(false);
                       navigate("/erp/settings");
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 text-left"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 text-start"
                   >
                     <Settings className="h-4 w-4 text-slate-400" />
                     Organization Settings
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left border-t border-slate-100"
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-start border-t border-slate-100"
                   >
                     <LogOut className="h-4 w-4" />
                     Sign Out

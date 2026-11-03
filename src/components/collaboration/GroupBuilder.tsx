@@ -198,11 +198,11 @@ export function GroupBuilder({ groupProjectId, classId, maxGroupSize }: GroupBui
             className="w-56"
           />
           <Button onClick={handleCreateGroup} variant="secondary">
-            <Plus className="mr-2 h-4 w-4" /> Add Group
+            <Plus className="me-2 h-4 w-4" /> Add Group
           </Button>
         </div>
         <Button onClick={handleAutoSplit} variant="outline">
-          <Shuffle className="mr-2 h-4 w-4" /> Auto-split remaining ({roster.length})
+          <Shuffle className="me-2 h-4 w-4" /> Auto-split remaining ({roster.length})
         </Button>
       </div>
 

@@ -99,8 +99,8 @@ export default function TeacherProfessionalDevelopment() {
     <AppLayout>
       <div className="space-y-4 md:space-y-6 pb-10">
   <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg">
-    <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-    <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+    <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+    <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
     <div className="relative flex items-center gap-3 md:gap-4">
       <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
         <GraduationCap className="h-7 w-7 md:h-6 md:w-6 text-white" />
@@ -128,7 +128,7 @@ export default function TeacherProfessionalDevelopment() {
           <AvatarImage src={avatarUrl} />
           <AvatarFallback className="bg-gradient-to-br from-blue-100 to-indigo-100"><User className="h-8 w-8 text-blue-400" /></AvatarFallback>
         </Avatar>
-        <label className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center cursor-pointer shadow-sm hover:scale-105 transition-transform">
+        <label className="absolute -bottom-1 -end-1 h-7 w-7 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white flex items-center justify-center cursor-pointer shadow-sm hover:scale-105 transition-transform">
           <Camera className="h-3.5 w-3.5" />
           <input type="file" accept="image/*" className="hidden" onChange={(e) => handlePhotoUpload(e.target.files?.[0] || null)} />
         </label>

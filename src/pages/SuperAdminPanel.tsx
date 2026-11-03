@@ -695,7 +695,7 @@ const SuperAdminPanel = () => {
                     }`}
                   >
                     {opt.label}
-                    <span className="ml-1.5 opacity-70">
+                    <span className="ms-1.5 opacity-70">
                       ({opt.value === "all" ? users.length : users.filter(u => u.role === opt.value).length})
                     </span>
                   </button>
@@ -713,7 +713,7 @@ const SuperAdminPanel = () => {
                 >
                   <Lock className="h-3.5 w-3.5" />
                   ERP Access Only
-                  <span className="ml-1 opacity-70">({users.filter(u => u.erp_access).length})</span>
+                  <span className="ms-1 opacity-70">({users.filter(u => u.erp_access).length})</span>
                 </button>
               </div>
 
@@ -776,7 +776,7 @@ const SuperAdminPanel = () => {
                       </TableHeader>
                       <TableBody>
                         {roleUsers.map((u) => (
-                          <TableRow key={u.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-l-4 hover:border-l-blue-500">
+                          <TableRow key={u.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:border-s-4 hover:border-s-blue-500">
                             <TableCell className="font-medium group-hover:text-blue-600 transition-colors duration-300">
                               <div className="flex items-center gap-2">
                                 <span>{u.full_name ?? <span className="italic text-muted-foreground">Unnamed</span>}</span>
@@ -889,7 +889,7 @@ const SuperAdminPanel = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b">
-                          <th className="text-left py-3 pr-6 font-semibold text-foreground min-w-[180px]">Module</th>
+                          <th className="text-start py-3 pe-6 font-semibold text-foreground min-w-[180px]">Module</th>
                           {PERMISSION_ROLES.map((role) => (
                             <th key={role} className="text-center py-3 px-4 font-semibold text-foreground min-w-[100px]">
                               {ROLE_LABELS[role]}
@@ -900,7 +900,7 @@ const SuperAdminPanel = () => {
                       <tbody>
                         {PERMISSION_MODULES.map((module, i) => (
                           <tr key={module} className={i % 2 === 0 ? "bg-muted/30" : ""}>
-                            <td className="py-3 pr-6 font-medium text-foreground">{module}</td>
+                            <td className="py-3 pe-6 font-medium text-foreground">{module}</td>
                             {PERMISSION_ROLES.map((role) => (
                               <td key={role} className="py-3 px-4 text-center">
                                 <Checkbox

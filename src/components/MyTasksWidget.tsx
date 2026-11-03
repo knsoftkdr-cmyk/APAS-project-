@@ -390,7 +390,7 @@ export function MyTasksWidget() {
                 <button
                   key={t.id}
                   onClick={() => navigate(t.link)}
-                  className="w-full flex items-center justify-between gap-3 rounded-lg border p-3 text-left hover:bg-muted/50 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 rounded-lg border p-3 text-start hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
                     <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", URGENCY_DOT[t.urgencyColor])} />
@@ -459,7 +459,7 @@ export function MyTasksWidget() {
         )}
 
         <Button variant="outline" className="w-full" onClick={openAddDialog}>
-          <Plus className="h-4 w-4 mr-1.5" /> Add Task
+          <Plus className="h-4 w-4 me-1.5" /> Add Task
         </Button>
       </CardContent>
 

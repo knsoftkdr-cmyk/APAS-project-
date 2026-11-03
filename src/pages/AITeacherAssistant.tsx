@@ -142,7 +142,7 @@ export default function AITeacherAssistant() {
             </div>
           </div>
           <Button variant="outline" size="sm" onClick={fetchAssistant} className="w-full sm:w-auto shrink-0 bg-blue-600 text-white">
-            <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
+            <RefreshCw className="h-3.5 w-3.5 me-1.5" /> Refresh
           </Button>
         </div>
 

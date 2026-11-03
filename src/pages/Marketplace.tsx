@@ -85,7 +85,7 @@ function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
     <div className="space-y-2">
       <div className="flex gap-2">
         <Button size="sm" variant="outline" className="flex-1 rounded-full" onClick={handlePlay} disabled={loading}>
-          <Play className="h-3.5 w-3.5 mr-1" />
+          <Play className="h-3.5 w-3.5 me-1" />
           {loading ? "Loading..." : expanded ? "Hide" : "Play"}
         </Button>
         {!listing.video_url && (
@@ -128,8 +128,8 @@ function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
 function HeroBanner({ title, eyebrow, icon: Icon, pills }: { title: string; eyebrow: string; icon: any; pills: string[] }) {
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-600 via-blue-500 to-teal-400 p-8">
-      <div className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
-      <div className="pointer-events-none absolute right-28 bottom-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-xl" />
+      <div className="pointer-events-none absolute -end-10 -top-10 h-56 w-56 rounded-full bg-white/10 blur-2xl" />
+      <div className="pointer-events-none absolute end-28 bottom-[-2rem] h-28 w-28 rounded-full bg-white/10 blur-xl" />
       <div className="relative flex items-center gap-5">
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-white/15 backdrop-blur-sm ring-2 ring-white/30">
           <Icon className="h-7 w-7 text-white" />
@@ -195,7 +195,7 @@ function SyllabusViewer({ listing }: { listing: MarketplaceListing }) {
 
   return (
     <Button size="sm" variant="outline" className="w-full rounded-full" onClick={handleView} disabled={loading}>
-      <Eye className="h-3.5 w-3.5 mr-1" />
+      <Eye className="h-3.5 w-3.5 me-1" />
       {loading ? "Loading..." : "View Syllabus"}
     </Button>
   );
@@ -344,7 +344,7 @@ function CourseMaterialsPanel({ listingId, canManage }: { listingId: string; can
         <div className="space-y-1.5">
           {materials.map((m) => (
             <div key={m.id} className="flex items-center justify-between text-xs bg-muted/40 rounded-lg px-3 py-1.5">
-              <button className="flex items-center gap-1.5 min-w-0 hover:underline text-left" onClick={() => openMaterial(m)}>
+              <button className="flex items-center gap-1.5 min-w-0 hover:underline text-start" onClick={() => openMaterial(m)}>
                 {m.material_type === "video" ? (
                   <Play className="h-3 w-3 shrink-0 text-blue-600" />
                 ) : (
@@ -590,9 +590,9 @@ function AdminCourses() {
                     className="w-full rounded-full"
                     onClick={() => setExpandedId(isExpanded ? null : c.id)}
                   >
-                    <Users className="h-3.5 w-3.5 mr-1" />
+                    <Users className="h-3.5 w-3.5 me-1" />
                     Students
-                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
+                    {isExpanded ? <ChevronUp className="h-3.5 w-3.5 ms-1" /> : <ChevronDown className="h-3.5 w-3.5 ms-1" />}
                   </Button>
                   {isExpanded && <CourseRoster listingId={c.id} />}
                   <Button
@@ -601,9 +601,9 @@ function AdminCourses() {
                     className="w-full rounded-full"
                     onClick={() => setMaterialsOpenId(isMaterialsOpen ? null : c.id)}
                   >
-                    <BookOpen className="h-3.5 w-3.5 mr-1" />
+                    <BookOpen className="h-3.5 w-3.5 me-1" />
                     Materials
-                    {isMaterialsOpen ? <ChevronUp className="h-3.5 w-3.5 ml-1" /> : <ChevronDown className="h-3.5 w-3.5 ml-1" />}
+                    {isMaterialsOpen ? <ChevronUp className="h-3.5 w-3.5 ms-1" /> : <ChevronDown className="h-3.5 w-3.5 ms-1" />}
                   </Button>
                   {isMaterialsOpen && <CourseMaterialsPanel listingId={c.id} canManage />}
                 </CardContent>

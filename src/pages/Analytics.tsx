@@ -359,23 +359,23 @@ try {
       <div className="space-y-6">
         <div className="mb-6 md:mb-8 overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 via-sky-500 to-blue-600 p-5 md:p-8 relative min-h-[180px] md:min-h-[220px]">
 
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 
 <div className="hidden md:block">
           
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+          <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 end-[45%] text-white/90 text-lg">✦</div>
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 </div>
 
           <div className="max-w-xl relative z-10">
@@ -392,7 +392,7 @@ try {
             src={analyticsBanner}
             alt="Analytics Banner"
             /* className="absolute right-10 bottom-6 h-[160px]" */
-            className="hidden md:block absolute right-5 bottom-3 w-[180px]"
+            className="hidden md:block absolute end-5 bottom-3 w-[180px]"
           />
         </div>
 
@@ -512,7 +512,7 @@ try {
                             key={a.id}
                             type="button"
                             onClick={() => setAssignmentFilter(isActive ? null : a.id)}
-                            className={`w-full text-left p-3 transition ${isActive ? "bg-primary/10 border-l-2 border-l-primary" : "hover:bg-muted/50"}`}
+                            className={`w-full text-start p-3 transition ${isActive ? "bg-primary/10 border-s-2 border-s-primary" : "hover:bg-muted/50"}`}
                           >
                             <p className="text-sm font-medium line-clamp-2">
                               {a.topic || a.period_title || "Untitled"}
@@ -578,8 +578,8 @@ try {
                   <TableHead className="text-center">Evaluated</TableHead>
                   <TableHead className="text-center">Avg Score</TableHead>
                   <TableHead>Latest Submission</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                  <TableHead className="text-right">Analytics</TableHead>
+                  <TableHead className="text-end">Action</TableHead>
+                  <TableHead className="text-end">Analytics</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -598,7 +598,7 @@ try {
                         <button
                           onClick={() => hasSubmission && setStudentAnalytics(r)}
                           disabled={!hasSubmission}
-                          className="text-left hover:text-primary hover:underline disabled:no-underline disabled:cursor-default disabled:hover:text-foreground"
+                          className="text-start hover:text-primary hover:underline disabled:no-underline disabled:cursor-default disabled:hover:text-foreground"
                         >
                           {r.student_name}
                         </button>
@@ -624,7 +624,7 @@ try {
                       <TableCell className="text-sm text-muted-foreground">
                         {r.latest?.submitted_at ? new Date(r.latest.submitted_at).toLocaleString() : "—"}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button
                           size="sm"
                           variant="outline"
@@ -640,7 +640,7 @@ try {
                           {hasSubmission ? "Review Answers" : "Awaiting"}
                         </Button>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button
                           size="sm"
                           variant="secondary"
@@ -686,7 +686,7 @@ try {
         </span>
         <p className="text-sm font-semibold text-slate-800 leading-relaxed">{a.question}</p>
       </div>
-      <div className="ml-8 rounded-lg bg-white border border-slate-100 px-3 py-2">
+      <div className="ms-8 rounded-lg bg-white border border-slate-100 px-3 py-2">
         <p className="text-sm text-foreground/85 whitespace-pre-wrap">
           <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">Answer </span>
           <br />
@@ -1217,7 +1217,7 @@ try {
                         <GraduationCap className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <DialogTitle className="text-white text-xl md:text-2xl font-bold text-left">
+                        <DialogTitle className="text-white text-xl md:text-2xl font-bold text-start">
                           Hi {studentAnalytics.student_name?.split(" ")[0]}
                         </DialogTitle>
                         <p className="text-sm text-white/80 mt-0.5">
@@ -1233,7 +1233,7 @@ try {
                         <div className="relative h-9 w-9 rounded-full bg-background/20 border border-primary-foreground/20 flex items-center justify-center">
                           <Bell className="h-4 w-4" />
                           {pending > 0 && (
-                            <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-rose-500 text-[10px] font-bold flex items-center justify-center">
+                            <span className="absolute -top-0.5 -end-0.5 h-4 w-4 rounded-full bg-rose-500 text-[10px] font-bold flex items-center justify-center">
                               {pending}
                             </span>
                           )}
@@ -1482,7 +1482,7 @@ try {
                             <TableHead>Assignment</TableHead>
                             <TableHead>Submitted</TableHead>
                             <TableHead className="text-center">Score</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead className="text-end">Action</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1497,7 +1497,7 @@ try {
                                 <TableCell className="text-center text-sm font-medium">
                                   {s.teacher_score != null ? `${s.teacher_score}%` : <span className="text-muted-foreground">Pending</span>}
                                 </TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-end">
                                   <Button
                                     size="sm"
                                     variant="outline"

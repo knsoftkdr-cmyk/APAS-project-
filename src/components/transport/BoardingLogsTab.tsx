@@ -122,7 +122,7 @@ export function BoardingLogsTab({ schoolId }: { schoolId?: string }) {
                   <Badge variant="outline" className={log.direction === "pickup" ? "text-emerald-700 border-emerald-200 bg-emerald-50" : "text-red-600 border-red-200 bg-red-50"}>
                     {log.direction === "pickup" ? "Boarded" : "Dropped"}
                   </Badge>
-                  <span className="text-xs text-muted-foreground w-16 text-right">
+                  <span className="text-xs text-muted-foreground w-16 text-end">
                     {new Date(log.boarded_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>

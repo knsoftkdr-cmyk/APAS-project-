@@ -377,21 +377,21 @@ if (phase === "loading") {
       <div className="space-y-6">
         <div className="mb-8 overflow-hidden rounded-xl bg-gradient-to-r from-sky-600 via-sky-500 to-sky-400 p-8 relative min-h-[160px]">
 <div className="hidden md:block">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/60"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] 
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] 
 border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] 
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] 
 border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] 
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] 
 border-b-white/80"></div>
 </div>
 
@@ -409,7 +409,7 @@ border-b-white/80"></div>
     src={academictests}
     alt="Academic tests Banner"
     /* className="absolute right-10 bottom-5 h-[150px]" */
-    className="hidden md:block absolute right-10 bottom-6 h-[130px]"
+    className="hidden md:block absolute end-10 bottom-6 h-[130px]"
   />
 </div>
 
@@ -421,7 +421,7 @@ border-b-white/80"></div>
               <img
                 src={boyTeacher}
                 alt="Teacher Guide"
-                className="absolute -right-5 bottom-0 h-[500px] w-auto z-20 drop-shadow-2xl"
+                className="absolute -end-5 bottom-0 h-[500px] w-auto z-20 drop-shadow-2xl"
               />
             )}
             <CardHeader className="text-center pb-2">
@@ -669,7 +669,7 @@ transition-all duration-300`}
           <Card className="border-2">
             <CardHeader className="pb-3">
               <CardTitle className="text-base leading-relaxed">
-                <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold mr-2">
+                <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold me-2">
                   {currentQ + 1}
                 </span>
                 {questions[currentQ].question}
@@ -683,7 +683,7 @@ transition-all duration-300`}
                   onClick={() => handleSelectOption(key)}
                   disabled={showAnswer}
                   className={cn(
-                    "w-full flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+                    "w-full flex items-center gap-3 rounded-xl border-2 p-4 text-start transition-all duration-200",
                     getOptionStyle(key)
                   )}
                 >
@@ -811,7 +811,7 @@ transition-all duration-300`}
 
               {/* Review answers */}
               <h3 className="font-semibold text-sm mb-3">Answer Review</h3>
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-80 overflow-y-auto pe-1">
                 {questions.map((q, i) => {
                   const isCorrect = isAnswerCorrect(q, answers[i]);
                   return (
@@ -909,7 +909,7 @@ transition-all duration-300`}
               </div>
 
               <h3 className="font-semibold text-sm mb-3">Detailed Answer Review</h3>
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[500px] overflow-y-auto pe-1">
                 {(reviewTest.questions as MCQQuestion[]).map((q: MCQQuestion, i: number) => {
                   const studentAnswer = (reviewTest.answers as Record<string, string>)?.[String(i)];
                   const isCorrect = isAnswerCorrect(q, studentAnswer);
@@ -926,13 +926,13 @@ transition-all duration-300`}
                         )}
                         <div className="flex-1">
                           <p className="font-medium mb-2">
-                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-muted text-xs font-bold mr-1.5">
+                            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-muted text-xs font-bold me-1.5">
                               {i + 1}
                             </span>
                             {q.question}
                           </p>
                           {q.options ? (
-                            <div className="grid gap-1 ml-1">
+                            <div className="grid gap-1 ms-1">
                               {Object.entries(q.options).map(([key, value]) => (
                                 <div
                                   key={key}
@@ -943,7 +943,7 @@ transition-all duration-300`}
                                     "text-muted-foreground"
                                   )}
                                 >
-                                  <span className="font-bold mr-1">{key}.</span> {value}
+                                  <span className="font-bold me-1">{key}.</span> {value}
                                   {key === q.correct && " ✓"}
                                   {key === studentAnswer && key !== q.correct && " ✗ (your answer)"}
                                   {key === studentAnswer && key === q.correct && " (your answer)"}
@@ -951,7 +951,7 @@ transition-all duration-300`}
                               ))}
                             </div>
                           ) : (
-                            <div className="ml-1 text-xs space-y-1">
+                            <div className="ms-1 text-xs space-y-1">
                               <div className={cn("px-2 py-1 rounded", isCorrect ? "bg-emerald-100 text-emerald-800 font-medium" : "bg-red-100 text-red-800 font-medium")}>
                                 Your answer: {studentAnswer || "(no answer)"}
                               </div>

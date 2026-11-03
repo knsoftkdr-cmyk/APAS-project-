@@ -343,7 +343,7 @@ export function BulkScoreEntryModal({
                       <p className="font-semibold text-sm text-foreground truncate">{student.name}</p>
                     </div>
                     {hasData && (
-                      <div className="text-right">
+                      <div className="text-end">
                         <p className="text-green-600 dark:text-green-400 font-semibold text-sm">{scoreValue}</p>
                       </div>
                     )}

@@ -1051,8 +1051,8 @@ export default function DriverDashboard() {
     <AppLayout>
       <div className="space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 p-8">
-          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-10 -start-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative flex items-center gap-4">
             <div className="rounded-xl bg-white/15 p-3">
               <Bus className="h-8 w-8 text-white" />
@@ -1112,7 +1112,7 @@ export default function DriverDashboard() {
                 Cancel
               </Button>
               <Button variant="destructive" onClick={sendSOS} disabled={sosSending}>
-                {sosSending && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {sosSending && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Send SOS
               </Button>
             </DialogFooter>
@@ -1183,7 +1183,7 @@ export default function DriverDashboard() {
                   type="file"
                   accept="image/*"
                   onChange={(e) => setIncidentPhoto(e.target.files?.[0] ?? null)}
-                  className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
+                  className="block w-full text-sm text-muted-foreground file:me-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
                 />
               </div>
             </div>
@@ -1192,7 +1192,7 @@ export default function DriverDashboard() {
                 Cancel
               </Button>
               <Button onClick={submitIncident} disabled={incidentSubmitting}>
-                {incidentSubmitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {incidentSubmitting && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Submit Report
               </Button>
             </IncidentDialogFooter>
@@ -1253,7 +1253,7 @@ export default function DriverDashboard() {
                   type="file"
                   accept="image/*,application/pdf"
                   onChange={(e) => setFuelReceipt(e.target.files?.[0] ?? null)}
-                  className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
+                  className="block w-full text-sm text-muted-foreground file:me-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
                 />
               </div>
             </div>
@@ -1262,7 +1262,7 @@ export default function DriverDashboard() {
                 Cancel
               </Button>
               <Button onClick={submitFuelLog} disabled={fuelSubmitting}>
-                {fuelSubmitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {fuelSubmitting && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 Save
               </Button>
             </IncidentDialogFooter>
@@ -1327,20 +1327,20 @@ export default function DriverDashboard() {
                             <button
                               type="button"
                               onClick={() => setExpandedStopId(isExpanded ? null : s.id)}
-                              className="flex min-w-0 flex-1 flex-wrap items-center text-left"
+                              className="flex min-w-0 flex-1 flex-wrap items-center text-start"
                             >
-                              <span className="text-muted-foreground mr-1.5">{idx + 1}.</span>
+                              <span className="text-muted-foreground me-1.5">{idx + 1}.</span>
                               {s.stop_name}
                               {arrivedStopIds.has(s.id) && (
-                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 ml-1.5" />
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 ms-1.5" />
                               )}
                               {stopStudents.length > 0 && (
-                                <span className="ml-1.5 text-xs text-muted-foreground">
+                                <span className="ms-1.5 text-xs text-muted-foreground">
                                   ({boardedCount}/{stopStudents.length})
                                 </span>
                               )}
                             </button>
-                            <span className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 text-right text-xs text-muted-foreground">
+                            <span className="flex shrink-0 flex-wrap items-center justify-end gap-x-2 text-end text-xs text-muted-foreground">
                               {s.pickup_time && `Pickup ${s.pickup_time}`}
                               {s.pickup_time && s.drop_time && " · "}
                               {s.drop_time && `Drop ${s.drop_time}`}
@@ -1355,7 +1355,7 @@ export default function DriverDashboard() {
                             </span>
                           </div>
                           {isExpanded && stopStudents.length > 0 && (
-                            <div className="mt-2 ml-4 space-y-1.5 border-l pl-3">
+                            <div className="mt-2 ms-4 space-y-1.5 border-s ps-3">
                               {stopStudents.map((a) => {
                                 const boarded = boardedStudentIds.has(`${a.student_id}-${tripDirection}`);
                                 const key = `${a.student_id}-${tripDirection}`;
@@ -1400,7 +1400,7 @@ export default function DriverDashboard() {
                             </div>
                           )}
                           {isExpanded && stopStudents.length === 0 && (
-                            <p className="mt-2 ml-4 text-xs text-muted-foreground">
+                            <p className="mt-2 ms-4 text-xs text-muted-foreground">
                               No students assigned to this stop for {tripDirection}.
                             </p>
                           )}

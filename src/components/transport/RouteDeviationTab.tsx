@@ -599,9 +599,9 @@ function TrafficIntelligenceView({ schoolId }: { schoolId?: string }) {
                 </Badge>
               </div>
               {r.error ? (
-                <p className="text-xs text-red-500 pl-11">{r.error}</p>
+                <p className="text-xs text-red-500 ps-11">{r.error}</p>
               ) : (
-                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pl-11">
+                <div className="flex flex-wrap gap-3 text-xs text-muted-foreground ps-11">
                   <span>
                     ETA: {r.liveMinutes} min{r.delayMinutes > 0 ? ` (+${r.delayMinutes} min traffic)` : ""}
                   </span>
@@ -626,7 +626,7 @@ function TrafficIntelligenceView({ schoolId }: { schoolId?: string }) {
                 </div>
               )}
               {!r.error && r.alternates.length > 0 && (
-                <div className="pl-11 flex flex-wrap gap-2">
+                <div className="ps-11 flex flex-wrap gap-2">
                   {r.alternates.map((a, idx) => (
                     <Button
                       key={idx}

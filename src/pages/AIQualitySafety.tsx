@@ -46,7 +46,7 @@ function ScoreBars({ scores }: { scores: Partial<Record<string, number | null>> 
             <div className="h-2 flex-1 rounded-full bg-muted overflow-hidden">
               <div className={`h-full ${v == null ? "" : v < 40 ? "bg-red-500" : v < 70 ? "bg-amber-500" : "bg-emerald-500"}`} style={{ width: `${v ?? 0}%` }} />
             </div>
-            <span className={`w-8 text-right tabular-nums font-medium ${scoreColor(v)}`}>{v ?? "–"}</span>
+            <span className={`w-8 text-end tabular-nums font-medium ${scoreColor(v)}`}>{v ?? "–"}</span>
           </div>
         );
       })}
@@ -103,7 +103,7 @@ export default function AIQualitySafety() {
             <Card key={v}><CardContent className="p-4">
               <p className="text-xs text-muted-foreground">{VERDICT_STYLE[v].label}</p>
               <p className="text-2xl font-semibold">{s?.by_verdict[v] ?? "–"}
-                {s?.total ? <span className="text-xs font-normal text-muted-foreground ml-1">{Math.round(((s.by_verdict[v] ?? 0) / s.total) * 100)}%</span> : null}</p>
+                {s?.total ? <span className="text-xs font-normal text-muted-foreground ms-1">{Math.round(((s.by_verdict[v] ?? 0) / s.total) * 100)}%</span> : null}</p>
             </CardContent></Card>
           ))}
         </div>
@@ -130,7 +130,7 @@ export default function AIQualitySafety() {
                 <div className="rounded-lg border p-3 space-y-2">
                   <div className="flex items-center justify-between"><VerdictBadge v={result.verdict} /><span className={`text-sm font-semibold ${scoreColor(result.overall)}`}>Overall {result.overall ?? "–"}</span></div>
                   {result.scores ? <ScoreBars scores={result.scores} /> : <p className="text-xs text-muted-foreground">AI evaluator unavailable - only rule checks ran.</p>}
-                  {result.issues.length > 0 && <ul className="text-xs space-y-1 list-disc pl-4">{result.issues.map((i, k) => <li key={k}><span className="font-medium capitalize">{i.dimension.replace("_", " ")}</span> ({i.severity}): {i.detail}</li>)}</ul>}
+                  {result.issues.length > 0 && <ul className="text-xs space-y-1 list-disc ps-4">{result.issues.map((i, k) => <li key={k}><span className="font-medium capitalize">{i.dimension.replace("_", " ")}</span> ({i.severity}): {i.detail}</li>)}</ul>}
                 </div>
               )}
             </CardContent>
@@ -170,19 +170,19 @@ export default function AIQualitySafety() {
                   : !data?.rows.length ? <p className="text-sm text-muted-foreground">No evaluations yet. AI Tutor replies are checked automatically as students use it.</p>
                   : data.rows.map((r: QualityEvaluation) => (
                     <div key={r.id} className="rounded-lg border p-3 text-sm">
-                      <button type="button" className="w-full text-left" onClick={() => setOpenId(openId === r.id ? null : r.id)}>
+                      <button type="button" className="w-full text-start" onClick={() => setOpenId(openId === r.id ? null : r.id)}>
                         <div className="flex flex-wrap items-center gap-2">
                           <VerdictBadge v={r.verdict} />
                           <span className="text-xs text-muted-foreground">{SOURCE_LABEL[r.source] ?? r.source} · {new Date(r.created_at).toLocaleString()}</span>
                           {r.reviewed_at && <Badge variant="secondary" className="text-[10px]">Reviewed</Badge>}
-                          <span className={`ml-auto text-xs font-semibold ${scoreColor(r.overall_score)}`}>{r.overall_score ?? "–"}</span>
+                          <span className={`ms-auto text-xs font-semibold ${scoreColor(r.overall_score)}`}>{r.overall_score ?? "–"}</span>
                         </div>
                         <p className={`mt-1.5 text-xs text-muted-foreground ${openId === r.id ? "whitespace-pre-wrap" : "line-clamp-2"}`}>{r.content_excerpt}</p>
                       </button>
                       {openId === r.id && (
                         <div className="mt-2 space-y-2">
                           <ScoreBars scores={{ hallucination: r.score_hallucination, bias: r.score_bias, alignment: r.score_alignment, privacy: r.score_privacy, age_suitability: r.score_age_suitability }} />
-                          {r.issues.length > 0 && <ul className="text-xs space-y-1 list-disc pl-4">{r.issues.map((i, k) => <li key={k}><span className="font-medium capitalize">{i.dimension.replace("_", " ")}</span> ({i.severity}): {i.detail}</li>)}</ul>}
+                          {r.issues.length > 0 && <ul className="text-xs space-y-1 list-disc ps-4">{r.issues.map((i, k) => <li key={k}><span className="font-medium capitalize">{i.dimension.replace("_", " ")}</span> ({i.severity}): {i.detail}</li>)}</ul>}
                           {!r.reviewed_at && r.verdict !== "pass" && (
                             <Button size="sm" variant="outline" className="gap-1" disabled={review.isPending}
                               onClick={() => review.mutate({ id: r.id }, { onSuccess: () => toast.success("Marked as reviewed"), onError: (e) => toast.error(e instanceof Error ? e.message : "Failed") })}>

@@ -87,7 +87,7 @@ const UpdatePassword = () => {
 
         <form onSubmit={handlePasswordUpdate} className="space-y-4">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+            <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
               <Lock className="h-4 w-4 text-[#2C3E50]/60" />
             </div>
             <input
@@ -95,20 +95,20 @@ const UpdatePassword = () => {
               placeholder="New Password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full h-12 pl-14 pr-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+              className="w-full h-12 ps-14 pe-11 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
+              className="absolute inset-y-0 end-0 flex items-center pe-3 text-[#2C3E50]/50 hover:text-[#2C3E50]"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
 
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+            <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
               <Lock className="h-4 w-4 text-[#2C3E50]/60" />
             </div>
             <input
@@ -116,7 +116,7 @@ const UpdatePassword = () => {
               placeholder="Confirm New Password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+              className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
               required
             />
           </div>

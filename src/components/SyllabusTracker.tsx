@@ -215,7 +215,7 @@ export default function SyllabusTracker() {
             <p className="text-xs text-gray-400 mt-1">
               {item.coveredChapters} of {item.totalChapters} chapter{item.totalChapters !== 1 ? "s" : ""} covered
               {item.totalChapters === 0 && (
-                <span className="ml-1 text-amber-500">(no chapters found in curriculum)</span>
+                <span className="ms-1 text-amber-500">(no chapters found in curriculum)</span>
               )}
             </p>
           </div>

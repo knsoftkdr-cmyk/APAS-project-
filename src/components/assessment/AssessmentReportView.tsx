@@ -197,8 +197,8 @@ export function AssessmentReportView({ evaluationId, open, onOpenChange }: Asses
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 flex-row items-center justify-between space-y-0">
           <DialogTitle>Assessment Correction Report</DialogTitle>
-          <Button size="sm" variant="outline" onClick={handleDownload} disabled={downloading || isLoading || !data} className="mr-8">
-            {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+          <Button size="sm" variant="outline" onClick={handleDownload} disabled={downloading || isLoading || !data} className="me-8">
+            {downloading ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Download className="h-4 w-4 me-2" />}
             Download
           </Button>
         </DialogHeader>
@@ -206,7 +206,7 @@ export function AssessmentReportView({ evaluationId, open, onOpenChange }: Asses
         <div ref={contentRef} className="flex-1 overflow-y-auto px-6 pb-6 space-y-8">
           {isLoading || !data ? (
             <div className="flex items-center justify-center py-24 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading report...
+              <Loader2 className="h-5 w-5 animate-spin me-2" /> Loading report...
             </div>
           ) : (
             <>
@@ -335,7 +335,7 @@ export function AssessmentReportView({ evaluationId, open, onOpenChange }: Asses
                     <table className="w-full text-xs table-fixed">
                       <thead className="bg-muted/50">
                         <tr>
-                          <th className="text-left px-2 py-2 font-medium" style={{ width: "19%" }}>Topic</th>
+                          <th className="text-start px-2 py-2 font-medium" style={{ width: "19%" }}>Topic</th>
                           {EVIDENCE_COLUMNS.map((c) => (
                             <th key={c.key} className="px-1 py-2 font-medium text-center break-words leading-tight" style={{ width: "12%" }}>
                               {c.label}

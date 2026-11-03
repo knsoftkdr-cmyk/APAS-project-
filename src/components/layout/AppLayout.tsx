@@ -80,7 +80,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       <div
         className={`flex flex-1 flex-col transition-all duration-300 ${
-          collapsed ? "md:ml-[var(--sidebar-collapsed)]" : "md:ml-[var(--sidebar-width)]"
+          collapsed ? "md:ms-[var(--sidebar-collapsed)]" : "md:ms-[var(--sidebar-width)]"
         }`}
       >
         <AppHeader onToggleSidebar={() => setMobileOpen(!mobileOpen)} />

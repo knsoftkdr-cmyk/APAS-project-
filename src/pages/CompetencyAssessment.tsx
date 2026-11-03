@@ -304,8 +304,8 @@ export default function CompetencyAssessment() {
     <AppLayout>
       <div className="p-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 p-6 md:p-8">
-          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -bottom-14 -left-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-14 -start-10 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
           <div className="relative flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
               <ClipboardCheck className="h-6 w-6 text-white" />
@@ -445,7 +445,7 @@ export default function CompetencyAssessment() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      className="h-6 px-2 text-xs sm:ml-auto"
+                                      className="h-6 px-2 text-xs sm:ms-auto"
                                       onClick={() => {
                                         setPendingRatings((prev) => ({
                                           ...prev,

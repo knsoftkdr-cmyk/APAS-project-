@@ -176,7 +176,7 @@ export const AIResponseFeedback = ({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting || isAccurate === null}>
-            {isSubmitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <MessageSquare className="h-4 w-4 mr-2" />}
+            {isSubmitting ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <MessageSquare className="h-4 w-4 me-2" />}
             Submit Feedback
           </Button>
         </DialogFooter>

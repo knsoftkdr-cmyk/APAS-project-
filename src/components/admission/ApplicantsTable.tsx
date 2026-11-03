@@ -162,7 +162,7 @@ export function ApplicantsTable({
                 <TableHead>Sibling</TableHead>
                 <TableHead>Meeting Date</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Docs</TableHead>
+                <TableHead className="text-end">Docs</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -198,7 +198,7 @@ export function ApplicantsTable({
                       </SelectContent>
                     </Select>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-end">
                     <ApplicantDocumentsDialog
                       applicant={applicant}
                       documentCount={applicant.documents?.[0]?.count ?? 0}

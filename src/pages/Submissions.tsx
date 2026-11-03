@@ -354,8 +354,8 @@ try {
   return (
     <AppLayout>
       <div className="rounded-2xl p-6 mb-6 relative overflow-hidden bg-gradient-to-r from-violet-600 to-fuchsia-600 shadow-lg">
-  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-  <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
+  <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+  <div className="absolute end-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
   <div className="relative flex items-center gap-4">
     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
       <FileCheck className="h-7 w-7 text-white" />
@@ -405,7 +405,7 @@ try {
               </SelectContent>
             </Select>
           </div>
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ms-auto flex items-center gap-3">
             <span className="text-sm font-medium border border-green-600 text-white bg-green-400 px-3 py-1.5 rounded-full">
               {filteredSubmissions.length} submission{filteredSubmissions.length !== 1 ? "s" : ""}
             </span>
@@ -523,7 +523,7 @@ try {
                       href={selectedSubmission.answer_file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="ml-auto text-xs text-muted-foreground hover:underline"
+                      className="ms-auto text-xs text-muted-foreground hover:underline"
                     >
                       Open in new tab ↗
                     </a>

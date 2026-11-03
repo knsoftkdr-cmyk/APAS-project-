@@ -186,8 +186,8 @@ export default function AlumniPage() {
     <AppLayout>
       <div className="p-6 space-y-4">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg">
-          <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.15] blur-3xl" />
-          <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-teal-200 opacity-[0.12] blur-3xl" />
+          <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.15] blur-3xl" />
+          <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-teal-200 opacity-[0.12] blur-3xl" />
           <div className="relative flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm text-white">
@@ -215,9 +215,9 @@ export default function AlumniPage() {
                   <div className="space-y-1">
                     <Label>Student</Label>
                     <div className="relative">
-                      <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
+                      <Search className="h-4 w-4 absolute start-2 top-2.5 text-muted-foreground" />
                       <Input
-                        className="pl-8 mb-2"
+                        className="ps-8 mb-2"
                         placeholder="Search student by name..."
                         value={studentSearch}
                         onChange={(e) => setStudentSearch(e.target.value)}
@@ -288,8 +288,8 @@ export default function AlumniPage() {
             <div className="flex items-center justify-between gap-3">
               <CardTitle className="text-base">All Alumni ({filteredAlumni.length})</CardTitle>
               <div className="relative w-64">
-                <Search className="h-4 w-4 absolute left-2 top-2.5 text-muted-foreground" />
-                <Input className="pl-8" placeholder="Search alumni..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Search className="h-4 w-4 absolute start-2 top-2.5 text-muted-foreground" />
+                <Input className="ps-8" placeholder="Search alumni..." value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
             </div>
           </CardHeader>
@@ -308,7 +308,7 @@ export default function AlumniPage() {
                     <TableHead>Graduation Date</TableHead>
                     <TableHead>Higher Education / Occupation</TableHead>
                     <TableHead>Contact</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -324,7 +324,7 @@ export default function AlumniPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {a.contact_phone || a.contact_email || "—"}
                       </TableCell>
-                      <TableCell className="text-right space-x-1">
+                      <TableCell className="text-end space-x-1 rtl:space-x-reverse">
                         <Button size="icon" variant="ghost" onClick={() => openEdit(a)}>
                           <Pencil className="h-4 w-4" />
                         </Button>

@@ -279,7 +279,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
         >
           Weather Alerts
           {alertSnapshots.length > 0 && (
-            <Badge className="ml-2 bg-red-500 text-white">{alertSnapshots.length}</Badge>
+            <Badge className="ms-2 bg-red-500 text-white">{alertSnapshots.length}</Badge>
           )}
         </Button>
         <Button
@@ -296,7 +296,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
           <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Live Conditions by Route</CardTitle>
             <Button size="sm" variant="ghost" onClick={refreshAllRoutes} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-4 w-4 me-1 ${loading ? "animate-spin" : ""}`} />
               Refresh All
             </Button>
           </CardHeader>
@@ -360,7 +360,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
               return (
                 <div
                   key={snap.id}
-                  className="flex items-start gap-3 rounded-lg border p-3 border-l-4 border-l-red-400"
+                  className="flex items-start gap-3 rounded-lg border p-3 border-s-4 border-s-red-400"
                 >
                   <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5" />
                   <div className="flex-1">
@@ -383,7 +383,7 @@ export default function WeatherTab({ schoolId }: WeatherTabProps) {
           <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="text-base">Route Impact Analysis</CardTitle>
             <Button size="sm" variant="ghost" onClick={computeRouteImpact} disabled={loading}>
-              <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw className={`h-4 w-4 me-1 ${loading ? "animate-spin" : ""}`} />
               Recalculate
             </Button>
           </CardHeader>

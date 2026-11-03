@@ -73,13 +73,13 @@ export default function DriverAttendanceView() {
   return (
     <AppLayout>
       <div className="relative min-h-screen overflow-x-hidden">
-        <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
-        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-10 end-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 start-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
 
         <div className="relative z-10 max-w-6xl mx-auto space-y-5 p-3 md:p-4">
           <div className="rounded-2xl md:rounded-3xl p-5 md:p-7 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-lg">
-            <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
-            <div className="absolute right-24 top-10 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
+            <div className="absolute end-24 top-10 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative">
               <h1 className="text-xl md:text-2xl font-bold text-white">My Attendance</h1>
               <p className="text-emerald-100 text-xs md:text-sm mt-0.5">Your day-by-day attendance record</p>
@@ -134,7 +134,7 @@ export default function DriverAttendanceView() {
                         <button
                           key={day.toISOString()}
                           onClick={() => setSelectedDay(selectedDay && isSameDay(day, selectedDay) ? null : day)}
-                          className={`relative min-h-[48px] md:min-h-[58px] p-1 md:p-1.5 rounded-lg text-left transition-all border ${
+                          className={`relative min-h-[48px] md:min-h-[58px] p-1 md:p-1.5 rounded-lg text-start transition-all border ${
                             isSelected ? "border-emerald-400 bg-emerald-50 shadow-sm" :
                             isToday ? "border-teal-200 bg-teal-50/70" :
                             "border-transparent hover:border-emerald-100 hover:bg-emerald-50/50"
@@ -185,7 +185,7 @@ export default function DriverAttendanceView() {
                         {attendancePct !== null && (
                           <div className="text-3xl font-bold text-gray-800">
                             {attendancePct}%
-                            <span className="text-xs font-normal text-muted-foreground ml-2 block mt-1">
+                            <span className="text-xs font-normal text-muted-foreground ms-2 block mt-1">
                               attendance ({totalMarked} days marked this month)
                             </span>
                           </div>

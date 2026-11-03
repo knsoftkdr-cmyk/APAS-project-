@@ -296,7 +296,7 @@ if (error) {
           <ClipboardList className="h-7 w-7 text-violet-700" />
           Diagnostic Question Approvals
           {pendingCount > 0 && (
-            <Badge variant="destructive" className="gap-1 ml-2">
+            <Badge variant="destructive" className="gap-1 ms-2">
               <AlertTriangle className="h-3 w-3" /> {pendingCount} pending
             </Badge>
           )}
@@ -324,7 +324,7 @@ if (error) {
             </TableHeader>
             <TableBody>
               {requests.map(r => (
-                <TableRow key={r.id} className={r.status === "pending" ? "bg-muted/30" : "cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500"}>
+                <TableRow key={r.id} className={r.status === "pending" ? "bg-muted/30" : "cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-s-4 hover:border-blue-500"}>
                   <TableCell className="font-medium">{(r.profiles as any)?.full_name || "Unknown"}</TableCell>
                   <TableCell>{r.class_name} - {r.section}</TableCell>
                   <TableCell>{r.subject}</TableCell>

@@ -103,8 +103,8 @@ const EditDrawer = ({
       {/* Panel */}
       <div
         className={cn(
-          "fixed right-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
-          open ? "translate-x-0" : "translate-x-full"
+          "fixed end-0 top-0 z-50 h-full w-full max-w-md bg-white shadow-2xl flex flex-col transition-transform duration-300 ease-in-out",
+          open ? "translate-x-0" : "translate-x-full rtl:-translate-x-full"
         )}
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-blue-50/60 to-white">
@@ -127,7 +127,7 @@ const EditDrawer = ({
             disabled={saving}
             className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-xl text-base"
           >
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
             Save
           </Button>
         </div>
@@ -152,7 +152,7 @@ const Field = ({
   <div className="space-y-1.5">
     <Label className="text-sm font-semibold text-gray-700">
       {label}
-      {required && <span className="text-red-500 ml-0.5">*</span>}
+      {required && <span className="text-red-500 ms-0.5">*</span>}
     </Label>
     {children}
     {hint && <p className="text-[11px] text-gray-400">{hint}</p>}
@@ -239,6 +239,9 @@ const SettingsPage = () => {
 
   // Language state
   const [langSaving, setLangSaving] = useState(false);
+  // Picked in the drawer, applied on Save: applying a language reloads the page.
+  const [pendingLanguage, setPendingLanguage] = useState<Language>(language);
+  useEffect(() => setPendingLanguage(language), [language]);
 
 const isStudent = profile?.role === "student";
 const isTeacher = profile?.role === "teacher";
@@ -384,10 +387,16 @@ const isTeacher = profile?.role === "teacher";
 
   const handleLanguageSave = async () => {
     setLangSaving(true);
-    await setLanguage(language as Language);
-    setLangSaving(false);
-    toast.success("Language updated");
-    setActiveDrawer(null);
+    try {
+      // Reloads the page when the language actually changes.
+      await setLanguage(pendingLanguage);
+      toast.success("Language updated");
+      setActiveDrawer(null);
+    } catch {
+      toast.error("Could not save your language. Check your connection and try again.");
+    } finally {
+      setLangSaving(false);
+    }
   };
 
   const initials = (profile?.full_name || "U").charAt(0).toUpperCase();
@@ -603,25 +612,25 @@ const careerTabs = [
 return (
   <AppLayout>
     <div className="min-h-screen relative overflow-x-hidden">
-      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.08] blur-3xl" />
-      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-cyan-200 opacity-[0.07] blur-3xl" />
+      <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.08] blur-3xl" />
+      <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-cyan-200 opacity-[0.07] blur-3xl" />
 
       <div className="relative z-10 space-y-6 p-4 md:p-6">
       <div className="mb-4 md:mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-300 to-blue-300 p-5 md:p-8 relative min-h-[160px] md:min-h-[220px] shadow-lg shadow-blue-200/50">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60 hidden sm:block"></div>
-<div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/80 hidden sm:block"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/60 hidden sm:block"></div>
+<div className="absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/80 hidden sm:block"></div>
 <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80 hidden sm:block"></div>
 
 <div className="hidden md:block">
-          <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+          <div className="absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
           
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 </div>
           <div className="max-w-xl relative z-10">
   <h1 className="text-2xl sm:text-3xl md:text-5xl font-bold text-slate-900">
@@ -636,7 +645,7 @@ return (
 <img
   src={settingsBanner}
   alt="Settings Banner"
-  className="hidden md:block absolute right-10 bottom-6 w-32"
+  className="hidden md:block absolute end-10 bottom-6 w-32"
 />
 </div>
 
@@ -645,8 +654,8 @@ return (
         {/* ── Profile Hero Card ─────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/60 overflow-hidden">
           <div className="h-28 relative" style={{background: "linear-gradient(120deg, #1e3a5f 0%, #2563a8 55%, #3b82c4 100%)"}}>
-            <div className="absolute top-4 right-8 w-10 h-10 rounded-full border border-white/25"></div>
-            <div className="absolute bottom-4 right-24 w-6 h-6 rounded-full border border-white/25"></div>
+            <div className="absolute top-4 end-8 w-10 h-10 rounded-full border border-white/25"></div>
+            <div className="absolute bottom-4 end-24 w-6 h-6 rounded-full border border-white/25"></div>
           </div>
           <div className="px-4 md:px-6 pb-6">
   <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-14 mb-4 gap-3">
@@ -662,7 +671,7 @@ return (
                   </div>
                 </div>
                 {/* completion ring hint */}
-                <div className="absolute -bottom-1.5 -right-1.5 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md border-2 border-white" style={{background:"#1e3a5f"}}>
+                <div className="absolute -bottom-1.5 -end-1.5 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md border-2 border-white" style={{background:"#1e3a5f"}}>
                   100%
                 </div>
               </div>
@@ -762,7 +771,7 @@ return (
           {/* Language */}
          <button
             onClick={() => setActiveDrawer("language")}
-            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-left"
+            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-start"
           >
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0" style={{background:"linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
@@ -773,13 +782,13 @@ return (
                 <p className="text-xs text-gray-400 capitalize">{language}</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-900 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-900 group-hover:translate-x-0.5 transition-all rtl:group-hover:-translate-x-0.5" />
           </button>
 
           {/* Password */}
           <button
             onClick={() => setActiveDrawer("password")}
-            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-left"
+            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-orange-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-start"
           >
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0" style={{background:"linear-gradient(135deg, #f97316, #fb923c)"}}>
@@ -790,7 +799,7 @@ return (
                 <p className="text-xs text-gray-400">Update your password</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all" />
+            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all rtl:group-hover:-translate-x-0.5" />
           </button>
         </div>
 
@@ -863,7 +872,7 @@ return (
             </div>
             <button
               onClick={() => fileRef.current?.click()}
-              className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full text-white flex items-center justify-center shadow-md transition-colors"
+              className="absolute -bottom-1 -end-1 h-8 w-8 rounded-full text-white flex items-center justify-center shadow-md transition-colors"
               style={{background:"#1e3a5f"}}
             >
               {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
@@ -1049,8 +1058,8 @@ return (
       >
         <Field label="Display Language">
           <Select
-            value={language}
-            onValueChange={(v) => setLanguage(v as Language)}
+            value={pendingLanguage}
+            onValueChange={(v) => setPendingLanguage(v as Language)}
           >
             <SelectTrigger className="rounded-xl border-gray-200 focus:border-blue-900">
               <SelectValue />

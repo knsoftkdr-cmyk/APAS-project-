@@ -25,7 +25,7 @@ export function ApplicantDocumentsDialog({ applicant, documentCount = 0, onDocum
       >
         <Paperclip className="h-4 w-4" />
         {documentCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 min-w-4 px-0.5 rounded-full bg-accent text-white text-[10px] leading-4 text-center font-medium">
+          <span className="absolute -top-1 -end-1 h-4 min-w-4 px-0.5 rounded-full bg-accent text-white text-[10px] leading-4 text-center font-medium">
             {documentCount}
           </span>
         )}

@@ -248,7 +248,7 @@ export const StudentDiagnosticTest = () => {
                               setTimeout(() => setCurrentQ(q => q + 1), 350);
                             }
                           }}
-                          className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all ${
+                          className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-start text-sm font-medium transition-all ${
                             selected
                               ? "border-accent bg-accent/10 text-accent shadow-sm"
                               : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-muted/50"
@@ -271,18 +271,18 @@ export const StudentDiagnosticTest = () => {
                 onClick={() => setCurrentQ(q => Math.max(0, q - 1))}
                 disabled={currentQ === 0}
               >
-                <ArrowLeft className="h-4 w-4 mr-1" /> Previous
+                <ArrowLeft className="h-4 w-4 me-1" /> Previous
               </Button>
               <div className="flex gap-2">
                 {!isLastQuestion && answers[currentQ] !== undefined && (
                   <Button onClick={() => setCurrentQ(q => q + 1)}>
-                    Next <ArrowRight className="h-4 w-4 ml-1" />
+                    Next <ArrowRight className="h-4 w-4 ms-1" />
                   </Button>
                 )}
                 {isLastQuestion && answers[currentQ] !== undefined && (
                   <div className="flex flex-col items-end gap-1">
                     <Button onClick={handleSubmit} disabled={submitting || !allAnswered}>
-                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ml-1" />
+                      {submitting ? "Submitting..." : "Submit Assessment"} <CheckCircle className="h-4 w-4 ms-1" />
                     </Button>
                     {!allAnswered && (
                       <span className="text-xs text-destructive">

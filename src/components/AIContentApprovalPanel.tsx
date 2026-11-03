@@ -374,14 +374,14 @@ export const AIContentApprovalPanel = () => {
               onClick={() => selectedItem && handleReject(selectedItem.id)}
               disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <XCircle className="h-4 w-4 mr-1" />}
+              {isProcessing ? <Loader2 className="h-4 w-4 me-1 animate-spin" /> : <XCircle className="h-4 w-4 me-1" />}
               Reject
             </Button>
             <Button
               onClick={() => selectedItem && handleApprove(selectedItem.id)}
               disabled={isProcessing}
             >
-              {isProcessing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+              {isProcessing ? <Loader2 className="h-4 w-4 me-1 animate-spin" /> : <CheckCircle2 className="h-4 w-4 me-1" />}
               Approve
             </Button>
           </DialogFooter>

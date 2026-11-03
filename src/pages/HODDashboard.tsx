@@ -214,7 +214,7 @@ export default function HODDashboard() {
                     <TableHeader><TableRow><TableHead>Student</TableHead><TableHead className="text-center">Tests</TableHead><TableHead className="text-center">Avg Score</TableHead><TableHead className="text-center">Status</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {students.map((s) => (
-                        <TableRow key={s.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-l-4 hover:border-l-blue-500">
+                        <TableRow key={s.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-s-4 hover:border-s-blue-500">
                           <TableCell className="font-medium">{s.full_name ?? "Unknown"}</TableCell>
                           <TableCell className="text-center">{s.tests}</TableCell>
                           <TableCell className="text-center font-semibold">{s.avg_score !== null ? `${s.avg_score}%` : "—"}</TableCell>
@@ -254,7 +254,7 @@ export default function HODDashboard() {
                     <TableHeader><TableRow><TableHead>Lesson Title</TableHead><TableHead>Subject</TableHead><TableHead>Class</TableHead><TableHead>Teacher</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
                     <TableBody>
                       {lessons.map((l) => (
-                        <TableRow key={l.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-l-4 hover:border-l-blue-500">
+                        <TableRow key={l.id} className="group cursor-pointer transition-all duration-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-cyan-50 hover:shadow-md hover:scale-[1.01] hover:border-s-4 hover:border-s-blue-500">
                           <TableCell className="font-medium">{l.title}</TableCell>
                           <TableCell>{l.subject ?? "—"}</TableCell>
                           <TableCell>{l.class_level ?? "—"}{l.section ? ` - ${l.section}` : ""}</TableCell>

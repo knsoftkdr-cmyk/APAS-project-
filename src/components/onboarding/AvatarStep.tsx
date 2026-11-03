@@ -73,7 +73,7 @@ export function AvatarStep({ open, gender, userId, onSave, onSkip }: Props) {
               >
                 <img src={p.src} alt="" className="h-full w-full object-contain" loading="lazy" />
                 {isSel && (
-                  <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <span className="absolute end-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="h-3 w-3" />
                   </span>
                 )}
@@ -98,7 +98,7 @@ export function AvatarStep({ open, gender, userId, onSave, onSkip }: Props) {
               <>
                 <img src={uploadedUrl} alt="" className="h-full w-full rounded-lg object-cover" />
                 {selected === uploadedUrl && (
-                  <span className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                  <span className="absolute end-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="h-3 w-3" />
                   </span>
                 )}
@@ -141,7 +141,7 @@ export function AvatarStep({ open, gender, userId, onSave, onSkip }: Props) {
               }
             }}
           >
-            {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {saving && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
             Save
           </Button>
         </div>

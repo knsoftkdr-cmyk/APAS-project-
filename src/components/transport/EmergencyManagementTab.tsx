@@ -586,7 +586,7 @@ function StudentContactsSection({ schoolId }: { schoolId?: string }) {
                 <p className="text-sm font-medium">
                   {c.full_name} <span className="text-xs text-muted-foreground capitalize">({c.relation})</span>
                   {c.pickup_authorized && (
-                    <Badge variant="outline" className="ml-2 text-emerald-700 border-emerald-200 bg-emerald-50">Pickup authorized</Badge>
+                    <Badge variant="outline" className="ms-2 text-emerald-700 border-emerald-200 bg-emerald-50">Pickup authorized</Badge>
                   )}
                 </p>
                 <p className="text-xs text-muted-foreground">

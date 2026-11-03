@@ -45,8 +45,8 @@ export function PageHelpPanel({ open, onOpenChange, canTakeTour, onTakeTour, onA
         className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <SheetHeader className="space-y-1 border-b border-border px-5 py-4 text-left">
-          <SheetTitle className="pr-6 text-base">Help with this page</SheetTitle>
+        <SheetHeader className="space-y-1 border-b border-border px-5 py-4 text-start">
+          <SheetTitle className="pe-6 text-base">Help with this page</SheetTitle>
           <SheetDescription>
             {pageName}
             {roleLabel ? ` · ${roleLabel}` : ""}
@@ -74,7 +74,7 @@ export function PageHelpPanel({ open, onOpenChange, canTakeTour, onTakeTour, onA
                             {t.before.join(" ")}
                           </p>
                         )}
-                        <ol className="mt-2 list-decimal space-y-1.5 pl-5 text-muted-foreground">
+                        <ol className="mt-2 list-decimal space-y-1.5 ps-5 text-muted-foreground">
                           {t.steps.map((s) => <li key={s}>{s}</li>)}
                         </ol>
                         {t.result && (
@@ -130,7 +130,7 @@ export function PageHelpPanel({ open, onOpenChange, canTakeTour, onTakeTour, onA
                         <button
                           type="button"
                           onClick={() => { onOpenChange(false); navigate(n.route); }}
-                          className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
+                          className="flex w-full items-center justify-between gap-3 px-3 py-2 text-start hover:bg-secondary/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                         >
                           <span>
                             <span className="block font-medium text-foreground">{n.label}</span>

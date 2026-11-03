@@ -74,7 +74,7 @@ export default function StudentLearningTwin({ studentId }: { studentId: string }
 
       {t.risk.reasons.length > 0 && (
         <Card><CardHeader className="pb-2"><CardTitle className="text-base">Why this risk level</CardTitle></CardHeader>
-          <CardContent><ul className="list-disc pl-5 text-sm space-y-1">{t.risk.reasons.map((r) => <li key={r}>{r}</li>)}</ul></CardContent></Card>
+          <CardContent><ul className="list-disc ps-5 text-sm space-y-1">{t.risk.reasons.map((r) => <li key={r}>{r}</li>)}</ul></CardContent></Card>
       )}
 
       {t.subjects.length > 0 && (

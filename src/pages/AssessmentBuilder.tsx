@@ -215,7 +215,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
     <Shell embedded={embedded}>
       <div className="p-3 sm:p-4 md:p-6 space-y-4 max-w-7xl mx-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-6">
         <div className="rounded-2xl p-5 relative overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0"><ClipboardList className="h-5 w-5 text-white" /></div>
             <div><h1 className="text-xl md:text-2xl font-bold text-white">Assessment Builder</h1>
@@ -258,14 +258,14 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
                   </SelectContent>
                 </Select>
                 <div className="col-span-2 relative">
-                  <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
-                  <Input className="pl-8" placeholder="Search question text or topic" value={search} onChange={(e) => setSearch(e.target.value)} />
+                  <Search className="h-4 w-4 absolute start-2.5 top-2.5 text-muted-foreground" />
+                  <Input className="ps-8" placeholder="Search question text or topic" value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
               </div>
               {bank && visible.length > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>{visible.length} question{visible.length > 1 ? "s" : ""}</span>
-                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={addAllVisible}><Plus className="h-3.5 w-3.5 mr-1" />Add all shown</Button>
+                  <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={addAllVisible}><Plus className="h-3.5 w-3.5 me-1" />Add all shown</Button>
                 </div>
               )}
             </CardHeader>
@@ -289,7 +289,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
                           </div>
                         </div>
                         <Button size="sm" variant={inTest ? "ghost" : "outline"} className="h-7 shrink-0" disabled={inTest} onClick={() => add(b)}>
-                          {inTest ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <><Plus className="h-3.5 w-3.5 mr-1" />Add</>}
+                          {inTest ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <><Plus className="h-3.5 w-3.5 me-1" />Add</>}
                         </Button>
                       </div>
                     </div>
@@ -303,7 +303,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
             <CardHeader className="pb-2 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Your test · {picked.length} question{picked.length === 1 ? "" : "s"} · {total} marks</CardTitle>
-                <Button variant="outline" size="sm" className="h-8" disabled={!picked.length} onClick={() => setPreviewOpen(true)}><Eye className="h-4 w-4 mr-1" />Preview</Button>
+                <Button variant="outline" size="sm" className="h-8" disabled={!picked.length} onClick={() => setPreviewOpen(true)}><Eye className="h-4 w-4 me-1" />Preview</Button>
               </div>
               <Input placeholder="Test title, e.g. Unit Test - Fractions" value={title} maxLength={200} onChange={(e) => { setTitle(e.target.value); setDone(null); }} />
             </CardHeader>
@@ -353,7 +353,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
                   {done && (
                     <>
                       <span className="text-sm text-emerald-700">Assigned to {done.students} students - they'll find it in My Exams.</span>
-                      <Button asChild variant="outline" size="sm"><Link to={`/assessment-paper-print?paper_id=${done.paperId}`}><Printer className="h-4 w-4 mr-1" />Print / answer key</Link></Button>
+                      <Button asChild variant="outline" size="sm"><Link to={`/assessment-paper-print?paper_id=${done.paperId}`}><Printer className="h-4 w-4 me-1" />Print / answer key</Link></Button>
                     </>
                   )}
                 </div>
@@ -371,7 +371,7 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
             <label className="inline-flex items-center gap-1.5"><Switch checked={showAnswers} onCheckedChange={setShowAnswers} /> Show answers</label>
           </div>
           {instructions.trim() && (
-            <ul className="text-sm list-disc pl-5 text-muted-foreground">{instructions.split("\n").filter((s) => s.trim()).map((s, i) => <li key={i}>{s}</li>)}</ul>
+            <ul className="text-sm list-disc ps-5 text-muted-foreground">{instructions.split("\n").filter((s) => s.trim()).map((s, i) => <li key={i}>{s}</li>)}</ul>
           )}
           <ol className="space-y-4 mt-2">
             {picked.map((p, i) => (
@@ -379,14 +379,14 @@ export default function AssessmentBuilder({ embedded = false }: { embedded?: boo
                 <div className="flex justify-between gap-3"><p className="font-medium">{i + 1}. {p.stem}</p><span className="text-xs text-muted-foreground shrink-0">[{p.marks}]</span></div>
                 {p.context_passage && <p className="mt-1 rounded bg-muted/50 p-2 text-xs whitespace-pre-wrap">{p.context_passage}</p>}
                 {p.options && (
-                  <div className="grid sm:grid-cols-2 gap-1 mt-1.5 pl-4">
+                  <div className="grid sm:grid-cols-2 gap-1 mt-1.5 ps-4">
                     {Object.entries(p.options).map(([k, v]) => (
                       <span key={k} className={showAnswers && k === p.correct_option ? "text-emerald-700 font-medium" : ""}>({k}) {v}</span>
                     ))}
                   </div>
                 )}
                 {!!p.sub_questions?.length && (
-                  <ol className="list-[lower-alpha] pl-8 mt-1 space-y-0.5">{p.sub_questions.map((s) => <li key={s.id}>{s.text} <span className="text-xs text-muted-foreground">[{s.max_marks}]</span></li>)}</ol>
+                  <ol className="list-[lower-alpha] ps-8 mt-1 space-y-0.5">{p.sub_questions.map((s) => <li key={s.id}>{s.text} <span className="text-xs text-muted-foreground">[{s.max_marks}]</span></li>)}</ol>
                 )}
                 {showAnswers && (p.explanation || p.model_answer) && (
                   <p className="mt-1.5 text-xs text-emerald-800 bg-emerald-50 rounded p-2 whitespace-pre-wrap">{p.explanation || p.model_answer}</p>

@@ -48,8 +48,8 @@ export default function DriverRatings() {
     <AppLayout>
       <div className="space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-700 p-8">
-          <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
-          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+          <div className="absolute -bottom-10 -start-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
           <div className="relative flex items-center gap-4">
             <div className="rounded-xl bg-white/15 p-3">
               <Star className="h-8 w-8 text-white" />
@@ -84,7 +84,7 @@ export default function DriverRatings() {
                       {[1, 2, 3, 4, 5].map((n) => (
                         <Star key={n} className={`h-4 w-4 ${n <= r.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />
                       ))}
-                      <span className="text-xs text-muted-foreground ml-2">
+                      <span className="text-xs text-muted-foreground ms-2">
                         {new Date(r.created_at).toLocaleDateString()}
                       </span>
                     </div>

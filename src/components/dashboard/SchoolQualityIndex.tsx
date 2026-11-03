@@ -206,7 +206,7 @@ export default function SchoolQualityIndex({ schoolId }: SchoolQualityIndexProps
             return (
               <div
                 key={key}
-                className="flex items-center gap-3 rounded-xl border-l-4 bg-slate-50 px-4 py-3"
+                className="flex items-center gap-3 rounded-xl border-s-4 bg-slate-50 px-4 py-3"
                 style={{
                   borderLeftColor: comp.available ? getScoreBand(comp.score!).ring : "#e2e8f0",
                 }}
@@ -230,7 +230,7 @@ export default function SchoolQualityIndex({ schoolId }: SchoolQualityIndexProps
                     <p className="mt-0.5 text-xs italic text-slate-400">{meta.unavailableCopy}</p>
                   )}
                 </div>
-                <div className="w-12 text-right">
+                <div className="w-12 text-end">
                   {comp.available ? (
                     <span className="text-sm font-semibold text-slate-700">
                       {Math.round(comp.score!)}%

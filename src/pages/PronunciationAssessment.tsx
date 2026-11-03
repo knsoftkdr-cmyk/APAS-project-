@@ -160,7 +160,7 @@ export default function PronunciationAssessment() {
     <AppLayout>
       <div className="mx-auto max-w-4xl space-y-5 p-4 md:p-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 p-5 shadow-lg md:p-6">
-          <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-white/10" />
+          <div className="absolute -end-6 -top-6 h-32 w-32 rounded-full bg-white/10" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 md:h-12 md:w-12">
               <Mic className="h-5 w-5 text-white md:h-6 md:w-6" />
@@ -222,7 +222,7 @@ export default function PronunciationAssessment() {
                     </Button>
                   ))}
                   <Button type="button" size="sm" variant="secondary" disabled={busy || generating} onClick={makePassage}>
-                    {generating ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Sparkles className="mr-1.5 h-4 w-4" />}
+                    {generating ? <Loader2 className="me-1.5 h-4 w-4 animate-spin" /> : <Sparkles className="me-1.5 h-4 w-4" />}
                     New passage (AI)
                   </Button>
                 </div>
@@ -233,7 +233,7 @@ export default function PronunciationAssessment() {
                   <Textarea id="pron-text" value={text} maxLength={MAX_CHARS} rows={3} disabled={busy}
                     placeholder={`Type or paste ${langName} text here…`}
                     onChange={(e) => { resetResult(); setText(e.target.value); }} />
-                  <p className="mt-1 text-right text-[11px] text-muted-foreground">{text.length}/{MAX_CHARS}</p>
+                  <p className="mt-1 text-end text-[11px] text-muted-foreground">{text.length}/{MAX_CHARS}</p>
                 </div>
               </CardContent>
             </Card>
@@ -264,14 +264,14 @@ export default function PronunciationAssessment() {
                 )}
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button type="button" variant="outline" size="sm" disabled={!hasText || busy} onClick={() => listen(false)}><Volume2 className="mr-1.5 h-4 w-4" />Listen</Button>
-                  <Button type="button" variant="outline" size="sm" disabled={!hasText || busy} onClick={() => listen(true)}><Turtle className="mr-1.5 h-4 w-4" />Listen slowly</Button>
+                  <Button type="button" variant="outline" size="sm" disabled={!hasText || busy} onClick={() => listen(false)}><Volume2 className="me-1.5 h-4 w-4" />Listen</Button>
+                  <Button type="button" variant="outline" size="sm" disabled={!hasText || busy} onClick={() => listen(true)}><Turtle className="me-1.5 h-4 w-4" />Listen slowly</Button>
                   <div className="flex-1" />
                   {speech.listening ? (
-                    <Button type="button" size="lg" variant="destructive" onClick={speech.stop}><Square className="mr-2 h-4 w-4" />Stop and score</Button>
+                    <Button type="button" size="lg" variant="destructive" onClick={speech.stop}><Square className="me-2 h-4 w-4" />Stop and score</Button>
                   ) : (
                     <Button type="button" size="lg" disabled={!hasText || !speech.supported || busy} onClick={startReading}>
-                      {scoring ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : result ? <RotateCcw className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
+                      {scoring ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : result ? <RotateCcw className="me-2 h-4 w-4" /> : <Mic className="me-2 h-4 w-4" />}
                       {scoring ? "Scoring…" : result ? "Try again" : "Start reading"}
                     </Button>
                   )}
@@ -409,7 +409,7 @@ export default function PronunciationAssessment() {
                     <CardHeader className="pb-2"><CardTitle className="text-base">Words that keep tripping you up</CardTitle></CardHeader>
                     <CardContent className="flex flex-wrap gap-2">
                       {history.summary.tricky_words.map((w) => (
-                        <Badge key={w.word} variant="outline" className="text-sm">{w.word} <span className="ml-1.5 text-xs text-muted-foreground">{w.times_missed}×</span></Badge>
+                        <Badge key={w.word} variant="outline" className="text-sm">{w.word} <span className="ms-1.5 text-xs text-muted-foreground">{w.times_missed}×</span></Badge>
                       ))}
                     </CardContent>
                   </Card>

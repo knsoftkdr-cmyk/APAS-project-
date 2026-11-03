@@ -237,8 +237,8 @@ const categoryIcons: Record<string, any> = {
 
 return (
     <div className="relative">
-      <div className="absolute -top-4 right-0 w-40 h-40 rounded-full bg-blue-200 opacity-[0.15] blur-3xl pointer-events-none" />
-      <div className="absolute top-40 left-0 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.12] blur-3xl pointer-events-none" />
+      <div className="absolute -top-4 end-0 w-40 h-40 rounded-full bg-blue-200 opacity-[0.15] blur-3xl pointer-events-none" />
+      <div className="absolute top-40 start-0 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.12] blur-3xl pointer-events-none" />
       <div className="relative z-10 space-y-6">
       {!showForm ? (
         <Card className="border-2 border-dashed border-blue-200 bg-blue-50/40">
@@ -354,7 +354,7 @@ return (
           </div>
 
           <Button onClick={handleSubmit} disabled={submitting} className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm">
-            {submitting ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4 mr-1" />}
+            {submitting ? <LoadingSpinner size="sm" /> : <Send className="h-4 w-4 me-1" />}
             Submit Request
           </Button>
         </CardContent>

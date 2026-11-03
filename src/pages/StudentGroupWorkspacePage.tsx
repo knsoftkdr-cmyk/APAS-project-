@@ -244,23 +244,23 @@ export default function StudentGroupWorkspacePage() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/student/group-projects')}
-            className="gap-1 -ml-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50"
+            className="gap-1 -ms-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50"
           >
             <ArrowLeft className="h-4 w-4" /> Back to Group Projects
           </Button>
 
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -301,7 +301,7 @@ export default function StudentGroupWorkspacePage() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             {/* Shared Files */}
-            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden border-l-4 border-l-emerald-400">
+            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden border-s-4 border-s-emerald-400">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
@@ -317,7 +317,7 @@ export default function StudentGroupWorkspacePage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white"
                   >
-                    {uploading ? <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="mr-2 h-3.5 w-3.5" />}
+                    {uploading ? <Loader2 className="me-2 h-3.5 w-3.5 animate-spin" /> : <Upload className="me-2 h-3.5 w-3.5" />}
                     Upload
                   </Button>
                 </div>
@@ -334,7 +334,7 @@ export default function StudentGroupWorkspacePage() {
                   <div className="space-y-2">
                     {files.map((f) => (
                       <div key={f.id} className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2 text-sm bg-slate-50/50">
-                        <button onClick={() => handleFileDownload(f)} className="flex items-center gap-2 hover:underline text-left min-w-0">
+                        <button onClick={() => handleFileDownload(f)} className="flex items-center gap-2 hover:underline text-start min-w-0">
                           <FileText className="h-4 w-4 shrink-0 text-emerald-500" />
                           <span className="truncate">{f.file_name}</span>
                         </button>
@@ -356,7 +356,7 @@ export default function StudentGroupWorkspacePage() {
             </Card>
 
             {/* Tasks */}
-            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden border-l-4 border-l-teal-400">
+            <Card className="border-slate-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden border-s-4 border-s-teal-400">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
@@ -434,7 +434,7 @@ export default function StudentGroupWorkspacePage() {
           </div>
 
           {/* Submission */}
-          <Card className="border-slate-200 shadow-sm overflow-hidden border-l-4 border-l-emerald-400">
+          <Card className="border-slate-200 shadow-sm overflow-hidden border-s-4 border-s-emerald-400">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
@@ -450,7 +450,7 @@ export default function StudentGroupWorkspacePage() {
                     <CheckCircle2 className="h-4 w-4" />
                     Submitted on {new Date(submission.submitted_at).toLocaleString()}
                     {submission.status === 'graded' && (
-                      <Badge className="ml-auto bg-emerald-500 text-white hover:opacity-90">Graded</Badge>
+                      <Badge className="ms-auto bg-emerald-500 text-white hover:opacity-90">Graded</Badge>
                     )}
                   </div>
                   {submission.note && <p className="text-sm text-muted-foreground">{submission.note}</p>}

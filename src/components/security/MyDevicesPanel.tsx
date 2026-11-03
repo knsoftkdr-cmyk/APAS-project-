@@ -57,7 +57,7 @@ export function MyDevicesPanel() {
           {devices.length} active {devices.length === 1 ? "device" : "devices"}. If you don't recognise one, sign it out and change your password.
         </p>
         <Button variant="outline" size="sm" disabled={otherCount === 0 || others.isPending} onClick={() => setConfirm("others")}>
-          <LogOut className="h-4 w-4 mr-1.5" />Sign out all other devices
+          <LogOut className="h-4 w-4 me-1.5" />Sign out all other devices
         </Button>
       </div>
 

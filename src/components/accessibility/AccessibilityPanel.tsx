@@ -155,7 +155,7 @@ export function AccessibilityLauncher({ variant = "header" }: { variant?: "heade
   const { setPanelOpen, panelOpen, suggestion } = useAccessibility();
   const label = `Accessibility settings${suggestion ? ", suggestions available" : ""}`;
   const base = variant === "floating"
-    ? "fixed bottom-4 left-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg hover:bg-secondary"
+    ? "fixed bottom-4 start-4 z-50 flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-lg hover:bg-secondary"
     : "relative rounded-button p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground";
   return (
     <button
@@ -168,7 +168,7 @@ export function AccessibilityLauncher({ variant = "header" }: { variant?: "heade
       className={base}
     >
       <Settings className={variant === "floating" ? "h-6 w-6" : "h-5 w-5"} />
-      {suggestion && <span aria-hidden="true" className="absolute right-1 top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />}
+      {suggestion && <span aria-hidden="true" className="absolute end-1 top-1 h-2.5 w-2.5 rounded-full bg-blue-500" />}
     </button>
   );
 }

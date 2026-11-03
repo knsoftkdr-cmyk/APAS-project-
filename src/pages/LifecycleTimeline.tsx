@@ -134,18 +134,18 @@ export default function LifecycleTimeline() {
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* Students list */}
-          <Card className="md:col-span-1 border-l-4 border-l-teal-500 shadow-sm">
+          <Card className="md:col-span-1 border-s-4 border-s-teal-500 shadow-sm">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2 text-teal-700">
                 Students
               </CardTitle>
               <div className="relative mt-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 rounded-full border-teal-100 focus-visible:ring-teal-400"
+                  className="ps-9 rounded-full border-teal-100 focus-visible:ring-teal-400"
                 />
               </div>
               <Select value={classFilter} onValueChange={setClassFilter}>
@@ -175,7 +175,7 @@ export default function LifecycleTimeline() {
                       <button
                         key={s.id}
                         onClick={() => selectStudent(s)}
-                        className={`w-full text-left px-4 py-3 my-1 rounded-xl transition-colors ${
+                        className={`w-full text-start px-4 py-3 my-1 rounded-xl transition-colors ${
                           isSelected
                             ? "bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-sm"
                             : "hover:bg-teal-50"
@@ -196,7 +196,7 @@ export default function LifecycleTimeline() {
           </Card>
 
           {/* Timeline */}
-          <Card className="md:col-span-2 border-l-4 border-l-cyan-500 shadow-sm">
+          <Card className="md:col-span-2 border-s-4 border-s-cyan-500 shadow-sm">
             <CardHeader>
               <CardTitle className="text-base text-cyan-700">
                 {selectedStudent ? `${selectedStudent.full_name}'s Timeline` : "Select a student"}
@@ -222,18 +222,18 @@ export default function LifecycleTimeline() {
                   No lifecycle events recorded yet for this student.
                 </p>
               ) : (
-                <div className="relative pl-6">
-                  <div className="absolute left-[9px] top-2 bottom-2 w-px bg-gradient-to-b from-teal-300 via-cyan-300 to-transparent" />
+                <div className="relative ps-6">
+                  <div className="absolute start-[9px] top-2 bottom-2 w-px bg-gradient-to-b from-teal-300 via-cyan-300 to-transparent" />
                   <div className="space-y-6">
                     {events.map((e) => {
                       const meta = EVENT_META[e.event_type] ?? { label: e.event_type, icon: History, color: "text-gray-600 bg-gray-50", ring: "ring-gray-100" };
                       const Icon = meta.icon;
                       return (
                         <div key={e.id} className="relative flex gap-3">
-                          <div className={`absolute -left-6 w-5 h-5 rounded-full flex items-center justify-center ring-4 ${meta.color} ${meta.ring}`}>
+                          <div className={`absolute -start-6 w-5 h-5 rounded-full flex items-center justify-center ring-4 ${meta.color} ${meta.ring}`}>
                             <Icon className="h-3 w-3" />
                           </div>
-                          <div className="ml-2 rounded-xl bg-teal-50/40 border border-teal-100 px-4 py-3 flex-1">
+                          <div className="ms-2 rounded-xl bg-teal-50/40 border border-teal-100 px-4 py-3 flex-1">
                             <div className="text-sm font-medium">{meta.label}</div>
                             <div className="text-xs text-muted-foreground">
                               {new Date(e.event_date).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}

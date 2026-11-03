@@ -14,7 +14,7 @@ const TIER_LABEL: Record<string, string> = { beginning: "Beginning", developing:
 
 function Glass({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl p-4 text-left"
+    <div className="rounded-2xl p-4 text-start"
       style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)" }}>
       {children}
     </div>

@@ -359,8 +359,8 @@ export default function ParentCommunicationCenter() {
             className="absolute inset-0 opacity-[0.07]"
             style={{ backgroundImage: "radial-gradient(circle, #fff 1px, transparent 1px)", backgroundSize: "16px 16px" }}
           />
-          <div className="absolute -right-8 -top-10 w-40 h-40 rounded-full" style={{ backgroundColor: `${SKY_ACCENT}26` }} />
-          <div className="absolute right-20 top-10 w-16 h-16 rounded-full" style={{ backgroundColor: "#ffffff14" }} />
+          <div className="absolute -end-8 -top-10 w-40 h-40 rounded-full" style={{ backgroundColor: `${SKY_ACCENT}26` }} />
+          <div className="absolute end-20 top-10 w-16 h-16 rounded-full" style={{ backgroundColor: "#ffffff14" }} />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div
               className="w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 shadow-md"
@@ -386,15 +386,15 @@ export default function ParentCommunicationCenter() {
           <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`min-h-0 border-r flex flex-col bg-white ${showMobileChat ? "hidden md:flex" : "flex"}`} style={{ borderColor: "#DCE7F5" }}>
+            <div className={`min-h-0 border-e flex flex-col bg-white ${showMobileChat ? "hidden md:flex" : "flex"}`} style={{ borderColor: "#DCE7F5" }}>
               <div className="p-3 border-b" style={{ borderColor: "#DCE7F5" }}>
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-2.5 h-4 w-4" style={{ color: `${BLUE_MID}99` }} />
+                  <Search className="absolute start-3.5 top-2.5 h-4 w-4" style={{ color: `${BLUE_MID}99` }} />
                   <Input
                     placeholder="Search teachers"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-9 h-10 text-sm rounded-full border-none focus-visible:ring-2"
+                    className="ps-9 h-10 text-sm rounded-full border-none focus-visible:ring-2"
                     style={{ backgroundColor: "#EAF1FA", boxShadow: "none" } as React.CSSProperties}
                   />
                 </div>
@@ -420,14 +420,14 @@ export default function ParentCommunicationCenter() {
                       <button
                         key={c.id}
                         onClick={() => openContact(c)}
-                        className="w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors relative"
+                        className="w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-colors relative"
                         style={isSelected ? { backgroundColor: "#E7EFFA" } : undefined}
                         onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = "#F1F6FC"; }}
                         onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = ""; }}
                       >
                         {isSelected && (
                           <span
-                            className="absolute left-0 top-2 bottom-2 w-1 rounded-full"
+                            className="absolute start-0 top-2 bottom-2 w-1 rounded-full"
                             style={{ backgroundColor: SKY_ACCENT }}
                           />
                         )}
@@ -558,7 +558,7 @@ export default function ParentCommunicationCenter() {
                               {isMine && (
                                 <button
                                   onClick={() => handleDeleteMessage(m.id)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center me-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
                                   title="Delete message"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
@@ -566,7 +566,7 @@ export default function ParentCommunicationCenter() {
                               )}
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 shadow-sm ${
-                                  isMine ? "text-white rounded-br-sm" : "bg-white rounded-bl-sm border"
+                                  isMine ? "text-white rounded-ee-sm" : "bg-white rounded-es-sm border"
                                 }`}
                                 style={
                                   isMine
@@ -661,7 +661,7 @@ export default function ParentCommunicationCenter() {
                           />
                           <button
                             onClick={() => setAttachedFile(null)}
-                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                            className="absolute -top-1.5 -end-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -676,7 +676,7 @@ export default function ParentCommunicationCenter() {
                           />
                           <button
                             onClick={() => setAttachedFile(null)}
-                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                            className="absolute -top-1.5 -end-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
                           >
                             <X className="h-3 w-3" />
                           </button>

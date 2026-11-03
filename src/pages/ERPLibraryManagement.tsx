@@ -247,10 +247,10 @@ function CatalogTab({
     <div className="space-y-4 mt-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative w-full basis-full min-w-0 sm:basis-auto sm:flex-1 sm:max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by title, author, subject..."
-            className="pl-8"
+            className="ps-8"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
           />
@@ -259,7 +259,7 @@ function CatalogTab({
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-4 w-4 me-1" />
               Add Item
             </Button>
           </DialogTrigger>
@@ -392,7 +392,7 @@ function CatalogTab({
                   ))}
                 </SelectContent>
               </Select>
-              <span className="ml-2 whitespace-nowrap">
+              <span className="ms-2 whitespace-nowrap">
                 {rangeStart}–{rangeEnd} of {items.length}
               </span>
             </div>
@@ -549,7 +549,7 @@ function CirculationTab({ schoolId }: { schoolId: string }) {
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Due</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Status</TableHead>
               <TableHead className="text-xs font-semibold uppercase tracking-wide text-white">Fine</TableHead>
-              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white text-right pr-4">Actions</TableHead>
+              <TableHead className="text-xs font-semibold uppercase tracking-wide text-white text-end pe-4">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -592,10 +592,10 @@ function CirculationTab({ schoolId }: { schoolId: string }) {
                     {displayFine > 0 ? `₹${displayFine}` : "-"}
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-1.5 justify-end pr-2">
+                    <div className="flex gap-1.5 justify-end pe-2">
                       {r.status === "issued" && (
                         <Button size="sm" variant="outline" onClick={() => openReturnDialog(r)}>
-                          <RotateCcw className="h-3 w-3 mr-1" />
+                          <RotateCcw className="h-3 w-3 me-1" />
                           Return
                         </Button>
                       )}
@@ -633,7 +633,7 @@ function CirculationTab({ schoolId }: { schoolId: string }) {
                   ))}
                 </SelectContent>
               </Select>
-              <span className="ml-2 whitespace-nowrap">
+              <span className="ms-2 whitespace-nowrap">
                 {rangeStart}–{rangeEnd} of {records.length}
               </span>
             </div>
@@ -890,7 +890,7 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
         <Button size="sm">
-          <Plus className="h-4 w-4 mr-1" />
+          <Plus className="h-4 w-4 me-1" />
           Issue Book
         </Button>
       </DialogTrigger>
@@ -954,10 +954,10 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
           {!selectedMember ? (
             <div className="space-y-2">
               <div className="relative">
-                <UserSearch className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <UserSearch className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder={memberType === "student" ? "Search by name or admission number..." : "Search by name or employee ID..."}
-                  className="pl-8"
+                  className="ps-8"
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
                 />
@@ -968,7 +968,7 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
                     <button
                       key={s.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
+                      className="w-full text-start px-3 py-2 hover:bg-slate-50 text-sm"
                       onClick={() =>
                         setSelectedMember({
                           profileId: s.profile_id,
@@ -988,7 +988,7 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
                     <button
                       key={t.id}
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
+                      className="w-full text-start px-3 py-2 hover:bg-slate-50 text-sm"
                       onClick={() =>
                         setSelectedMember({
                           profileId: t.id,
@@ -1030,10 +1030,10 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
           {!selectedBook ? (
             <div className="space-y-2">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search available books by title..."
-                  className="pl-8"
+                  className="ps-8"
                   value={bookSearch}
                   onChange={(e) => setBookSearch(e.target.value)}
                 />
@@ -1043,7 +1043,7 @@ function IssueBookDialog({ schoolId }: { schoolId: string }) {
                   <button
                     key={b.id}
                     type="button"
-                    className="w-full text-left px-3 py-2 hover:bg-slate-50 text-sm"
+                    className="w-full text-start px-3 py-2 hover:bg-slate-50 text-sm"
                     onClick={() => setSelectedBook({ id: b.id, title: b.title })}
                   >
                     <div className="font-medium">{b.title}</div>
@@ -1188,7 +1188,7 @@ function DigitalLibraryTab({ schoolId }: { schoolId: string }) {
         <Dialog open={uploadOpen} onOpenChange={(v) => { setUploadOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Upload className="h-4 w-4 mr-1" />
+              <Upload className="h-4 w-4 me-1" />
               Upload eBook
             </Button>
           </DialogTrigger>
@@ -1389,7 +1389,7 @@ function ResearchRepositoryTab({ schoolId }: { schoolId: string }) {
         <Dialog open={addOpen} onOpenChange={(v) => { setAddOpen(v); if (!v) resetForm(); }}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-4 w-4 me-1" />
               Add Paper
             </Button>
           </DialogTrigger>
@@ -1461,7 +1461,7 @@ function ResearchRepositoryTab({ schoolId }: { schoolId: string }) {
                 <TableCell className="font-medium text-slate-900 py-3">{p.title}</TableCell>
                 <TableCell className="text-slate-700">{p.author || "-"}</TableCell>
                 <TableCell className="text-slate-600">{p.subject || "-"}</TableCell>
-                <TableCell className="space-x-1">
+                <TableCell className="space-x-1 rtl:space-x-reverse">
                   {p.library_item_tags?.map((t: any, i: number) => (
                     <Badge key={i} variant="outline">{t.tag}</Badge>
                   ))}

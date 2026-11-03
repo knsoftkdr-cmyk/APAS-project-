@@ -437,8 +437,8 @@ export default function RotationScheduleManagement() {
       <div className="p-6 space-y-6">
         {/* Gradient hero banner — matches Attendance page theme */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 px-6 py-7 md:px-8 md:py-8 shadow-sm">
-          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
-          <div className="absolute right-24 -bottom-10 h-28 w-28 rounded-full bg-white/10" />
+          <div className="absolute -end-10 -top-10 h-40 w-40 rounded-full bg-white/10" />
+          <div className="absolute end-24 -bottom-10 h-28 w-28 rounded-full bg-white/10" />
           <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
@@ -454,7 +454,7 @@ export default function RotationScheduleManagement() {
                   onClick={openCreateCycleDialog}
                   className="bg-white text-emerald-700 hover:bg-white/90 shadow-sm"
                 >
-                  <Plus className="h-4 w-4 mr-1" /> New Cycle
+                  <Plus className="h-4 w-4 me-1" /> New Cycle
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -621,7 +621,7 @@ export default function RotationScheduleManagement() {
                     <Dialog open={blockDialogOpen} onOpenChange={(open) => { setBlockDialogOpen(open); if (!open) setEditingBlockId(null); }}>
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline" onClick={openCreateBlockDialog} className="bg-white">
-                          <Plus className="h-4 w-4 mr-1" /> Add Block
+                          <Plus className="h-4 w-4 me-1" /> Add Block
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
@@ -704,7 +704,7 @@ export default function RotationScheduleManagement() {
                     <Dialog open={groupDialogOpen} onOpenChange={(open) => { setGroupDialogOpen(open); if (!open) setEditingGroupId(null); }}>
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline" onClick={openCreateGroupDialog} className="bg-white">
-                          <Plus className="h-4 w-4 mr-1" /> Add Group
+                          <Plus className="h-4 w-4 me-1" /> Add Group
                         </Button>
                       </DialogTrigger>
                       <DialogContent>
@@ -779,7 +779,7 @@ export default function RotationScheduleManagement() {
                     <Dialog open={slotDialogOpen} onOpenChange={(open) => { setSlotDialogOpen(open); if (!open) setEditingSlotId(null); }}>
                       <DialogTrigger asChild>
                         <Button size="sm" variant="outline" onClick={openCreateSlotDialog} className="bg-white">
-                          <Plus className="h-4 w-4 mr-1" /> Add Slot
+                          <Plus className="h-4 w-4 me-1" /> Add Slot
                         </Button>
                       </DialogTrigger>
                       <DialogContent>

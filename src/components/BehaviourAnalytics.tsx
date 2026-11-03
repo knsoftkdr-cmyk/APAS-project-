@@ -204,7 +204,7 @@ return (
             <button
               key={s.student.id}
               onClick={() => onSelectStudent(s.student, { level: s.level, breakdown: s.breakdown })}
-              className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-colors text-left ${
+              className={`w-full flex items-center justify-between p-2.5 rounded-lg border transition-colors text-start ${
                 s.level === "high"
                   ? "bg-red-50/60 border-red-100 hover:bg-red-50"
                   : s.level === "watch"

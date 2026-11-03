@@ -224,14 +224,14 @@ export default function HouseManagement() {
   return (
     <AppLayout>
   <div className="min-h-screen relative overflow-x-hidden">
-    <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-violet-300 opacity-[0.10] blur-3xl" />
-    <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-200 opacity-[0.08] blur-3xl" />
+    <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-violet-300 opacity-[0.10] blur-3xl" />
+    <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-violet-200 opacity-[0.08] blur-3xl" />
 
     <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-6xl mx-auto">
       {/* Header */}
       <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-violet-500 to-violet-600 shadow-lg">
-        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-        <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+        <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
         <div className="relative flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -244,7 +244,7 @@ export default function HouseManagement() {
           </div>
           {isAdmin && (
             <Button onClick={openAdd} className="bg-white text-amber-700 hover:bg-amber-50 shrink-0">
-              <Plus className="h-4 w-4 mr-2" /> Add House
+              <Plus className="h-4 w-4 me-2" /> Add House
             </Button>
           )}
         </div>
@@ -266,7 +266,7 @@ export default function HouseManagement() {
       </p>
       {isAdmin && (
         <Button className="mt-4 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={openAdd}>
-          <Plus className="h-4 w-4 mr-2" /> Add House
+          <Plus className="h-4 w-4 me-2" /> Add House
         </Button>
       )}
     </CardContent>
@@ -301,8 +301,8 @@ export default function HouseManagement() {
             style={{ width: `${(row.total_points / maxPoints) * 100}%`, backgroundColor: row.color }}
           />
         </div>
-        <span className="text-sm font-bold w-16 text-right shrink-0 order-2 sm:order-none">{row.total_points} pts</span>
-        <span className="text-xs text-muted-foreground w-20 text-right shrink-0 hidden sm:block">{row.student_count} students</span>
+        <span className="text-sm font-bold w-16 text-end shrink-0 order-2 sm:order-none">{row.total_points} pts</span>
+        <span className="text-xs text-muted-foreground w-20 text-end shrink-0 hidden sm:block">{row.student_count} students</span>
       </div>
     ))}
   </CardContent>
@@ -455,7 +455,7 @@ export default function HouseManagement() {
             <div className="flex gap-2 justify-end pt-1 flex-wrap">
   <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setAssignHouse(null)}>Cancel</Button>
   <Button className="flex-1 sm:flex-none bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700" onClick={saveAssignment} disabled={savingAssign || selectedStudentIds.size === 0}>
-    {savingAssign && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+    {savingAssign && <Loader2 className="h-4 w-4 animate-spin me-2" />}
     Assign to {assignHouse?.name}
   </Button>
 </div>
@@ -483,7 +483,7 @@ export default function HouseManagement() {
             <div className="flex gap-2 justify-end pt-1 flex-wrap">
   <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setPointsHouse(null)}>Cancel</Button>
   <Button className="flex-1 sm:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={savePoints} disabled={savingPoints}>
-    {savingPoints && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+    {savingPoints && <Loader2 className="h-4 w-4 animate-spin me-2" />}
     Award Points
   </Button>
 </div>
@@ -585,7 +585,7 @@ export default function HouseManagement() {
             <div className="flex gap-2 justify-end pt-1 flex-wrap">
   <Button variant="outline" className="flex-1 sm:flex-none" onClick={() => setShowForm(false)}>Cancel</Button>
   <Button className="flex-1 sm:flex-none bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700" onClick={saveHouse} disabled={saving}>
-    {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+    {saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}
     {editingHouse ? "Update House" : "Create House"}
   </Button>
 </div>

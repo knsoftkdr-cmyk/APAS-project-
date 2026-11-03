@@ -175,10 +175,10 @@ function CatalogTab({
     <div className="space-y-4 mt-4">
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by title, author, subject..."
-            className="pl-8"
+            className="ps-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -187,7 +187,7 @@ function CatalogTab({
         <Dialog open={addOpen} onOpenChange={setAddOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="h-4 w-4 me-1" />
               Add Item
             </Button>
           </DialogTrigger>
@@ -365,7 +365,7 @@ function CirculationTab({ schoolId }: { schoolId: string | undefined }) {
               <TableCell>
                 {r.status === "issued" && (
                   <Button size="sm" variant="outline" onClick={() => returnMutation.mutate(r.id)}>
-                    <RotateCcw className="h-3 w-3 mr-1" />
+                    <RotateCcw className="h-3 w-3 me-1" />
                     Return
                   </Button>
                 )}
@@ -404,7 +404,7 @@ function DigitalLibraryTab({ schoolId }: { schoolId: string | undefined }) {
     <div className="space-y-4 mt-4">
       <div className="flex justify-end">
         <Button size="sm" variant="outline" disabled title="Wire to Supabase Storage upload">
-          <Upload className="h-4 w-4 mr-1" />
+          <Upload className="h-4 w-4 me-1" />
           Upload eBook
         </Button>
       </div>
@@ -474,7 +474,7 @@ function ResearchRepositoryTab({ schoolId }: { schoolId: string | undefined }) {
               <TableCell className="font-medium">{p.title}</TableCell>
               <TableCell>{p.author || "-"}</TableCell>
               <TableCell>{p.subject || "-"}</TableCell>
-              <TableCell className="space-x-1">
+              <TableCell className="space-x-1 rtl:space-x-reverse">
                 {p.library_item_tags?.map((t: any, i: number) => (
                   <Badge key={i} variant="outline">{t.tag}</Badge>
                 ))}

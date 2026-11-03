@@ -591,15 +591,15 @@ export default function Worksheets() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl pointer-events-none" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.10] blur-3xl pointer-events-none" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl pointer-events-none" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.10] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl pointer-events-none" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-5xl mx-auto">
           {/* Header */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                 <FileText className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -723,7 +723,7 @@ export default function Worksheets() {
                       </Button>
 
                       {getSubmissionFor(ws.worksheets?.id)?.answer_file_url && (
-                        <Badge variant="outline" className="text-xs gap-1.5 self-center pr-1 border-indigo-200 bg-indigo-50/50">
+                        <Badge variant="outline" className="text-xs gap-1.5 self-center pe-1 border-indigo-200 bg-indigo-50/50">
                           <Paperclip className="h-3 w-3" />
                           {getSubmissionFor(ws.worksheets?.id)?.answer_file_name || "File uploaded"}
                           <Check className="h-3 w-3 text-emerald-600" />
@@ -732,7 +732,7 @@ export default function Worksheets() {
                               type="button"
                               onClick={() => handleRemoveFile(ws)}
                               disabled={removingId === ws.id}
-                              className="ml-1 rounded-full hover:bg-destructive/10 p-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                              className="ms-1 rounded-full hover:bg-destructive/10 p-0.5 text-muted-foreground hover:text-destructive transition-colors"
                               aria-label="Remove uploaded file"
                             >
                               {removingId === ws.id ? (
@@ -805,7 +805,7 @@ export default function Worksheets() {
                       type="button"
                       onClick={() => handleRemoveFile(practiceWorksheet)}
                       disabled={removingId === practiceWorksheet.id}
-                      className="ml-auto text-xs text-destructive hover:underline"
+                      className="ms-auto text-xs text-destructive hover:underline"
                     >
                       {removingId === practiceWorksheet.id ? "Removing..." : "Remove"}
                     </button>
@@ -854,7 +854,7 @@ export default function Worksheets() {
 
           <DraftRecoveryDialog draft={worksheetDraft} noun="answers draft" />
           <DialogFooter className="items-center gap-2">
-            <DraftStatus draft={worksheetDraft} className="sm:mr-auto" />
+            <DraftStatus draft={worksheetDraft} className="sm:me-auto" />
             <Button variant="outline" className="rounded-xl" onClick={() => setPracticeWorksheet(null)} disabled={isSubmittingWorksheet}>
               Cancel
             </Button>

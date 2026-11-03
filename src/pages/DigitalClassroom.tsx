@@ -140,7 +140,7 @@ function StreamTab({ data, moderator }: TabProps) {
               <SelectItem value="question">Question</SelectItem>
             </SelectContent>
           </Select>
-          <Button size="sm" className="ml-auto gap-1" disabled={!body.trim() || act.isPending}
+          <Button size="sm" className="ms-auto gap-1" disabled={!body.trim() || act.isPending}
             onClick={() => run({ op: "post", class_id: data.class!.id, body: body.trim(), kind }, "Posted", () => setBody(""))}>
             <Send className="h-3.5 w-3.5" />Post
           </Button>
@@ -159,7 +159,7 @@ function StreamTab({ data, moderator }: TabProps) {
                 <span className="font-medium">{p.author.name}</span>
                 {p.author.role && p.author.role !== "student" && <span className="text-muted-foreground capitalize">({p.author.role.replace("_", " ")})</span>}
                 <span className="text-muted-foreground">{fmt(p.created_at)}</span>
-                <div className="ml-auto flex gap-1">
+                <div className="ms-auto flex gap-1">
                   {moderator && (
                     <Button variant="ghost" size="icon" className="h-7 w-7" title={p.pinned ? "Unpin" : "Pin"} onClick={() => run({ op: "pin_post", post_id: p.id, pinned: !p.pinned })}>
                       {p.pinned ? <PinOff className="h-3.5 w-3.5" /> : <Pin className="h-3.5 w-3.5" />}
@@ -175,7 +175,7 @@ function StreamTab({ data, moderator }: TabProps) {
               </div>
               <p className="text-sm whitespace-pre-wrap">{p.body}</p>
               {p.comments.length > 0 && (
-                <div className="border-l-2 pl-3 space-y-1.5">
+                <div className="border-s-2 ps-3 space-y-1.5">
                   {p.comments.map((c) => (
                     <div key={c.id} className="text-sm">
                       <span className="font-medium text-xs">{c.author.name}</span> <span className="text-[11px] text-muted-foreground">{fmt(c.created_at)}</span>
@@ -354,7 +354,7 @@ function AttendanceTab({ data, moderator }: TabProps) {
     <Card><CardContent className="p-4 space-y-3">
       <div className="flex flex-wrap items-center gap-2">
         <p className="text-sm font-medium">Today ({data.attendance?.date}) · {unmarked} unmarked</p>
-        <Button size="sm" variant="outline" className="ml-auto h-8" onClick={() => setMarks(Object.fromEntries((roster ?? []).map((r) => [r.student_id, "present" as AttendanceStatus])))}>All present</Button>
+        <Button size="sm" variant="outline" className="ms-auto h-8" onClick={() => setMarks(Object.fromEntries((roster ?? []).map((r) => [r.student_id, "present" as AttendanceStatus])))}>All present</Button>
         <Button size="sm" className="h-8" disabled={act.isPending || !Object.keys(marks).length}
           onClick={() => act.mutate({ op: "attendance_save", class_id: data.class!.id, date: data.attendance?.date, marks },
             { onSuccess: (r) => toast.success(`Saved ${(r as { saved?: number }).saved ?? ""} records`), onError: (e) => toast.error(errMsg(e)) })}>

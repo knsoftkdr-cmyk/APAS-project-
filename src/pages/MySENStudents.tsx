@@ -510,14 +510,14 @@ export default function MySENStudents() {
   return (
     <AppLayout>
       <div className="relative min-h-screen overflow-x-hidden">
-        <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
-        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-10 end-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 start-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col gap-4 p-3 md:p-6">
           {/* ── Hero ─────────────────────────────────────────── */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
                 <Accessibility className="h-6 w-6 text-white" />
@@ -539,10 +539,10 @@ export default function MySENStudents() {
                   <Users className="h-4 w-4" /> Students ({senStudents.length})
                 </CardTitle>
                 <div className="relative mt-2">
-                  <Search className="h-4 w-4 absolute left-2.5 top-2.5 text-emerald-400" />
+                  <Search className="h-4 w-4 absolute start-2.5 top-2.5 text-emerald-400" />
                   <Input
                     placeholder="Search..."
-                    className="pl-8 rounded-xl border-emerald-100 h-9"
+                    className="ps-8 rounded-xl border-emerald-100 h-9"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
@@ -557,7 +557,7 @@ export default function MySENStudents() {
                   <button
                     key={s.id}
                     onClick={() => selectStudent(s)}
-                    className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-all ${
+                    className={`w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-all ${
                       selected?.id === s.id ? "bg-emerald-50 border border-emerald-300 shadow-sm" : "border border-transparent hover:bg-slate-50 hover:border-slate-200"
                     }`}
                   >
@@ -606,7 +606,7 @@ export default function MySENStudents() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="text-end shrink-0">
                       <Badge className="bg-emerald-600 text-white hover:bg-emerald-600">{selected.category}</Badge>
                       <p className="text-xs text-muted-foreground mt-1">
                         {isCaseManager ? "You are the case manager" : "Therapist view (read-only IEP)"}
@@ -621,13 +621,13 @@ export default function MySENStudents() {
                   <Tabs defaultValue="iep">
                     <TabsList className="w-full overflow-x-auto flex-nowrap justify-start bg-slate-100 rounded-xl p-1 h-auto">
                       <TabsTrigger value="iep" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">
-                        <FileText className="h-3.5 w-3.5 mr-1" /> IEP
+                        <FileText className="h-3.5 w-3.5 me-1" /> IEP
                       </TabsTrigger>
                       <TabsTrigger value="accommodations" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">
-                        <Accessibility className="h-3.5 w-3.5 mr-1" /> Accommodations
+                        <Accessibility className="h-3.5 w-3.5 me-1" /> Accommodations
                       </TabsTrigger>
                       <TabsTrigger value="therapy" className="text-xs md:text-sm rounded-lg data-[state=active]:bg-emerald-600 data-[state=active]:text-white shrink-0">
-                        <Stethoscope className="h-3.5 w-3.5 mr-1" /> Therapy
+                        <Stethoscope className="h-3.5 w-3.5 me-1" /> Therapy
                       </TabsTrigger>
                     </TabsList>
 
@@ -642,14 +642,14 @@ export default function MySENStudents() {
                               className="border-emerald-300 text-emerald-700 hover:bg-emerald-50 rounded-xl w-full sm:w-auto"
                               onClick={() => setIepGenOpen(true)}
                             >
-                              <Sparkles className="h-4 w-4 mr-1" /> Generate IEP with AI
+                              <Sparkles className="h-4 w-4 me-1" /> Generate IEP with AI
                             </Button>
                             <Button
                               size="sm"
                               className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
                               onClick={() => { setEditingPlanId(null); setPlanForm({ title: "", start_date: "", end_date: "", status: "draft" }); setPlanOpen(true); }}
                             >
-                              <Plus className="h-4 w-4 mr-1" /> New IEP Plan
+                              <Plus className="h-4 w-4 me-1" /> New IEP Plan
                             </Button>
                           </>
                         ) : (
@@ -686,7 +686,7 @@ export default function MySENStudents() {
                                 <p className="text-sm font-semibold flex items-center gap-1.5 text-slate-700"><Target className="h-3.5 w-3.5 text-emerald-500" /> Goals</p>
                                 {isCaseManager && (
                                   <Button variant="ghost" size="sm" className="text-emerald-700 hover:bg-emerald-50 rounded-lg" onClick={() => { setEditingGoal(null); setGoalForm({ domain: "Academic", goal_description: "", baseline: "", target_criteria: "", target_date: "" }); setGoalOpen(plan.id); }}>
-                                    <Plus className="h-3.5 w-3.5 mr-1" /> Goal
+                                    <Plus className="h-3.5 w-3.5 me-1" /> Goal
                                   </Button>
                                 )}
                               </div>
@@ -724,7 +724,7 @@ export default function MySENStudents() {
                                 <p className="text-sm font-semibold flex items-center gap-1.5 text-slate-700"><CalendarClock className="h-3.5 w-3.5 text-emerald-500" /> Reviews</p>
                                 {isCaseManager && (
                                   <Button variant="ghost" size="sm" className="text-emerald-700 hover:bg-emerald-50 rounded-lg" onClick={() => { setEditingReview(null); setReviewForm({ review_date: "", attendees: "", summary: "", next_review_date: "" }); setReviewOpen(plan.id); }}>
-                                    <Plus className="h-3.5 w-3.5 mr-1" /> Review
+                                    <Plus className="h-3.5 w-3.5 me-1" /> Review
                                   </Button>
                                 )}
                               </div>
@@ -760,7 +760,7 @@ export default function MySENStudents() {
                             className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
                             onClick={() => { setEditingAccId(null); setAccForm({ accommodation_type: ACCOMMODATION_TYPES[0], applies_to: "both", description: "" }); setAccOpen(true); }}
                           >
-                            <Plus className="h-4 w-4 mr-1" /> Add Accommodation
+                            <Plus className="h-4 w-4 me-1" /> Add Accommodation
                           </Button>
                         ) : (
                           <Badge variant="outline" className="gap-1"><Lock className="h-3 w-3" /> Read-only</Badge>
@@ -806,7 +806,7 @@ export default function MySENStudents() {
                           className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto"
                           onClick={() => { setEditingSessionId(null); setSessionForm({ therapy_type: THERAPY_TYPES[0], session_date: "", duration_minutes: "", goals_addressed: "", notes: "" }); setSessionOpen(true); }}
                         >
-                          <Plus className="h-4 w-4 mr-1" /> Log Session
+                          <Plus className="h-4 w-4 me-1" /> Log Session
                         </Button>
                       </div>
                       {sessions.length === 0 && <p className="text-sm text-muted-foreground py-6 text-center">No therapy sessions logged.</p>}
@@ -830,8 +830,8 @@ export default function MySENStudents() {
                                 )}
                               </div>
                             </div>
-                            {s.goals_addressed && <p className="text-xs mt-2 ml-10 text-slate-600">Goals: {s.goals_addressed}</p>}
-                            {s.notes && <p className="text-xs text-muted-foreground mt-1 ml-10">{s.notes}</p>}
+                            {s.goals_addressed && <p className="text-xs mt-2 ms-10 text-slate-600">Goals: {s.goals_addressed}</p>}
+                            {s.notes && <p className="text-xs text-muted-foreground mt-1 ms-10">{s.notes}</p>}
                           </CardContent>
                         </Card>
                       ))}

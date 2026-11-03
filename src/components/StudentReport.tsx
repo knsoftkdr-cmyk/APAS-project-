@@ -107,7 +107,7 @@ const opt: any = {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-4xl max-h-[92vh] p-0 overflow-auto border-0 bg-[#f7f5f0]">
-        <div className="flex items-center justify-center md:justify-end p-3 pr-12 pb-0">
+        <div className="flex items-center justify-center md:justify-end p-3 pe-12 pb-0">
           <Button size="sm" variant="outline" onClick={handleDownload} className="gap-1.5 w-full md:w-auto">
             <Download className="h-4 w-4" />
             Download Report

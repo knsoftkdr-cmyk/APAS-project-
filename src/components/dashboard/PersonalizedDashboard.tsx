@@ -100,7 +100,7 @@ export function PersonalizedDashboard({ dashboardKey, widgets }: { dashboardKey:
             <SheetTitle>Customize your dashboard</SheetTitle>
             <SheetDescription>Drag a section by its handle (or use the arrows) to reorder it. Use the switch to show or hide it.</SheetDescription>
           </SheetHeader>
-          <Reorder.Group axis="y" values={list.map((w) => w.id)} onReorder={reorder} className="flex-1 space-y-2 overflow-y-auto pr-1">
+          <Reorder.Group axis="y" values={list.map((w) => w.id)} onReorder={reorder} className="flex-1 space-y-2 overflow-y-auto pe-1">
             {list.map((w, i) => (
               <Row key={w.id} w={w} index={i} count={list.length} onMove={move} onToggle={setHidden} />
             ))}

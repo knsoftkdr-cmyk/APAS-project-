@@ -607,7 +607,7 @@ try {
           <thead>
             <tr className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
               {headers.map((h, i) => (
-                <th key={i} className="px-3 py-3 text-left font-semibold whitespace-nowrap text-sm">{h || `Col ${i+1}`}</th>
+                <th key={i} className="px-3 py-3 text-start font-semibold whitespace-nowrap text-sm">{h || `Col ${i+1}`}</th>
               ))}
             </tr>
           </thead>
@@ -670,7 +670,7 @@ try {
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-8 text-white">
-          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="absolute top-6 end-10 w-16 h-16 rounded-full border border-white/30" />
           <div className="relative z-10 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <CalendarDays className="h-6 w-6 text-white" />
@@ -709,7 +709,7 @@ try {
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-green-600 via-green-500 to-teal-500 p-8 text-white">
-          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="absolute top-6 end-10 w-16 h-16 rounded-full border border-white/30" />
           <div className="relative z-10 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <CalendarDays className="h-6 w-6 text-white" />
@@ -736,11 +736,11 @@ try {
                       <span className="font-semibold text-indigo-800">Period {duty.period_number}</span>
                       <span className="text-slate-500 mx-2">·</span>
                       <span className="text-slate-700">Class {duty.class_grade} - Section {duty.section}</span>
-                      {duty.group_name ? <span className="text-slate-400 text-sm ml-2">({duty.group_name})</span> : null}
+                      {duty.group_name ? <span className="text-slate-400 text-sm ms-2">({duty.group_name})</span> : null}
                     </div>
                     <div className="text-sm text-indigo-700 font-medium">
                       {duty.block_name} {duty.subject && duty.subject !== duty.block_name ? `(${duty.subject})` : ""}
-                      {duty.room ? <span className="text-slate-400 ml-2">· {duty.room}</span> : null}
+                      {duty.room ? <span className="text-slate-400 ms-2">· {duty.room}</span> : null}
                     </div>
                   </div>
                 ))}
@@ -776,7 +776,7 @@ try {
     <AppLayout>
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 p-8 text-white">
-          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="absolute top-6 end-10 w-16 h-16 rounded-full border border-white/30" />
           <div className="relative z-10 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <CalendarDays className="h-6 w-6 text-white" />
@@ -795,7 +795,7 @@ try {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                   <BookOpen className="h-4 w-4" />All Timetables
-                  <Badge className="bg-purple-100 text-purple-700 ml-1">{timetables.length}</Badge>
+                  <Badge className="bg-purple-100 text-purple-700 ms-1">{timetables.length}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -806,7 +806,7 @@ try {
                       {classTimetables.map(tt => (
                         <div key={tt.id}
                           className={`flex items-center justify-between px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors
-                            ${viewingLabel === `Class ${tt.class_grade} - Section ${tt.section}` ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}`}
+                            ${viewingLabel === `Class ${tt.class_grade} - Section ${tt.section}` ? "bg-blue-50 border-s-4 border-s-blue-500" : ""}`}
                           onClick={() => loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`, { class_grade: tt.class_grade ?? "", section: tt.section ?? "" })}>
                           <div>
                             <p className="text-sm font-semibold text-slate-700">Class {tt.class_grade} · Section {tt.section}</p>
@@ -825,7 +825,7 @@ try {
                       {teacherTimetables.map(tt => (
                         <div key={tt.id}
                           className={`flex items-center justify-between px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors
-                            ${viewingLabel.includes(tt.teacher_name ?? "") ? "bg-green-50 border-l-4 border-l-green-500" : ""}`}
+                            ${viewingLabel.includes(tt.teacher_name ?? "") ? "bg-green-50 border-s-4 border-s-green-500" : ""}`}
                           onClick={() => loadAndParseFile(tt.file_path, `${tt.teacher_name ?? "Teacher"}'s Timetable`)}>
                           <div>
                             <p className="text-sm font-semibold text-slate-700">{tt.teacher_name ?? "Unknown"}</p>
@@ -877,17 +877,17 @@ try {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute top-0 start-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#3b82f6" />
         </svg>
-        <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute top-0 start-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#4f46e5" />
         </svg>
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-500 p-8 text-white">
-          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
-          <div className="absolute bottom-4 right-32 w-8 h-8 rounded-full border border-white/20" />
+          <div className="absolute top-6 end-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="absolute bottom-4 end-32 w-8 h-8 rounded-full border border-white/20" />
           <div className="relative z-10 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <CalendarDays className="h-6 w-6 text-white" />
@@ -994,7 +994,7 @@ try {
                       <input ref={classFileRef} type="file" accept=".xlsx" className="hidden" onChange={e => setClassFile(e.target.files?.[0] ?? null)} />
                     </div>
                     <Button className="w-full bg-blue-600" onClick={handleUploadClass} disabled={uploadingClass}>
-                      {uploadingClass ? <LoadingSpinner size="sm" /> : <><Upload className="h-4 w-4 mr-2" />Upload</>}
+                      {uploadingClass ? <LoadingSpinner size="sm" /> : <><Upload className="h-4 w-4 me-2" />Upload</>}
                     </Button>
                   </CardContent>
                 </Card>
@@ -1040,7 +1040,7 @@ try {
                       <input ref={teacherFileRef} type="file" accept=".xlsx" className="hidden" onChange={e => setTeacherFile(e.target.files?.[0] ?? null)} />
                     </div>
                     <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={handleUploadTeacher} disabled={uploadingTeacher}>
-                      {uploadingTeacher ? <LoadingSpinner size="sm" /> : <><Upload className="h-4 w-4 mr-2" />Upload</>}
+                      {uploadingTeacher ? <LoadingSpinner size="sm" /> : <><Upload className="h-4 w-4 me-2" />Upload</>}
                     </Button>
                   </CardContent>
                 </Card>
@@ -1049,7 +1049,7 @@ try {
               <TabsContent value="whatif">
                 <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm p-0">
                   <div className="p-5 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600">
-                    <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+                    <div className="absolute -end-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
                     <div className="relative flex items-start gap-3">
                       <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                         <Users className="h-4.5 w-4.5 text-white" />
@@ -1121,7 +1121,7 @@ try {
               <TabsContent value="substitutes">
                 <Card className="overflow-hidden border-blue-100 bg-white/80 backdrop-blur-sm shadow-sm p-0">
                   <div className="p-5 relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-600">
-                    <div className="absolute -right-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
+                    <div className="absolute -end-6 -top-6 w-28 h-28 bg-white/10 rounded-full" />
                     <div className="relative flex items-start gap-3">
                       <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center shrink-0">
                         <Users className="h-4.5 w-4.5 text-white" />
@@ -1194,7 +1194,7 @@ try {
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-sm font-semibold text-blue-700 flex items-center gap-2">
                         <Users className="h-4 w-4" />Substitute Assignments
-                        <Badge className="bg-blue-100 text-blue-700 ml-1">{substituteAssignments.length}</Badge>
+                        <Badge className="bg-blue-100 text-blue-700 ms-1">{substituteAssignments.length}</Badge>
                       </CardTitle>
                       <Button variant="ghost" size="icon" onClick={fetchSubstituteAssignments} className="h-7 w-7">
                         <RefreshCw className="h-3.5 w-3.5" />
@@ -1266,7 +1266,7 @@ try {
                               </div>
                             </div>
                             {isPrincipal && editingSubId === sa.id && (
-                              <div className="flex items-center gap-2 mt-2 pl-1">
+                              <div className="flex items-center gap-2 mt-2 ps-1">
                                 <Select value={editSubTeacherId} onValueChange={setEditSubTeacherId}>
                                   <SelectTrigger className="h-8 text-xs w-56">
                                     <SelectValue placeholder="Choose substitute..." />
@@ -1310,7 +1310,7 @@ try {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm font-semibold text-slate-700 flex items-center gap-2">
                     <BookOpen className="h-4 w-4" />All Timetables
-                    <Badge className="bg-blue-100 text-blue-700 ml-1">{timetables.length}</Badge>
+                    <Badge className="bg-blue-100 text-blue-700 ms-1">{timetables.length}</Badge>
                   </CardTitle>
                   <Button variant="ghost" size="icon" onClick={fetchTimetables} className="h-7 w-7">
                     <RefreshCw className="h-3.5 w-3.5" />
@@ -1326,7 +1326,7 @@ try {
                       {classTimetables.map(tt => (
                         <div key={tt.id}
                           className={`flex items-center justify-between px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors
-                            ${viewingLabel === `Class ${tt.class_grade} - Section ${tt.section}` ? "bg-blue-50 border-l-4 border-l-blue-500" : ""}`}
+                            ${viewingLabel === `Class ${tt.class_grade} - Section ${tt.section}` ? "bg-blue-50 border-s-4 border-s-blue-500" : ""}`}
                           onClick={() => loadAndParseFile(tt.file_path, `Class ${tt.class_grade} - Section ${tt.section}`, { class_grade: tt.class_grade ?? "", section: tt.section ?? "" })}>
                           <div>
                             <p className="text-sm font-semibold text-slate-700">Class {tt.class_grade} · Section {tt.section}</p>
@@ -1354,7 +1354,7 @@ try {
                       {teacherTimetables.map(tt => (
                         <div key={tt.id}
                           className={`flex items-center justify-between px-4 py-3 hover:bg-slate-50 cursor-pointer transition-colors
-                            ${viewingLabel.includes(tt.teacher_name ?? "") ? "bg-green-50 border-l-4 border-l-green-500" : ""}`}
+                            ${viewingLabel.includes(tt.teacher_name ?? "") ? "bg-green-50 border-s-4 border-s-green-500" : ""}`}
                           onClick={() => loadAndParseFile(tt.file_path, `${tt.teacher_name ?? "Teacher"}'s Timetable`)}>
                           <div>
                             <p className="text-sm font-semibold text-slate-700">{tt.teacher_name ?? "Unknown"}</p>

@@ -155,7 +155,7 @@ export default function AttendanceRiskView({ schoolId, role, classes }: Props) {
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
-                  <div className="text-right hidden sm:block">
+                  <div className="text-end hidden sm:block">
                     <div className="text-sm font-semibold text-slate-700">{r.last_30_pct}%</div>
                     <div className="text-[10px] text-muted-foreground">last 30 days</div>
                   </div>

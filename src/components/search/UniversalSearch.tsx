@@ -168,7 +168,7 @@ export function UniversalSearch() {
         className="hidden h-9 w-56 items-center gap-2 rounded-button border border-border bg-secondary/50 px-3 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:flex lg:w-80"
       >
         <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
-        <span className="flex-1 truncate text-left">{PLACEHOLDER}</span>
+        <span className="flex-1 truncate text-start">{PLACEHOLDER}</span>
         <kbd className="hidden rounded border border-border bg-background px-1.5 py-0.5 font-sans text-[10px] font-medium lg:inline">
           {isMac ? "⌘K" : "Ctrl K"}
         </kbd>
@@ -202,7 +202,7 @@ export function UniversalSearch() {
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="search"
-              className="pr-8"
+              className="pe-8"
               aria-label="Search"
             />
 

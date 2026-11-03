@@ -101,9 +101,9 @@ export default function PurchaseOrdersTab({
               <TableHead>Vendor</TableHead>
               <TableHead>Warehouse</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Ordered</TableHead>
-              <TableHead className="text-right">Received</TableHead>
-              <TableHead className="text-right">Value</TableHead>
+              <TableHead className="text-end">Ordered</TableHead>
+              <TableHead className="text-end">Received</TableHead>
+              <TableHead className="text-end">Value</TableHead>
               <TableHead className="w-[90px]" />
             </TableRow>
           </TableHeader>
@@ -133,13 +133,13 @@ export default function PurchaseOrdersTab({
                       {STATUS_LABEL[po.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-end tabular-nums">
                     {po.total_quantity_ordered}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-end tabular-nums">
                     {po.total_quantity_received}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-end tabular-nums">
                     {po.total_value.toFixed(2)}
                   </TableCell>
                   <TableCell>

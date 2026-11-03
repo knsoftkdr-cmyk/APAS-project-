@@ -10,7 +10,10 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "i18n:translate": "node tools/translate-ui.mjs",
+    "i18n:check": "node tools/translate-ui.mjs --check",
+    "i18n:verify": "node tools/i18n/verifyRewrite.mjs"
   },
   "dependencies": {
     "@capacitor-community/text-to-speech": "^8.0.2",
@@ -35,6 +38,7 @@
     "@radix-ui/react-collapsible": "^1.1.11",
     "@radix-ui/react-context-menu": "^2.2.15",
     "@radix-ui/react-dialog": "^1.1.14",
+    "@radix-ui/react-direction": "1.1.1",
     "@radix-ui/react-dropdown-menu": "^2.1.15",
     "@radix-ui/react-hover-card": "^1.1.14",
     "@radix-ui/react-label": "^2.1.7",

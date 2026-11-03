@@ -40,7 +40,7 @@ function GroupCard({ group }: { group: PeerGroup }) {
               {group.shared_needs.map((n) => (
                 <Badge key={n.topic_id} variant="secondary" className="font-normal" title={n.chapter_name}>
                   {n.topic_name}
-                  <span className="ml-1 text-muted-foreground">
+                  <span className="ms-1 text-muted-foreground">
                     {isSupport ? `${n.weak_count}/${n.member_count} weak · ${pct(n.avg_score)}` : pct(n.avg_score)}
                   </span>
                 </Badge>

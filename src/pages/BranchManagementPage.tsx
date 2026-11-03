@@ -289,14 +289,14 @@ export default function BranchManagementPage() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-7xl mx-auto">
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -340,7 +340,7 @@ export default function BranchManagementPage() {
                 >
                   <DialogTrigger asChild>
                     <Button onClick={openCreateDialog} className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700">
-                      <Plus className="h-4 w-4 mr-1" /> Add Branch
+                      <Plus className="h-4 w-4 me-1" /> Add Branch
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
@@ -401,7 +401,7 @@ export default function BranchManagementPage() {
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        {b.code && <p className="text-xs text-muted-foreground pl-11.5 mt-1">{b.code}</p>}
+                        {b.code && <p className="text-xs text-muted-foreground ps-11.5 mt-1">{b.code}</p>}
                       </CardHeader>
                       <CardContent className="pt-1">
                         <div className="flex items-center gap-1.5 text-sm font-medium text-slate-700 mb-2">
@@ -429,8 +429,8 @@ export default function BranchManagementPage() {
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="relative flex-1 min-w-[200px]">
-                      <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input className="pl-9" placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} />
+                      <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="ps-9" placeholder="Search students..." value={studentSearch} onChange={(e) => setStudentSearch(e.target.value)} />
                     </div>
                     <Select value={moveTargetStudents} onValueChange={setMoveTargetStudents}>
                       <SelectTrigger className="w-48">
@@ -447,7 +447,7 @@ export default function BranchManagementPage() {
                       disabled={selectedStudentIds.size === 0 || !moveTargetStudents}
                       className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700"
                     >
-                      <ArrowRightLeft className="h-4 w-4 mr-1" /> Move ({selectedStudentIds.size})
+                      <ArrowRightLeft className="h-4 w-4 me-1" /> Move ({selectedStudentIds.size})
                     </Button>
                   </div>
 
@@ -492,8 +492,8 @@ export default function BranchManagementPage() {
                 <CardContent className="pt-6 space-y-4">
                   <div className="flex items-center gap-3 flex-wrap">
                     <div className="relative flex-1 min-w-[200px]">
-                      <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input className="pl-9" placeholder="Search staff..." value={staffSearch} onChange={(e) => setStaffSearch(e.target.value)} />
+                      <Search className="h-4 w-4 absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <Input className="ps-9" placeholder="Search staff..." value={staffSearch} onChange={(e) => setStaffSearch(e.target.value)} />
                     </div>
                     <Select value={moveTargetStaff} onValueChange={setMoveTargetStaff}>
                       <SelectTrigger className="w-48">
@@ -510,7 +510,7 @@ export default function BranchManagementPage() {
                       disabled={selectedStaffIds.size === 0 || !moveTargetStaff}
                       className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700"
                     >
-                      <ArrowRightLeft className="h-4 w-4 mr-1" /> Move ({selectedStaffIds.size})
+                      <ArrowRightLeft className="h-4 w-4 me-1" /> Move ({selectedStaffIds.size})
                     </Button>
                   </div>
 

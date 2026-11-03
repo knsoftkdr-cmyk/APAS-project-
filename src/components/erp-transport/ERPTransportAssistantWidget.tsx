@@ -574,7 +574,7 @@ if (isNativePlatform) {
       {!open && isTransportTab && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
+          className="fixed bottom-5 end-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
           aria-label="Open APAS Agent"
         >
           <Bus className="h-6 w-6" />
@@ -585,7 +585,7 @@ if (isNativePlatform) {
         <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center voice-overlay-bg">
           <button
             onClick={exitVoiceMode}
-            className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full voice-overlay-btn"
+            className="absolute top-6 end-6 flex h-10 w-10 items-center justify-center rounded-full voice-overlay-btn"
             aria-label="Exit voice mode"
           >
             <X className="h-5 w-5" />
@@ -680,7 +680,7 @@ if (isNativePlatform) {
       )}
 
       {open && !voiceMode && (
-        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:end-5 sm:h-[520px] sm:w-[380px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent
@@ -704,7 +704,7 @@ if (isNativePlatform) {
 
           <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden p-3">
             <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block" ref={scrollRef}>
-              <div className="flex flex-col gap-3 pr-2">
+              <div className="flex flex-col gap-3 pe-2">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
                     Try: "How many vehicles need attention?", "Where does Route 3 pick up?", "Show me the drivers tab", or "Which student is Aditya on?" Or tap the blue icon above for hands-free voice mode.

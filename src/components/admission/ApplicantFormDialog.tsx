@@ -166,7 +166,7 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-white text-indigo-700 hover:bg-indigo-50 shadow-sm">
-          <UserPlus className="h-4 w-4 mr-1.5" />
+          <UserPlus className="h-4 w-4 me-1.5" />
           Log New Applicant
         </Button>
       </DialogTrigger>
@@ -418,7 +418,7 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
                 disabled={submitting}
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Paperclip className="h-4 w-4 mr-1.5" />
+                <Paperclip className="h-4 w-4 me-1.5" />
                 Choose File
               </Button>
               <input
@@ -444,7 +444,7 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
                     <button
                       type="button"
                       onClick={() => removePendingDocument(doc.id)}
-                      className="text-muted-foreground hover:text-destructive shrink-0 ml-2"
+                      className="text-muted-foreground hover:text-destructive shrink-0 ms-2"
                       aria-label={`Remove ${doc.file.name}`}
                     >
                       <X className="h-3.5 w-3.5" />
@@ -469,7 +469,7 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
             disabled={submitting}
             className="flex-1 sm:flex-none bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700"
           >
-            {submitting && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+            {submitting && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
             Save Applicant
           </Button>
         </DialogFooter>

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleSecurityAnomaly } from "../_shared/handlers/securityAnomaly.ts";
 import { handleSessionManagement } from "../_shared/handlers/sessionManagement.ts";
+import { handleTranslateUi } from "../_shared/handlers/translateUi.ts";
 
 // Security Anomaly Detection (merged in, no new edge function - see _shared/mergedRouter.ts and CONSOLIDATION.md).
 // Routed on `mode` because this function's own body already uses `action` for the audit action name.
@@ -17,6 +18,8 @@ const MERGED_ROUTES: RouteTable = {
   sess_revoke: { handler: handleSessionManagement, action: "revoke" },
   sess_revoke_others: { handler: handleSessionManagement, action: "revoke_others" },
   sess_admin_revoke_user: { handler: handleSessionManagement, action: "admin_revoke_user" },
+  // UI translation for tools/translate-ui.mjs (Google Cloud Translation)
+  ui_translate: { handler: handleTranslateUi },
 };
 
 const corsHeaders = {

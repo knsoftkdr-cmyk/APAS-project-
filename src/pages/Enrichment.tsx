@@ -96,7 +96,7 @@ export default function Enrichment() {
                 </SelectContent>
               </Select>
               <Select value={language} onValueChange={(v) => { setLangOverride(v); setResult(null); }}>
-                <SelectTrigger aria-label="Language"><Globe2 className="h-4 w-4 mr-1 shrink-0" /><SelectValue /></SelectTrigger>
+                <SelectTrigger aria-label="Language"><Globe2 className="h-4 w-4 me-1 shrink-0" /><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {TUTOR_LANGUAGES.map((l) => <SelectItem key={l.code} value={l.code}>{l.native}{l.code !== "en" ? ` (${l.name})` : ""}</SelectItem>)}
                 </SelectContent>
@@ -180,14 +180,14 @@ export default function Enrichment() {
             {pack.content.think_about_it.length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Lightbulb className="h-5 w-5" /> Think about it</CardTitle></CardHeader>
-                <CardContent><ul className="list-disc pl-5 space-y-1 text-sm">{pack.content.think_about_it.map((q, i) => <li key={i}>{q}</li>)}</ul></CardContent>
+                <CardContent><ul className="list-disc ps-5 space-y-1 text-sm">{pack.content.think_about_it.map((q, i) => <li key={i}>{q}</li>)}</ul></CardContent>
               </Card>
             )}
 
             {pack.content.real_world_connections.length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="flex items-center gap-2 text-lg"><Globe2 className="h-5 w-5" /> In the real world</CardTitle></CardHeader>
-                <CardContent><ul className="list-disc pl-5 space-y-1 text-sm">{pack.content.real_world_connections.map((q, i) => <li key={i}>{q}</li>)}</ul></CardContent>
+                <CardContent><ul className="list-disc ps-5 space-y-1 text-sm">{pack.content.real_world_connections.map((q, i) => <li key={i}>{q}</li>)}</ul></CardContent>
               </Card>
             )}
 

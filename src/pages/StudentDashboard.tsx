@@ -472,7 +472,7 @@ const subjectColors: Record<string, string> = {
                         onClick={() => navigate("/diagnostic")}
                         className="w-full sm:w-auto shrink-0 bg-blue-500 hover:bg-blue-700 text-white"
                       >
-                        Start Assessment <ArrowRight className="ml-2 h-4 w-4" />
+                        Start Assessment <ArrowRight className="ms-2 h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
@@ -712,7 +712,7 @@ const subjectColors: Record<string, string> = {
                             <CardContent className="px-4 pb-4">
                               <div className="flex items-center gap-3 mb-2">
                                 <Progress value={score.percentage} className={`h-2 flex-1 ${getProgressColor(score.percentage)}`} />
-                                <span className="text-sm font-semibold text-foreground w-12 text-right">{score.percentage}%</span>
+                                <span className="text-sm font-semibold text-foreground w-12 text-end">{score.percentage}%</span>
                               </div>
                               <p className="text-xs text-muted-foreground mb-1">{score.description}</p>
                               <p className="text-xs text-foreground/80 leading-relaxed">{score.interpretation}</p>
@@ -741,7 +741,7 @@ const subjectColors: Record<string, string> = {
                       </CardTitle>
                       <Button variant="ghost" size="sm" asChild>
                         <Link to="/dashboard">
-                          View All <ArrowRight className="ml-1 h-4 w-4" />
+                          View All <ArrowRight className="ms-1 h-4 w-4" />
                         </Link>
                       </Button>
                     </CardHeader>
@@ -799,11 +799,11 @@ const subjectColors: Record<string, string> = {
                               >
                                 {hw.status === "overdue" ? (
                                   <>
-                                    <AlertCircle className="h-3 w-3 mr-1" /> Overdue
+                                    <AlertCircle className="h-3 w-3 me-1" /> Overdue
                                   </>
                                 ) : (
                                   <>
-                                    <Clock className="h-3 w-3 mr-1" /> Pending
+                                    <Clock className="h-3 w-3 me-1" /> Pending
                                   </>
                                 )}
                               </Badge>
@@ -870,7 +870,7 @@ const subjectColors: Record<string, string> = {
                               </div>
                               <div className="flex gap-1 shrink-0">
                                 <Badge className="bg-purple-900 text-white border-purple-400 cursor-pointer">
-                                  <FileText className="h-3 w-3 mr-1" /> View
+                                  <FileText className="h-3 w-3 me-1" /> View
                                 </Badge>
                               </div>
                             </div>
@@ -985,7 +985,7 @@ const subjectColors: Record<string, string> = {
                             <div className="pt-2">
                               <p className="text-xs text-muted-foreground mb-1">Overall completion</p>
                               <Progress value={completionPct} className="h-2" />
-                              <p className="text-xs text-right mt-1 font-medium">{completionPct}%</p>
+                              <p className="text-xs text-end mt-1 font-medium">{completionPct}%</p>
                             </div>
                           </div>
                         </div>

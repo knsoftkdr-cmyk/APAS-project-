@@ -50,10 +50,10 @@ const ForgotPassword = () => {
     <div className="min-h-screen bg-[#EAF1FB] flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-xl overflow-hidden relative">
         {/* Visual Dot Matrices */}
-        <div className="absolute top-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+        <div className="absolute top-6 end-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
           {Array.from({ length: 25 }).map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />)}
         </div>
-        <div className="absolute bottom-6 right-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
+        <div className="absolute bottom-6 end-6 grid grid-cols-5 gap-1 opacity-40 pointer-events-none">
           {Array.from({ length: 25 }).map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-[#2563EB]/40" />)}
         </div>
 
@@ -91,7 +91,7 @@ const ForgotPassword = () => {
 
                 <form onSubmit={handleSendResetLink} className="space-y-4">
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                    <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                       <Mail className="h-4 w-4 text-[#2C3E50]/60" />
                     </div>
                     <input
@@ -99,7 +99,7 @@ const ForgotPassword = () => {
                       placeholder="Registered email address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                      className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                       required
                       autoFocus
                     />
@@ -135,7 +135,7 @@ const ForgotPassword = () => {
                   </p>
                 </div>
 
-                <div className="bg-[#F5F8FC] rounded-xl p-5 border border-[#E8EEF7] text-left">
+                <div className="bg-[#F5F8FC] rounded-xl p-5 border border-[#E8EEF7] text-start">
                   <p className="text-xs text-[#2C3E50]/70 leading-relaxed">
                     <strong>Next Steps:</strong> Open your email application and click <strong>"Reset password"</strong>. The link will securely authorize your session and open your password editor form.
                   </p>

@@ -16,11 +16,11 @@ export const DashboardHero = ({
   return (
     <div data-tour="dashboard-hero" className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-700 via-blue-600 to-cyan-500 px-5 py-6 md:px-9 md:py-10 text-white shadow-elevated">
       <div className="pointer-events-none absolute inset-0 overflow-hidden opacity-90">
-        <div className="absolute -top-10 -right-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
-        <div className="absolute bottom-0 right-24 h-32 w-32 rounded-full bg-indigo-300/10 blur-xl" />
-        <div className="absolute top-10 right-72 h-2 w-2 rounded-full bg-white/40" />
-        <div className="absolute top-24 right-52 h-1.5 w-1.5 rounded-full bg-white/30" />
-        <div className="absolute bottom-14 right-96 h-1.5 w-1.5 rounded-full bg-white/30" />
+        <div className="absolute -top-10 -end-10 h-56 w-56 rounded-full bg-blue-400/10 blur-2xl" />
+        <div className="absolute bottom-0 end-24 h-32 w-32 rounded-full bg-indigo-300/10 blur-xl" />
+        <div className="absolute top-10 end-72 h-2 w-2 rounded-full bg-white/40" />
+        <div className="absolute top-24 end-52 h-1.5 w-1.5 rounded-full bg-white/30" />
+        <div className="absolute bottom-14 end-96 h-1.5 w-1.5 rounded-full bg-white/30" />
       </div>
 
       <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-5 md:gap-6">

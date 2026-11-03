@@ -145,15 +145,15 @@ export default function ExecutiveReporting() {
         ) : (
         <>
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 shadow-lg">
-          <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
-          <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
+          <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
+          <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
           <div className="relative flex items-center justify-between flex-wrap gap-3">
             <div>
               <h1 className="text-2xl font-bold text-white">Executive Reporting</h1>
               <p className="text-blue-100 text-xs md:text-sm mt-0.5">Whole-school status at a glance</p>
             </div>
             <Button size="sm" onClick={fetchReport} className="bg-white text-blue-700 hover:bg-blue-50">
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Refresh
+              <RefreshCw className="h-3.5 w-3.5 me-1.5" /> Refresh
             </Button>
           </div>
         </div>
@@ -173,7 +173,7 @@ export default function ExecutiveReporting() {
         {/* 11. School Health Score breakdown */}
         {data.health_components?.length > 0 && (
           <Card className="relative overflow-hidden border-2 border-indigo-200 hover:border-indigo-300 rounded-2xl bg-gradient-to-br from-indigo-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-indigo-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-indigo-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-indigo-500 to-blue-500 text-white shadow-sm shadow-indigo-200"><Activity className="h-3.5 w-3.5" /></div>School Health Score — {data.health_score}/100</CardTitle></CardHeader>
             <CardContent className="flex flex-wrap gap-4 text-xs text-muted-foreground">
               {data.health_components.map((c: any) => (
@@ -189,7 +189,7 @@ export default function ExecutiveReporting() {
         {/* AI Executive Insights */}
         {data.ai_insights?.length > 0 && (
           <Card className="relative overflow-hidden border-2 border-dashed border-blue-300 rounded-2xl bg-gradient-to-br from-blue-50/70 via-white to-white shadow-sm">
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-blue-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-blue-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm shadow-blue-200"><Sparkles className="h-3.5 w-3.5" /></div>AI Executive Insights</CardTitle></CardHeader>
             <CardContent className="space-y-1.5">
               {data.ai_insights.map((insight: string, i: number) => <p key={i} className="text-sm">{insight}</p>)}
@@ -199,7 +199,7 @@ export default function ExecutiveReporting() {
 
         {/* At-Risk Students Report */}
         <Card className="relative overflow-hidden border-2 border-pink-200 hover:border-pink-300 rounded-2xl bg-gradient-to-br from-pink-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-pink-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-pink-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-sm shadow-pink-200"><AlertTriangle className="h-3.5 w-3.5" /></div>At-Risk Students</CardTitle></CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-3 mb-2">
@@ -214,7 +214,7 @@ export default function ExecutiveReporting() {
         {/* Behaviour + Intervention + Homework + Assessment summaries */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="relative overflow-hidden border-2 border-pink-200 hover:border-pink-300 rounded-2xl bg-gradient-to-br from-pink-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-pink-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-pink-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-pink-500 to-rose-500 text-white shadow-sm shadow-pink-200"><Heart className="h-3.5 w-3.5" /></div>Behaviour Summary</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-2 text-sm">
               <p>Positive Notes: <span className="font-semibold">{data.behaviour.positive}</span></p>
@@ -225,7 +225,7 @@ export default function ExecutiveReporting() {
           </Card>
 
           <Card className="relative overflow-hidden border-2 border-blue-200 hover:border-blue-300 rounded-2xl bg-gradient-to-br from-blue-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-blue-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-blue-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-blue-500 to-indigo-500 text-white shadow-sm shadow-blue-200"><ClipboardList className="h-3.5 w-3.5" /></div>Intervention Summary</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-2 text-sm">
               <p>Created: <span className="font-semibold">{data.interventions.created}</span></p>
@@ -236,7 +236,7 @@ export default function ExecutiveReporting() {
           </Card>
 
           <Card className="relative overflow-hidden border-2 border-amber-200 hover:border-amber-300 rounded-2xl bg-gradient-to-br from-amber-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-amber-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-amber-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-amber-500 to-yellow-500 text-white shadow-sm shadow-amber-200"><BookOpen className="h-3.5 w-3.5" /></div>Homework Summary</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-2 text-sm">
               <p>Assigned: <span className="font-semibold">{data.homework.assigned}</span></p>
@@ -246,7 +246,7 @@ export default function ExecutiveReporting() {
           </Card>
 
           <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><TrendingUp className="h-3.5 w-3.5" /></div>Assessment Summary</CardTitle></CardHeader>
             <CardContent className="grid grid-cols-2 gap-2 text-sm">
               <p>Conducted: <span className="font-semibold">{data.assessment.conducted}</span></p>
@@ -262,7 +262,7 @@ export default function ExecutiveReporting() {
         {/* Grade-wise Report */}
         {data.grade_wise?.length > 0 && (
           <Card className="relative overflow-hidden border-2 border-purple-200 hover:border-purple-300 rounded-2xl bg-gradient-to-br from-purple-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-purple-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-purple-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-purple-500 to-violet-500 text-white shadow-sm shadow-purple-200"><GraduationCap className="h-3.5 w-3.5" /></div>Grade-wise Report</CardTitle></CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -284,7 +284,7 @@ export default function ExecutiveReporting() {
 {/* Teacher Performance Summary */}
         {data.teacher_performance.teacher_summary?.length > 0 && (
           <Card className="relative overflow-hidden border-2 border-orange-200 hover:border-orange-300 rounded-2xl bg-gradient-to-br from-orange-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-            <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-orange-400/10 blur-3xl" />
+            <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-orange-400/10 blur-3xl" />
             <CardHeader className="pb-2 relative"><CardTitle className="text-base flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-orange-500 to-amber-500 text-white shadow-sm shadow-orange-200"><Users className="h-3.5 w-3.5" /></div>Teacher Summary</CardTitle></CardHeader>
             <CardContent className="p-0">
               <Table>

@@ -153,8 +153,8 @@ export default function InterventionBoard() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <div className="relative flex-1 min-w-[12rem]"><Search className="h-4 w-4 absolute left-2.5 top-2.5 text-muted-foreground" />
-            <Input className="pl-8" placeholder="Search student or reason" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
+          <div className="relative flex-1 min-w-[12rem]"><Search className="h-4 w-4 absolute start-2.5 top-2.5 text-muted-foreground" />
+            <Input className="ps-8" placeholder="Search student or reason" value={search} onChange={(e) => setSearch(e.target.value)} /></div>
           <Select value={classFilter} onValueChange={setClassFilter}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent><SelectItem value="all">All classes</SelectItem>{classLabels.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
@@ -186,7 +186,7 @@ export default function InterventionBoard() {
                   const out = iv.effectiveness ? OUTCOME[iv.effectiveness] : null;
                   return (
                     <button key={iv.id} type="button" onClick={() => setOpenId(iv.id)}
-                      className="w-full text-left rounded-lg border bg-background p-3 space-y-2 hover:border-primary/50 transition-colors">
+                      className="w-full text-start rounded-lg border bg-background p-3 space-y-2 hover:border-primary/50 transition-colors">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-sm font-medium truncate">{s?.full_name ?? "Student"}</p>
@@ -386,7 +386,7 @@ function NewInterventionPicker({ open, onOpenChange, onPick }: { open: boolean; 
           {classId && roster === null && <Loader2 className="h-4 w-4 animate-spin" />}
           {roster?.length === 0 && <p className="text-sm text-muted-foreground">No students on this class roster.</p>}
           {roster?.map((s) => (
-            <button key={s.id} type="button" className="w-full text-left rounded-md border px-3 py-2 text-sm hover:bg-muted" onClick={() => onPick(s)}>{s.full_name}</button>
+            <button key={s.id} type="button" className="w-full text-start rounded-md border px-3 py-2 text-sm hover:bg-muted" onClick={() => onPick(s)}>{s.full_name}</button>
           ))}
         </div>
       </DialogContent>

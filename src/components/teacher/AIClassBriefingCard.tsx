@@ -53,7 +53,7 @@ export function AIClassBriefingCard() {
             {data.priorities.length > 0 && (
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Do first</p>
-                <ol className="space-y-1 text-sm list-decimal pl-5">
+                <ol className="space-y-1 text-sm list-decimal ps-5">
                   {data.priorities.map((p, i) => <li key={i}>{p}</li>)}
                 </ol>
               </div>
@@ -81,7 +81,7 @@ export function AIClassBriefingCard() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5">Learning issues</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {data.learning_issues.map((t, i) => <Badge key={i} variant="secondary" className="font-normal text-left whitespace-normal">{t}</Badge>)}
+                  {data.learning_issues.map((t, i) => <Badge key={i} variant="secondary" className="font-normal text-start whitespace-normal">{t}</Badge>)}
                 </div>
               </div>
             )}

@@ -537,14 +537,14 @@ export default function TeacherVirtualClassroom() {
   return (
     <AppLayout>
     <div className="min-h-screen relative overflow-x-hidden">
-  <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-teal-300 opacity-[0.12] blur-3xl" />
-  <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-cyan-300 opacity-[0.10] blur-3xl" />
-  <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-teal-200 opacity-[0.10] blur-3xl" />
+  <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-teal-300 opacity-[0.12] blur-3xl" />
+  <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-cyan-300 opacity-[0.10] blur-3xl" />
+  <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-teal-200 opacity-[0.10] blur-3xl" />
 
   <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-7xl mx-auto">
     <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-teal-600 to-cyan-600 shadow-lg">
-      <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-      <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+      <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+      <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
       <div className="relative flex items-center gap-3 md:gap-4">
         <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
           <PenLine className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -599,15 +599,15 @@ export default function TeacherVirtualClassroom() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {sessions.map((s) => {
   const statusAccent =
-    s.status === "live" ? "border-l-red-400" :
-    s.status === "completed" ? "border-l-slate-300" :
-    "border-l-teal-400";
+    s.status === "live" ? "border-s-red-400" :
+    s.status === "completed" ? "border-s-slate-300" :
+    "border-s-teal-400";
   const statusBadge =
     s.status === "live" ? "bg-red-100 text-red-700" :
     s.status === "completed" ? "bg-slate-100 text-slate-600" :
     "bg-teal-100 text-teal-700";
   return (
-  <Card key={s.id} className={`overflow-hidden border-l-4 ${statusAccent} border-teal-300 shadow-sm hover:shadow-md transition-shadow`}>
+  <Card key={s.id} className={`overflow-hidden border-s-4 ${statusAccent} border-teal-300 shadow-sm hover:shadow-md transition-shadow`}>
     <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3">
       <CardTitle className="text-base md:text-lg flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-lg bg-teal-100 flex items-center justify-center shrink-0">
@@ -729,14 +729,14 @@ export default function TeacherVirtualClassroom() {
 </Dialog>
 
                   <Button size="sm" className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white" onClick={() => openWhiteboard(s)}>
-                    <PenLine className="h-3.5 w-3.5 mr-1" /> Whiteboard
+                    <PenLine className="h-3.5 w-3.5 me-1" /> Whiteboard
                   </Button>
 
                   <Button variant="outline" size="sm" className="border-slate-200" onClick={() => openEditDialog(s)}>
-                    <Pencil className="h-3.5 w-3.5 mr-1" /> Edit
+                    <Pencil className="h-3.5 w-3.5 me-1" /> Edit
                   </Button>
                   <Button variant="outline" size="sm" className="border-red-200 text-red-600 hover:bg-red-50" onClick={() => setDeleteTargetId(s.id)}>
-                    <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                    <Trash2 className="h-3.5 w-3.5 me-1" /> Delete
                   </Button>
                 </div>
               </CardContent>

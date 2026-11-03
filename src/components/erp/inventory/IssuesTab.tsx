@@ -96,8 +96,8 @@ export default function IssuesTab({
               <TableHead>Warehouse</TableHead>
               <TableHead>Purpose</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Issued</TableHead>
-              <TableHead className="text-right">Returned</TableHead>
+              <TableHead className="text-end">Issued</TableHead>
+              <TableHead className="text-end">Returned</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="w-[80px]" />
             </TableRow>
@@ -130,10 +130,10 @@ export default function IssuesTab({
                       {STATUS_LABEL[iss.status]}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-end tabular-nums">
                     {iss.total_quantity_issued}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-end tabular-nums">
                     {iss.total_quantity_returned}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">

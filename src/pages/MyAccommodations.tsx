@@ -55,14 +55,14 @@ export default function MyAccommodations() {
   return (
     <AppLayout>
       <div className="relative min-h-screen overflow-x-hidden">
-        <div className="absolute top-10 right-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
-        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-10 end-10 w-72 h-72 rounded-full bg-emerald-300 opacity-[0.08] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 start-0 w-64 h-64 rounded-full bg-teal-200 opacity-[0.08] blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col gap-4 p-3 md:p-6 max-w-2xl mx-auto">
           {/* ── Hero ─────────────────────────────────────────── */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
                 <Accessibility className="h-6 w-6 text-white" />

@@ -283,14 +283,14 @@ function FuelLogsView({ schoolId }: { schoolId?: string }) {
                 type="file"
                 accept="image/*,application/pdf"
                 onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
-                className="block w-full text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
+                className="block w-full text-sm text-muted-foreground file:me-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:bg-muted file:text-foreground"
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={resetForm} disabled={saving}>Cancel</Button>
             <Button onClick={submit} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />} Save
+              {saving && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />} Save
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -60,9 +60,9 @@ function StudentRow({ p, onPin, onUnpin, busy }: {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel className="text-xs">Pin {p.full_name.split(" ")[0]} to…</DropdownMenuLabel>
           {(["remedial", "regular", "enrichment"] as Tier[]).filter((t) => t !== p.tier || !p.pinned).map((t) => (
-            <DropdownMenuItem key={t} onClick={() => onPin(t)}><Pin className="h-3.5 w-3.5 mr-2" /> {TIER_LABEL[t]}</DropdownMenuItem>
+            <DropdownMenuItem key={t} onClick={() => onPin(t)}><Pin className="h-3.5 w-3.5 me-2" /> {TIER_LABEL[t]}</DropdownMenuItem>
           ))}
-          {p.pinned && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={onUnpin}><PinOff className="h-3.5 w-3.5 mr-2" /> Unpin (follow performance)</DropdownMenuItem></>)}
+          {p.pinned && (<><DropdownMenuSeparator /><DropdownMenuItem onClick={onUnpin}><PinOff className="h-3.5 w-3.5 me-2" /> Unpin (follow performance)</DropdownMenuItem></>)}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
@@ -154,7 +154,7 @@ export function LearningGroupsPanel({ classId, bookId }: { classId: string; book
             </div>
             <Button size="sm" variant="outline" onClick={recalc} disabled={preview.isFetching}>Recalculate</Button>
             <Button size="sm" onClick={onSave} disabled={apply.isPending || !persistence}>
-              <Save className="h-3.5 w-3.5 mr-1.5" /> {apply.isPending ? "Saving…" : "Save these groups"}
+              <Save className="h-3.5 w-3.5 me-1.5" /> {apply.isPending ? "Saving…" : "Save these groups"}
             </Button>
           </div>
         </CardContent>

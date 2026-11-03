@@ -509,7 +509,7 @@ const AITutor = () => {
               </span>
             );
           })}
-          <div className="ml-auto">
+          <div className="ms-auto">
             <Select value={teachingLanguage} onValueChange={setLanguageOverride} disabled={isLoading}>
               <SelectTrigger className="h-9 w-[170px] gap-1" aria-label="Tutor language">
                 <Globe2 className="h-4 w-4 shrink-0" />
@@ -547,14 +547,14 @@ const AITutor = () => {
             <span className="text-xs text-muted-foreground">{STYLE_CONFIG[style].help}</span>
           )}
           {messages.length > 0 && (
-            <Button variant="ghost" size="sm" className="ml-auto h-7 gap-1 text-xs text-muted-foreground" onClick={clearHistory} disabled={isLoading}>
+            <Button variant="ghost" size="sm" className="ms-auto h-7 gap-1 text-xs text-muted-foreground" onClick={clearHistory} disabled={isLoading}>
               <Trash2 className="h-3.5 w-3.5" /> Clear chat
             </Button>
           )}
         </div>
 
         {/* Chat Area */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 mb-4 pe-2">
           {messages.length === 0 && (
             <div className="relative flex flex-col items-center justify-center h-full text-center gap-4 py-16">
               {/* Floating AI Robot */}
@@ -567,7 +567,7 @@ const AITutor = () => {
                     md:w-[400px]
                     animate-float
                     drop-shadow-2xl
-                    left-32
+                    start-32
                     top-[60px]
                   "
                 />

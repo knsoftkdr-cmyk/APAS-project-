@@ -482,11 +482,11 @@ export default function ParentFeePayment() {
                 disabled={submitting}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6"
               >
-                <CreditCard className="h-4 w-4 mr-1.5" />
+                <CreditCard className="h-4 w-4 me-1.5" />
                 {submitting ? "Processing..." : "Proceed For Payment"}
               </Button>
               <Button variant="destructive" onClick={() => navigate("/dashboard")} className="px-6">
-                <XCircle className="h-4 w-4 mr-1.5" /> Cancel
+                <XCircle className="h-4 w-4 me-1.5" /> Cancel
               </Button>
             </div>
           </CardContent>

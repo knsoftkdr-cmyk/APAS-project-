@@ -495,10 +495,10 @@ const downloadTemplate = async () => {
               </div>
               <div className="flex gap-3 justify-center">
                 <Button onClick={() => fileRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-2" /> Choose File
+                  <Upload className="h-4 w-4 me-2" /> Choose File
                 </Button>
                 <Button variant="outline" onClick={downloadTemplate}>
-                  <Download className="h-4 w-4 mr-2" /> Download Template
+                  <Download className="h-4 w-4 me-2" /> Download Template
                 </Button>
               </div>
               <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleFile} />
@@ -529,7 +529,7 @@ const downloadTemplate = async () => {
                   <XCircle className="h-3 w-3" /> Errors: {errorCount}
                 </Badge>
               )}
-              <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1">
+              <span className="text-xs text-muted-foreground ms-auto flex items-center gap-1">
                 <Pencil className="h-3 w-3" /> Click any row to edit
               </span>
             </div>
@@ -701,7 +701,7 @@ const downloadTemplate = async () => {
                         onClick={() => updateClassSetup(idx, "isEditing", !cls.isEditing)}
                       >
                         {cls.isEditing ? <Save className="h-4 w-4" /> : <Edit2 className="h-4 w-4" />}
-                        <span className="ml-1 text-xs">{cls.isEditing ? "Save" : "Edit"}</span>
+                        <span className="ms-1 text-xs">{cls.isEditing ? "Save" : "Edit"}</span>
                       </Button>
                     </div>
 

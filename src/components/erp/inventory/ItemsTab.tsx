@@ -169,8 +169,8 @@ export default function ItemsTab({ schoolId, userId }: { schoolId: string; userI
               <TableHead>Name</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Unit</TableHead>
-              <TableHead className="text-right">On Hand</TableHead>
-              <TableHead className="text-right">Reorder At</TableHead>
+              <TableHead className="text-end">On Hand</TableHead>
+              <TableHead className="text-end">Reorder At</TableHead>
               <TableHead className="w-[110px]" />
             </TableRow>
           </TableHeader>
@@ -206,10 +206,10 @@ export default function ItemsTab({ schoolId, userId }: { schoolId: string; userI
                     {item.category_name ?? '—'}
                   </TableCell>
                   <TableCell className="text-sm">{item.unit}</TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="text-end tabular-nums">
                     {item.total_quantity_on_hand}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums text-muted-foreground">
+                  <TableCell className="text-end tabular-nums text-muted-foreground">
                     {item.reorder_point}
                   </TableCell>
                   <TableCell>

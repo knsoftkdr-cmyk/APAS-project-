@@ -84,14 +84,14 @@ export default function StudentGroupProjectsPage() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                 <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -124,14 +124,14 @@ export default function StudentGroupProjectsPage() {
               {rows.map((r) => {
                 const pct = r.totalTasks > 0 ? Math.round((r.doneTasks / r.totalTasks) * 100) : 0;
                 const statusAccent =
-                  r.projectStatus === 'active' ? 'border-l-emerald-400' :
-                  r.projectStatus === 'closed' ? 'border-l-amber-400' :
-                  r.projectStatus === 'archived' ? 'border-l-slate-300' :
-                  'border-l-slate-200';
+                  r.projectStatus === 'active' ? 'border-s-emerald-400' :
+                  r.projectStatus === 'closed' ? 'border-s-amber-400' :
+                  r.projectStatus === 'archived' ? 'border-s-slate-300' :
+                  'border-s-slate-200';
                 return (
                   <Card
                     key={r.groupId}
-                    className={`overflow-hidden border-l-4 ${statusAccent} border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
+                    className={`overflow-hidden border-s-4 ${statusAccent} border-slate-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer`}
                     onClick={() => navigate(`/student/group-projects/${r.groupId}`)}
                   >
                     <CardHeader className="pb-3">
@@ -144,7 +144,7 @@ export default function StudentGroupProjectsPage() {
                           {r.projectStatus}
                         </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1 pl-11.5 mt-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 ps-11.5 mt-1">
                         <Users2 className="h-3 w-3" /> {r.groupName}
                       </p>
                     </CardHeader>

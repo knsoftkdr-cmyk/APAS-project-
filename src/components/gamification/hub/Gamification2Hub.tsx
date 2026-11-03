@@ -12,7 +12,7 @@ const MUTED = "rgba(241,245,249,0.55)";
 
 function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl p-4 text-left ${className}`}
+    <div className={`rounded-2xl p-4 text-start ${className}`}
       style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)" }}>
       {children}
     </div>
@@ -83,7 +83,7 @@ export function Gamification2Tabs({ tab, onChange, claimable }: { tab: HubTab; o
             : { color: MUTED }}>
           {t.label}
           {t.id === "missions" && claimable > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center"
+            <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center"
               style={{ background: "#F59E0B", color: "#0F172A" }}>{claimable}</span>
           )}
         </button>
@@ -109,7 +109,7 @@ function MissionCard({ m, onClaim, claiming }: { m: G2Mission; onClaim: (id: str
       </div>
       <div className="flex items-center gap-3 mt-3">
         <div className="flex-1"><Bar pct={pct} color={done ? "#22C55E" : undefined} /></div>
-        <span className="text-xs tabular-nums w-20 text-right" style={{ color: MUTED }}>
+        <span className="text-xs tabular-nums w-20 text-end" style={{ color: MUTED }}>
           {isAccuracy ? `best ${m.progress}% / ${m.target}%` : `${Math.min(m.progress, m.target)} / ${m.target}`}
         </span>
       </div>

@@ -69,7 +69,7 @@ export function ParentTransportAssistantWidget({ schoolId, studentId }: ParentTr
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
+          className="fixed bottom-5 end-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 transition-colors"
           aria-label="Open APAS Agent"
         >
           <Sparkles className="h-6 w-6" />
@@ -77,7 +77,7 @@ export function ParentTransportAssistantWidget({ schoolId, studentId }: ParentTr
       )}
 
       {open && (
-        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:end-5 sm:h-[520px] sm:w-[380px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent
@@ -89,7 +89,7 @@ export function ParentTransportAssistantWidget({ schoolId, studentId }: ParentTr
 
           <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden p-3">
             <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block" ref={scrollRef}>
-              <div className="flex flex-col gap-3 pr-2">
+              <div className="flex flex-col gap-3 pe-2">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
                     Try: "Where's the bus right now?", "Is it running late?", "What's the driver's phone number?", or "What time is pickup?"

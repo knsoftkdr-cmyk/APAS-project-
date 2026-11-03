@@ -78,8 +78,8 @@ export function SafeguardingDashboard() {
         className="rounded-2xl p-5 md:p-6 relative overflow-hidden shadow-lg"
         style={{ background: "linear-gradient(120deg, #1e3a5f 0%, #2c5282 100%)" }}
       >
-        <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-        <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+        <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+        <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
         <div className="relative flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/15 rounded-xl flex items-center justify-center shrink-0">

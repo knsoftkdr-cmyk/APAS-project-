@@ -142,7 +142,7 @@ const Landing = () => {
     <div className="landing-root min-h-screen overflow-x-hidden bg-white text-slate-900 scroll-smooth">
       {/* Navbar */}
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 start-0 end-0 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-white/80 backdrop-blur-xl shadow-[0_4px_20px_rgba(79,70,229,0.08)]"
             : "bg-transparent"
@@ -210,9 +210,9 @@ const Landing = () => {
       >
         {/* animated mesh background */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute top-0 -left-40 w-[600px] h-[600px] rounded-full bg-blue-400/30 blur-3xl mesh-blob" />
-          <div className="absolute top-20 right-0 w-[500px] h-[500px] rounded-full bg-blue-700/30 blur-3xl mesh-blob mesh-blob-2" />
-          <div className="absolute bottom-0 left-1/3 w-[500px] h-[500px] rounded-full bg-green-400/20 blur-3xl mesh-blob mesh-blob-3" />
+          <div className="absolute top-0 -start-40 w-[600px] h-[600px] rounded-full bg-blue-400/30 blur-3xl mesh-blob" />
+          <div className="absolute top-20 end-0 w-[500px] h-[500px] rounded-full bg-blue-700/30 blur-3xl mesh-blob mesh-blob-2" />
+          <div className="absolute bottom-0 start-1/3 w-[500px] h-[500px] rounded-full bg-green-400/20 blur-3xl mesh-blob mesh-blob-3" />
           {/* particles */}
           {Array.from({ length: 18 }).map((_, i) => (
             <span
@@ -251,7 +251,7 @@ const Landing = () => {
                   size="lg"
                   className="rounded-full px-7 h-12 text-base bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 text-white shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40 hover:scale-105 transition-all"
                 >
-                  Get Started <ArrowRight className="ml-1" />
+                  Get Started <ArrowRight className="ms-1" />
                 </Button>
               </Link>
               <a href="#features">
@@ -300,10 +300,10 @@ const Landing = () => {
               <div className="w-[420px] h-[420px] lg:w-[480px] lg:h-[480px] rounded-full bg-[radial-gradient(circle,rgba(216,180,254,0.35),rgba(251,207,232,0.15)_55%,transparent_75%)] blur-2xl" />
             </div>
             {/* Floating bubbles */}
-            <div className="absolute top-8 left-6 w-6 h-6 rounded-full bg-blue-300/50 floaty pointer-events-none" />
-            <div className="absolute bottom-12 right-8 w-8 h-8 rounded-full bg-green-300/50 floaty pointer-events-none" style={{ animationDelay: "1.2s" }} />
-            <div className="absolute top-20 right-16 w-3 h-3 rounded-full bg-green-300/60 floaty pointer-events-none" style={{ animationDelay: "0.6s" }} />
-            <div className="absolute bottom-24 left-16 w-4 h-4 rounded-full bg-blue-300/50 floaty pointer-events-none" style={{ animationDelay: "1.8s" }} />
+            <div className="absolute top-8 start-6 w-6 h-6 rounded-full bg-blue-300/50 floaty pointer-events-none" />
+            <div className="absolute bottom-12 end-8 w-8 h-8 rounded-full bg-green-300/50 floaty pointer-events-none" style={{ animationDelay: "1.2s" }} />
+            <div className="absolute top-20 end-16 w-3 h-3 rounded-full bg-green-300/60 floaty pointer-events-none" style={{ animationDelay: "0.6s" }} />
+            <div className="absolute bottom-24 start-16 w-4 h-4 rounded-full bg-blue-300/50 floaty pointer-events-none" style={{ animationDelay: "1.8s" }} />
             <img
               src={heroBoy}
               alt="Student reading a book"
@@ -505,14 +505,14 @@ const Landing = () => {
 <section id = "aifeatures" className="relative py-20 px-6 bg-white overflow-hidden">
   <div className="max-w-7xl mx-auto">
     {/* Background AI Robot */}
-    <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
-<div className="absolute right-0 top-[25%] -translate-y-1/2 opacity-60 pointer-events-none">
+    <div className="absolute end-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
+<div className="absolute end-0 top-[25%] -translate-y-1/2 opacity-60 pointer-events-none">
   <img
     src={airobot}
     alt="AI Robot"
     className="w-[900px] animate-float"
   />
-  <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-gradient-to-r from-blue-200/20 to-green-200/20 rounded-full blur-3xl"></div>
+  <div className="absolute end-10 top-1/2 -translate-y-1/2 w-[450px] h-[450px] bg-gradient-to-r from-blue-200/20 to-green-200/20 rounded-full blur-3xl"></div>
 </div>
 
     <div className="text-center mb-14">
@@ -929,7 +929,7 @@ const Landing = () => {
                 </div>
               </div>
 
-              <div className="absolute -top-5 -right-3 rounded-2xl bg-white shadow-2xl shadow-blue-200 p-3 flex items-center gap-3 floaty floaty-2 z-10">
+              <div className="absolute -top-5 -end-3 rounded-2xl bg-white shadow-2xl shadow-blue-200 p-3 flex items-center gap-3 floaty floaty-2 z-10">
                 <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
                   <Trophy className="w-5 h-5 text-white" />
                 </div>
@@ -939,20 +939,20 @@ const Landing = () => {
                 </div>
               </div>
 
-              <div className="absolute -bottom-4 -left-4 rounded-2xl bg-white shadow-2xl shadow-blue-200 p-3 max-w-[220px] floaty floaty-3 z-10">
+              <div className="absolute -bottom-4 -start-4 rounded-2xl bg-white shadow-2xl shadow-blue-200 p-3 max-w-[220px] floaty floaty-3 z-10">
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-blue-500 flex items-center justify-center">
                     <MessageCircle className="w-3.5 h-3.5 text-white" />
                   </div>
                   <span className="text-xs font-semibold">AI Tutor</span>
-                  <span className="ml-auto w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="ms-auto w-2 h-2 rounded-full bg-green-500 animate-pulse" />
                 </div>
                 <div className="text-[11px] text-slate-600 bg-slate-50 rounded-lg p-2">
                   Need help with photosynthesis? I can explain step by step ✨
                 </div>
               </div>
 
-              <div className="absolute top-1/2 -left-6 -translate-y-1/2 rounded-2xl bg-white shadow-xl p-2 flex gap-1.5 floaty z-10">
+              <div className="absolute top-1/2 -start-6 -translate-y-1/2 rounded-2xl bg-white shadow-xl p-2 flex gap-1.5 floaty z-10">
                 {[Award, Star, Trophy].map((Ic, i) => (
                   <div key={i} className={`w-9 h-9 rounded-lg flex items-center justify-center ${["bg-gradient-to-br from-green-400 to-green-500","bg-gradient-to-br from-amber-400 to-orange-500","bg-gradient-to-br from-blue-400 to-blue-500"][i]}`}>
                     <Ic className="w-4 h-4 text-white" />
@@ -1038,8 +1038,8 @@ const Landing = () => {
 <section id="analytics" className="relative py-20 px-6 bg-gradient-to-br from-blue-50 to-green-50 overflow-hidden">
   <div className="max-w-7xl mx-auto">
     {/* Background School */}
-    <div className="absolute right-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
-<div className="absolute right-0 top-[35%] -translate-y-1/2 opacity-40 pointer-events-none">
+    <div className="absolute end-10 top-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-300/20 rounded-full blur-3xl"></div>
+<div className="absolute end-0 top-[35%] -translate-y-1/2 opacity-40 pointer-events-none">
   <img
     src={schoolbg}
     alt="School"
@@ -1167,7 +1167,7 @@ const Landing = () => {
     <div className="relative">
 
       {/* Desktop connecting line */}
-      <div className="hidden xl:block absolute top-10 left-[8%] right-[8%] h-1 bg-gradient-to-r from-blue-500 via-blue-500 to-green-500 rounded-full"></div>
+      <div className="hidden xl:block absolute top-10 start-[8%] end-[8%] h-1 bg-gradient-to-r from-blue-500 via-blue-500 to-green-500 rounded-full"></div>
 
       <div className="grid md:grid-cols-2 xl:grid-cols-6 gap-10 relative">
 
@@ -1178,7 +1178,7 @@ const Landing = () => {
               📝
             </div>
 
-            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+            <div className="absolute -top-2 -end-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
               1
             </div>
           </div>
@@ -1199,7 +1199,7 @@ const Landing = () => {
               🧠
             </div>
 
-            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+            <div className="absolute -top-2 -end-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
               2
             </div>
           </div>
@@ -1220,7 +1220,7 @@ const Landing = () => {
               👤
             </div>
 
-            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+            <div className="absolute -top-2 -end-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
               3
             </div>
           </div>
@@ -1241,7 +1241,7 @@ const Landing = () => {
               📚
             </div>
 
-            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+            <div className="absolute -top-2 -end-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
               4
             </div>
           </div>
@@ -1262,7 +1262,7 @@ const Landing = () => {
               🎯
             </div>
 
-            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+            <div className="absolute -top-2 -end-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
               5
             </div>
           </div>
@@ -1283,7 +1283,7 @@ const Landing = () => {
               📈
             </div>
 
-            <div className="absolute -top-2 -right-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
+            <div className="absolute -top-2 -end-2 w-9 h-9 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center font-bold text-blue-600">
               6
             </div>
           </div>
@@ -1306,8 +1306,8 @@ const Landing = () => {
 {/* Platform Modules */}
 <section className="py-20 px-6 bg-gradient-to-br from-blue-100 via-white to-green-100">
   <div className="absolute inset-0 overflow-hidden pointer-events-none">
-  <div className="absolute top-20 left-20 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
-  <div className="absolute bottom-20 right-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl"></div>
+  <div className="absolute top-20 start-20 w-72 h-72 bg-blue-200/30 rounded-full blur-3xl"></div>
+  <div className="absolute bottom-20 end-20 w-72 h-72 bg-green-200/30 rounded-full blur-3xl"></div>
 </div>
   <div className="max-w-7xl mx-auto">
 
@@ -1755,7 +1755,7 @@ duration-300
                 className="reveal group rounded-2xl bg-white border border-slate-100 p-7 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-200 transition-all relative overflow-hidden"
                 style={{ transitionDelay: `${i * 100}ms` }}
               >
-                <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full bg-gradient-to-br ${t.color} opacity-10 blur-2xl group-hover:opacity-30 transition-opacity`} />
+                <div className={`absolute -top-10 -end-10 w-32 h-32 rounded-full bg-gradient-to-br ${t.color} opacity-10 blur-2xl group-hover:opacity-30 transition-opacity`} />
                 <div className="flex gap-1 text-amber-400 mb-3">
                   {[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-current" />)}
                 </div>
@@ -1863,7 +1863,7 @@ duration-300
             <div className="mt-8 flex flex-wrap gap-4 justify-center relative">
               <Link to="/request-demo">
                 <Button size="lg" className="rounded-full px-8 h-12 bg-white text-blue-700 hover:bg-white/90 font-semibold shadow-xl">
-                  Get Started Free <ArrowRight className="ml-1" />
+                  Get Started Free <ArrowRight className="ms-1" />
                 </Button>
               </Link>
               <Link to="/login">

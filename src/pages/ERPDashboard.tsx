@@ -83,14 +83,14 @@ const ERPDashboard = () => {
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <button
           onClick={() => navigate("/erp/people")}
-          className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+          className="text-start rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
         >
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
             <Users className="h-6 w-6 text-white" />
           </div>
           <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
             People
-            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all rtl:translate-x-1 rtl:group-hover:translate-x-0" />
           </div>
           <p className="text-sm text-slate-500">
             {employeeCount > 0
@@ -101,14 +101,14 @@ const ERPDashboard = () => {
 
         <button
           onClick={() => navigate("/erp/admissions")}
-          className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+          className="text-start rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
         >
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
             <GraduationCap className="h-6 w-6 text-white" />
           </div>
           <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
             Admissions
-            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all rtl:translate-x-1 rtl:group-hover:translate-x-0" />
           </div>
           <p className="text-sm text-slate-500">
             {openIntakeCount > 0
@@ -119,42 +119,42 @@ const ERPDashboard = () => {
 
         <button
   onClick={() => navigate("/erp/fees")}
-  className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+  className="text-start rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
 >
   <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
     <Wallet className="h-6 w-6 text-white" />
   </div>
   <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
     Fee Management
-    <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+    <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all rtl:translate-x-1 rtl:group-hover:translate-x-0" />
   </div>
   <p className="text-sm text-slate-500">Track student fee payments</p>
 </button>
 
         <button
   onClick={() => navigate("/erp/library")}
-  className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+  className="text-start rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
 >
   <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
     <BookOpen className="h-6 w-6 text-white" />
   </div>
   <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
     Library Management
-    <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+    <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all rtl:translate-x-1 rtl:group-hover:translate-x-0" />
   </div>
   <p className="text-sm text-slate-500">Catalog, circulation & digital library</p>
 </button>
 
         <button
           onClick={() => navigate("/erp/transport")}
-          className="text-left rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
+          className="text-start rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-lg hover:-translate-y-0.5 hover:border-blue-200 transition-all group"
         >
           <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-blue-600 to-emerald-500 flex items-center justify-center mb-4">
             <Bus className="h-6 w-6 text-white" />
           </div>
           <div className="flex items-center gap-1 font-bold text-slate-900 mb-1">
             Transport
-            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+            <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all rtl:translate-x-1 rtl:group-hover:translate-x-0" />
           </div>
           <p className="text-sm text-slate-500">
             {vehicleCount > 0

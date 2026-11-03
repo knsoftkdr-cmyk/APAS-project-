@@ -58,7 +58,7 @@ export function GenderStep({ open, onSave }: Props) {
                   type="button"
                   onClick={() => setSelected(opt.value)}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border-2 p-4 text-left transition-all w-full",
+                    "flex items-center gap-3 rounded-lg border-2 p-4 text-start transition-all w-full",
                     isSel
                       ? "border-primary bg-primary/5 shadow-sm"
                       : "border-border hover:border-primary/40 hover:bg-muted/50"
@@ -92,7 +92,7 @@ export function GenderStep({ open, onSave }: Props) {
           >
             {saving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="me-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (

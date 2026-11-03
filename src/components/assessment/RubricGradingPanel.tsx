@@ -108,7 +108,7 @@ export function RubricGradingPanel({
               value={r.comment ?? ""} onChange={(e) => set(i, { comment: e.target.value || null })} />
             <div className="flex flex-wrap items-center gap-2">
               {r.evidence ? (
-                <blockquote className="flex-1 min-w-0 border-l-2 border-amber-400 pl-2 text-xs italic text-muted-foreground line-clamp-2">“{r.evidence}”</blockquote>
+                <blockquote className="flex-1 min-w-0 border-s-2 border-amber-400 ps-2 text-xs italic text-muted-foreground line-clamp-2">“{r.evidence}”</blockquote>
               ) : <span className="flex-1 text-[11px] text-muted-foreground">No evidence yet - select words in the answer above, then press Quote.</span>}
               {r.evidence && !disabled && (
                 <Button type="button" variant="ghost" size="icon" className="h-6 w-6" aria-label="Remove evidence" onClick={() => set(i, { evidence: null })}><X className="h-3 w-3" /></Button>

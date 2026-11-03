@@ -314,7 +314,7 @@ export default function CompetencyHeatmap() {
     <AppLayout>
       <div className="p-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 p-8 text-white">
-          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="absolute top-6 end-10 w-16 h-16 rounded-full border border-white/30" />
           <div className="relative z-10 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <Flame className="h-6 w-6 text-white" />

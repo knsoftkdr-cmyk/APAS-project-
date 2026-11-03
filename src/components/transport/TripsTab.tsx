@@ -232,7 +232,7 @@ export function TripsTab({ schoolId }: { schoolId?: string }) {
               <div className="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onClick={resetForm} disabled={saving}>Cancel</Button>
                 <Button size="sm" onClick={scheduleTrip} disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                  {saving && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                   Schedule Trip
                 </Button>
               </div>
@@ -293,7 +293,7 @@ export function TripsTab({ schoolId }: { schoolId?: string }) {
                           ? t.purpose || "Special trip"
                           : t.transport_routes?.route_name || "Route"}
                         {t.direction && t.direction !== "special" && (
-                          <span className="text-xs font-normal text-muted-foreground ml-1">({t.direction})</span>
+                          <span className="text-xs font-normal text-muted-foreground ms-1">({t.direction})</span>
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground truncate">
@@ -443,7 +443,7 @@ function TripReplayDialog({ trip, onClose }: { trip: TripRow; onClose: () => voi
                 }}
                 className="flex-1"
               />
-              <span className="text-xs text-muted-foreground w-16 text-right shrink-0">
+              <span className="text-xs text-muted-foreground w-16 text-end shrink-0">
                 {index + 1}/{points.length}
               </span>
             </div>

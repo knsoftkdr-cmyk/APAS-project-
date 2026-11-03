@@ -198,8 +198,8 @@ const runPredictions = async () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-red-500 via-red-500 to-orange-500 p-8 shadow-xl">
             {/* Decorative circles */}
-            <div className="absolute top-5 right-10 h-24 w-24 rounded-full bg-white/10"></div>
-            <div className="absolute bottom-4 right-36 h-12 w-12 rounded-full bg-white/10"></div>
+            <div className="absolute top-5 end-10 h-24 w-24 rounded-full bg-white/10"></div>
+            <div className="absolute bottom-4 end-36 h-12 w-12 rounded-full bg-white/10"></div>
             <div className="absolute top-10 left-1/2 h-4 w-4 rounded-full bg-white/20"></div>
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -224,12 +224,12 @@ const runPredictions = async () => {
                   >
                     {running ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <Loader2 className="me-2 h-5 w-5 animate-spin" />
                         Running...
                       </>
                     ) : (
                       <>
-                        <Brain className="mr-2 h-5 w-5" />
+                        <Brain className="me-2 h-5 w-5" />
                         Run Predictions
                       </>
                     )}
@@ -280,7 +280,7 @@ const runPredictions = async () => {
             ].map(({ label, value, icon: Icon, iconBg, iconColor, border }) => (
               <Card
                 key={label}
-                className={`group border border-gray-200 border-l-4 ${border} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+                className={`group border border-gray-200 border-s-4 ${border} shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
               >
                 <CardContent className="p-5 flex items-center justify-between">
                   <div>
@@ -389,7 +389,7 @@ const runPredictions = async () => {
                               setDrawerOpen(true);
                             }}
                           >
-                            <ClipboardList className="h-5 w-5 mr-1.5 text-white" />
+                            <ClipboardList className="h-5 w-5 me-1.5 text-white" />
                             {interventions.get(r.student_id)?.some(iv => iv.status === "active")
                               ? "View Intervention"
                               : interventions.get(r.student_id)?.length

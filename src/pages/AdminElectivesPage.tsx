@@ -262,15 +262,15 @@ export default function AdminElectivesPage() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-7xl mx-auto">
           {/* Header */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -291,7 +291,7 @@ export default function AdminElectivesPage() {
               >
                 <DialogTrigger asChild>
                   <Button onClick={openCreateDialog} className="bg-white text-blue-700 hover:bg-blue-50">
-                    <Plus className="h-4 w-4 mr-1" /> Create Elective
+                    <Plus className="h-4 w-4 me-1" /> Create Elective
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -430,10 +430,10 @@ export default function AdminElectivesPage() {
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground pl-11.5 mt-1">
+                      <p className="text-xs text-muted-foreground ps-11.5 mt-1">
                         {e.subject} · Grade {e.grade}
                       </p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground pl-11.5 flex-wrap">
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground ps-11.5 flex-wrap">
                         <span className="inline-flex items-center gap-1">
                           <Clock className="h-3 w-3" /> {e.day_of_week} · Period {e.period_number}
                         </span>
@@ -480,7 +480,7 @@ export default function AdminElectivesPage() {
                             className="h-7 text-destructive hover:bg-red-50"
                             onClick={(ev) => { ev.stopPropagation(); handleDelete(e); }}
                           >
-                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                            <Trash2 className="h-3.5 w-3.5 me-1" /> Delete
                           </Button>
                         </div>
                       )}

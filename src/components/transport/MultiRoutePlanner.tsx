@@ -479,7 +479,7 @@ export function MultiRoutePlanner({ schoolId }: { schoolId?: string }) {
                       {r.vehicle_registration && (
                         <span className="opacity-75">· {r.vehicle_registration}</span>
                       )}
-                      {selected && <CheckCircle2 className="h-3.5 w-3.5 ml-0.5" />}
+                      {selected && <CheckCircle2 className="h-3.5 w-3.5 ms-0.5" />}
                     </button>
                   );
                 })}
@@ -519,7 +519,7 @@ export function MultiRoutePlanner({ schoolId }: { schoolId?: string }) {
                     <div className="space-y-1">
                       {plan.stops.map((s, i) => (
                         <div key={s.id} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <span className="w-4 shrink-0 text-right">{i + 1}.</span>
+                          <span className="w-4 shrink-0 text-end">{i + 1}.</span>
                           <MapPin className="h-3 w-3 shrink-0" />
                           <span className="text-foreground">{s.stop_name}</span>
                           {s.originalRouteId !== plan.routeId && (

@@ -68,24 +68,24 @@ const Billing = () => {
     <AppLayout>
       <div className="space-y-6">
         <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-500 p-8 relative min-h-[220px]">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+                    <div className="absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
 <div className="hidden md:block">
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+          <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 end-[45%] text-white/90 text-lg">✦</div>
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 
 </div>
           <div className="max-w-xl">
@@ -102,7 +102,7 @@ const Billing = () => {
             src={billBanner}
             alt="Billing Banner"
             /* className="absolute right-10 bottom-6 h-[160px]" */
-            className="hidden md:block absolute right-10 bottom-6 w-[160px] z-10"
+            className="hidden md:block absolute end-10 bottom-6 w-[160px] z-10"
           />
         </div>
 
@@ -134,7 +134,7 @@ const Billing = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {PLAN_TIERS.map(plan => (
               <Card key={plan.tier} className={`group bg-cyan-200 relative overflow-hidden transition-all duration-700 hover:-translate-y-3 hover:scale-[1.03] hover:shadow-2xl cursor-pointer ${plan.popular ? "border-primary shadow-lg bg-white" : "" }`}>
-                <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 group-hover:left-[150%] transition-all duration-1000 z-10"/>
+                <div className="absolute top-0 -start-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-12 group-hover:start-[150%] transition-all duration-1000 z-10"/>
                 {plan.popular && <Badge className="absolute -top-0 left-1/2 -translate-x-1/2">Most Popular</Badge>}
                 <CardHeader className="text-center bg-cyan-200">
                   <CardTitle className="text-xl">{plan.name}</CardTitle>

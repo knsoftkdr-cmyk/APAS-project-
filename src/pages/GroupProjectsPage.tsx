@@ -79,14 +79,14 @@ const statusColor: Record<string, string> = {
   return (
     <AppLayout>
 <div className="min-h-screen relative overflow-x-hidden">
-  <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
-  <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
-  <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
+  <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-emerald-300 opacity-[0.12] blur-3xl" />
+  <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-teal-300 opacity-[0.10] blur-3xl" />
+  <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-emerald-200 opacity-[0.10] blur-3xl" />
 
   <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
     <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-emerald-600 to-teal-600 shadow-lg">
-      <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-      <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+      <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+      <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
       <div className="relative flex items-center gap-3 md:gap-4">
         <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
           <Users className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -120,12 +120,12 @@ const statusColor: Record<string, string> = {
           {projects.map((project) => {
             const isExpanded = expandedId === project.id;
             const statusAccent =
-              project.status === 'active' ? 'border-l-emerald-400' :
-              project.status === 'closed' ? 'border-l-amber-400' :
-              project.status === 'archived' ? 'border-l-slate-300' :
-              'border-l-slate-200';
+              project.status === 'active' ? 'border-s-emerald-400' :
+              project.status === 'closed' ? 'border-s-amber-400' :
+              project.status === 'archived' ? 'border-s-slate-300' :
+              'border-s-slate-200';
             return (
-              <Card key={project.id} className={`overflow-hidden border-l-4 ${statusAccent} border-emerald-300 shadow-sm hover:shadow-md transition-shadow`}>
+              <Card key={project.id} className={`overflow-hidden border-s-4 ${statusAccent} border-emerald-300 shadow-sm hover:shadow-md transition-shadow`}>
                 <CardHeader
                   className="cursor-pointer pb-4"
                   onClick={() => setExpandedId(isExpanded ? null : project.id)}
@@ -155,17 +155,17 @@ const statusColor: Record<string, string> = {
                     </div>
 
                     {/* Badges row */}
-                    <div className="flex items-center gap-2 flex-wrap pl-0 sm:pl-[52px]">
+                    <div className="flex items-center gap-2 flex-wrap ps-0 sm:ps-[52px]">
                       <Badge className={`${statusColor[project.status]} hover:opacity-90 capitalize text-xs`}>{project.status}</Badge>
                       {project.subject && <Badge variant="outline" className="text-xs border-emerald-200 text-emerald-700 bg-emerald-50/50">{project.subject}</Badge>}
                     </div>
 
                     {project.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2 pl-0 sm:pl-[52px]">{project.description}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2 ps-0 sm:ps-[52px]">{project.description}</p>
                     )}
 
                     {/* Meta chips row */}
-                    <div className="flex items-center gap-2 text-xs flex-wrap pl-0 sm:pl-[52px]">
+                    <div className="flex items-center gap-2 text-xs flex-wrap ps-0 sm:ps-[52px]">
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-50 text-slate-600 font-medium">
                         {project.class_name}
                       </span>
@@ -221,7 +221,7 @@ const statusColor: Record<string, string> = {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
-              {deleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {deleting ? <Loader2 className="me-2 h-4 w-4 animate-spin" /> : null}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

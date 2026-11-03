@@ -188,7 +188,7 @@ export default function SchoolSyllabusOverview() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16 text-indigo-600">
-        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading syllabus coverage...
+        <Loader2 className="h-5 w-5 animate-spin me-2" /> Loading syllabus coverage...
       </div>
     );
   }
@@ -280,7 +280,7 @@ export default function SchoolSyllabusOverview() {
                       <p className="text-xs text-gray-400 mt-1">
                         {item.coveredChapters} of {item.totalChapters} chapter{item.totalChapters !== 1 ? "s" : ""} covered
                         {item.totalChapters === 0 && (
-                          <span className="ml-1 text-amber-500">(no chapters found in curriculum)</span>
+                          <span className="ms-1 text-amber-500">(no chapters found in curriculum)</span>
                         )}
                       </p>
                     </>

@@ -37,7 +37,7 @@ export function ScoreEntrySelectionModal({
               onSelectWholeClass();
               onOpenChange(false);
             }}
-            className="h-auto flex flex-col items-start justify-start p-4 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 text-left border border-blue-200 dark:border-blue-800"
+            className="h-auto flex flex-col items-start justify-start p-4 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950 dark:hover:bg-blue-900 text-start border border-blue-200 dark:border-blue-800"
             variant="outline"
           >
             <div className="flex items-center gap-3 w-full">
@@ -57,7 +57,7 @@ export function ScoreEntrySelectionModal({
               onSelectIndividual();
               onOpenChange(false);
             }}
-            className="h-auto flex flex-col items-start justify-start p-4 bg-green-50 hover:bg-green-100 dark:bg-green-950 dark:hover:bg-green-900 text-left border border-green-200 dark:border-green-800"
+            className="h-auto flex flex-col items-start justify-start p-4 bg-green-50 hover:bg-green-100 dark:bg-green-950 dark:hover:bg-green-900 text-start border border-green-200 dark:border-green-800"
             variant="outline"
           >
             <div className="flex items-center gap-3 w-full">

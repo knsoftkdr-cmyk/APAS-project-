@@ -162,11 +162,11 @@ export const CurativeLessonPlanView = ({
             Differentiated Lesson Plan · {classLabel}{sectionLabel}
           </p>
         </div>
-        <div className="text-right text-xs" style={{ color: "#8282a8" }}>
+        <div className="text-end text-xs" style={{ color: "#8282a8" }}>
           <div>Plan ID: {planId}</div>
           <strong className="block text-[13px] font-medium mt-0.5" style={{ color: "#3d3d5c" }}>{planDate}</strong>
           <span className="inline-block text-[10px] font-semibold tracking-[1.5px] uppercase px-2.5 py-1 rounded-full mt-1.5" style={{ background: "#0e9a7b", color: "#fff" }}>AI Generated</span>
-          <span className="inline-block text-[10px] font-semibold tracking-[1.5px] uppercase px-2.5 py-1 rounded-full mt-1.5 ml-1" style={{ background: "#d97706", color: "#fff" }}>
+          <span className="inline-block text-[10px] font-semibold tracking-[1.5px] uppercase px-2.5 py-1 rounded-full mt-1.5 ms-1" style={{ background: "#d97706", color: "#fff" }}>
             {activeGroups.length} Groups · 45 min
           </span>
         </div>

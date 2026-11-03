@@ -136,14 +136,14 @@ function StudentRow({ row }: { row: ResultRow }) {
   return (
     <div className="border-b last:border-0">
       <button type="button" disabled={!canOpen} onClick={() => setOpen((o) => !o)}
-        className={cn("w-full flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2.5 text-left", canOpen && "hover:bg-muted/40")}>
+        className={cn("w-full flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2.5 text-start", canOpen && "hover:bg-muted/40")}>
         <div className="min-w-0 flex-1 basis-40">
           <p className="text-sm font-medium break-words">{row.name}</p>
           {row.roll && <p className="text-[11px] text-muted-foreground">Roll {row.roll}</p>}
         </div>
         <Badge variant="outline" className={cn("text-[10px]", BAND_CLASS[row.mastery_band])}>{BAND_LABEL[row.mastery_band]}</Badge>
         <Badge variant="outline" className={cn("text-[10px]", st.cls)}>{st.label}</Badge>
-        <div className="text-xs tabular-nums text-right min-w-[5.5rem]">
+        <div className="text-xs tabular-nums text-end min-w-[5.5rem]">
           {row.status === "submitted"
             ? <><span className="font-semibold">{correct}/{row.answers.length}</span>{row.score != null && <span className="text-muted-foreground"> · {Math.round(row.score)}%</span>}</>
             : row.answers.length > 0 ? <span className="text-muted-foreground">{row.answers.length} answered</span> : <span className="text-muted-foreground">—</span>}
@@ -151,7 +151,7 @@ function StudentRow({ row }: { row: ResultRow }) {
         </div>
         <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", !canOpen && "opacity-0", open && "rotate-180")} />
       </button>
-      {open && <div className="pl-1 pr-1 pb-1"><StudentAnswers row={row} /></div>}
+      {open && <div className="ps-1 pe-1 pb-1"><StudentAnswers row={row} /></div>}
     </div>
   );
 }
@@ -169,7 +169,7 @@ function BatchResults({ assignment, rows, loading }: { assignment: AdaptiveHomew
 
   return (
     <div className="rounded-xl border">
-      <button type="button" onClick={() => setOpen((o) => !o)} className="w-full text-left p-3 space-y-2 hover:bg-muted/30 rounded-xl">
+      <button type="button" onClick={() => setOpen((o) => !o)} className="w-full text-start p-3 space-y-2 hover:bg-muted/30 rounded-xl">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm font-medium break-words">{assignment.title}</p>
@@ -213,7 +213,7 @@ export function HomeworkBatches({ assignments }: { assignments: AdaptiveHomework
           <CardTitle className="text-sm">Homework for this class</CardTitle>
           <Button size="sm" variant="outline" className="h-9 sm:h-8 text-xs" disabled={isFetching}
             onClick={() => { void qc.invalidateQueries({ queryKey: ["adaptive-homework-results"] }); void qc.invalidateQueries({ queryKey: ["adaptive-homework-assignments"] }); }}>
-            <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", isFetching && "animate-spin")} /> Refresh
+            <RefreshCw className={cn("h-3.5 w-3.5 me-1.5", isFetching && "animate-spin")} /> Refresh
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">Open a set to see who has submitted, their scores, and their answers.</p>

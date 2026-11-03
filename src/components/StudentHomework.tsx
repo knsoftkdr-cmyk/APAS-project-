@@ -466,7 +466,7 @@ try {
       </div>
 
       {/* Pills row */}
-      <div className="flex flex-wrap gap-1.5 pl-0 sm:pl-[52px]">
+      <div className="flex flex-wrap gap-1.5 ps-0 sm:ps-[52px]">
         {assignment.subject && (
           <Badge className="text-[10px] sm:text-xs bg-blue-50 text-blue-700 hover:bg-blue-50 border-blue-100">
             {assignment.subject}
@@ -485,7 +485,7 @@ try {
       </div>
 
       {/* Period / date row */}
-      <div className="flex items-center gap-3 text-[11px] sm:text-xs text-muted-foreground flex-wrap pl-0 sm:pl-[52px]">
+      <div className="flex items-center gap-3 text-[11px] sm:text-xs text-muted-foreground flex-wrap ps-0 sm:ps-[52px]">
         {assignment.period_number && (
           <span className="flex items-center gap-1">
             <Clock className="h-3 w-3" />
@@ -557,7 +557,7 @@ try {
             </span>
             <p className="text-sm font-medium text-slate-800 pt-0.5">{q.question}</p>
           </div>
-          <div className="ml-8 p-3 bg-white rounded-lg border border-slate-100">
+          <div className="ms-8 p-3 bg-white rounded-lg border border-slate-100">
             <p className="text-sm text-slate-600">
               {(submission?.answers as any)?.[idx]?.answer || "—"}
             </p>
@@ -632,7 +632,7 @@ try {
               </p>
               <p className="text-xs text-muted-foreground mt-1">Auto-submit when time's up</p>
             </div>
-            <div className="text-right">
+            <div className="text-end">
               <p className="text-xs text-muted-foreground mb-2">Progress</p>
               <p className="text-2xl font-bold text-primary">
                 {answeredCount}/{questionsArray.length}
@@ -701,7 +701,7 @@ try {
                 </p>
                 <CardTitle className="text-lg">{currentQuestion?.question}</CardTitle>
               </div>
-              <div className="text-right">
+              <div className="text-end">
                 <span className="inline-block px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
                   Q {currentQuestionIndex + 1}
                 </span>

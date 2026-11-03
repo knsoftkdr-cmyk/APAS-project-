@@ -190,7 +190,7 @@ export function EditGroupProjectDialog({ project, open, onOpenChange, onUpdated 
               disabled={submitting}
               className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
             >
-              {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {submitting && <Loader2 className="me-2 h-4 w-4 animate-spin" />}
               Save Changes
             </Button>
           </DialogFooter>

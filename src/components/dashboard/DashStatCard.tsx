@@ -68,8 +68,8 @@ export const DashStatCard = ({
       tones.wash,
       tones.border
     )}>
-      <div className={cn("absolute -top-10 -right-10 w-32 h-32 rounded-full blur-3xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
-      <div className={cn("absolute -bottom-10 -left-10 w-28 h-28 rounded-full blur-3xl opacity-60 transition-transform duration-500 group-hover:scale-110", tones.glow)} />
+      <div className={cn("absolute -top-10 -end-10 w-32 h-32 rounded-full blur-3xl transition-transform duration-500 group-hover:scale-125", tones.glow)} />
+      <div className={cn("absolute -bottom-10 -start-10 w-28 h-28 rounded-full blur-3xl opacity-60 transition-transform duration-500 group-hover:scale-110", tones.glow)} />
       <CardContent className="relative p-5">
         <div className="flex items-start justify-between gap-2 mb-5">
           <div className="relative">

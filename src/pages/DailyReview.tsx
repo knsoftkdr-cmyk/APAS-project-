@@ -194,7 +194,7 @@ export default function DailyReview() {
                 {sessionStats.correct} of {sessionStats.answered} correct this session.
               </p>
               <Button onClick={handleCheckForMore} disabled={checking}>
-                {checking && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                {checking && <Loader2 className="h-4 w-4 animate-spin me-1" />}
                 Check for more
               </Button>
             </CardContent>
@@ -310,7 +310,7 @@ function ReviewCard({ review, selectedOption, onSelect, feedback, submitting, on
             key={key}
             onClick={() => !showAnswer && onSelect(key as "A" | "B" | "C" | "D")}
             disabled={showAnswer}
-            className={cn("w-full flex items-center gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200", optionStyle(key))}
+            className={cn("w-full flex items-center gap-3 rounded-xl border-2 p-4 text-start transition-all duration-200", optionStyle(key))}
           >
             <span className={cn("flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold transition-colors", optionBadgeStyle(key))}>
               {showAnswer && key === feedback!.correct_option ? <CheckCircle2 className="h-5 w-5" />
@@ -337,13 +337,13 @@ function ReviewCard({ review, selectedOption, onSelect, feedback, submitting, on
                 Remind me tomorrow
               </Button>
               <Button onClick={onSubmit} disabled={!selectedOption || submitting}>
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : null}
                 Submit
               </Button>
             </>
           ) : (
-            <Button onClick={onContinue} className="ml-auto">
-              {isLast ? <>Finish <Trophy className="h-4 w-4 ml-1" /></> : <>Next <ChevronRight className="h-4 w-4 ml-1" /></>}
+            <Button onClick={onContinue} className="ms-auto">
+              {isLast ? <>Finish <Trophy className="h-4 w-4 ms-1" /></> : <>Next <ChevronRight className="h-4 w-4 ms-1" /></>}
             </Button>
           )}
         </div>

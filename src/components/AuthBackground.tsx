@@ -134,11 +134,11 @@ const AuthBackground = () => (
 
     {/* Watermark removed */}
     {/* Flowing pink / purple / blue gradient blobs */}
-    <div className="absolute -left-32 top-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-pink-400/40 to-purple-500/30 blur-3xl auth-float-slow" />
-    <div className="absolute -right-32 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-bl from-fuchsia-400/35 to-purple-400/25 blur-3xl auth-float-slow-reverse" />
-    <div className="absolute -bottom-40 left-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-blue-400/40 to-indigo-400/30 blur-3xl auth-float-medium" />
-    <div className="absolute bottom-0 -right-20 h-[500px] w-[500px] rounded-full bg-gradient-to-tl from-pink-400/35 to-violet-400/25 blur-3xl auth-float-slow" />
-    <div className="absolute left-1/3 top-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-purple-300/30 to-pink-300/20 blur-3xl auth-float-medium" />
+    <div className="absolute -start-32 top-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-br from-pink-400/40 to-purple-500/30 blur-3xl auth-float-slow" />
+    <div className="absolute -end-32 -top-20 h-[550px] w-[550px] rounded-full bg-gradient-to-bl from-fuchsia-400/35 to-purple-400/25 blur-3xl auth-float-slow-reverse" />
+    <div className="absolute -bottom-40 start-1/4 h-[600px] w-[600px] rounded-full bg-gradient-to-tr from-blue-400/40 to-indigo-400/30 blur-3xl auth-float-medium" />
+    <div className="absolute bottom-0 -end-20 h-[500px] w-[500px] rounded-full bg-gradient-to-tl from-pink-400/35 to-violet-400/25 blur-3xl auth-float-slow" />
+    <div className="absolute start-1/3 top-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-purple-300/30 to-pink-300/20 blur-3xl auth-float-medium" />
 
     {/* Particle network */}
     <ParticleCanvas />
@@ -147,7 +147,7 @@ const AuthBackground = () => (
     <div className="absolute inset-0 z-[2] bg-[radial-gradient(circle_at_1px_1px,rgba(168,85,247,0.08)_1px,transparent_1px)] bg-[length:44px_44px]" />
 
     {/* Flowing wave layers at bottom — pink/blue ribbons */}
-    <div className="absolute bottom-0 left-0 right-0 z-[2] h-48 pointer-events-none">
+    <div className="absolute bottom-0 start-0 end-0 z-[2] h-48 pointer-events-none">
       <svg viewBox="0 0 1440 200" className="w-full h-full" preserveAspectRatio="none">
         <defs>
           <linearGradient id="wave1" x1="0" x2="1" y1="0" y2="0">
@@ -176,7 +176,7 @@ const AuthBackground = () => (
 
     {/* Top-left logo removed */}
     {/* Knsoft Technologies branding — bottom right */}
-    <div className="absolute bottom-4 right-4 z-[5] pointer-events-none flex flex-col items-end gap-1">
+    <div className="absolute bottom-4 end-4 z-[5] pointer-events-none flex flex-col items-end gap-1">
       <img
         src={knsoftLogo}
         alt="Knsoft Technologies"

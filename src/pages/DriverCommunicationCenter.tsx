@@ -401,8 +401,8 @@ export default function DriverCommunicationCenter() {
     <AppLayout>
       <div className="h-[calc(100dvh-var(--header-height)-6.5rem)] md:h-[calc(100vh-100px)] flex flex-col">
         <div className="rounded-2xl p-5 md:p-6 mb-4 relative overflow-hidden bg-gradient-to-r from-purple-600 to-indigo-600 shadow-lg shrink-0">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -418,11 +418,11 @@ export default function DriverCommunicationCenter() {
           <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`min-h-0 border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
+            <div className={`min-h-0 border-e border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
               <div className="p-3 border-b border-slate-100 space-y-2">
                 <button
                   onClick={() => openContact(allParentsContact)}
-                  className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors border ${
+                  className={`w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-colors border ${
                     selectedContact?.id === ALL_PARENTS_ID
                       ? "bg-purple-50 border-purple-200"
                       : "bg-purple-50/40 border-purple-100 hover:bg-purple-50"
@@ -438,12 +438,12 @@ export default function DriverCommunicationCenter() {
                 </button>
 
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search admin/parent"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-9 h-10 text-sm rounded-full bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-purple-300"
+                    className="ps-9 h-10 text-sm rounded-full bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-purple-300"
                   />
                 </div>
               </div>
@@ -464,7 +464,7 @@ export default function DriverCommunicationCenter() {
                       <button
                         key={c.id}
                         onClick={() => openContact(c)}
-                        className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                        className={`w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
                           isSelected ? "bg-purple-50" : "hover:bg-slate-50"
                         }`}
                       >
@@ -539,8 +539,8 @@ export default function DriverCommunicationCenter() {
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2 text-sm shadow-sm ${
                                   isMine
-                                    ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-br-sm"
-                                    : "bg-white text-slate-800 rounded-bl-sm border border-slate-100"
+                                    ? "bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-ee-sm"
+                                    : "bg-white text-slate-800 rounded-es-sm border border-slate-100"
                                 }`}
                               >
                                 {m.attachment_url && (
@@ -596,7 +596,7 @@ export default function DriverCommunicationCenter() {
 
                   <div className="p-3 border-t border-slate-100 shrink-0 relative">
                     {showEmojiPicker && (
-                      <div className="absolute bottom-full left-3 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-2 grid grid-cols-6 gap-1 w-64 max-h-48 overflow-y-auto z-10">
+                      <div className="absolute bottom-full start-3 mb-2 bg-white border border-slate-200 rounded-xl shadow-lg p-2 grid grid-cols-6 gap-1 w-64 max-h-48 overflow-y-auto z-10">
                         {QUICK_EMOJIS.map(e => (
                           <button
                             key={e}
@@ -609,7 +609,7 @@ export default function DriverCommunicationCenter() {
                       </div>
                     )}
                     {isRecording && (
-                      <div className="absolute bottom-full left-3 mb-2 bg-white border border-red-200 rounded-full shadow-lg px-3 py-1.5 flex items-center gap-2 text-xs text-red-600 z-10">
+                      <div className="absolute bottom-full start-3 mb-2 bg-white border border-red-200 rounded-full shadow-lg px-3 py-1.5 flex items-center gap-2 text-xs text-red-600 z-10">
                         <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                         Recording {Math.floor(recordingSeconds / 60)}:{String(recordingSeconds % 60).padStart(2, "0")}
                       </div>
@@ -661,7 +661,7 @@ export default function DriverCommunicationCenter() {
                       />
                       <Button
                         size="icon"
-                        className="ml-auto shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:opacity-90 sm:ml-0"
+                        className="ms-auto shrink-0 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 hover:opacity-90 sm:ms-0"
                         disabled={sending || uploadingFile}
                         onClick={handleSend}
                       >

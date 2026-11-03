@@ -6,18 +6,15 @@ export const RTL_LANGUAGES: Language[] = ["ar"];
 export const isRtlLanguage = (lang: Language) => RTL_LANGUAGES.includes(lang);
 
 /**
- * Whether an RTL language also flips the page layout (<html dir="rtl">).
+ * Whether an RTL language also mirrors the page layout (<html dir="rtl">).
  *
- * Off deliberately. Arabic *text* still reads right-to-left without it — the
- * browser's bidirectional algorithm handles direction per text run, so swapping
- * English words for Arabic ones is enough to read correctly. What `dir="rtl"`
- * additionally flips is the *layout*, and this app's CSS positions things with
- * physical directions (ml-*, pl-*, left-*, text-left) in roughly a thousand
- * places, so flipping it misplaces page headers, hero artwork and the search
- * field.
+ * Off for now: Arabic text is shown in the normal left-to-right layout (each
+ * Arabic sentence still reads right-to-left on its own). The layout will be
+ * reviewed separately.
  *
- * Flip this to true only after that CSS has been migrated to logical
- * properties (ms-*, ps-*, start-*, text-start).
+ * The app's Tailwind classes are already logical (ms-*, start-*, text-start,
+ * migrated by tools/i18n/rtlCodemod.mjs), so setting this to true mirrors the
+ * whole layout for Arabic. New code should use the logical classes too.
  */
 export const ENABLE_RTL_LAYOUT = false;
 

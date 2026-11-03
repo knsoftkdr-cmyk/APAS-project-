@@ -171,7 +171,7 @@ export default function HistoryTab({ schoolId }: { schoolId: string }) {
               <TableHead>Item</TableHead>
               <TableHead>Warehouse</TableHead>
               <TableHead>Type</TableHead>
-              <TableHead className="text-right">Quantity</TableHead>
+              <TableHead className="text-end">Quantity</TableHead>
               <TableHead>By</TableHead>
               <TableHead>Notes</TableHead>
             </TableRow>
@@ -199,7 +199,7 @@ export default function HistoryTab({ schoolId }: { schoolId: string }) {
                     </TableCell>
                     <TableCell className="font-medium">
                       {m.item_name}
-                      <span className="text-xs text-muted-foreground ml-1">({m.item_sku})</span>
+                      <span className="text-xs text-muted-foreground ms-1">({m.item_sku})</span>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {m.warehouse_name}
@@ -209,7 +209,7 @@ export default function HistoryTab({ schoolId }: { schoolId: string }) {
                         {MOVEMENT_LABEL[m.movement_type]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="text-end tabular-nums">
                       <span
                         className={`inline-flex items-center gap-1 ${
                           isPositive ? 'text-emerald-600' : 'text-red-600'

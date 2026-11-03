@@ -87,7 +87,7 @@ export function StudentReadinessView({ studentId, bookId, blueprints = [] }: {
               </Select>
             </div>
           )}
-          <p className="text-xs text-muted-foreground sm:ml-auto sm:max-w-xs">
+          <p className="text-xs text-muted-foreground sm:ms-auto sm:max-w-xs">
             With an exam date, the score accounts for what is likely to be forgotten by then.
           </p>
         </CardContent>
@@ -99,7 +99,7 @@ export function StudentReadinessView({ studentId, bookId, blueprints = [] }: {
         <>
           <Card>
             <CardContent className="p-5 grid gap-5 md:grid-cols-[auto,1fr] items-center">
-              <div className="flex flex-col items-center justify-center md:pr-6 md:border-r">
+              <div className="flex flex-col items-center justify-center md:pe-6 md:border-e">
                 <div className="text-5xl font-bold tabular-nums">{Math.round(data.overall.readiness)}<span className="text-2xl text-muted-foreground">/100</span></div>
                 <div className="mt-2"><BandBadge band={data.overall.band} /></div>
                 {data.days_to_exam != null && <p className="text-xs text-muted-foreground mt-2">{data.days_to_exam} day{data.days_to_exam === 1 ? "" : "s"} to the exam</p>}
@@ -150,29 +150,29 @@ export function StudentReadinessView({ studentId, bookId, blueprints = [] }: {
             <CardContent className="space-y-3">
               {data.subjects.map((s) => (
                 <div key={s.book_id} className="rounded-lg border">
-                  <button type="button" className="w-full flex items-center gap-3 p-3 text-left" onClick={() => toggle(`s${s.book_id}`)} aria-expanded={!!open[`s${s.book_id}`]}>
+                  <button type="button" className="w-full flex items-center gap-3 p-3 text-start" onClick={() => toggle(`s${s.book_id}`)} aria-expanded={!!open[`s${s.book_id}`]}>
                     {open[`s${s.book_id}`] ? <ChevronDown className="h-4 w-4 shrink-0" /> : <ChevronRight className="h-4 w-4 shrink-0" />}
                     <span className="font-medium flex-1 min-w-0 truncate">{s.subject}{s.class_name ? ` (${s.class_name})` : ""}</span>
                     <div className="w-24 hidden sm:block"><ScoreBar value={s.readiness} /></div>
-                    <span className="tabular-nums text-sm w-12 text-right">{Math.round(s.readiness)}%</span>
+                    <span className="tabular-nums text-sm w-12 text-end">{Math.round(s.readiness)}%</span>
                     <BandBadge band={s.band} />
                   </button>
                   {open[`s${s.book_id}`] && (
                     <div className="border-t divide-y">
                       {s.chapters.map((c) => (
                         <div key={c.chapter_id}>
-                          <button type="button" className="w-full flex items-center gap-3 py-2 pl-8 pr-3 text-left" onClick={() => toggle(`c${c.chapter_id}`)} aria-expanded={!!open[`c${c.chapter_id}`]}>
+                          <button type="button" className="w-full flex items-center gap-3 py-2 ps-8 pe-3 text-start" onClick={() => toggle(`c${c.chapter_id}`)} aria-expanded={!!open[`c${c.chapter_id}`]}>
                             {open[`c${c.chapter_id}`] ? <ChevronDown className="h-3.5 w-3.5 shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 shrink-0" />}
                             <span className="text-sm flex-1 min-w-0 truncate">{c.name}</span>
                             <div className="w-20 hidden sm:block"><ScoreBar value={c.readiness} /></div>
-                            <span className="tabular-nums text-xs w-10 text-right">{Math.round(c.readiness)}%</span>
+                            <span className="tabular-nums text-xs w-10 text-end">{Math.round(c.readiness)}%</span>
                           </button>
                           {open[`c${c.chapter_id}`] && c.topics.map((t) => (
-                            <div key={t.topic_id} className="flex items-center gap-3 py-1.5 pl-14 pr-3 text-xs bg-muted/30">
+                            <div key={t.topic_id} className="flex items-center gap-3 py-1.5 ps-14 pe-3 text-xs bg-muted/30">
                               <span className="flex-1 min-w-0 truncate">{t.name}</span>
                               <span className="text-muted-foreground hidden sm:block">{Math.round(t.coverage_pct)}% assessed</span>
                               <div className="w-16"><ScoreBar value={t.readiness} /></div>
-                              <span className="tabular-nums w-10 text-right">{Math.round(t.readiness)}%</span>
+                              <span className="tabular-nums w-10 text-end">{Math.round(t.readiness)}%</span>
                             </div>
                           ))}
                         </div>
@@ -193,7 +193,7 @@ export function StudentReadinessView({ studentId, bookId, blueprints = [] }: {
                     <div key={b.bloom_level} className="flex items-center gap-3 text-xs">
                       <span className="w-24 capitalize">{b.bloom_level}</span>
                       <ScoreBar value={b.readiness} className="flex-1" />
-                      <span className="w-10 text-right tabular-nums">{Math.round(b.readiness)}%</span>
+                      <span className="w-10 text-end tabular-nums">{Math.round(b.readiness)}%</span>
                     </div>
                   ))}
                 </CardContent>
@@ -276,7 +276,7 @@ export function ClassReadinessView({ classId, bookId, blueprints = [] }: { class
                     <p className="text-xs text-muted-foreground truncate">{s.weakest_topic ? `Study first: ${s.weakest_topic}` : "\u00a0"}</p></div>
                   <span className="text-xs text-muted-foreground hidden sm:block">{s.confidence ? `${s.confidence} confidence` : ""}</span>
                   <div className="w-20 hidden sm:block"><ScoreBar value={s.readiness} /></div>
-                  <span className="tabular-nums w-10 text-right">{s.readiness == null ? "—" : `${Math.round(s.readiness)}%`}</span>
+                  <span className="tabular-nums w-10 text-end">{s.readiness == null ? "—" : `${Math.round(s.readiness)}%`}</span>
                   <BandBadge band={s.band} />
                 </div>
               ))}
@@ -291,7 +291,7 @@ export function ClassReadinessView({ classId, bookId, blueprints = [] }: { class
                   <div className="min-w-0 flex-1"><p className="truncate">{t.topic_name}</p><p className="text-xs text-muted-foreground truncate">{t.chapter_name}</p></div>
                   <span className="text-xs text-muted-foreground hidden sm:block">{t.students_at_risk}/{t.students} at risk</span>
                   <div className="w-24 hidden sm:block"><ScoreBar value={t.class_readiness} /></div>
-                  <span className="tabular-nums w-10 text-right">{Math.round(t.class_readiness)}%</span>
+                  <span className="tabular-nums w-10 text-end">{Math.round(t.class_readiness)}%</span>
                 </div>
               ))}
             </CardContent>
@@ -371,7 +371,7 @@ function TopicStandingCard({ topics, title, showStudent }: { topics: CohortTopic
               </span>
               {t.standing === "no_reference" || t.gap_pts == null ? <Badge variant="outline">—</Badge> : (
                 <Badge variant="outline" className={t.standing === "above" ? "text-emerald-700 border-emerald-200" : t.standing === "below" ? "text-rose-700 border-rose-200" : ""}>
-                  {t.standing === "above" ? <TrendingUp className="h-3 w-3 mr-1" /> : t.standing === "below" ? <TrendingDown className="h-3 w-3 mr-1" /> : null}
+                  {t.standing === "above" ? <TrendingUp className="h-3 w-3 me-1" /> : t.standing === "below" ? <TrendingDown className="h-3 w-3 me-1" /> : null}
                   {sign(t.gap_pts)} pts
                 </Badge>
               )}
@@ -432,7 +432,7 @@ export function ClassCohortView({ classId, bookId }: { classId: string; bookId?:
               <div key={s.class_id} className="flex items-center gap-3 text-sm">
                 <span className={`w-28 truncate ${s.is_this_section ? "font-semibold" : ""}`}>{s.label}</span>
                 <ScoreBar value={s.avg_pct} className="flex-1" />
-                <span className="w-10 text-right tabular-nums">{pctText(s.avg_pct)}</span>
+                <span className="w-10 text-end tabular-nums">{pctText(s.avg_pct)}</span>
               </div>
             ))}
           </CardContent>
@@ -458,19 +458,19 @@ export function ClassCohortView({ classId, bookId }: { classId: string; bookId?:
           <CardDescription className="text-xs">Percentile = share of the group scoring below (ties count half). Lowest scores first.</CardDescription></CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="text-left text-xs text-muted-foreground"><th className="py-1 pr-3 font-normal">Student</th><th className="px-2 font-normal text-right">Score</th>
-              <th className="px-2 font-normal text-right">Section</th><th className="px-2 font-normal text-right">Grade</th><th className="px-2 font-normal text-right">School</th><th className="pl-3 font-normal">Pattern</th></tr></thead>
+            <thead><tr className="text-start text-xs text-muted-foreground"><th className="py-1 pe-3 font-normal">Student</th><th className="px-2 font-normal text-end">Score</th>
+              <th className="px-2 font-normal text-end">Section</th><th className="px-2 font-normal text-end">Grade</th><th className="px-2 font-normal text-end">School</th><th className="ps-3 font-normal">Pattern</th></tr></thead>
             <tbody className="divide-y">
               {d.students.map((s) => {
                 const p = PATTERN_LABEL[s.pattern];
                 return (
                   <tr key={s.student_id}>
-                    <td className="py-1.5 pr-3 whitespace-nowrap">{s.name}</td>
-                    <td className="px-2 text-right tabular-nums">{s.score_pct == null ? "—" : `${Math.round(s.score_pct)}%`}</td>
-                    <td className="px-2 text-right tabular-nums">{s.section_percentile == null ? "—" : `${Math.round(s.section_percentile)}th`}</td>
-                    <td className="px-2 text-right tabular-nums">{s.grade_percentile == null ? "—" : `${Math.round(s.grade_percentile)}th`}</td>
-                    <td className="px-2 text-right tabular-nums">{s.school_percentile == null ? "—" : `${Math.round(s.school_percentile)}th`}</td>
-                    <td className="pl-3"><Badge variant="outline" className={p.className} title={p.hint}>{p.label}</Badge></td>
+                    <td className="py-1.5 pe-3 whitespace-nowrap">{s.name}</td>
+                    <td className="px-2 text-end tabular-nums">{s.score_pct == null ? "—" : `${Math.round(s.score_pct)}%`}</td>
+                    <td className="px-2 text-end tabular-nums">{s.section_percentile == null ? "—" : `${Math.round(s.section_percentile)}th`}</td>
+                    <td className="px-2 text-end tabular-nums">{s.grade_percentile == null ? "—" : `${Math.round(s.grade_percentile)}th`}</td>
+                    <td className="px-2 text-end tabular-nums">{s.school_percentile == null ? "—" : `${Math.round(s.school_percentile)}th`}</td>
+                    <td className="ps-3"><Badge variant="outline" className={p.className} title={p.hint}>{p.label}</Badge></td>
                   </tr>
                 );
               })}

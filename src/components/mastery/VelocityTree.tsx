@@ -9,11 +9,11 @@ function fmtGain(g: number | null) {
 
 function ConceptRow({ concept }: { concept: VelocityConcept }) {
   return (
-    <div className="pl-4 py-2 border-l-2 ml-2 border-muted">
+    <div className="ps-4 py-2 border-s-2 ms-2 border-muted">
       <div className="flex items-center gap-3 w-full">
         <span className="flex-1 text-sm font-medium truncate">{concept.name}</span>
         <VelocityTrendIndicator trend={concept.trend} className="hidden sm:inline-flex" />
-        <span className="text-xs text-muted-foreground w-24 text-right hidden sm:inline">
+        <span className="text-xs text-muted-foreground w-24 text-end hidden sm:inline">
           {fmtGain(concept.mastery_gain_per_attempt)}
         </span>
         <VelocityBadge label={concept.velocity_label} className="text-[10px] px-1.5 py-0 shrink-0" />
@@ -38,10 +38,10 @@ function TopicBlock({ topic }: { topic: VelocityTopic }) {
       <AccordionTrigger className="py-2 hover:no-underline">
         <div className="flex items-center gap-3 w-full">
           <span className="flex-1 text-sm font-medium truncate">{topic.name}</span>
-          <span className="text-xs text-muted-foreground w-24 text-right hidden sm:inline">
+          <span className="text-xs text-muted-foreground w-24 text-end hidden sm:inline">
             {fmtGain(topic.avg_gain_per_attempt)}
           </span>
-          <span className="text-[11px] text-muted-foreground w-24 text-right hidden sm:inline">
+          <span className="text-[11px] text-muted-foreground w-24 text-end hidden sm:inline">
             {topic.fast_count} fast · {topic.slow_count} slow
           </span>
         </div>
@@ -76,7 +76,7 @@ export function VelocityTree({ subject }: { subject: VelocitySubject }) {
             {subject.fast_count} fast, {subject.average_count} average, {subject.slow_count} slow concepts
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <VelocityBadge label={subject.pace_label} />
           <div className="text-xs text-muted-foreground mt-1">{fmtGain(subject.avg_gain_per_attempt)}</div>
         </div>
@@ -87,12 +87,12 @@ export function VelocityTree({ subject }: { subject: VelocitySubject }) {
             <AccordionTrigger className="py-3 hover:no-underline">
               <div className="flex items-center gap-3 w-full">
                 <span className="flex-1 text-sm font-medium truncate">{chapter.name}</span>
-                <span className="text-xs text-muted-foreground w-24 text-right hidden sm:inline">
+                <span className="text-xs text-muted-foreground w-24 text-end hidden sm:inline">
                   {fmtGain(chapter.avg_gain_per_attempt)}
                 </span>
               </div>
             </AccordionTrigger>
-            <AccordionContent className="pl-2">
+            <AccordionContent className="ps-2">
               <Accordion type="multiple" className="space-y-1">
                 {chapter.topics.map((t) => <TopicBlock key={t.id} topic={t} />)}
               </Accordion>

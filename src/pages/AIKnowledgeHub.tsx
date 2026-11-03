@@ -115,24 +115,24 @@ const AIKnowledgeHub = () => {
     <AppLayout>
       <div className="space-y-6">
 <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-400 p-8 relative min-h-[220px]">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+                    <div className="absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+          <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 end-[45%] text-white/90 text-lg">✦</div>
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 </div>
 
           <div className="max-w-xl">
@@ -149,14 +149,14 @@ const AIKnowledgeHub = () => {
             src={aihubbanner}
             alt="AI hub Banner"
             /* className="absolute right-10 bottom-8 h-[130px]" */
-            className="hidden md:block absolute right-10 bottom-8 w-[140px] z-10"
+            className="hidden md:block absolute end-10 bottom-8 w-[140px] z-10"
           />
         </div>
 
         {/* Stats Bar */}
         <div className="flex gap-4 items-center">
           <Button variant="outline" size="sm" onClick={fetchStats} disabled={loadingStats}>
-            {loadingStats ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Database className="h-4 w-4 mr-1" />}
+            {loadingStats ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : <Database className="h-4 w-4 me-1" />}
             Refresh Stats
           </Button>
           {stats && (
@@ -169,8 +169,8 @@ const AIKnowledgeHub = () => {
 
         <Tabs defaultValue="search" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="search"><Search className="h-4 w-4 mr-1" /> Search Knowledge</TabsTrigger>
-            <TabsTrigger value="embed"><Upload className="h-4 w-4 mr-1" /> Embed Content</TabsTrigger>
+            <TabsTrigger value="search"><Search className="h-4 w-4 me-1" /> Search Knowledge</TabsTrigger>
+            <TabsTrigger value="embed"><Upload className="h-4 w-4 me-1" /> Embed Content</TabsTrigger>
           </TabsList>
 
           {/* Search Tab */}
@@ -211,7 +211,7 @@ const AIKnowledgeHub = () => {
                   </Select>
                 </div>
                 <Button onClick={handleSearch} disabled={searching} className="w-full">
-                  {searching ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Search className="h-4 w-4 mr-2" />}
+                  {searching ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Search className="h-4 w-4 me-2" />}
                   Search Knowledge Base
                 </Button>
               </CardContent>
@@ -223,7 +223,7 @@ const AIKnowledgeHub = () => {
                   {searchResults.length} results found
                 </h3>
                 {searchResults.map((result, i) => (
-                  <Card key={result.id} className="border-l-4 border-l-primary/50">
+                  <Card key={result.id} className="border-s-4 border-s-primary/50">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div className="flex gap-2 flex-wrap">
@@ -235,7 +235,7 @@ const AIKnowledgeHub = () => {
                           )}
                           {result.metadata?.file_name && (
                             <Badge variant="secondary" className="text-xs">
-                              <FileText className="h-3 w-3 mr-1" />{result.metadata.file_name}
+                              <FileText className="h-3 w-3 me-1" />{result.metadata.file_name}
                             </Badge>
                           )}
                         </div>
@@ -304,7 +304,7 @@ const AIKnowledgeHub = () => {
                   rows={10}
                 />
                 <Button onClick={handleEmbed} disabled={embedding} className="w-full">
-                  {embedding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Upload className="h-4 w-4 mr-2" />}
+                  {embedding ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Upload className="h-4 w-4 me-2" />}
                   {embedding ? "Embedding... (this may take a while)" : "Embed Content"}
                 </Button>
 

@@ -145,16 +145,16 @@ const StudentDashboard = () => {
 return (
   <AppLayout>
     <div className="min-h-screen relative overflow-x-hidden">
-      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.10] blur-3xl" />
-      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-cyan-200 opacity-[0.08] blur-3xl" />
-      <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
+      <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.10] blur-3xl" />
+      <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-cyan-200 opacity-[0.08] blur-3xl" />
+      <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
 
       <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-8xl mx-auto">
 
         {/* Header */}
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-cyan-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <PenLine className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -168,7 +168,7 @@ return (
 
         {/* Homework Section */}
         <Card className="group relative overflow-hidden border-blue-100 shadow-sm hover:shadow-md transition-all duration-300">
-  <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-blue-100 opacity-40 blur-2xl transition-transform duration-500 group-hover:scale-125" />
+  <div className="absolute -top-8 -end-8 w-32 h-32 rounded-full bg-blue-100 opacity-40 blur-2xl transition-transform duration-500 group-hover:scale-125" />
   <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500 relative z-10" />
   <CardContent className="p-4 md:p-5 relative z-10">
     <h2 className="text-base md:text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2.5">
@@ -352,10 +352,10 @@ const TeacherHome = () => {
                       <Link key={feature.path} to={feature.path} className="group">
                         <Card className="h-full border-0 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 overflow-hidden relative bg-white group">
                           <div className={`h-1 w-full bg-gradient-to-r ${feature.color}`}></div>
-                          <div className={`absolute left-0 top-0 h-full w-1 bg-gradient-to-b ${feature.color}`}></div>
-                          <div className={`absolute right-0 top-0 h-full w-1 bg-gradient-to-b ${feature.color}`}></div>
+                          <div className={`absolute start-0 top-0 h-full w-1 bg-gradient-to-b ${feature.color}`}></div>
+                          <div className={`absolute end-0 top-0 h-full w-1 bg-gradient-to-b ${feature.color}`}></div>
                           <CardContent className="p-6">
-                            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${feature.glow}`}/>
+                            <div className={`absolute top-0 end-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${feature.glow}`}/>
                             <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color} mb-4`}>
                               <feature.icon className={`h-8 w-8 ${feature.iconColor}`} />
                             </div>
@@ -366,7 +366,7 @@ const TeacherHome = () => {
                               {feature.description}
                             </p>
                             <div className="flex items-center gap-1.5 text-sm font-medium text-primary mt-3 opacity-0 max-h-0 overflow-hidden group-hover:max-h-10 group-hover:opacity-100 transition-all duration-500 ">
-                              Explore <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" />
+                              Explore <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-2 rtl:group-hover:-translate-x-2" />
                             </div>
                           </CardContent>
                         </Card>
@@ -388,7 +388,7 @@ const TeacherHome = () => {
                       <div key={i} className="relative">
                         <Card className="h-full border-0 shadow-md bg-gradient-to-br from-blue-200 to-blue-200 transition-all duration-500 hover:-translate-y-3 hover:shadow-2xl hover:rotate-1 group">
                           <CardContent className="p-5">
-                            <span className="text-3xl font-black text-primary/15 absolute top-3 right-4">{step.step}</span>
+                            <span className="text-3xl font-black text-primary/15 absolute top-3 end-4">{step.step}</span>
                             <div
             className="
             flex h-12 w-12
@@ -533,7 +533,7 @@ const AdminHome = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {atRiskStudents.map((s, i) => (
                         <Card key={i} className="group overflow-hidden border-0 bg-gradient-to-br from-red-50 via-white to-orange-50 shadow-md hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                            <div className="absolute top-0 end-0 w-32 h-32 bg-red-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
                           <CardContent className="p-4">
                             <div className="flex items-center justify-between mb-2">
                               <Badge className="bg-red-500 text-white animate-pulse shadow-lg shadow-red-100">HIGH RISK</Badge>
@@ -545,7 +545,7 @@ const AdminHome = () => {
                               Predicted:<p className="text-xl font-semibold text-red-600">{Number(s.predicted_score_next_test).toFixed(0)}%</p>
                             </p>
                             </div>
-                          <div className="text-right">
+                          <div className="text-end">
                             <p className="text-xs text-muted-foreground">
                               Dropout Risk: <p className="text-xl font-semibold text-orange-600">{Number(s.dropout_risk_percentage).toFixed(0)}%</p>
                             </p>
@@ -611,7 +611,7 @@ const AdminHome = () => {
                       <Link key={feature.path} to={feature.path} className="group">
                         <Card className="h-full border-0 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 relative overflow-hidden bg-white">
                           <CardContent className="p-6">
-                            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500  ${feature.glow}`}/>
+                            <div className={`absolute top-0 end-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500  ${feature.glow}`}/>
                               <div className={`relative flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br ${feature.color} mb-4 shadow-lg group-hover:scale-125 group-hover:rotate-12 transition-all duration-500`}>
                                 <feature.icon className={`h-7 w-7 ${feature.iconColor} group-hover:scale-110 transition-all duration-500`}/>
                               </div>
@@ -623,7 +623,7 @@ const AdminHome = () => {
                             </p>
                               <div className="flex items-center gap-1.5 text-sm font-medium text-primary opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500">
                                 Open
-                                <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform duration-500" />
+                                <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform duration-500 rtl:group-hover:-translate-x-2" />
                               </div>
                           </CardContent>
                         </Card>
@@ -678,8 +678,8 @@ const AdminHome = () => {
                       <div key={i} className="relative">
                         <Card className="h-full border-0 shadow-md hover:shadow-2xl hover:-translate-y-3 transition-all duration-500 overflow-hidden relative group">
                           <CardContent className="p-5">
-                            <div className={`absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${step.glow}`}/>
-                            <span className="text-5xl font-black text-slate-200 absolute top-2 right-3 group-hover:scale-125 transition-all duration-500">
+                            <div className={`absolute top-0 end-0 w-32 h-32 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500 ${step.glow}`}/>
+                            <span className="text-5xl font-black text-slate-200 absolute top-2 end-3 group-hover:scale-125 transition-all duration-500">
                             {step.step}</span>
                             <div className={`flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${step.bg} mb-4 shadow-lg group-hover:scale-125 group-hover:rotate-12 transition-all duration-500`}>
                               <step.icon className="h-7 w-7 text-white" />

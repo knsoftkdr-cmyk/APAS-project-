@@ -388,14 +388,14 @@ const last6MonthsChart = useMemo(() => {
         </div>
 
         <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
           <CardContent className="p-5 relative">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><Target className="h-3.5 w-3.5" /></div>School Target vs Actual</h3>
             <div className="overflow-x-auto -mx-1 px-1">
               <table className="w-full min-w-[480px] text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-muted-foreground border-b">
-                    <th className="pb-2 pr-3">Metric</th><th className="pb-2 pr-3">Target</th><th className="pb-2 pr-3">Actual</th><th className="pb-2">Status</th>
+                  <tr className="text-start text-xs text-muted-foreground border-b">
+                    <th className="pb-2 pe-3">Metric</th><th className="pb-2 pe-3">Target</th><th className="pb-2 pe-3">Actual</th><th className="pb-2">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -415,21 +415,21 @@ const last6MonthsChart = useMemo(() => {
         </div>
 
         <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
           <CardContent className="p-5 relative">
             <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><BarChart3 className="h-3.5 w-3.5" /></div>Grade-wise Benchmark</h3>
             <div className="overflow-x-auto -mx-1 px-1">
               <table className="w-full min-w-[420px] text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-muted-foreground border-b">
-                    <th className="pb-2 pr-3 whitespace-nowrap">Grade</th><th className="pb-2 pr-3 whitespace-nowrap">Average Score</th><th className="pb-2 whitespace-nowrap">Homework Completion</th>
+                  <tr className="text-start text-xs text-muted-foreground border-b">
+                    <th className="pb-2 pe-3 whitespace-nowrap">Grade</th><th className="pb-2 pe-3 whitespace-nowrap">Average Score</th><th className="pb-2 whitespace-nowrap">Homework Completion</th>
                   </tr>
                 </thead>
                 <tbody>
                   {gradeRows.map((g) => (
                     <tr key={g.grade} className="border-b last:border-0">
-                      <td className="py-2 pr-3 font-medium whitespace-nowrap">{g.grade}</td>
-                      <td className="py-2 pr-3">{g.score}%</td>
+                      <td className="py-2 pe-3 font-medium whitespace-nowrap">{g.grade}</td>
+                      <td className="py-2 pe-3">{g.score}%</td>
                       <td className="py-2">{g.homework}%</td>
                     </tr>
                   ))}
@@ -440,23 +440,23 @@ const last6MonthsChart = useMemo(() => {
         </Card>
 
         <Card className="relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg transition-all duration-300">
-          <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
+          <div className="absolute -top-10 -end-10 w-32 h-32 rounded-full bg-emerald-400/10 blur-3xl" />
           <CardContent className="p-5 relative">
             <h3 className="text-sm font-semibold mb-1 flex items-center gap-2"><div className="rounded-lg p-1.5 bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-sm shadow-emerald-200"><Users className="h-3.5 w-3.5" /></div>Teacher Performance Benchmark</h3>
             <p className="text-xs text-muted-foreground mb-3">A comparison to spot where support may help — not a ranking.</p>
             <div className="overflow-x-auto -mx-1 px-1">
               <table className="w-full min-w-[560px] text-sm">
                 <thead>
-                  <tr className="text-left text-xs text-muted-foreground border-b">
-                    <th className="pb-2 pr-3 whitespace-nowrap">Teacher</th><th className="pb-2 pr-3 whitespace-nowrap">Homework Reviewed</th><th className="pb-2 pr-3 whitespace-nowrap">Avg Homework Score</th><th className="pb-2 whitespace-nowrap">Active Interventions</th>
+                  <tr className="text-start text-xs text-muted-foreground border-b">
+                    <th className="pb-2 pe-3 whitespace-nowrap">Teacher</th><th className="pb-2 pe-3 whitespace-nowrap">Homework Reviewed</th><th className="pb-2 pe-3 whitespace-nowrap">Avg Homework Score</th><th className="pb-2 whitespace-nowrap">Active Interventions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {teacherRows.map((t) => (
                     <tr key={t.name} className="border-b last:border-0">
-                      <td className="py-2 pr-3 font-medium whitespace-nowrap">{t.name}</td>
-                      <td className="py-2 pr-3">{t.homeworkReviewed}</td>
-                      <td className="py-2 pr-3">{t.avgScore ?? "—"}</td>
+                      <td className="py-2 pe-3 font-medium whitespace-nowrap">{t.name}</td>
+                      <td className="py-2 pe-3">{t.homeworkReviewed}</td>
+                      <td className="py-2 pe-3">{t.avgScore ?? "—"}</td>
                       <td className="py-2">{t.activeInterventions}</td>
                     </tr>
                   ))}
@@ -482,7 +482,7 @@ function BenchmarkCard({ label, value, target, lowerIsBetter }: { label: string;
   const onTarget = lowerIsBetter ? value <= target : value >= target;
   return (
     <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-      <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl transition-transform duration-500 group-hover:scale-125" />
+      <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl transition-transform duration-500 group-hover:scale-125" />
       <CardContent className="p-4 relative">
         <p className="text-xs text-muted-foreground mb-1">{label}</p>
         <p className={cn("text-2xl font-bold", onTarget ? "text-emerald-600" : "text-amber-600")}>{value}%</p>
@@ -515,7 +515,7 @@ function TrendCard({ label, last, current }: { label: string; last: number; curr
   const up = delta >= 0;
   return (
     <Card className="group relative overflow-hidden border-2 border-emerald-200 hover:border-emerald-300 rounded-2xl bg-gradient-to-br from-emerald-50/60 via-white to-white shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
-      <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl transition-transform duration-500 group-hover:scale-125" />
+      <div className="absolute -top-10 -end-10 w-28 h-28 rounded-full bg-emerald-400/10 blur-3xl transition-transform duration-500 group-hover:scale-125" />
       <CardContent className="p-4 relative">
         <p className="text-xs text-muted-foreground mb-2">{label}</p>
         <div className="flex items-end justify-between">
@@ -523,7 +523,7 @@ function TrendCard({ label, last, current }: { label: string; last: number; curr
             <p className="text-xs text-muted-foreground">Last Month</p>
             <p className="text-lg font-semibold">{last}%</p>
           </div>
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-xs text-muted-foreground">This Month</p>
             <p className="text-lg font-semibold">{current}%</p>
           </div>

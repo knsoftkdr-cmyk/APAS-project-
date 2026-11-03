@@ -146,7 +146,7 @@ export default function BktCalibration() {
     <AppLayout>
       <div className="p-4 md:p-6 space-y-5 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-cyan-700 to-blue-800 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <Activity className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -218,7 +218,7 @@ export default function BktCalibration() {
             <CardHeader className="pb-2 flex-row items-center justify-between">
               <CardTitle className="text-sm">Learning objectives ({objectives.length})</CardTitle>
               <Button size="sm" variant="outline" disabled={calibratingId !== null} onClick={runBatchCalibration}>
-                <Sparkles className="h-4 w-4 mr-1.5" /> Calibrate all
+                <Sparkles className="h-4 w-4 me-1.5" /> Calibrate all
               </Button>
             </CardHeader>
             <CardContent>
@@ -226,10 +226,10 @@ export default function BktCalibration() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Objective</TableHead>
-                    <TableHead className="text-right">P(init)</TableHead>
-                    <TableHead className="text-right">P(learn)</TableHead>
-                    <TableHead className="text-right">P(slip)</TableHead>
-                    <TableHead className="text-right">P(guess)</TableHead>
+                    <TableHead className="text-end">P(init)</TableHead>
+                    <TableHead className="text-end">P(learn)</TableHead>
+                    <TableHead className="text-end">P(slip)</TableHead>
+                    <TableHead className="text-end">P(guess)</TableHead>
                     <TableHead>Source</TableHead>
                     <TableHead />
                   </TableRow>
@@ -238,10 +238,10 @@ export default function BktCalibration() {
                   {objectives.map((o) => (
                     <TableRow key={o.id}>
                       <TableCell className="max-w-xs truncate text-sm">{o.objective_text}</TableCell>
-                      <TableCell className="text-right text-xs">{o.p_init.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-xs">{o.p_transit.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-xs">{o.p_slip.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-xs">{o.p_guess.toFixed(2)}</TableCell>
+                      <TableCell className="text-end text-xs">{o.p_init.toFixed(2)}</TableCell>
+                      <TableCell className="text-end text-xs">{o.p_transit.toFixed(2)}</TableCell>
+                      <TableCell className="text-end text-xs">{o.p_slip.toFixed(2)}</TableCell>
+                      <TableCell className="text-end text-xs">{o.p_guess.toFixed(2)}</TableCell>
                       <TableCell>
                         {o.is_calibrated ? (
                           <Badge variant="outline" className="text-emerald-600 border-emerald-200 text-[10px]">

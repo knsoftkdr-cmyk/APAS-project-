@@ -53,7 +53,7 @@ const RequestDemo = () => {
   return (
     <>
       <section
-        className="min-h-screen flex items-center justify-end pr-20"
+        className="min-h-screen flex items-center justify-end pe-20"
         style={{
           backgroundImage: "url('/classroom-bg.jpg')",
           backgroundSize: "cover",
@@ -61,7 +61,7 @@ const RequestDemo = () => {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="absolute top-8 left-8 z-50">
+        <div className="absolute top-8 start-8 z-50">
           <img src={knsoftLogo} alt="KNSOFT Logo" className="h-10 w-auto object-contain" />
         </div>
 
@@ -114,7 +114,7 @@ const RequestDemo = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                  <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                     <User className="h-4 w-4 text-[#2C3E50]/60" />
                   </div>
                   <input
@@ -122,7 +122,7 @@ const RequestDemo = () => {
                     placeholder="First Name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                    className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                     required
                   />
                 </div>
@@ -140,7 +140,7 @@ const RequestDemo = () => {
               </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                   <Building2 className="h-4 w-4 text-[#2C3E50]/60" />
                 </div>
                 <input
@@ -148,13 +148,13 @@ const RequestDemo = () => {
                   placeholder="Institution / School Name"
                   value={institutionName}
                   onChange={(e) => setInstitutionName(e.target.value)}
-                  className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                   required
                 />
               </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                   <Mail className="h-4 w-4 text-[#2C3E50]/60" />
                 </div>
                 <input
@@ -162,13 +162,13 @@ const RequestDemo = () => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                   required
                 />
               </div>
 
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-l-md">
+                <div className="absolute inset-y-0 start-0 flex items-center justify-center w-12 bg-[#E8EEF7] rounded-s-md">
                   <Phone className="h-4 w-4 text-[#2C3E50]/60" />
                 </div>
                 <input
@@ -176,12 +176,12 @@ const RequestDemo = () => {
                   placeholder="Phone Number"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="w-full h-12 pl-14 pr-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
+                  className="w-full h-12 ps-14 pe-4 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0"
                 />
               </div>
 
               <div className="relative">
-                <div className="absolute top-0 left-0 flex items-start justify-center w-12 h-12 bg-[#E8EEF7] rounded-l-md">
+                <div className="absolute top-0 start-0 flex items-start justify-center w-12 h-12 bg-[#E8EEF7] rounded-s-md">
                   <MessageSquare className="h-4 w-4 text-[#2C3E50]/60 mt-4" />
                 </div>
                 <textarea
@@ -189,7 +189,7 @@ const RequestDemo = () => {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={4}
-                  className="w-full pl-14 pr-4 py-3 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0 resize-none"
+                  className="w-full ps-14 pe-4 py-3 bg-[#F5F8FC] rounded-md text-[#2C3E50] placeholder:text-[#2C3E50]/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 border-0 resize-none"
                 />
               </div>
 

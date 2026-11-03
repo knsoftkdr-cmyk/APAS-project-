@@ -49,9 +49,9 @@ function AdmissionStatCard({
   const tones = ADMISSION_STAT_TONES[accent];
   return (
     <Card className="group relative overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
-      <div className={`absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-125 ${tones.glow}`} />
-      <div className={`absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b ${tones.bar}`} />
-      <CardContent className="relative p-3 md:p-4 pl-4 md:pl-5 flex items-center gap-2.5 sm:gap-3">
+      <div className={`absolute -top-6 -end-6 w-20 h-20 rounded-full blur-2xl transition-transform duration-500 group-hover:scale-125 ${tones.glow}`} />
+      <div className={`absolute inset-y-0 start-0 w-1.5 bg-gradient-to-b ${tones.bar}`} />
+      <CardContent className="relative p-3 md:p-4 ps-4 md:ps-5 flex items-center gap-2.5 sm:gap-3">
         <div className={`w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 rounded-xl bg-gradient-to-br ${tones.chip} flex items-center justify-center shadow-sm shrink-0 transition-transform duration-300 group-hover:scale-110`}>
           <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
         </div>
@@ -91,16 +91,16 @@ export function AdmissionDashboard() {
 
   return (
     <div className="min-h-screen relative overflow-x-hidden">
-      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
-      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-200 opacity-[0.08] blur-3xl" />
-      <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
+      <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
+      <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-violet-200 opacity-[0.08] blur-3xl" />
+      <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
 
       <div className="relative z-10 space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
 
         {/* Hero */}
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
           <div className="relative flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">

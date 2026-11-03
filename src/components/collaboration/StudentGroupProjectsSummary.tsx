@@ -104,7 +104,7 @@ export function StudentGroupProjectsSummary() {
                     </span>
                     <Button variant="ghost" size="sm" asChild className="h-6 px-2 text-xs">
                       <Link to={GROUP_WORKSPACE_ROUTE(r.groupId)}>
-                        Open <ArrowRight className="ml-1 h-3 w-3" />
+                        Open <ArrowRight className="ms-1 h-3 w-3" />
                       </Link>
                     </Button>
                   </div>

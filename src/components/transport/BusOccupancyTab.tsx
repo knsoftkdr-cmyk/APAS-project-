@@ -183,7 +183,7 @@ export default function BusOccupancyTab({ schoolId }: BusOccupancyTabProps) {
         <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="text-base">Live Occupancy & Seat Availability</CardTitle>
           <Button size="sm" variant="ghost" onClick={fetchOccupancy} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 me-1 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </CardHeader>
@@ -237,19 +237,19 @@ export default function BusOccupancyTab({ schoolId }: BusOccupancyTabProps) {
                       Set manually at {new Date(occ.recordedAt).toLocaleTimeString()}
                     </p>
                   )}
-                  <div className="flex gap-2 ml-auto">
+                  <div className="flex gap-2 ms-auto">
                     {occ?.source === "manual" && occ.manualLogId && (
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => clearOverride(route.id, occ.manualLogId!)}
                       >
-                        <RotateCcw className="h-3 w-3 mr-1" />
+                        <RotateCcw className="h-3 w-3 me-1" />
                         Revert to auto
                       </Button>
                     )}
                     <Button size="sm" variant="outline" onClick={() => openOverrideDialog(route)}>
-                      <Pencil className="h-3 w-3 mr-1" />
+                      <Pencil className="h-3 w-3 me-1" />
                       Override headcount
                     </Button>
                   </div>

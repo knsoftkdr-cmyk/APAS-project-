@@ -83,11 +83,11 @@ export default function DelayPredictionSubTab({ schoolId }: Props) {
             disabled={!schoolId || forecastMutation.isPending}
           >
             {forecastMutation.isPending ? (
-              <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Forecasting...</>
+              <><Loader2 className="h-4 w-4 me-1.5 animate-spin" /> Forecasting...</>
             ) : prediction ? (
-              <><Sparkles className="h-4 w-4 mr-1.5" /> Re-run Forecast</>
+              <><Sparkles className="h-4 w-4 me-1.5" /> Re-run Forecast</>
             ) : (
-              <><Sparkles className="h-4 w-4 mr-1.5" /> Run Forecast</>
+              <><Sparkles className="h-4 w-4 me-1.5" /> Run Forecast</>
             )}
           </Button>
         </CardTitle>

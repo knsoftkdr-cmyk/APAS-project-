@@ -534,15 +534,15 @@ export default function ExamSeating() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-6xl mx-auto">
           {/* Header */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                 <ClipboardList className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -560,7 +560,7 @@ export default function ExamSeating() {
               <CardTitle className={sectionTitleClass}><Building2 className="h-4 w-4" /> Exam Halls</CardTitle>
               <Dialog open={hallDialogOpen} onOpenChange={setHallDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"><Plus className="h-4 w-4 mr-1" /> Add Hall</Button>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"><Plus className="h-4 w-4 me-1" /> Add Hall</Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-2xl">
                   <DialogHeader><DialogTitle>Add Exam Hall</DialogTitle></DialogHeader>
@@ -572,7 +572,7 @@ export default function ExamSeating() {
                     </div>
                     <div><Label>Capacity (required if no rows/columns)</Label><Input type="number" className="rounded-xl mt-1" value={newHallCapacity} onChange={(e) => setNewHallCapacity(e.target.value)} placeholder="Total seats" /></div>
                     <Button onClick={saveHall} disabled={savingHall} className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-xl">
-                      {savingHall ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save Hall
+                      {savingHall ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : null} Save Hall
                     </Button>
                   </div>
                 </DialogContent>
@@ -609,7 +609,7 @@ export default function ExamSeating() {
               <CardTitle className={sectionTitleClass}>Exam Schedules</CardTitle>
               <Dialog open={schedDialogOpen} onOpenChange={setSchedDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"><Plus className="h-4 w-4 mr-1" /> Add Exam</Button>
+                  <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 rounded-xl"><Plus className="h-4 w-4 me-1" /> Add Exam</Button>
                 </DialogTrigger>
                 <DialogContent className="rounded-2xl">
                   <DialogHeader><DialogTitle>Add Exam Schedule</DialogTitle></DialogHeader>
@@ -622,7 +622,7 @@ export default function ExamSeating() {
                     </div>
                     <div><Label>Classes (comma-separated)</Label><Input className="rounded-xl mt-1" value={newClasses} onChange={(e) => setNewClasses(e.target.value)} placeholder="e.g. 9, 10" /></div>
                     <Button onClick={saveSchedule} disabled={savingSched} className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-xl">
-                      {savingSched ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save Exam Schedule
+                      {savingSched ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : null} Save Exam Schedule
                     </Button>
                   </div>
                 </DialogContent>
@@ -640,7 +640,7 @@ export default function ExamSeating() {
                         <TableCell className="font-medium">{s.subject}</TableCell>
                         <TableCell className="text-sm">{s.exam_date}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{s.start_time} - {s.end_time}</TableCell>
-                        <TableCell>{s.classes.map((c) => <Badge key={c} variant="outline" className="mr-1 border-indigo-200 text-indigo-700 bg-indigo-50/50">{c}</Badge>)}</TableCell>
+                        <TableCell>{s.classes.map((c) => <Badge key={c} variant="outline" className="me-1 border-indigo-200 text-indigo-700 bg-indigo-50/50">{c}</Badge>)}</TableCell>
                         <TableCell>
                           <Button size="sm" variant="ghost" className="rounded-full hover:bg-red-50" onClick={() => deleteSchedule(s.id)} disabled={deletingId === s.id}>
                             {deletingId === s.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5 text-red-500" />}
@@ -674,7 +674,7 @@ export default function ExamSeating() {
                   disabled={generating || !selectedScheduleId || selectedHallIds.length === 0}
                   className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 rounded-xl"
                 >
-                  {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shuffle className="h-4 w-4 mr-2" />}
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <Shuffle className="h-4 w-4 me-2" />}
                   Generate Seating
                 </Button>
               </div>
@@ -707,7 +707,7 @@ export default function ExamSeating() {
                         <div className="flex items-center justify-between mb-0 px-3 py-2.5 bg-gradient-to-r from-indigo-50 to-violet-50/50 border-b border-indigo-100">
                           <h3 className="text-sm font-semibold text-indigo-900">{hall?.name}</h3>
                           <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => generateLayoutPDF(hallId)}>
-                            <Printer className="h-3.5 w-3.5 mr-1.5" /> Layout
+                            <Printer className="h-3.5 w-3.5 me-1.5" /> Layout
                           </Button>
                         </div>
                         <Table>
@@ -758,12 +758,12 @@ export default function ExamSeating() {
                           <TableCell className="text-center">{l.seat_count}</TableCell>
                           <TableCell className="flex gap-2 justify-end">
                             <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "view")} disabled={layoutActionKey === viewKey}>
-                              {layoutActionKey === viewKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5 mr-1.5" />}
+                              {layoutActionKey === viewKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Printer className="h-3.5 w-3.5 me-1.5" />}
                               View
                             </Button>
                             {!Capacitor.isNativePlatform() && (
                               <Button size="sm" variant="outline" className="rounded-lg border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => loadAndRunSavedLayout(l.exam_schedule_id, l.hall_id, "download")} disabled={layoutActionKey === downloadKey}>
-                                {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
+                                {layoutActionKey === downloadKey ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5 me-1.5" />}
                                 Download
                               </Button>
                             )}

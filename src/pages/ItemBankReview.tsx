@@ -455,7 +455,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
     <Shell embedded={embedded}>
       <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-5 max-w-5xl mx-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-6">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <Layers className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -573,7 +573,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                     Activate immediately (skip draft review)
                   </label>
                   <Button onClick={runGenerate} disabled={generating} className="w-full h-10 sm:h-9">
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : <Sparkles className="h-4 w-4 me-1" />}
                     {generating ? (genKind === "mcq" ? "Generating…" : "Generating — this can take a minute…") : "Generate"}
                   </Button>
                 </CardContent>
@@ -586,7 +586,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                     Has the AI solve every active question on its own, without seeing the stored answer. Any question where it disagrees goes back to draft so students stop seeing it.
                   </p>
                   <Button onClick={runVerifyKeys} disabled={verifying} variant="outline" className="w-full h-10 sm:h-9">
-                    {verifying ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle2 className="h-4 w-4 mr-1" />}
+                    {verifying ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : <CheckCircle2 className="h-4 w-4 me-1" />}
                     {verifying ? "Checking — this can take a few minutes…" : "Check answer keys"}
                   </Button>
                 </CardContent>
@@ -623,7 +623,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
               <Badge variant="outline" className="bg-sky-50 text-sky-700 border-sky-300">Case-based: {extTotals.caseActive} active · {extTotals.caseDraft} draft</Badge>
               {extTotals.draftIds.length > 0 && (
                 <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" disabled={busyItem != null} onClick={() => setExtStatus(extTotals.draftIds, "active")}>
-                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve all {extTotals.draftIds.length} short/case drafts
+                  <CheckCircle2 className="h-3.5 w-3.5 me-1" /> Approve all {extTotals.draftIds.length} short/case drafts
                 </Button>
               )}
             </div>
@@ -638,7 +638,7 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
               <Card><CardContent className="p-6 text-sm text-muted-foreground text-center space-y-3">
                 <p>No learning objectives here yet. Questions are written per learning objective, so create those first.</p>
                 <Button size="sm" onClick={createObjectives} disabled={genObjectives.isPending}>
-                  {genObjectives.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                  {genObjectives.isPending ? <Loader2 className="h-4 w-4 animate-spin me-1" /> : <Sparkles className="h-4 w-4 me-1" />}
                   {genObjectives.isPending ? "Creating learning objectives…" : "Create learning objectives for this topic"}
                 </Button>
               </CardContent></Card>
@@ -653,9 +653,9 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
                   const flagged = items.filter((i) => i.status === "active" && i.review_flag && i.review_flag !== "ok").length;
                   return (
                     <AccordionItem key={lo.id} value={String(lo.id)} className="border rounded-xl px-3 sm:px-4">
-                      <AccordionTrigger className="hover:no-underline py-3 gap-2 text-left">
+                      <AccordionTrigger className="hover:no-underline py-3 gap-2 text-start">
                         {/* Phone: text on top, badges wrap underneath. Laptop: text left, badges right. */}
-                        <div className="flex flex-1 min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 text-left">
+                        <div className="flex flex-1 min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3 text-start">
                           <div className="min-w-0">
                             <p className="text-sm font-medium break-words">{lo.objective_text}</p>
                             {!subtopicId && (
@@ -788,17 +788,17 @@ function ItemCard({ item, busy, misconceptions, onApprove, onRetire, onFixKey, o
         <div className="flex gap-2 pt-0.5">
           {item.status === "draft" && (
             <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" disabled={busy} onClick={onApprove}>
-              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
+              {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 me-1" /> Approve</>}
             </Button>
           )}
           {item.status === "active" && (
             <Button size="sm" variant="ghost" className="h-9 sm:h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
-              <Archive className="h-3.5 w-3.5 mr-1" /> Retire
+              <Archive className="h-3.5 w-3.5 me-1" /> Retire
             </Button>
           )}
           {item.status === "draft" && (
             <Button size="sm" variant="ghost" className="h-9 sm:h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
-              <XCircle className="h-3.5 w-3.5 mr-1" /> Discard
+              <XCircle className="h-3.5 w-3.5 me-1" /> Discard
             </Button>
           )}
         </div>
@@ -861,11 +861,11 @@ function ExtendedItemCard({ item, busy, onApprove, onRetire }: {
       <div className="flex gap-2 pt-0.5">
         {item.status === "draft" && (
           <Button size="sm" variant="outline" className="h-9 sm:h-7 text-xs" disabled={busy} onClick={onApprove}>
-            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Approve</>}
+            {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><CheckCircle2 className="h-3.5 w-3.5 me-1" /> Approve</>}
           </Button>
         )}
         <Button size="sm" variant="ghost" className="h-9 sm:h-7 text-xs text-muted-foreground" disabled={busy} onClick={onRetire}>
-          {item.status === "draft" ? <><XCircle className="h-3.5 w-3.5 mr-1" /> Discard</> : <><Archive className="h-3.5 w-3.5 mr-1" /> Retire</>}
+          {item.status === "draft" ? <><XCircle className="h-3.5 w-3.5 me-1" /> Discard</> : <><Archive className="h-3.5 w-3.5 me-1" /> Retire</>}
         </Button>
       </div>
     </div>

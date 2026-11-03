@@ -65,7 +65,7 @@ export const ReportContent = ({
             Phase 1 · Diagnostic Assessment
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <p className="text-xs text-[#6b6b8a] font-light">{reportId}</p>
           <p className="text-sm font-medium text-[#3a3a5c] mt-0.5">{formattedDate}</p>
           <span className="inline-block bg-[#0e9a7b] text-white text-[10px] font-semibold tracking-[1.5px] uppercase px-2.5 py-1 rounded-full mt-1.5">
@@ -101,7 +101,7 @@ export const ReportContent = ({
                 className={`relative bg-white border rounded-xl p-4 text-center overflow-hidden ${isDominant ? "border-[#0e9a7b] bg-[#e1f5ee]" : "border-[#e2e0d8]"}`}
               >
                 {isDominant && (
-                  <span className="absolute top-1.5 right-1.5 text-[8px] font-bold tracking-[1px] text-[#0e9a7b]">DOMINANT</span>
+                  <span className="absolute top-1.5 end-1.5 text-[8px] font-bold tracking-[1px] text-[#0e9a7b]">DOMINANT</span>
                 )}
                 <div className={`text-4xl mb-1 ${isDominant ? "text-[#0e9a7b]" : "text-[#1a1a2e]"}`} style={{ fontFamily: "'DM Serif Display', serif" }}>
                   {v.letter}
@@ -144,8 +144,8 @@ export const ReportContent = ({
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 border-[#e2e0d8]">
-                <th className="text-left text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Dimension</th>
-                <th className="text-left text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Theory</th>
+                <th className="text-start text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Dimension</th>
+                <th className="text-start text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Theory</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Score</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Level</th>
                 <th className="text-center text-[10px] font-semibold tracking-[1.5px] uppercase text-[#6b6b8a] px-4 py-3">Not Sure</th>
@@ -287,7 +287,7 @@ const DimensionRow = ({ score }: { score: DimensionScore }) => {
             style={{ width: `${score.percentage}%`, background: barColor }}
           />
         </div>
-        <span className="text-sm font-bold text-[#3a3a5c] w-12 text-right">{score.percentage}%</span>
+        <span className="text-sm font-bold text-[#3a3a5c] w-12 text-end">{score.percentage}%</span>
       </div>
       <p className="text-xs text-[#6b6b8a] mb-1">{score.description}</p>
       <p className="text-xs text-[#3a3a5c] leading-relaxed">{score.interpretation}</p>
@@ -390,7 +390,7 @@ const NotSureInsight = ({
                     <span className="inline-block w-2 h-2 rounded-full bg-[#4338ca]/40 shrink-0" />
                     <div className="flex-1">
                       <span className="text-sm font-medium text-[#3a3a5c]">{s.dimension}</span>
-                      <span className="text-xs text-[#6b6b8a] ml-2">({s.notSureCount} of {s.totalQuestions} questions — {dimPct}%)</span>
+                      <span className="text-xs text-[#6b6b8a] ms-2">({s.notSureCount} of {s.totalQuestions} questions — {dimPct}%)</span>
                     </div>
                     <div className="w-24 h-1.5 bg-[#e2e0d8] rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-[#4338ca]" style={{ width: `${dimPct}%` }} />

@@ -48,10 +48,10 @@ const LessonMarkdownComponents = {
     <p className="text-sm leading-relaxed mb-3 text-foreground/85" {...props}>{props.children}</p>
   ),
   ul: ({ node, ...props }: any) => (
-    <ul className="space-y-2 mb-3 ml-4 list-none" {...props}>{props.children}</ul>
+    <ul className="space-y-2 mb-3 ms-4 list-none" {...props}>{props.children}</ul>
   ),
   ol: ({ node, ...props }: any) => (
-    <ol className="space-y-2 mb-3 ml-4 list-decimal list-inside" {...props}>{props.children}</ol>
+    <ol className="space-y-2 mb-3 ms-4 list-decimal list-inside" {...props}>{props.children}</ol>
   ),
   li: ({ node, ...props }: any) => (
     <li className="text-sm text-foreground/85 flex gap-2 items-start">
@@ -60,7 +60,7 @@ const LessonMarkdownComponents = {
     </li>
   ),
   blockquote: ({ node, ...props }: any) => (
-    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>{props.children}</blockquote>
+    <blockquote className="border-s-4 border-primary/50 ps-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>{props.children}</blockquote>
   ),
   code: ({ node, inline, ...props }: any) =>
     inline ? (
@@ -75,7 +75,7 @@ const LessonMarkdownComponents = {
     <thead className="bg-primary/10 border-b-2 border-primary/30" {...props}>{props.children}</thead>
   ),
   th: ({ node, ...props }: any) => (
-    <th className="text-left px-3 py-2 font-semibold text-foreground/90" {...props}>{props.children}</th>
+    <th className="text-start px-3 py-2 font-semibold text-foreground/90" {...props}>{props.children}</th>
   ),
   td: ({ node, ...props }: any) => (
     <td className="px-3 py-2 border-b border-border text-foreground/85" {...props}>{props.children}</td>
@@ -1037,7 +1037,7 @@ const data = await resp.json();
               </div>
               <DraftRecoveryDialog draft={manualDraft} noun="period draft" />
               <div className="flex gap-2 items-center flex-wrap">
-                <DraftStatus draft={manualDraft} className="order-last sm:ml-auto" />
+                <DraftStatus draft={manualDraft} className="order-last sm:ms-auto" />
                 <Button size="sm" onClick={handleAddManual} className="gap-1.5">
                   <Check className="h-3.5 w-3.5" /> Add Period
                 </Button>
@@ -1118,7 +1118,7 @@ const data = await resp.json();
                               </div>
                               <DraftRecoveryDialog draft={editDraft} noun="period draft" />
                               <div className="flex gap-2 items-center flex-wrap">
-                                <DraftStatus draft={editDraft} className="order-last sm:ml-auto" />
+                                <DraftStatus draft={editDraft} className="order-last sm:ms-auto" />
                                 <Button size="sm" onClick={() => handleSaveEdit(globalIdx)} className="gap-1.5">
                                   <Check className="h-3.5 w-3.5" /> Save
                                 </Button>

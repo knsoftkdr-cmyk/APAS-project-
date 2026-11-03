@@ -61,7 +61,7 @@ export function IntakesList({ intakes, loading, selectedIntakeId, onSelect, onTo
             }`}
           >
             {/* decorative glow orb */}
-            <div className={`absolute -top-8 -right-8 w-28 h-28 rounded-full bg-gradient-to-br ${accent.from} ${accent.to} opacity-10 blur-2xl transition-transform duration-500 group-hover:scale-125`} />
+            <div className={`absolute -top-8 -end-8 w-28 h-28 rounded-full bg-gradient-to-br ${accent.from} ${accent.to} opacity-10 blur-2xl transition-transform duration-500 group-hover:scale-125`} />
 
             <CardContent className="relative p-5">
               {/* Header row: grade badge + name + toggle */}

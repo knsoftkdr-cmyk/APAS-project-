@@ -64,12 +64,12 @@ const MarkdownComponents = {
     </p>
   ),
   ul: ({ node, ...props }: any) => (
-    <ul className="space-y-2 mb-3 ml-4 list-none" {...props}>
+    <ul className="space-y-2 mb-3 ms-4 list-none" {...props}>
       {props.children}
     </ul>
   ),
   ol: ({ node, ...props }: any) => (
-    <ol className="space-y-2 mb-3 ml-4 list-decimal list-inside" {...props}>
+    <ol className="space-y-2 mb-3 ms-4 list-decimal list-inside" {...props}>
       {props.children}
     </ol>
   ),
@@ -80,7 +80,7 @@ const MarkdownComponents = {
     </li>
   ),
   blockquote: ({ node, ...props }: any) => (
-    <blockquote className="border-l-4 border-primary/50 pl-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>
+    <blockquote className="border-s-4 border-primary/50 ps-4 py-2 my-4 bg-primary/5 italic text-foreground/80 text-sm" {...props}>
       {props.children}
     </blockquote>
   ),
@@ -106,7 +106,7 @@ const MarkdownComponents = {
     </thead>
   ),
   th: ({ node, ...props }: any) => (
-    <th className="text-left px-3 py-2 font-semibold text-foreground/90" {...props}>
+    <th className="text-start px-3 py-2 font-semibold text-foreground/90" {...props}>
       {props.children}
     </th>
   ),
@@ -1793,8 +1793,8 @@ console.log("PDF SAVED:", result.uri);
     <AppLayout>
       {/* Hero Header */}
       <div className="relative mb-6 md:mb-8 rounded-2xl overflow-hidden bg-gradient-to-br from-blue-700 via-sky-600 to-sky-700 p-5 md:p-8 shadow-xl animate-fade-in">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute end-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djJoLTJ2LTJoMnptMC00aDJ2MmgtMnYtMnptLTQgOGgydjJoLTJ2LTJ6bTIgMGgydjJoLTJ2LTJ6bTItNGgydjJoLTJ2LTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
@@ -2051,9 +2051,9 @@ console.log("PDF SAVED:", result.uri);
                   className="w-full sm:w-auto shrink-0 bg-gradient-to-r from-sky-500 to-sky-500 hover:from-sky-600 hover:to-sky-700 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 text-sm md:text-base px-6 md:px-8 py-2.5 md:py-3 rounded-xl"
                 >
                   {isStreaming ? (
-                    <><Loader2 className="h-5 w-5 mr-2 animate-spin" /> Generating...</>
+                    <><Loader2 className="h-5 w-5 me-2 animate-spin" /> Generating...</>
                   ) : (
-                    <><Sparkles className="h-5 w-5 mr-2" /> Generate Lesson Plan</>
+                    <><Sparkles className="h-5 w-5 me-2" /> Generate Lesson Plan</>
                   )}
                 </Button>
               </div>
@@ -2073,7 +2073,7 @@ console.log("PDF SAVED:", result.uri);
                     <Badge className="text-xs gap-1 bg-primary/10 text-primary border-primary/20"><BookMarked className="h-3 w-3" /> {topicValue.trim()}</Badge>
                   )}
                   <Badge variant="outline" className="text-xs gap-1"><CalendarDays className="h-3 w-3" /> {selectedPeriods} {parseInt(selectedPeriods) === 1 ? "Period" : "Periods"} × {periodDuration}min</Badge>
-                  <span className="text-xs text-muted-foreground ml-2">
+                  <span className="text-xs text-muted-foreground ms-2">
                     {studentCount} student{studentCount !== 1 ? "s" : ""} found. AI will use assessment reports & textbook content
                   </span>
                 </div>
@@ -2092,7 +2092,7 @@ console.log("PDF SAVED:", result.uri);
                 <div className="w-11 h-11 rounded-xl overflow-hidden shadow-lg animate-bounce-slow border-2 border-white/30">
                   <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white/30 animate-pulse" />
+                <div className="absolute -bottom-0.5 -end-0.5 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white/30 animate-pulse" />
               </div>
               <div>
                 <h2 className="text-lg font-bold text-white tracking-tight flex items-center gap-2">
@@ -2108,7 +2108,7 @@ console.log("PDF SAVED:", result.uri);
                   <Button variant="ghost" size="sm" className="text-white/80 hover:text-white hover:bg-white/10 text-xs gap-1.5 rounded-lg transition-all duration-300">
                     <History className="h-3.5 w-3.5" /> History
                     {chatHistorySessions.length > 0 && (
-                      <span className="ml-1 text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">{chatHistorySessions.length}</span>
+                      <span className="ms-1 text-[10px] bg-white/20 px-1.5 py-0.5 rounded-full">{chatHistorySessions.length}</span>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
@@ -2170,7 +2170,7 @@ console.log("PDF SAVED:", result.uri);
                   <div className="w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 border-accent/20">
                     <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover animate-bounce-slow" />
                   </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-card flex items-center justify-center">
+                  <div className="absolute -top-1 -end-1 w-5 h-5 bg-green-400 rounded-full border-2 border-card flex items-center justify-center">
                     <Sparkles className="h-2.5 w-2.5 text-white" />
                   </div>
                 </div>
@@ -2269,8 +2269,8 @@ console.log("PDF SAVED:", result.uri);
                   )}
                   <div className={`rounded-2xl px-4 md:px-5 py-3 md:py-4 max-w-[90%] sm:max-w-[85%] shadow-sm ${
   msg.role === "user" 
-    ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-sm rounded-br-md" 
-    : "bg-card border border-border/60 rounded-bl-md"
+    ? "bg-gradient-to-br from-blue-600 to-indigo-600 text-white text-sm rounded-ee-md" 
+    : "bg-card border border-border/60 rounded-es-md"
 }`}>
                     {msg.role === "assistant" ? (
                       <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -2287,7 +2287,7 @@ console.log("PDF SAVED:", result.uri);
                   )}
                 </div>
                 {msg.role === "assistant" && (
-                  <div className="flex justify-start mt-2.5 ml-11">
+                  <div className="flex justify-start mt-2.5 ms-11">
                     <Button 
                       variant="outline" 
                       size="sm" 
@@ -2306,7 +2306,7 @@ console.log("PDF SAVED:", result.uri);
                 <div className="shrink-0 w-8 h-8 rounded-xl overflow-hidden shadow-sm border border-accent/10">
                   <img src={teacherAiAvatar} alt="AI Teacher" className="w-full h-full object-cover" loading="lazy" />
                 </div>
-                <div className="bg-card border border-border/60 rounded-2xl rounded-bl-md px-5 py-4 shadow-sm">
+                <div className="bg-card border border-border/60 rounded-2xl rounded-es-md px-5 py-4 shadow-sm">
                   <div className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin text-accent" />
                     <span className="text-xs text-muted-foreground">Thinking...</span>
@@ -2332,7 +2332,7 @@ console.log("PDF SAVED:", result.uri);
                   onKeyDown={handleKeyDown}
                   placeholder={isReady ? `Ask about ${getClassLabel(selectedClass)} Section ${selectedSection}...` : "Select a class and section first..."}
                   disabled={!isReady || isStreaming} 
-                  className="pr-4 rounded-xl border-border/60 bg-card focus:ring-accent/30 focus:border-accent/50 transition-all duration-300 h-11" 
+                  className="pe-4 rounded-xl border-border/60 bg-card focus:ring-accent/30 focus:border-accent/50 transition-all duration-300 h-11" 
                 />
               </div>
               <Button 
@@ -3497,7 +3497,7 @@ if (!Capacitor.isNativePlatform()) {
                   {assignmentConfirmationData.questions.slice(0, 5).map((question: string, idx: number) => (
                     <div key={idx} className="text-sm">
                       <span className="font-semibold text-primary">{idx + 1}.</span>
-                      <span className="text-foreground ml-2">{question}</span>
+                      <span className="text-foreground ms-2">{question}</span>
                     </div>
                   ))}
                   {assignmentConfirmationData.questions.length > 5 && (
@@ -3938,7 +3938,7 @@ toast.success(`Worksheet assigned to ${targetStudents.length} ${label} in ${ws.c
                 <Card key={ws.id} className="border border-border/60 overflow-hidden">
                   <div className="p-4 flex items-start justify-between gap-3 flex-wrap">
                     {ws.vark_type && ws.vark_type !== "general" && (
-                      <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border mr-auto
+                      <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border me-auto
                         ${ ws.vark_type === "visual"      ? "bg-purple-100 text-purple-800 border-purple-300"
                          : ws.vark_type === "auditory"    ? "bg-teal-100 text-teal-800 border-teal-300"
                          : ws.vark_type === "readwrite"   ? "bg-blue-100 text-blue-800 border-blue-300"
@@ -3983,7 +3983,7 @@ toast.success(`Worksheet assigned to ${targetStudents.length} ${label} in ${ws.c
                           <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => handleDownloadIllustratedPDF(ws)}>
                             <ImageIcon className="h-3.5 w-3.5 text-purple-600" />
                             <span>Download Image Worksheet</span>
-                            {!ws.image_url && <span className="ml-auto text-[10px] text-amber-500">generating...</span>}
+                            {!ws.image_url && <span className="ms-auto text-[10px] text-amber-500">generating...</span>}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -4426,7 +4426,7 @@ try {
                       />
                       <DraftRecoveryDialog draft={lessonDraft} noun="lesson plan draft" />
                       <div className="flex gap-2 justify-end items-center flex-wrap">
-                        <DraftStatus draft={lessonDraft} className="mr-auto" />
+                        <DraftStatus draft={lessonDraft} className="me-auto" />
                         <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSavingEdit}>
                           Cancel
                         </Button>

@@ -921,14 +921,14 @@ const filteredStudents = isTeacher
 return (
   <AppLayout>
     <div className="min-h-screen relative overflow-x-hidden">
-      <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
-      <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
-      <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
+      <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-indigo-300 opacity-[0.10] blur-3xl" />
+      <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-violet-300 opacity-[0.08] blur-3xl" />
+      <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-indigo-200 opacity-[0.08] blur-3xl" />
 
       <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-7xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-indigo-600 to-violet-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <GraduationCap className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -959,7 +959,7 @@ return (
             <TabsContent value="years" className="space-y-4 mt-4">
               <div className="flex justify-between items-center flex-wrap gap-2">
                 <h2 className="font-semibold text-slate-800">Academic Years</h2>
-                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={() => setShowYearForm(true)}><Plus className="h-4 w-4 mr-1" />New Year</Button>
+                <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={() => setShowYearForm(true)}><Plus className="h-4 w-4 me-1" />New Year</Button>
               </div>
               {academicYears.length === 0 ? (
                 <Card><CardContent className="py-12 text-center text-muted-foreground">No academic years yet. Create one to get started.</CardContent></Card>
@@ -980,7 +980,7 @@ return (
                               <Button size="sm" variant="outline" onClick={() => reopenYear(y)}>Reopen</Button>
                             ) : (
                               <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => completeYear(y)}>
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Complete
+                                <CheckCircle2 className="h-3.5 w-3.5 me-1" /> Complete
                               </Button>
                             )}
                             <Button size="sm" variant="ghost" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => deleteYear(y)}>
@@ -1008,7 +1008,7 @@ return (
                   {activeYear && <Badge variant="outline">{activeYear.name}</Badge>}
                 </div>
                 <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={() => { setSemForm((f) => ({ ...f, year_id: activeYear?.id ?? "" })); setShowSemForm(true); }}>
-                  <Plus className="h-4 w-4 mr-1" />New Semester
+                  <Plus className="h-4 w-4 me-1" />New Semester
                 </Button>
               </div>
               {yearSemesters.length === 0 ? (
@@ -1016,10 +1016,10 @@ return (
               ) : (
                 <div className="space-y-3">
                   {yearSemesters.map((sem) => (
-                    <Card key={sem.id} className={`overflow-hidden shadow-sm border-l-4 ${
-  sem.status === 'active' ? 'border-l-emerald-400' :
-  sem.status === 'closed' ? 'border-l-red-400' :
-  sem.status === 'assessment' ? 'border-l-blue-400' : 'border-l-slate-300'
+                    <Card key={sem.id} className={`overflow-hidden shadow-sm border-s-4 ${
+  sem.status === 'active' ? 'border-s-emerald-400' :
+  sem.status === 'closed' ? 'border-s-red-400' :
+  sem.status === 'assessment' ? 'border-s-blue-400' : 'border-s-slate-300'
 } ${activeSemester?.id === sem.id ? "border-indigo-300 ring-1 ring-indigo-200" : "border-slate-200"}`}>
                       <CardContent className="py-4 flex items-center justify-between flex-wrap gap-3">
                         <div className="space-y-1">
@@ -1089,7 +1089,7 @@ return (
                   )}
                   {isAdmin && (
                     <Button size="sm" className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={calculateGPAs} disabled={saving || !activeSemester}>
-                      {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />} Calculate GPA
+                      {saving && <Loader2 className="h-4 w-4 animate-spin me-1" />} Calculate GPA
                     </Button>
                   )}
                 </div>
@@ -1247,10 +1247,10 @@ return (
                             <TableCell>
                               <div className="flex gap-1.5">
                                 <Button size="sm" variant="outline" className="text-green-700 border-green-200 hover:bg-green-50" onClick={() => setPromotion(s, "promoted")}>
-                                  <CheckCircle2 className="h-3.5 w-3.5 mr-1" /> Promote
+                                  <CheckCircle2 className="h-3.5 w-3.5 me-1" /> Promote
                                 </Button>
                                 <Button size="sm" variant="outline" className="text-red-700 border-red-200 hover:bg-red-50" onClick={() => setPromotion(s, "retained")}>
-                                  <XCircle className="h-3.5 w-3.5 mr-1" /> Retain
+                                  <XCircle className="h-3.5 w-3.5 me-1" /> Retain
                                 </Button>
                               </div>
                             </TableCell>
@@ -1307,7 +1307,7 @@ return (
                     disabled={saving || Object.values(progressions).filter((p) => p.promotion_status === "promoted").length === 0}
                     className="bg-amber-600 hover:bg-amber-700"
                   >
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin me-2" /> : <RotateCcw className="h-4 w-4 me-2" />}
                     Trigger Year Rollover
                   </Button>
                 </CardContent>
@@ -1340,7 +1340,7 @@ return (
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowYearForm(false)}>Cancel</Button>
-              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveYear} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveYear} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}Create</Button>
             </div>
           </div>
         </DialogContent>
@@ -1367,7 +1367,7 @@ return (
             </div>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowSemForm(false)}>Cancel</Button>
-              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveSemester} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Create</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveSemester} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}Create</Button>
             </div>
           </div>
         </DialogContent>
@@ -1389,11 +1389,11 @@ return (
               </div>
             ))}
             <Button size="sm" variant="outline" onClick={() => setMarksForm((f) => [...f, { subject: "", marks: "", max: "100" }])}>
-              <Plus className="h-3.5 w-3.5 mr-1" /> Add Subject
+              <Plus className="h-3.5 w-3.5 me-1" /> Add Subject
             </Button>
             <div className="flex gap-2 justify-end">
               <Button variant="outline" onClick={() => setShowMarksDialog(false)}>Cancel</Button>
-              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveMarks} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Save Marks</Button>
+              <Button className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700" onClick={saveMarks} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}Save Marks</Button>
             </div>
           </div>
         </DialogContent>

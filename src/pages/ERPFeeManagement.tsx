@@ -592,7 +592,7 @@ const ERPFeeManagement = () => {
                 onClick={() => setAddOpen(true)}
                 className="bg-gradient-to-r from-blue-600 via-blue-800 to-green-500 hover:opacity-90 text-white rounded-full px-5"
               >
-                <Plus className="h-4 w-4 mr-1" />
+                <Plus className="h-4 w-4 me-1" />
                 <span className="hidden sm:inline">Add Individual Fee</span>
                 <span className="sm:hidden">Add Fee</span>
               </Button>
@@ -640,7 +640,7 @@ const ERPFeeManagement = () => {
                 <TableHead className="hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Section</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
                 <TableHead className="hidden lg:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Paid Date</TableHead>
-                <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Receipt</TableHead>
+                <TableHead className="text-end text-xs font-semibold text-slate-500 uppercase tracking-wide">Receipt</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -669,7 +669,7 @@ const ERPFeeManagement = () => {
                       <TableCell className="hidden lg:table-cell text-slate-600">
                         {f.due_date ? new Date(f.due_date).toLocaleDateString() : "—"}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-end">
                         <Button
                           variant="outline"
                           size="sm"
@@ -753,7 +753,7 @@ const ERPFeeManagement = () => {
                 <TableHead className="hidden md:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Amount Paid</TableHead>
                 <TableHead className="hidden lg:table-cell text-xs font-semibold text-slate-500 uppercase tracking-wide">Due Date</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</TableHead>
-                <TableHead className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</TableHead>
+                <TableHead className="text-end text-xs font-semibold text-slate-500 uppercase tracking-wide">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -788,7 +788,7 @@ const ERPFeeManagement = () => {
                       {fee.status}
                     </span>
                   </TableCell>
-                  <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <TableCell className="text-end" onClick={(e) => e.stopPropagation()}>
                     <Button
                       variant="ghost"
                       size="icon"

@@ -81,17 +81,17 @@ return (
   className="min-h-screen relative overflow-x-hidden"
 >
   {/* Layered waves at top */}
-  <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <svg className="absolute top-0 start-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#3b82f6" />
   </svg>
-  <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+  <svg className="absolute top-0 start-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#2563eb" />
   </svg>
 
   <div className="relative z-10 p-4 md:p-6 space-y-4 md:space-y-6 max-w-5xl mx-auto">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-500 to-cyan-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-          <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
           <div className="relative flex items-start md:items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
               <Sparkles className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -105,7 +105,7 @@ return (
 
         {loading && (
   <div className="flex items-center justify-center py-12 text-sky-600">
-    <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...
+    <Loader2 className="h-5 w-5 animate-spin me-2" /> Loading...
   </div>
 )}
 
@@ -139,7 +139,7 @@ return (
                 </div>
                 <span className="truncate">{elective.name}</span>
               </CardTitle>
-              <p className="text-xs md:text-sm text-muted-foreground mt-1 ml-9 md:ml-10">{elective.subject} · Grade {elective.grade}</p>
+              <p className="text-xs md:text-sm text-muted-foreground mt-1 ms-9 md:ms-10">{elective.subject} · Grade {elective.grade}</p>
             </div>
             <Badge
               className={`shrink-0 ${
@@ -151,7 +151,7 @@ return (
               {students.length}/{elective.capacity}
             </Badge>
           </div>
-          <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs text-muted-foreground mt-2 ml-9 md:ml-10">
+          <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs text-muted-foreground mt-2 ms-9 md:ms-10">
             <span className="flex items-center gap-1 capitalize">
               <Clock className="h-3 w-3 text-blue-400" /> {elective.day_of_week} · Period {elective.period_number}
             </span>

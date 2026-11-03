@@ -136,7 +136,7 @@ function ScoreTicker({ score }: { score: number }) {
     if (score !== prevScore.current) { setPop(true); setTimeout(() => setPop(false), 400); prevScore.current = score; }
   }, [score]);
   return (
-    <div className={`fixed top-4 right-4 z-40 px-5 py-2.5 rounded-2xl shadow-2xl transition-transform duration-300 ${pop ? "scale-125" : "scale-100"}`}
+    <div className={`fixed top-4 end-4 z-40 px-5 py-2.5 rounded-2xl shadow-2xl transition-transform duration-300 ${pop ? "scale-125" : "scale-100"}`}
       style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.9), rgba(168,85,247,0.9))", backdropFilter: "blur(16px)", border: "1px solid rgba(255,255,255,0.2)" }}>
       <div className="flex items-center gap-2">
         <Flame className="h-4 w-4 text-yellow-400 animate-pulse" />
@@ -463,7 +463,7 @@ const Gamification = () => {
       <Confetti show={showConfetti} />
 
       {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && (
-        <div className="fixed top-4 left-4 z-40 flex items-center gap-2 px-4 py-2 rounded-2xl timer-glow"
+        <div className="fixed top-4 start-4 z-40 flex items-center gap-2 px-4 py-2 rounded-2xl timer-glow"
           style={{ background: "rgba(15,23,42,0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(56,189,248,0.2)" }}>
           <Timer className="h-4 w-4 animate-pulse" style={{ color: "#38BDF8" }} />
           <span className="text-sm font-mono font-black tabular-nums" style={{ color: "#F1F5F9" }}>
@@ -581,7 +581,7 @@ const Gamification = () => {
             </div>
 
             {/* Selected Games Preview */}
-            <GlassCard className="text-left">
+            <GlassCard className="text-start">
               <Accordion type="single" collapsible>
                 <AccordionItem value="games" className="border-none">
                   <AccordionTrigger className="text-sm font-bold py-2 hover:no-underline" style={{ color: "#F1F5F9" }}>
@@ -626,7 +626,7 @@ const Gamification = () => {
                 color: "#F1F5F9",
                 boxShadow: termsAccepted ? "0 0 60px rgba(99,102,241,0.5), 0 8px 32px rgba(0,0,0,0.3)" : "none",
               }}>
-              {termsAccepted && <span className="absolute -top-2 -right-2 text-lg animate-bounce">✨</span>}
+              {termsAccepted && <span className="absolute -top-2 -end-2 text-lg animate-bounce">✨</span>}
               <span className="relative flex items-center gap-3">
                 <Rocket className="h-6 w-6" /> START ROUND
               </span>
@@ -640,16 +640,16 @@ const Gamification = () => {
                     <Shield className="h-5 w-5" style={{ color: "#6366F1" }} /> Terms & Conditions
                   </DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="max-h-96 pr-4">
+                <ScrollArea className="max-h-96 pe-4">
                   <div className="space-y-5 text-sm" style={{ color: "rgba(241,245,249,0.7)" }}>
                     <Section icon={<Shield className="h-4 w-4" style={{ color: "#38BDF8" }} />} title="Fair Play Policy">
-                      <ul className="list-disc pl-4 space-y-1"><li>Complete independently.</li><li>No external help or calculators.</li></ul>
+                      <ul className="list-disc ps-4 space-y-1"><li>Complete independently.</li><li>No external help or calculators.</li></ul>
                     </Section>
                     <Section icon={<Eye className="h-4 w-4" style={{ color: "#A855F7" }} />} title="Data & Privacy">
-                      <ul className="list-disc pl-4 space-y-1"><li>Data stored securely for learning analytics.</li><li>Not shared with third parties.</li></ul>
+                      <ul className="list-disc ps-4 space-y-1"><li>Data stored securely for learning analytics.</li><li>Not shared with third parties.</li></ul>
                     </Section>
                     <Section icon={<BarChart3 className="h-4 w-4" style={{ color: "#84CC16" }} />} title="Scoring & Results">
-                      <ul className="list-disc pl-4 space-y-1"><li>Scores are final.</li><li>Results available immediately.</li></ul>
+                      <ul className="list-disc ps-4 space-y-1"><li>Scores are final.</li><li>Results available immediately.</li></ul>
                     </Section>
                   </div>
                 </ScrollArea>
@@ -689,7 +689,7 @@ const Gamification = () => {
               {currentGameConfig.rules[ageGroup.id].map((r, i) => (
                 <div key={i} className="flex items-start gap-2 mb-2">
                   <ChevronRight className="h-4 w-4 mt-0.5 shrink-0" style={{ color: currentGameConfig.color }} />
-                  <span className="text-sm text-left" style={{ color: "rgba(241,245,249,0.7)" }}>{r}</span>
+                  <span className="text-sm text-start" style={{ color: "rgba(241,245,249,0.7)" }}>{r}</span>
                 </div>
               ))}
             </GlassCard>
@@ -708,7 +708,7 @@ const Gamification = () => {
             </div>
 
             {(content.status === "empty" || content.status === "error") && (
-              <div className="rounded-2xl p-4 text-sm text-left"
+              <div className="rounded-2xl p-4 text-sm text-start"
                 style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "#FCD34D" }}>
                 {content.message}
               </div>
@@ -762,7 +762,7 @@ const Gamification = () => {
         {phase === "PLAYING" && (
           <div className="w-full max-w-2xl mx-auto game-enter">
             <button onClick={() => setQuitConfirm(true)}
-              className="fixed bottom-4 right-4 z-40 p-3 rounded-full transition-all hover:scale-110"
+              className="fixed bottom-4 end-4 z-40 p-3 rounded-full transition-all hover:scale-110"
               style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", backdropFilter: "blur(8px)" }}>
               <X className="h-5 w-5" style={{ color: "#EF4444" }} />
             </button>
@@ -884,7 +884,7 @@ const Gamification = () => {
                 <thead>
                   <tr style={{ background: "rgba(255,255,255,0.05)" }}>
                     {["Game", "Score", "Accuracy", "Time"].map(h => (
-                      <th key={h} className={`p-4 font-bold text-[10px] uppercase tracking-widest ${h === "Game" ? "text-left" : "text-center"}`}
+                      <th key={h} className={`p-4 font-bold text-[10px] uppercase tracking-widest ${h === "Game" ? "text-start" : "text-center"}`}
                         style={{ color: "rgba(241,245,249,0.4)" }}>{h}</th>
                     ))}
                   </tr>
@@ -895,7 +895,7 @@ const Gamification = () => {
                     return (
                       <tr key={i} className="transition-colors hover:bg-white/[0.03]" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                         <td className="p-4 font-bold" style={{ color: gameConf?.color || "#F1F5F9" }}>
-                          <span className="mr-2">{gameConf?.icon}</span>{r.gameName}
+                          <span className="me-2">{gameConf?.icon}</span>{r.gameName}
                         </td>
                         <td className="text-center p-4 font-black" style={{ color: "#F1F5F9" }}>{r.rawScore}</td>
                         <td className="text-center p-4 font-bold" style={{ color: r.accuracy >= 70 ? "#22C55E" : r.accuracy >= 40 ? "#F59E0B" : "#EF4444" }}>

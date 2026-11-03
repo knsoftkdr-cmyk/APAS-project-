@@ -102,7 +102,7 @@ function ResultView({
               </div>
             ))}
           </dl>
-          <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+          <ul className="list-disc space-y-1 ps-5 text-xs text-muted-foreground">
             {view.preview.consequences.map((c) => <li key={c}>{c}</li>)}
           </ul>
           <div className="flex flex-wrap gap-2">
@@ -252,7 +252,7 @@ export function CommandBar() {
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="go"
-              className="pr-8"
+              className="pe-8"
               aria-label={PROMPT}
               disabled={thinking}
               onKeyDown={(e) => {

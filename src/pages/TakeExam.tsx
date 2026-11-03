@@ -75,7 +75,7 @@ function StartScreen({ onStart }: { onStart: () => void }) {
   return (
     <Card><CardContent className="p-6 space-y-4">
       <h1 className="text-xl font-bold">Ready to start?</h1>
-      <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
+      <ul className="text-sm text-muted-foreground list-disc ps-5 space-y-1">
         <li>The timer starts the moment you press Start and can't be paused.</li>
         <li>Your answers are saved automatically, so a refresh won't lose your work.</li>
         <li>When time runs out, your exam is submitted automatically.</li>
@@ -194,14 +194,14 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
 
       {data.exam.instructions.length > 0 && (
         <Card><CardContent className="p-4 text-sm"><p className="font-medium mb-1">Instructions</p>
-          <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">{data.exam.instructions.map((t, i) => <li key={i}>{t}</li>)}</ul></CardContent></Card>
+          <ul className="list-disc ps-5 text-muted-foreground space-y-0.5">{data.exam.instructions.map((t, i) => <li key={i}>{t}</li>)}</ul></CardContent></Card>
       )}
 
       <nav aria-label="Question navigator" className="flex flex-wrap gap-1.5">
         {items.map((it, i) => (
           <a key={it.item_id} href={`#q-${it.item_id}`}
             className={`h-8 w-8 rounded-md border text-xs flex items-center justify-center relative ${answered(it) ? "bg-primary text-primary-foreground border-primary" : "bg-background"}`}>
-            {i + 1}{flagged.has(it.item_id) && <Flag className="h-2.5 w-2.5 absolute -top-1 -right-1 text-amber-500 fill-amber-500" />}
+            {i + 1}{flagged.has(it.item_id) && <Flag className="h-2.5 w-2.5 absolute -top-1 -end-1 text-amber-500 fill-amber-500" />}
           </a>
         ))}
       </nav>
@@ -219,7 +219,7 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
                     {it.context_passage && <p className="text-sm rounded-md bg-muted/50 p-3 whitespace-pre-wrap">{it.context_passage}</p>}
                     <p className="text-sm whitespace-pre-wrap">{it.stem}</p>
                     {it.sub_questions && it.sub_questions.length > 0 && (
-                      <ol className="text-sm list-[lower-alpha] pl-5 space-y-1">{it.sub_questions.map((sq) => <li key={sq.id}>{sq.text} <span className="text-xs text-muted-foreground">[{sq.max_marks}]</span></li>)}</ol>)}
+                      <ol className="text-sm list-[lower-alpha] ps-5 space-y-1">{it.sub_questions.map((sq) => <li key={sq.id}>{sq.text} <span className="text-xs text-muted-foreground">[{sq.max_marks}]</span></li>)}</ol>)}
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">[{it.marks}]</span>
                   <button type="button" onClick={() => setFlagged((f) => { const x = new Set(f); x.has(it.item_id) ? x.delete(it.item_id) : x.add(it.item_id); return x; })}
@@ -230,7 +230,7 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
                     {OPTION_ORDER.filter((o) => it.options?.[o] != null).map((o) => (
                       <label key={o} className={`flex items-start gap-2 rounded-md border p-2 text-sm cursor-pointer ${mcq[it.item_id] === o ? "border-primary bg-primary/5" : "hover:bg-muted/40"}`}>
                         <input type="radio" name={`q-${it.item_id}`} className="mt-1" checked={mcq[it.item_id] === o} onChange={() => setMcqAnswer(it.item_id, o)} />
-                        <span><span className="font-medium mr-1">{o}.</span>{it.options![o]}</span>
+                        <span><span className="font-medium me-1">{o}.</span>{it.options![o]}</span>
                       </label>
                     ))}
                     {mcq[it.item_id] && <button type="button" className="text-xs text-muted-foreground underline" onClick={() => clearMcqAnswer(it.item_id)}>Clear answer</button>}
@@ -270,7 +270,7 @@ function BreakdownCard({ title, rows, labelKey }: { title: string; rows: Analysi
           <div key={String(r[labelKey])} className="flex items-center gap-3 text-xs">
             <span className="w-32 sm:w-48 truncate capitalize" title={String(r[labelKey])}>{String(r[labelKey]).replace(/_/g, " ")}</span>
             <ScoreBar value={r.pct} className="flex-1" />
-            <span className="w-16 text-right tabular-nums">{r.marks}/{r.max_marks}</span>
+            <span className="w-16 text-end tabular-nums">{r.marks}/{r.max_marks}</span>
           </div>
         ))}
       </CardContent></Card>
@@ -290,7 +290,7 @@ function ResultView({ data }: { data: AttemptPayload }) {
       <Card><CardContent className="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex-1"><p className="text-xs text-muted-foreground">{data.exam.title}</p>
           <p className="text-4xl font-bold tabular-nums">{r.score}<span className="text-xl text-muted-foreground">/{r.max_marks}</span>
-            <span className="text-lg text-muted-foreground ml-2">{r.pct != null ? `${Math.round(r.pct)}%` : ""}</span></p></div>
+            <span className="text-lg text-muted-foreground ms-2">{r.pct != null ? `${Math.round(r.pct)}%` : ""}</span></p></div>
         <div className="text-xs space-y-1 text-muted-foreground">
           {r.provisional && <p className="flex items-center gap-1.5 text-amber-700"><AlertTriangle className="h-3.5 w-3.5" />Written answers are scored by AI for now — your teacher will confirm.</p>}
           {data.attempt.auto_submitted && <p>Submitted automatically when time ran out.</p>}
@@ -327,13 +327,13 @@ function ResultView({ data }: { data: AttemptPayload }) {
                   <span className="tabular-nums text-xs shrink-0">{res.awarded}/{res.marks}{res.provisional ? " *" : ""}</span>
                 </div>
                 {res.question_type === "mcq" && (
-                  <p className="text-xs text-muted-foreground pl-6">
+                  <p className="text-xs text-muted-foreground ps-6">
                     {res.answered ? <>You chose {res.selected_option}. </> : <>Not answered. </>}
                     {!res.is_correct && <>Correct answer: <span className="font-medium text-foreground">{res.correct_option}</span>. </>}{res.explanation}
                   </p>
                 )}
-                {res.question_type === "open_ended" && !res.answered && <p className="text-xs text-muted-foreground pl-6">Not answered.</p>}
-                {res.question_type === "open_ended" && res.feedback && <p className="text-xs text-muted-foreground pl-6">{res.teacher_reviewed ? "Teacher feedback" : "AI feedback"}: {res.feedback}</p>}
+                {res.question_type === "open_ended" && !res.answered && <p className="text-xs text-muted-foreground ps-6">Not answered.</p>}
+                {res.question_type === "open_ended" && res.feedback && <p className="text-xs text-muted-foreground ps-6">{res.teacher_reviewed ? "Teacher feedback" : "AI feedback"}: {res.feedback}</p>}
               </div>
             );
           })}

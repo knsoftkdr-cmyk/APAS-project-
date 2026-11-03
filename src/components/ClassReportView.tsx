@@ -159,7 +159,7 @@ export const ClassReportView = ({
             APAS <em className="text-[#0e9a7b] italic">Class Diagnostic</em>
           </h1>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <p className="text-xs text-[#8282a8]">Report ID: {reportId}</p>
           <p className="text-[13px] font-medium text-[#3d3d5c] mt-0.5">{reportDate}</p>
           <span className="inline-block bg-[#0e9a7b] text-white text-[10px] font-semibold tracking-[1.5px] uppercase px-2.5 py-1 rounded-full mt-1.5">
@@ -193,7 +193,7 @@ export const ClassReportView = ({
             <thead>
               <tr className="border-b-[1.5px] border-[#e4e2dc]">
                 {["#", "Learner", "Avg Score", "VARK", "Strong Areas", "Needs Attention", "Not Sure"].map(h => (
-                  <th key={h} className="text-left text-[10px] font-semibold tracking-[1.2px] uppercase text-[#8282a8] px-2.5 py-2 whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-start text-[10px] font-semibold tracking-[1.2px] uppercase text-[#8282a8] px-2.5 py-2 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -352,7 +352,7 @@ export const ClassReportView = ({
                 <div className="flex-1 h-2 bg-[#e4e2dc] rounded overflow-hidden">
                   <div className="h-full rounded" style={{ width: `${d.average}%`, background: barColor }} />
                 </div>
-                <span className="text-[13px] font-semibold text-[#3d3d5c] w-10 text-right">{d.average}%</span>
+                <span className="text-[13px] font-semibold text-[#3d3d5c] w-10 text-end">{d.average}%</span>
                 {d.notSureTotal > 0 && (
                   <span className="text-[11px] font-medium text-[#4338ca] min-w-[60px]">🤷 {d.notSureTotal}</span>
                 )}

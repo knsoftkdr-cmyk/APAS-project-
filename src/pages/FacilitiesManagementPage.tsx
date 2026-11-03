@@ -334,14 +334,14 @@ export default function FacilitiesManagementPage() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.12] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.10] blur-3xl" />
 
         <div className="relative z-10 space-y-5 p-4 md:p-6 max-w-7xl mx-auto">
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-sky-600 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-3 md:gap-4">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
@@ -385,14 +385,14 @@ export default function FacilitiesManagementPage() {
                 >
                   <DialogTrigger asChild>
                     <Button onClick={openCreateDialog} className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700">
-                      <Plus className="h-4 w-4 mr-1" /> Add Facility
+                      <Plus className="h-4 w-4 me-1" /> Add Facility
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
                       <DialogTitle>{editingId ? "Edit Facility" : "Add New Facility"}</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
+                    <div className="space-y-4 max-h-[70vh] overflow-y-auto pe-1">
                       <div>
                         <Label>Name</Label>
                         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Physics Lab" />
@@ -474,7 +474,7 @@ export default function FacilitiesManagementPage() {
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                        <p className="text-xs text-muted-foreground pl-11.5 mt-1 capitalize">
+                        <p className="text-xs text-muted-foreground ps-11.5 mt-1 capitalize">
                           {f.type}{f.capacity ? ` · Capacity ${f.capacity}` : ""}
                         </p>
                       </CardHeader>
@@ -546,7 +546,7 @@ export default function FacilitiesManagementPage() {
                     disabled={savingBooking}
                     className="bg-gradient-to-r from-blue-600 to-sky-600 hover:from-blue-700 hover:to-sky-700"
                   >
-                    <CalendarClock className="h-4 w-4 mr-1" /> {savingBooking ? "Logging..." : "Log Usage"}
+                    <CalendarClock className="h-4 w-4 me-1" /> {savingBooking ? "Logging..." : "Log Usage"}
                   </Button>
                 </CardContent>
               </Card>

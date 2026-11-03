@@ -149,7 +149,7 @@ export function SosAlertBanner() {
               disabled={resolvingId === alert.id}
               className="shrink-0"
             >
-              {resolvingId === alert.id && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+              {resolvingId === alert.id && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
               Mark Resolved
             </Button>
           </div>

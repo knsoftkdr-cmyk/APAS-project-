@@ -63,7 +63,7 @@ export function AttachmentChips({ items, onRemove, disabled }: { items: TutorAtt
     <div className="mb-2" data-testid="attachment-chips">
       <div className="flex flex-wrap gap-2">
         {items.map((a) => (
-          <div key={a.id} className="flex max-w-full items-center gap-2 rounded-lg border bg-card py-1 pl-1 pr-1.5 text-xs">
+          <div key={a.id} className="flex max-w-full items-center gap-2 rounded-lg border bg-card py-1 ps-1 pe-1.5 text-xs">
             {a.preview ? (
               <img src={a.preview} alt="" className="h-9 w-9 shrink-0 rounded object-cover" />
             ) : (

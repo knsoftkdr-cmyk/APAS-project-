@@ -141,16 +141,16 @@ const TeacherPanel = () => {
     <AppLayout>
       <div className="space-y-6">
           <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 p-8 relative min-h-[220px] shadow-lg shadow-blue-200/50">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
                     
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 end-[45%] text-white/90 text-lg">✦</div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 </div>
 
           <div className="max-w-xl">
@@ -167,7 +167,7 @@ const TeacherPanel = () => {
             src={reportsBanner}
             alt="Reports Banner"
             /* className="absolute right-10 bottom-6 h-[160px]" */
-            className="hidden md:block absolute right-0 bottom-3 w-[180px]"
+            className="hidden md:block absolute end-0 bottom-3 w-[180px]"
           />
         </div>
 
@@ -771,7 +771,7 @@ const ClassReport = ({ assessments, filterClass, filterSection, teacherName, use
       <Dialog open={showFullReport} onOpenChange={setShowFullReport}>
         <DialogContent className="max-w-5xl max-h-[92vh] p-0 overflow-hidden border-0 bg-[#f6f5f2]">
           {!Capacitor.isNativePlatform() && (
-            <div className="flex items-center justify-end p-3 pb-0 pr-14">
+            <div className="flex items-center justify-end p-3 pb-0 pe-14">
               <Button size="sm" variant="outline" onClick={handleDownloadClassReport} className="gap-1.5">
                 <Download className="h-4 w-4" />
                 Download Report

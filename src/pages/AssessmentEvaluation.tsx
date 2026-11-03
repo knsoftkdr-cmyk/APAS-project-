@@ -469,10 +469,10 @@ return (
     
   >
     {/* Layered waves at top */}
-    <svg className="absolute top-0 left-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="absolute top-0 start-0 w-full h-48 opacity-[0.07]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M0,90 C240,150 480,30 720,70 C960,110 1200,30 1440,80 L1440,0 L0,0 Z" fill="#3b82f6" />
     </svg>
-    <svg className="absolute top-0 left-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className="absolute top-0 start-0 w-full h-36 opacity-[0.06]" viewBox="0 0 1440 220" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M0,50 C320,120 720,10 1440,60 L1440,0 L0,0 Z" fill="#2563eb" />
     </svg>
 
@@ -481,8 +481,8 @@ return (
     <div className="relative z-10 p-4 md:p-6 space-y-6 max-w-6xl mx-auto">
 {!embedded && (
 <div className="rounded-2xl p-6 relative overflow-hidden bg-gradient-to-r from-blue-500 to-sky-600 shadow-lg">
-  <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-  <div className="absolute right-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
+  <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+  <div className="absolute end-16 top-10 w-16 h-16 bg-white/10 rounded-full" />
   <div className="relative flex items-center gap-4">
     <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
       <Sparkles className="h-6 w-6 text-white" />
@@ -501,7 +501,7 @@ return (
   <Dialog open={uploadOpen} onOpenChange={(open) => { setUploadOpen(open); if (!open) resetUploadForm(); }}>
     <DialogTrigger asChild>
       <Button className="bg-gradient-to-r from-blue-500 to-sky-600 hover:from-blue-600 hover:to-sky-700 text-white">
-        <Upload className="h-4 w-4 mr-2" />
+        <Upload className="h-4 w-4 me-2" />
         Upload Assessment
       </Button>
     </DialogTrigger>
@@ -700,7 +700,7 @@ return (
                   (paperMode === "existing" ? !selectedPaperId : !newPaperFile)
                 }
               >
-                {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
+                {uploading ? <Loader2 className="h-4 w-4 me-2 animate-spin" /> : <Upload className="h-4 w-4 me-2" />}
                 Upload
               </Button>
             </DialogFooter>
@@ -782,9 +782,9 @@ return (
       onClick={() => runEvaluation(selectedIds)}
     >
             {evaluatingIds.length > 0 ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              <Loader2 className="h-4 w-4 me-2 animate-spin" />
             ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
+              <Sparkles className="h-4 w-4 me-2" />
             )}
             Evaluate Selected with AI
           </Button>
@@ -793,7 +793,7 @@ return (
 
       {isLoading ? (
         <div className="flex items-center justify-center py-16 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading evaluations...
+          <Loader2 className="h-5 w-5 animate-spin me-2" /> Loading evaluations...
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-2">
@@ -807,7 +807,7 @@ return (
             const isExpanded = expandedId === s.id;
             const label = s.student_name || s.file_name;
             return (
-              <Card key={s.id} className={`overflow-hidden border-l-4 ${s.status === "pending" ? "border-l-amber-400" : s.status === "ai_reviewed" ? "border-l-violet-400" : s.status === "reviewed" ? "border-l-emerald-400" : "border-l-gray-300" }`}>
+              <Card key={s.id} className={`overflow-hidden border-s-4 ${s.status === "pending" ? "border-s-amber-400" : s.status === "ai_reviewed" ? "border-s-violet-400" : s.status === "reviewed" ? "border-s-emerald-400" : "border-s-gray-300" }`}>
                 <CardHeader className="flex flex-row items-center justify-between gap-4 py-4">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     {s.status === "pending" && (
@@ -872,7 +872,7 @@ return (
           <div className="flex-1 overflow-auto rounded-md border bg-muted/20">
             {previewLoading ? (
               <div className="flex items-center justify-center h-full py-16 text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading preview...
+                <Loader2 className="h-5 w-5 animate-spin me-2" /> Loading preview...
               </div>
             ) : previewError ? (
               <div className="flex items-center justify-center h-full py-16 text-destructive text-sm px-4 text-center">

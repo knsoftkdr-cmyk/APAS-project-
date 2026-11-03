@@ -185,7 +185,7 @@ export default function DifferentiationStudio() {
               <CardContent className="space-y-1.5 max-h-72 overflow-y-auto">
                 {!history?.length ? <p className="text-sm text-muted-foreground">Nothing saved yet.</p> : history.map((h) => (
                   <div key={h.id} className="flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm">
-                    <button type="button" className="flex-1 text-left min-w-0" onClick={async () => {
+                    <button type="button" className="flex-1 text-start min-w-0" onClick={async () => {
                       try { setPack(await loadDiffPack(h.id)); } catch (e) { toast.error(e instanceof Error ? e.message : "Could not open"); }
                     }}>
                       <p className="truncate">{h.topic}</p>
@@ -235,7 +235,7 @@ export default function DifferentiationStudio() {
                       <TabsContent key={v.key} value={v.key} className="space-y-3">
                         <div className="flex flex-wrap items-center gap-2">
                           {v.for_whom && <Badge variant="secondary" className="font-normal">For: {v.for_whom}</Badge>}
-                          <div className="ml-auto flex gap-1.5">
+                          <div className="ms-auto flex gap-1.5">
                             <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => { navigator.clipboard.writeText(versionText(pack, v, showAnswers)); toast.success("Copied"); }}><Copy className="h-3.5 w-3.5" />Copy</Button>
                             <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => onPrint(v)}><Printer className="h-3.5 w-3.5" />Print</Button>
                             <Button size="sm" className="h-8 gap-1" disabled={!shareClass || sharing} onClick={() => onShare(v)}><Share2 className="h-3.5 w-3.5" />Share</Button>
@@ -244,7 +244,7 @@ export default function DifferentiationStudio() {
                         {v.student_instructions && <p className="text-sm"><b>Instructions:</b> {v.student_instructions}</p>}
                         <div className="prose prose-sm dark:prose-invert max-w-none rounded-md border p-3"><ReactMarkdown>{v.content}</ReactMarkdown></div>
                         {v.questions.length > 0 && (
-                          <ol className="list-decimal pl-5 space-y-1.5 text-sm">
+                          <ol className="list-decimal ps-5 space-y-1.5 text-sm">
                             {v.questions.map((q, i) => (
                               <li key={i}>{q.q}{showAnswers && q.answer && <p className="text-xs text-emerald-800 bg-emerald-50 rounded px-2 py-1 mt-1">{q.answer}</p>}</li>
                             ))}

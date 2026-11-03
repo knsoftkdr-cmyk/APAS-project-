@@ -475,16 +475,16 @@ const notifyCalendarEvent = async (
   return (
     <AppLayout>
       <div className="relative min-h-screen">
-        <div className="absolute -top-10 right-0 w-72 h-72 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl pointer-events-none" />
-        <div className="absolute top-96 left-0 w-64 h-64 rounded-full bg-sky-200 opacity-[0.12] blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-1/4 w-56 h-56 rounded-full bg-amber-200 opacity-[0.10] blur-3xl pointer-events-none" />
+        <div className="absolute -top-10 end-0 w-72 h-72 rounded-full bg-indigo-300 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute top-96 start-0 w-64 h-64 rounded-full bg-sky-200 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 end-1/4 w-56 h-56 rounded-full bg-amber-200 opacity-[0.10] blur-3xl pointer-events-none" />
 
       <div className="relative z-10 p-4 md:p-6 space-y-5 md:space-y-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="rounded-2xl md:rounded-3xl p-5 md:p-7 relative overflow-hidden bg-gradient-to-r from-indigo-600 via-blue-600 to-sky-600 shadow-lg">
-          <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
-          <div className="absolute right-24 top-10 w-16 h-16 bg-white/10 rounded-full" />
-          <div className="absolute bottom-0 left-1/3 w-24 h-24 bg-white/5 rounded-full" />
+          <div className="absolute -end-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
+          <div className="absolute end-24 top-10 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute bottom-0 start-1/3 w-24 h-24 bg-white/5 rounded-full" />
           <div className="relative flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-white">Academic Calendar</h1>
@@ -496,10 +496,10 @@ const notifyCalendarEvent = async (
         {isAdmin && (
           <div className="flex gap-2 justify-end flex-wrap">
             <Button variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => setShowUpload(true)}>
-              <Upload className="h-4 w-4 mr-2" /> Upload Document
+              <Upload className="h-4 w-4 me-2" /> Upload Document
             </Button>
             <Button className="bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white" onClick={openAdd}>
-              <Plus className="h-4 w-4 mr-2" /> Add Event
+              <Plus className="h-4 w-4 me-2" /> Add Event
             </Button>
           </div>
         )}
@@ -544,7 +544,7 @@ const notifyCalendarEvent = async (
                   <button
                     key={day.toISOString()}
                     onClick={() => setSelectedDay(selectedDay && isSameDay(day, selectedDay) ? null : day)}
-                    className={`relative min-h-[48px] md:min-h-[58px] p-1 md:p-1.5 rounded-lg text-left transition-all border ${
+                    className={`relative min-h-[48px] md:min-h-[58px] p-1 md:p-1.5 rounded-lg text-start transition-all border ${
                       isSelected ? "border-indigo-400 bg-indigo-50 shadow-sm" :
                       isToday ? "border-sky-200 bg-sky-50/70" :
                       isWeekend ? "border-transparent bg-slate-50/60 hover:border-indigo-100 hover:bg-indigo-50/50" :
@@ -641,7 +641,7 @@ const notifyCalendarEvent = async (
 
             {isAdmin && (
               <Button size="sm" variant="outline" className="w-full mt-4 border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={openAdd}>
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                <Plus className="h-3.5 w-3.5 me-1.5" />
                 {selectedDay ? `Add event for ${format(selectedDay, "MMM d")}` : "Add Event"}
               </Button>
             )}
@@ -695,7 +695,7 @@ const notifyCalendarEvent = async (
             <div className="flex gap-2 justify-end pt-1">
               <Button variant="outline" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button onClick={saveEvent} disabled={saving} className="bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white">
-                {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                {saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}
                 {editingEvent ? "Update Event" : "Save Event"}
               </Button>
             </div>
@@ -750,7 +750,7 @@ Term 1: June 1 - October 31`}
 
             <Button className="w-full bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white" onClick={extractEvents} disabled={extracting || !uploadText.trim()}>
               {extracting
-                ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Extracting with AI...</>
+                ? <><Loader2 className="h-4 w-4 animate-spin me-2" /> Extracting with AI...</>
                 : "✨ Extract Events with AI"}
             </Button>
 
@@ -764,10 +764,10 @@ Term 1: June 1 - October 31`}
                     <div key={i} className={`p-2 rounded-lg text-xs border flex items-start justify-between gap-2 ${EVENT_COLORS[e.event_type as EventType]?.badge || "bg-muted border-border"}`}>
                       <div className="flex-1 min-w-0">
                         <span className="font-semibold">{e.title}</span>
-                        <span className="ml-2 opacity-70">
+                        <span className="ms-2 opacity-70">
                           {e.start_date === e.end_date ? e.start_date : `${e.start_date} → ${e.end_date}`}
                         </span>
-                        <Badge variant="outline" className="ml-2 text-[9px] py-0">{EVENT_LABELS[e.event_type as EventType] || e.event_type}</Badge>
+                        <Badge variant="outline" className="ms-2 text-[9px] py-0">{EVENT_LABELS[e.event_type as EventType] || e.event_type}</Badge>
                       </div>
                       <button onClick={() => setExtractedEvents(ev => ev.filter((_, j) => j !== i))}>
                         <X className="h-3 w-3 shrink-0" />
@@ -776,7 +776,7 @@ Term 1: June 1 - October 31`}
                   ))}
                 </div>
                 <Button className="w-full bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-700 hover:to-sky-700 text-white" onClick={saveExtractedEvents} disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                  {saving && <Loader2 className="h-4 w-4 animate-spin me-2" />}
                   Save {extractedEvents.length} Events to Calendar
                 </Button>
               </div>

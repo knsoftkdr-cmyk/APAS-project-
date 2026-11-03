@@ -158,7 +158,7 @@ function ForecastRow({ item, selected, onClick }: { item: ForgettingForecastItem
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center justify-between gap-3 rounded-lg border p-3 text-left transition-colors",
+        "w-full flex items-center justify-between gap-3 rounded-lg border p-3 text-start transition-colors",
         selected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50",
       )}
     >
@@ -167,7 +167,7 @@ function ForecastRow({ item, selected, onClick }: { item: ForgettingForecastItem
         <p className="text-xs text-muted-foreground truncate">{item.subject} · {item.topic_name}</p>
       </div>
       <div className="flex items-center gap-2 shrink-0">
-        <div className="text-right">
+        <div className="text-end">
           <p className={cn("text-sm font-semibold", item.is_at_risk ? "text-amber-600" : "text-muted-foreground")}>
             {Math.round(item.retention_now * 100)}%
           </p>
@@ -189,7 +189,7 @@ function StillLearningRow({ item }: { item: StillLearningItem }) {
         <p className="text-sm font-medium truncate">{item.objective_text}</p>
         <p className="text-xs text-muted-foreground truncate">{item.subject} · {item.topic_name}</p>
       </div>
-      <div className="text-right shrink-0 space-y-1">
+      <div className="text-end shrink-0 space-y-1">
         <Badge
           variant="outline"
           className={cn("text-[11px]", missed ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200")}

@@ -113,7 +113,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
       {/* Sidebar toggle (mobile) */}
       <button
         onClick={onToggleSidebar}
-        className="mr-3 rounded-button p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
+        className="me-3 rounded-button p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground md:hidden"
       >
         <Menu className="h-5 w-5" />
       </button>
@@ -147,14 +147,14 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
           >
             <Bell className="h-5 w-5" />
             {unreadCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+              <span className="absolute end-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
           </button>
 
           {bellOpen && (
-            <div className="fixed left-3 right-3 top-[calc(var(--header-height)+0.5rem)] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] rounded-xl border border-border bg-card shadow-2xl z-50 overflow-hidden">
+            <div className="fixed start-3 end-3 top-[calc(var(--header-height)+0.5rem)] sm:absolute sm:start-auto sm:end-0 sm:top-full sm:mt-2 sm:w-[380px] rounded-xl border border-border bg-card shadow-2xl z-50 overflow-hidden">
 
               {/* Panel header */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
@@ -203,7 +203,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
                       <button
                         key={n.id}
                         onClick={() => handleNotificationClick(n.id, n.link)}
-                        className={`w-full text-left flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50 ${
+                        className={`w-full text-start flex items-start gap-3 px-4 py-3.5 transition-colors hover:bg-muted/50 ${
                           !n.is_read ? "bg-blue-50/60 dark:bg-blue-950/20" : ""
                         }`}
                       >
@@ -279,7 +279,7 @@ export function AppHeader({ onToggleSidebar }: AppHeaderProps) {
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-48 rounded-card border border-border bg-card py-1 shadow-elevated z-50">
+            <div className="absolute end-0 top-full mt-1 w-48 rounded-card border border-border bg-card py-1 shadow-elevated z-50">
               <button
                 onClick={() => {
                   setMenuOpen(false);

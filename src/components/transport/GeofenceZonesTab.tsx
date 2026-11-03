@@ -230,7 +230,7 @@ export function GeofenceZonesTab({ schoolId }: { schoolId?: string }) {
               <p className="text-xs text-muted-foreground">
                 Search an address above, or click on the map below to set the exact center point.
                 {picked && (
-                  <span className="ml-1 font-medium text-foreground">
+                  <span className="ms-1 font-medium text-foreground">
                     Picked: {picked.lat.toFixed(5)}, {picked.lng.toFixed(5)}
                   </span>
                 )}
@@ -260,7 +260,7 @@ export function GeofenceZonesTab({ schoolId }: { schoolId?: string }) {
                   Cancel
                 </Button>
                 <Button size="sm" onClick={handleSave} disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                  {saving && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                   Save Zone
                 </Button>
               </div>

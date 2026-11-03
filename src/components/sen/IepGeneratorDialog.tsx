@@ -234,7 +234,7 @@ export function IepGeneratorDialog({ open, onOpenChange, senStudentId, studentNa
             </div>
             <DialogFooter>
               <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl w-full sm:w-auto" onClick={generate} disabled={loading}>
-                {loading ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Drafting...</> : <><Sparkles className="h-4 w-4 mr-1" /> Generate draft</>}
+                {loading ? <><Loader2 className="h-4 w-4 me-1 animate-spin" /> Drafting...</> : <><Sparkles className="h-4 w-4 me-1" /> Generate draft</>}
               </Button>
             </DialogFooter>
           </div>
@@ -268,10 +268,10 @@ export function IepGeneratorDialog({ open, onOpenChange, senStudentId, studentNa
               <p className="font-semibold text-slate-700">Present levels</p>
               <p className="text-slate-700">{result.draft.present_levels}</p>
               {result.draft.strengths.length > 0 && (
-                <div><p className="font-medium text-xs text-emerald-700">Strengths</p><ul className="list-disc pl-5 text-xs text-slate-600">{result.draft.strengths.map((s, n) => <li key={n}>{s}</li>)}</ul></div>
+                <div><p className="font-medium text-xs text-emerald-700">Strengths</p><ul className="list-disc ps-5 text-xs text-slate-600">{result.draft.strengths.map((s, n) => <li key={n}>{s}</li>)}</ul></div>
               )}
               {result.draft.needs.length > 0 && (
-                <div><p className="font-medium text-xs text-amber-700">Needs</p><ul className="list-disc pl-5 text-xs text-slate-600">{result.draft.needs.map((s, n) => <li key={n}>{s}</li>)}</ul></div>
+                <div><p className="font-medium text-xs text-amber-700">Needs</p><ul className="list-disc ps-5 text-xs text-slate-600">{result.draft.needs.map((s, n) => <li key={n}>{s}</li>)}</ul></div>
               )}
             </div>
 
@@ -285,7 +285,7 @@ export function IepGeneratorDialog({ open, onOpenChange, senStudentId, studentNa
                       <SelectTrigger className="h-8 w-[150px] text-xs rounded-lg"><SelectValue /></SelectTrigger>
                       <SelectContent>{IEP_DOMAINS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
                     </Select>
-                    <Input type="date" className="h-8 text-xs rounded-lg ml-auto w-[150px]" value={g.target_date} onChange={(e) => updateGoal(i, { target_date: e.target.value })} />
+                    <Input type="date" className="h-8 text-xs rounded-lg ms-auto w-[150px]" value={g.target_date} onChange={(e) => updateGoal(i, { target_date: e.target.value })} />
                   </div>
                   <Textarea className="rounded-xl text-sm" rows={2} value={g.goal_description} onChange={(e) => updateGoal(i, { goal_description: e.target.value })} />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -304,7 +304,7 @@ export function IepGeneratorDialog({ open, onOpenChange, senStudentId, studentNa
                     <Checkbox className="mt-0.5" checked={a.include} onCheckedChange={(v) => updateAcc(i, { include: v === true })} />
                     <span className="min-w-0">
                       <span className="font-medium">{a.accommodation_type}</span>{" "}
-                      <Badge variant="outline" className="font-normal text-xs ml-1">{a.applies_to}</Badge>
+                      <Badge variant="outline" className="font-normal text-xs ms-1">{a.applies_to}</Badge>
                       <span className="block text-xs text-muted-foreground mt-0.5">{a.description}</span>
                     </span>
                   </label>
@@ -315,16 +315,16 @@ export function IepGeneratorDialog({ open, onOpenChange, senStudentId, studentNa
             {result.draft.strategies.length > 0 && (
               <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-3 text-sm">
                 <p className="font-semibold text-slate-700 mb-1">Teaching strategies</p>
-                <ul className="list-disc pl-5 text-xs text-slate-600 space-y-0.5">{result.draft.strategies.map((s, n) => <li key={n}>{s}</li>)}</ul>
+                <ul className="list-disc ps-5 text-xs text-slate-600 space-y-0.5">{result.draft.strategies.map((s, n) => <li key={n}>{s}</li>)}</ul>
                 <p className="text-[11px] text-muted-foreground mt-2">Strategies are not stored in the plan. Use Copy to keep them with the IEP document.</p>
               </div>
             )}
 
             <DialogFooter className="gap-2 sm:gap-2 flex-col sm:flex-row">
-              <Button variant="ghost" className="rounded-xl" onClick={() => setStep("options")} disabled={saving}><ArrowLeft className="h-4 w-4 mr-1" /> Back</Button>
-              <Button variant="outline" className="rounded-xl" onClick={copyText} disabled={saving}><Copy className="h-4 w-4 mr-1" /> Copy full IEP</Button>
+              <Button variant="ghost" className="rounded-xl" onClick={() => setStep("options")} disabled={saving}><ArrowLeft className="h-4 w-4 me-1" /> Back</Button>
+              <Button variant="outline" className="rounded-xl" onClick={copyText} disabled={saving}><Copy className="h-4 w-4 me-1" /> Copy full IEP</Button>
               <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-xl" onClick={save} disabled={saving}>
-                {saving ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Saving...</> : "Save as draft plan"}
+                {saving ? <><Loader2 className="h-4 w-4 me-1 animate-spin" /> Saving...</> : "Save as draft plan"}
               </Button>
             </DialogFooter>
           </div>

@@ -234,15 +234,15 @@ export default function StudentTransfers() {
   return (
     <AppLayout>
       <div className="min-h-screen relative overflow-x-hidden">
-        <div className="absolute top-16 right-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.10] blur-3xl" />
-        <div className="absolute top-96 left-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.08] blur-3xl" />
-        <div className="absolute bottom-24 right-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.08] blur-3xl" />
+        <div className="absolute top-16 end-10 w-56 h-56 rounded-full bg-blue-300 opacity-[0.10] blur-3xl" />
+        <div className="absolute top-96 start-6 w-64 h-64 rounded-full bg-sky-300 opacity-[0.08] blur-3xl" />
+        <div className="absolute bottom-24 end-1/4 w-48 h-48 rounded-full bg-blue-200 opacity-[0.08] blur-3xl" />
 
         <div className="relative z-10 p-4 md:p-6 space-y-5 max-w-4xl mx-auto">
           {/* Header */}
           <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-blue-600 to-sky-500 shadow-lg">
-            <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-            <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+            <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+            <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
             <div className="relative flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
                 <ArrowRightLeft className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -268,7 +268,7 @@ export default function StudentTransfers() {
               >
                 Pending Approvals
                 {pendingTransfers.length > 0 && (
-                  <Badge className="ml-2 bg-blue-600 text-white hover:bg-blue-600">{pendingTransfers.length}</Badge>
+                  <Badge className="ms-2 bg-blue-600 text-white hover:bg-blue-600">{pendingTransfers.length}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
@@ -455,7 +455,7 @@ export default function StudentTransfers() {
                       disabled={submitting}
                       className="bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600"
                     >
-                      {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                      {submitting && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
                       Submit request
                     </Button>
                   </form>
@@ -509,7 +509,7 @@ export default function StudentTransfers() {
                               disabled={processingId === t.id}
                               onClick={() => handleDecision(t.id, "rejected")}
                             >
-                              <X className="h-4 w-4 mr-1" /> Reject
+                              <X className="h-4 w-4 me-1" /> Reject
                             </Button>
                             <Button
                               size="sm"
@@ -518,9 +518,9 @@ export default function StudentTransfers() {
                               onClick={() => handleDecision(t.id, "approved")}
                             >
                               {processingId === t.id ? (
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                <Loader2 className="h-4 w-4 me-1 animate-spin" />
                               ) : (
-                                <Check className="h-4 w-4 mr-1" />
+                                <Check className="h-4 w-4 me-1" />
                               )}
                               Approve
                             </Button>

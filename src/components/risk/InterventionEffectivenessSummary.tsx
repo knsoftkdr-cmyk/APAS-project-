@@ -93,7 +93,7 @@ export function InterventionEffectivenessSummary({ classId, className }: { class
                   <div key={row.action} className="space-y-0.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="truncate">{row.action}</span>
-                      <span className={cn("font-medium shrink-0 ml-2", pctColor(row.improved_pct))}>
+                      <span className={cn("font-medium shrink-0 ms-2", pctColor(row.improved_pct))}>
                         {row.improved_pct}% ({row.improved}/{row.measured})
                       </span>
                     </div>
@@ -108,12 +108,12 @@ export function InterventionEffectivenessSummary({ classId, className }: { class
             <div className="flex flex-wrap gap-1.5">
               {data.by_tier.map((row) => (
                 <Badge key={row.tier} variant="outline" className="text-[10px]">
-                  {TIER_LABEL[row.tier]}: <span className={cn("ml-1 font-semibold", pctColor(row.improved_pct))}>{row.improved_pct}%</span>
+                  {TIER_LABEL[row.tier]}: <span className={cn("ms-1 font-semibold", pctColor(row.improved_pct))}>{row.improved_pct}%</span>
                 </Badge>
               ))}
               {data.by_priority.map((row) => (
                 <Badge key={row.priority} variant="outline" className="text-[10px]">
-                  {PRIORITY_LABEL[row.priority]}: <span className={cn("ml-1 font-semibold", pctColor(row.improved_pct))}>{row.improved_pct}%</span>
+                  {PRIORITY_LABEL[row.priority]}: <span className={cn("ms-1 font-semibold", pctColor(row.improved_pct))}>{row.improved_pct}%</span>
                 </Badge>
               ))}
             </div>

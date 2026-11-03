@@ -223,7 +223,7 @@ export default function CompetencyDefinitions() {
     <AppLayout>
       <div className="p-6 space-y-6">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-8 text-white">
-          <div className="absolute top-6 right-10 w-16 h-16 rounded-full border border-white/30" />
+          <div className="absolute top-6 end-10 w-16 h-16 rounded-full border border-white/30" />
           <div className="relative z-10 flex items-center gap-4">
             <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center">
               <BookOpen className="h-6 w-6 text-white" />
@@ -235,7 +235,7 @@ export default function CompetencyDefinitions() {
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
                 <Button onClick={openCreate} variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 me-2" />
                 Add competency
               </Button>
             </DialogTrigger>
@@ -376,7 +376,7 @@ export default function CompetencyDefinitions() {
                 </p>
                 {competencies.length === 0 && (
                   <Button variant="outline" onClick={openCreate}>
-                    <Plus className="h-4 w-4 mr-2" />
+                    <Plus className="h-4 w-4 me-2" />
                     Add your first competency
                   </Button>
                 )}
@@ -389,7 +389,7 @@ export default function CompetencyDefinitions() {
                     <TableHead>Competency</TableHead>
                     <TableHead>Grade</TableHead>
                     <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-end">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -405,7 +405,7 @@ export default function CompetencyDefinitions() {
                       <TableCell className="text-muted-foreground max-w-xs truncate">
                         {c.description || "—"}
                       </TableCell>
-                      <TableCell className="text-right space-x-1">
+                      <TableCell className="text-end space-x-1 rtl:space-x-reverse">
                         <Button
                           variant="ghost"
                           size="icon"

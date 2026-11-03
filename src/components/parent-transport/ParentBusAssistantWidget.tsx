@@ -645,7 +645,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-cyan-400 to-blue-500 text-white transition-transform hover:scale-105"
+          className="fixed bottom-5 end-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 via-cyan-400 to-blue-500 text-white transition-transform hover:scale-105"
           style={{ animation: "orb-glow 2.4s ease-in-out infinite, orb-float 3s ease-in-out infinite" }}
           aria-label="Open APAS Agent"
         >
@@ -657,7 +657,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
         <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center voice-overlay-bg">
           <button
             onClick={exitVoiceMode}
-            className="absolute top-6 right-6 flex h-10 w-10 items-center justify-center rounded-full voice-overlay-btn"
+            className="absolute top-6 end-6 flex h-10 w-10 items-center justify-center rounded-full voice-overlay-btn"
             aria-label="Exit voice mode"
           >
             <X className="h-5 w-5" />
@@ -743,7 +743,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
       )}
 
       {open && !voiceMode && (
-        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:right-5 sm:h-[520px] sm:w-[380px]">
+        <Card className="fixed inset-x-3 top-16 bottom-3 z-50 flex flex-col shadow-2xl sm:inset-x-auto sm:top-auto sm:bottom-5 sm:end-5 sm:h-[520px] sm:w-[380px]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 border-b py-3">
             <CardTitle className="flex items-center gap-2 text-sm">
               <Sparkles className="h-4 w-4 text-blue-600" /> APAS Agent
@@ -767,7 +767,7 @@ export function ParentBusAssistantWidget({ studentId, studentName }: ParentBusAs
 
           <CardContent className="flex flex-1 flex-col gap-3 overflow-hidden p-3">
             <ScrollArea className="min-h-0 flex-1 [&>[data-radix-scroll-area-viewport]>div]:!block" ref={scrollRef}>
-              <div className="flex flex-col gap-3 pr-2">
+              <div className="flex flex-col gap-3 pe-2">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
                     Ask me about the bus, fees, report cards, attendance, appointments, the academic calendar, hall tickets, surveys, safeguarding updates, or messages from school - or ask me to explain a school topic so you can help your child. Tap the blue icon above for hands-free voice mode.

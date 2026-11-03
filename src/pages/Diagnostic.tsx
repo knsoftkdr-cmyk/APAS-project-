@@ -475,23 +475,23 @@ if (showLoader) {
       <div className="space-y-6">
          <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-600 via-cyan-500 to-cyan-400 p-8 relative min-h-[140px]">
 <div className="hidden md:block">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/60"></div>
           
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
           
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
           
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 </div>
           <div className="max-w-xl">
             <h1 className="text-4xl font-bold text-white">
@@ -507,7 +507,7 @@ if (showLoader) {
             src={assessmentbanner}
             alt="Assessment Banner"
             /* className="absolute right-10 bottom-5 h-[150px]" */
-            className="hidden md:block absolute right-10 bottom-6 h-[110px]"
+            className="hidden md:block absolute end-10 bottom-6 h-[110px]"
           />
         </div>
 
@@ -515,7 +515,7 @@ if (showLoader) {
 
           {/* Teacher PNG */}
         {showTeacher && (
-          <div className="absolute left-10 top-1/2 -translate-y-1/2 ">
+          <div className="absolute start-10 top-1/2 -translate-y-1/2 ">
             <img
               src={teacherGuide}
               alt="Teacher Guide"
@@ -646,7 +646,7 @@ if (showLoader) {
             </div>
 
               <Button className="w-full h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-300/40 hover:scale-105 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-400/50 transition-all duration-300 " onClick={startQuizWithLoader} disabled={!canStartQuiz}>
-                Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
+                Start Assessment <ArrowRight className="h-4 w-4 ms-2" />
               </Button>
             </CardContent>
           </Card>
@@ -789,7 +789,7 @@ if (showLoader) {
                             onClick={() => {
                               handleAnswer(question.id, opt.value);
                             }}
-                            className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all ${
+                            className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-start text-sm font-medium transition-all ${
                               selected
                                 ? "border-accent bg-accent/10 text-accent shadow-sm"
                                 : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-muted/50"
@@ -812,13 +812,13 @@ if (showLoader) {
                   onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
                   disabled={currentQ === 0}
                 >
-                  <ArrowLeft className="h-4 w-4 mr-1" /> Previous
+                  <ArrowLeft className="h-4 w-4 me-1" /> Previous
                 </Button>
 
                 <div className="flex gap-2">
                   {answers[question.id] !== undefined && !isLastQuestion && (
                     <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                      Next <ArrowRight className="h-4 w-4 ml-1" />
+                      Next <ArrowRight className="h-4 w-4 ms-1" />
                     </Button>
                   )}
                 </div>
@@ -963,17 +963,17 @@ const DiagnosticTeacher = () => {
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-300 p-8 text-white mb-6">
 
   {/* Decorative Shapes */}
-  <div className="hidden md:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute top-6 end-40 w-14 h-14 rounded-full border border-white/60"></div>
 
-  <div className="hidden md:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/60"></div>
 
   <div className="hidden md:block absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/60"></div>
 
-  <div className="hidden md:block absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
+  <div className="hidden md:block absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
 
-  <div className="hidden md:block absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
+  <div className="hidden md:block absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
 
-  <div className="hidden md:block absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+  <div className="hidden md:block absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
 
   <h1 className="text-3xl md:text-4xl font-bold">
     Teacher Assessment
@@ -985,7 +985,7 @@ const DiagnosticTeacher = () => {
 
 <img
   src={teacherassessmentbanner}  alt="Teacher Assessment Banner"
-  className="hidden md:block absolute right-10 bottom-6 w-20"
+  className="hidden md:block absolute end-10 bottom-6 w-20"
 />
 </div>
         <div className="space-y-6">
@@ -1013,7 +1013,7 @@ const DiagnosticTeacher = () => {
                 <Label>Name of the Student</Label>
                 <Popover open={studentSearchOpen} onOpenChange={setStudentSearchOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left font-normal">
+                    <Button variant="outline" className="w-full justify-start text-start font-normal">
                       {selectedStudentName ? (
                         <span className="truncate">{selectedStudentName}</span>
                       ) : (
@@ -1049,7 +1049,7 @@ const DiagnosticTeacher = () => {
               </div>
 
               <Button className="w-full" size="lg" onClick={startQuiz} disabled={!canStartQuiz}>
-                Start Assessment <ArrowRight className="h-4 w-4 ml-2" />
+                Start Assessment <ArrowRight className="h-4 w-4 ms-2" />
               </Button>
             </CardContent>
           </Card>
@@ -1149,7 +1149,7 @@ const DiagnosticTeacher = () => {
               <CardContent className="p-8">
                 <div className="animate-fade-in" key={currentQ}>
                   <p className="text-lg font-medium text-foreground mb-8 leading-relaxed">
-                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold mr-3">
+                    <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-primary text-primary-foreground text-sm font-bold me-3">
                       {question.id}
                     </span>
                     {question.text}
@@ -1163,7 +1163,7 @@ const DiagnosticTeacher = () => {
                           onClick={() => {
                             handleAnswer(question.id, opt.value);
                           }}
-                          className={`flex items-center gap-3 rounded-lg border p-4 text-left text-sm font-medium transition-all ${
+                          className={`flex items-center gap-3 rounded-lg border p-4 text-start text-sm font-medium transition-all ${
                             selected
                               ? "border-accent bg-accent/10 text-accent shadow-sm"
                               : "border-border bg-card text-foreground hover:border-accent/40 hover:bg-muted/50"
@@ -1185,12 +1185,12 @@ const DiagnosticTeacher = () => {
                 onClick={() => setCurrentQ((q) => Math.max(0, q - 1))}
                 disabled={currentQ === 0}
               >
-                <ArrowLeft className="h-4 w-4 mr-1" /> Previous
+                <ArrowLeft className="h-4 w-4 me-1" /> Previous
               </Button>
               <div className="flex gap-2">
                 {answers[question.id] !== undefined && !isLastQuestion && (
                   <Button onClick={() => setCurrentQ((q) => q + 1)}>
-                    Next <ArrowRight className="h-4 w-4 ml-1" />
+                    Next <ArrowRight className="h-4 w-4 ms-1" />
                   </Button>
                 )}
               </div>

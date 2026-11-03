@@ -89,11 +89,11 @@ export default function AttendanceCorrelationSubTab({ schoolId }: Props) {
             disabled={!schoolId || analyzeMutation.isPending}
           >
             {analyzeMutation.isPending ? (
-              <><Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> Analyzing...</>
+              <><Loader2 className="h-4 w-4 me-1.5 animate-spin" /> Analyzing...</>
             ) : analysis ? (
-              <><Sparkles className="h-4 w-4 mr-1.5" /> Re-run Analysis</>
+              <><Sparkles className="h-4 w-4 me-1.5" /> Re-run Analysis</>
             ) : (
-              <><Sparkles className="h-4 w-4 mr-1.5" /> Run Analysis</>
+              <><Sparkles className="h-4 w-4 me-1.5" /> Run Analysis</>
             )}
           </Button>
         </CardTitle>

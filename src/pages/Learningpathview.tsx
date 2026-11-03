@@ -69,8 +69,8 @@ export default function LearningPathView() {
         </Badge>
       </div>
 
-      <div className="relative pl-6 space-y-4">
-        <div className="absolute left-[11px] top-2 bottom-2 w-px bg-border" />
+      <div className="relative ps-6 space-y-4">
+        <div className="absolute start-[11px] top-2 bottom-2 w-px bg-border" />
         {steps.map((step) => {
           const status = step.progress?.status ?? (step.is_required ? "locked" : "available");
           const isLocked = status === "locked";
@@ -88,14 +88,14 @@ export default function LearningPathView() {
           return (
             <div key={step.id} className="relative flex items-start gap-3">
               <div
-                className={`absolute -left-6 rounded-full bg-background ${
+                className={`absolute -start-6 rounded-full bg-background ${
                   isCompleted ? "text-green-600" : isLocked ? "text-muted-foreground" : "text-blue-600"
                 }`}
               >
                 <Icon className="h-5 w-5" />
               </div>
               <Card
-                className={`flex-1 ml-2 ${isLocked ? "opacity-60" : "cursor-pointer hover:shadow-md"}`}
+                className={`flex-1 ms-2 ${isLocked ? "opacity-60" : "cursor-pointer hover:shadow-md"}`}
                 onClick={() => !isLocked && step.course && navigate(`/student/courses/${step.course.id}`)}
               >
                 <CardContent className="py-3 flex items-center justify-between">

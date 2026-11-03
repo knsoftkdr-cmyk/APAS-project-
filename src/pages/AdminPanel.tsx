@@ -469,24 +469,24 @@ const AdminPanel = () => {
       <AppLayout>
       <div className="space-y-6">
 <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-600 p-8 relative min-h-[220px]">
-          <div className="absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-          <div className="absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+          <div className="absolute top-6 end-40 w-14 h-14 rounded-full border border-white/40"></div>
+          <div className="absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/40"></div>
           <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
-                    <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-          <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-          <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+                    <div className="absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
+          <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
+          <div className="absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
           
-          <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-          <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-          <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+          <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+          <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
+          <div className="absolute top-24 end-[45%] text-white/90 text-lg">✦</div>
 
-          <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+          <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-          <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+          <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-          <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+          <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 
 </div>
           <div className="max-w-xl">
@@ -503,7 +503,7 @@ const AdminPanel = () => {
             src={adminpanelBanner}
             alt="Admin Panel Banner"
             /* className="absolute right-10 bottom-8 h-[130px]" */
-            className="hidden md:block absolute right-10 bottom-5 w-[140px] z-10"
+            className="hidden md:block absolute end-10 bottom-5 w-[140px] z-10"
           />
         </div>
 
@@ -511,28 +511,28 @@ const AdminPanel = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
             <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-blue-500 to-cyan-400">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="absolute top-0 end-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
               <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><School className="h-7 w-7 text-cyan-600" /></div>
               <div><p className="text-2xl font-bold text-black-600 text-foreground">{classes.length}</p><p className="text-sm text-white">Classes</p></div>
             </CardContent>
           </Card>
           <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
             <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-pink-500 to-pink-400">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="absolute top-0 end-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
               <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><GraduationCap className="h-7 w-7 text-pink-600" /></div>
               <div><p className="text-2xl font-bold text-black-600">{students.length}</p><p className="text-sm text-white">Students</p></div>
             </CardContent>
           </Card>
           <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
             <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-emerald-500 to-green-500">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="absolute top-0 end-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
               <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><Users className="h-7 w-7 text-green-600" /></div>
               <div><p className="text-2xl font-bold text-black-600">{teachers.length}</p><p className="text-sm text-white">Teachers</p></div>
             </CardContent>
           </Card>
           <Card className="border-0 overflow-hidden transition-all duration-500 hover:-translate-y-3 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20 cursor-pointer group">
             <CardContent className="relative flex items-center gap-3 p-4 bg-gradient-to-r from-orange-500 to-red-500">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
+              <div className="absolute top-0 end-0 w-24 h-24 bg-white/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700"/>
               <div className="rounded-lg bg-white/50 p-2 transition-all duration-500 group-hover:rotate-12 group-hover:scale-125"><BookOpen className="h-7 w-7 text-red-600" /></div>
               <div><p className="text-2xl font-bold text-black-900">{questionAssignments.length}</p><p className="text-sm text-white">Q Assignments</p></div>
             </CardContent>
@@ -563,11 +563,11 @@ const AdminPanel = () => {
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
-                    <FileSpreadsheet className="h-4 w-4 mr-1" /> Import Excel
+                    <FileSpreadsheet className="h-4 w-4 me-1" /> Import Excel
                   </Button>
                   <Dialog open={createClassOpen} onOpenChange={setCreateClassOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm"><Plus className="h-4 w-4 mr-1" /> New Class</Button>
+                      <Button size="sm"><Plus className="h-4 w-4 me-1" /> New Class</Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader><DialogTitle>Create New Class</DialogTitle></DialogHeader>
@@ -605,7 +605,7 @@ const AdminPanel = () => {
                       {classes.map(c => (
                         <TableRow
                           key={c.id}
-                            className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500" onClick={() => setSelectedClassDetailsId(c.id)}
+                            className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-s-4 hover:border-blue-500" onClick={() => setSelectedClassDetailsId(c.id)}
                         >
                           <TableCell className="font-medium">{c.name}</TableCell>
                           <TableCell><Badge variant="secondary">{c.section}</Badge></TableCell>
@@ -751,7 +751,7 @@ const AdminPanel = () => {
                               <TableHead>Student ID</TableHead>
                               <TableHead>Date of Birth</TableHead>
                               <TableHead>Parent Phone</TableHead>
-                              <TableHead className="w-24 text-right">Actions</TableHead>
+                              <TableHead className="w-24 text-end">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -762,7 +762,7 @@ const AdminPanel = () => {
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.roll_number || "—"}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.date_of_birth ? new Date((students as any[]).find(s => s.id === member.student_id).date_of_birth).toLocaleDateString() : "—"}</TableCell>
                                 <TableCell>{(students as any[]).find(s => s.id === member.student_id)?.parent_phone || "—"}</TableCell>
-                                <TableCell className="text-right">
+                                <TableCell className="text-end">
                                   <Button
                                     variant="ghost"
                                     size="icon"
@@ -878,7 +878,7 @@ const AdminPanel = () => {
                     </Select>
                   </div>
                   <Button onClick={handleAssignStudent} disabled={!selectedClassForStudent || !selectedStudent} className="bg-blue-600">
-                    <Plus className="h-5 w-5 mr-1" /> Assign
+                    <Plus className="h-5 w-5 me-1" /> Assign
                   </Button>
                 </div>
 
@@ -897,7 +897,7 @@ const AdminPanel = () => {
                       </TableHeader>
                       <TableBody>
                         {classStudents.filter(cs => cs.class_id === selectedClassForStudent).map(cs => (
-                          <TableRow key={cs.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500">
+                          <TableRow key={cs.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-s-4 hover:border-blue-500">
                             <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.profiles?.full_name || (students as any[]).find(s => s.id === cs.student_id)?.full_name || "Unnamed"}</TableCell>
                             <TableCell>{(students as any[]).find(s => s.id === cs.student_id)?.grade || "—"}</TableCell>
                             <TableCell>
@@ -988,7 +988,7 @@ const AdminPanel = () => {
                         </div>
                       )}
                       <Button onClick={handleAssignTeacher} disabled={!selectedClassForTeacher || !selectedTeacher} className="bg-blue-600">
-                        <Plus className="h-5 w-5 mr-1" /> Assign
+                        <Plus className="h-5 w-5 me-1" /> Assign
                       </Button>
                     </div>
 
@@ -1008,7 +1008,7 @@ const AdminPanel = () => {
                           </TableHeader>
                           <TableBody>
                             {classTeachers.filter(ct => ct.class_id === selectedClassForTeacher).map(ct => (
-                              <TableRow key={ct.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-l-4 hover:border-blue-500">
+                              <TableRow key={ct.id} className="cursor-pointer transition-all duration-300 hover:bg-blue-50 hover:shadow-lg hover:scale-[1.01] hover:border-s-4 hover:border-blue-500">
                                 <TableCell className="font-medium">{(ct.profiles as any)?.full_name || "Unnamed"}</TableCell>
                                 <TableCell>
                                   <Badge variant={ct.teacher_role === "primary" ? "default" : "secondary"}>
@@ -1184,7 +1184,7 @@ const AdminPanel = () => {
                     </Select>
                   </div>
                   <Button onClick={handleAssignQuestions} disabled={!selectedTeacherForQuestions || !selectedAgeGroup}>
-                    <Plus className="h-4 w-4 mr-1" /> Assign
+                    <Plus className="h-4 w-4 me-1" /> Assign
                   </Button>
                 </div>
 

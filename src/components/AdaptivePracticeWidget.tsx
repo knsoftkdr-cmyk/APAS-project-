@@ -104,7 +104,7 @@ export function AdaptivePracticeWidget({
             <Trophy className="h-10 w-10 text-amber-500 mx-auto" />
             <p className="text-lg font-semibold">{Math.round(result.accuracy * 100)}% correct</p>
             {result.by_objective.length > 0 && (
-              <div className="text-left space-y-1.5 max-h-48 overflow-y-auto">
+              <div className="text-start space-y-1.5 max-h-48 overflow-y-auto">
                 {result.by_objective.map((o) => (
                   <div key={o.learning_objective_id} className="flex justify-between text-xs gap-2 border-b pb-1 last:border-0">
                     <span className="text-muted-foreground truncate">{o.text}</span>
@@ -151,7 +151,7 @@ export function AdaptivePracticeWidget({
                     disabled={!!feedback}
                     onClick={() => !feedback && setSelected(key)}
                     className={cn(
-                      "w-full flex items-center gap-3 rounded-lg border-2 p-3 text-left text-sm transition-colors",
+                      "w-full flex items-center gap-3 rounded-lg border-2 p-3 text-start text-sm transition-colors",
                       isCorrectKey ? "border-emerald-500 bg-emerald-50" :
                       isWrongPick ? "border-red-500 bg-red-50" :
                       !feedback && selected === key ? "border-primary bg-primary/5" : "border-border",
@@ -201,11 +201,11 @@ export function AdaptivePracticeWidget({
               ) : <span />}
               {!feedback ? (
                 <Button onClick={handleSubmit} disabled={!selected || loading} size="sm">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}Submit
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin me-1.5" /> : null}Submit
                 </Button>
               ) : (
                 <Button onClick={handleContinue} size="sm" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}Next question
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin me-1.5" /> : null}Next question
                 </Button>
               )}
             </div>

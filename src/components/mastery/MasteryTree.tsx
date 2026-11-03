@@ -29,10 +29,10 @@ function MasteryRow({ label, p_mastery, objectiveCount, attemptedCount }: {
       {attemptedCount === 0 ? (
         <Badge variant="outline" className="text-xs text-muted-foreground">Not assessed</Badge>
       ) : (
-        <span className="text-xs text-muted-foreground w-10 text-right">{pct(p_mastery)}%</span>
+        <span className="text-xs text-muted-foreground w-10 text-end">{pct(p_mastery)}%</span>
       )}
       <Progress value={attemptedCount === 0 ? 0 : pct(p_mastery)} className={`w-24 h-2 ${progressColorClass(p_mastery)}`} />
-      <span className="text-[11px] text-muted-foreground w-14 text-right hidden sm:inline">
+      <span className="text-[11px] text-muted-foreground w-14 text-end hidden sm:inline">
         {attemptedCount}/{objectiveCount} LOs
       </span>
     </div>
@@ -45,11 +45,11 @@ function ConceptBlock({ concept, isAtRisk, onSelectConcept, onSelectObjective }:
   onSelectObjective?: (id: number, text: string) => void;
 }) {
   return (
-    <div className={`pl-4 py-2 border-l-2 ml-2 ${isAtRisk ? "border-rose-400" : "border-muted"}`}>
+    <div className={`ps-4 py-2 border-s-2 ms-2 ${isAtRisk ? "border-rose-400" : "border-muted"}`}>
       <button
         type="button"
         onClick={() => onSelectConcept?.(concept.id, concept.name)}
-        className="flex items-center gap-2 w-full text-left rounded hover:bg-muted/50 -ml-1 pl-1"
+        className="flex items-center gap-2 w-full text-start rounded hover:bg-muted/50 -ms-1 ps-1"
       >
         <MasteryRow
           label={concept.name}
@@ -70,7 +70,7 @@ function ConceptBlock({ concept, isAtRisk, onSelectConcept, onSelectObjective }:
             <button
               type="button"
               onClick={() => onSelectObjective?.(o.id, o.text)}
-              className="flex items-center gap-2 text-xs text-muted-foreground pl-2 w-full text-left hover:text-foreground"
+              className="flex items-center gap-2 text-xs text-muted-foreground ps-2 w-full text-start hover:text-foreground"
             >
               <MasteryBadge status={o.status} className="text-[10px] px-1.5 py-0 shrink-0" />
               <span className="flex-1">{o.text}</span>
@@ -119,7 +119,7 @@ function ChapterBlock({ chapter, atRiskIds, ...handlers }: { chapter: MasteryCha
           attemptedCount={chapter.attempted_count}
         />
       </AccordionTrigger>
-      <AccordionContent className="pl-2">
+      <AccordionContent className="ps-2">
         <Accordion type="multiple" className="space-y-1">
           {chapter.topics.map((t) => (
             <TopicBlock key={t.id} topic={t} atRiskIds={atRiskIds} {...handlers} />
@@ -172,7 +172,7 @@ export function MasteryTree({ subject, atRiskSubtopicIds, studentId }: {
             {subject.class_name} · {subject.curriculum ?? "—"} · {subject.attempted_count}/{subject.objective_count} learning objectives assessed
           </p>
         </div>
-        <div className="text-right">
+        <div className="text-end">
           <div className="text-2xl font-bold">{pct(subject.p_mastery)}%</div>
           <div className="text-xs text-muted-foreground">overall mastery</div>
         </div>

@@ -78,17 +78,17 @@ export default function NotificationInbox() {
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               value={query}
               onChange={(e) => { setQuery(e.target.value); setVisible(PAGE_SIZE); }}
               placeholder="Search notifications"
               aria-label="Search notifications"
-              className="pl-9 pr-9"
+              className="ps-9 pe-9"
               maxLength={100}
             />
             {query && (
-              <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => setQuery("")} aria-label="Clear search" className="absolute end-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:text-foreground">
                 <X className="h-4 w-4" />
               </button>
             )}
@@ -136,7 +136,7 @@ export default function NotificationInbox() {
                   <button
                     type="button"
                     onClick={() => open(n)}
-                    className="min-w-0 flex-1 text-left"
+                    className="min-w-0 flex-1 text-start"
                     aria-label={`${n.is_read ? "" : "Unread. "}${n.title}. ${canOpen ? "Opens the related page." : ""}`}
                   >
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">

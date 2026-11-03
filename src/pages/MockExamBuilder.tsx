@@ -222,7 +222,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
     <Shell embedded={embedded}>
       <div className="p-3 sm:p-4 md:p-6 space-y-4 md:space-y-5 max-w-5xl mx-auto pb-[calc(6rem+env(safe-area-inset-bottom,0px))] md:pb-6">
         <div className="rounded-2xl p-5 md:p-6 relative overflow-hidden bg-gradient-to-r from-rose-600 to-orange-600 shadow-lg">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+          <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0"><Timer className="h-5 w-5 md:h-6 md:w-6 text-white" /></div>
             <div><h1 className="text-xl md:text-2xl font-bold text-white">Mock Exams</h1>
@@ -237,7 +237,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
               <div className="grid gap-3 sm:grid-cols-2">
                 {(patterns ?? []).map((p) => (
                   <button key={p.code} type="button" onClick={() => { setPatternCode(p.code); setResult(null); setAssigned(null); }}
-                    className={`text-left rounded-lg border p-3 transition ${patternCode === p.code ? "border-primary ring-2 ring-primary/30" : "hover:bg-muted/50"}`} aria-pressed={patternCode === p.code}>
+                    className={`text-start rounded-lg border p-3 transition ${patternCode === p.code ? "border-primary ring-2 ring-primary/30" : "hover:bg-muted/50"}`} aria-pressed={patternCode === p.code}>
                     <div className="flex items-center justify-between gap-2"><span className="font-medium text-sm">{p.name}</span>{p.board && <Badge variant="outline">{p.board}</Badge>}</div>
                     <p className="text-xs text-muted-foreground mt-1">{p.total_marks} marks · {p.duration_minutes} min · {p.question_type_mix.length} sections</p>
                     {p.description && <p className="text-xs text-muted-foreground mt-1">{p.description}</p>}
@@ -291,9 +291,9 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
                       <div className="flex items-center gap-1"><Input aria-label={`Weight for ${c.chapter_name}`} type="number" min={0.1} max={100} step={0.5} className="h-8 w-20"
                         value={chapterWeights[c.id]} onChange={(e) => setChapterWeights((w) => ({ ...w, [c.id]: e.target.value }))} /><span className="text-xs text-muted-foreground">%</span></div>
                     ) : blocked ? (
-                      <span className="text-[11px] text-amber-700 basis-full pl-7 sm:basis-auto sm:pl-0">{blocked}</span>
+                      <span className="text-[11px] text-amber-700 basis-full ps-7 sm:basis-auto sm:ps-0">{blocked}</span>
                     ) : st ? (
-                      <span className="text-[11px] text-muted-foreground basis-full pl-7 sm:basis-auto sm:pl-0" title="Active questions in the item bank, by type">
+                      <span className="text-[11px] text-muted-foreground basis-full ps-7 sm:basis-auto sm:ps-0" title="Active questions in the item bank, by type">
                         {(neededTypes.length ? neededTypes : ["mcq"]).map((t) => `${typeLabel(t)} ${st.byType[t] ?? 0}`).join(" · ")}
                       </span>
                     ) : null}
@@ -321,7 +321,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
               <p className="text-xs text-muted-foreground">Weights add up to {weightTotal.toFixed(1)}% — they're scaled to 100% automatically.</p>
             )}
             <Button className="w-full sm:w-auto h-10 sm:h-9" onClick={onGenerate} disabled={!pattern || !weightsValid || generate.isPending}>
-              <Wand2 className="h-4 w-4 mr-1.5" />{generate.isPending ? "Assembling…" : "Generate paper"}
+              <Wand2 className="h-4 w-4 me-1.5" />{generate.isPending ? "Assembling…" : "Generate paper"}
             </Button>
           </CardContent>
         </Card>
@@ -340,7 +340,7 @@ export default function MockExamBuilder({ embedded = false }: { embedded?: boole
                   {shortfalls.length > 6 && <p className="text-amber-800">…and {shortfalls.length - 6} more. Generate more items for these chapters in the Item Bank.</p>}
                 </div>
               )}
-              <Button asChild variant="outline" size="sm"><Link to={`/assessment-paper-print?paper_id=${result.paper_id}`}><Printer className="h-4 w-4 mr-1.5" />Print / answer key</Link></Button>
+              <Button asChild variant="outline" size="sm"><Link to={`/assessment-paper-print?paper_id=${result.paper_id}`}><Printer className="h-4 w-4 me-1.5" />Print / answer key</Link></Button>
 
               <div className="border-t pt-3 space-y-3">
                 <p className="text-sm font-medium">3. Run it as a mock exam</p>

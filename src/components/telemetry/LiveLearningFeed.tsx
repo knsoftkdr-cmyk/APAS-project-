@@ -101,7 +101,7 @@ export default function LiveLearningFeed({ studentId, classId, isOwnView = false
       <Card><CardContent className="py-8 text-center">
         <p className="text-destructive font-medium">Couldn't load learning activity.</p>
         <p className="text-sm text-muted-foreground mt-1">{stream.error}</p>
-        <Button size="sm" variant="outline" className="mt-3" onClick={stream.refresh}><RefreshCw className="h-3.5 w-3.5 mr-1.5" />Try again</Button>
+        <Button size="sm" variant="outline" className="mt-3" onClick={stream.refresh}><RefreshCw className="h-3.5 w-3.5 me-1.5" />Try again</Button>
       </CardContent></Card>
     );
   }
@@ -184,12 +184,12 @@ export default function LiveLearningFeed({ studentId, classId, isOwnView = false
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr className="border-b">
-                  <th className="text-left font-medium px-4 py-2">Student</th>
-                  <th className="text-left font-medium px-2 py-2">Status</th>
-                  <th className="text-right font-medium px-2 py-2">Questions</th>
-                  <th className="text-right font-medium px-2 py-2">Correct</th>
-                  <th className="text-right font-medium px-2 py-2">Active</th>
-                  <th className="text-right font-medium px-4 py-2">Last seen</th>
+                  <th className="text-start font-medium px-4 py-2">Student</th>
+                  <th className="text-start font-medium px-2 py-2">Status</th>
+                  <th className="text-end font-medium px-2 py-2">Questions</th>
+                  <th className="text-end font-medium px-2 py-2">Correct</th>
+                  <th className="text-end font-medium px-2 py-2">Active</th>
+                  <th className="text-end font-medium px-4 py-2">Last seen</th>
                 </tr>
               </thead>
               <tbody>
@@ -197,10 +197,10 @@ export default function LiveLearningFeed({ studentId, classId, isOwnView = false
                   <tr key={r.student_id} className="border-b last:border-0">
                     <td className="px-4 py-2 font-medium">{r.name ?? "Student"}</td>
                     <td className="px-2 py-2"><Badge className={STATUS[r.status].cls}>{STATUS[r.status].label}</Badge></td>
-                    <td className="px-2 py-2 text-right tabular-nums">{r.questions}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{r.accuracy_pct !== null ? `${r.accuracy_pct}%` : "—"}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{r.active_minutes ? minutesLabel(r.active_minutes) : "—"}</td>
-                    <td className="px-4 py-2 text-right text-muted-foreground">{r.last_active_at ? ago(r.last_active_at) : "never"}</td>
+                    <td className="px-2 py-2 text-end tabular-nums">{r.questions}</td>
+                    <td className="px-2 py-2 text-end tabular-nums">{r.accuracy_pct !== null ? `${r.accuracy_pct}%` : "—"}</td>
+                    <td className="px-2 py-2 text-end tabular-nums">{r.active_minutes ? minutesLabel(r.active_minutes) : "—"}</td>
+                    <td className="px-4 py-2 text-end text-muted-foreground">{r.last_active_at ? ago(r.last_active_at) : "never"}</td>
                   </tr>
                 ))}
               </tbody>

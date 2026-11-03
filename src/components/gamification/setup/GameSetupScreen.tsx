@@ -124,7 +124,7 @@ export function GameSetupScreen({ onStart }: Props) {
           <div className="flex items-center justify-center gap-3 py-3 px-6 rounded-2xl mx-auto w-fit"
             style={{ background: `${ageGroup.color}15`, border: `1px solid ${ageGroup.color}30` }}>
             <span className="text-2xl">{ageGroup.emoji}</span>
-            <div className="text-left">
+            <div className="text-start">
               <p className="text-sm font-bold" style={{ color: ageGroup.color }}>{ctx.class.label}</p>
               <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{ageGroup.label} · {ageGroup.description}</p>
             </div>
@@ -169,7 +169,7 @@ export function GameSetupScreen({ onStart }: Props) {
           style={{ background: "rgba(56,189,248,0.08)", border: "1px solid rgba(56,189,248,0.2)" }}>
           <div className="flex items-start gap-3">
             <Brain className="h-5 w-5 mt-0.5 flex-shrink-0" style={{ color: "#7DD3FC" }} />
-            <div className="text-left space-y-1">
+            <div className="text-start space-y-1">
               <p className="text-sm font-bold" style={{ color: "#7DD3FC" }}>Generic Brain Training</p>
               <p className="text-xs leading-relaxed" style={{ color: "rgba(241,245,249,0.5)" }}>
                 Includes cognitive games (memory, logic, speed, verbal) and mixed-subject quizzes pulling questions from your class subjects. You won't see the same question twice.
@@ -187,7 +187,7 @@ export function GameSetupScreen({ onStart }: Props) {
           color: "#F1F5F9",
           boxShadow: canStart ? "0 0 60px rgba(99,102,241,0.4), 0 8px 32px rgba(0,0,0,0.3)" : "none",
         }}>
-        {canStart && <span className="absolute -top-2 -right-2 text-lg animate-bounce">✨</span>}
+        {canStart && <span className="absolute -top-2 -end-2 text-lg animate-bounce">✨</span>}
         <span className="relative flex items-center gap-3">
           <Rocket className="h-5 w-5" /> GENERATE MY GAMES
         </span>

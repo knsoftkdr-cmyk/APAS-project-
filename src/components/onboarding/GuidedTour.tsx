@@ -214,7 +214,7 @@ export function GuidedTour({ open, steps, onFinish, onSkip, onNeedSidebar }: Pro
           )}
           <div className="flex gap-2">
             <Button variant="outline" size="sm" disabled={idx === 0} onClick={goBack}>
-              <ArrowLeft className="mr-1 h-3 w-3" /> Back
+              <ArrowLeft className="me-1 h-3 w-3" /> Back
             </Button>
             {isLast ? (
               <Button ref={nextRef} size="sm" onClick={onFinish}>
@@ -222,7 +222,7 @@ export function GuidedTour({ open, steps, onFinish, onSkip, onNeedSidebar }: Pro
               </Button>
             ) : (
               <Button ref={nextRef} size="sm" onClick={goNext}>
-                Next <ArrowRight className="ml-1 h-3 w-3" />
+                Next <ArrowRight className="ms-1 h-3 w-3" />
               </Button>
             )}
           </div>

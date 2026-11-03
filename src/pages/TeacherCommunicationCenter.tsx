@@ -556,8 +556,8 @@ const isVideoFile = (name?: string | null) =>
 <div className="h-[calc(100vh-100px)] flex flex-col">
   {view === "messages" && (
     <div className="rounded-2xl p-5 md:p-6 mb-4 relative overflow-hidden bg-gradient-to-r from-green-600 to-emerald-600 shadow-lg shrink-0">
-      <div className="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
-      <div className="absolute right-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
+      <div className="absolute -end-6 -top-6 w-32 h-32 bg-white/10 rounded-full" />
+      <div className="absolute end-16 top-8 w-16 h-16 bg-white/10 rounded-full" />
       <div className="relative flex items-center gap-3 md:gap-4">
         <div className="w-10 h-10 md:w-12 md:h-12 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
           <MessageSquare className="h-5 w-5 md:h-6 md:w-6 text-white" />
@@ -598,15 +598,15 @@ const isVideoFile = (name?: string | null) =>
           <div className="grid grid-cols-1 md:grid-cols-[340px_1fr] h-full min-h-0">
 
             {/* ── Contact List Panel ── */}
-            <div className={`min-h-0 border-r border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
+            <div className={`min-h-0 border-e border-slate-100 bg-white flex flex-col ${showMobileChat ? "hidden md:flex" : "flex"}`}>
               <div className="p-3 border-b border-slate-100">
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search student/parent"
                     value={search}
                     onChange={e => setSearch(e.target.value)}
-                    className="pl-9 h-10 text-sm rounded-full bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-green-300"
+                    className="ps-9 h-10 text-sm rounded-full bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-green-300"
                   />
                 </div>
               </div>
@@ -637,7 +637,7 @@ const isVideoFile = (name?: string | null) =>
                         <button
                           key={`group-${g.id}`}
                           onClick={() => openContact(g)}
-                          className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                          className={`w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
                             isSelected ? "bg-green-50" : "hover:bg-slate-50"
                           }`}
                         >
@@ -670,7 +670,7 @@ const isVideoFile = (name?: string | null) =>
                           <button
                             key={c.id}
                             onClick={() => openContact(c)}
-                            className={`w-full text-left p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
+                            className={`w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-colors ${
                               isSelected ? "bg-green-50" : "hover:bg-slate-50"
                             }`}
                           >
@@ -775,7 +775,7 @@ const isVideoFile = (name?: string | null) =>
                               {isMine && (
                                 <button
                                   onClick={() => handleDeleteMessage(m.id)}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity self-center me-1.5 p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-600"
                                   title="Delete message"
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />
@@ -784,8 +784,8 @@ const isVideoFile = (name?: string | null) =>
                               <div
                                 className={`max-w-[75%] rounded-2xl px-3.5 py-2.5 ${
                                   isMine
-                                    ? "bg-green-600 text-white rounded-br-sm"
-                                    : "bg-white border border-border/60 rounded-bl-sm"
+                                    ? "bg-green-600 text-white rounded-ee-sm"
+                                    : "bg-white border border-border/60 rounded-es-sm"
                                 }`}
                               >
                                 {m.message_type === "appreciation" && (
@@ -882,7 +882,7 @@ const isVideoFile = (name?: string | null) =>
                           />
                           <button
                             onClick={() => setAttachedFile(null)}
-                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                            className="absolute -top-1.5 -end-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
                           >
                             <X className="h-3 w-3" />
                           </button>
@@ -896,7 +896,7 @@ const isVideoFile = (name?: string | null) =>
                           />
                           <button
                             onClick={() => setAttachedFile(null)}
-                            className="absolute -top-1.5 -right-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
+                            className="absolute -top-1.5 -end-1.5 bg-slate-800 text-white rounded-full p-0.5 shadow"
                           >
                             <X className="h-3 w-3" />
                           </button>

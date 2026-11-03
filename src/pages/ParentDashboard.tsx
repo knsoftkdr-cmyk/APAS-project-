@@ -466,7 +466,7 @@ export default function ParentDashboard() {
                   </p>
                 </div>
                 <Button size="sm" onClick={() => setGuardianDialogOpen(true)}>
-                  <Plus className="h-4 w-4 mr-1" /> Add Guardian
+                  <Plus className="h-4 w-4 me-1" /> Add Guardian
                 </Button>
               </CardHeader>
               <CardContent className="space-y-2">

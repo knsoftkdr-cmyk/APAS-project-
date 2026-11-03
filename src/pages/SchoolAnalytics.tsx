@@ -127,26 +127,26 @@ return (
       {/* Hero Banner */}
       <div className="mb-8 overflow-hidden rounded-3xl bg-gradient-to-r from-blue-400 via-blue-0 to-blue-500 p-6 sm:p-8 relative min-h-[220px]">
         {/* Decorative Circles */}
-        <div className="hidden sm:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/40"></div>
-        <div className="hidden sm:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/40"></div>
+        <div className="hidden sm:block absolute top-6 end-40 w-14 h-14 rounded-full border border-white/40"></div>
+        <div className="hidden sm:block absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/40"></div>
         <div className="absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/80"></div>
 <div className="hidden md:block">
         {/* Stars */}
-        <div className="absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-        <div className="absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-        <div className="absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+        <div className="absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
+        <div className="absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
+        <div className="absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
 
-        <div className="absolute top-6 left-1/4 text-white/50 text-xl">✦</div>
-        <div className="absolute top-0 left-[45%] text-white/40 text-lg">✦</div>
-        <div className="absolute top-1/2 left-[70%] text-white/40 text-lg">✦</div>
-        <div className="absolute top-24 right-[45%] text-white/90 text-lg">✦</div>
+        <div className="absolute top-6 start-1/4 text-white/50 text-xl">✦</div>
+        <div className="absolute top-0 start-[45%] text-white/40 text-lg">✦</div>
+        <div className="absolute top-1/2 start-[70%] text-white/40 text-lg">✦</div>
+        <div className="absolute top-24 end-[45%] text-white/90 text-lg">✦</div>
 
         {/* Triangles */}
-        <div className="absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+        <div className="absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
-        <div className="absolute bottom-16 left-72 w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[18px] border-b-white/40"></div>
+        <div className="absolute bottom-16 start-72 w-0 h-0 border-s-[10px] border-s-transparent border-e-[10px] border-e-transparent border-b-[18px] border-b-white/40"></div>
 
-        <div className="absolute top-28 left-1/3 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-white/80"></div>
+        <div className="absolute top-28 start-1/3 w-0 h-0 border-s-[8px] border-s-transparent border-e-[8px] border-e-transparent border-b-[14px] border-b-white/80"></div>
 </div>
         {/* Content */}
         <div className="relative z-10 max-w-xl">
@@ -164,7 +164,7 @@ return (
           src={schoolIntelligencebanner}
           alt="School Intelligence Banner"
           /* className="absolute right-10 bottom-0 h-[200px] object-contain" */
-          className="hidden md:block absolute right-10 bottom-5 w-[180px] z-10"
+          className="hidden md:block absolute end-10 bottom-5 w-[180px] z-10"
         />
       </div>
 
@@ -177,9 +177,9 @@ return (
           disabled={runningDetection}
         >
           {runningDetection ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            <Loader2 className="h-4 w-4 animate-spin me-1" />
           ) : (
-            <AlertTriangle className="h-5 w-5 text-red-600 mr-1" />
+            <AlertTriangle className="h-5 w-5 text-red-600 me-1" />
           )}
           Run Issue Detection
         </Button>
@@ -191,9 +191,9 @@ return (
           disabled={runningPrediction}
         >
           {runningPrediction ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            <Loader2 className="h-4 w-4 animate-spin me-1" />
           ) : (
-            <Brain className="h-5 w-5 mr-1" />
+            <Brain className="h-5 w-5 me-1" />
           )}
           Run Predictions
         </Button>
@@ -247,12 +247,12 @@ return (
               <TabsTrigger value="alerts" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">Smart Alerts ({alerts?.length || 0})</TabsTrigger>
               {canSeeTwin && (
                 <TabsTrigger value="forecast" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">
-                  <TrendingUp className="h-4 w-4 mr-1 inline" />Forecast
+                  <TrendingUp className="h-4 w-4 me-1 inline" />Forecast
                 </TabsTrigger>
               )}
               {canSeeTwin && (
                 <TabsTrigger value="twin" className="shrink-0 whitespace-nowrap text-xs sm:text-sm gap-1 data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md text-slate-600 hover:text-blue-600 rounded-lg transition-all duration-300">
-                  <Network className="h-4 w-4 mr-1 inline" />Digital Twin
+                  <Network className="h-4 w-4 me-1 inline" />Digital Twin
                 </TabsTrigger>
               )}
             </TabsList>
@@ -383,9 +383,9 @@ return (
           <TabsContent value="alerts" className="space-y-3">
             {(alerts || []).length > 0 ? (
               alerts!.map((alert) => (
-                <Card key={alert.id} className="group relative overflow-hidden border-l-4 border-l-red-500 hover:shadow-xl hover:-translate-y-1 hover:border-l-red-600 transition-all duration-500 bg-gradient-to-r from-red-50/50 to-white">
+                <Card key={alert.id} className="group relative overflow-hidden border-s-4 border-s-red-500 hover:shadow-xl hover:-translate-y-1 hover:border-s-red-600 transition-all duration-500 bg-gradient-to-r from-red-50/50 to-white">
                   <CardContent className="p-4">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-400/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
+                    <div className="absolute top-0 end-0 w-32 h-32 bg-red-400/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline" className="text-xs">{alert.lesson_type}</Badge>

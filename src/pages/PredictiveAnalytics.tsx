@@ -298,8 +298,8 @@ if (!predictions || predictions.length === 0) {
     <>
       {/* Hero */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 p-8 shadow-xl mb-6">
-        <div className="absolute top-6 right-10 h-24 w-24 rounded-full bg-white/10" />
-        <div className="absolute bottom-5 right-40 h-14 w-14 rounded-full bg-white/10" />
+        <div className="absolute top-6 end-10 h-24 w-24 rounded-full bg-white/10" />
+        <div className="absolute bottom-5 end-40 h-14 w-14 rounded-full bg-white/10" />
         <div className="relative z-10 flex items-center gap-5">
           <div className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
             <Brain className="h-9 w-9 text-white" />

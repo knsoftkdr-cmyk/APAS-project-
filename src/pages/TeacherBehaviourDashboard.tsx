@@ -325,8 +325,8 @@ const [noteType, setNoteType] = useState("observation");
     <PageShell embedded={embedded}>
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-cyan-600 via-sky-500 to-blue-500 p-8 shadow-xl">
         {/* Decorative Circles */}
-        <div className="absolute top-6 right-10 h-24 w-24 rounded-full bg-white/10"></div>
-        <div className="absolute bottom-5 right-40 h-14 w-14 rounded-full bg-white/10"></div>
+        <div className="absolute top-6 end-10 h-24 w-24 rounded-full bg-white/10"></div>
+        <div className="absolute bottom-5 end-40 h-14 w-14 rounded-full bg-white/10"></div>
         <div className="absolute top-12 left-1/2 h-5 w-5 rounded-full bg-white/20"></div>
         {/* Hero Content */}
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
@@ -374,7 +374,7 @@ const [noteType, setNoteType] = useState("observation");
         <p className="text-sm font-semibold">Active Intervention</p>
         <Badge className="bg-amber-500 text-white hover:bg-amber-500">{activeIntervention.priority} priority</Badge>
       </div>
-      <p className="text-xs text-muted-foreground ml-9">
+      <p className="text-xs text-muted-foreground ms-9">
         {activeIntervention.review_date
           ? `Review by ${format(new Date(activeIntervention.review_date), "d MMM yyyy")}`
           : "No review date set"}
@@ -469,7 +469,7 @@ const [noteType, setNoteType] = useState("observation");
                         Share this as a behaviour record visible to the student & parent
                       </label>
                       <Button onClick={handleSaveNote} disabled={saving} className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white">
-                        <MessageSquarePlus className="h-4 w-4 mr-2" />
+                        <MessageSquarePlus className="h-4 w-4 me-2" />
                         {saving ? "Saving..." : "Save Note"}
                       </Button>
                     </>
@@ -497,18 +497,18 @@ const [noteType, setNoteType] = useState("observation");
                   ) : (
                     <div className="space-y-3">
                       {notes.map((n) => (
-                        <div key={n.id} className={`border-l-2 pl-3 py-2 relative group rounded-r-lg ${
-                          n.note_type === "positive" ? "border-l-green-400 bg-green-50/40" :
-                          n.note_type === "concern" ? "border-l-amber-400 bg-amber-50/40" :
-                          n.note_type === "incident" ? "border-l-red-400 bg-red-50/40" :
-                          "border-l-blue-400 bg-blue-50/40"
+                        <div key={n.id} className={`border-s-2 ps-3 py-2 relative group rounded-e-lg ${
+                          n.note_type === "positive" ? "border-s-green-400 bg-green-50/40" :
+                          n.note_type === "concern" ? "border-s-amber-400 bg-amber-50/40" :
+                          n.note_type === "incident" ? "border-s-red-400 bg-red-50/40" :
+                          "border-s-blue-400 bg-blue-50/40"
                         }`}>
                           <div className="flex items-center gap-2 mb-1">
                             <Badge className={NOTE_TYPE_STYLES[n.note_type]}>{n.note_type}</Badge>
                             <span className="text-xs text-muted-foreground">{format(new Date(n.created_at), "d MMM yyyy, h:mm a")}</span>
                             {n.follow_up_date && (
                               <Badge variant={n.follow_up_completed ? "outline" : isPast(new Date(n.follow_up_date)) ? "destructive" : "secondary"}>
-                                <Clock className="h-3 w-3 mr-1" />
+                                <Clock className="h-3 w-3 me-1" />
                                 {n.follow_up_completed ? "Followed up" : `Follow-up ${format(new Date(n.follow_up_date), "d MMM")}`}
                               </Badge>
                             )}

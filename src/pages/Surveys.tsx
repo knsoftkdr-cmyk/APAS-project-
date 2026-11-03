@@ -180,15 +180,15 @@ export default function Surveys() {
 return (
     <AppLayout>
       <div className="relative min-h-screen">
-        <div className="absolute -top-10 right-0 w-72 h-72 rounded-full bg-violet-300 opacity-[0.12] blur-3xl pointer-events-none" />
-        <div className="absolute top-64 left-0 w-64 h-64 rounded-full bg-fuchsia-200 opacity-[0.12] blur-3xl pointer-events-none" />
-        <div className="absolute bottom-10 right-1/3 w-56 h-56 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl pointer-events-none" />
+        <div className="absolute -top-10 end-0 w-72 h-72 rounded-full bg-violet-300 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute top-64 start-0 w-64 h-64 rounded-full bg-fuchsia-200 opacity-[0.12] blur-3xl pointer-events-none" />
+        <div className="absolute bottom-10 end-1/3 w-56 h-56 rounded-full bg-indigo-200 opacity-[0.10] blur-3xl pointer-events-none" />
 
       <div className="relative z-10 space-y-6 pb-10">
         <div className="rounded-2xl md:rounded-3xl p-5 md:p-7 relative overflow-hidden bg-gradient-to-r from-violet-600 via-indigo-600 to-fuchsia-600 shadow-lg">
-          <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
-          <div className="absolute right-20 top-10 w-16 h-16 bg-white/10 rounded-full" />
-          <div className="absolute bottom-0 left-1/3 w-24 h-24 bg-white/5 rounded-full" />
+          <div className="absolute -end-8 -top-8 w-40 h-40 bg-white/10 rounded-full" />
+          <div className="absolute end-20 top-10 w-16 h-16 bg-white/10 rounded-full" />
+          <div className="absolute bottom-0 start-1/3 w-24 h-24 bg-white/5 rounded-full" />
           <div className="relative flex items-center gap-3 md:gap-4">
             <div className="flex h-11 w-11 md:h-12 md:w-12 items-center justify-center rounded-xl bg-white/20 text-white shrink-0">
               <ClipboardList className="h-5 w-5 md:h-6 md:w-6" />
@@ -203,7 +203,7 @@ return (
         {canCreate && (
           <div className="flex justify-end">
             <Button onClick={() => setBuilderOpen(true)} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white shrink-0 w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-1.5" /> Create Survey
+              <Plus className="h-4 w-4 me-1.5" /> Create Survey
             </Button>
           </div>
         )}
@@ -214,7 +214,7 @@ return (
             className={cn("flex-1 md:flex-none px-4 py-2 text-sm font-medium rounded-lg transition-all",
               tab === "respond" ? "bg-white text-violet-700 shadow-sm" : "text-muted-foreground hover:text-violet-600")}
           >
-            To Respond {toRespond.length > 0 && <Badge className="ml-1.5 bg-red-500 text-white hover:bg-red-500">{toRespond.length}</Badge>}
+            To Respond {toRespond.length > 0 && <Badge className="ms-1.5 bg-red-500 text-white hover:bg-red-500">{toRespond.length}</Badge>}
           </button>
           {canCreate && (
             <button
@@ -237,7 +237,7 @@ return (
               <EmptyState text="No surveys waiting for your response right now." />
             ) : (
               toRespond.map((s) => (
-                <Card key={s.id} className="border-l-4 border-l-violet-400 border-y border-r border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                <Card key={s.id} className="border-s-4 border-s-violet-400 border-y border-e border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
                   <CardContent className="p-4 flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-lg bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
@@ -266,10 +266,10 @@ return (
             ) : (
               mySurveys.map((s) => {
                 const statusAccent =
-                  s.status === "active" ? "border-l-emerald-400" :
-                  s.status === "closed" ? "border-l-slate-300" : "border-l-amber-400";
+                  s.status === "active" ? "border-s-emerald-400" :
+                  s.status === "closed" ? "border-s-slate-300" : "border-s-amber-400";
                 return (
-                <Card key={s.id} className={cn("border-l-4 border-y border-r border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden", statusAccent)}>
+                <Card key={s.id} className={cn("border-s-4 border-y border-e border-border/60 shadow-sm hover:shadow-md transition-shadow overflow-hidden", statusAccent)}>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between flex-wrap gap-3">
                       <div className="flex items-start gap-3 min-w-0">
@@ -294,16 +294,16 @@ return (
                     <div className="flex gap-2 flex-wrap">
                       {s.status === "draft" && (
                         <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" onClick={() => updateStatus(s, "active")}>
-                          <Play className="h-3.5 w-3.5 mr-1.5" /> Activate
+                          <Play className="h-3.5 w-3.5 me-1.5" /> Activate
                         </Button>
                       )}
                       {s.status === "active" && (
                         <Button size="sm" variant="outline" className="border-slate-200 hover:bg-slate-50" onClick={() => updateStatus(s, "closed")}>
-                          <Square className="h-3.5 w-3.5 mr-1.5" /> Close
+                          <Square className="h-3.5 w-3.5 me-1.5" /> Close
                         </Button>
                       )}
                       <Button size="sm" variant="outline" className="border-indigo-200 text-indigo-700 hover:bg-indigo-50" onClick={() => setResultsSurvey(s)}>
-                        <BarChart3 className="h-3.5 w-3.5 mr-1.5" /> Results
+                        <BarChart3 className="h-3.5 w-3.5 me-1.5" /> Results
                       </Button>
                       {s.status === "draft" && (
                         <Button size="sm" variant="outline" className="hover:bg-red-50" onClick={() => deleteSurvey(s)}>
@@ -641,21 +641,21 @@ function SurveyBuilderDialog({ schoolId, userId, role, onClose, onCreated }: {
                       </div>
                     ))}
                     <Button size="sm" variant="outline" className="border-violet-200 text-violet-700 hover:bg-violet-50" onClick={() => updateQuestion(q.key, { options: [...q.options, ""] })}>
-                      <Plus className="h-3 w-3 mr-1" /> Add Option
+                      <Plus className="h-3 w-3 me-1" /> Add Option
                     </Button>
                   </div>
                 )}
               </div>
             ))}
             <Button variant="outline" size="sm" className="border-violet-200 text-violet-700 hover:bg-violet-50" onClick={addQuestion}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Question
+              <Plus className="h-3.5 w-3.5 me-1.5" /> Add Question
             </Button>
           </div>
         </div>
 
         <DraftRecoveryDialog draft={surveyDraft} noun="survey draft" />
         <DialogFooter className="items-center gap-2">
-          <DraftStatus draft={surveyDraft} className="sm:mr-auto" />
+          <DraftStatus draft={surveyDraft} className="sm:me-auto" />
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={handleCreate} disabled={saving} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white">
             {saving ? "Creating..." : "Create Survey"}
@@ -915,10 +915,10 @@ const responseRate = data && data.targetCount > 0 ? (data.receiptCount / data.ta
                     {(q.question_type === "text_short" || q.question_type === "text_long") && (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto">
                         {qResponses.length === 0 ? (
-                          <p className="text-xs text-muted-foreground pl-9">No responses yet.</p>
+                          <p className="text-xs text-muted-foreground ps-9">No responses yet.</p>
                         ) : (
                           qResponses.map((r: any, i: number) => (
-                            <p key={i} className="text-sm bg-violet-50/60 border border-violet-100 rounded-lg p-2.5 ml-9">{r.answer_value}</p>
+                            <p key={i} className="text-sm bg-violet-50/60 border border-violet-100 rounded-lg p-2.5 ms-9">{r.answer_value}</p>
                           ))
                         )}
                       </div>
@@ -941,7 +941,7 @@ function QuestionBreakdown({ options, responses, multi }: { options: string[]; r
   });
   const total = responses.length || 1;
   return (
-    <div className="space-y-2 pl-9">
+    <div className="space-y-2 ps-9">
       {counts.map(({ opt, n }) => (
         <div key={opt}>
           <div className="flex justify-between text-xs mb-1">
@@ -960,14 +960,14 @@ function RatingBreakdown({ responses }: { responses: any[] }) {
   const dist = [1, 2, 3, 4, 5].map((n) => responses.filter((r) => Number(r.answer_value) === n).length);
   const total = responses.length || 1;
   return (
-    <div className="pl-9">
+    <div className="ps-9">
       <p className="text-2xl font-bold mb-2 text-violet-700">{avg} <span className="text-sm font-normal text-muted-foreground">/ 5 avg</span></p>
       <div className="space-y-1.5">
         {dist.map((n, i) => (
           <div key={i} className="flex items-center gap-2">
             <span className="text-xs w-3 font-medium text-amber-600">{i + 1}★</span>
             <Progress value={(n / total) * 100} className="h-2 flex-1 [&>div]:bg-amber-400" />
-            <span className="text-xs w-5 text-right text-muted-foreground">{n}</span>
+            <span className="text-xs w-5 text-end text-muted-foreground">{n}</span>
           </div>
         ))}
       </div>

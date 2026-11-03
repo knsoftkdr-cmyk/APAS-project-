@@ -111,8 +111,8 @@ export default function ExamReviews({ embedded = false }: { embedded?: boolean }
               </SelectContent>
             </Select>
             <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student or roll no." className="pl-8" />
+              <Search className="absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search student or roll no." className="ps-8" />
             </div>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function ExamReviews({ embedded = false }: { embedded?: boolean }
                   onCheckedChange={(v) => setSelected(v === true ? new Set(rows.map((r) => r.id)) : new Set())}
                 />
                 <span>{selected.size ? `${selected.size} selected` : "Select answer sheets to act on many at once"}</span>
-                <div className="ml-auto flex gap-2">
+                <div className="ms-auto flex gap-2">
                   <Button size="sm" variant="ghost" className="gap-1" onClick={() => setBatchesOpen(true)}><History className="h-3.5 w-3.5" />Recent</Button>
                   <Button size="sm" className="gap-1" disabled={!selected.size || selected.size > 100} onClick={() => setBulkOpen(true)}>
                     <ListChecks className="h-3.5 w-3.5" />Accept AI marks{selected.size ? ` (${selected.size})` : ""}
@@ -174,7 +174,7 @@ function AttemptRow({ a, onOpen, selectable, selected, onSelect }: {
           <p className="font-medium truncate">
             {a.studentName}
             {(a.studentClass || a.rollNumber) && (
-              <span className="ml-2 text-xs font-normal text-muted-foreground">
+              <span className="ms-2 text-xs font-normal text-muted-foreground">
                 {[a.studentClass, a.rollNumber ? `Roll ${a.rollNumber}` : ""].filter(Boolean).join(" · ")}
               </span>
             )}
@@ -189,7 +189,7 @@ function AttemptRow({ a, onOpen, selectable, selected, onSelect }: {
           </div>
         </div>
         <div className="flex items-center gap-3 sm:justify-end">
-          <div className="text-right">
+          <div className="text-end">
             <p className="text-sm font-semibold tabular-nums">
               {fmt(a.totalScore)}<span className="text-muted-foreground">/{fmt(a.totalMax)}</span>
             </p>
@@ -211,7 +211,7 @@ function ReviewDetailView({ attemptId, onBack }: { attemptId: string; onBack: ()
   const save = useSaveReview(attemptId);
 
   const back = (
-    <Button variant="ghost" size="sm" onClick={onBack} className="-ml-2 mb-2"><ArrowLeft className="h-4 w-4 mr-1" />Back to list</Button>
+    <Button variant="ghost" size="sm" onClick={onBack} className="-ms-2 mb-2"><ArrowLeft className="h-4 w-4 me-1" />Back to list</Button>
   );
   if (isLoading) return <div>{back}<div className="space-y-3"><Skeleton className="h-24 w-full" /><Skeleton className="h-64 w-full" /></div></div>;
   if (error || !data) {
@@ -242,7 +242,7 @@ function ReviewDetailView({ attemptId, onBack }: { attemptId: string; onBack: ()
           <p className="text-lg font-semibold truncate">{data.studentName}</p>
           <p className="text-sm text-muted-foreground">{[data.studentClass, data.examTitle].filter(Boolean).join(" · ")}</p>
         </div>
-        <div className="sm:text-right">
+        <div className="sm:text-end">
           <p className="text-3xl font-bold tabular-nums">{fmt(data.totalScore)}<span className="text-lg text-muted-foreground">/{fmt(data.totalMax)}</span></p>
           <p className={cn("text-xs", final ? "text-emerald-700" : "text-amber-700")}>
             {final ? "Final — visible to the student" : `Provisional — ${confirmed} of ${answered.length} written answers confirmed`}
@@ -309,9 +309,9 @@ function QuestionReviewCard({ item, saving, onSave }: {
           <span className="font-semibold">Q{item.number}</span>
           {item.sectionLabel && <span className="text-xs text-muted-foreground">{item.sectionLabel}</span>}
           <span className="text-xs text-muted-foreground">· {item.slotMarks} mark{item.slotMarks === 1 ? "" : "s"}</span>
-          <div className="ml-auto">
+          <div className="ms-auto">
             {!sub ? <Badge variant="outline">Not answered</Badge>
-              : reviewed ? <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 mr-1" />Confirmed</Badge>
+              : reviewed ? <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100"><CheckCircle2 className="h-3 w-3 me-1" />Confirmed</Badge>
               : <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">Needs your review</Badge>}
           </div>
         </div>
@@ -320,7 +320,7 @@ function QuestionReviewCard({ item, saving, onSave }: {
           {item.context && <div className="rounded-md bg-muted/50 p-3 whitespace-pre-wrap text-muted-foreground">{item.context}</div>}
           <p className="whitespace-pre-wrap">{item.stem}</p>
           {item.subQuestions.length > 0 && (
-            <ol className="list-[lower-alpha] pl-5 space-y-1 text-muted-foreground">
+            <ol className="list-[lower-alpha] ps-5 space-y-1 text-muted-foreground">
               {item.subQuestions.map((sq, i) => (
                 <li key={sq.id ?? i}>{sq.question ?? sq.text ?? sq.label}{sq.marks != null ? ` [${sq.marks}]` : ""}</li>
               ))}
@@ -432,7 +432,7 @@ function QuestionReviewCard({ item, saving, onSave }: {
 
             <div className="flex justify-end">
               <Button onClick={submit} disabled={!!problem || !dirty || busy || saving}>
-                {busy && <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />}
+                {busy && <Loader2 className="h-4 w-4 me-1.5 animate-spin" />}
                 {reviewed ? "Save changes" : "Confirm marks"}
               </Button>
             </div>

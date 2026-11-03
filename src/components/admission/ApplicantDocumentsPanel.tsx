@@ -82,7 +82,7 @@ export function ApplicantDocumentsPanel({ applicantId, onDocumentsChanged }: App
         </Select>
 
         <Button onClick={handlePickFile} disabled={uploading} variant="outline">
-          {uploading ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Upload className="h-4 w-4 mr-1.5" />}
+          {uploading ? <Loader2 className="h-4 w-4 me-1.5 animate-spin" /> : <Upload className="h-4 w-4 me-1.5" />}
           Upload File
         </Button>
         <input

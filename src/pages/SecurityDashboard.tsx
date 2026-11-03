@@ -175,15 +175,15 @@ const SecurityDashboard = () => {
 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-500 via-blue-600 to-blue-500 p-8 text-white mb-6">
 
   {/* Decorations */}
-  <div className="hidden md:block absolute top-6 right-40 w-14 h-14 rounded-full border border-white/60"></div>
-  <div className="hidden md:block absolute bottom-10 right-80 w-8 h-8 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute top-6 end-40 w-14 h-14 rounded-full border border-white/60"></div>
+  <div className="hidden md:block absolute bottom-10 end-80 w-8 h-8 rounded-full border border-white/60"></div>
   <div className="hidden md:block absolute top-16 left-1/2 w-6 h-6 rounded-full border border-white/60"></div>
 
-  <div className="hidden md:block absolute top-12 left-[45%] text-white/80 text-xl">✦</div>
-  <div className="hidden md:block absolute bottom-16 left-[60%] text-white/50 text-lg">✦</div>
-  <div className="hidden md:block absolute top-24 right-[35%] text-white/80 text-lg">✦</div>
+  <div className="hidden md:block absolute top-12 start-[45%] text-white/80 text-xl">✦</div>
+  <div className="hidden md:block absolute bottom-16 start-[60%] text-white/50 text-lg">✦</div>
+  <div className="hidden md:block absolute top-24 end-[35%] text-white/80 text-lg">✦</div>
 
-  <div className="hidden md:block absolute top-12 right-64 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-b-[20px] border-b-white/40"></div>
+  <div className="hidden md:block absolute top-12 end-64 w-0 h-0 border-s-[12px] border-s-transparent border-e-[12px] border-e-transparent border-b-[20px] border-b-white/40"></div>
 
   <div className="relative z-10 flex items-center gap-4">
           <div className="h-14 w-14 rounded-xl bg-white/20 flex items-center justify-center">
@@ -205,7 +205,7 @@ const SecurityDashboard = () => {
             src={securitybanner}
             alt="Security Banner"
             /* className="absolute right-10 bottom-6 h-[160px]" */
-            className="hidden md:block absolute right-5 bottom-3 w-[100px] z-10"
+            className="hidden md:block absolute end-5 bottom-3 w-[100px] z-10"
           />
 </div>
 
@@ -279,7 +279,7 @@ const SecurityDashboard = () => {
                           style={{ width: `${Math.min((count / totalUsers) * 100, 100)}%` }}
                         />
                       </div>
-                      <span className="text-sm font-semibold w-6 text-right">{count}</span>
+                      <span className="text-sm font-semibold w-6 text-end">{count}</span>
                     </div>
                   </div>
                 ))}
@@ -381,12 +381,12 @@ const SecurityDashboard = () => {
                   <Lock className="h-5 w-5" />Audit Logs
                 </CardTitle>
                 <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search logs..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
+                    className="ps-9"
                   />
                 </div>
               </div>

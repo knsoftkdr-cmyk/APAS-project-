@@ -8,7 +8,7 @@ export default function SchoolBusLoader() {
         <div className="relative w-[320px] h-24 overflow-hidden">
             <div className="absolute bottom-5 w-full h-1 bg-gray-400"></div>
 
-<div className="absolute right-0 bottom-4 text-4xl md:text-8xl">
+<div className="absolute end-0 bottom-4 text-4xl md:text-8xl">
   🏫
 </div>
 
