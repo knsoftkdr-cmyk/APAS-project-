@@ -3,6 +3,7 @@ import { GameResult } from "../types";
 import { AgeGroupId } from "../engine/ageGroups";
 import type { MatchPair } from "../engine/contentPools";
 import { playCorrectSound, playWrongSound, playNextSound, playLevelUpSound } from "../sounds";
+import { visualSize } from "../engine/visual";
 
 interface Props {
   /** Fresh, class-strict items served (and recorded as seen) by the server for this round. */
@@ -161,7 +162,7 @@ export function MatchPairs({ onComplete, ageGroup, subject, gameIndex, timeLimit
               minWidth: ageGroup === 'early_learners' ? 80 : 70,
             }}
           >
-            {card.flipped || card.matched ? card.content : '?'}
+            {card.flipped || card.matched ? <span style={visualSize(card.content)}>{card.content}</span> : '?'}
           </button>
         ))}
       </div>

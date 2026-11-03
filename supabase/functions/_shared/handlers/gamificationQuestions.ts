@@ -17,6 +17,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { callAi, getAiConfig } from "../aiClient.ts";
+import { generateVisualItems } from "../preprimaryVisualContent.ts";
 import {
   bandForGrade, buildGenerationPrompt, candidatesFromGenerated, classKey as toClassKey, classLabel, difficultyFromAccuracy,
   exhaustedMessage, fingerprintOf, gradeLevel, isGameType, normalizeText, parseGeneratedItems, serveItems, serveSpec, shuffled,
@@ -170,7 +171,10 @@ async function loadPoolCandidates(admin: any, s: StudentCtx, subKey: string, gam
   const rows = must(await admin.from("gamification_question_pool").select("id, fingerprint, payload, class_key")
     .eq("school_scope", s.schoolId ?? ZERO_UUID).eq("class_key", s.classKey).eq("subject_key", subKey)
     .eq("game_type", gameType).eq("status", "active").limit(1000)) as any[];
-  return (rows ?? []).map((r) => ({ fingerprint: r.fingerprint, payload: r.payload, source: "pool" as const, poolItemId: r.id, classKey: r.class_key }));
+  // Re-check saved items against TODAY's rules, so tightening the guard also cleans out items saved under older, looser rules.
+  return (rows ?? [])
+    .filter((r) => validateItem(gameType, r.payload, { classKey: s.classKey, level: s.level }).ok)
+    .map((r) => ({ fingerprint: r.fingerprint, payload: r.payload, source: "pool" as const, poolItemId: r.id, classKey: r.class_key }));
 }
 
 async function loadSeen(admin: any, s: StudentCtx, subKey: string): Promise<Set<string>> {
@@ -246,7 +250,8 @@ async function serve(admin: any, userId: string, body: any) {
   const band = bandForGrade(s.level);
   const spec = serveSpec(gameType, band);
   const cur = await loadCurriculum(admin, group.bookIds);
-  const difficulty = await studentDifficulty(admin, userId, group.key);
+  // Little ones always get the easiest tier; accuracy-based difficulty only applies from Class 1 up.
+  const difficulty = s.level <= 0 ? "easy" as const : await studentDifficulty(admin, userId, group.key);
   let model: string | null = null;
 
   const deps: ServeDeps = {
@@ -263,26 +268,43 @@ async function serve(admin: any, userId: string, body: any) {
       const recent = (await admin.from("gamification_question_pool").select("created_at")
         .eq("school_scope", s.schoolId ?? ZERO_UUID).eq("class_key", s.classKey).eq("subject_key", group.key).eq("game_type", gameType)
         .order("created_at", { ascending: false }).limit(1)).data as any[] | null;
-      if (recent?.[0] && Date.now() - new Date(recent[0].created_at).getTime() < 8000) return [];
+      if (s.level > 0 && recent?.[0] && Date.now() - new Date(recent[0].created_at).getTime() < 8000) return []; // (picture content for little ones costs nothing, so no throttle)
 
-      const cfg = getAiConfig();                                             // throws when no key is configured -> graceful "failed"
       const existing = await loadPoolCandidates(admin, s, group.key, gameType);
+
+      // Nursery / LKG / UKG: pictures, not sentences. Built-in emoji content first - always the right level, no AI needed.
+      let builtin: Candidate[] = [];
+      if (s.level <= 0) {
+        const have = new Set(existing.map((c) => c.fingerprint));
+        builtin = candidatesFromGenerated(gameType, generateVisualItems(gameType, { classKey: s.classKey, level: s.level }, group.label, need * 4),
+          { classKey: s.classKey, level: s.level }).items.filter((c) => !have.has(c.fingerprint));
+        model = "builtin-visual";
+        if (builtin.length >= need) return builtin.slice(0, Math.max(need, 12));
+      }
+
+      let ai: Candidate[] = [];
+      try {
+      const cfg = getAiConfig();                                             // throws when no key is configured -> graceful "failed"
       const avoid = existing.slice(-30).map((c) => String(readableStem(gameType, c.payload)).slice(0, 90));
       const material = shuffled([...cur.objectives, ...cur.topics]).slice(0, 14);
       const { system, prompt } = buildGenerationPrompt({
         gameType, classLabel: s.label, subject: group.label, difficulty, count: Math.min(need, 20),
-        curriculum: material, avoid, seed: Math.floor(Math.random() * 1e6), curriculumName: group.curriculum ?? s.curriculum,
+        curriculum: material, avoid, seed: Math.floor(Math.random() * 1e6), curriculumName: group.curriculum ?? s.curriculum, level: s.level,
       });
       const res = await callAi(cfg, prompt, { system, temperature: 0.85, maxOutputTokens: 8192 });
       model = res.model;
-      return candidatesFromGenerated(gameType, parseGeneratedItems(res.text), { classKey: s.classKey, level: s.level }).items;
+      ai = candidatesFromGenerated(gameType, parseGeneratedItems(res.text), { classKey: s.classKey, level: s.level }).items;
+      } catch (e) {
+        if (!builtin.length) throw e;                                         // nothing to fall back on: report the AI failure
+      }
+      return [...builtin, ...ai];
     },
 
     savePool: async (items) => {
       const rows = items.map((c) => ({
         school_id: s.schoolId, school_scope: s.schoolId ?? ZERO_UUID, class_key: s.classKey, subject_key: group.key,
         subject_label: group.label, game_type: gameType, difficulty, fingerprint: c.fingerprint, payload: c.payload,
-        source: "ai", generation_model: model, status: "active",
+        source: model === "builtin-visual" ? "manual" : "ai", generation_model: model, status: "active",
       }));
       const inserted = must(await admin.from("gamification_question_pool")
         .upsert(rows, { onConflict: "school_scope,class_key,subject_key,fingerprint", ignoreDuplicates: true })

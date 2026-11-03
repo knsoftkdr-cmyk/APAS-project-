@@ -123,7 +123,9 @@ const uniq = (xs: string[]) => new Set(xs.map(normalizeText)).size === xs.length
 
 /** Largest whole number a child of this grade should meet. Conservative on purpose: wrong-class content is worse than a missing question. */
 export function maxNumberForGrade(level: number): number {
-  if (level <= 0) return 20;
+  if (level === -3) return 10;   // Nursery: counting 1-10
+  if (level === -2) return 20;   // LKG
+  if (level === -1) return 50;   // UKG
   if (level === 1) return 100;
   if (level === 2) return 1000;
   if (level === 3) return 10000;
@@ -156,6 +158,65 @@ export function classGuard(texts: string[], level: number, ownKey: string): stri
   }
   if (level <= 5) for (const t of ADVANCED_TERMS) if (blob.includes(t)) return `advanced topic "${t}"`;
   if (level <= 2) for (const t of UPPER_PRIMARY_TERMS) if (blob.includes(t)) return `upper-primary topic "${t}"`;
+  return null;
+}
+
+
+// ── pre-primary (Nursery / LKG / UKG) simplicity ──────────────────────────────────────────────────
+
+const PREPRIMARY_BANNED = [
+  "machine", "lever", "pulley", "force", "energy", "gravity", "magnet", "electric", "adjective", "noun", "verb", "pronoun",
+  "sentence", "tense", "plural", "synonym", "antonym", "fraction", "multipl", "divid", "continent", "government", "century",
+  "pollut", "photosynth", "evaporat", "habitat", "ecosystem", "vertebrate", "organism", "temperature", "solid", "liquid", "gas",
+];
+const wordsOf = (t: string) => t.trim().split(/\s+/).filter(Boolean);
+const tooLong = (t: string, maxWords: number, maxChars: number) => wordsOf(t).length > maxWords || t.length > maxChars;
+
+/**
+ * Children aged ~3-6 can barely read. Everything must be a short, concrete, familiar thing: one or two words per item,
+ * a very short question, no technical vocabulary. Stricter than the generic class guard because "a bit too hard" for a
+ * Class 5 child is "impossible" for a Nursery child. Returns the reason it is too hard, or null.
+ */
+export const hasEmoji = (t: string) => /\p{Extended_Pictographic}/u.test(t);
+const isNumberOrLetter = (t: string) => /^\d{1,2}$/.test(t.trim()) || /^[A-Za-z]$/.test(t.trim());
+
+export function preprimaryGuard(gameType: GameType, it: Any, level = -3): string | null {
+  const q = (t: string) => tooLong(t, 9, 70) ? "question too long for this age" : !hasEmoji(t) ? "question needs a picture (emoji)" : null;
+  // A picture is required. Digits and single letters are fine on their own; from LKG a single short word is also fine.
+  const pic = (t: string) => hasEmoji(t) || isNumberOrLetter(t) ? null : `"${t}" needs a picture (emoji)`;
+  const opt = (t: string) => tooLong(t, 2, 16) ? `"${t}" is too long - use one or two familiar words` : (level >= -2 && /^\p{L}{1,8}$/u.test(t.trim()) ? null : pic(t));
+  const item = (t: string) => tooLong(t, 2, 16) ? `"${t}" is too long - use one or two familiar words` : pic(t);
+  const checks: (string | null)[] = [];
+  switch (gameType) {
+    case "quick-quiz": checks.push(q(it.question), ...it.options.map(opt)); break;
+    case "word-scramble":
+      if (it.word.length > 5) checks.push("word too long for this age");
+      if (wordsOf(it.hint).length > 8) checks.push("hint too long");
+      if (!hasEmoji(it.hint)) checks.push("hint needs a picture (emoji)"); break;
+    case "match-pairs":
+      checks.push(tooLong(it.a, 2, 16) || tooLong(it.b, 2, 16) ? "pair side too long" : null);
+      if (!hasEmoji(it.a) && !hasEmoji(it.b)) checks.push("pair needs a picture (emoji)"); break;
+    case "category-sort":
+      if (wordsOf(it.rule).length > 8) checks.push("rule too long");
+      checks.push(item(it.leftLabel), item(it.rightLabel), ...it.leftItems.map(item), ...it.rightItems.map(item));
+      if (!hasEmoji(it.rule)) checks.push("rule needs a picture (emoji)");
+      if (it.leftItems.length > 4 || it.rightItems.length > 4) checks.push("too many items to sort"); break;
+    case "speed-tap":
+      if (wordsOf(it.instruction).length > 8) checks.push("instruction too long");
+      if (!hasEmoji(it.instruction)) checks.push("instruction needs a picture (emoji)");
+      checks.push(...it.targets.map(item), ...it.distractors.map(item)); break;
+    case "visual-memory":
+      checks.push(...it.items.map(item));
+      for (const qq of it.questions) checks.push(q(qq.question), ...qq.options.map(opt)); break;
+  }
+  const bad1 = checks.find(Boolean);
+  if (bad1) return bad1;
+  const values: string[] = [];
+  const walk = (v: Any): void => { if (typeof v === "string") values.push(v); else if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === "object") Object.values(v).forEach(walk); };
+  walk(it);                                   // values only - key names like "distractors" are not child-facing text
+  const blob = values.join(" ").toLowerCase();
+  for (const t of PREPRIMARY_BANNED) if (blob.includes(t)) return `too advanced for this age ("${t}")`;
+  for (const w of blob.match(/\p{L}+/gu) ?? []) if (w.length > 9) return `word "${w}" is too long for this age`;
   return null;
 }
 
@@ -209,9 +270,10 @@ function checkSpeed(p: Any): Checked<Any> {
   return { ok: true, item: { instruction, targets, distractors } };
 }
 
-function checkVisual(p: Any): Checked<Any> {
+function checkVisual(p: Any, level: number): Checked<Any> {
   const items = Array.isArray(p?.items) ? p.items.map((x: unknown) => str(x, 30)).filter(Boolean) : [];
-  if (items.length < 4 || items.length > 8) return bad("needs 4-8 items to memorise");
+  const [lo, hi] = level <= 0 ? [3, 4] : [4, 8];            // little ones memorise 3-4 things, not 8
+  if (items.length < lo || items.length > hi) return bad(`needs ${lo}-${hi} items to memorise`);
   if (!uniq(items)) return bad("duplicate items");
   const qs = Array.isArray(p?.questions) ? p.questions : [];
   const questions: Any[] = [];
@@ -228,7 +290,7 @@ export function validateItem(gameType: GameType, raw: Any, ctx: ValidateCtx, opt
     gameType === "word-scramble" ? checkWord(raw) :
     gameType === "match-pairs" ? checkPair(raw) :
     gameType === "category-sort" ? checkSort(raw) :
-    gameType === "speed-tap" ? checkSpeed(raw) : checkVisual(raw);
+    gameType === "speed-tap" ? checkSpeed(raw) : checkVisual(raw, ctx.level);
   if (!checked.ok) return checked;
 
   if (opts.requireClassClaim) {
@@ -244,7 +306,7 @@ export function validateItem(gameType: GameType, raw: Any, ctx: ValidateCtx, opt
     gameType === "category-sort" ? [it.rule, it.leftLabel, it.rightLabel, ...it.leftItems, ...it.rightItems] :
     gameType === "speed-tap" ? [it.instruction, ...it.targets, ...it.distractors] :
     [...it.items, ...it.questions.flatMap((q: Any) => [q.question, ...q.options])];
-  const why = classGuard(texts, ctx.level, ctx.classKey);
+  const why = classGuard(texts, ctx.level, ctx.classKey) ?? (ctx.level <= 0 ? preprimaryGuard(gameType, it, ctx.level) : null);
   return why ? bad(why) : checked;
 }
 
@@ -290,14 +352,31 @@ const SHAPES: Record<GameType, string> = {
   "visual-memory": `{"class":"<class>","items":["4-6 short things to memorise"],"questions":[{"question":"... (about the items shown)","options":["...","...","...","..."],"correctIndex":0-3}]}  (1-2 questions per set)`,
 };
 
+
+function preprimaryBrief(level?: number): string {
+  if (level == null || level > 0) return "";
+  const stage = level === -3
+    ? "NURSERY (age 3-4): colours, basic shapes, common animals, fruits, body parts, toys, vehicles, big/small, counting 1-5, recognising single letters."
+    : level === -2
+    ? "LKG (age 4-5): all of Nursery plus letters A-Z and their first sounds, numbers 1-10, simple opposites, family members, 3-letter words."
+    : "UKG (age 5-6): all of LKG plus numbers up to 20, adding/taking away within 10, 3-4 letter words, days of the week, simple plants/animals/seasons.";
+  return [
+    `THIS IS A PRE-PRIMARY CHILD WHO CAN BARELY READ. Keep it EXTREMELY simple. Stage: ${stage}`,
+    "PICTURES ARE REQUIRED: every question, option, pair side and item must include an emoji picture (e.g. 🍎 🐶 🚗). Prefer emoji-only items; at most ONE or TWO very familiar words beside a picture. Digits 1-10 and single letters are fine as options.",
+    "A question has at most 8 short words and contains an emoji. Make it playful (animal sounds, colours, shapes, counting pictures, find-the-one, odd-one-out).",
+    "Use only concrete things a young child sees every day. NO science or technical ideas, NO grammar terms, NO craft or activity instructions, NO long words, NO descriptions.",
+  ].join("\n");
+}
+
 export function buildGenerationPrompt(a: {
   gameType: GameType; classLabel: string; subject: string; difficulty: Difficulty; count: number;
-  curriculum: string[]; avoid: string[]; seed: number; curriculumName?: string | null;
+  curriculum: string[]; avoid: string[]; seed: number; curriculumName?: string | null; level?: number;
 }): { system: string; prompt: string } {
   const system = "You write school game content. Output strict JSON only: {\"items\":[...]}. No markdown, no commentary.";
   const prompt = [
     `Create ${a.count} DIFFERENT "${a.gameType}" items for a ${a.classLabel} student studying ${a.subject}${a.curriculumName ? ` (${a.curriculumName} curriculum)` : ""}.`,
     `Difficulty: ${a.difficulty}. Content MUST suit ${a.classLabel} exactly: nothing from a higher class, no numbers or ideas beyond what ${a.classLabel} students are taught.`,
+    preprimaryBrief(a.level),
     a.curriculum.length ? `Base items on these ${a.classLabel} ${a.subject} topics / learning objectives (mix them):\n- ${a.curriculum.join("\n- ")}` : `Use typical ${a.classLabel} ${a.subject} content.`,
     `Vary wording, examples, numerical values and sub-topics from item to item. Each item must stand alone and have a single clearly correct answer.`,
     a.avoid.length ? `Do NOT repeat or lightly reword any of these already used items:\n- ${a.avoid.join("\n- ")}` : "",
