@@ -19,12 +19,17 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, Users, User, ShieldCheck,
-  MessageSquare, Check, CheckCheck, Calendar as CalendarIcon,
+  MessageSquare, Calendar as CalendarIcon,
   Sparkles, Smile, X, FileText, Image as ImageIcon, ChevronLeft, Trash2,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { TeacherCommunitiesContent } from "@/pages/TeacherCommunities";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useSentMessageDelivery } from "@/hooks/useMessageDelivery";
+import {
+  DeliveryReportDialog, DeliverySummaryChip, DeliveryTick,
+} from "@/components/communication/MessageDeliveryReport";
+import { overallStatus, reportKey, statusOfMessage, type DeliveryStatus } from "@/lib/messageDeliveryModel";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type RecipientRole = "parent" | "student" | "admin";
@@ -55,6 +60,11 @@ interface Message {
   broadcast_label: string | null;
   is_read: boolean;
   created_at: string;
+  // Delivery tracking (server-maintained; absent until the tracking migration is applied)
+  delivery_status?: DeliveryStatus;
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
 }
 
 const QUICK_EMOJIS = [
@@ -112,6 +122,28 @@ export default function TeacherCommunicationCenter() {
 
   // Last message per contact, for history/preview
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
+
+  // ── Delivery tracking (same rules and report as the Admin Communication Center) ──
+  const [reportMessage, setReportMessage] = useState<Message | null>(null);
+  const sentKeys = useMemo(
+    () => messages.filter(m => m.sender_id === user?.id).slice(-100).map(m => reportKey(m)),
+    [messages, user?.id],
+  );
+  const delivery = useSentMessageDelivery(
+    user?.id,
+    sentKeys,
+    reportMessage ? reportKey(reportMessage) : null,
+  );
+  const recipientNames = useMemo(() => {
+    const map = new Map<string, string>();
+    [...parentContacts, ...studentContacts, ...adminContacts].forEach(c => map.set(c.id, c.name));
+    return map;
+  }, [parentContacts, studentContacts, adminContacts]);
+  const nameFor = useCallback((id: string) => recipientNames.get(id) || "Unknown recipient", [recipientNames]);
+  const tickStatusOf = (m: Message): DeliveryStatus => {
+    const s = delivery.summaries.get(reportKey(m));
+    return s && s.total > 0 ? overallStatus(s) : statusOfMessage(m);
+  };
 
   // ── Fetch contacts (parents, students, admins in teacher's classes/school) ──
   const fetchContacts = useCallback(async () => {
@@ -833,15 +865,17 @@ const isVideoFile = (name?: string | null) =>
                                     {m.attachment_name || "Attachment"}
                                   </a>
                                 )}
+                                {isMine && (
+                                  <DeliverySummaryChip
+                                    summary={delivery.summaries.get(reportKey(m))}
+                                    onOpen={() => setReportMessage(m)}
+                                  />
+                                )}
                                 <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
                                   <span className={`text-[10px] ${isMine ? "text-green-100" : "text-muted-foreground"}`}>
                                     {format(new Date(m.created_at), "h:mm a")}
                                   </span>
-                                  {isMine && (
-                                    m.is_read
-                                      ? <CheckCheck className="h-3 w-3 text-sky-300" />
-                                      : <Check className="h-3 w-3 text-green-100" />
-                                  )}
+                                  {isMine && <DeliveryTick status={tickStatusOf(m)} />}
                                 </div>
                               </div>
                             </div>
@@ -992,6 +1026,22 @@ const isVideoFile = (name?: string | null) =>
         </Card>
         )}
       </div>
+
+      <DeliveryReportDialog
+        open={!!reportMessage}
+        onOpenChange={(o) => { if (!o) setReportMessage(null); }}
+        title={
+          reportMessage?.broadcast_label
+            || (reportMessage ? nameFor(reportMessage.recipient_id) : "")
+        }
+        preview={reportMessage?.message?.slice(0, 120)}
+        sentAt={reportMessage ? (reportMessage.sent_at || reportMessage.created_at) : null}
+        rows={delivery.report}
+        loading={delivery.reportLoading}
+        error={delivery.reportError}
+        available={delivery.available}
+        nameFor={nameFor}
+      />
     </AppLayout>
   );
 }

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sendEmail } from "../_shared/email.ts";
 import { generateReceiptPdf } from "../_shared/receipt.ts";
+import { handleInstalmentReceipt, handleRazorpayWebhook, handleVerifyInstalment } from "../_shared/instalmentHandlers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,8 +57,15 @@ serve(async (req) => {
   }
 
   try {
-    const { fee_payment_id, razorpay_order_id, razorpay_payment_id, razorpay_signature } =
-      await req.json();
+    // Razorpay's server-to-server webhook (signed; this function has verify_jwt = false so Razorpay can reach it).
+    if (req.headers.get("x-razorpay-signature")) return await handleRazorpayWebhook(req, await req.text());
+
+    const body = await req.json();
+    // Instalment payments share this function instead of needing their own edge functions.
+    if (body?.kind === "instalment_verify") return await handleVerifyInstalment(req, body);
+    if (body?.kind === "instalment_receipt") return await handleInstalmentReceipt(req, body);
+
+    const { fee_payment_id, razorpay_order_id, razorpay_payment_id, razorpay_signature } = body;
 
     if (!fee_payment_id || !razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
       return new Response(

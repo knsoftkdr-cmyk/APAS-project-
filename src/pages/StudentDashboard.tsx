@@ -63,6 +63,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { StudentReport } from "@/components/StudentReport";
 import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
 import StudentVirtualClassroomWidget from "@/components/StudentVirtualClassroomWidget";
+import StudentEngagementCard from "@/components/engagement/StudentEngagementCard";
 import { StudentGroupProjectsSummary } from "@/components/collaboration/StudentGroupProjectsSummary";
 
 const COMPLETION_COLORS = {
@@ -435,6 +436,14 @@ const subjectColors: Record<string, string> = {
       <PersonalizedDashboard
         dashboardKey="student-home"
         widgets={[
+        {
+          id: "engagement", title: "My engagement score", description: "How actively you take part in learning",
+          render: () => (
+                <div className="mb-6">
+                  <StudentEngagementCard />
+                </div>
+          ),
+        },
         {
           id: "classrooms", title: "Virtual classrooms", description: "Upcoming and live sessions",
           render: () => (

@@ -24,6 +24,7 @@ import { handleStudentTwin } from "../_shared/handlers/studentTwin.ts";
 import { handleAccessibility } from "../_shared/handlers/accessibility.ts";
 import { handlePronunciation } from "../_shared/handlers/pronunciation.ts";
 import { handleLearningEventStream } from "../_shared/handlers/learningEventStream.ts";
+import { handleEngagementScore } from "../_shared/handlers/engagementScore.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -42,6 +43,13 @@ const MERGED_ROUTES: RouteTable = {
   lel_ingest: { handler: handleLearningEventStream, action: "ingest" },
   lel_stream: { handler: handleLearningEventStream, action: "stream" },
   lel_summary: { handler: handleLearningEventStream, action: "summary" },
+  // Student Engagement Score - see _shared/handlers/engagementScore.ts.
+  eng_me: { handler: handleEngagementScore, action: "me" },
+  eng_student: { handler: handleEngagementScore, action: "student" },
+  eng_class: { handler: handleEngagementScore, action: "class" },
+  eng_overview: { handler: handleEngagementScore, action: "overview" },
+  eng_settings_get: { handler: handleEngagementScore, action: "settings_get" },
+  eng_settings_save: { handler: handleEngagementScore, action: "settings_save" },
 };
 
 serve(async (req) => {

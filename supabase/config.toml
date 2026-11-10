@@ -94,3 +94,8 @@ entrypoint = "./functions/send-push-notification/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/send-push-notification/*.html" ]
+
+# Razorpay's webhook calls this with no Supabase JWT. Every path inside authenticates itself: HMAC signatures (checkout + webhook)
+# or the caller's own token (instalment verify / receipt).
+[functions.verify-razorpay-payment]
+verify_jwt = false

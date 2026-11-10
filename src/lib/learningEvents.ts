@@ -103,7 +103,7 @@ export function fetchLearningSummary(scope: StreamScope, days = 7): Promise<Summ
 
 // ── browser telemetry (students only; failures are silent by design) ────────────────────────────────
 
-export type ClientEventType = "page_view" | "session_heartbeat" | "resource_opened" | "resource_completed";
+export type ClientEventType = "page_view" | "session_heartbeat" | "resource_opened" | "resource_completed" | "video_progress";
 export interface ClientEvent {
   event_type: ClientEventType;
   path?: string;
@@ -111,6 +111,9 @@ export interface ClientEvent {
   resource_type?: string;
   resource_id?: string;
   duration_seconds?: number;
+  /** video_progress only: cumulative unique seconds watched, and the video's length. */
+  watched_seconds?: number;
+  video_duration?: number;
 }
 
 const FLUSH_MS = 4000;

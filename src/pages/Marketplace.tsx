@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import { transcodeToH264 } from "@/lib/videoTranscode";
+import { TrackedVideo, TrackedYouTube } from "@/components/video/TrackedVideo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,82 +44,94 @@ import {
   getSyllabusFileSignedUrl,
 } from "@/lib/marketplace";
 
-function getYouTubeEmbed(url: string): string | null {
+function getYouTubeId(url: string): string | null {
   const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
-  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+  return m ? m[1] : null;
+}
+
+const UPLOAD_ACCEPT = "video/*,.pdf,.ppt,.pptx,.doc,.docx";
+
+function isVideoFile(fileType: string | null | undefined): boolean {
+  if (!fileType) return true; // legacy rows with no type were always videos
+  const t = fileType.toLowerCase();
+  return t.startsWith("video/") || ["mp4", "webm", "mov", "mkv", "avi", "m4v", "mpeg", "mpg", "ogv"].includes(t);
 }
 
 function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
   const [expanded, setExpanded] = useState(false);
-  const [signedUrl, setSignedUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  const loadFile = async () => {
-    setLoading(true);
-    try {
+  // Look up the uploaded file (if any) up front so the card knows whether it is a video or a document.
+  const { data: file, isLoading } = useQuery({
+    queryKey: ["marketplace-listing-file", listing.id],
+    enabled: !listing.video_url,
+    staleTime: 30 * 60 * 1000,
+    queryFn: async () => {
       const files = await getListingFiles(listing.id);
-      if (files.length > 0) {
-        const url = await getListingFileSignedUrl(files[0].storage_path);
-        setSignedUrl(url);
-      } else {
-        toast.error("No video file found for this listing");
-      }
-    } catch {
-      toast.error("Failed to load video");
-    } finally {
-      setLoading(false);
-    }
-  };
+      if (files.length === 0) return null;
+      const f = files[0];
+      const name = f.storage_path.split("/").pop()?.replace(/^\d+-/, "") ?? "file";
+      const [viewUrl, downloadUrl] = await Promise.all([
+        getListingFileSignedUrl(f.storage_path),
+        getListingFileSignedUrl(f.storage_path, name),
+      ]);
+      return { fileType: f.file_type, name, viewUrl, downloadUrl };
+    },
+  });
 
-  const handlePlay = async () => {
-    if (!expanded) {
-      if (!listing.video_url && !signedUrl) await loadFile();
-      setExpanded(true);
-    } else {
-      setExpanded(false);
-    }
-  };
+  const youTubeId = listing.video_url ? getYouTubeId(listing.video_url) : null;
 
-  const youTubeEmbed = listing.video_url ? getYouTubeEmbed(listing.video_url) : null;
+  // Documents (PDF, PPT, DOC...): just the file name with Open / Download, no Play button.
+  if (!listing.video_url && file && !isVideoFile(file.fileType)) {
+    return (
+      <div className="flex items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2">
+        <FileText className="h-4 w-4 shrink-0 text-blue-600" />
+        <span className="min-w-0 flex-1 truncate text-sm" title={file.name}>{file.name}</span>
+        <Button size="sm" variant="outline" className="rounded-full" asChild>
+          <a href={file.viewUrl} target="_blank" rel="noopener noreferrer">
+            <Eye className="h-3.5 w-3.5 me-1" /> Open
+          </a>
+        </Button>
+        <Button size="sm" variant="ghost" className="rounded-full" asChild>
+          <a href={file.downloadUrl} aria-label={`Download ${file.name}`}>
+            <Download className="h-3.5 w-3.5" />
+          </a>
+        </Button>
+      </div>
+    );
+  }
+
+  if (!listing.video_url && !isLoading && !file) {
+    return <p className="text-xs text-muted-foreground">No file attached</p>;
+  }
 
   return (
     <div className="space-y-2">
       <div className="flex gap-2">
-        <Button size="sm" variant="outline" className="flex-1 rounded-full" onClick={handlePlay} disabled={loading}>
+        <Button
+          size="sm"
+          variant="outline"
+          className="flex-1 rounded-full"
+          onClick={() => setExpanded((v) => !v)}
+          disabled={isLoading}
+        >
           <Play className="h-3.5 w-3.5 me-1" />
-          {loading ? "Loading..." : expanded ? "Hide" : "Play"}
+          {isLoading ? "Loading..." : expanded ? "Hide" : "Play"}
         </Button>
-        {!listing.video_url && (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="rounded-full"
-            onClick={async () => {
-              const files = await getListingFiles(listing.id);
-              if (files.length > 0) {
-                const url = await getListingFileSignedUrl(files[0].storage_path);
-                window.open(url, "_blank");
-              } else {
-                toast.error("No file to download");
-              }
-            }}
-          >
-            <Download className="h-3.5 w-3.5" />
+        {!listing.video_url && file && (
+          <Button size="sm" variant="ghost" className="rounded-full" asChild>
+            <a href={file.downloadUrl} aria-label="Download video">
+              <Download className="h-3.5 w-3.5" />
+            </a>
           </Button>
         )}
       </div>
       {expanded && (
-        youTubeEmbed ? (
-          <iframe
-            src={youTubeEmbed}
-            className="w-full aspect-video rounded-xl"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+        youTubeId ? (
+          <TrackedYouTube videoId={youTubeId} resourceId={listing.id} title={listing.title} className="w-full aspect-video rounded-xl" />
         ) : listing.video_url ? (
-          <video src={listing.video_url} controls className="w-full rounded-xl" />
-        ) : signedUrl ? (
-          <video src={signedUrl} controls className="w-full rounded-xl" />
+          <TrackedVideo src={listing.video_url} resourceId={listing.id} title={listing.title} className="w-full rounded-xl" />
+        ) : file ? (
+          <TrackedVideo src={file.viewUrl} resourceId={listing.id} title={listing.title} className="w-full rounded-xl" />
         ) : null
       )}
     </div>
@@ -944,8 +957,8 @@ function AdminMarketplace() {
               </div>
               <div className="text-xs text-muted-foreground text-center">â€” or â€”</div>
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Upload Video File</label>
-                <Input type="file" accept="video/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+                <label className="text-xs text-muted-foreground">Upload File (video, PDF, PPT, DOC)</label>
+                <Input type="file" accept={UPLOAD_ACCEPT} onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
               </div>
               <Button
                 onClick={() => createMutation.mutate()}

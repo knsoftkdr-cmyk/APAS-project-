@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { handleCreateInstalmentOrder } from "../_shared/instalmentHandlers.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { fee_payment_id } = await req.json();
+    const body = await req.json();
+    // Instalment payments (one instalment of an approved plan) are handled in the shared module - no extra edge function needed.
+    if (body?.item_id) return await handleCreateInstalmentOrder(req, body);
+    const { fee_payment_id } = body;
 
     if (!fee_payment_id) {
       return new Response(

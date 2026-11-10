@@ -22,6 +22,7 @@ export const CLIENT_EVENT_TYPES = [
   "session_heartbeat",     // "the student is actively on the page" - one per minute at most
   "resource_opened",       // lesson / worksheet / video / reading opened
   "resource_completed",
+  "video_progress",        // cumulative UNIQUE seconds watched of one video (engagement score reads the max per video)
 ] as const;
 
 export type ServerEventType = (typeof SERVER_EVENT_TYPES)[number];
@@ -93,6 +94,19 @@ export function sanitizeClientEvent(raw: unknown, nowMs: number): CleanClientEve
     if (!rt) return null;
     payload.resource_type = rt;
     if (rid) { payload.resource_id = rid; ref = rid; }
+    const title = str(r.title, 80);
+    if (title) payload.title = title;
+  }
+
+  if (type === "video_progress") {
+    const rid = typeof r.resource_id === "string" && ID_RE.test(r.resource_id) ? r.resource_id : null;
+    const watched = Number(r.watched_seconds), total = Number(r.video_duration);
+    if (!rid || !Number.isFinite(watched) || !Number.isFinite(total) || total <= 0 || watched < 0) return null;
+    const dur = Math.min(Math.round(total), 8 * 3600);
+    payload.resource_id = rid;
+    payload.video_duration = dur;
+    payload.watched_seconds = Math.min(Math.round(watched), dur); // can never exceed the video's length
+    ref = rid;
     const title = str(r.title, 80);
     if (title) payload.title = title;
   }
@@ -219,6 +233,11 @@ export function describeEvent(e: FeedEvent): { label: string; detail: string | n
       return { label: "Opened learning material", detail: [p.resource_type, p.title].filter((x) => typeof x === "string").join(" · ") || null };
     case "resource_completed":
       return { label: "Completed learning material", detail: [p.resource_type, p.title].filter((x) => typeof x === "string").join(" · ") || null };
+    case "video_progress": {
+      const w = Number(p.watched_seconds), t = Number(p.video_duration);
+      const pct = t > 0 && Number.isFinite(w) ? Math.min(100, Math.round((w / t) * 100)) : null;
+      return { label: "Watched a video", detail: [typeof p.title === "string" ? p.title : null, pct !== null ? `${pct}% watched` : null].filter(Boolean).join(" · ") || null };
+    }
     case "session_heartbeat":
       return { label: "Active on the platform", detail: null };
     default:

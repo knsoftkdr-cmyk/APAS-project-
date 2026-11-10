@@ -10,6 +10,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { ackMessageDeliveries, ackPendingDeliveries } from "@/hooks/useMessageDelivery";
 import {
   inferCategory, isDuplicateOfRecent, mapGovernanceRow, mergeNotifications,
   type NotificationCategory,
@@ -996,6 +997,10 @@ return () => {
 
     // 1. catch-up on sign-in (and every 2 min as a safety net if realtime is not enabled on the table)
     const catchUp = async () => {
+      // Delivery tracking: confirm to the sender that this client has now received anything it missed while
+      // offline. Fetches the unconfirmed rows first, so only messages that really reached this app are
+      // confirmed. Failure-tolerant and idempotent; the next catch-up retries.
+      void ackPendingDeliveries(user.id);
       const { data, error } = await supabase
         .from("teacher_messages" as any)
         .select("id, sender_id, message_type, message, broadcast_label, created_at")
@@ -1018,6 +1023,8 @@ return () => {
         { event: "INSERT", schema: "public", table: "teacher_messages", filter: `recipient_id=eq.${user.id}` },
         async (payload) => {
           const row = payload.new as MsgRow;
+          // Delivery tracking: the INSERT event reaching this client is the delivery confirmation.
+          void ackMessageDeliveries([row.id]);
           // Already viewing this exact conversation — no need to notify
           if (activeMessageThreadIdRef.current === row.sender_id) return;
           const notif = await toNotification(row, false);

@@ -28,6 +28,7 @@ import { analyzeResponses, getReportConfig } from "@/data/reportTheories";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentHomework from "@/components/StudentHomework";
+import EngagementOverviewPanel from "@/components/engagement/EngagementOverviewPanel";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 import studentBanner from "@/assets/student-home-banner.png";
 import teacherhomebanner from "@/assets/teacherhome-banner.png";
@@ -333,6 +334,14 @@ const TeacherHome = () => {
           ),
         },
         {
+          id: "engagement", title: "Student engagement", description: "Engagement scores for the students in your classes",
+          render: () => (
+                <div className="mb-10">
+                  <EngagementOverviewPanel />
+                </div>
+          ),
+        },
+        {
           id: "syllabus", title: "Syllabus tracker", description: "Your syllabus progress",
           render: () => (
                 <div className="mb-10">
@@ -518,6 +527,14 @@ const AdminHome = () => {
                   <DashStatCard label="Teachers" value={stats?.teachers ?? 0} icon={GraduationCap} accent="emerald" loading={isLoading} />
                   <DashStatCard label="Assessments" value={stats?.assessments ?? 0} icon={CheckCircle} accent="orange" loading={isLoading} />
                   <DashStatCard label="Active Alerts" value={stats?.activeAlerts ?? 0} icon={AlertTriangle} accent="amber" loading={isLoading} />
+                </div>
+          ),
+        },
+        {
+          id: "engagement", title: "Student engagement", description: "School-wide engagement scores and trends", available: !!profile?.school_id,
+          render: () => (
+                <div className="mb-10">
+                  <EngagementOverviewPanel />
                 </div>
           ),
         },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { playBadgeSound, playLevelUpSound, playMissionCompleteSound, playFreezeSound, playClaimSound, playErrorSound } from "@/components/gamification/sounds";
 import { claimMission, G2Awarded, G2Error, G2State, getGamificationState } from "@/lib/gamification2";
 
 // Gamification 2.0 state for the Gamification page (missions, badges, streak, progression).
@@ -34,6 +35,14 @@ export function useGamification2() {
   /** Show what the server just awarded (called after a round or a claim). */
   const announce = useCallback((a: G2Awarded | undefined) => {
     if (!a) return;
+    // Queue reward sounds one after another so they never pile into noise. The first waits a beat
+    // so it does not collide with the round-complete fanfare.
+    let at = 900;
+    const queue = (fn: () => void, gap: number) => { setTimeout(fn, at); at += gap; };
+    if (a.missions_completed?.length) queue(playMissionCompleteSound, 900);
+    if (a.badges_unlocked.length) queue(playBadgeSound, 1300);
+    if (a.streak?.freeze_earned || a.streak?.freezes_used) queue(playFreezeSound, 1000);
+    if (a.level_up) queue(playLevelUpSound, 1400);
     a.missions_completed?.forEach((m) => toast.success("Mission complete!", { description: `${m.title} - claim +${m.xp_reward} XP in Missions` }));
     a.badges_unlocked.forEach((b) => toast.success("Badge unlocked!", { description: `${b.title}${b.xp_reward ? ` (+${b.xp_reward} XP)` : ""}` }));
     if (a.streak?.freezes_used) toast.info("Streak saved", { description: `A streak freeze covered ${a.streak.freezes_used} missed day${a.streak.freezes_used > 1 ? "s" : ""}.` });
@@ -46,9 +55,11 @@ export function useGamification2() {
     try {
       const res = await claimMission(missionId);
       setState(res.state);
+      playClaimSound();
       toast.success(`+${res.awarded.mission_xp} XP`, { description: "Mission reward claimed" });
       announce({ ...res.awarded, missions_completed: undefined });
     } catch (e) {
+      playErrorSound();
       toast.error(e instanceof Error ? e.message : "Couldn't claim that mission.");
       refresh();
     } finally {

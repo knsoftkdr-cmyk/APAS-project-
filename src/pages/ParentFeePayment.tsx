@@ -19,6 +19,7 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CreditCard, GraduationCap, Info, XCircle } from "lucide-react";
+import { ParentInstalmentPanel } from "@/components/erp-fees/instalments/ParentInstalmentPanel";
 
 type StudentFeeDetails = {
   student_id: string;
@@ -213,16 +214,6 @@ export default function ParentFeePayment() {
       return;
     }
 
-    if (mode === "finance") {
-      setSubmitting(false);
-      toast({
-        title: "Finance plan requested",
-        description: "Your installment request has been recorded for the school to review.",
-      });
-      navigate("/dashboard");
-      return;
-    }
-
     // mode === "gateway" — launch the real Razorpay checkout
     const scriptLoaded = await loadRazorpayScript();
     if (!scriptLoaded) {
@@ -378,6 +369,16 @@ export default function ParentFeePayment() {
               </RadioGroup>
             </div>
 
+            {mode === "finance" && (
+              <ParentInstalmentPanel
+                studentId={student.student_id}
+                studentName={student.full_name}
+                businessName={student.branch_name || "School"}
+                prefill={{ name: student.father_name || student.mother_name || student.full_name, email: student.contact_email, contact: student.mobile }}
+              />
+            )}
+
+            {mode === "gateway" && (<>
             <div className="grid md:grid-cols-2 gap-6">
               {/* Student Information */}
               <div className="border border-slate-200 rounded-xl p-4">
@@ -489,6 +490,7 @@ export default function ParentFeePayment() {
                 <XCircle className="h-4 w-4 me-1.5" /> Cancel
               </Button>
             </div>
+            </>)}
           </CardContent>
         </Card>
       </div>

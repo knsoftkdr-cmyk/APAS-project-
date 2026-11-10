@@ -1,36 +1,33 @@
 import { Flame, Snowflake, Loader2, Check, Gift, Target } from "lucide-react";
 import type { G2Awarded, G2Badge, G2Mission, G2State } from "@/lib/gamification2";
 import { CompetencyMissionsSection } from "@/components/gamification/hub/CompetencyMissions";
+import { motion } from "framer-motion";
+import { useGamificationTheme } from "@/components/gamification/theme/GamificationTheme";
+import { StreakFlame, LevelRing } from "@/components/gamification/art/GameIcons";
+import { BadgeEmblem } from "@/components/gamification/art/BadgeEmblem";
+import { playTabSound, playClickSound } from "@/components/gamification/sounds";
 
 // Gamification 2.0 panels for the existing Gamification page (no new route, no new sidebar entry).
 // Styled to match that page's dark glass look.
 
 export type HubTab = "play" | "missions" | "badges" | "progress";
 
-const TXT = "#F1F5F9";
-const MUTED = "rgba(241,245,249,0.55)";
 
 function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl p-4 text-start ${className}`}
-      style={{ background: "rgba(255,255,255,0.05)", backdropFilter: "blur(20px)", border: "1px solid rgba(255,255,255,0.1)" }}>
-      {children}
-    </div>
-  );
+  const th = useGamificationTheme();
+  return <div className={`p-4 text-start ${className}`} style={th.card}>{children}</div>;
 }
 
-function Bar({ pct, color = "linear-gradient(90deg,#6366F1,#A855F7,#F472B6)" }: { pct: number; color?: string }) {
+function Bar({ pct, color }: { pct: number; color?: string }) {
+  const th = useGamificationTheme();
   return (
-    <div className="w-full h-2 rounded-full" style={{ background: "rgba(255,255,255,0.08)" }}>
+    <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: th.barTrack }}>
       <div className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: color }} />
+        style={{ width: `${Math.max(0, Math.min(100, pct))}%`, background: color ?? th.barFill }} />
     </div>
   );
 }
 
-const BADGE_EMOJI: Record<string, string> = {
-  gamepad: "🎮", target: "🎯", flame: "🔥", flag: "🚩", rocket: "🚀", trophy: "🏆", "trending-up": "📈", compass: "🧭",
-};
 const CATEGORY_LABEL: Record<string, string> = {
   g2_rounds: "Rounds", g2_accuracy: "Accuracy", g2_streak: "Streaks", g2_missions: "Missions", g2_adaptive: "Made for you",
 };
@@ -39,30 +36,42 @@ const TIER = ["Bronze", "Silver", "Gold"];
 /* ── header: streak + level, always visible above the tabs ───────────────────────────────────────── */
 
 export function Gamification2Header({ state }: { state: G2State | null }) {
+  const th = useGamificationTheme();
   if (!state) return null;
   const { streak, progression: p } = state;
+  const playful = th.tier === "playful";
+  const lit = streak.current > 0;
   return (
-    <div className="grid grid-cols-2 gap-3">
-      <Glass>
+    <div className="grid grid-cols-1 min-[440px]:grid-cols-2 gap-3">
+      <div className="p-4 text-start" style={th.card}>
         <div className="flex items-center gap-2">
-          <Flame className="h-5 w-5" style={{ color: streak.current > 0 ? "#F59E0B" : MUTED }} />
-          <span className="text-2xl font-black tabular-nums" style={{ color: TXT }}>{streak.current}</span>
-          <span className="text-xs font-medium" style={{ color: MUTED }}>day streak</span>
+          <motion.span style={{ display: "inline-flex", color: th.cardMuted }}
+            animate={lit ? { scale: [1, 1.1, 1] } : undefined} transition={{ duration: 1.6, repeat: Infinity }}>
+            <StreakFlame lit={lit} size={playful ? 34 : 28} />
+          </motion.span>
+          <span className={playful ? "text-3xl font-black tabular-nums" : "text-2xl font-semibold tabular-nums"}
+            style={{ color: th.cardText, fontFamily: th.fontHeading }}>{streak.current}</span>
+          <span className="text-xs font-semibold" style={{ color: th.cardMuted }}>day streak</span>
         </div>
-        <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: MUTED }}>
-          <Snowflake className="h-3.5 w-3.5" style={{ color: "#38BDF8" }} />
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1.5 text-xs font-medium" style={{ color: th.cardMuted }}>
+          <Snowflake className="h-3.5 w-3.5" style={{ color: th.freeze }} />
           <span>{streak.freezes} freeze{streak.freezes === 1 ? "" : "s"}</span>
-          {streak.at_risk && <span className="font-bold" style={{ color: "#F59E0B" }}>· play today to keep it</span>}
-          {streak.played_today && <span className="font-bold" style={{ color: "#22C55E" }}>· done today</span>}
+          {streak.at_risk && <span className="font-bold" style={{ color: th.warn }}>· play today to keep it</span>}
+          {streak.played_today && <span className="font-bold" style={{ color: th.good }}>· done today</span>}
         </div>
-      </Glass>
-      <Glass>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-black" style={{ color: TXT }}>{p.emoji} Lv {p.level} · {p.title}</span>
-          <span className="text-xs tabular-nums" style={{ color: MUTED }}>{p.xp_to_next_level} XP to go</span>
+      </div>
+      <div className="p-4 flex items-center gap-3 text-start" style={th.card}>
+        <LevelRing level={p.level} pct={p.level_progress_pct} size={playful ? 62 : 54}
+          from={th.ringFrom} to={th.ringTo} track={th.ringTrack} textColor={th.cardText} fontFamily={th.fontHeading} />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-black truncate" style={{ color: th.cardText, fontFamily: th.fontHeading }}>Lv {p.level} · {p.title}</p>
+          <p className="text-xs tabular-nums font-medium" style={{ color: th.cardMuted }}>{p.xp_to_next_level} XP to go</p>
+          <div className="mt-2 w-full overflow-hidden" style={{ height: playful ? 12 : 6, borderRadius: 999, background: th.barTrack }}>
+            <div className="h-full transition-all duration-700"
+              style={{ width: `${Math.max(0, Math.min(100, p.level_progress_pct))}%`, background: th.barFill, borderRadius: 999 }} />
+          </div>
         </div>
-        <div className="mt-2"><Bar pct={p.level_progress_pct} /></div>
-      </Glass>
+      </div>
     </div>
   );
 }
@@ -70,20 +79,20 @@ export function Gamification2Header({ state }: { state: G2State | null }) {
 /* ── tab strip ─────────────────────────────────────────────────────────────────────────────────── */
 
 export function Gamification2Tabs({ tab, onChange, claimable }: { tab: HubTab; onChange: (t: HubTab) => void; claimable: number }) {
+  const th = useGamificationTheme();
+  const playful = th.tier === "playful";
   const items: { id: HubTab; label: string }[] = [
     { id: "play", label: "Play" }, { id: "missions", label: "Missions" }, { id: "badges", label: "Badges" }, { id: "progress", label: "Progress" },
   ];
   return (
-    <div role="tablist" className="flex gap-1 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>
-      {items.map((t) => (
-        <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => onChange(t.id)}
-          className="relative flex-1 py-2 rounded-xl text-sm font-bold transition-all"
-          style={tab === t.id
-            ? { background: "linear-gradient(135deg,#6366F1,#A855F7)", color: TXT }
-            : { color: MUTED }}>
+    <div role="tablist" className="flex gap-1 p-1" style={th.tabStrip}>
+      {items.map((t, idx) => (
+        <button key={t.id} role="tab" aria-selected={tab === t.id} onClick={() => { if (tab !== t.id) playTabSound(idx); onChange(t.id); }}
+          className={`relative flex-1 min-h-[44px] px-1 text-sm transition-all ${playful ? "font-black" : "font-semibold"}`}
+          style={{ borderRadius: th.tabRadius, fontFamily: th.fontBody, ...(tab === t.id ? th.tabActive : { color: th.tabIdle }) }}>
           {t.label}
           {t.id === "missions" && claimable > 0 && (
-            <span className="absolute -top-1 -end-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center"
+            <span className="absolute -top-1.5 -end-1 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-black flex items-center justify-center"
               style={{ background: "#F59E0B", color: "#0F172A" }}>{claimable}</span>
           )}
         </button>
@@ -95,6 +104,7 @@ export function Gamification2Tabs({ tab, onChange, claimable }: { tab: HubTab; o
 /* ── missions ─────────────────────────────────────────────────────────────────────────────────── */
 
 function MissionCard({ m, onClaim, claiming }: { m: G2Mission; onClaim: (id: string) => void; claiming: boolean }) {
+  const th = useGamificationTheme();
   const isAccuracy = m.metric === "accuracy_round";
   const pct = isAccuracy ? (m.progress / m.target) * 100 : (Math.min(m.progress, m.target) / m.target) * 100;
   const done = m.status !== "active";
@@ -102,53 +112,54 @@ function MissionCard({ m, onClaim, claiming }: { m: G2Mission; onClaim: (id: str
     <Glass>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-sm font-black" style={{ color: TXT }}>{m.title}</p>
-          <p className="text-xs mt-0.5" style={{ color: MUTED }}>{m.description}</p>
+          <p className="text-sm font-black" style={{ color: th.cardText }}>{m.title}</p>
+          <p className="text-xs mt-0.5" style={{ color: th.cardMuted }}>{m.description}</p>
         </div>
-        <span className="shrink-0 text-xs font-black px-2 py-1 rounded-full" style={{ background: "rgba(245,158,11,0.15)", color: "#F59E0B" }}>+{m.xp_reward} XP</span>
+        <span className="shrink-0 text-xs font-black px-2 py-1 rounded-full" style={{ background: `${th.warn}26`, color: th.warn }}>+{m.xp_reward} XP</span>
       </div>
       <div className="flex items-center gap-3 mt-3">
-        <div className="flex-1"><Bar pct={pct} color={done ? "#22C55E" : undefined} /></div>
-        <span className="text-xs tabular-nums w-20 text-end" style={{ color: MUTED }}>
+        <div className="flex-1"><Bar pct={pct} color={done ? th.good : undefined} /></div>
+        <span className="text-xs tabular-nums w-20 text-end" style={{ color: th.cardMuted }}>
           {isAccuracy ? `best ${m.progress}% / ${m.target}%` : `${Math.min(m.progress, m.target)} / ${m.target}`}
         </span>
       </div>
       {m.status === "completed" && (
-        <button onClick={() => onClaim(m.id)} disabled={claiming}
+        <button onClick={() => { playClickSound(); onClaim(m.id); }} disabled={claiming}
           className="mt-3 w-full py-2 rounded-xl text-sm font-black flex items-center justify-center gap-2 transition-transform hover:scale-[1.02] disabled:opacity-60"
           style={{ background: "linear-gradient(135deg,#F59E0B,#F472B6)", color: "#0F172A" }}>
           {claiming ? <Loader2 className="h-4 w-4 animate-spin" /> : <Gift className="h-4 w-4" />} Claim reward
         </button>
       )}
       {m.status === "claimed" && (
-        <p className="mt-3 text-xs font-bold flex items-center gap-1" style={{ color: "#22C55E" }}><Check className="h-3.5 w-3.5" /> Claimed</p>
+        <p className="mt-3 text-xs font-bold flex items-center gap-1" style={{ color: th.good }}><Check className="h-3.5 w-3.5" /> Claimed</p>
       )}
     </Glass>
   );
 }
 
 function MissionsPanel({ state, onClaim, claimingId }: { state: G2State; onClaim: (id: string) => void; claimingId: string | null }) {
+  const th = useGamificationTheme();
   const { daily, weekly } = state.missions;
   const weak = state.insights.weak_subject;
   return (
     <div className="space-y-5">
       <Glass>
-        <div className="flex items-start gap-2 text-xs" style={{ color: MUTED }}>
-          <Target className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#A855F7" }} />
+        <div className="flex items-start gap-2 text-xs" style={{ color: th.cardMuted }}>
+          <Target className="h-4 w-4 shrink-0 mt-0.5" style={{ color: th.accent }} />
           <p>
             Missions are set from your last two weeks of play.
-            {state.insights.avg_accuracy != null && <> Your recent accuracy is <b style={{ color: TXT }}>{state.insights.avg_accuracy}%</b>.</>}
-            {weak && <> <b style={{ color: TXT }}>{weak.subject}</b> is your toughest subject right now.</>}
+            {state.insights.avg_accuracy != null && <> Your recent accuracy is <b style={{ color: th.cardText }}>{state.insights.avg_accuracy}%</b>.</>}
+            {weak && <> <b style={{ color: th.cardText }}>{weak.subject}</b> is your toughest subject right now.</>}
             {state.insights.rounds_14d === 0 && <> Play a few rounds and they will start to fit you.</>}
           </p>
         </div>
       </Glass>
       <section className="space-y-3">
-        <h3 className="text-sm font-black" style={{ color: TXT }}>Today</h3>
+        <h3 className="text-sm font-black" style={{ color: th.text }}>Today</h3>
         {daily.map((m) => <MissionCard key={m.id} m={m} onClaim={onClaim} claiming={claimingId === m.id} />)}
       </section>
       <section className="space-y-3">
-        <h3 className="text-sm font-black" style={{ color: TXT }}>This week</h3>
+        <h3 className="text-sm font-black" style={{ color: th.text }}>This week</h3>
         {weekly.map((m) => <MissionCard key={m.id} m={m} onClaim={onClaim} claiming={claimingId === m.id} />)}
       </section>
     </div>
@@ -158,24 +169,20 @@ function MissionsPanel({ state, onClaim, claimingId }: { state: G2State; onClaim
 /* ── badges ───────────────────────────────────────────────────────────────────────────────────── */
 
 function BadgeTile({ b, tierLabel }: { b: G2Badge; tierLabel?: string }) {
+  const th = useGamificationTheme();
   const pct = b.progress ? (b.progress.current / b.progress.target) * 100 : 0;
   return (
-    <div className="rounded-2xl p-3 text-center"
-      style={{
-        background: b.earned ? "linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.25))" : "rgba(255,255,255,0.04)",
-        border: `1px solid ${b.earned ? "rgba(168,85,247,0.5)" : "rgba(255,255,255,0.08)"}`,
-        opacity: b.earned ? 1 : 0.8,
-      }}>
-      <div className="text-3xl" style={{ filter: b.earned ? "none" : "grayscale(1)" }}>{BADGE_EMOJI[b.icon] ?? "🏅"}</div>
-      <p className="text-xs font-black mt-1" style={{ color: TXT }}>{b.title}</p>
-      {tierLabel && <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "#A855F7" }}>{tierLabel}</p>}
-      <p className="text-[11px] mt-1 leading-snug" style={{ color: MUTED }}>{b.description}</p>
+    <div className="p-3 text-center flex flex-col items-center" style={{ ...(b.earned ? th.badgeEarned : th.badgeLocked), borderRadius: 20 }}>
+      <BadgeEmblem icon={b.icon} earned={b.earned} tierLabel={tierLabel} size={54} />
+      <p className="text-xs font-black mt-1.5" style={{ color: th.cardText }}>{b.title}</p>
+      {tierLabel && <p className="text-[10px] font-extrabold uppercase tracking-wide" style={{ color: th.accent }}>{tierLabel}</p>}
+      <p className="text-[11px] mt-1 leading-snug" style={{ color: th.cardMuted }}>{b.description}</p>
       {b.earned ? (
-        <p className="text-[11px] font-bold mt-2" style={{ color: "#22C55E" }}>Earned{b.earned_at ? ` ${new Date(b.earned_at).toLocaleDateString()}` : ""}</p>
+        <p className="text-[11px] font-bold mt-2" style={{ color: th.good }}>Earned{b.earned_at ? ` ${new Date(b.earned_at).toLocaleDateString()}` : ""}</p>
       ) : b.progress ? (
-        <div className="mt-2 space-y-1">
+        <div className="mt-2 space-y-1 w-full">
           <Bar pct={pct} />
-          <p className="text-[10px] tabular-nums" style={{ color: MUTED }}>{b.progress.current} / {b.progress.target}</p>
+          <p className="text-[10px] tabular-nums" style={{ color: th.cardMuted }}>{b.progress.current} / {b.progress.target}</p>
         </div>
       ) : null}
     </div>
@@ -183,18 +190,19 @@ function BadgeTile({ b, tierLabel }: { b: G2Badge; tierLabel?: string }) {
 }
 
 function BadgesPanel({ state }: { state: G2State }) {
+  const th = useGamificationTheme();
   const groups = new Map<string, G2Badge[]>();
   for (const b of state.badges) groups.set(b.category, [...(groups.get(b.category) ?? []), b]);
   const earned = state.badges.filter((b) => b.earned).length;
   if (!state.badges.length) {
-    return <Glass><p className="text-sm text-center" style={{ color: MUTED }}>Badges aren't available yet.</p></Glass>;
+    return <Glass><p className="text-sm text-center" style={{ color: th.cardMuted }}>Badges aren't available yet.</p></Glass>;
   }
   return (
     <div className="space-y-5">
-      <p className="text-xs text-center" style={{ color: MUTED }}>{earned} of {state.badges.length} badges earned</p>
+      <p className="text-xs text-center" style={{ color: th.muted }}>{earned} of {state.badges.length} badges earned</p>
       {[...groups.entries()].map(([cat, list]) => (
         <section key={cat} className="space-y-3">
-          <h3 className="text-sm font-black" style={{ color: TXT }}>{CATEGORY_LABEL[cat] ?? cat}</h3>
+          <h3 className="text-sm font-black" style={{ color: th.text }}>{CATEGORY_LABEL[cat] ?? cat}</h3>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {list.map((b, i) => <BadgeTile key={b.key} b={b} tierLabel={cat !== "g2_adaptive" ? TIER[i] : undefined} />)}
           </div>
@@ -207,28 +215,30 @@ function BadgesPanel({ state }: { state: G2State }) {
 /* ── progress ─────────────────────────────────────────────────────────────────────────────────── */
 
 function Stat({ label, value }: { label: string; value: string | number }) {
+  const th = useGamificationTheme();
   return (
     <Glass className="text-center">
-      <p className="text-2xl font-black tabular-nums" style={{ color: TXT }}>{value}</p>
-      <p className="text-[11px] mt-0.5" style={{ color: MUTED }}>{label}</p>
+      <p className="text-2xl font-black tabular-nums" style={{ color: th.cardText }}>{value}</p>
+      <p className="text-[11px] mt-0.5" style={{ color: th.cardMuted }}>{label}</p>
     </Glass>
   );
 }
 
 function ProgressPanel({ state }: { state: G2State }) {
+  const th = useGamificationTheme();
   const { progression: p, streak, insights } = state;
   return (
     <div className="space-y-4">
       <Glass>
         <div className="text-center">
           <div className="text-5xl">{p.emoji}</div>
-          <p className="text-lg font-black mt-1" style={{ color: TXT }}>{p.title} · Level {p.level}</p>
-          <p className="text-xs" style={{ color: MUTED }}>{p.total_xp} XP total</p>
+          <p className="text-lg font-black mt-1" style={{ color: th.cardText }}>{p.title} · Level {p.level}</p>
+          <p className="text-xs" style={{ color: th.cardMuted }}>{p.total_xp} XP total</p>
         </div>
         <div className="mt-3"><Bar pct={p.level_progress_pct} /></div>
-        <p className="text-xs mt-2 text-center" style={{ color: MUTED }}>
+        <p className="text-xs mt-2 text-center" style={{ color: th.cardMuted }}>
           {p.xp_to_next_level} XP to level {p.level + 1}
-          {p.next_title && <> · <b style={{ color: TXT }}>{p.next_title.title}</b> at level {p.next_title.at_level}</>}
+          {p.next_title && <> · <b style={{ color: th.cardText }}>{p.next_title.title}</b> at level {p.next_title.at_level}</>}
         </p>
       </Glass>
       <div className="grid grid-cols-3 gap-3">
@@ -237,11 +247,11 @@ function ProgressPanel({ state }: { state: G2State }) {
         <Stat label="Avg accuracy" value={insights.avg_accuracy == null ? "-" : `${insights.avg_accuracy}%`} />
       </div>
       <Glass>
-        <div className="flex items-center gap-2"><Flame className="h-4 w-4" style={{ color: "#F59E0B" }} />
-          <p className="text-sm font-black" style={{ color: TXT }}>Streak: {streak.current} day{streak.current === 1 ? "" : "s"} (best {streak.longest})</p>
+        <div className="flex items-center gap-2"><Flame className="h-4 w-4" style={{ color: th.warn }} />
+          <p className="text-sm font-black" style={{ color: th.cardText }}>Streak: {streak.current} day{streak.current === 1 ? "" : "s"} (best {streak.longest})</p>
         </div>
-        <p className="text-xs mt-2 flex items-start gap-2" style={{ color: MUTED }}>
-          <Snowflake className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: "#38BDF8" }} />
+        <p className="text-xs mt-2 flex items-start gap-2" style={{ color: th.cardMuted }}>
+          <Snowflake className="h-3.5 w-3.5 shrink-0 mt-0.5" style={{ color: th.freeze }} />
           <span>You earn a streak freeze every 7 days of streak (hold up to 2). A freeze automatically covers one missed day. Next one in {streak.next_freeze_in_days} day{streak.next_freeze_in_days === 1 ? "" : "s"}.</span>
         </p>
       </Glass>
@@ -257,15 +267,16 @@ export function Gamification2Panel({
   tab: Exclude<HubTab, "play">; state: G2State | null; loading: boolean; unavailable: boolean; error: string | null;
   onClaim: (id: string) => void; claimingId: string | null; onRetry: () => void;
 }) {
-  if (loading && !state) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" style={{ color: MUTED }} /></div>;
+  const th = useGamificationTheme();
+  if (loading && !state) return <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" style={{ color: th.muted }} /></div>;
   if (unavailable) {
-    return <Glass><p className="text-sm text-center" style={{ color: MUTED }}>Missions and badges aren't switched on for your school yet. Games and XP still work as usual.</p></Glass>;
+    return <Glass><p className="text-sm text-center" style={{ color: th.cardMuted }}>Missions and badges aren't switched on for your school yet. Games and XP still work as usual.</p></Glass>;
   }
   if (error || !state) {
     return (
       <Glass>
-        <p className="text-sm text-center" style={{ color: MUTED }}>{error ?? "Couldn't load your missions."}</p>
-        <button onClick={onRetry} className="mt-3 mx-auto block px-4 py-2 rounded-xl text-sm font-bold" style={{ background: "rgba(255,255,255,0.08)", color: TXT }}>Try again</button>
+        <p className="text-sm text-center" style={{ color: th.cardMuted }}>{error ?? "Couldn't load your missions."}</p>
+        <button onClick={() => { playClickSound(); onRetry(); }} className="mt-3 mx-auto block px-4 py-2 rounded-xl text-sm font-bold" style={{ background: `${th.cardText}1A`, color: th.cardText }}>Try again</button>
       </Glass>
     );
   }
@@ -285,6 +296,7 @@ export function Gamification2Panel({
 /* ── results-screen summary of what this session earned ─────────────────────────────────────────── */
 
 export function RoundRewardsCard({ rewards }: { rewards: G2Awarded[] }) {
+  const th = useGamificationTheme();
   if (!rewards.length) return null;
   const xp = rewards.reduce((s, r) => s + (r.round_xp ?? 0) + r.badge_bonus_xp, 0);
   const missions = rewards.flatMap((r) => r.missions_completed ?? []);
@@ -292,15 +304,15 @@ export function RoundRewardsCard({ rewards }: { rewards: G2Awarded[] }) {
   const last = rewards[rewards.length - 1];
   return (
     <Glass>
-      <p className="text-sm font-black text-center" style={{ color: TXT }}>Rewards from this round</p>
+      <p className="text-sm font-black text-center" style={{ color: th.cardText }}>Rewards from this round</p>
       <div className="grid grid-cols-3 gap-3 mt-3 text-center">
-        <div><p className="text-xl font-black" style={{ color: "#F59E0B" }}>+{xp}</p><p className="text-[11px]" style={{ color: MUTED }}>XP</p></div>
-        <div><p className="text-xl font-black" style={{ color: TXT }}>{last.streak?.current ?? 0}🔥</p><p className="text-[11px]" style={{ color: MUTED }}>day streak</p></div>
-        <div><p className="text-xl font-black" style={{ color: TXT }}>{missions.length}</p><p className="text-[11px]" style={{ color: MUTED }}>missions done</p></div>
+        <div><p className="text-xl font-black" style={{ color: th.warn }}>+{xp}</p><p className="text-[11px]" style={{ color: th.cardMuted }}>XP</p></div>
+        <div><p className="text-xl font-black" style={{ color: th.cardText }}>{last.streak?.current ?? 0}</p><p className="text-[11px]" style={{ color: th.cardMuted }}>day streak</p></div>
+        <div><p className="text-xl font-black" style={{ color: th.cardText }}>{missions.length}</p><p className="text-[11px]" style={{ color: th.cardMuted }}>missions done</p></div>
       </div>
-      {badges.length > 0 && <p className="text-xs mt-3 text-center" style={{ color: TXT }}>🏅 New: {badges.map((b) => b.title).join(", ")}</p>}
-      {missions.length > 0 && <p className="text-xs mt-1 text-center" style={{ color: MUTED }}>Claim mission rewards in Missions.</p>}
-      {rewards.some((r) => r.capped) && <p className="text-[11px] mt-2 text-center" style={{ color: MUTED }}>Daily round XP limit reached - badges and missions still count.</p>}
+      {badges.length > 0 && <p className="text-xs mt-3 text-center" style={{ color: th.cardText }}>New badges: {badges.map((b) => b.title).join(", ")}</p>}
+      {missions.length > 0 && <p className="text-xs mt-1 text-center" style={{ color: th.cardMuted }}>Claim mission rewards in Missions.</p>}
+      {rewards.some((r) => r.capped) && <p className="text-[11px] mt-2 text-center" style={{ color: th.cardMuted }}>Daily round XP limit reached - badges and missions still count.</p>}
     </Glass>
   );
 }

@@ -156,10 +156,10 @@ export async function uploadListingFile(file: File, listingId: string) {
   return data as MarketplaceListingFile;
 }
 
-export async function getListingFileSignedUrl(storagePath: string) {
+export async function getListingFileSignedUrl(storagePath: string, downloadName?: string) {
   const { data, error } = await supabase.storage
     .from(LISTING_FILES_BUCKET)
-    .createSignedUrl(storagePath, 3600);
+    .createSignedUrl(storagePath, 3600, downloadName ? { download: downloadName } : undefined);
   if (error) throw error;
   return data.signedUrl;
 }

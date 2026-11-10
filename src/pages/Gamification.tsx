@@ -17,6 +17,8 @@ import { CategorySort } from "@/components/gamification/games/CategorySort";
 import { SpeedTap } from "@/components/gamification/games/SpeedTap";
 import { VisualMemory } from "@/components/gamification/games/VisualMemory";
 import { GameSetupScreen } from "@/components/gamification/setup/GameSetupScreen";
+import { LittleGame } from "@/components/gamification/games/little/LittleGame";
+import { isLittleGame, littleLevel } from "@/components/gamification/engine/littleGames";
 import { SelectedGame, GameMode } from "@/components/gamification/engine/gameSelector";
 import { AgeGroup } from "@/components/gamification/engine/ageGroups";
 import { serveGameContent, type GameType, type GameItemMap, type ServedContent } from "@/lib/gamificationQuestions";
@@ -29,7 +31,8 @@ import {
   ArrowRight, X, Shield, Eye, BarChart3,
   Sparkles, Target, Flame, Gamepad2, Rocket,
 } from "lucide-react";
-import { playCountdownBeep, playGoSound, playVictorySound, playClickSound } from "@/components/gamification/sounds";
+import { playCountdownBeep, playGoSound, playVictorySound, playClickSound, playMascotSound, playCelebrationSound, resetAnswerStreak, duckMusic, setMusicStyle, activateGamificationAudio, deactivateGamificationAudio } from "@/components/gamification/sounds";
+import { SoundToggle } from "@/components/gamification/SoundToggle";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
@@ -38,6 +41,9 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { GamificationThemeProvider } from "@/components/gamification/theme/GamificationTheme";
+import { getVisualTier, readCachedTier, cacheTier, type VisualTier } from "@/components/gamification/theme/visualTier";
+import { AdventureBackdrop, ArenaBackdrop, EliteBackdrop } from "@/components/gamification/art/Backdrops";
 
 /* ═══════════════════════════════════════════════════════════
    ANIMATED BACKGROUND — floating orbs + grid
@@ -216,7 +222,17 @@ const Gamification = () => {
   const { profile } = useAuth();
   const { awardXp } = useGamification();
   const g2 = useGamification2();
+  // Sound belongs to this page only: on while it is open, fully off the moment the student leaves.
+  useEffect(() => {
+    activateGamificationAudio();
+    return () => deactivateGamificationAudio();
+  }, []);
   const [hubTab, setHubTab] = useState<HubTab>("play");
+  // LKG-Class 5 get the playful APAS look, Class 6+ the elegant one. Cached so there is no flash on return visits.
+  const [visualTier, setVisualTier] = useState<VisualTier>(() => readCachedTier() ?? "elegant");
+  // Class 6-10 ("arena" look) gets its own energetic track; everyone else keeps the light adventure loop.
+  useEffect(() => { setMusicStyle(visualTier === "arena" ? "arena" : "adventure"); }, [visualTier]);
+  const handleClassKnown = (classKey: string) => { const t = getVisualTier(classKey); setVisualTier(t); cacheTier(t); };
   const [sessionRewards, setSessionRewards] = useState<G2Awarded[]>([]);
   const roundIdRef = useRef<string>("");
   const studentName = profile?.full_name || "Student";
@@ -252,6 +268,8 @@ const Gamification = () => {
     if (phase !== "PRE_GAME") return;
     const cfg = selectedGames[currentGame];
     if (!cfg) return;
+    // Picture games (Nursery / LKG / UKG) carry their own content: nothing to fetch from the server.
+    if (isLittleGame(cfg.id)) { setContent({ status: "ready", items: [], message: null }); return; }
     const key = `${roundIdRef.current}:${currentGame}:${contentRetry}`;
     let cancelled = false;
     let req = contentRequests.current.get(key);
@@ -283,14 +301,19 @@ const Gamification = () => {
   useEffect(() => {
     if (phase !== "COUNTDOWN") return;
     if (countdown <= 0) { playGoSound(); setPhase("PLAYING"); return; }
-    playCountdownBeep();
+    playCountdownBeep(countdown);
     const t = setTimeout(() => setCountdown(p => p - 1), 1000);
     return () => clearTimeout(t);
   }, [countdown, phase]);
 
   useEffect(() => {
+    if (phase === "WELCOME") playMascotSound();
+  }, [phase]);
+
+  useEffect(() => {
     if (phase !== "POST_GAME") return;
     playVictorySound();
+    duckMusic(2200);
     setShowConfetti(true);
     const t = setTimeout(() => setShowConfetti(false), 4000);
     return () => clearTimeout(t);
@@ -314,7 +337,7 @@ const Gamification = () => {
     setPhase("PRE_GAME");
   };
 
-  const startCountdown = () => { setCountdown(3); setPhase("COUNTDOWN"); };
+  const startCountdown = () => { resetAnswerStreak(); setCountdown(3); setPhase("COUNTDOWN"); };
 
   const handleGameComplete = (result: GameResult) => {
     setResults(prev => [...prev, result]);
@@ -349,6 +372,8 @@ const Gamification = () => {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 6000);
       setPhase("RESULTS");
+      playCelebrationSound();
+      duckMusic(3500);
       if (results.length > 0) awardXp("complete_assessment", "Completed Adaptive Gamification Round");
     } else {
       setContent({ status: "idle", items: [], message: null });
@@ -381,6 +406,11 @@ const Gamification = () => {
 
   const renderGame = () => {
     if (!currentGameConfig || !ageGroup) return null;
+
+    if (isLittleGame(currentGameConfig.id)) {
+      return <LittleGame key={currentGameConfig.id} gameId={currentGameConfig.id} gameName={currentGameConfig.name}
+        gameIndex={currentGame} level={littleLevel(studentClass)} onComplete={handleGameComplete} />;
+    }
 
     const commonProps = {
       studentName,
@@ -457,10 +487,10 @@ const Gamification = () => {
   };
 
   const gameWrapper = (
-    <div className="min-h-screen relative" style={{ background: "linear-gradient(135deg, #0F172A 0%, #1e1147 50%, #312E81 100%)" }}>
-      <AnimatedBackground />
-      <FloatingParticles />
+    <div className="min-h-screen relative" style={{ background: visualTier === "playful" ? "#0B4F6C" : visualTier === "arena" ? "#0B0820" : "#0A0F1F" }}>
+      {visualTier === "playful" ? <AdventureBackdrop /> : visualTier === "arena" ? <ArenaBackdrop /> : <EliteBackdrop />}
       <Confetti show={showConfetti} />
+      <SoundToggle />
 
       {(phase === "PLAYING" || phase === "PRE_GAME" || phase === "COUNTDOWN" || phase === "POST_GAME") && (
         <div className="fixed top-4 start-4 z-40 flex items-center gap-2 px-4 py-2 rounded-2xl timer-glow"
@@ -496,7 +526,7 @@ const Gamification = () => {
               </>
             )}
             {hubTab === "play" || g2.unavailable ? (
-              <GameSetupScreen onStart={handleSetupComplete} />
+              <GameSetupScreen onStart={handleSetupComplete} onContext={handleClassKnown} />
             ) : (
               <Gamification2Panel
                 tab={hubTab}
@@ -596,7 +626,7 @@ const Gamification = () => {
                             <p className="text-sm font-bold" style={{ color: g.color }}>{g.name}</p>
                             <p className="text-xs" style={{ color: "rgba(241,245,249,0.5)" }}>{g.objective}</p>
                             <p className="text-[10px] mt-1" style={{ color: "rgba(241,245,249,0.3)" }}>
-                              {g.dimension} · {g.timeLimit[ageGroup.id]}s
+                              {g.dimension}{isLittleGame(g.id) ? "" : ` · ${g.timeLimit[ageGroup.id]}s`}
                             </p>
                           </div>
                         </div>
@@ -697,7 +727,7 @@ const Gamification = () => {
             <div className="flex justify-center gap-4">
               <div className="px-5 py-3 rounded-xl text-center" style={{ background: `${currentGameConfig.color}10`, border: `1px solid ${currentGameConfig.color}20` }}>
                 <span className="text-lg">⏱</span>
-                <p className="text-sm font-bold mt-1" style={{ color: "#F1F5F9" }}>{currentGameConfig.timeLimit[ageGroup.id]}s</p>
+                <p className="text-sm font-bold mt-1" style={{ color: "#F1F5F9" }}>{isLittleGame(currentGameConfig.id) ? "No timer" : `${currentGameConfig.timeLimit[ageGroup.id]}s`}</p>
                 <p className="text-[10px] uppercase" style={{ color: "rgba(241,245,249,0.4)" }}>Time</p>
               </div>
               <div className="px-5 py-3 rounded-xl text-center" style={{ background: `${currentGameConfig.color}10`, border: `1px solid ${currentGameConfig.color}20` }}>
@@ -761,7 +791,7 @@ const Gamification = () => {
         {/* ─── PLAYING ─── */}
         {phase === "PLAYING" && (
           <div className="w-full max-w-2xl mx-auto game-enter">
-            <button onClick={() => setQuitConfirm(true)}
+            <button onClick={() => { playClickSound(); setQuitConfirm(true); }}
               className="fixed bottom-4 end-4 z-40 p-3 rounded-full transition-all hover:scale-110"
               style={{ background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", backdropFilter: "blur(8px)" }}>
               <X className="h-5 w-5" style={{ color: "#EF4444" }} />
@@ -959,7 +989,7 @@ const Gamification = () => {
     </div>
   );
 
-  return <AppLayout>{gameWrapper}</AppLayout>;
+  return <AppLayout><GamificationThemeProvider tier={visualTier}>{gameWrapper}</GamificationThemeProvider></AppLayout>;
 };
 
 export default Gamification;

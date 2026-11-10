@@ -6,6 +6,8 @@
  * single "Whole School" announcement across all three roles at once.
  * Reuses the same `teacher_messages` table as the other Communication
  * Center pages — `sender_id` here is just whichever admin-type role sent it.
+ * Every sent message carries a delivery report (Pending / Delivered / Read per
+ * recipient) backed by the delivery tracking columns on that same table.
  */
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -20,11 +22,19 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, Users, User, GraduationCap, Truck,
-  MessageSquare, Check, CheckCheck, Smile, X, FileText, ChevronLeft, Megaphone,
+  MessageSquare, Smile, X, FileText, ChevronLeft, Megaphone,
   Image as ImageIcon, Mic, Square,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useSentMessageDelivery } from "@/hooks/useMessageDelivery";
+import {
+  DeliveryReportDialog, DeliverySummaryChip, DeliveryTick,
+} from "@/components/communication/MessageDeliveryReport";
+import {
+  overallStatus, reportKey, statusOfMessage, uniqueRecipients,
+  type DeliveryStatus,
+} from "@/lib/messageDeliveryModel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -51,6 +61,11 @@ interface Message {
   broadcast_label: string | null;
   is_read: boolean;
   created_at: string;
+  // Delivery tracking (server-maintained; absent until the tracking migration is applied)
+  delivery_status?: DeliveryStatus;
+  sent_at?: string | null;
+  delivered_at?: string | null;
+  read_at?: string | null;
 }
 
 const QUICK_EMOJIS = [
@@ -121,6 +136,28 @@ export default function AdminCommunicationCenter() {
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
+
+  // ── Delivery tracking ───────────────────────────────────────────────────────
+  const [reportMessage, setReportMessage] = useState<Message | null>(null);
+  const sentKeys = useMemo(
+    () => messages.filter(m => m.sender_id === user?.id).slice(-100).map(m => reportKey(m)),
+    [messages, user?.id],
+  );
+  const delivery = useSentMessageDelivery(
+    user?.id,
+    sentKeys,
+    reportMessage ? reportKey(reportMessage) : null,
+  );
+  const recipientNames = useMemo(() => {
+    const map = new Map<string, string>();
+    [...teacherContacts, ...parentContacts, ...studentContacts, ...driverContacts].forEach(c => map.set(c.id, c.name));
+    return map;
+  }, [teacherContacts, parentContacts, studentContacts, driverContacts]);
+  const nameFor = useCallback((id: string) => recipientNames.get(id) || "Unknown recipient", [recipientNames]);
+  const tickStatusOf = (m: Message): DeliveryStatus => {
+    const s = delivery.summaries.get(reportKey(m));
+    return s && s.total > 0 ? overallStatus(s) : statusOfMessage(m);
+  };
 
   // ── Fetch every teacher / parent / student in this school ─────────────────
   const fetchContacts = useCallback(async () => {
@@ -359,6 +396,9 @@ export default function AdminCommunicationCenter() {
         } else {
           recipients = driverContacts.map(c => ({ id: c.id, role: "driver" as const }));
         }
+
+        // One tracked record per person, even if someone appears in two contact lists
+        recipients = uniqueRecipients(recipients);
 
         if (recipients.length === 0) {
           toast({ title: "No recipients found", variant: "destructive" });
@@ -707,15 +747,17 @@ export default function AdminCommunicationCenter() {
                                     {m.attachment_name || "Attachment"}
                                   </a>
                                 )}
+                                {isMine && (
+                                  <DeliverySummaryChip
+                                    summary={delivery.summaries.get(reportKey(m))}
+                                    onOpen={() => setReportMessage(m)}
+                                  />
+                                )}
                                 <div className={`flex items-center gap-1 mt-1 ${isMine ? "justify-end" : "justify-start"}`}>
                                   <span className={`text-[10px] ${isMine ? "text-green-100" : "text-muted-foreground"}`}>
                                     {format(new Date(m.created_at), "h:mm a")}
                                   </span>
-                                  {isMine && (
-                                    m.is_read
-                                      ? <CheckCheck className="h-3 w-3 text-sky-300" />
-                                      : <Check className="h-3 w-3 text-green-100" />
-                                  )}
+                                  {isMine && <DeliveryTick status={tickStatusOf(m)} />}
                                 </div>
                               </div>
                             </div>
@@ -888,6 +930,22 @@ export default function AdminCommunicationCenter() {
           </div>
         </Card>
       </div>
+
+      <DeliveryReportDialog
+        open={!!reportMessage}
+        onOpenChange={(o) => { if (!o) setReportMessage(null); }}
+        title={
+          reportMessage?.broadcast_label
+            || (reportMessage ? nameFor(reportMessage.recipient_id) : "")
+        }
+        preview={reportMessage?.message?.slice(0, 120)}
+        sentAt={reportMessage ? (reportMessage.sent_at || reportMessage.created_at) : null}
+        rows={delivery.report}
+        loading={delivery.reportLoading}
+        error={delivery.reportError}
+        available={delivery.available}
+        nameFor={nameFor}
+      />
     </AppLayout>
   );
 }

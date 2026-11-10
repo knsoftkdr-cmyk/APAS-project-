@@ -33,6 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import ERPLayout from "@/components/erp/ERPLayout";
 import { ERPFeeAssistantWidget } from "@/components/erp-fees/ERPFeeAssistantWidget";
+import { InstalmentsAdminTab } from "@/components/erp-fees/instalments/InstalmentsAdminTab";
 
 type FeeRecord = {
   id: string;
@@ -120,7 +121,7 @@ const ERPFeeManagement = () => {
   const [deleting, setDeleting] = useState(false);
 
   // Top-level tabs: Assign Fees / Fee Records / Payment History
-  const [activeTab, setActiveTab] = useState<"records" | "history">("records");
+  const [activeTab, setActiveTab] = useState<"records" | "history" | "instalments">("records");
 
   // Bulk Assign dialog (Assign Fees tab)
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -613,6 +614,7 @@ const ERPFeeManagement = () => {
         {([
           { key: "records", label: "Fee Records" },
           { key: "history", label: "Payment History" },
+          { key: "instalments", label: "Instalments" },
         ] as const).map((t) => (
           <button
             key={t.key}
@@ -629,6 +631,8 @@ const ERPFeeManagement = () => {
       </div>
 
 
+
+      {activeTab === "instalments" && schoolId && <InstalmentsAdminTab schoolId={schoolId} />}
 
       {activeTab === "history" && (
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -1433,7 +1437,7 @@ const ERPFeeManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-      <ERPFeeAssistantWidget schoolId={schoolId} onNavigate={(tab) => setActiveTab(tab as "records" | "history")} isFeesTab />
+      <ERPFeeAssistantWidget schoolId={schoolId} onNavigate={(tab) => setActiveTab(tab as "records" | "history" | "instalments")} isFeesTab />
     </ERPLayout>
   );
 };
