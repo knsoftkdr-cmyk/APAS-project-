@@ -1,6 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+import type { Outcome, ScoringRules, SessionScore } from "../../supabase/functions/_shared/dailyReviewScoring";
+
+export type { Outcome, ScoringRules, SessionScore };
 
 // ── Types matching supabase/functions/spaced-repetition/index.ts's response shapes ─
 
@@ -47,12 +50,26 @@ export interface DueReview {
   item: ReviewItem;
 }
 
+/** Daily Review negative marking, as scored by the server for one answer. `enabled: false` = marking is off for this school. */
+export interface AnswerScoring {
+  enabled: boolean;
+  /** false when this scheduled review had already been scored (a repeat submit) or couldn't be scored */
+  counted: boolean;
+  duplicate?: boolean;
+  outcome?: Outcome;
+  marks?: number;
+  rules?: ScoringRules;
+  /** running totals for the session so far, from the server's ledger */
+  session?: SessionScore | null;
+}
+
 export interface ReviewAnswerFeedback {
   is_correct: boolean;
   correct_option: "A" | "B" | "C" | "D";
   explanation: string | null;
-  p_mastery_before: number;
-  p_mastery_after: number;
+  p_mastery_before: number | null;
+  p_mastery_after: number | null;
+  scoring?: AnswerScoring;
 }
 
 async function invoke<T>(body: Record<string, unknown>): Promise<T> {
@@ -78,10 +95,10 @@ export function useReviewForecast(studentId?: string) {
 
 // ── The actual review queue for a "Daily Review" session ────────────────────
 export function useDueReviews(args: { studentId?: string; limit?: number; bookId?: number } = {}) {
-  return useQuery<{ count: number; reviews: DueReview[] }>({
+  return useQuery<{ count: number; reviews: DueReview[]; scoring?: ScoringRules }>({
     queryKey: ["due-reviews", args.studentId ?? "self", args.limit ?? 20, args.bookId ?? "all"],
     queryFn: () =>
-      invoke<{ count: number; reviews: DueReview[] }>({
+      invoke<{ count: number; reviews: DueReview[]; scoring?: ScoringRules }>({
         action: "due",
         student_id: args.studentId,
         limit: args.limit,
@@ -100,6 +117,9 @@ export function useAnswerReview() {
       learningObjectiveId: number;
       itemId: string;
       selectedOption: "A" | "B" | "C" | "D";
+      /** ties the answers of one sitting together so the server can total the session's marks */
+      sessionId?: string;
+      sessionTotal?: number;
     }) =>
       invoke<ReviewAnswerFeedback>({
         action: "session-answer",
@@ -107,6 +127,8 @@ export function useAnswerReview() {
         learning_objective_id: args.learningObjectiveId,
         item_id: args.itemId,
         selected_option: args.selectedOption,
+        session_id: args.sessionId,
+        session_total: args.sessionTotal,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
@@ -120,16 +142,48 @@ export function useAnswerReview() {
 export function useSnoozeReview() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (args: { learningObjectiveId: number; days?: number; studentId?: string }) =>
+    mutationFn: (args: { learningObjectiveId: number; days?: number; studentId?: string; scheduleId?: string; sessionId?: string }) =>
       invoke<{ learning_objective_id: number; due_at: string }>({
         action: "snooze",
         learning_objective_id: args.learningObjectiveId,
         days: args.days ?? 1,
         student_id: args.studentId,
+        schedule_id: args.scheduleId,
+        session_id: args.sessionId,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
       queryClient.invalidateQueries({ queryKey: ["review-forecast"] });
+    },
+  });
+}
+
+// ── Daily Review scoring rules (negative marking) ───────────────────────────
+export interface ScoringConfig { rules: ScoringRules; can_edit: boolean; school_id: string | null }
+
+export function useDailyReviewScoring(enabled = true) {
+  return useQuery<ScoringConfig>({
+    queryKey: ["daily-review-scoring"],
+    queryFn: () => invoke<ScoringConfig>({ action: "scoring-get" }),
+    staleTime: 60 * 1000,
+    enabled,
+  });
+}
+
+/** Principal only (enforced by the server). The rules apply to the whole school. */
+export function useSaveDailyReviewScoring() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (rules: ScoringRules) =>
+      invoke<ScoringConfig>({
+        action: "scoring-set",
+        enabled: rules.enabled,
+        marks_per_correct: rules.marks_per_correct,
+        negative_marks_per_wrong: rules.negative_marks_per_wrong,
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["daily-review-scoring"] });
+      queryClient.invalidateQueries({ queryKey: ["due-reviews"] });
     },
   });
 }

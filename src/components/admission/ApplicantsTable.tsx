@@ -19,6 +19,11 @@ import { APPLICANT_STATUS_LABELS, APPLICANT_STATUS_BADGE_VARIANT } from "@/types
 import type { ApplicantFilters } from "@/hooks/useAdmissionApplicants";
 import type { AdmissionIntake } from "@/types/admission";
 import { ApplicantDocumentsDialog } from "./ApplicantDocumentsDialog";
+import { LeadSourceBadge } from "./LeadSourceBadge";
+import { LeadActivityDialog } from "./LeadActivityDialog";
+import { useLeadMeta } from "@/hooks/useAdmissionIntegrations";
+import { LEAD_PROVIDER_LABELS, type AdmissionIntegration } from "@/lib/admissionIntegrations";
+import { APPLICANT_SOURCE_LABELS } from "@/types/admission";
 
 interface ApplicantsTableProps {
   applicants: AdmissionApplicant[];
@@ -28,6 +33,8 @@ interface ApplicantsTableProps {
   onFiltersChange: (filters: ApplicantFilters) => void;
   onDecide: (id: string, status: ApplicantStatus) => Promise<{ error: string | null }>;
   onDocumentsChanged?: () => void;
+  /** Connected lead integrations (for the source column / filter). Optional so the table works without them. */
+  integrations?: AdmissionIntegration[];
 }
 const STATUS_OPTIONS: (ApplicantStatus | "all")[] = [
   "all",
@@ -48,9 +55,21 @@ export function ApplicantsTable({
   onFiltersChange,
   onDecide,
   onDocumentsChanged,
+  integrations = [],
 }: ApplicantsTableProps) {
   const { toast } = useToast();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const { meta, refetch: refetchMeta, integrationName } = useLeadMeta(applicants.map((a) => a.id), integrations);
+
+  // "all" | "integration" (any connected source) | "manual" (walk-in / phone / referral) | a provider key
+  const visible = applicants.filter((a) => {
+    const m = meta[a.id];
+    if (sourceFilter === "all") return true;
+    if (sourceFilter === "integration") return !!m;
+    if (sourceFilter === "manual") return !m;
+    return m?.lead_source === sourceFilter;
+  });
 
   const handleSearchSubmit = () => onFiltersChange({ ...filters, search: searchInput });
 
@@ -115,6 +134,20 @@ export function ApplicantsTable({
           </SelectContent>
         </Select>
 
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="w-[170px]" aria-label="Lead source">
+            <SelectValue placeholder="All sources" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All sources</SelectItem>
+            <SelectItem value="integration">Any integration</SelectItem>
+            <SelectItem value="manual">Walk-in / manual</SelectItem>
+            {(Object.keys(LEAD_PROVIDER_LABELS) as (keyof typeof LEAD_PROVIDER_LABELS)[]).map((k) => (
+              <SelectItem key={k} value={k}>{LEAD_PROVIDER_LABELS[k]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <Input
           type="number"
           placeholder="Min %"
@@ -143,7 +176,7 @@ export function ApplicantsTable({
 
       {loading ? (
         <LoadingSpinner />
-      ) : applicants.length === 0 ? (
+      ) : visible.length === 0 ? (
         <EmptyState
           icon={Users2}
           title="No applicants match these filters"
@@ -161,12 +194,15 @@ export function ApplicantsTable({
                 <TableHead>Distance</TableHead>
                 <TableHead>Sibling</TableHead>
                 <TableHead>Meeting Date</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-end">Docs</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {applicants.map((applicant) => (
+              {visible.map((applicant) => {
+                const lead = meta[applicant.id];
+                return (
                 <TableRow key={applicant.id}>
                   <TableCell className="font-medium text-foreground">{applicant.full_name}</TableCell>
                   <TableCell className="text-muted-foreground">
@@ -180,6 +216,19 @@ export function ApplicantsTable({
                   <TableCell>{applicant.distance_from_school_km != null ? `${applicant.distance_from_school_km} km` : "—"}</TableCell>
                   <TableCell>{applicant.sibling_studying_here ? "Yes" : "—"}</TableCell>
                   <TableCell className="text-muted-foreground">{applicant.meeting_date}</TableCell>
+                  <TableCell>
+                    {lead ? (
+                      <div className="space-y-1">
+                        <LeadSourceBadge source={lead.lead_source} label={integrationName(lead.integration_id)} />
+                        {lead.enquiry_count > 1 && (
+                          <div className="text-[11px] text-amber-700" title="Merged repeat enquiries">{lead.enquiry_count} enquiries</div>
+                        )}
+                        <LeadActivityDialog applicant={applicant} meta={lead} onChanged={refetchMeta} />
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">{APPLICANT_SOURCE_LABELS[applicant.source] ?? applicant.source}</span>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Select value={applicant.status} onValueChange={(v) => handleStatusChange(applicant, v as ApplicantStatus)}>
                       <SelectTrigger className="w-[150px] h-8">
@@ -206,7 +255,8 @@ export function ApplicantsTable({
                     />
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>

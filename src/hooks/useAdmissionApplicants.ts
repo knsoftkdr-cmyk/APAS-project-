@@ -28,7 +28,8 @@ export interface ApplicantFilters {
   status?: ApplicantStatus | "all";
   search?: string;
   minPercentage?: number | null;
-  sortBy?: "previous_percentage" | "priority_score" | "meeting_date" | "created_at";
+  /** "lead_score" is applied client-side by the table (scores live in their own table); the query falls back to newest-first. */
+  sortBy?: "previous_percentage" | "priority_score" | "meeting_date" | "created_at" | "lead_score";
   sortDirection?: "asc" | "desc";
 }
 
@@ -70,7 +71,7 @@ export function useAdmissionApplicants(filters: ApplicantFilters) {
       }
     }
 
-    const sortBy = filters.sortBy ?? "created_at";
+    const sortBy = !filters.sortBy || filters.sortBy === "lead_score" ? "created_at" : filters.sortBy;
     const sortDirection = filters.sortDirection ?? "desc";
     query = query.order(sortBy, { ascending: sortDirection === "asc", nullsFirst: false });
 
@@ -83,7 +84,7 @@ export function useAdmissionApplicants(filters: ApplicantFilters) {
       setApplicants((data ?? []) as unknown as AdmissionApplicant[]);
     }
     setLoading(false);
-  }, [schoolId, filters.intakeId, filters.status, filters.minPercentage, filters.search, filters.sortBy, filters.sortDirection]);
+  }, [schoolId, filters.intakeId, filters.status, filters.minPercentage, filters.search, filters.sortBy === "lead_score" ? "created_at" : filters.sortBy, filters.sortDirection]);
 
   useEffect(() => {
     fetchApplicants();

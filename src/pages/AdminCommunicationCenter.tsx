@@ -23,7 +23,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import {
   Search, Send, Paperclip, Users, User, GraduationCap, Truck,
   MessageSquare, Smile, X, FileText, ChevronLeft, Megaphone,
-  Image as ImageIcon, Mic, Square,
+  Image as ImageIcon, Mic, Square, CalendarClock,
 } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { useNotifications } from "@/contexts/NotificationContext";
@@ -35,6 +35,10 @@ import {
   overallStatus, reportKey, statusOfMessage, uniqueRecipients,
   type DeliveryStatus,
 } from "@/lib/messageDeliveryModel";
+import { useScheduledMessages } from "@/hooks/useScheduledMessages";
+import { ScheduleMessageDialog, type ScheduleCandidate } from "@/components/communication/ScheduleMessageDialog";
+import { ScheduledMessagesPanel } from "@/components/communication/ScheduledMessagesPanel";
+import { audienceLabelFor } from "@/lib/scheduledMessagesModel";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,6 +140,11 @@ export default function AdminCommunicationCenter() {
   const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const [lastMessages, setLastMessages] = useState<Map<string, Message>>(new Map());
+
+  // ── Scheduled messages (same page, no new menu) ─────────────────────────────
+  const scheduled = useScheduledMessages(user?.id);
+  const [showScheduled, setShowScheduled] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   // ── Delivery tracking ───────────────────────────────────────────────────────
   const [reportMessage, setReportMessage] = useState<Message | null>(null);
@@ -320,6 +329,7 @@ export default function AdminCommunicationCenter() {
   }, [messages, selectedContact]);
 
   const openContact = (contact: Contact) => {
+    setShowScheduled(false);
     setSelectedContact(contact);
     setShowMobileChat(true);
     setMessageText("");
@@ -438,6 +448,46 @@ export default function AdminCommunicationCenter() {
     }
   };
 
+  // ── Schedule send: the same recipient rules as handleSend, resolved for the selected contact / group ──
+  const scheduleCandidates = useMemo<ScheduleCandidate[]>(() => {
+    if (!selectedContact) return [];
+    const toCand = (c: Contact): ScheduleCandidate => ({ id: c.id, role: c.role, name: c.name, subtitle: c.subtitle });
+    if (selectedContact.kind === "individual") return [toCand(selectedContact)];
+    const lists: Contact[] =
+      selectedContact.id === WHOLE_SCHOOL_ID ? [...teacherContacts, ...parentContacts, ...studentContacts, ...driverContacts]
+      : selectedContact.role === "teacher" ? teacherContacts
+      : selectedContact.role === "parent" ? parentContacts
+      : selectedContact.role === "student" ? studentContacts
+      : driverContacts;
+    return uniqueRecipients(lists).map(toCand);
+  }, [selectedContact, teacherContacts, parentContacts, studentContacts, driverContacts]);
+
+  const handleScheduleSubmit = async (v: { message: string; when: Date; recipients: { id: string; role: string }[] }): Promise<string | null> => {
+    if (!selectedContact) return "Select who to message first.";
+    let attachment: { url: string; name: string } | null = null;
+    if (attachedFile) {
+      attachment = await uploadAttachment(attachedFile);
+      if (!attachment) return "The attachment could not be uploaded. Please try again.";
+    }
+    const res = await scheduled.schedule({
+      message: v.message,
+      scheduledFor: v.when,
+      recipients: v.recipients,
+      attachment,
+      audienceLabel: audienceLabelFor({
+        kind: selectedContact.kind,
+        name: selectedContact.id === WHOLE_SCHOOL_ID ? "Whole School" : `All ${selectedContact.role}s`,
+      }),
+    });
+    if (!res.ok) return res.error;
+    toast({ title: "Message scheduled", description: `It will be sent on ${format(v.when, "d MMM yyyy 'at' h:mm a")}.` });
+    setMessageText("");
+    setAttachedFile(null);
+    setShowEmojiPicker(false);
+    setScheduleOpen(false);
+    return null;
+  };
+
   // ── Voice recording ──────────────────────────────────────────────────────────
   const startRecording = async () => {
     try {
@@ -552,6 +602,24 @@ export default function AdminCommunicationCenter() {
                   </div>
                 </button>
 
+                <button
+                  onClick={() => { setShowScheduled(true); setSelectedContact(null); setShowMobileChat(true); setActiveMessageThreadId(null); }}
+                  className={`w-full text-start p-2.5 rounded-xl flex items-center gap-3 transition-colors border ${
+                    showScheduled ? "bg-amber-50 border-amber-200" : "bg-amber-50/40 border-amber-100 hover:bg-amber-50"
+                  }`}
+                >
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shrink-0 shadow-sm">
+                    <CalendarClock className="h-4.5 w-4.5 text-white" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate text-slate-800">Scheduled</p>
+                    <p className="text-xs text-muted-foreground truncate">Edit, cancel or review scheduled messages</p>
+                  </div>
+                  {scheduled.pendingCount > 0 && (
+                    <span className="text-[11px] font-semibold bg-amber-500 text-white rounded-full px-2 py-0.5">{scheduled.pendingCount}</span>
+                  )}
+                </button>
+
                 <div className="relative">
                   <Search className="absolute start-3.5 top-2.5 h-4 w-4 text-slate-400" />
                   <Input
@@ -652,7 +720,15 @@ export default function AdminCommunicationCenter() {
 
             {/* ── Chat Panel ── */}
             <div className={`min-h-0 flex flex-col ${showMobileChat ? "flex" : "hidden md:flex"}`}>
-              {!selectedContact ? (
+              {showScheduled ? (
+                <ScheduledMessagesPanel
+                  api={scheduled}
+                  userId={user?.id}
+                  role={profile?.role}
+                  nameFor={nameFor}
+                  onBack={() => { setShowScheduled(false); setShowMobileChat(false); }}
+                />
+              ) : !selectedContact ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-50/50">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center mb-4">
                     <MessageSquare className="h-9 w-9 text-green-500" />
@@ -917,6 +993,17 @@ export default function AdminCommunicationCenter() {
                       className="resize-none min-h-[40px] max-h-32 text-sm rounded-2xl bg-slate-100 border-none focus-visible:ring-2 focus-visible:ring-green-300 px-4 py-2.5"
                     />
                     <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 rounded-full text-slate-500 hover:bg-slate-100"
+                      onClick={() => setScheduleOpen(true)}
+                      disabled={sending || uploadingFile}
+                      title="Schedule send"
+                      aria-label="Schedule send"
+                    >
+                      <CalendarClock className="h-4 w-4" />
+                    </Button>
+                    <Button
                       onClick={handleSend}
                       disabled={sending || uploadingFile}
                       className="shrink-0 gap-1.5 rounded-full h-10 w-10 p-0 bg-gradient-to-br from-green-600 to-emerald-500 hover:from-green-700 hover:to-emerald-600 shadow-sm shadow-green-200"
@@ -930,6 +1017,17 @@ export default function AdminCommunicationCenter() {
           </div>
         </Card>
       </div>
+
+      <ScheduleMessageDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        mode="create"
+        candidates={scheduleCandidates}
+        initialMessage={messageText}
+        attachmentName={attachedFile?.name ?? null}
+        audienceLabel={selectedContact?.kind === "group" ? selectedContact.name : null}
+        onSubmit={handleScheduleSubmit}
+      />
 
       <DeliveryReportDialog
         open={!!reportMessage}

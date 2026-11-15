@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronDown, MoreHorizontal, Plus, Wallet, Pencil, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchErpProfile } from "@/lib/erpProfile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,7 @@ import { useToast } from "@/hooks/use-toast";
 import ERPLayout from "@/components/erp/ERPLayout";
 import { ERPFeeAssistantWidget } from "@/components/erp-fees/ERPFeeAssistantWidget";
 import { InstalmentsAdminTab } from "@/components/erp-fees/instalments/InstalmentsAdminTab";
+import { PaymentGatewaysAdminTab } from "@/components/erp-fees/payments/PaymentGatewaysAdminTab";
 
 type FeeRecord = {
   id: string;
@@ -121,7 +123,7 @@ const ERPFeeManagement = () => {
   const [deleting, setDeleting] = useState(false);
 
   // Top-level tabs: Assign Fees / Fee Records / Payment History
-  const [activeTab, setActiveTab] = useState<"records" | "history" | "instalments">("records");
+  const [activeTab, setActiveTab] = useState<"records" | "history" | "instalments" | "gateways" | "transactions">("records");
 
   // Bulk Assign dialog (Assign Fees tab)
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -288,11 +290,7 @@ const ERPFeeManagement = () => {
         return;
       }
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("erp_access, school_id, schools(name)")
-        .eq("id", sessionData.session.user.id)
-        .single();
+      const { data: profileData, error } = await fetchErpProfile(sessionData.session.user.id);
 
       if (error || !profileData || profileData.erp_access !== true) {
         navigate("/dashboard");
@@ -615,6 +613,8 @@ const ERPFeeManagement = () => {
           { key: "records", label: "Fee Records" },
           { key: "history", label: "Payment History" },
           { key: "instalments", label: "Instalments" },
+          { key: "gateways", label: "Payment Gateways" },
+          { key: "transactions", label: "Transactions" },
         ] as const).map((t) => (
           <button
             key={t.key}
@@ -633,6 +633,7 @@ const ERPFeeManagement = () => {
 
 
       {activeTab === "instalments" && schoolId && <InstalmentsAdminTab schoolId={schoolId} />}
+      {(activeTab === "gateways" || activeTab === "transactions") && schoolId && <PaymentGatewaysAdminTab schoolId={schoolId} view={activeTab} />}
 
       {activeTab === "history" && (
         <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -1437,7 +1438,7 @@ const ERPFeeManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-      <ERPFeeAssistantWidget schoolId={schoolId} onNavigate={(tab) => setActiveTab(tab as "records" | "history" | "instalments")} isFeesTab />
+      <ERPFeeAssistantWidget schoolId={schoolId} onNavigate={(tab) => setActiveTab(tab as "records" | "history" | "instalments" | "gateways" | "transactions")} isFeesTab />
     </ERPLayout>
   );
 };

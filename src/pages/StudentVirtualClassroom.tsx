@@ -11,7 +11,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { PenLine, Video, History, Archive } from "lucide-react";
+import { LiveClassPresenceBar } from "@/components/live-attendance/LiveClassPresenceBar";
+import { startTracking, joinOutcomeMessage } from "@/lib/liveAttendanceTracker";
+import { PenLine, Video, History, Archive, PlayCircle } from "lucide-react";
+import { StudentRecordingsPanel } from "@/components/live-recordings/StudentRecordingsPanel";
 import { WhiteboardCanvas } from "@/components/whiteboard/WhiteboardCanvas";
 
 interface SessionRow {
@@ -38,7 +41,7 @@ interface TopicEntry {
   subject?: string;
 }
 
-type TabKey = "upcoming" | "history" | "past";
+type TabKey = "upcoming" | "history" | "past" | "recordings";
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -163,6 +166,20 @@ export default function StudentVirtualClassroom() {
     setLoading(false);
   }
 
+  // The link itself opens natively (no popup-blocker risk); attendance is recorded alongside and can never block it.
+  function handleJoinClick(session: SessionRow) {
+    void startTracking({ id: session.id, title: session.title || session.subject }).then((outcome) => {
+      const note = joinOutcomeMessage(outcome);
+      if (note) {
+        toast({
+          title: outcome.recorded === false && outcome.reason === "error" ? "Could not log attendance" : "Attendance not recorded",
+          description: note,
+          variant: outcome.recorded === false && outcome.reason === "error" ? "destructive" : undefined,
+        });
+      }
+    });
+  }
+
   function renderScheduleBadge(session: SessionRow) {
     if (!session.recurrence_end_date) {
       return <Badge variant="outline">{new Date(session.scheduled_start).toLocaleDateString()}</Badge>;
@@ -222,6 +239,7 @@ export default function StudentVirtualClassroom() {
     { key: "upcoming", label: "Upcoming Classes", icon: Video },
     { key: "history", label: "Topic History", icon: History },
     { key: "past", label: "Past Sessions", icon: Archive },
+    { key: "recordings", label: "Recordings", icon: PlayCircle },
   ];
 
   return (
@@ -245,6 +263,8 @@ export default function StudentVirtualClassroom() {
               </div>
             </div>
           </div>
+
+          <LiveClassPresenceBar />
 
           {/* Tabs */}
           <div className="flex gap-1.5 bg-slate-100/70 rounded-xl p-1.5 w-fit flex-wrap">
@@ -307,7 +327,7 @@ export default function StudentVirtualClassroom() {
                             <div className="flex gap-2 flex-wrap">
                               {today ? (
                                 <>
-                                  <a href={s.meet_link} target="_blank" rel="noopener noreferrer">
+                                  <a href={s.meet_link} target="_blank" rel="noopener noreferrer" onClick={() => handleJoinClick(s)}>
                                     <Button size="sm" className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white">
                                       Join Today's Class
                                     </Button>
@@ -401,6 +421,8 @@ export default function StudentVirtualClassroom() {
                   </div>
                 )
               )}
+
+              {tab === "recordings" && <StudentRecordingsPanel />}
             </>
           )}
         </div>

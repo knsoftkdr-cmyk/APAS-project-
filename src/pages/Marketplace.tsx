@@ -1,6 +1,10 @@
-﻿import { useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { transcodeToH264 } from "@/lib/videoTranscode";
 import { TrackedVideo, TrackedYouTube } from "@/components/video/TrackedVideo";
+import { VideoLearningDialog } from "@/components/video/InteractiveVideoPlayer";
+import { VideoQuestionManager } from "@/components/video/VideoQuestionManager";
+import { VideoInsightsDialog } from "@/components/video/VideoInsights";
+import { useListingVideoSource } from "@/components/video/useListingVideoSource";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCap, BookOpen, Users, ChevronDown, ChevronUp, CheckCircle2, Pencil, FileText, Eye, FileUp } from "lucide-react";
+import { Store, Upload, Play, Download, Trash2, Video as VideoIcon, GraduationCap, BookOpen, Users, ChevronDown, ChevronUp, CheckCircle2, Pencil, FileText, Eye, FileUp, MessageCircleQuestion, BarChart3 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { TextbookLoaderPanel } from "@/components/marketplace/TextbookLoaderPanel";
@@ -21,8 +25,6 @@ import {
   getMyClassVideos,
   createVideoListing,
   deleteVideoListing,
-  getListingFiles,
-  getListingFileSignedUrl,
   getClassLabel,
   CLASS_OPTIONS,
   SUBJECT_OPTIONS,
@@ -44,44 +46,21 @@ import {
   getSyllabusFileSignedUrl,
 } from "@/lib/marketplace";
 
-function getYouTubeId(url: string): string | null {
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
-  return m ? m[1] : null;
-}
-
 const UPLOAD_ACCEPT = "video/*,.pdf,.ppt,.pptx,.doc,.docx";
 
-function isVideoFile(fileType: string | null | undefined): boolean {
-  if (!fileType) return true; // legacy rows with no type were always videos
-  const t = fileType.toLowerCase();
-  return t.startsWith("video/") || ["mp4", "webm", "mov", "mkv", "avi", "m4v", "mpeg", "mpg", "ogv"].includes(t);
-}
-
 function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
+  const { profile } = useAuth();
+  const isStudent = profile?.role === "student";
   const [expanded, setExpanded] = useState(false);
+  const [questionsOpen, setQuestionsOpen] = useState(false);
+  const [insightsOpen, setInsightsOpen] = useState(false);
 
   // Look up the uploaded file (if any) up front so the card knows whether it is a video or a document.
-  const { data: file, isLoading } = useQuery({
-    queryKey: ["marketplace-listing-file", listing.id],
-    enabled: !listing.video_url,
-    staleTime: 30 * 60 * 1000,
-    queryFn: async () => {
-      const files = await getListingFiles(listing.id);
-      if (files.length === 0) return null;
-      const f = files[0];
-      const name = f.storage_path.split("/").pop()?.replace(/^\d+-/, "") ?? "file";
-      const [viewUrl, downloadUrl] = await Promise.all([
-        getListingFileSignedUrl(f.storage_path),
-        getListingFileSignedUrl(f.storage_path, name),
-      ]);
-      return { fileType: f.file_type, name, viewUrl, downloadUrl };
-    },
-  });
-
-  const youTubeId = listing.video_url ? getYouTubeId(listing.video_url) : null;
+  const { file, isLoading, isError, refetch, youTubeId, src, isDocument } = useListingVideoSource(listing);
+  const detectedDuration = useVideoDuration(questionsOpen && !youTubeId ? src : null);
 
   // Documents (PDF, PPT, DOC...): just the file name with Open / Download, no Play button.
-  if (!listing.video_url && file && !isVideoFile(file.fileType)) {
+  if (isDocument && file) {
     return (
       <div className="flex items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2">
         <FileText className="h-4 w-4 shrink-0 text-blue-600" />
@@ -100,13 +79,23 @@ function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
     );
   }
 
+  // The lookup failed (storage timeout, network...): say so and let the user retry. Do not claim there is no file.
+  if (!listing.video_url && isError) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <span>Couldn't load this video.</span>
+        <Button size="sm" variant="outline" className="h-7 rounded-full" onClick={() => refetch()}>Retry</Button>
+      </div>
+    );
+  }
+
   if (!listing.video_url && !isLoading && !file) {
     return <p className="text-xs text-muted-foreground">No file attached</p>;
   }
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           size="sm"
           variant="outline"
@@ -115,8 +104,18 @@ function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
           disabled={isLoading}
         >
           <Play className="h-3.5 w-3.5 me-1" />
-          {isLoading ? "Loading..." : expanded ? "Hide" : "Play"}
+          {isLoading ? "Loading..." : expanded && !isStudent ? "Hide" : "Play"}
         </Button>
+        {!isStudent && (
+          <>
+            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setQuestionsOpen(true)} disabled={isLoading}>
+              <MessageCircleQuestion className="h-3.5 w-3.5 me-1" /> Questions
+            </Button>
+            <Button size="sm" variant="ghost" className="rounded-full" onClick={() => setInsightsOpen(true)} aria-label="Video performance">
+              <BarChart3 className="h-3.5 w-3.5" />
+            </Button>
+          </>
+        )}
         {!listing.video_url && file && (
           <Button size="sm" variant="ghost" className="rounded-full" asChild>
             <a href={file.downloadUrl} aria-label="Download video">
@@ -125,17 +124,40 @@ function VideoPlayer({ listing }: { listing: MarketplaceListing }) {
           </Button>
         )}
       </div>
-      {expanded && (
+
+      {/* Students: the interactive learning screen (questions, resume, doubts). Everyone else: the plain player, as before. */}
+      {isStudent ? (
+        <VideoLearningDialog open={expanded} onOpenChange={setExpanded} listingId={listing.id} title={listing.title} src={src} youTubeId={youTubeId} />
+      ) : expanded && (
         youTubeId ? (
           <TrackedYouTube videoId={youTubeId} resourceId={listing.id} title={listing.title} className="w-full aspect-video rounded-xl" />
-        ) : listing.video_url ? (
-          <TrackedVideo src={listing.video_url} resourceId={listing.id} title={listing.title} className="w-full rounded-xl" />
-        ) : file ? (
-          <TrackedVideo src={file.viewUrl} resourceId={listing.id} title={listing.title} className="w-full rounded-xl" />
+        ) : src ? (
+          <TrackedVideo src={src} resourceId={listing.id} title={listing.title} className="w-full rounded-xl" />
         ) : null
+      )}
+
+      {!isStudent && (
+        <>
+          <VideoQuestionManager open={questionsOpen} onOpenChange={setQuestionsOpen} listing={{ id: listing.id, title: listing.title }} detectedDuration={detectedDuration} />
+          {insightsOpen && <VideoInsightsDialog listingId={listing.id} onClose={() => setInsightsOpen(false)} />}
+        </>
       )}
     </div>
   );
+}
+
+/** Length of an uploaded video, read from its metadata (YouTube links cannot be read; the teacher types it). */
+function useVideoDuration(src: string | null): number | null {
+  const [d, setD] = useState<number | null>(null);
+  useEffect(() => {
+    if (!src) return;
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.onloadedmetadata = () => { if (Number.isFinite(v.duration) && v.duration > 0) setD(Math.round(v.duration)); };
+    v.src = src;
+    return () => { v.onloadedmetadata = null; v.removeAttribute("src"); v.load(); };
+  }, [src]);
+  return d;
 }
 
 function HeroBanner({ title, eyebrow, icon: Icon, pills }: { title: string; eyebrow: string; icon: any; pills: string[] }) {

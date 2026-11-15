@@ -29,6 +29,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentHomework from "@/components/StudentHomework";
 import EngagementOverviewPanel from "@/components/engagement/EngagementOverviewPanel";
+import { VideoInsightsPanel } from "@/components/video/VideoInsights";
 import teacherHeroBg from "@/assets/teacher-hero-bg.jpg";
 import studentBanner from "@/assets/student-home-banner.png";
 import teacherhomebanner from "@/assets/teacherhome-banner.png";
@@ -342,6 +343,10 @@ const TeacherHome = () => {
           ),
         },
         {
+          id: "video-learning", title: "Video learning", description: "Watch time, completion and question results for your videos",
+          render: () => <VideoInsightsPanel />,
+        },
+        {
           id: "syllabus", title: "Syllabus tracker", description: "Your syllabus progress",
           render: () => (
                 <div className="mb-10">
@@ -537,6 +542,10 @@ const AdminHome = () => {
                   <EngagementOverviewPanel />
                 </div>
           ),
+        },
+        {
+          id: "video-learning", title: "Video learning", description: "School-wide video watch time, completion and question results", available: !!profile?.school_id,
+          render: () => <VideoInsightsPanel />,
         },
         {
           id: "at-risk", title: "Students at risk", description: "AI-predicted high-risk students", available: profile?.role !== "school_admin" && !!atRiskStudents && atRiskStudents.length > 0,

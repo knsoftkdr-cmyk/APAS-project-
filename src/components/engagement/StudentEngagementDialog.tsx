@@ -4,6 +4,7 @@ import { AlertTriangle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ACTIVITY_META, fetchStudentEngagement } from "@/lib/engagement";
+import { StudentVideoReport } from "@/components/video/VideoInsights";
 import { ActivityBars, CategoryBadge, DeltaBadge, ScoreRing, TrendChart, periodText } from "./EngagementParts";
 
 export default function StudentEngagementDialog({ studentId, name, onClose }: { studentId: string | null; name?: string; onClose: () => void }) {
@@ -42,6 +43,7 @@ export default function StudentEngagementDialog({ studentId, name, onClose }: { 
               <p className="mb-1 text-xs font-medium text-slate-600">Trend over time</p>
               <TrendChart data={(q.data?.history ?? []).map((h) => ({ date: h.date, value: h.score }))} />
             </div>
+            {studentId && <StudentVideoReport studentId={studentId} />}
           </div>
         )}
       </DialogContent>

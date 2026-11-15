@@ -133,6 +133,20 @@ export function IntakeFormDialog({ onCreate }: IntakeFormDialogProps) {
       </div>
     </div>
 
+    <div className="space-y-1.5">
+      <Label htmlFor="annual_fee" className="text-xs font-semibold text-slate-600">Annual fee (optional)</Label>
+      <Input
+        id="annual_fee"
+        type="number"
+        min={0}
+        placeholder="e.g. 85000"
+        value={form.annual_fee ?? ""}
+        onChange={(e) => setForm((f) => ({ ...f, annual_fee: e.target.value ? Number(e.target.value) : undefined }))}
+        className="border-slate-200 focus-visible:ring-indigo-400"
+      />
+      <p className="text-[11px] text-muted-foreground">Used to judge fee affordability when scoring leads for this grade.</p>
+    </div>
+
     <div className="rounded-xl border border-indigo-100 bg-indigo-50/30 p-3.5">
       <p className="text-xs font-bold text-indigo-700 uppercase tracking-wide mb-3">Application Window</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

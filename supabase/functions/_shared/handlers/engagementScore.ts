@@ -147,7 +147,7 @@ async function gatherFacts(admin: any, studs: StudentCtx[], cfg: EngagementConfi
   // Learning events: video progress + tutor messages (the existing telemetry stream)
   const events = await safe("learning_events", async () => (await Promise.all(chunk(ids, 50).map((c) =>
     pageAll((f, t) => admin.from("learning_events").select("id, student_id, event_type, source, ref_id, payload, occurred_at")
-      .in("student_id", c).in("event_type", ["video_progress", "tutor_message"]).gte("occurred_at", since).order("id").range(f, t))))).flat(), [] as Row[], missing);
+      .in("student_id", c).in("event_type", ["video_progress", "tutor_message", "video_question_answered", "video_doubt"]).gte("occurred_at", since).order("id").range(f, t))))).flat(), [] as Row[], missing);
 
   // Videos available to each student: published videos of the student's own school for the student's class
   const listings = await safe("videos", async () => (await Promise.all(schoolIds.map((sid) =>
@@ -273,6 +273,8 @@ async function gatherFacts(admin: any, studs: StudentCtx[], cfg: EngagementConfi
       interactions: [
         ...myEvents.filter((e) => e.event_type === "tutor_message" && e.source !== "career")
           .map((e) => ({ at: e.occurred_at, kind: "tutor" as const, chars: Number(e.payload?.chars) || 0 })),
+        ...myEvents.filter((e) => e.event_type === "video_question_answered").map((e) => ({ at: e.occurred_at, kind: "video_question" as const, chars: null })),
+        ...myEvents.filter((e) => e.event_type === "video_doubt").map((e) => ({ at: e.occurred_at, kind: "video_doubt" as const, chars: null })),
         ...(postsBy.get(s.profileId) ?? []).map((p) => ({ at: p.created_at, kind: "classroom_question" as const, chars: null })),
       ],
     });

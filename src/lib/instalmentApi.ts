@@ -23,7 +23,7 @@ export async function fetchStudentInstalmentData(studentId: string) {
     unwrap<InstalmentRequest[]>(db.from("instalment_requests").select("*").eq("student_id", studentId).order("created_at", { ascending: false })),
     unwrap<InstalmentPlan[]>(db.from("instalment_plans").select("*").eq("student_id", studentId).order("created_at", { ascending: false })),
     unwrap<InstalmentItem[]>(db.from("instalment_items_v").select("*").eq("student_id", studentId).order("due_date", { ascending: true }).order("seq", { ascending: true })),
-    unwrap<InstalmentTxn[]>(db.from("instalment_transactions").select("id,item_id,plan_id,amount,refunded_amount,status,receipt_no,razorpay_payment_id,failure_reason,method,created_at,paid_at").eq("student_id", studentId).order("created_at", { ascending: false })),
+    unwrap<InstalmentTxn[]>(db.from("instalment_transactions").select("id,item_id,plan_id,amount,refunded_amount,status,receipt_no,razorpay_payment_id,gateway,failure_reason,method,created_at,paid_at").eq("student_id", studentId).order("created_at", { ascending: false })),
   ]);
   return { requests: requests ?? [], plans: plans ?? [], items: items ?? [], txns: txns ?? [] };
 }
@@ -79,89 +79,17 @@ export const updateInstalmentSchedule = (planId: string, items: ScheduleRow[]) =
   unwrap<null>(db.rpc("update_instalment_schedule", { p_plan_id: planId, p_items: items.map((r) => ({ ...(r.id ? { id: r.id } : {}), amount: r.amount, due_date: r.due_date })) }));
 
 // ─────────────────────────── payments ───────────────────────────
-const loadRazorpayScript = (): Promise<boolean> =>
-  new Promise((resolve) => {
-    if ((window as any).Razorpay) return resolve(true);
-    const s = document.createElement("script");
-    s.src = "https://checkout.razorpay.com/v1/checkout.js";
-    s.onload = () => resolve(true);
-    s.onerror = () => resolve(false);
-    document.body.appendChild(s);
-  });
+// Payment processing is gateway-neutral and lives in paymentGateways.ts (Razorpay, Stripe, PayU, Cashfree). The helpers below keep the
+// instalment screens' existing call shape.
+import { downloadReceipt as downloadReceiptImpl, startPayment, verifyPayment, type GatewayId, type PayOutcome } from "./paymentGateways";
+export type { PayOutcome };
 
-/** supabase-js hides the JSON error body of a non-2xx edge response in error.context - dig it out for a useful message. */
-async function functionErrorMessage(error: any, data: any): Promise<string> {
-  if (data?.error) return String(data.error);
-  try { const body = await error?.context?.json?.(); if (body?.error) return String(body.error); } catch { /* fall through */ }
-  return error?.message || "Something went wrong";
+/** Pay ONE instalment through the chosen gateway (default Razorpay). */
+export function payInstalment(itemId: string, prefill: { businessName: string; description: string; name?: string; email?: string; contact?: string; gateway?: GatewayId }): Promise<PayOutcome> {
+  return startPayment({ itemId }, { gateway: prefill.gateway ?? "razorpay", businessName: prefill.businessName, description: prefill.description, customer: { name: prefill.name, email: prefill.email, phone: prefill.contact } });
 }
 
-export type PayOutcome =
-  | { status: "success"; receiptNo?: string }
-  | { status: "pending" }
-  | { status: "failed"; message: string }
-  | { status: "cancelled" }
-  | { status: "error"; message: string };
+/** Re-check a payment that is still "processing" (bank slow / tab closed). The server asks the gateway again. */
+export const recheckPayment = (orderId: string, gateway: GatewayId = "razorpay") => verifyPayment(gateway, orderId);
 
-async function reconcile(orderId: string, extra: Record<string, string> = {}): Promise<{ status: string; receipt_no?: string; reason?: string; error?: string }> {
-  const { data, error } = await supabase.functions.invoke("verify-razorpay-payment", { body: { kind: "instalment_verify", razorpay_order_id: orderId, ...extra } });
-  if (error && !data) return { status: "error", error: await functionErrorMessage(error, data) };
-  return (data as any) ?? { status: "error", error: "No response" };
-}
-
-/**
- * Pay ONE instalment through the existing Razorpay account. The browser never decides the outcome: every result comes from
- * verify-razorpay-payment (kind "instalment_verify"), which asks Razorpay itself. Resolves once the checkout is finished or closed.
- */
-export async function payInstalment(itemId: string, prefill: { businessName: string; description: string; name?: string; email?: string; contact?: string }): Promise<PayOutcome> {
-  if (!(await loadRazorpayScript())) return { status: "error", message: "Couldn't load the payment gateway. Please check your connection and try again." };
-
-  const { data: order, error } = await supabase.functions.invoke("create-razorpay-order", { body: { item_id: itemId } });
-  if (error || !order || (order as any).error) return { status: "error", message: await functionErrorMessage(error, order) };
-  const { order_id, amount, currency, key_id } = order as { order_id: string; amount: number; currency: string; key_id: string };
-
-  return new Promise<PayOutcome>((resolve) => {
-    let settled = false;
-    const finish = (o: PayOutcome) => { if (!settled) { settled = true; resolve(o); } };
-
-    const rzp = new (window as any).Razorpay({
-      key: key_id, amount, currency, order_id,
-      name: prefill.businessName, description: prefill.description,
-      prefill: { name: prefill.name, email: prefill.email || undefined, contact: prefill.contact || undefined },
-      theme: { color: "#12203a" },
-      handler: async (resp: any) => {
-        const r = await reconcile(order_id, { razorpay_payment_id: resp.razorpay_payment_id, razorpay_signature: resp.razorpay_signature });
-        if (r.status === "success") finish({ status: "success", receiptNo: r.receipt_no });
-        else if (r.status === "pending") finish({ status: "pending" });
-        else if (r.status === "failed") finish({ status: "failed", message: r.reason || "Payment failed" });
-        else finish({ status: "error", message: r.error || "We couldn't confirm this payment. If money was deducted it will be reconciled automatically - please contact the school if it doesn't update." });
-      },
-      modal: {
-        ondismiss: async () => {
-          // closed without a handler call: ask the gateway what (if anything) happened - never assume
-          const r = await reconcile(order_id);
-          if (r.status === "success") finish({ status: "success", receiptNo: r.receipt_no });
-          else if (r.status === "failed") finish({ status: "failed", message: r.reason || "Payment failed" });
-          else finish({ status: "cancelled" });
-        },
-      },
-    });
-    // a failed attempt inside the open checkout: record it (server-verified); the modal stays open so the parent can retry
-    rzp.on("payment.failed", () => { void reconcile(order_id); });
-    rzp.open();
-  });
-}
-
-/** Re-check a payment that is still "processing" (bank slow / tab closed). Server asks Razorpay again. */
-export async function recheckPayment(orderId: string) { return reconcile(orderId); }
-
-export async function downloadReceipt(transactionId: string): Promise<void> {
-  const { data, error } = await supabase.functions.invoke("verify-razorpay-payment", { body: { kind: "instalment_receipt", transaction_id: transactionId } });
-  if (error || !data || (data as any).error) throw new Error(await functionErrorMessage(error, data));
-  const { filename, pdf_base64 } = data as { filename: string; pdf_base64: string };
-  const bytes = Uint8Array.from(atob(pdf_base64), (c) => c.charCodeAt(0));
-  const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
-  const a = document.createElement("a");
-  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
-}
+export const downloadReceipt = downloadReceiptImpl;

@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { LiveClassPresenceBar } from "@/components/live-attendance/LiveClassPresenceBar";
+import { startTracking, joinOutcomeMessage } from "@/lib/liveAttendanceTracker";
 
 interface TodaySession {
   id: string;
@@ -157,48 +159,23 @@ export default function StudentVirtualClassroomWidget() {
   }
 
   async function handleJoin(session: TodaySession) {
+    // Open the class FIRST, synchronously inside the tap, so a slow network or a popup blocker can never keep a
+    // student out of class. Attendance is recorded right after, and a failure there never blocks joining.
+    window.open(session.meet_link, "_blank", "noopener,noreferrer");
     setJoiningId(session.id);
-
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData?.user) {
-      setJoiningId(null);
-      return;
-    }
-
-    const { data: studentRow } = await supabase
-      .from("students")
-      .select("id")
-      .eq("profile_id", userData.user.id)
-      .single();
-
-    if (!studentRow) {
-      setJoiningId(null);
-      return;
-    }
-
-    const { error } = await supabase.from("virtual_classroom_attendance").upsert(
-      {
-        session_id: session.id,
-        student_id: studentRow.id,
-        session_date: todayStr(),
-        attendance_status: "joined",
-        joined_at: new Date().toISOString(),
-      },
-      { onConflict: "session_id,student_id,session_date" }
-    );
-
+    const outcome = await startTracking({ id: session.id, title: session.title || session.subject });
     setJoiningId(null);
 
-    if (error) {
-      toast({ title: "Could not log attendance", description: error.message, variant: "destructive" });
-      // Still let them join even if attendance logging fails, so they don't miss class
+    const note = joinOutcomeMessage(outcome);
+    if (note) {
+      toast({
+        title: outcome.recorded === false && outcome.reason === "error" ? "Could not log attendance" : "Attendance not recorded",
+        description: note,
+        variant: outcome.recorded === false && outcome.reason === "error" ? "destructive" : undefined,
+      });
+      return;
     }
-
-    setSessions((prev) =>
-      prev.map((s) => (s.id === session.id ? { ...s, already_joined: true } : s))
-    );
-
-    window.open(session.meet_link, "_blank", "noopener,noreferrer");
+    setSessions((prev) => prev.map((s) => (s.id === session.id ? { ...s, already_joined: true } : s)));
   }
 
   function isLive(session: TodaySession) {
@@ -229,6 +206,7 @@ export default function StudentVirtualClassroomWidget() {
         </Link>
       </CardHeader>
       <CardContent className="space-y-3">
+        <LiveClassPresenceBar />
         {sessions.map((s) => (
           <div key={s.id} className="flex items-center justify-between border rounded-lg p-3">
             <div>

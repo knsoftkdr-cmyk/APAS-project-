@@ -60,6 +60,7 @@ const navLabels: Partial<Record<Language, Record<string, string>>> = {
     "Exam Reviews": "مراجعات الاختبارات",
     "Exam Seating": "توزيع مقاعد الاختبار",
     "Forgetting Forecast": "توقّع النسيان",
+    "Flashcards": "البطاقات التعليمية",
     "Gamification": "التلعيب",
     "Group Projects": "المشاريع الجماعية",
     "Hall Tickets": "بطاقات دخول القاعة",

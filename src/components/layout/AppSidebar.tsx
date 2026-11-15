@@ -98,6 +98,9 @@ export const navItems: NavItem[] = [
   { title: "Communication", icon: MessageSquare, path: "/admin-communication", roles: ["principal"] },
   { title: "Syllabus Coverage", icon: TrendingUp, path: "/syllabus-overview", roles: ["principal"], module: "Home" },
   { title: "Surveys", icon: ClipboardList, path: "/surveys", roles: ["principal"] },
+  // One entry for the principal: the rules of Adaptive Test and Daily Review live on one page with two tabs (like Item Bank & Mock Exams).
+  // Deliberately NO `module`: a principal's module permissions don't include "Assessments", so a module here would hide it.
+  { title: "Adaptive Test & Daily Review", icon: Zap, path: "/adaptive-test", roles: ["principal"], alsoActiveOn: ["/daily-review"] },
   { title: "Academic Calendar", icon: CalendarDays, path: "/academic-calendar", roles: ["principal"], module: "Academic Calendar" },
   { title: "Timetable", icon: CalendarDays, path: "/timetable", roles: ["principal"], module: "Home" },
   { title: "Attendance", icon: UserCheck, path: "/attendance", roles: ["principal"], module: "Attendance" },
@@ -145,7 +148,7 @@ export const navItems: NavItem[] = [
   { title: "My Mastery", icon: Target, path: "/my-mastery", roles: ["student"], module: "Assessments", alsoActiveOn: ["/exam-readiness"] },
   { title: "My Exams", icon: ClipboardCheck, path: "/my-exams", roles: ["student"], module: "Assessments" },
   { title: "Adaptive Test", icon: Zap, path: "/adaptive-test", roles: ["student"], module: "Assessments" },
-  { title: "Daily Review", icon: RotateCw, path: "/daily-review", roles: ["student"], module: "Assessments" },
+  { title: "Daily Review", icon: RotateCw, path: "/daily-review", roles: ["student"], module: "Assessments", alsoActiveOn: ["/flashcards"] },
   { title: "Forgetting Forecast", icon: Hourglass, path: "/forgetting-forecast", roles: ["student"], module: "Assessments" },
   { title: "Learning Path", icon: Route, path: "/learning-path", roles: ["student"], module: "Assessments" },
   //{ title: "What's Next", icon: Sparkles, path: "/next-best-action", roles: ["student"], module: "Assessments" },

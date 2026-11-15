@@ -359,3 +359,13 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
   (existing `_shared/aiClient.ts`, same Gemini secrets as generate-mcqs). Nothing a student has been served is served again.
 * Requests without these actions fall through to update-mastery's original code unchanged.
 
+
+## Live class recordings (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Live class recordings: user operations (settings, list, play, upload, link, delete, per-session toggle, usage) | ai-teacher-assistant | action: `live_recordings` (+ `op`) |
+| Live class recordings: scheduled steps (arm Meet auto-recording, sync from Meet, copy Drive -> private bucket, retention purge) | calibrate-irt-cron | job: `live_recordings` (+ `step`: `arm` `sync` `copy_purge`) |
+
+Needs migration 20261114000000, secret `GOOGLE_MEET_SA_JSON` (service account key) and the existing `CRON_SECRET`.
+Both anchors must be redeployed (calibrate-irt-cron with `--no-verify-jwt`, as before).

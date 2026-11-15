@@ -34,6 +34,7 @@ export const EXTRA_PHRASES: Record<string, string[]> = {
   "/my-exams": ["exam", "online exam"],
   "/adaptive-test": ["adaptive", "adaptive testing", "adaptive assessment"],
   "/daily-review": ["review", "daily revision", "revision", "spaced repetition"],
+  "/flashcards": ["flash cards", "flashcard", "flip cards", "revision cards", "study cards"],
   "/forgetting-forecast": ["forecast", "forgetting curve", "memory forecast", "retention forecast"],
   "/learning-path": ["study path", "learning plan"],
   "/worksheets": ["worksheet", "practice worksheets"],
@@ -70,6 +71,7 @@ const navigator = createNavigator({
   // no sidebar row of their own. Only offered when their parent item is itself visible to the student.
   subDestinations: [
     { path: "/exam-readiness", parentPath: "/my-mastery", title: "Exam Readiness" }, // 2nd tab of StudentMasteryReadiness
+    { path: "/flashcards", parentPath: "/daily-review", title: "Flashcards" }, // 2nd tab of StudentReviewFlashcards
   ],
   roleWords: ["teacher", "principal", "admin", "administrator", "hod", "parent", "driver", "staff", "knsoft", "faculty", "headmaster"],
   assistantNames: "study buddy|buddy|apas",

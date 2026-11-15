@@ -49,8 +49,8 @@ describe("principal navigation - what a principal would say", () => {
 });
 
 describe("destinations come from the sidebar, not a second menu", () => {
-  it("are exactly the sidebar items a principal can see (+ the two Item Bank tabs)", () => {
-    const expected = new Set<string>(["/mock-exams", "/exam-reviews"]);
+  it("are exactly the sidebar items a principal can see (+ the two Item Bank tabs and the Daily Review tab)", () => {
+    const expected = new Set<string>(["/mock-exams", "/exam-reviews", "/daily-review"]);
     for (const it of navItems) {
       if (!isNavItemAllowedForRole(it, "principal")) continue;
       expected.add(it.path);

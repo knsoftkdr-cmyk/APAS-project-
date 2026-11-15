@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { AppLayout } from "@/components/layout/AppLayout";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { PageShell } from "@/components/layout/PageShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +13,12 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
   useDueReviews, useAnswerReview, useSnoozeReview, useReviewForecast,
-  type DueReview, type ReviewForecast,
+  type AnswerScoring, type DueReview, type ReviewForecast, type ScoringRules, type SessionScore,
 } from "@/hooks/useSpacedRepetition";
+import { useAuth } from "@/contexts/AuthContext";
+import { ScoringRulesTabs } from "@/components/dailyreview/ScoringRulesTabs";
+import { AnswerMarks, RulesBanner, SessionResults, type ResultItem } from "@/components/dailyreview/MarksDisplay";
+import { DEFAULT_RULES, summarizeSession, formatMarks } from "../../supabase/functions/_shared/dailyReviewScoring";
 
 type Phase = "loading" | "error" | "empty" | "review" | "feedback" | "done";
 
@@ -35,7 +39,28 @@ function formatWhen(iso: string): string {
   return `in ${days} day${days === 1 ? "" : "s"} (${date})`;
 }
 
-export default function DailyReview() {
+const SCORING_ADMIN_ROLES = ["principal"];
+const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `dr-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+
+/**
+ * Students get their review queue. The principal opens the same Daily Review screen to set its marking rules
+ * (negative marking) - they have no queue of their own, so the student queries are never fired for them.
+ */
+export default function DailyReview({ embedded = false }: { embedded?: boolean } = {}) {
+  const { profile } = useAuth();
+  if (profile?.role && SCORING_ADMIN_ROLES.includes(profile.role)) {
+    return (
+      <PageShell embedded={embedded}>
+        <div className="max-w-2xl mx-auto p-4">
+          <ScoringRulesTabs active="daily" />
+        </div>
+      </PageShell>
+    );
+  }
+  return <StudentDailyReview embedded={embedded} />;
+}
+
+function StudentDailyReview({ embedded = false }: { embedded?: boolean } = {}) {
   const { data: queueData, isLoading, isError, error, isFetching, refetch } = useDueReviews({ limit: 20 });
   const { data: forecast } = useReviewForecast();
   const answerReview = useAnswerReview();
@@ -48,7 +73,10 @@ export default function DailyReview() {
   // earlier visit is never used.
   const [session, setSession] = useState<DueReview[] | null>(null);
   useEffect(() => {
-    if (session === null && queueData && !isFetching) setSession(queueData.reviews ?? []);
+    if (session === null && queueData && !isFetching) {
+      setSession(queueData.reviews ?? []);
+      setSessionRules(queueData.scoring ?? DEFAULT_RULES);   // frozen with the queue: the rules can't change under a student mid-session
+    }
   }, [queueData, isFetching, session]);
 
   const [index, setIndex] = useState(0);
@@ -56,6 +84,12 @@ export default function DailyReview() {
   const [feedback, setFeedback] = useState<Awaited<ReturnType<typeof answerReview.mutateAsync>> | null>(null);
   const [sessionStats, setSessionStats] = useState({ answered: 0, correct: 0 });
   const [checking, setChecking] = useState(false);
+
+  // Negative marking (Daily Review only). Marks come from the server per answer; this just keeps them for the summary.
+  const sessionId = useRef(newSessionId());
+  const [sessionRules, setSessionRules] = useState<ScoringRules>(DEFAULT_RULES);
+  const [results, setResults] = useState<ResultItem[]>([]);
+  const [lastSession, setLastSession] = useState<SessionScore | null>(null);
 
   const reviews = session ?? [];
   const current = reviews[index];
@@ -82,8 +116,17 @@ export default function DailyReview() {
         learningObjectiveId: current.learning_objective_id,
         itemId: current.item.item_id,
         selectedOption,
+        sessionId: sessionId.current,
+        sessionTotal: reviews.length,
       });
       setFeedback(result);
+      const sc = result.scoring;
+      setResults((r) => [...r, {
+        key: current.schedule_id, stem: current.item.stem, outcome: result.is_correct ? "correct" : "wrong",
+        selected: selectedOption, correctOption: result.correct_option, topic: current.topic_name,
+        marks: sc?.enabled && sc.counted ? sc.marks ?? 0 : null,
+      }]);
+      if (sc?.session) setLastSession(sc.session);
       setSessionStats((s) => ({ answered: s.answered + 1, correct: s.correct + (result.is_correct ? 1 : 0) }));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't grade that answer.");
@@ -99,7 +142,10 @@ export default function DailyReview() {
   const handleSnooze = async () => {
     if (!current) return;
     try {
-      await snoozeReview.mutateAsync({ learningObjectiveId: current.learning_objective_id, days: 1 });
+      await snoozeReview.mutateAsync({
+        learningObjectiveId: current.learning_objective_id, days: 1, scheduleId: current.schedule_id, sessionId: sessionId.current,
+      });
+      setResults((r) => [...r, { key: current.schedule_id, stem: current.item.stem, outcome: "skipped", marks: sessionRules.enabled ? 0 : null, topic: current.topic_name }]);
       toast.success("Pushed to tomorrow.");
       setSelectedOption(null); // don't carry a half-made choice over to the next question
       setIndex((i) => i + 1);
@@ -114,6 +160,10 @@ export default function DailyReview() {
       const r = await refetch();
       if (r.isError || !r.data) throw r.error ?? new Error("Couldn't check for more reviews.");
       setSession(r.data.reviews ?? []);
+      setSessionRules(r.data.scoring ?? DEFAULT_RULES);
+      sessionId.current = newSessionId();                      // a new sitting is scored on its own
+      setResults([]);
+      setLastSession(null);
       setIndex(0);
       setFeedback(null);
       setSelectedOption(null);
@@ -128,7 +178,7 @@ export default function DailyReview() {
   const progressPct = reviews.length > 0 ? Math.round((Math.min(index, reviews.length) / reviews.length) * 100) : 0;
 
   return (
-    <AppLayout>
+    <PageShell embedded={embedded}>
       <div className="max-w-2xl mx-auto p-4 space-y-4">
         <div className="flex items-center gap-2">
           <RotateCw className="h-5 w-5 text-primary" />
@@ -161,11 +211,15 @@ export default function DailyReview() {
 
         {(phase === "review" || phase === "feedback") && current && (
           <>
+            <RulesBanner rules={sessionRules} />
             <Card>
               <CardContent className="p-4 space-y-2">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Review {Math.min(index + 1, reviews.length)} of {reviews.length}</span>
-                  <span>{sessionStats.correct}/{sessionStats.answered} correct so far</span>
+                  <span>
+                    {sessionStats.correct}/{sessionStats.answered} correct so far
+                    {sessionRules.enabled && lastSession ? ` · score ${formatMarks(lastSession.net)}` : ""}
+                  </span>
                 </div>
                 <Progress value={progressPct} className="h-1.5" />
               </CardContent>
@@ -190,9 +244,17 @@ export default function DailyReview() {
             <CardContent className="p-8 text-center space-y-3">
               <Trophy className="h-10 w-10 text-amber-500 mx-auto" />
               <p className="font-medium text-lg">Review complete!</p>
-              <p className="text-sm text-muted-foreground">
-                {sessionStats.correct} of {sessionStats.answered} correct this session.
-              </p>
+              {sessionRules.enabled ? (
+                <SessionResults
+                  rules={sessionRules}
+                  items={results}
+                  score={lastSession ?? summarizeSession(results.map((r) => ({ outcome: r.outcome, marks: r.marks ?? 0 })), reviews.length, sessionRules)}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {sessionStats.correct} of {sessionStats.answered} correct this session.
+                </p>
+              )}
               <Button onClick={handleCheckForMore} disabled={checking}>
                 {checking && <Loader2 className="h-4 w-4 animate-spin me-1" />}
                 Check for more
@@ -201,7 +263,7 @@ export default function DailyReview() {
           </Card>
         )}
       </div>
-    </AppLayout>
+    </PageShell>
   );
 }
 
@@ -266,7 +328,7 @@ interface ReviewCardProps {
   review: DueReview;
   selectedOption: "A" | "B" | "C" | "D" | null;
   onSelect: (opt: "A" | "B" | "C" | "D") => void;
-  feedback: { is_correct: boolean; correct_option: string; explanation: string | null } | null;
+  feedback: { is_correct: boolean; correct_option: string; explanation: string | null; scoring?: AnswerScoring } | null;
   submitting: boolean;
   onSubmit: () => void;
   onContinue: () => void;
@@ -327,6 +389,7 @@ function ReviewCard({ review, selectedOption, onSelect, feedback, submitting, on
           )}>
             <p className="font-medium mb-1">{feedback!.is_correct ? "Remembered it!" : "That one slipped — it'll come back sooner now"}</p>
             {feedback!.explanation && <p>{feedback!.explanation}</p>}
+            <AnswerMarks scoring={feedback!.scoring} />
           </div>
         )}
 

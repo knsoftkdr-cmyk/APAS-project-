@@ -20,6 +20,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
 import { useStudentSubjects } from "@/hooks/useStudentSubjects";
+import { useAuth } from "@/contexts/AuthContext";
+import type { AnswerScoring, ScoringRules, SessionScore } from "@/hooks/useSpacedRepetition";
+import { ScoringRulesTabs } from "@/components/dailyreview/ScoringRulesTabs";
+import { AnswerMarks, RulesBanner, SessionResults, type ResultItem } from "@/components/dailyreview/MarksDisplay";
+import { formatMarks } from "../../supabase/functions/_shared/dailyReviewScoring";
 
 // ── Types matching supabase/functions/cat-session/index.ts's response shapes ─
 
@@ -43,6 +48,8 @@ interface CatSessionPublic {
   max_items: number;
   precision_pct: number;
   started_at: string;
+  /** Negative marking rules this test started under (only present when the school has marking on). */
+  scoring?: { enabled: boolean; rules: ScoringRules };
 }
 interface CatItemPublic {
   item_id: string;
@@ -57,6 +64,14 @@ interface CatFeedback {
   explanation: string | null;
   mastery_before: number | null;
   mastery_after: number | null;
+  scoring?: AnswerScoring;
+}
+/** Negative marking for a finished test, as scored by the server. */
+interface CatResultScoring {
+  enabled: boolean;
+  rules?: ScoringRules;
+  score?: SessionScore;
+  items?: { seq: number; stem: string; outcome: "correct" | "wrong" | "skipped"; selected: string | null; correct_option: string | null; marks: number; topic: string }[];
 }
 interface CatObjectiveBreakdown {
   learning_objective_id: number;
@@ -82,6 +97,7 @@ interface CatResult {
   accuracy: number;
   by_objective: CatObjectiveBreakdown[];
   misconceptions: CatMisconception[];
+  scoring?: CatResultScoring;
 }
 interface CatAdvance {
   complete: boolean;
@@ -122,7 +138,27 @@ interface ConceptOption { id: number; subtopic_name: string }
 
 type Phase = "pick" | "question" | "feedback" | "result";
 
+const SCORING_ADMIN_ROLES = ["principal"];
+
+/**
+ * Students take the test. The principal opens the same Adaptive Test screen to set its marking rules (negative marking);
+ * they take no test, so none of the student queries below run for them.
+ */
 export default function AdaptiveTest() {
+  const { profile } = useAuth();
+  if (profile?.role && SCORING_ADMIN_ROLES.includes(profile.role)) {
+    return (
+      <AppLayout>
+        <div className="max-w-2xl mx-auto p-4">
+          <ScoringRulesTabs active="adaptive" />
+        </div>
+      </AppLayout>
+    );
+  }
+  return <StudentAdaptiveTest />;
+}
+
+function StudentAdaptiveTest() {
   const [phase, setPhase] = useState<Phase>("pick");
   const [busyScope, setBusyScope] = useState<ScopeType | null>(null);
 
@@ -455,7 +491,7 @@ function ScopeRow({ type, title, subtitle, scopeId, busy, onStart }: {
 // ─────────────────────────────────────────────────────────────────────────
 // Live question + feedback
 // ─────────────────────────────────────────────────────────────────────────
-function QuestionView(props: {
+export function QuestionView(props: {
   session: CatSessionPublic; item: CatItemPublic; selectedOption: string | null;
   setSelectedOption: (v: string) => void; feedback: CatFeedback | null;
   submitting: boolean; onSubmit: () => void; onContinue: () => void; isLastKnown: boolean;
@@ -480,6 +516,7 @@ function QuestionView(props: {
 
   return (
     <div className="space-y-4">
+      {session.scoring?.enabled && <RulesBanner rules={session.scoring.rules} />}
       <Card>
         <CardContent className="p-4 space-y-2">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -522,6 +559,7 @@ function QuestionView(props: {
             )}>
               <p className="font-medium mb-1">{feedback!.is_correct ? "Correct!" : "Not quite"}</p>
               {feedback!.explanation && <p>{feedback!.explanation}</p>}
+              <AnswerMarks scoring={feedback!.scoring} />
             </div>
           )}
 
@@ -546,7 +584,7 @@ function QuestionView(props: {
 // ─────────────────────────────────────────────────────────────────────────
 // Result
 // ─────────────────────────────────────────────────────────────────────────
-function ResultView({ result, onDone }: { result: CatResult; onDone: () => void }) {
+export function ResultView({ result, onDone }: { result: CatResult; onDone: () => void }) {
   const band = BAND_STYLES[result.band];
   const sorted = [...result.by_objective].sort((a, b) => (a.p_mastery ?? 1) - (b.p_mastery ?? 1));
 
@@ -580,6 +618,23 @@ function ResultView({ result, onDone }: { result: CatResult; onDone: () => void 
           </div>
         )}
       </Card>
+
+      {result.scoring?.enabled && result.scoring.rules && result.scoring.score && (
+        <Card data-testid="adaptive-marks">
+          <CardHeader className="pb-2"><CardTitle className="text-sm">Your marks</CardTitle></CardHeader>
+          <CardContent>
+            <SessionResults
+              hideUnansweredWhenZero
+              rules={result.scoring.rules}
+              score={result.scoring.score}
+              items={(result.scoring.items ?? []).map((i): ResultItem => ({
+                key: String(i.seq), stem: i.stem, outcome: i.outcome, selected: i.selected ?? undefined,
+                correctOption: i.correct_option ?? undefined, marks: i.marks, topic: i.topic,
+              }))}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {sorted.length > 0 && (
         <Card>
@@ -630,6 +685,7 @@ function ResultView({ result, onDone }: { result: CatResult; onDone: () => void 
 interface RecentSession {
   id: string; scope_label: string | null; status: string; items_administered: number;
   scaled_score: number | null; band: CatResult["band"] | null; provisional: boolean; completed_at: string | null;
+  marks?: { net: number; max_possible: number; correct: number; wrong: number };
 }
 function RecentSessions() {
   const { data, isLoading } = useQuery({
@@ -650,6 +706,7 @@ function RecentSessions() {
             <span className="truncate pe-2">{s.scope_label}</span>
             <span className="flex items-center gap-2 shrink-0 text-muted-foreground text-xs">
               {s.items_administered} questions
+              {s.marks && <span data-testid="past-marks" className={cn("font-medium", s.marks.net < 0 ? "text-red-600" : "text-foreground")}>{formatMarks(s.marks.net)}/{formatMarks(s.marks.max_possible)} marks</span>}
               {s.scaled_score != null && <Badge variant="outline" className="text-xs">{s.scaled_score}{s.provisional ? "*" : ""}</Badge>}
             </span>
           </div>

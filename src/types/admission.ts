@@ -26,6 +26,7 @@ export interface AdmissionIntake {
   grade: string;
   total_seats: number;
   min_percentage_required: number | null;
+  annual_fee?: number | null;
   criteria_notes: string | null;
   is_open: boolean;
   opens_on: string | null;
@@ -110,6 +111,16 @@ export const APPLICANT_SOURCE_LABELS: Record<ApplicantSource, string> = {
   phone_enquiry: "Phone Enquiry",
   online_enquiry: "Online Enquiry",
   other: "Other",
+};
+
+/** Lead channel for applicants created by an integration (admission_lead_meta.lead_source). */
+export const LEAD_SOURCE_LABELS: Record<string, string> = {
+  meta: "Meta Lead Ads",
+  google: "Google Lead Forms",
+  zoho: "Zoho CRM",
+  website: "Website form",
+  zapier: "Zapier",
+  make: "Make",
 };
 
 export const DOCUMENT_TYPE_LABELS: Record<AdmissionDocumentType, string> = {

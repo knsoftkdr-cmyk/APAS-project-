@@ -8,6 +8,7 @@ import { handleCommandBar } from "../_shared/handlers/commandBar.ts";
 import { handleClassBriefing } from "../_shared/handlers/classBriefing.ts";
 import { handleAiWhiteboard } from "../_shared/handlers/aiWhiteboard.ts";
 import { handleDigitalClassroom } from "../_shared/handlers/digitalClassroom.ts";
+import { handleLiveRecordings } from "../_shared/handlers/liveRecordings.ts";
 import { handleDifferentiation } from "../_shared/handlers/differentiation.ts";
 
 // Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
@@ -28,6 +29,7 @@ const MERGED_ROUTES: RouteTable = {
   class_briefing: { handler: handleClassBriefing },
   whiteboard_draw: { handler: handleAiWhiteboard },
   classroom: { handler: handleDigitalClassroom },
+  live_recordings: { handler: handleLiveRecordings },
   differentiate: { handler: handleDifferentiation },
 };
 

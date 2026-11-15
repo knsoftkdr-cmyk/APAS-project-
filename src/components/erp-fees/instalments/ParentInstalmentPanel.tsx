@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { GatewayPicker } from "@/components/erp-fees/payments/GatewayPicker";
+import type { GatewayId } from "@/lib/paymentGateways";
 import { downloadReceipt, fetchParentOverview, fetchStudentInstalmentData, payInstalment, recheckPayment } from "@/lib/instalmentApi";
 import {
   canPay, formatDate, formatINR, planProgress, toCents, fromCents, type InstalmentItem, type InstalmentPlan, type InstalmentRequest, type InstalmentTxn, type ParentFee, type ParentOverview,
@@ -16,6 +18,8 @@ interface Props {
   studentName: string;
   businessName: string;
   prefill: { name?: string; email?: string | null; contact?: string | null };
+  /** the school, so the parent can pick among its enabled payment gateways */
+  schoolId?: string | null;
 }
 
 const CATEGORY_LABELS: [keyof ParentFee, string][] = [["course_amount", "Course"], ["transport_amount", "Transport"], ["other_amount", "Other"], ["uniform_amount", "Uniform"], ["material_amount", "Material"], ["exam_amount", "Exam"]];
@@ -26,7 +30,8 @@ const Progress = ({ percent, label }: { percent: number; label: string }) => (
   </div>
 );
 
-export function ParentInstalmentPanel({ studentId, studentName, businessName, prefill }: Props) {
+export function ParentInstalmentPanel({ studentId, studentName, businessName, prefill, schoolId }: Props) {
+  const [gateway, setGateway] = useState<GatewayId | null>(null);
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -79,7 +84,8 @@ export function ParentInstalmentPanel({ studentId, studentName, businessName, pr
   const pay = async (item: InstalmentItem, count: number) => {
     setPayingId(item.id);
     try {
-      const out = await payInstalment(item.id, { businessName, description: `Instalment ${item.seq} of ${count} - ${studentName}`, name: prefill.name, email: prefill.email ?? undefined, contact: prefill.contact ?? undefined });
+      const out = await payInstalment(item.id, { businessName, description: `Instalment ${item.seq} of ${count} - ${studentName}`, name: prefill.name, email: prefill.email ?? undefined, contact: prefill.contact ?? undefined, gateway: gateway ?? "razorpay" });
+      if (out.status === "redirecting") return;   // on its way to the gateway; settled when the parent returns
       if (out.status === "success") toast({ title: "Payment successful", description: out.receiptNo ? `Receipt ${out.receiptNo} is ready to download.` : "Your instalment has been recorded." });
       else if (out.status === "pending") toast({ title: "Payment is being confirmed", description: "Your bank is still processing it. This page updates automatically once it's confirmed." });
       else if (out.status === "failed") toast({ title: "Payment failed", description: `${out.message}. No money was recorded - you can try again.`, variant: "destructive" });
@@ -91,9 +97,9 @@ export function ParentInstalmentPanel({ studentId, studentName, businessName, pr
   const recheck = async (t: InstalmentTxn) => {
     setBusyTxn(t.id);
     try {
-      const { data: row } = await (supabase as any).from("instalment_transactions").select("razorpay_order_id").eq("id", t.id).maybeSingle();
+      const { data: row } = await (supabase as any).from("instalment_transactions").select("razorpay_order_id, gateway").eq("id", t.id).maybeSingle();
       if (!row?.razorpay_order_id) throw new Error("Payment not found");
-      const r = await recheckPayment(row.razorpay_order_id);
+      const r = await recheckPayment(row.razorpay_order_id, (row.gateway ?? "razorpay") as GatewayId);
       toast({ title: r.status === "success" ? "Payment confirmed" : r.status === "failed" ? "Payment failed" : "Still processing", description: r.status === "success" ? "Thank you - your receipt is ready." : r.status === "failed" ? "No money was recorded." : "We'll update this automatically." });
     } catch (e) { toast({ title: "Couldn't check the payment", description: (e as Error).message, variant: "destructive" }); }
     finally { setBusyTxn(null); await load(true); }
@@ -195,6 +201,13 @@ export function ParentInstalmentPanel({ studentId, studentName, businessName, pr
               {r.status === "approved" && <p className="mt-2 text-sm text-emerald-800">Approved{r.reviewed_at ? ` on ${formatDate(r.reviewed_at)}` : ""} - your schedule is below.</p>}
             </div>
           ))}
+        </section>
+      )}
+
+      {/* ── payment method (only when there is something to pay) ── */}
+      {schoolId && visiblePlans.some((p) => p.status === "active") && (
+        <section className="rounded-xl border border-slate-200 bg-white p-4" aria-label="Payment method">
+          <GatewayPicker schoolId={schoolId} value={gateway} onChange={setGateway} disabled={!!payingId} compact />
         </section>
       )}
 

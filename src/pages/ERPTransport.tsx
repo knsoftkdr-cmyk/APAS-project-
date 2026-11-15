@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Bus, UserRound, Route as RouteIcon, Users, MapPin, Wand2, MapPinned, ClipboardList, Siren } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchErpProfile } from "@/lib/erpProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ERPLayout from "@/components/erp/ERPLayout";
 import { VehiclesTab, DriversTab, AttendantsTab, RoutesTab, AssignmentsTab } from "@/pages/TransportManagement";
@@ -42,11 +43,7 @@ const ERPTransport = () => {
         return;
       }
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("erp_access, school_id, schools(name)")
-        .eq("id", sessionData.session.user.id)
-        .single();
+      const { data: profileData, error } = await fetchErpProfile(sessionData.session.user.id);
 
       if (error || !profileData || profileData.erp_access !== true) {
         navigate("/dashboard");

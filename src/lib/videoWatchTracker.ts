@@ -55,6 +55,25 @@ export class WatchAccumulator {
     this.seconds.add(k);
   }
 
+  /** The watched seconds as sorted [start, end) runs: compact enough to store, and mergeable on the server. */
+  ranges(): [number, number][] {
+    const out: [number, number][] = [];
+    for (const k of [...this.seconds].sort((a, b) => a - b)) {
+      const last = out[out.length - 1];
+      if (last && k === last[1]) last[1] = k + 1;
+      else out.push([k, k + 1]);
+    }
+    return out;
+  }
+
+  /** Start from what the student already watched in earlier sittings (resume), so the total keeps growing. */
+  seed(ranges: readonly (readonly [number, number])[] | null | undefined): void {
+    for (const r of ranges ?? []) {
+      const a = Math.max(0, Math.floor(Number(r[0]))), b = Math.min(86400, Math.ceil(Number(r[1])));
+      for (let k = a; k < b; k++) this.seconds.add(k);
+    }
+  }
+
   /** Unique seconds watched, never more than the video's length. */
   watched(): number {
     return this.duration > 0 ? Math.min(this.seconds.size, Math.ceil(this.duration)) : this.seconds.size;

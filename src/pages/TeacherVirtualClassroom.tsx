@@ -35,6 +35,9 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, Trash2, PenLine } from "lucide-react";
 import { WhiteboardCanvas } from "@/components/whiteboard/WhiteboardCanvas";
+import { LiveAttendanceRegister } from "@/components/live-attendance/LiveAttendanceRegister";
+import { ClassAttendanceReportDialog } from "@/components/live-attendance/ClassAttendanceReportDialog";
+import { SessionRecordingsDialog } from "@/components/live-recordings/SessionRecordingsDialog";
 
 // ---------- Types ----------
 
@@ -57,14 +60,6 @@ interface VirtualSession {
   recurrence_end_date: string | null;
   class_name?: string;
   section?: string;
-}
-
-interface AttendanceRow {
-  student_id: string;
-  full_name: string;
-  roll_number: string | null;
-  attendance_status: string;
-  joined_at: string | null;
 }
 
 interface TopicLogEntry {
@@ -103,9 +98,8 @@ export default function TeacherVirtualClassroom() {
 
   // Attendance + topic log dialog state
   const [attendanceSession, setAttendanceSession] = useState<VirtualSession | null>(null);
+  const [recordingsSession, setRecordingsSession] = useState<VirtualSession | null>(null);
   const [attendanceDate, setAttendanceDate] = useState<string>("");
-  const [attendanceRows, setAttendanceRows] = useState<AttendanceRow[]>([]);
-  const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [topicCovered, setTopicCovered] = useState("");
   const [nextTopic, setNextTopic] = useState("");
   const [topicHistory, setTopicHistory] = useState<TopicLogEntry[]>([]);
@@ -322,50 +316,7 @@ export default function TeacherVirtualClassroom() {
     const { start, end } = sessionDateBounds(session);
     const defaultDate = today < start ? start : today > end ? end : today;
     setAttendanceDate(defaultDate);
-    await loadAttendanceForDate(session, defaultDate);
     await loadTopicHistory(session.id, defaultDate);
-  }
-
-  async function loadAttendanceForDate(session: VirtualSession, date: string) {
-    setAttendanceLoading(true);
-
-    const { data: classStudents, error: csError } = await supabase
-      .from("class_students")
-      .select(`student_id, students:student_id ( full_name, roll_number )`)
-      .eq("class_id", session.class_id);
-
-    if (csError) {
-      toast({ title: "Failed to load roster", description: csError.message, variant: "destructive" });
-      setAttendanceLoading(false);
-      return;
-    }
-
-    const { data: attendance, error: attError } = await supabase
-      .from("virtual_classroom_attendance")
-      .select("student_id, attendance_status, joined_at")
-      .eq("session_id", session.id)
-      .eq("session_date", date);
-
-    if (attError) {
-      toast({ title: "Failed to load attendance", description: attError.message, variant: "destructive" });
-      setAttendanceLoading(false);
-      return;
-    }
-
-    const attendanceMap = new Map((attendance || []).map((a) => [a.student_id, a]));
-    const rows: AttendanceRow[] = (classStudents || []).map((row: any) => {
-      const att = attendanceMap.get(row.student_id);
-      return {
-        student_id: row.student_id,
-        full_name: row.students?.full_name ?? "Unknown",
-        roll_number: row.students?.roll_number ?? null,
-        attendance_status: att?.attendance_status ?? "absent",
-        joined_at: att?.joined_at ?? null,
-      };
-    });
-    rows.sort((a, b) => (a.roll_number || "").localeCompare(b.roll_number || ""));
-    setAttendanceRows(rows);
-    setAttendanceLoading(false);
   }
 
   async function loadTopicHistory(sessionId: string, currentDate: string) {
@@ -389,31 +340,7 @@ export default function TeacherVirtualClassroom() {
   async function handleAttendanceDateChange(newDate: string) {
     setAttendanceDate(newDate);
     if (!attendanceSession) return;
-    await loadAttendanceForDate(attendanceSession, newDate);
     await loadTopicHistory(attendanceSession.id, newDate);
-  }
-
-  async function markAttendance(studentId: string, status: string) {
-    if (!attendanceSession || !attendanceDate) return;
-
-    const { error } = await supabase.from("virtual_classroom_attendance").upsert(
-      {
-        session_id: attendanceSession.id,
-        student_id: studentId,
-        session_date: attendanceDate,
-        attendance_status: status,
-        marked_by_teacher: true,
-      },
-      { onConflict: "session_id,student_id,session_date" }
-    );
-
-    if (error) {
-      toast({ title: "Failed to update attendance", description: error.message, variant: "destructive" });
-      return;
-    }
-    setAttendanceRows((rows) =>
-      rows.map((r) => (r.student_id === studentId ? { ...r, attendance_status: status } : r))
-    );
   }
 
   async function saveTopicLog() {
@@ -512,17 +439,6 @@ export default function TeacherVirtualClassroom() {
     setWhiteboardLoading(false);
   }
 
-  function statusColor(status: string) {
-    switch (status) {
-      case "joined":
-        return "bg-green-100 text-green-800";
-      case "excused":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-red-100 text-red-800";
-    }
-  }
-
   function renderScheduleBadge(session: VirtualSession) {
     if (!session.recurrence_end_date) {
       return <Badge variant="outline">{new Date(session.scheduled_start).toLocaleDateString()}</Badge>;
@@ -556,7 +472,9 @@ export default function TeacherVirtualClassroom() {
       </div>
     </div>
 
-    <div className="flex justify-end">
+    <div className="flex justify-end gap-2 flex-wrap">
+      <ClassAttendanceReportDialog classes={teacherClasses} />
+      <SessionRecordingsDialog session={recordingsSession} onClose={() => setRecordingsSession(null)} />
       <Dialog open={createOpen} onOpenChange={(open) => { setCreateOpen(open); if (open) setForm(emptyForm); }}>
         <DialogTrigger asChild>
           <Button className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white shrink-0">+ New Session</Button>
@@ -692,42 +610,17 @@ export default function TeacherVirtualClassroom() {
         </div>
       )}
 
-      {attendanceLoading ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground py-6 justify-center">
-          <span className="w-4 h-4 rounded-full border-2 border-teal-300 border-t-teal-600 animate-spin" /> Loading roster...
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {attendanceRows.map((r) => (
-            <div key={r.student_id} className="flex items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2.5 flex-wrap">
-              <div className="min-w-0">
-                <p className="font-medium text-sm text-slate-800 truncate">{r.full_name}</p>
-                <p className="text-xs text-muted-foreground">
-                  Roll: {r.roll_number ?? "-"}
-                  {r.joined_at && ` • Joined ${new Date(r.joined_at).toLocaleTimeString()}`}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge className={`${statusColor(r.attendance_status)} hover:opacity-90`}>{r.attendance_status}</Badge>
-                <Select value={r.attendance_status} onValueChange={(v) => markAttendance(r.student_id, v)}>
-                  <SelectTrigger className="w-28 h-8 border-slate-200">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="joined">Joined</SelectItem>
-                    <SelectItem value="absent">Absent</SelectItem>
-                    <SelectItem value="excused">Excused</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          ))}
-        </div>
+      {attendanceSession && attendanceDate && (
+        <LiveAttendanceRegister
+          session={{ id: attendanceSession.id, class_id: attendanceSession.class_id }}
+          date={attendanceDate}
+        />
       )}
     </div>
   </DialogContent>
 </Dialog>
 
+                  <Button variant="outline" size="sm" className="border-teal-200 text-teal-700 hover:bg-teal-50" onClick={() => setRecordingsSession(s)}>Recordings</Button>
                   <Button size="sm" className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white" onClick={() => openWhiteboard(s)}>
                     <PenLine className="h-3.5 w-3.5 me-1" /> Whiteboard
                   </Button>

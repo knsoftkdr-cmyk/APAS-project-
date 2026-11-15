@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { CreditCard, GraduationCap, Info, XCircle } from "lucide-react";
 import { ParentInstalmentPanel } from "@/components/erp-fees/instalments/ParentInstalmentPanel";
+import { GatewayPicker } from "@/components/erp-fees/payments/GatewayPicker";
+import { PaymentHistoryList } from "@/components/erp-fees/payments/PaymentHistoryList";
+import { readGatewayReturn, startPayment, type GatewayId } from "@/lib/paymentGateways";
 
 type StudentFeeDetails = {
   student_id: string;
@@ -63,25 +66,31 @@ const emptyParticulars = {
   exam_amount: "0",
 };
 
-const loadRazorpayScript = (): Promise<boolean> => {
-  return new Promise((resolve) => {
-    if ((window as any).Razorpay) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
-};
-
 export default function ParentFeePayment() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const requestedStudentId = (location.state as { studentId?: string } | null)?.studentId ?? null;
+  const [gatewayChoice, setGatewayChoice] = useState<GatewayId | null>(null);
+  const [historyKey, setHistoryKey] = useState(0);
+
+  // Coming back from Stripe / PayU / Cashfree (?gw=...&order=...): the server asks the gateway what happened, then we tell the parent.
+  useEffect(() => {
+    let alive = true;
+    readGatewayReturn().then((r) => {
+      if (!alive || !r) return;
+      const o = r.outcome;
+      if (r.kind === "instalment") setMode("finance");
+      setHistoryKey((k) => k + 1);
+      if (o.status === "success") toast({ title: "Payment successful", description: o.receiptNo ? `Receipt ${o.receiptNo} is ready - find it in your payment history.` : "Your payment has been recorded." });
+      else if (o.status === "pending") toast({ title: "Payment is being confirmed", description: "Your bank is still processing it. This updates automatically once confirmed." });
+      else if (o.status === "failed") toast({ title: "Payment failed", description: `${o.message}. No money was recorded - you can try again.`, variant: "destructive" });
+      else if (o.status === "cancelled") toast({ title: "Payment not completed", description: "Nothing was charged. You can pay whenever you're ready." });
+      else if (o.status === "error") toast({ title: "Couldn't confirm the payment", description: o.message, variant: "destructive" });
+    });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentFeeDetails | null>(null);
@@ -214,105 +223,28 @@ export default function ParentFeePayment() {
       return;
     }
 
-    // mode === "gateway" — launch the real Razorpay checkout
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      setSubmitting(false);
-      toast({
-        title: "Couldn't load payment gateway",
-        description: "Please check your connection and try again.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { data: orderData, error: orderError } = await supabase.functions.invoke(
-      "create-razorpay-order",
-      { body: { fee_payment_id: inserted.id } }
-    );
-
-    if (orderError || !orderData || (orderData as any).error) {
-      setSubmitting(false);
-      toast({
-        title: "Couldn't start payment",
-        description: (orderData as any)?.error || orderError?.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { order_id, amount, currency, key_id } = orderData as {
-      order_id: string;
-      amount: number;
-      currency: string;
-      key_id: string;
-    };
-
-    const rzp = new (window as any).Razorpay({
-      key: key_id,
-      amount,
-      currency,
-      order_id,
-      name: student.branch_name || "School Fee Payment",
+    // mode === "gateway" - pay through the gateway the parent chose (Razorpay, Stripe, PayU or Cashfree).
+    // The server decides the amount and confirms the payment with the gateway; nothing here marks anything paid.
+    const outcome = await startPayment({ feeId: inserted.id }, {
+      gateway: gatewayChoice as GatewayId,
+      businessName: student.branch_name || "School Fee Payment",
       description: "Fee payment for " + student.full_name,
-      prefill: {
-        name: student.father_name || student.mother_name || student.full_name,
-        email: student.contact_email || undefined,
-        contact: student.mobile || undefined,
-      },
-      handler: async (response: any) => {
-        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-          "verify-razorpay-payment",
-          {
-            body: {
-              fee_payment_id: inserted.id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            },
-          }
-        );
-
-        setSubmitting(false);
-
-        if (verifyError || !verifyData || (verifyData as any).error) {
-          toast({
-            title: "Payment verification failed",
-            description:
-              (verifyData as any)?.error ||
-              verifyError?.message ||
-              "Please contact the school if your payment was deducted.",
-            variant: "destructive",
-          });
-          return;
-        }
-
-        toast({ title: "Payment successful", description: "Your fee payment has been recorded." });
-        navigate("/dashboard");
-      },
-      modal: {
-        ondismiss: () => {
-          setSubmitting(false);
-          toast({
-            title: "Payment cancelled",
-            description:
-              "Your fee request has been saved as pending — you can complete payment anytime from your dashboard.",
-          });
-        },
-      },
-      theme: { color: "#2563eb" },
+      customer: { name: student.father_name || student.mother_name || student.full_name, email: student.contact_email, phone: student.mobile },
     });
-
-    rzp.on("payment.failed", () => {
-      setSubmitting(false);
-      toast({
-        title: "Payment failed",
-        description: "Please try again or contact the school if the issue persists.",
-        variant: "destructive",
-      });
-    });
-
-    rzp.open();
+    if (outcome.status === "redirecting") return;   // the browser is on its way to the gateway; the result is settled when it returns
+    setSubmitting(false);
+    if (outcome.status === "success") {
+      toast({ title: "Payment successful", description: outcome.receiptNo ? `Receipt ${outcome.receiptNo} has been emailed to you.` : "Your fee payment has been recorded." });
+      navigate("/dashboard");
+    } else if (outcome.status === "pending") {
+      toast({ title: "Payment is being confirmed", description: "Your bank is still processing it. We'll update your fee record as soon as it's confirmed." });
+    } else if (outcome.status === "failed") {
+      toast({ title: "Payment failed", description: `${outcome.message}. No money was recorded - please try again.`, variant: "destructive" });
+    } else if (outcome.status === "cancelled") {
+      toast({ title: "Payment cancelled", description: "Your fee request has been saved as pending - you can complete payment anytime from your dashboard." });
+    } else {
+      toast({ title: "Couldn't start payment", description: outcome.message, variant: "destructive" });
+    }
   };
 
   if (loading) {
@@ -375,6 +307,7 @@ export default function ParentFeePayment() {
                 studentName={student.full_name}
                 businessName={student.branch_name || "School"}
                 prefill={{ name: student.father_name || student.mother_name || student.full_name, email: student.contact_email, contact: student.mobile }}
+                schoolId={student.school_id}
               />
             )}
 
@@ -477,10 +410,14 @@ export default function ParentFeePayment() {
               </div>
             </div>
 
-            <div className="flex justify-center gap-3 mt-6">
+            <div className="mt-6 max-w-2xl mx-auto">
+              <GatewayPicker schoolId={student.school_id} value={gatewayChoice} onChange={setGatewayChoice} disabled={submitting} />
+            </div>
+
+            <div className="flex flex-wrap justify-center gap-3 mt-6">
               <Button
                 onClick={handleProceed}
-                disabled={submitting}
+                disabled={submitting || !gatewayChoice}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6"
               >
                 <CreditCard className="h-4 w-4 me-1.5" />
@@ -492,6 +429,11 @@ export default function ParentFeePayment() {
             </div>
             </>)}
           </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader><CardTitle className="text-lg text-[#12203a]">Payment history</CardTitle></CardHeader>
+          <CardContent><PaymentHistoryList studentId={student.student_id} refreshKey={historyKey} /></CardContent>
         </Card>
       </div>
     </AppLayout>

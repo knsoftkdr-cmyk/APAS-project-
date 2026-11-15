@@ -145,7 +145,7 @@ const ERPLibraryManagement = lazy(() => import("./pages/ERPLibraryManagement"));
 const ERPTransport = lazy(() => import("./pages/ERPTransport"));
 const ERPInventory = lazy(() => import("./pages/ERPInventory"));
 const TransportManagement = lazy(() => import("./pages/TransportManagement"));
-const DailyReview = lazy(() => import("./pages/DailyReview"));
+const StudentReviewFlashcards = lazy(() => import("./pages/StudentReviewFlashcards"));
 const ForgettingForecast = lazy(() => import("./pages/ForgettingForecast"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const NextBestAction = lazy(() => import("./pages/NextBestAction"));
@@ -346,8 +346,9 @@ export default function App() {
                       <Route path="/class-mastery" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "school_admin"]}><ClassInsightsRoute /></RoleGuard></ProtectedRoute>} />
                       <Route path="/concept-dependencies" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><KnowledgeGraphEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/bkt-calibration" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><BktCalibration /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/adaptive-test" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><AdaptiveTest /></RoleGuard></ProtectedRoute>} />
-                      <Route path="/daily-review" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><DailyReview /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/adaptive-test" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "principal"]}><AdaptiveTest /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/daily-review" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "principal"]}><StudentReviewFlashcards /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/flashcards" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentReviewFlashcards /></RoleGuard></ProtectedRoute>} />
                       <Route path="/forgetting-forecast" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><ForgettingForecast /></RoleGuard></ProtectedRoute>} />
                       <Route path="/learning-path" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><LearningPath /></RoleGuard></ProtectedRoute>} />
                       <Route path="/next-best-action" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><NextBestAction /></RoleGuard></ProtectedRoute>} />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
 import { IntakesList } from "./IntakesList";
@@ -8,7 +8,11 @@ import { ApplicantsTable } from "./ApplicantsTable";
 import { ExportSelectedApplicantsButton } from "./ExportSelectedApplicantsButton";
 import { useAdmissionIntakes } from "@/hooks/useAdmissionIntakes";
 import { useAdmissionApplicants, type ApplicantFilters } from "@/hooks/useAdmissionApplicants";
-import { GraduationCap, Users, UserCheck, Clock, LayoutGrid } from "lucide-react";
+import { IntegrationsPanel } from "./IntegrationsPanel";
+import { LeadSourceBadge } from "./LeadSourceBadge";
+import { useAdmissionIntegrations } from "@/hooks/useAdmissionIntegrations";
+import { LEAD_PROVIDER_LABELS } from "@/lib/admissionIntegrations";
+import { GraduationCap, Users, UserCheck, Clock, LayoutGrid, Plug, AlertTriangle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 type StatAccent = "indigo" | "violet" | "emerald" | "amber";
 
@@ -67,7 +71,7 @@ function AdmissionStatCard({
 export function AdmissionDashboard() {
   const { intakes, loading: intakesLoading, createIntake, toggleIntakeOpen } = useAdmissionIntakes();
   const [selectedIntakeId, setSelectedIntakeId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<"overview" | "applicants">("overview");
+  const [activeView, setActiveView] = useState<"overview" | "applicants" | "sources">("overview");
   const [filters, setFilters] = useState<ApplicantFilters>({ intakeId: "all", status: "all" });
 
   const {
@@ -77,6 +81,11 @@ export function AdmissionDashboard() {
     decideApplicant,
     refetch: refetchApplicants,
   } = useAdmissionApplicants(filters);
+
+  const { integrations, refetch: refetchIntegrations } = useAdmissionIntegrations();
+  // The Lead Sources panel owns its own copy; pick up its changes when the user leaves it.
+  useEffect(() => { void refetchIntegrations(); }, [activeView, refetchIntegrations]);
+  const needAttention = integrations.filter((i) => i.status === "error").length;
 
   const totalSeats = intakes.reduce((sum, i) => sum + i.total_seats, 0);
   const totalFilled = intakes.reduce((sum, i) => sum + (i.seats_filled ?? 0), 0);
@@ -108,7 +117,7 @@ export function AdmissionDashboard() {
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-white">Admissions</h1>
-                <p className="text-indigo-100 text-xs md:text-sm mt-0.5">Log walk-in applicants, track seats, and shortlist who to admit</p>
+                <p className="text-indigo-100 text-xs md:text-sm mt-0.5">Log walk-in and online enquiries, track seats, and shortlist who to admit</p>
               </div>
             </div>
             <div className="shrink-0">
@@ -157,6 +166,26 @@ export function AdmissionDashboard() {
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveView("sources")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
+              activeView === "sources"
+                ? "bg-indigo-600 text-white shadow"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <Plug className="h-4 w-4" />
+            Lead Sources
+            {needAttention > 0 && (
+              <span
+                className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-100 text-red-700"
+                title={`${needAttention} integration${needAttention > 1 ? "s" : ""} need attention`}
+              >
+                <AlertTriangle className="h-3 w-3 inline -mt-0.5" /> {needAttention}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Stat cards */}
@@ -167,6 +196,25 @@ export function AdmissionDashboard() {
           <AdmissionStatCard icon={UserCheck} label="Seats Filled" value={totalFilled} accent="emerald" />
           <AdmissionStatCard icon={Clock} label="Pending Review" value={totalPending} accent="amber" />
         </div>
+        )}
+
+        {/* Lead source status (only once an integration exists) */}
+        {activeView === "overview" && integrations.length > 0 && (
+        <Card className="border-slate-200 shadow-sm">
+          <CardContent className="p-3 md:p-4 flex items-center gap-3 flex-wrap">
+            <span className="text-sm font-semibold text-slate-700 flex items-center gap-1.5"><Plug className="h-4 w-4 text-indigo-600" />Lead sources</span>
+            {integrations.map((i) => (
+              <button key={i.id} type="button" onClick={() => setActiveView("sources")}
+                title={`${LEAD_PROVIDER_LABELS[i.provider]} · ${i.leads_created} leads`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2 py-1 text-xs hover:bg-slate-50">
+                <span className={`h-2 w-2 rounded-full ${i.status === "active" ? "bg-emerald-500" : i.status === "paused" ? "bg-amber-500" : "bg-red-500"}`} />
+                <span className="font-medium text-slate-700 max-w-[140px] truncate">{i.name}</span>
+                <LeadSourceBadge source={i.provider} className="py-0" />
+                <span className="text-muted-foreground">{i.leads_created}</span>
+              </button>
+            ))}
+          </CardContent>
+        </Card>
         )}
 
         {/* Admission Intakes */}
@@ -212,6 +260,21 @@ export function AdmissionDashboard() {
             onFiltersChange={setFilters}
             onDecide={decideApplicant}
             onDocumentsChanged={refetchApplicants}
+            integrations={integrations}
+          />
+        </div>
+        )}
+
+        {/* Lead Sources (Meta, Google, Zoho, website, Zapier, Make) */}
+        {activeView === "sources" && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2.5">
+            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
+            Lead Sources
+          </h2>
+          <IntegrationsPanel
+            intakes={intakes}
+            onLeadsChanged={() => { void refetchApplicants(); void refetchIntegrations(); }}
           />
         </div>
         )}

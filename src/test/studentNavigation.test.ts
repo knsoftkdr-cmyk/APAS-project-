@@ -28,7 +28,7 @@ describe("Study Buddy navigation - the requests from the brief", () => {
 });
 
 describe("destinations come from the sidebar, not a second menu", () => {
-  it("are exactly the sidebar items a student can see (+ the Exam Readiness tab)", () => {
+  it("are exactly the sidebar items a student can see (+ the Exam Readiness and Flashcards tabs)", () => {
     const fromSidebar = new Set<string>();
     for (const it of navItems) {
       if (!isNavItemAllowedForRole(it, "student")) continue;
@@ -36,6 +36,7 @@ describe("destinations come from the sidebar, not a second menu", () => {
       if (it.subItem) fromSidebar.add(it.subItem.path);
     }
     fromSidebar.add("/exam-readiness");
+    fromSidebar.add("/flashcards");
     expect(new Set(dests.map((d) => d.path))).toEqual(fromSidebar);
   });
 

@@ -25,6 +25,8 @@ import { handleAccessibility } from "../_shared/handlers/accessibility.ts";
 import { handlePronunciation } from "../_shared/handlers/pronunciation.ts";
 import { handleLearningEventStream } from "../_shared/handlers/learningEventStream.ts";
 import { handleEngagementScore } from "../_shared/handlers/engagementScore.ts";
+import { handleInteractiveVideo } from "../_shared/handlers/interactiveVideo.ts";
+import { handleHrPayroll } from "../_shared/handlers/hrPayroll.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -50,6 +52,27 @@ const MERGED_ROUTES: RouteTable = {
   eng_overview: { handler: handleEngagementScore, action: "overview" },
   eng_settings_get: { handler: handleEngagementScore, action: "settings_get" },
   eng_settings_save: { handler: handleEngagementScore, action: "settings_save" },
+  // Interactive Video Player (questions at timestamps, resume, watch tracking, doubts, analytics) - see handlers/interactiveVideo.ts.
+  vid_config: { handler: handleInteractiveVideo, action: "config" },
+  vid_settings_save: { handler: handleInteractiveVideo, action: "settings_save" },
+  vid_question_save: { handler: handleInteractiveVideo, action: "question_save" },
+  vid_question_bulk: { handler: handleInteractiveVideo, action: "question_bulk" },
+  vid_question_delete: { handler: handleInteractiveVideo, action: "question_delete" },
+  vid_generate: { handler: handleInteractiveVideo, action: "generate" },
+  vid_answer: { handler: handleInteractiveVideo, action: "answer" },
+  vid_progress: { handler: handleInteractiveVideo, action: "progress" },
+  vid_doubt_post: { handler: handleInteractiveVideo, action: "doubt_post" },
+  vid_doubts: { handler: handleInteractiveVideo, action: "doubts" },
+  vid_doubt_answer: { handler: handleInteractiveVideo, action: "doubt_answer" },
+  vid_analytics: { handler: handleInteractiveVideo, action: "analytics" },
+  vid_student_report: { handler: handleInteractiveVideo, action: "student_report" },
+  // HR & Payroll (ERP > People) - see handlers/hrPayroll.ts.
+  hr_config_save: { handler: handleHrPayroll, action: "config_save" },
+  hr_generate: { handler: handleHrPayroll, action: "generate" },
+  hr_finalize: { handler: handleHrPayroll, action: "finalize" },
+  hr_reopen: { handler: handleHrPayroll, action: "reopen" },
+  hr_delete_run: { handler: handleHrPayroll, action: "delete_run" },
+  hr_mark_paid: { handler: handleHrPayroll, action: "mark_paid" },
 };
 
 serve(async (req) => {

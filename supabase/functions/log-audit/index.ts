@@ -4,6 +4,8 @@ import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleSecurityAnomaly } from "../_shared/handlers/securityAnomaly.ts";
 import { handleSessionManagement } from "../_shared/handlers/sessionManagement.ts";
 import { handleTranslateUi } from "../_shared/handlers/translateUi.ts";
+import { handleAdmissionIntegrations } from "../_shared/handlers/admissionIntegrations.ts";
+import { handleLeadWebhookRequest } from "../_shared/handlers/leadWebhook.ts";
 
 // Security Anomaly Detection (merged in, no new edge function - see _shared/mergedRouter.ts and CONSOLIDATION.md).
 // Routed on `mode` because this function's own body already uses `action` for the audit action name.
@@ -20,6 +22,15 @@ const MERGED_ROUTES: RouteTable = {
   sess_admin_revoke_user: { handler: handleSessionManagement, action: "admin_revoke_user" },
   // UI translation for tools/translate-ui.mjs (Google Cloud Translation)
   ui_translate: { handler: handleTranslateUi },
+  // Admissions > Lead Sources: admin API (the handler authenticates the caller and checks the admin role itself)
+  adm_int_create: { handler: handleAdmissionIntegrations, action: "create" },
+  adm_int_update: { handler: handleAdmissionIntegrations, action: "update" },
+  adm_int_rotate: { handler: handleAdmissionIntegrations, action: "rotate" },
+  adm_int_delete: { handler: handleAdmissionIntegrations, action: "delete" },
+  adm_int_test: { handler: handleAdmissionIntegrations, action: "test" },
+  adm_int_subscribe: { handler: handleAdmissionIntegrations, action: "subscribe" },
+  adm_int_sync: { handler: handleAdmissionIntegrations, action: "sync" },
+  adm_int_retry: { handler: handleAdmissionIntegrations, action: "retry" },
 };
 
 const corsHeaders = {
@@ -28,6 +39,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Public lead webhook (Meta / Google / Zoho / Zapier / Make / website forms): <this function>?lead_hook=<token>.
+  // Must come BEFORE the generic CORS preflight so website forms get the per-integration origin allow-list, and
+  // before routeMerged because Meta's subscription handshake is a GET. Each provider authenticates itself
+  // (signature / key); the token alone only selects the integration. Without `lead_hook` nothing changes here.
+  if (new URL(req.url).searchParams.has("lead_hook")) return handleLeadWebhookRequest(req);
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const merged = await routeMerged(req, MERGED_ROUTES, "mode");

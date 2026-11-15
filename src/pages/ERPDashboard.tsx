@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Wallet, Bus, GraduationCap, ArrowRight, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchErpProfile } from "@/lib/erpProfile";
 import ERPLayout from "@/components/erp/ERPLayout";
 
 const ERPDashboard = () => {
@@ -20,11 +21,7 @@ const ERPDashboard = () => {
         return;
       }
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("erp_access, school_id, schools(name)")
-        .eq("id", sessionData.session.user.id)
-        .single();
+      const { data: profileData, error } = await fetchErpProfile(sessionData.session.user.id);
 
       if (error || !profileData || profileData.erp_access !== true) {
         navigate("/dashboard");

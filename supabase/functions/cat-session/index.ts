@@ -18,6 +18,11 @@
 //   result        { session_id }                              full report for a finished session
 //   list          { student_id? }                             recent sessions (staff may pass student_id)
 //   abandon       { session_id }
+//   cat_scoring_get / cat_scoring_set   the school's Adaptive Test marking rules (set: principal only)
+//
+// NEGATIVE MARKING (Adaptive Test only, mode "assessment"): a scoring overlay derived from item_responses - correct = +marks,
+// wrong = -penalty. It is added to the responses by ../_shared/handlers/adaptiveTestScoring.ts AFTER the engine has run, so
+// theta / se, item selection, stopping, student_ability and the scaled score are untouched. Off by default per school.
 //
 // SECURITY
 //   * The answer key never leaves the server before an item is answered.
@@ -77,6 +82,10 @@ import { handleNextBestAction } from "../_shared/handlers/nextBestAction.ts";
 import { handleAssessmentPaperAttempt } from "../_shared/handlers/assessmentPaperAttempt.ts";
 import { handleSubmitAssessmentPaperAttempt } from "../_shared/handlers/submitAssessmentPaperAttempt.ts";
 import { handlePracticeHint } from "../_shared/handlers/practiceHint.ts";
+import { handleFlashcards } from "../_shared/handlers/flashcards.ts";
+import {
+  ScoringError, buildResultScoring, decorateAnswer, decorateListWithMarks, decorateWithRules, recordRulesAtStart, scoringGet, scoringSet,
+} from "../_shared/handlers/adaptiveTestScoring.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -85,6 +94,8 @@ const MERGED_ROUTES: RouteTable = {
   sr_session_start: { handler: handleSpacedRepetition, action: "session-start" },
   sr_session_answer: { handler: handleSpacedRepetition, action: "session-answer" },
   sr_snooze: { handler: handleSpacedRepetition, action: "snooze" },
+  sr_scoring_get: { handler: handleSpacedRepetition, action: "scoring-get" },
+  sr_scoring_set: { handler: handleSpacedRepetition, action: "scoring-set" },
   lp_generate: { handler: handleLearningPath, action: "generate" },
   lp_answer: { handler: handleLearningPath, action: "answer" },
   nba_get: { handler: handleNextBestAction },
@@ -92,6 +103,13 @@ const MERGED_ROUTES: RouteTable = {
   paper_save_draft: { handler: handleAssessmentPaperAttempt, action: "save_draft" },
   paper_submit: { handler: handleSubmitAssessmentPaperAttempt },
   practice_hint: { handler: handlePracticeHint },
+  // AI Auto Flashcards (students, own data only) - see handlers/flashcards.ts.
+  fc_catalog: { handler: handleFlashcards, action: "catalog" },
+  fc_generate: { handler: handleFlashcards, action: "generate" },
+  fc_study: { handler: handleFlashcards, action: "study" },
+  fc_rate: { handler: handleFlashcards, action: "rate" },
+  fc_overview: { handler: handleFlashcards, action: "overview" },
+  fc_report: { handler: handleFlashcards, action: "report" },
 };
 
 serve(async (req) => {
@@ -114,7 +132,7 @@ serve(async (req) => {
     const { data: { user }, error: userError } = await asCaller.auth.getUser();
     if (userError || !user) throw new HttpError(401, "Not authenticated");
 
-    const { data: profile } = await admin.from("profiles").select("role").eq("id", user.id).single();
+    const { data: profile } = await admin.from("profiles").select("role, school_id").eq("id", user.id).single();
     if (!profile) throw new HttpError(403, "Profile not found");
 
     const isStaff = STAFF_ROLES.includes(profile.role);
@@ -131,19 +149,27 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body.action ?? "");
 
-    const ctx: Ctx = { admin, isStaff, isStudent, ownStudentId };
+    const ctx: Ctx = { admin, isStaff, isStudent, ownStudentId, role: profile.role, schoolId: profile.school_id ?? null, userId: user.id };
 
     switch (action) {
       case "availability":
         return json(await availability(ctx, body));
-      case "start":
+      case "start": {
         requireStudent(ctx);
-        return json(await start(ctx, body));
-      case "answer":
+        const started = (await start(ctx, body)) as Row;
+        // A brand-new test remembers the marking rules it started under (off => nothing is stored).
+        if (!started.resumed && started.session) {
+          await recordRulesAtStart(ctx.admin, { session: started.session, studentId: ctx.ownStudentId, schoolId: ctx.schoolId });
+        }
+        return json(await decorateWithRules(ctx.admin, started));
+      }
+      case "answer": {
         requireStudent(ctx);
-        return json(await answer(ctx, body));
+        const answered = (await answer(ctx, body)) as Row;
+        return json(await decorateAnswer(ctx.admin, String(body.session_id ?? ""), answered));
+      }
       case "state":
-        return json(await state(ctx, body));
+        return json(await decorateWithRules(ctx.admin, (await state(ctx, body)) as Row));
       case "result":
         return json(await result(ctx, body));
       case "list":
@@ -151,6 +177,10 @@ serve(async (req) => {
       case "abandon":
         requireStudent(ctx);
         return json(await abandon(ctx, body));
+      case "cat_scoring_get":
+        return json(await scoringGet(ctx.admin, { role: ctx.role, schoolId: ctx.schoolId }));
+      case "cat_scoring_set":
+        return json(await scoringSet(ctx.admin, { role: ctx.role, schoolId: ctx.schoolId, userId: ctx.userId }, body));
       default:
         throw new HttpError(400, `Unknown action "${action}"`);
     }
@@ -158,6 +188,7 @@ serve(async (req) => {
     if (e instanceof HttpError) {
       return json({ error: e.message, code: e.code, ...(e.extra ?? {}) }, e.status);
     }
+    if (e instanceof ScoringError) return json({ error: e.message, code: e.code }, e.status);
     console.error("cat-session error", e);
     return json({ error: e instanceof Error ? e.message : "Unknown error" }, 500);
   }
@@ -170,6 +201,9 @@ interface Ctx {
   isStaff: boolean;
   isStudent: boolean;
   ownStudentId: string | null;
+  role: string;
+  schoolId: string | null;
+  userId: string;
 }
 
 function requireStudent(ctx: Ctx) {
@@ -546,12 +580,13 @@ async function buildResult(ctx: Ctx, sessionId: string) {
     loIds.length
       ? ctx.admin.from("student_mastery").select("learning_objective_id, p_mastery").eq("student_id", s.student_id).in("learning_objective_id", loIds)
       : Promise.resolve({ data: [] }),
-    itemIds.length ? ctx.admin.from("question_bank").select("id, distractor_misconceptions").in("id", itemIds) : Promise.resolve({ data: [] }),
+    itemIds.length ? ctx.admin.from("question_bank").select("id, stem, correct_option, distractor_misconceptions").in("id", itemIds) : Promise.resolve({ data: [] }),
   ]);
 
   const loText = new Map((los ?? []).map((l: Row) => [l.id, l.objective_text]));
   const masteryById = new Map((mastery ?? []).map((m: Row) => [m.learning_objective_id, Number(m.p_mastery)]));
   const distractorMap = new Map((items ?? []).map((i: Row) => [i.id, (i.distractor_misconceptions ?? {}) as Row]));
+  const itemsById = new Map<string, Row>((items ?? []).map((i: Row) => [i.id as string, i]));
 
   const byObjective = loIds.map((id) => {
     const rows = rs.filter((r) => r.learning_objective_id === id);
@@ -595,6 +630,8 @@ async function buildResult(ctx: Ctx, sessionId: string) {
     accuracy: s.items_administered ? round(s.correct_count / s.items_administered, 3) : 0,
     by_objective: byObjective,
     misconceptions,
+    // Negative marking overlay (Adaptive Test only). Never read back by the engine.
+    scoring: await buildResultScoring(ctx.admin, sessionId, rs, itemsById, loText as Map<number, string>),
   };
 }
 
@@ -608,7 +645,7 @@ async function list(ctx: Ctx, body: Row) {
   if (body.mode === "practice" || body.mode === "assessment") query = query.eq("mode", body.mode);
   const { data } = await query;
   return {
-    sessions: (data ?? []).map((s: Row) => ({
+    sessions: (await decorateListWithMarks(ctx.admin, (data ?? []) as Row[])).map((s: Row) => ({
       ...s,
       scaled_score: s.status === "completed" ? scaledScore(Number(s.theta)) : null,
       band: s.status === "completed" ? abilityBand(Number(s.theta)) : null,

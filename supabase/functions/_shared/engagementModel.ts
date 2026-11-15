@@ -324,11 +324,12 @@ export function liveClassActivity(
 
 // ── 5. Doubts & interactions ────────────────────────────────────────────────────────────────────
 
-export interface InteractionEvent { at: string; kind: "tutor" | "classroom_question"; chars: number | null }
+export interface InteractionEvent { at: string; kind: "tutor" | "classroom_question" | "video_question" | "video_doubt"; chars: number | null }
 
 /**
- * Meaningful interactions only: AI-tutor doubts (not the career coach) of at least `interaction_min_chars`, and
- * questions posted to the digital classroom. Capped per day. Always "available" (the tutor is open to every student).
+ * Meaningful interactions only: AI-tutor doubts (not the career coach) of at least `interaction_min_chars`,
+ * questions posted to the digital classroom, in-video questions a student actually answered (skipping earns
+ * nothing) and doubts asked from the video player. Capped per day. Always "available" (the tutor is open to every student).
  */
 export function interactionActivity(events: readonly InteractionEvent[], p: Period, cfg: EngagementConfig): ActivityResult {
   const perDay = new Map<string, number>();

@@ -48,7 +48,7 @@ const chunk = <T,>(xs: T[], n: number): T[][] => Array.from({ length: Math.ceil(
 
 // ── who is asking, and which class they are REALLY in ─────────────────────────────────────────────
 
-interface StudentCtx {
+export interface StudentCtx {
   userId: string;
   schoolId: string | null;
   curriculum: string | null;
@@ -85,9 +85,9 @@ async function resolveStudent(admin: any, userId: string): Promise<StudentCtx> {
 
 // ── subjects + curriculum for exactly this class (and school) ─────────────────────────────────────
 
-interface BookRow { id: number; subject: string; curriculum: string | null }
+export interface BookRow { id: number; subject: string; curriculum: string | null }
 
-async function loadClassBooks(admin: any, s: StudentCtx): Promise<BookRow[]> {
+export async function loadClassBooks(admin: any, s: StudentCtx): Promise<BookRow[]> {
   const out: BookRow[] = [];
   for (let from = 0; ; from += 1000) {
     let q = admin.from("books").select("id, subject, class_name, curriculum").eq("is_active", true).order("id").range(from, from + 999);
@@ -103,7 +103,7 @@ async function loadClassBooks(admin: any, s: StudentCtx): Promise<BookRow[]> {
   return out;
 }
 
-function groupSubjects(books: BookRow[]): Map<string, { key: string; label: string; bookIds: number[]; curriculum: string | null }> {
+export function groupSubjects(books: BookRow[]): Map<string, { key: string; label: string; bookIds: number[]; curriculum: string | null }> {
   const m = new Map<string, { key: string; label: string; bookIds: number[]; curriculum: string | null }>();
   for (const b of books) {
     const k = subjectKey(b.subject);

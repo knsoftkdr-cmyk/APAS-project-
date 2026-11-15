@@ -28,6 +28,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import ReactMarkdown from "react-markdown";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
+import { LiveClassPresenceBar } from "@/components/live-attendance/LiveClassPresenceBar";
+import { startTracking } from "@/lib/liveAttendanceTracker";
 import { fetchClassOptions } from "@/lib/Classsubjects";
 import {
   uploadClassroomFile, useClassroomAction, useClassroomOverview,
@@ -383,8 +385,11 @@ function AttendanceTab({ data, moderator }: TabProps) {
 
 function LiveTab({ data, moderator }: TabProps) {
   const sessions = data.sessions ?? [];
+  const { profile } = useAuth();
+  const isStudent = profile?.role === "student";
   return (
     <div className="space-y-3">
+      {isStudent && <LiveClassPresenceBar />}
       {moderator && <Button asChild size="sm" className="gap-1"><Link to="/virtual-classrooms"><Video className="h-3.5 w-3.5" />Schedule / open whiteboard</Link></Button>}
       {!sessions.length && <p className="text-sm text-muted-foreground px-1">No upcoming live sessions.</p>}
       {sessions.map((s) => {
@@ -394,7 +399,7 @@ function LiveTab({ data, moderator }: TabProps) {
             {live && <Badge className="bg-red-600">Live now</Badge>}
             <span className="text-sm font-medium flex-1">{s.title || s.subject || "Live class"}</span>
             <span className="text-xs text-muted-foreground">{fmt(s.scheduled_start)}</span>
-            {s.meet_link && <Button asChild size="sm" className="h-8 gap-1"><a href={s.meet_link} target="_blank" rel="noopener noreferrer"><ExternalLink className="h-3.5 w-3.5" />Join</a></Button>}
+            {s.meet_link && <Button asChild size="sm" className="h-8 gap-1"><a href={s.meet_link} target="_blank" rel="noopener noreferrer" onClick={() => { if (isStudent) void startTracking({ id: s.id, title: s.title || s.subject || "Live class" }); }}><ExternalLink className="h-3.5 w-3.5" />Join</a></Button>}
           </CardContent></Card>
         );
       })}

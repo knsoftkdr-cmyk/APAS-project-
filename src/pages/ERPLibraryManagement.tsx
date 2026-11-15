@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchErpProfile } from "@/lib/erpProfile";
 import { toast } from "sonner";
 import ERPLayout from "@/components/erp/ERPLayout";
 import {
@@ -93,11 +94,7 @@ const ERPLibraryManagement = () => {
         navigate("/login");
         return;
       }
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("erp_access, school_id, schools(name)")
-        .eq("id", sessionData.session.user.id)
-        .single();
+      const { data: profileData, error } = await fetchErpProfile(sessionData.session.user.id);
       if (error || !profileData || profileData.erp_access !== true) {
         navigate("/dashboard");
         return;

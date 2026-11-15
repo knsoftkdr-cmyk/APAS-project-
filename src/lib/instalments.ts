@@ -99,6 +99,7 @@ export interface InstalmentTxn {
   status: TxnStatus;
   receipt_no: string | null;
   razorpay_payment_id: string | null;
+  gateway?: string;
   failure_reason: string | null;
   method: string | null;
   created_at: string;

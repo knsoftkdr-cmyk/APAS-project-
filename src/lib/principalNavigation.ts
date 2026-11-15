@@ -58,10 +58,11 @@ export const PRINCIPAL_EXTRA_PHRASES: Record<string, string[]> = {
   "/settings": ["setting", "preferences", "account settings"],
 };
 
-// Tabs of "Item Bank & Mock Exams": real routes (its `alsoActiveOn`) with no sidebar row of their own.
+// Tabs of "Item Bank & Mock Exams" and "Adaptive Test & Daily Review": real routes (their `alsoActiveOn`) with no sidebar row of their own.
 const SUB_DESTINATIONS = [
   { path: "/mock-exams", parentPath: "/item-bank", title: "Mock Exams" },
   { path: "/exam-reviews", parentPath: "/item-bank", title: "Exam Reviews" },
+  { path: "/daily-review", parentPath: "/adaptive-test", title: "Daily Review" }, // 2nd tab of "Adaptive Test & Daily Review"
 ];
 
 // Pages of other roles. NOT "principal" or "admin": "principal dashboard" and "admin panel" are the principal's own.

@@ -1996,6 +1996,7 @@ export type Database = {
           grade: string
           id: string
           is_open: boolean
+          annual_fee: number | null
           min_percentage_required: number | null
           opens_on: string | null
           school_id: string
@@ -2011,6 +2012,7 @@ export type Database = {
           grade: string
           id?: string
           is_open?: boolean
+          annual_fee?: number | null
           min_percentage_required?: number | null
           opens_on?: string | null
           school_id: string
@@ -2026,6 +2028,7 @@ export type Database = {
           grade?: string
           id?: string
           is_open?: boolean
+          annual_fee?: number | null
           min_percentage_required?: number | null
           opens_on?: string | null
           school_id?: string

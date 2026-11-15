@@ -8,6 +8,8 @@ export interface IntakeFormInput {
   grade: string;
   total_seats: number;
   min_percentage_required?: number | null;
+  /** Optional; lets lead scoring compare a parent's budget with the real fee. Omitted when blank. */
+  annual_fee?: number | null;
   criteria_notes?: string | null;
   is_open?: boolean;
   opens_on?: string | null;

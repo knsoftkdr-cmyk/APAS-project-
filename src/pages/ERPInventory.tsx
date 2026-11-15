@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchErpProfile } from "@/lib/erpProfile";
 import ERPLayout from "@/components/erp/ERPLayout";
 import InventoryModule from "@/components/erp/inventory/InventoryModule";
 
@@ -19,11 +20,7 @@ const ERPInventory = () => {
         return;
       }
 
-      const { data: profileData, error } = await supabase
-        .from("profiles")
-        .select("erp_access, school_id, schools(name)")
-        .eq("id", sessionData.session.user.id)
-        .single();
+      const { data: profileData, error } = await fetchErpProfile(sessionData.session.user.id);
 
       if (error || !profileData || profileData.erp_access !== true) {
         navigate("/dashboard");

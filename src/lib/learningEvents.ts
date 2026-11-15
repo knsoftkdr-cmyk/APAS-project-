@@ -66,7 +66,8 @@ const scopeBody = (s: StreamScope) => ({
   ...(s.classId ? { class_id: s.classId } : {}),
 });
 
-async function call<T>(body: Record<string, unknown>, retried = false): Promise<T> {
+/** Calls the `get-mastery-history` anchor (also used by the Engagement Score and Interactive Video clients). */
+export async function call<T>(body: Record<string, unknown>, retried = false): Promise<T> {
   const { data, error } = await supabase.functions.invoke("get-mastery-history", { body });
   if (error) {
     // A 401 usually means the browser's session token went stale (tab left open, app resumed from the

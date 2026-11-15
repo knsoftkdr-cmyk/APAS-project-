@@ -15,6 +15,8 @@ export const SERVER_EVENT_TYPES = [
   "adaptive_test_completed",
   "assessment_submitted",
   "pronunciation_attempt",
+  "video_question_answered", // an in-video question answered (not skipped), written by the interactive video handler
+  "video_doubt",           // a doubt asked from inside the video player (length only, never the text)
 ] as const;
 
 export const CLIENT_EVENT_TYPES = [
@@ -238,6 +240,10 @@ export function describeEvent(e: FeedEvent): { label: string; detail: string | n
       const pct = t > 0 && Number.isFinite(w) ? Math.min(100, Math.round((w / t) * 100)) : null;
       return { label: "Watched a video", detail: [typeof p.title === "string" ? p.title : null, pct !== null ? `${pct}% watched` : null].filter(Boolean).join(" · ") || null };
     }
+    case "video_question_answered":
+      return { label: e.is_correct ? "Answered a video question correctly" : "Answered a video question", detail: typeof p.title === "string" ? p.title : null };
+    case "video_doubt":
+      return { label: "Asked a doubt while watching a video", detail: typeof p.title === "string" ? p.title : null };
     case "session_heartbeat":
       return { label: "Active on the platform", detail: null };
     default:

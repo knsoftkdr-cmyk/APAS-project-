@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LiveClassSettingsPanel } from "@/components/live-recordings/LiveClassSettingsPanel";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ import { DashboardHero } from "@/components/dashboard/DashboardHero";
 import { DashStatCard } from "@/components/dashboard/DashStatCard";
 import {
   Users, GraduationCap, BookOpen, School, BarChart3,
-  Plus, Trash2, ShieldCheck, TrendingUp, UserCheck, Lock,
+  Plus, Trash2, ShieldCheck, TrendingUp, UserCheck, Lock, Video,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -530,6 +531,7 @@ const SuperAdminPanel = () => {
             <TabsTrigger value="accounts" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Users className="h-5 w-5" />Accounts</TabsTrigger>
             <TabsTrigger value="permissions" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Lock className="h-5 w-5" />Permissions</TabsTrigger>
             <TabsTrigger value="school" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><School className="h-5 w-5" />School Info</TabsTrigger>
+            <TabsTrigger value="live-classes" className="gap-1.5  data-[state=active]:bg-blue-600 data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"><Video className="h-5 w-5" />Live Classes</TabsTrigger>
           </TabsList>
 
           {/* ══════════════════════════════════════════ OVERVIEW */}
@@ -923,6 +925,11 @@ const SuperAdminPanel = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ══════════════════════════════════════════ LIVE CLASSES */}
+          <TabsContent value="live-classes">
+            <LiveClassSettingsPanel />
           </TabsContent>
 
           {/* ══════════════════════════════════════════ SCHOOL INFO */}
