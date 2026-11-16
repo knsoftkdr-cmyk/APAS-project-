@@ -113,6 +113,9 @@ const DriverDocuments = lazy(() => import("./pages/DriverDocuments"));
 const DriverRatings = lazy(() => import("./pages/DriverRatings"));
 const DriverAttendanceView = lazy(() => import("./pages/DriverAttendanceView"));
 const SyllabusOverview = lazy(() => import("./pages/SyllabusOverview"));
+const CourseStructureManager = lazy(() => import("./pages/CourseStructureManager"));
+const StudentTopic = lazy(() => import("./pages/StudentTopic"));
+const ContentApproval = lazy(() => import("./pages/ContentApproval"));
 const CompetencyDefinitions = lazy(() => import("./pages/CompetencyDefinitions"));
 const CompetencyAssessment = lazy(() => import("./pages/CompetencyAssessment"));
 const CompetencyHeatmap = lazy(() => import("./pages/CompetencyHeatmap"));
@@ -152,6 +155,9 @@ const ERPTransport = lazy(() => import("./pages/ERPTransport"));
 const ERPInventory = lazy(() => import("./pages/ERPInventory"));
 const TransportManagement = lazy(() => import("./pages/TransportManagement"));
 const StudentReviewFlashcards = lazy(() => import("./pages/StudentReviewFlashcards"));
+const DailyReview = lazy(() => import("./pages/DailyReview"));
+const DailyPractice = lazy(() => import("./pages/DailyPractice"));
+const DppManage = lazy(() => import("./pages/DppManage"));
 const ForgettingForecast = lazy(() => import("./pages/ForgettingForecast"));
 const LearningPath = lazy(() => import("./pages/LearningPath"));
 const NextBestAction = lazy(() => import("./pages/NextBestAction"));
@@ -346,6 +352,8 @@ export default function App() {
                       <Route path="/id-cards" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><IDCardGenerator /></RoleGuard></ProtectedRoute>} />
                       <Route path="/verify-student/:id" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "teacher"]}><StudentVerify /></RoleGuard></ProtectedRoute>} />
                       <Route path="/lifecycle-timeline" element={<ProtectedRoute><RoleGuard allowedRoles={["school_admin"]}><LifecycleTimeline /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/content-approval" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher"]}><ContentApproval /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/course-structure" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher"]}><CourseStructureManager /></RoleGuard></ProtectedRoute>} />
                       <Route path="/syllabus-overview" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SyllabusOverview /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-definitions" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><CompetencyDefinitions /></RoleGuard></ProtectedRoute>} />
                       <Route path="/competency-assessment" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><CompetencyAssessment /></RoleGuard></ProtectedRoute>} />
@@ -355,6 +363,8 @@ export default function App() {
                       <Route path="/concept-dependencies" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><KnowledgeGraphEngine /></RoleGuard></ProtectedRoute>} />
                       <Route path="/bkt-calibration" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><BktCalibration /></RoleGuard></ProtectedRoute>} />
                       <Route path="/adaptive-test" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "principal"]}><AdaptiveTest /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/daily-practice" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><DailyPractice /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/dpp-manage" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "school_admin", "hod", "teacher"]}><DppManage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/daily-review" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "principal"]}><StudentReviewFlashcards /></RoleGuard></ProtectedRoute>} />
                       <Route path="/flashcards" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><StudentReviewFlashcards /></RoleGuard></ProtectedRoute>} />
                       <Route path="/forgetting-forecast" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><ForgettingForecast /></RoleGuard></ProtectedRoute>} />
@@ -395,6 +405,9 @@ export default function App() {
 } />
 <Route path="/student/courses/:courseId" element={
   <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><CourseDetail /></AppLayout></RoleGuard></ProtectedRoute>
+} />
+<Route path="/student/courses/:courseId/topics/:topicId" element={
+  <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><StudentTopic /></AppLayout></RoleGuard></ProtectedRoute>
 } />
 <Route path="/student/paths/:pathId" element={
   <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><LearningPathView /></AppLayout></RoleGuard></ProtectedRoute>

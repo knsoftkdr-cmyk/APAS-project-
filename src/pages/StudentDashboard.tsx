@@ -462,6 +462,34 @@ const subjectColors: Record<string, string> = {
           ),
         },
         {
+          id: "dpp", title: "Daily Practice Problems", description: "Adaptive daily drills based on your current performance",
+          render: () => (
+                <Card className="mb-6 border-2 border-emerald-200 bg-gradient-to-r from-emerald-500/5 to-transparent hover:border-emerald-400 transition-all">
+                  <CardContent className="pt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex items-center gap-4 min-w-0">
+                        <div className="h-10 w-10 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0">
+                          <Sparkles className="h-6 w-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="font-semibold text-foreground">Daily Practice Problems</h3>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Complete today’s adaptive set and review your instant feedback
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => navigate("/daily-practice")}
+                        className="w-full sm:w-auto shrink-0 bg-emerald-500 hover:bg-emerald-700 text-white"
+                      >
+                        Open DPP <ArrowRight className="ms-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+          ),
+        },
+        {
           id: "diagnostic", title: "Diagnostic assessment", description: "Start or retake your assessment",
           render: () => (
                 <Card className="mb-6 border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-transparent hover:border-primary/40 transition-all">

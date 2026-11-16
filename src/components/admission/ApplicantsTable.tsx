@@ -7,13 +7,15 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "@/components/StatusBadge";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Users2 } from "lucide-react";
+import { Search, Users2, History as HistoryIcon } from "lucide-react";
 import type { AdmissionApplicant, ApplicantStatus } from "@/types/admission";
 import { APPLICANT_STATUS_LABELS, APPLICANT_STATUS_BADGE_VARIANT } from "@/types/admission";
 import type { ApplicantFilters } from "@/hooks/useAdmissionApplicants";
@@ -24,6 +26,11 @@ import { LeadActivityDialog } from "./LeadActivityDialog";
 import { useLeadMeta } from "@/hooks/useAdmissionIntegrations";
 import { LEAD_PROVIDER_LABELS, type AdmissionIntegration } from "@/lib/admissionIntegrations";
 import { APPLICANT_SOURCE_LABELS } from "@/types/admission";
+import { CallButton } from "./calls/CallButton";
+import { ActiveCallBanner } from "./calls/ActiveCallBanner";
+import { LeadCallPanel } from "./calls/LeadCallPanel";
+import { useCallSession } from "@/hooks/useTelephony";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ApplicantsTableProps {
   applicants: AdmissionApplicant[];
@@ -35,6 +42,12 @@ interface ApplicantsTableProps {
   onDocumentsChanged?: () => void;
   /** Connected lead integrations (for the source column / filter). Optional so the table works without them. */
   integrations?: AdmissionIntegration[];
+  /** Optional row selection (used by Export Leads). Omit both to hide the checkboxes. */
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  /** Open the call panel (timeline / notes / follow-ups) for a lead - lets the dashboard open it from a follow-up reminder. */
+  panelLead?: { id: string; name: string } | null;
+  onPanelLeadChange?: (lead: { id: string; name: string } | null) => void;
 }
 const STATUS_OPTIONS: (ApplicantStatus | "all")[] = [
   "all",
@@ -56,7 +69,19 @@ export function ApplicantsTable({
   onDecide,
   onDocumentsChanged,
   integrations = [],
+  selectedIds,
+  onSelectionChange,
+  panelLead: panelLeadProp,
+  onPanelLeadChange,
 }: ApplicantsTableProps) {
+  const qc = useQueryClient();
+  const [ownPanel, setOwnPanel] = useState<{ id: string; name: string } | null>(null);
+  const panelLead = onPanelLeadChange ? (panelLeadProp ?? null) : ownPanel;
+  const setPanelLead = onPanelLeadChange ?? setOwnPanel;
+  const [callingFor, setCallingFor] = useState<{ id: string; name: string } | null>(null);
+  const session = useCallSession(() => { qc.invalidateQueries({ queryKey: ["tel-history"] }); qc.invalidateQueries({ queryKey: ["tel-timeline"] }); });
+  const selectable = !!onSelectionChange;
+  const selected = new Set(selectedIds ?? []);
   const { toast } = useToast();
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
@@ -70,6 +95,14 @@ export function ApplicantsTable({
     if (sourceFilter === "manual") return !m;
     return m?.lead_source === sourceFilter;
   });
+
+  const allTicked = visible.length > 0 && visible.every((a) => selected.has(a.id));
+  const toggleOne = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    onSelectionChange?.(Array.from(next));
+  };
+  const toggleAll = () => onSelectionChange?.(allTicked ? [] : visible.map((a) => a.id));
 
   const handleSearchSubmit = () => onFiltersChange({ ...filters, search: searchInput });
 
@@ -174,6 +207,9 @@ export function ApplicantsTable({
         </Select>
       </div>
 
+      <ActiveCallBanner name={callingFor?.name ?? "Lead"} call={session.call} error={session.error} onDismiss={session.dismiss}
+        onOpenLead={callingFor ? () => setPanelLead(callingFor) : undefined} />
+
       {loading ? (
         <LoadingSpinner />
       ) : visible.length === 0 ? (
@@ -187,6 +223,9 @@ export function ApplicantsTable({
           <Table>
             <TableHeader>
               <TableRow>
+                {selectable && (
+                  <TableHead className="w-10"><Checkbox checked={allTicked} onCheckedChange={toggleAll} aria-label="Select all shown leads" /></TableHead>
+                )}
                 <TableHead>Student</TableHead>
                 <TableHead>Grade</TableHead>
                 <TableHead>Parent / Phone</TableHead>
@@ -204,6 +243,9 @@ export function ApplicantsTable({
                 const lead = meta[applicant.id];
                 return (
                 <TableRow key={applicant.id}>
+                  {selectable && (
+                    <TableCell><Checkbox checked={selected.has(applicant.id)} onCheckedChange={() => toggleOne(applicant.id)} aria-label={`Select ${applicant.full_name}`} /></TableCell>
+                  )}
                   <TableCell className="font-medium text-foreground">{applicant.full_name}</TableCell>
                   <TableCell className="text-muted-foreground">
                     {applicant.intake?.grade ?? "—"}
@@ -211,6 +253,12 @@ export function ApplicantsTable({
                   <TableCell className="text-muted-foreground">
                     <div>{applicant.parent_name}</div>
                     <div className="text-xs">{applicant.parent_phone}</div>
+                    <div className="mt-1 flex items-center gap-1">
+                      <CallButton applicantName={applicant.full_name} parentPhone={applicant.parent_phone} starting={session.starting}
+                        disabled={!!session.call && !["completed", "missed", "busy", "failed", "cancelled"].includes(session.call.status)}
+                        onStart={(o) => { setCallingFor({ id: applicant.id, name: applicant.full_name }); return session.start(applicant.id, o); }} />
+                      <Button size="sm" variant="ghost" className="h-7 px-1.5" title="Call history, notes and follow-ups" onClick={() => setPanelLead({ id: applicant.id, name: applicant.full_name })}><HistoryIcon className="h-3.5 w-3.5" /></Button>
+                    </div>
                   </TableCell>
                   <TableCell>{applicant.previous_percentage != null ? `${applicant.previous_percentage}%` : "—"}</TableCell>
                   <TableCell>{applicant.distance_from_school_km != null ? `${applicant.distance_from_school_km} km` : "—"}</TableCell>
@@ -261,6 +309,7 @@ export function ApplicantsTable({
           </Table>
         </div>
       )}
+      <LeadCallPanel applicantId={panelLead?.id ?? null} applicantName={panelLead?.name ?? ""} onOpenChange={(o) => { if (!o) setPanelLead(null); }} />
     </div>
   );
 }

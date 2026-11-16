@@ -1,0 +1,208 @@
+import { PGlite } from '@electric-sql/pglite';
+import fs from 'fs';
+const db = new PGlite();
+process.on("uncaughtException",e=>{console.log("ERR:",String(e.message).slice(0,500));process.exit(1)});
+await db.exec(fs.readFileSync(process.argv[3],'utf8'));
+const mig = fs.readFileSync(process.argv[2],'utf8');
+await db.exec(mig); await db.exec(mig);
+await db.exec(`grant all on all tables in schema public to service_role; grant select on all tables in schema public to authenticated; grant execute on all functions in schema public to service_role;`);
+// re-run grants from migration effect: authenticated needs execute on dpp_ public fns (migration did it)
+console.log('MIGRATION OK (applied twice)');
+const S1='11111111-1111-1111-1111-111111111111', S2='22222222-2222-2222-2222-222222222222';
+const U={ADMIN:'a0000000-0000-0000-0000-000000000001',T1:'a0000000-0000-0000-0000-000000000002',T2:'a0000000-0000-0000-0000-000000000003',ST:'a0000000-0000-0000-0000-000000000004',ST2:'a0000000-0000-0000-0000-000000000005',OST:'a0000000-0000-0000-0000-000000000006',PAR:'a0000000-0000-0000-0000-000000000007',OADM:'a0000000-0000-0000-0000-000000000008',ST3:'a0000000-0000-0000-0000-000000000009'};
+const rows=[[U.ADMIN,'Admin','admin',S1,null],[U.T1,'Teacher1','teacher',S1,null],[U.T2,'Teacher2','teacher',S1,null],[U.ST,'Student A','student',S1,'Class 5'],[U.ST2,'Student B','student',S1,'5'],[U.OST,'Other School Student','student',S2,'5'],[U.PAR,'Parent','parent',S1,null],[U.OADM,'Other Admin','admin',S2,null],[U.ST3,'Student C','student',S1,'Class 6']];
+for (const [id,n,r,s,c] of rows){ await db.query('insert into auth.users(id) values($1)',[id]); await db.query('insert into profiles(id,full_name,role,school_id,class_grade) values($1,$2,$3,$4,$5)',[id,n,r,s,c]); }
+const sid=(await db.query(`insert into students(profile_id,grade) values($1,'5') returning id`,[U.ST])).rows[0].id;
+await db.query(`insert into parent_students(parent_id,student_id) values($1,$2)`,[U.PAR,U.ST]);
+// curriculum: Class 5 maths, 14 active questions; class 6 book only 2
+const bk=(await db.query(`insert into books(book_name,class_name,subject,school_id) values('M5','Class 5','Mathematics',null) returning id`)).rows[0].id;
+const bk6=(await db.query(`insert into books(book_name,class_name,subject,school_id) values('M6','Class 6','Mathematics',null) returning id`)).rows[0].id;
+const un=(await db.query(`insert into units(book_id,unit_name) values($1,'U') returning id`,[bk])).rows[0].id;
+const un6=(await db.query(`insert into units(book_id,unit_name) values($1,'U') returning id`,[bk6])).rows[0].id;
+const ch=(await db.query(`insert into curriculum_chapters(unit_id,chapter_name) values($1,'Algebra') returning id`,[un])).rows[0].id;
+const ch6=(await db.query(`insert into curriculum_chapters(unit_id,chapter_name) values($1,'Geo') returning id`,[un6])).rows[0].id;
+const tp=(await db.query(`insert into topics(chapter_id,topic_name) values($1,'T') returning id`,[ch])).rows[0].id;
+const tp6=(await db.query(`insert into topics(chapter_id,topic_name) values($1,'T') returning id`,[ch6])).rows[0].id;
+const st=(await db.query(`insert into subtopics(topic_id,subtopic_name) values($1,'Variables') returning id`,[tp])).rows[0].id;
+const st6=(await db.query(`insert into subtopics(topic_id,subtopic_name) values($1,'x') returning id`,[tp6])).rows[0].id;
+const lo=(await db.query(`insert into learning_objectives(subtopic_id) values($1) returning id`,[st])).rows[0].id;
+for(let i=0;i<14;i++) await db.query(`insert into question_bank(learning_objective_id,subtopic_id,stem,options,correct_option,explanation,status,irt_b) values($1,$2,$3,'{"A":"1","B":"2","C":"3","D":"4"}','B','because',$4,$5)`,[lo,st,'Q'+i,i<12?'active':'draft',(i%3)-1]);
+await db.query(`insert into question_bank(learning_objective_id,subtopic_id,stem,options,correct_option,status) values($1,$2,'6q','{"A":"1","B":"2"}','A','active')`,[lo,st6]);
+let pass=0,fail=0;
+const as=async(uid,sql,p=[])=>{await db.exec(`reset role; select set_config('request.jwt.claim.sub','${uid??''}',false); set role authenticated;`);try{return await db.query(sql,p)}finally{await db.exec("reset role; select set_config('request.jwt.claim.sub','',false);")}};
+const ok=(n,c)=>{c?pass++:fail++;console.log(c?'  PASS':'  FAIL',n)};
+const throws=async(n,fn,m)=>{try{await fn();fail++;console.log('  FAIL (no error)',n)}catch(e){const g=String(e.message).includes(m);g?pass++:fail++;console.log(g?'  PASS':'  FAIL',n,g?'':e.message)}};
+const rpc=async(u,f,args=[])=>(await as(u,`select ${f}(${args.map((_,i)=>'$'+(i+1)).join(',')}) j`,args)).rows[0].j;
+
+console.log('-- auto assignment');
+const td=await rpc(U.ST,'dpp_student_today');
+ok('student gets one auto set today',td.assignments.length===1);
+const a0=td.assignments[0];
+ok('auto set has 10 questions (only active ones)',a0.question_count===10);
+ok('no draft questions used',(await db.query(`select count(*)::int c from dpp_items i join question_bank q on q.id=i.bank_item_id where q.status<>'active'`)).rows[0].c===0);
+ok('class 5 student does not get class 6 question',(await db.query(`select count(*)::int c from dpp_items where stem='6q'`)).rows[0].c===0);
+ok('subject is Mathematics',a0.subject==='Mathematics');
+const td2=await rpc(U.ST,'dpp_student_today');
+ok('second call does not duplicate',td2.assignments.length===1);
+const tdB=await rpc(U.ST2,'dpp_student_today');
+ok('"5" class format also matches',tdB.assignments.length===1);
+const tdC=await rpc(U.ST3,'dpp_student_today');
+ok('class with too few questions gets nothing',tdC.assignments.length===0);
+await throws('parent cannot open student page',()=>rpc(U.PAR,'dpp_student_today'),'FORBIDDEN');
+await throws('anonymous refused',()=>as(null,`select dpp_student_today()`),'NOT_AUTHENTICATED');
+
+console.log('-- attempt, save, key secrecy');
+const start=await rpc(U.ST,'dpp_start_attempt',[a0.assignment_id]);
+ok('start returns 10 items',start.items.length===10);
+ok('items carry no answer key',start.items.every(i=>!('correct_answer' in i)&&!('explanation' in i)&&!('correct_option' in i)));
+const att=start.attempt_id;
+await throws('student cannot read dpp_items directly',async()=>{const r=await as(U.ST,`select * from dpp_items`);if(r.rows.length)throw new Error('LEAK '+r.rows.length);throw new Error('empty-ok');},'empty-ok');
+await throws('student cannot insert attempts directly',()=>as(U.ST,`insert into dpp_attempts(assignment_id,set_id,student_id,school_id) values($1,$1,$2,$3)`,[a0.assignment_id,U.ST,S1]),'permission denied');
+await throws('student cannot update score',()=>as(U.ST,`update dpp_attempts set score=99`),'permission denied');
+await throws('other student cannot start my assignment',()=>rpc(U.ST2,'dpp_start_attempt',[a0.assignment_id]),'ASSIGNMENT_NOT_FOUND');
+const items=(await db.query(`select id,position,correct_answer from dpp_items where set_id=$1 order by position`,[a0.set_id])).rows;
+for(let i=0;i<10;i++){ const ans=i<6?items[i].correct_answer:(i<9?(items[i].correct_answer==='A'?'B':'A'):''); await as(U.ST,`select dpp_save_answer($1,$2,$3)`,[att,items[i].id,ans]); }
+const resume=await rpc(U.ST,'dpp_start_attempt',[a0.assignment_id]);
+ok('resume returns saved answers',Object.keys(resume.answers).length===9&&resume.attempt_id===att);
+await throws('other student cannot save into my attempt',()=>as(U.ST2,`select dpp_save_answer($1,$2,'A')`,[att,items[0].id]),'ATTEMPT_NOT_FOUND');
+
+console.log('-- grading');
+const res=await rpc(U.ST,'dpp_submit_attempt',[att]);
+ok('score 6/10',Number(res.score)===6&&Number(res.max_score)===10&&Number(res.percent)===60);
+ok('3 incorrect, 1 unanswered',res.incorrect===3&&res.unanswered===1&&res.correct===6);
+ok('accuracy 6/9 = 66.7',Number(res.accuracy)===66.7);
+ok('result carries explanations and key',res.items.every(i=>i.correct_answer)&&res.items[0].explanation==='because');
+const again=await rpc(U.ST,'dpp_submit_attempt',[att]);
+ok('second submit is a no-op, same score',Number(again.score)===6);
+await throws('cannot save after submit',()=>as(U.ST,`select dpp_save_answer($1,$2,'A')`,[att,items[0].id]),'ALREADY_SUBMITTED');
+await throws('cannot restart after submit',()=>rpc(U.ST,'dpp_start_attempt',[a0.assignment_id]),'ALREADY_SUBMITTED');
+ok('mastery evidence recorded for answered items (9)',(await db.query(`select count(*)::int c from mastery_log where source='mcq'`)).rows[0].c===9);
+const t3=await rpc(U.ST,'dpp_student_today');
+ok('today shows submitted',t3.assignments[0].status==='submitted'&&t3.streak.current===1&&t3.streak.done_today===true);
+ok('student A cannot see student B result',await (async()=>{try{await rpc(U.ST2,'dpp_get_result',[att]);return false}catch(e){return String(e.message).includes('ATTEMPT_NOT_FOUND')}})());
+
+console.log('-- streak');
+await db.exec(`update dpp_streaks set last_completed_date=last_completed_date-1, current_streak=4 where student_id='${U.ST}'`);
+const sset=(await db.query(`insert into dpp_sets(school_id,title,subject,status,created_by) values($1,'Extra','Mathematics','published',$2) returning id`,[S1,U.T1])).rows[0].id;
+await db.query(`insert into dpp_items(set_id,position,question_type,stem,options,correct_answer) values($1,1,'mcq','q','{"A":"1","B":"2"}','A')`,[sset]);
+const asg=(await db.query(`insert into dpp_assignments(set_id,school_id,student_id,assigned_for) values($1,$2,$3,(select current_date)) returning id`,[sset,S1,U.ST])).rows[0].id;
+const s2=await rpc(U.ST,'dpp_start_attempt',[asg]);
+await rpc(U.ST,'dpp_submit_attempt',[s2.attempt_id]);
+ok('consecutive day extends streak to 5',(await db.query(`select current_streak c from dpp_streaks where student_id=$1`,[U.ST])).rows[0].c===5);
+ok('same-day second attempt does not double count',(await db.query(`select total_completed c from dpp_streaks where student_id=$1`,[U.ST])).rows[0].c===2);
+
+console.log('-- teacher set creation and all question types');
+const items2=[
+ {question_type:'mcq',stem:'2+2?',options:{A:'3',B:'4',C:'5',D:'6'},correct_answer:'B',explanation:'four',marks:2,difficulty:'easy'},
+ {question_type:'true_false',stem:'Sky is blue',correct_answer:'A',marks:1},
+ {question_type:'short_answer',stem:'Capital of France',accepted_answers:['Paris'],marks:1},
+ {question_type:'numeric',stem:'pi to 2dp',numeric_answer:3.14,tolerance:0.01,marks:2},
+ {question_type:'open_ended',stem:'Explain gravity',marks:4}];
+await throws('student cannot create sets',()=>as(U.ST,`select dpp_save_set(null,'{"title":"x","subject":"y"}'::jsonb,'[]'::jsonb)`),'FORBIDDEN');
+await throws('set needs a title',()=>as(U.T1,`select dpp_save_set(null,'{"subject":"y"}'::jsonb,$1::jsonb)`,[JSON.stringify(items2)]),'title is required');
+await throws('mcq needs valid correct option',()=>as(U.T1,`select dpp_save_set(null,'{"title":"x","subject":"y"}'::jsonb,$1::jsonb)`,[JSON.stringify([{question_type:'mcq',stem:'q',options:{A:'1',B:'2'},correct_answer:'D'}])]),'no valid correct option');
+await throws('marks must be positive',()=>as(U.T1,`select dpp_save_set(null,'{"title":"x","subject":"y"}'::jsonb,$1::jsonb)`,[JSON.stringify([{question_type:'true_false',stem:'q',correct_answer:'A',marks:0}])]),'marks');
+const setId=await rpc(U.T1,'dpp_save_set',[null,JSON.stringify({title:'Mixed quiz',subject:'Maths',class_level:'Class 5',time_limit_minutes:30}),JSON.stringify(items2)]);
+ok('set created',!!setId);
+await throws('other teacher cannot edit',()=>as(U.T2,`select dpp_save_set($1,'{"title":"hijack","subject":"y"}'::jsonb,null)`,[setId]),'FORBIDDEN');
+await throws('other school admin cannot assign',()=>as(U.OADM,`select dpp_assign_set($1,'Class 5')`,[setId]),'FORBIDDEN');
+const asr=await rpc(U.T1,'dpp_assign_set',[setId,'Class 5',null,null,null]);
+ok('assigned to class 5 students of this school only (2)',asr.assigned===2);
+ok('other school student not assigned',(await db.query(`select count(*)::int c from dpp_assignments where set_id=$1 and student_id=$2`,[setId,U.OST])).rows[0].c===0);
+const asr2=await rpc(U.T1,'dpp_assign_set',[setId,'Class 5',null,null,null]);
+ok('re-assign creates no duplicates',asr2.assigned===0&&asr2.already_assigned===2);
+ok('notification created',(await db.query(`select count(*)::int c from governance_notifications where event_type='dpp_assigned'`)).rows[0].c===2);
+await throws('cannot schedule in the past',()=>as(U.T1,`select dpp_assign_set($1,'Class 5',null,null,current_date-3)`,[setId]),'from today');
+const future=await rpc(U.T1,'dpp_assign_set',[setId,null,null,`{${U.ST3}}`,new Date(Date.now()+3*864e5).toISOString().slice(0,10)]);
+ok('scheduled assignment created',future.assigned===1);
+ok('future assignment hidden from student today',(await rpc(U.ST3,'dpp_student_today')).assignments.every(a=>a.set_id!==setId));
+await throws('cannot start a future assignment',async()=>{const id=(await db.query(`select id from dpp_assignments where set_id=$1 and student_id=$2`,[setId,U.ST3])).rows[0].id;await rpc(U.ST3,'dpp_start_attempt',[id])},'NOT_AVAILABLE_YET');
+
+console.log('-- student takes mixed quiz');
+const mine=(await rpc(U.ST,'dpp_student_today')).assignments.find(a=>a.set_id===setId);
+const sa=await rpc(U.ST,'dpp_start_attempt',[mine.assignment_id]);
+ok('time limit exposed',sa.time_limit_minutes===30&&sa.remaining_seconds>1700);
+const it=(await db.query(`select id,question_type from dpp_items where set_id=$1 order by position`,[setId])).rows;
+const give=['B','A',' paris. ','3.145','Gravity pulls masses together'];
+for(let i=0;i<5;i++) await as(U.ST,`select dpp_save_answer($1,$2,$3)`,[sa.attempt_id,it[i].id,give[i]]);
+const r2=await rpc(U.ST,'dpp_submit_attempt',[sa.attempt_id]);
+ok('objective items graded (2+1+1+2=6) and open-ended pending',Number(r2.score)===6&&r2.pending_manual===1&&r2.grading_status==='pending_manual');
+ok('open-ended answer has no key shown',r2.items[4].correct_answer===null&&r2.items[4].pending===true);
+console.log('-- manual grading');
+const pend=await rpc(U.T1,'dpp_pending_manual');
+ok('teacher sees pending answer',pend.length===1&&pend[0].student==='Student A');
+await throws('other teacher cannot grade',()=>as(U.T2,`select dpp_grade_answer($1,3,'x')`,[pend[0].answer_id]),'FORBIDDEN');
+await throws('marks above max rejected',()=>as(U.T1,`select dpp_grade_answer($1,9,'x')`,[pend[0].answer_id]),'marks must be between');
+await as(U.T1,`select dpp_grade_answer($1,3,'Good')`,[pend[0].answer_id]);
+const r3=await rpc(U.ST,'dpp_get_result',[sa.attempt_id]);
+ok('score updated to 9/10 and complete',Number(r3.score)===9&&r3.grading_status==='complete'&&r3.pending_manual===0);
+ok('teacher feedback visible',r3.items[4].teacher_feedback==='Good');
+await throws('set locked after attempts',()=>as(U.T1,`select dpp_save_set($1,'{"title":"Mixed quiz","subject":"Maths"}'::jsonb,$2::jsonb)`,[setId,JSON.stringify(items2)]),'SET_LOCKED');
+
+console.log('-- interrupted attempts / timer');
+const tset=await rpc(U.T1,'dpp_save_set',[null,JSON.stringify({title:'Timed',subject:'Maths',time_limit_minutes:5}),JSON.stringify([{question_type:'true_false',stem:'a',correct_answer:'A'},{question_type:'true_false',stem:'b',correct_answer:'B'}])]);
+await rpc(U.T1,'dpp_assign_set',[tset,null,null,`{${U.ST}}`,null]);
+const tm=(await rpc(U.ST,'dpp_student_today')).assignments.find(a=>a.set_id===tset);
+const ta=await rpc(U.ST,'dpp_start_attempt',[tm.assignment_id]);
+const tit=(await db.query(`select id from dpp_items where set_id=$1 order by position`,[tset])).rows;
+await as(U.ST,`select dpp_save_answer($1,$2,'A')`,[ta.attempt_id,tit[0].id]);
+await db.query(`update dpp_attempts set started_at=now()-interval '20 minutes' where id=$1`,[ta.attempt_id]);
+ok('late save is refused and auto-submits',(await as(U.ST,`select dpp_save_answer($1,$2,'B') j`,[ta.attempt_id,tit[1].id])).rows[0].j==='time_up');
+const ar=(await db.query(`select status,auto_submitted,score,time_taken_seconds from dpp_attempts where id=$1`,[ta.attempt_id])).rows[0];
+ok('expired attempt auto-submitted with saved answers (1/2), time capped at 300s',ar.status==='submitted'&&ar.auto_submitted===true&&Number(ar.score)===1&&ar.time_taken_seconds===300);
+const abandoned=await rpc(U.T1,'dpp_save_set',[null,JSON.stringify({title:'Idle',subject:'Maths'}),JSON.stringify([{question_type:'true_false',stem:'a',correct_answer:'A'}])]);
+await rpc(U.T1,'dpp_assign_set',[abandoned,null,null,`{${U.ST}}`,null]);
+const ab=(await rpc(U.ST,'dpp_student_today')).assignments.find(a=>a.set_id===abandoned);
+await rpc(U.ST,'dpp_start_attempt',[ab.assignment_id]);
+ok('abandoned attempt can be resumed later',(await rpc(U.ST,'dpp_start_attempt',[ab.assignment_id])).attempt_id!==undefined);
+
+console.log('-- parent / admin / teacher analytics');
+const po=await rpc(U.PAR,'dpp_parent_overview',[U.ST]);
+ok('parent sees own child',po.child_name==='Student A'&&po.totals.attempts>=3);
+await throws('parent cannot see another child',()=>rpc(U.PAR,'dpp_parent_overview',[U.ST2]),'not linked');
+await throws('student cannot call parent view',()=>rpc(U.ST2,'dpp_parent_overview',[U.ST]),'not linked');
+const ad=await rpc(U.ADMIN,'dpp_admin_overview',[30]);
+ok('admin totals',ad.totals.submitted>=4&&ad.totals.students===3);
+ok('admin sees class + subject + daily + teachers',ad.by_class.length>0&&ad.by_subject.length>0&&ad.daily.length===30&&ad.teachers.length>=1);
+const oa=await rpc(U.OADM,'dpp_admin_overview',[30]);
+ok('other school admin sees none of it',oa.totals.submitted===0&&oa.totals.students===1&&oa.by_subject.length===0);
+await throws('teacher cannot open admin view',()=>rpc(U.T1,'dpp_admin_overview',[30]),'FORBIDDEN');
+const ov=await rpc(U.T1,'dpp_teacher_overview',[30]);
+ok('teacher sees own sets only',ov.sets.length===4&&ov.sets.every(s=>s.title));
+ok('teacher 2 sees none of teacher 1 sets',(await rpc(U.T2,'dpp_teacher_overview',[30])).sets.length===0);
+const det=await rpc(U.T1,'dpp_set_detail',[setId]);
+ok('set detail has per-student results and question stats',det.students.length>=2&&det.question_stats.length===5&&det.items[0].correct_answer==='B');
+await throws('other teacher cannot open set detail',()=>rpc(U.T2,'dpp_set_detail',[setId]),'FORBIDDEN');
+ok('admin can open any set in school',!!(await rpc(U.ADMIN,'dpp_set_detail',[setId])).set);
+ok('teacher can view student result',(await rpc(U.T1,'dpp_get_result',[sa.attempt_id])).student_name==='Student A');
+await throws('other teacher cannot view result',()=>rpc(U.T2,'dpp_get_result',[sa.attempt_id]),'ATTEMPT_NOT_FOUND');
+await throws('teacher cannot read other school attempts',()=>rpc(U.OADM,'dpp_get_result',[sa.attempt_id]),'ATTEMPT_NOT_FOUND');
+
+console.log('-- RLS reads');
+ok('student sees only own attempts via table',(await as(U.ST2,`select count(*)::int c from dpp_attempts`)).rows[0].c===0);
+ok('student cannot read answer table of others',(await as(U.ST2,`select count(*)::int c from dpp_answers`)).rows[0].c===0);
+ok('other school student sees none of my sets',(await as(U.OST,`select count(*)::int c from dpp_sets`)).rows[0].c===0);
+ok('other school admin sees no sets',(await as(U.OADM,`select count(*)::int c from dpp_sets`)).rows[0].c===0);
+ok('teacher 2 sees no sets of teacher 1',(await as(U.T2,`select count(*)::int c from dpp_sets`)).rows[0].c===0);
+ok('no one but staff reads dpp_items (student A)',(await as(U.ST,`select count(*)::int c from dpp_items`)).rows[0].c===0);
+
+console.log('-- stats, history, recommendations, tutor');
+const stats=await rpc(U.ST,'dpp_student_stats');
+ok('stats include week of 7 days, subjects, difficulty',stats.week.length===7&&stats.by_subject.length>0&&stats.by_difficulty.length>0);
+await db.query(`update dpp_answers set is_correct=false, marks_awarded=0 where attempt_id=$1`,[att]);
+const recs=await rpc(U.ST,'dpp_recommendations');
+ok('weak concept recommended with subtopic id for Adaptive Practice',recs.length===1&&Number(recs[0].subtopic_id)===Number(st)&&Number(recs[0].accuracy)<60);
+ok('history lists attempts',(await rpc(U.ST,'dpp_history',[30])).length>=3);
+const tc=await rpc(U.ST,'dpp_tutor_context',[U.ST,att,items[0].id]);
+ok('tutor context after submit has answer + explanation',tc.locked===false&&tc.correct_answer&&tc.explanation==='because');
+const live=await rpc(U.ST,'dpp_tutor_context',[U.ST,ab.assignment_id?(await db.query(`select id from dpp_attempts where assignment_id=$1`,[ab.assignment_id])).rows[0].id:null,(await db.query(`select id from dpp_items where set_id=$1`,[abandoned])).rows[0].id]);
+ok('tutor context during active attempt is locked and has no key',live.locked===true&&!('correct_answer' in live)&&!('explanation' in live));
+await throws('tutor context refuses other student',()=>rpc(U.ST2,'dpp_tutor_context',[U.ST,att,items[0].id]),'FORBIDDEN');
+await db.exec(`reset role`);
+const settings=await rpc(U.ADMIN,'dpp_save_settings',['Asia/Kolkata',true,8]).catch(e=>e);
+await throws('invalid timezone rejected',()=>as(U.ADMIN,`select dpp_save_settings('Mars/Base',true,8)`),'unknown time zone');
+await throws('teacher cannot change settings',()=>as(U.T1,`select dpp_save_settings('Asia/Kolkata',true,8)`),'FORBIDDEN');
+await as(U.ADMIN,`select dpp_save_settings('Pacific/Kiritimati',true,8)`);
+ok('settings saved',(await rpc(U.T1,'dpp_get_settings')).daily_question_count===8);
+console.log(`\nRESULT: ${pass} passed, ${fail} failed`);
+process.exit(fail?1:0);

@@ -133,7 +133,8 @@ const AITutor = () => {
   const [messages, setMessages] = useState<Message[]>(() =>
     searchParams.get("mode") === "career" ? getCareerIntroMessages(profile?.full_name) : []
   );
-  const [input, setInput] = useState("");
+  // Opened from a Daily Practice result: pre-fill the question about that practice item (student still presses send).
+  const [input, setInput] = useState(() => (searchParams.get("dpp_item") ? (searchParams.get("prompt") ?? "").slice(0, 500) : ""));
   const [isLoading, setIsLoading] = useState(false);
   // Photos / documents attached to the question (kept for follow-ups until the student removes them).
   const [attachments, setAttachments] = useState<TutorAttachment[]>([]);
@@ -372,6 +373,11 @@ const AITutor = () => {
           hint_level: levelForThisMessage,
           accessibility: getAiAccessibilityFlags(),
           voice: voiceModeRef.current,
+          // set when the student opens the tutor from a topic page ("Ask the AI Tutor")
+          ...(searchParams.get("topic") ? { topic_id: searchParams.get("topic") } : {}),
+          // set when the student asks about a Daily Practice question; the server decides what may be revealed
+          ...(searchParams.get("dpp_attempt") && searchParams.get("dpp_item")
+            ? { dpp_attempt: searchParams.get("dpp_attempt"), dpp_item: searchParams.get("dpp_item") } : {}),
           ...(sending.length ? { attachments: toRequestAttachments(sending) } : {}),
         }),
       });

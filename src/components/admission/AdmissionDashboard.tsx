@@ -7,13 +7,20 @@ import { ApplicantFormDialog } from "./ApplicantFormDialog";
 import { ApplicantsTable } from "./ApplicantsTable";
 import { EnquiriesPanel } from "./EnquiriesPanel";
 import { ExportSelectedApplicantsButton } from "./ExportSelectedApplicantsButton";
+import { LeadImportDialog } from "./LeadImportDialog";
+import { LeadExportDialog } from "./LeadExportDialog";
+import { LeadImportHistoryDialog } from "./LeadImportHistoryDialog";
+import { Button } from "@/components/ui/button";
+import { CallSettingsDialog } from "./calls/CallSettingsDialog";
+import { PendingFollowupsCard } from "./calls/PendingFollowupsCard";
+import { useAuth } from "@/contexts/AuthContext";
 import { useAdmissionIntakes } from "@/hooks/useAdmissionIntakes";
 import { useAdmissionApplicants, type ApplicantFilters } from "@/hooks/useAdmissionApplicants";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { LeadSourceBadge } from "./LeadSourceBadge";
 import { useAdmissionIntegrations } from "@/hooks/useAdmissionIntegrations";
 import { LEAD_PROVIDER_LABELS } from "@/lib/admissionIntegrations";
-import { GraduationCap, Users, UserCheck, Clock, LayoutGrid, Plug, AlertTriangle, Inbox } from "lucide-react";
+import { GraduationCap, Users, UserCheck, Clock, LayoutGrid, Plug, AlertTriangle, Upload, FileDown, History, Phone,  Inbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 type StatAccent = "indigo" | "violet" | "emerald" | "amber";
 
@@ -74,6 +81,14 @@ export function AdmissionDashboard() {
   const [selectedIntakeId, setSelectedIntakeId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<"overview" | "applicants" | "enquiries" | "sources">("overview");
   const [filters, setFilters] = useState<ApplicantFilters>({ intakeId: "all", status: "all" });
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [callSettingsOpen, setCallSettingsOpen] = useState(false);
+  const [panelLead, setPanelLead] = useState<{ id: string; name: string } | null>(null);
+  const { profile: authProfile } = useAuth();
+  const isAdminRole = ["admin", "principal", "school_admin"].includes(authProfile?.role ?? "");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const {
     applicants,
@@ -267,9 +282,18 @@ export function AdmissionDashboard() {
                 </span>
               )}
             </h2>
-            <ExportSelectedApplicantsButton />
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setImportOpen(true)}><Upload className="h-4 w-4 me-1.5" />Import Leads</Button>
+              <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}><FileDown className="h-4 w-4 me-1.5" />Export Leads{selectedIds.length ? ` (${selectedIds.length})` : ""}</Button>
+              {isAdminRole && <Button variant="outline" size="sm" onClick={() => setCallSettingsOpen(true)}><Phone className="h-4 w-4 me-1.5" />Calling settings</Button>}
+              <Button variant="ghost" size="sm" onClick={() => setHistoryOpen(true)}><History className="h-4 w-4 me-1.5" />Import history</Button>
+              <ExportSelectedApplicantsButton />
+            </div>
           </div>
+          <PendingFollowupsCard onOpenLead={(id, name) => setPanelLead({ id, name })} />
           <ApplicantsTable
+            panelLead={panelLead}
+            onPanelLeadChange={setPanelLead}
             applicants={applicants}
             loading={applicantsLoading}
             intakes={intakes}
@@ -278,6 +302,8 @@ export function AdmissionDashboard() {
             onDecide={decideApplicant}
             onDocumentsChanged={refetchApplicants}
             integrations={integrations}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
           />
         </div>
         )}
@@ -296,6 +322,11 @@ export function AdmissionDashboard() {
         </div>
         )}
       </div>
+
+      <LeadImportDialog open={importOpen} onOpenChange={setImportOpen} intakes={intakes} onImported={() => { void refetchApplicants(); void refetchIntegrations(); }} />
+      <LeadExportDialog open={exportOpen} onOpenChange={setExportOpen} intakes={intakes} selectedIds={selectedIds} />
+      <LeadImportHistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} />
+      <CallSettingsDialog open={callSettingsOpen} onOpenChange={setCallSettingsOpen} />
     </div>
   );
 }

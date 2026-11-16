@@ -62,7 +62,8 @@ import {
   Lightbulb,
   Hourglass,
   Gauge,
-  Siren
+  Siren,
+  ListChecks,
 } from "lucide-react";
 import { useCallback, useLayoutEffect, useRef } from "react";
 import { NavLink, useLocation } from "react-router-dom";
@@ -150,6 +151,7 @@ export const navItems: NavItem[] = [
   { title: "My Exams", icon: ClipboardCheck, path: "/my-exams", roles: ["student"], module: "Assessments" },
   { title: "Adaptive Test", icon: Zap, path: "/adaptive-test", roles: ["student"], module: "Assessments" },
   { title: "Daily Review", icon: RotateCw, path: "/daily-review", roles: ["student"], module: "Assessments", alsoActiveOn: ["/flashcards"] },
+  { title: "Daily Practice", icon: ListChecks, path: "/daily-practice", roles: ["student"], module: "Assessments" },
   { title: "Forgetting Forecast", icon: Hourglass, path: "/forgetting-forecast", roles: ["student"], module: "Assessments" },
   { title: "Learning Path", icon: Route, path: "/learning-path", roles: ["student"], module: "Assessments" },
   //{ title: "What's Next", icon: Sparkles, path: "/next-best-action", roles: ["student"], module: "Assessments" },
@@ -177,6 +179,9 @@ export const navItems: NavItem[] = [
   { title: "Reports", icon: Users, path: "/teacher", roles: ["admin", "hod", "student", "parent"], module: "Reports" },
   { title: "Electives", icon: BookOpen, path: "/electives", roles: ["student"] },
   { title: "Courses", icon: BookOpen, path: "/student/courses", roles: ["student"], module: "Courses" },
+  { title: "Course Structure", icon: Layers, path: "/course-structure", roles: ["admin", "principal", "school_admin", "hod", "teacher"] },
+  { title: "Daily Practice (DPP)", icon: ListChecks, path: "/dpp-manage", roles: ["admin", "principal", "school_admin", "hod", "teacher"] },
+  { title: "Content Approval", icon: ClipboardCheck, path: "/content-approval", roles: ["admin", "principal", "school_admin", "hod", "teacher"] },
   { title: "Credentials", icon: Award, path: "/student/credentials", roles: ["student"], module: "Credentials" },
   { title: "My Doubts", icon: MessageSquare, path: "/doubts", roles: ["student"] },
   { title: "Student Doubts", icon: MessageSquare, path: "/doubts", roles: ["teacher", "admin", "principal", "hod", "school_admin"] },

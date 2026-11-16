@@ -5,6 +5,8 @@ import { clampHintLevel, resolveTutorStyle, styleDirective } from "../_shared/tu
 import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
 import { callerOwnsStudent, pruneThread, resolveMode, saveMessage, tapStream } from "../_shared/tutorMemory.ts";
 import { emitLearningEvent } from "../_shared/learningEvents.ts";
+import { topicContextDirective } from "../_shared/topicContext.ts";
+import { dppContextDirective } from "../_shared/dppContext.ts";
 import { screenStudentMessage, sseFromText, voiceDirective } from "../_shared/voiceTutorSafety.ts";
 import { evaluateAndStore } from "../_shared/handlers/aiQualityControl.ts";
 import {
@@ -80,7 +82,7 @@ serve(async (req) => {
     // `attachments` = photos / documents the student sent with the question.
     const {
       message, student_id, conversation_history = [], language, style, hint_level, mode,
-      accessibility, voice, grade_band, attachments,
+      accessibility, voice, grade_band, attachments, topic_id, dpp_attempt, dpp_item,
     } = await req.json();
     const voiceMode = voice === true;
     const teachingLang = resolveTeachingLanguage(language);
@@ -195,6 +197,31 @@ serve(async (req) => {
       }
     }
 
+    // Multi-level course structure: when the student is inside a topic, ground the tutor in that lesson.
+    // The RPC re-checks that the topic is published, in the student's school and not locked for them; any
+    // failure simply means "no lesson context" and the tutor behaves exactly as before.
+    let lessonContext = "";
+    if (persist && typeof topic_id === "string" && /^[0-9a-f-]{36}$/i.test(topic_id)) {
+      try {
+        const { data: ctx } = await supabase.rpc("get_topic_tutor_context", { p_student: student_id, p_topic: topic_id });
+        lessonContext = topicContextDirective(ctx);
+      } catch (e) {
+        console.error("topic context failed:", e);
+      }
+    }
+
+    // Daily Practice: the student asked about one practice question. Answer key/explanation are released by the
+    // database only after the attempt is submitted; during an active attempt the tutor only coaches.
+    const uuidRe = /^[0-9a-f-]{36}$/i;
+    if (persist && typeof dpp_attempt === "string" && typeof dpp_item === "string" && uuidRe.test(dpp_attempt) && uuidRe.test(dpp_item)) {
+      try {
+        const { data: dctx } = await supabase.rpc("dpp_tutor_context", { p_student: student_id, p_attempt: dpp_attempt, p_item: dpp_item });
+        lessonContext += dppContextDirective(dctx);
+      } catch (e) {
+        console.error("dpp context failed:", e);
+      }
+    }
+
     const systemPrompt = `You are APAS AI Tutor, a friendly and patient educational assistant for students. 
 
 Student Profile:
@@ -206,7 +233,7 @@ Student Profile:
 - ZPD Score: ${student?.zpd_score || "N/A"}
 - Curriculum: ${student?.curriculum || "your school curriculum"}
 - Weak Topics: ${weakTopics.length ? weakTopics.join(", ") : "None identified"}
-${relevantContext}
+${relevantContext}${lessonContext}
 
 IMPORTANT - STRICT SUBJECT RESTRICTION:
 You ONLY answer questions related to school subjects: Mathematics, Science, English, Social Studies, Environmental Science, Physics, Chemistry, Biology, History, Geography, and other academic curriculum subjects.

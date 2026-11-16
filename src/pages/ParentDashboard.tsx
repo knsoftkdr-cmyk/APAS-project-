@@ -21,6 +21,7 @@ import { BusTrackingMap } from "@/components/transport/BusTrackingMap";
 import { DriverRatingForm } from "@/components/transport/DriverRatingForm";
 import { Link } from "react-router-dom";
 import parentBanner from "@/assets/parent-banner.png";
+import { ParentDppCard } from "@/components/dpp/ParentDppCard";
 import { DashboardHero } from "@/components/dashboard/DashboardHero";
 
 import parentBanner from "@/assets/parent-banner.png";
@@ -323,6 +324,8 @@ export default function ParentDashboard() {
             </CardContent>
           </Card>
         )}
+
+        {selectedChild && <ParentDppCard childId={selectedChild} />}
 
         {/* Pay Fees entry point */}
         <Link to="/parent/fee-payment" state={{ studentId: selectedChild }}>

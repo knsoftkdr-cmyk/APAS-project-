@@ -6,6 +6,7 @@ import { handleSessionManagement } from "../_shared/handlers/sessionManagement.t
 import { handleTranslateUi } from "../_shared/handlers/translateUi.ts";
 import { handleAdmissionIntegrations } from "../_shared/handlers/admissionIntegrations.ts";
 import { handleLeadWebhookRequest } from "../_shared/handlers/leadWebhook.ts";
+import { handleTelephonyCalls, handleTelephonyWebhook } from "../_shared/handlers/telephonyCalls.ts";
 
 // Security Anomaly Detection (merged in, no new edge function - see _shared/mergedRouter.ts and CONSOLIDATION.md).
 // Routed on `mode` because this function's own body already uses `action` for the audit action name.
@@ -31,6 +32,8 @@ const MERGED_ROUTES: RouteTable = {
   adm_int_subscribe: { handler: handleAdmissionIntegrations, action: "subscribe" },
   adm_int_sync: { handler: handleAdmissionIntegrations, action: "sync" },
   adm_int_retry: { handler: handleAdmissionIntegrations, action: "retry" },
+  // Click-to-Call & telephony (browser operations: start / refresh / recording). Does its own staff authentication.
+  tel_call: { handler: handleTelephonyCalls },
 };
 
 const corsHeaders = {
@@ -46,6 +49,9 @@ serve(async (req) => {
   if (new URL(req.url).searchParams.has("lead_hook")) return handleLeadWebhookRequest(req);
 
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  // Telephony provider status callbacks (Exotel posts here). Authenticated by an HMAC token in the URL, not a JWT.
+  if (new URL(req.url).searchParams.has("telephony")) return handleTelephonyWebhook(req);
 
   const merged = await routeMerged(req, MERGED_ROUTES, "mode");
   if (merged) return merged;
