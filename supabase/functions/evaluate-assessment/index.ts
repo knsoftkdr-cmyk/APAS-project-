@@ -5,8 +5,73 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const GEMINI_MODEL = "gemini-2.5-pro";
-const GEMINI_ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+// Gemini 2.5 models were shut down, so default to the current 3.x Flash models. Override without
+// redeploying via the EVAL_GEMINI_MODELS secret (comma-separated), e.g. to put a Pro model first.
+const DEFAULT_EVAL_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"];
+const geminiUrl = (model: string, key: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+
+function evalModels(): string[] {
+  const fromEnv = (Deno.env.get("EVAL_GEMINI_MODELS") ?? "").split(",").map((m) => m.trim()).filter(Boolean);
+  return fromEnv.length ? fromEnv : DEFAULT_EVAL_MODELS;
+}
+
+function evalKeys(): string[] {
+  return [
+    Deno.env.get("Worksheet_gemini_api_key"),
+    Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
+    Deno.env.get("GOOGLE_GEMINI_API_KEY"),
+    Deno.env.get("GEMINI_KEY_2"),
+    Deno.env.get("GEMINI_KEY_3"),
+    Deno.env.get("GEMINI_KEY_4"),
+  ].filter((k, i, a): k is string => !!k && k.trim().length > 0 && a.indexOf(k) === i);
+}
+
+// Grading one answer sheet: try each key x model until one returns a usable JSON report. Stops before the
+// edge function's wall-clock limit so the caller still gets a readable error instead of a killed request.
+// deno-lint-ignore no-explicit-any
+async function generateReport(body: any, deadline: number): Promise<any> {
+  const errors: string[] = [];
+  attempts:
+  for (const key of evalKeys()) {
+    for (const model of evalModels()) {
+      const thinking = model.startsWith("gemini-2.5") ? { thinkingBudget: 2048 } : { thinkingLevel: "low" };
+      for (const withThinking of [true, false]) {
+        const remaining = deadline - Date.now();
+        if (remaining < 5000) { errors.push("timed out"); break attempts; }
+        try {
+          const generationConfig = withThinking ? { ...body.generationConfig, thinkingConfig: thinking } : body.generationConfig;
+          const res = await fetch(geminiUrl(model, key), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...body, generationConfig }),
+            signal: AbortSignal.timeout(remaining),
+          });
+          if (!res.ok) {
+            const errText = (await res.text()).replace(/\s+/g, " ").slice(0, 150);
+            if (res.status === 400 && withThinking) continue; // model may reject this thinking setting
+            errors.push(`${model}: ${res.status} ${errText}`);
+            break;
+          }
+          const data = await res.json();
+          // deno-lint-ignore no-explicit-any
+          const text = (data?.candidates?.[0]?.content?.parts ?? []).filter((p: any) => !p?.thought && p?.text).map((p: any) => p.text).join("");
+          if (!text.trim()) { errors.push(`${model}: empty (${data?.candidates?.[0]?.finishReason ?? "unknown"})`); break; }
+          try {
+            return JSON.parse(text);
+          } catch {
+            errors.push(`${model}: invalid JSON`);
+            break;
+          }
+        } catch (e) {
+          errors.push(`${model}: ${e instanceof Error ? e.message : String(e)}`);
+          break;
+        }
+      }
+    }
+  }
+  throw new Error(`AI evaluation failed - ${[...new Set(errors)].slice(0, 4).join(" | ") || "no AI key configured"}`);
+}
 
 // Structured output schema -- Gemini returns exactly this shape as JSON.
 const RESPONSE_SCHEMA = {
@@ -265,7 +330,8 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const geminiApiKey = Deno.env.get("Worksheet_gemini_api_key")!;
+    // Leave room under the edge wall-clock limit to save results / report a clean error.
+    const requestDeadline = Date.now() + 130_000;
 
     // Client scoped to the caller's JWT so RLS enforces teacher_id ownership automatically.
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -383,26 +449,10 @@ Deno.serve(async (req) => {
           responseMimeType: "application/json",
           responseSchema: RESPONSE_SCHEMA,
           maxOutputTokens: 65536,
-          thinkingConfig: { thinkingBudget: 2048 },
         },
       };
 
-      const geminiRes = await fetch(`${GEMINI_ENDPOINT}?key=${geminiApiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(geminiBody),
-      });
-
-      if (!geminiRes.ok) {
-        const errText = await geminiRes.text();
-        throw new Error(`Gemini API error (${geminiRes.status}): ${errText.slice(0, 500)}`);
-      }
-
-      const geminiData = await geminiRes.json();
-      const textPart = geminiData?.candidates?.[0]?.content?.parts?.find((p: any) => p.text)?.text;
-      if (!textPart) throw new Error("Gemini returned no content");
-
-      const report = JSON.parse(textPart);
+      const report = await generateReport(geminiBody, requestDeadline);
 
       // Update summary fields on the evaluation row.
       const { error: updateErr } = await supabase

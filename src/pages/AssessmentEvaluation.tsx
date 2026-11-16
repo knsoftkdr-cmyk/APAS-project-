@@ -423,12 +423,19 @@ export default function AssessmentEvaluation({ embedded = false }: { embedded?: 
     if (ids.length === 0) return;
     setEvaluatingIds((prev) => [...prev, ...ids]);
     try {
-      const { data, error } = await supabase.functions.invoke("evaluate-assessment", {
-        body: { evaluation_ids: ids },
-      });
-      if (error) throw error;
-
-      const results = data?.results || [];
+      // The function grades ONE sheet per request (wall-clock limit), so send one request per sheet.
+      const responses = await Promise.all(
+        ids.map(async (id) => {
+          const { data, error } = await supabase.functions.invoke("evaluate-assessment", { body: { evaluation_id: id } });
+          if (error) {
+            let detail = "";
+            try { detail = (await (error as any).context?.json())?.error ?? ""; } catch { /* body not JSON */ }
+            return [{ evaluation_id: id, error: detail || error.message }];
+          }
+          return data?.results || [];
+        })
+      );
+      const results = responses.flat();
       const failed = results.filter((r: any) => r.error);
       const succeeded = results.filter((r: any) => r.success);
 

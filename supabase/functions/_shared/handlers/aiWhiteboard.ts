@@ -51,8 +51,11 @@ export async function handleAiWhiteboard(req: Request): Promise<Response> {
     if (body.style !== "board") {
       try {
         // Thinking on: a correct, well laid-out picture needs the model to plan positions before drawing.
+        // Time-boxed so the board fallback below still fits inside the edge function's wall-clock limit;
+        // without a budget a slow picture got the whole request killed with a non-JSON 5xx.
         const pic = await callAi(cfg, buildIllustrationPrompt(input), {
-          system: ILLUSTRATION_SYSTEM_PROMPT, temperature: 0.3, maxOutputTokens: 32768, reasoning: true,
+          system: ILLUSTRATION_SYSTEM_PROMPT, temperature: 0.3, maxOutputTokens: 24576, reasoning: true,
+          thinkingLevel: "low", timeoutMs: 80_000,
         });
         const illustration = sanitiseIllustration(parseAiJson(pic.text), maxSteps);
         if (illustration) return json({ kind: "illustration", ...illustration, model: pic.model });
@@ -63,7 +66,7 @@ export async function handleAiWhiteboard(req: Request): Promise<Response> {
     }
 
     const result = await callAi(cfg, buildWhiteboardPrompt(input), {
-      system: WHITEBOARD_SYSTEM_PROMPT, temperature: 0.2, maxOutputTokens: 8192,
+      system: WHITEBOARD_SYSTEM_PROMPT, temperature: 0.2, maxOutputTokens: 8192, timeoutMs: 45_000,
     });
     const drawing = sanitiseDrawing(parseAiJson(result.text), maxSteps);
     if (!drawing) return json({ error: "The AI could not produce a drawing for that. Try rephrasing the request." }, 502);

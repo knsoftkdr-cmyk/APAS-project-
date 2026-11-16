@@ -37,7 +37,15 @@ export function getAiConfig(): AiConfig {
 
 // reasoning: let the model think before answering (default is minimal thinking, which is fine for writing
 // but not for checking arithmetic / working out a correct answer).
-export interface CallOptions { system?: string; temperature?: number; maxOutputTokens?: number; reasoning?: boolean }
+// timeoutMs: total time budget across every key/model attempt. Edge functions are killed at their wall-clock
+// limit with a non-JSON response, so a slow call must give up early enough for the caller to answer cleanly.
+// thinkingLevel: with reasoning, cap how long the model thinks (3.x levels; 2.5 gets a matching token budget).
+export interface CallOptions {
+  system?: string; temperature?: number; maxOutputTokens?: number; reasoning?: boolean;
+  timeoutMs?: number; thinkingLevel?: "low" | "medium" | "high";
+}
+
+const THINKING_BUDGET_25 = { low: 1024, medium: 4096, high: 8192 } as const;
 
 function geminiUrl(model: string, key: string) {
   return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
@@ -50,16 +58,26 @@ export async function callAi(cfg: AiConfig, prompt: string, opts: CallOptions = 
   // Thinking tokens count toward this limit, so leave generous headroom for a batch of MCQs.
   const maxOutputTokens = opts.maxOutputTokens ?? 16384;
   const errors: string[] = [];
+  const deadline = opts.timeoutMs ? Date.now() + opts.timeoutMs : Number.POSITIVE_INFINITY;
+  // With reasoning, an explicit thinkingLevel is sent (and dropped on a 400 like the minimal setting).
+  const thinkingFor = (model: string) =>
+    opts.reasoning
+      ? (opts.thinkingLevel
+        ? (model.startsWith("gemini-2.5") ? { thinkingBudget: THINKING_BUDGET_25[opts.thinkingLevel] } : { thinkingLevel: opts.thinkingLevel })
+        : null)
+      : (model.startsWith("gemini-2.5") ? { thinkingBudget: 0 } : { thinkingLevel: "minimal" });
 
+  attempts:
   for (const key of cfg.geminiKeys) {
     for (const model of geminiModels()) {
-      // Ask for minimal thinking; if a model rejects that setting (400), retry once without it.
-      for (const withThinking of opts.reasoning ? [false] : [true, false]) {
+      // Send the thinking setting; if a model rejects it (400), retry once without it.
+      const thinking = thinkingFor(model);
+      for (const withThinking of thinking ? [true, false] : [false]) {
+        const remaining = deadline - Date.now();
+        if (remaining < 3000) { errors.push("timed out"); break attempts; }
         try {
           const generationConfig: Record<string, unknown> = { temperature, maxOutputTokens, responseMimeType: "application/json" };
-          if (withThinking) {
-            generationConfig.thinkingConfig = model.startsWith("gemini-2.5") ? { thinkingBudget: 0 } : { thinkingLevel: "minimal" };
-          }
+          if (withThinking) generationConfig.thinkingConfig = thinking;
           const resp = await fetch(geminiUrl(model, key), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -68,6 +86,7 @@ export async function callAi(cfg: AiConfig, prompt: string, opts: CallOptions = 
               contents: [{ role: "user", parts: [{ text: prompt }] }],
               generationConfig,
             }),
+            signal: Number.isFinite(remaining) ? AbortSignal.timeout(remaining) : undefined,
           });
           if (resp.status === 400 && withThinking) { await resp.text(); continue; } // retry without thinkingConfig
           if (resp.status === 429 || resp.status === 503) { errors.push(`${model}: rate limited (${resp.status})`); break; }
@@ -86,7 +105,7 @@ export async function callAi(cfg: AiConfig, prompt: string, opts: CallOptions = 
     }
   }
 
-  if (cfg.lovableKey) {
+  if (cfg.lovableKey && deadline - Date.now() >= 3000) {
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${cfg.lovableKey}`, "Content-Type": "application/json" },
