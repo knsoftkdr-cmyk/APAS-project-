@@ -314,13 +314,12 @@ Storage: `competency_missions`, `competency_xp_awards` (migration 20261019000000
   client-judged `is_correct`, so a determined student could still inflate a score; the evidence/multi-day rules and the daily cap
   make that slow and bounded, not impossible. Grading every flow server-side is the real fix.
 
-<<<<<<< Updated upstream
 ## AI Command Bar (added later, same pattern)
 
 | Feature | Anchor (deployed) | Discriminator |
 |---|---|---|
 | AI Command Bar (resolve + read-only lookups + action previews; no writes) | ai-teacher-assistant | action: `command_bar` (any signed-in role; the handler authenticates the caller's JWT itself, uses the caller's RLS-bound client, never the service role) |
-=======
+
 ## Teacher & AI suite - sheet rows 27, 28, 40, 41, 42, 43 (same pattern; migration 20261023000000)
 
 | Feature | Anchor (deployed) | Discriminator |
@@ -343,7 +342,6 @@ the share of AI Tutor / Voice Tutor replies sent to the quality evaluator.
 | Bulk actions on exam reviews (row 45) | evaluate-assessment | action: `bulk_review` (+ `op`: `preview` `apply` `undo` `list`) |
 | AI-assisted differentiation (row 46) | ai-teacher-assistant | action: `differentiate` (+ `op`: `generate` `list` `get` `delete` `share`) |
 | Student intervention board (row 47) | - (client, existing RLS on student_interventions) | - |
->>>>>>> Stashed changes
 
 ## Gamification question history (added later, same pattern)
 
@@ -362,7 +360,6 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
 * Requests without these actions fall through to update-mastery's original code unchanged.
 
 
-<<<<<<< Updated upstream
 ## Live class recordings (added later, same pattern)
 
 | Feature | Anchor (deployed) | Discriminator |
@@ -372,10 +369,9 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
 
 Needs migration 20261114000000, secret `GOOGLE_MEET_SA_JSON` (service account key) and the existing `CRON_SECRET`.
 Both anchors must be redeployed (calibrate-irt-cron with `--no-verify-jwt`, as before).
-=======
+
 ## Content Studio (added later, same pattern)
 
 | Feature | Anchor (deployed) | Discriminator |
 |---|---|---|
 | Content Studio - prompt to PPTX / flash cards / flowchart | generate-entry-ticket | action: `content_studio` (needs migration 20261113000000 and secret CONTENT_STUDIO_GEMINI_API_KEY; falls back to the shared Gemini keys) |
->>>>>>> Stashed changes
