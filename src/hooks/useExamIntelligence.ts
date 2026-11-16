@@ -253,7 +253,7 @@ export interface AttemptResultItem {
 }
 export interface AnalysisRow { marks: number; max_marks: number; pct: number | null; questions: number; label?: string; bloom_level?: string; difficulty?: string; topic_name?: string }
 export interface AttemptPayload {
-  attempt: { id: string; status: "assigned" | "in_progress" | "submitted" | "graded"; started_at: string | null; total_max_marks: number; total_score?: number; submitted_at?: string; auto_submitted?: boolean; late_submission?: boolean; time_taken_seconds?: number };
+  attempt: { id: string; status: "assigned" | "in_progress" | "submitted" | "graded"; started_at: string | null; total_max_marks: number; total_score?: number; submitted_at?: string; auto_submitted?: boolean; late_submission?: boolean; time_taken_seconds?: number; integrity_event_count?: number };
   assignment: { id: string; title: string; due_at: string | null; time_limit_minutes: number | null; is_mock: boolean; strict_timer: boolean; grace_seconds: number; opens_at: string | null };
   exam: { title: string; instructions: string[]; exam_pattern_code: string | null };
   timing: { server_now: string; deadline_at: string | null; seconds_remaining: number | null; expired: boolean };

@@ -1,4 +1,5 @@
 ﻿import { useMemo, useState, useEffect } from "react";
+import { displayLocale } from "@/i18n/runtime";
 import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
@@ -426,7 +427,7 @@ const subjectColors: Record<string, string> = {
         eyebrow="APAS Student Portal"
         greeting="Welcome back"
         name={firstName}
-        dateLabel={new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        dateLabel={new Date().toLocaleDateString(displayLocale(), { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         description="Your personal learning dashboard - track homework, scores and weekly progress."
       />
 

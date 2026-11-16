@@ -12,6 +12,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { AccessibilityProvider } from "@/contexts/AccessibilityContext";
 import { AccessibilityPanel } from "@/components/accessibility/AccessibilityPanel";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { LanguageSelectionDialog } from "@/components/LanguageSelectionDialog";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleGuard } from "@/components/RoleGuard";
@@ -36,6 +37,10 @@ import MyCredentials from "@/pages/Mycredentials";
 
 // Lazy load all page components for code splitting
 const Landing = lazy(() => import("./pages/Landing"));
+const Doubts = lazy(() => import("./pages/Doubts"));
+const Certificates = lazy(() => import("./pages/Certificates"));
+const VerifyCertificate = lazy(() => import("./pages/VerifyCertificate"));
+const EnquiryForm = lazy(() => import("./pages/EnquiryForm"));
 const Login = lazy(() => import("./pages/Login"));
 const RequestDemo = lazy(() => import("./pages/RequestDemo"));
 const ERPDashboard = lazy(() => import("./pages/ERPDashboard"));
@@ -54,6 +59,7 @@ const Curative = lazy(() => import("./pages/Curative"));
 const Submissions = lazy(() => import("./pages/Submissions"));
 const AssessmentEvaluation = lazy(() => import("./pages/AssessmentEvaluation"));
 const EntryTicket = lazy(() => import("./pages/EntryTicket"));
+const ContentStudio = lazy(() => import("./pages/ContentStudio"));
 const Requests = lazy(() => import("./pages/Requests"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
 const TeacherPanel = lazy(() => import("./pages/TeacherPanel"));
@@ -225,6 +231,7 @@ export default function App() {
                 <NotificationProvider>
                   <DraftSyncMount />
                   <AccessibilityPanel />
+                  <LanguageSelectionDialog />
                   <Suspense fallback={<PageLoader />}>
                     <Routes>
                       <Route path="/" element={<Landing />} />
@@ -276,6 +283,7 @@ export default function App() {
                       <Route path="/submissions" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal"]}><Submissions /></RoleGuard></ProtectedRoute>} />
                       <Route path="/assessment-evaluation" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "hod", "principal", "school_admin"]}><AssessmentEvaluation /></RoleGuard></ProtectedRoute>} />
                       <Route path="/entry-ticket" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><EntryTicket /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/content-studio" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><ContentStudio /></RoleGuard></ProtectedRoute>} />
                       <Route path="/teacher-electives" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher"]}><TeacherElectives /></RoleGuard></ProtectedRoute>} />
                       <Route path="/requests" element={<ProtectedRoute><RoleGuard allowedRoles={["teacher", "admin", "principal", "hod", "student", "parent"]}><Requests /></RoleGuard></ProtectedRoute>} />
                       <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
@@ -373,6 +381,7 @@ export default function App() {
                       <Route path="/my-classroom" element={<ProtectedRoute><RoleGuard allowedRoles={["student"]}><DigitalClassroom /></RoleGuard></ProtectedRoute>} />
                       <Route path="/mock-exams" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentHub /></RoleGuard></ProtectedRoute>} />
                       <Route path="/exam-reviews" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentHub /></RoleGuard></ProtectedRoute>} />
+                      <Route path="/exam-proctoring" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "teacher", "principal", "hod", "school_admin"]}><AssessmentHub /></RoleGuard></ProtectedRoute>} />
                       <Route path="/school-quality-index" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><SchoolQualityIndexPage /></RoleGuard></ProtectedRoute>} />
                       <Route path="/skills-passport" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "parent"]}><SkillsPassport /></RoleGuard></ProtectedRoute>} />
                       <Route path="/register" element={<Register />} />
@@ -393,6 +402,11 @@ export default function App() {
 <Route path="/student/credentials" element={
   <ProtectedRoute><RoleGuard allowedRoles={['student']}><AppLayout><MyCredentials /></AppLayout></RoleGuard></ProtectedRoute>
 } />
+<Route path="/doubts" element={<ProtectedRoute><RoleGuard allowedRoles={["student", "teacher", "admin", "principal", "hod", "school_admin"]}><Doubts /></RoleGuard></ProtectedRoute>} />
+<Route path="/certificates" element={<ProtectedRoute><RoleGuard allowedRoles={["admin", "principal", "hod", "school_admin"]}><Certificates /></RoleGuard></ProtectedRoute>} />
+<Route path="/verify-certificate" element={<VerifyCertificate />} />
+<Route path="/verify-certificate/:code" element={<VerifyCertificate />} />
+<Route path="/enquiry/:schoolId" element={<EnquiryForm />} />
 <Route path="/blog" element={<Blog />} />
         <Route path="/blog/:slug" element={<BlogPost />} />
                     </Routes>

@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Award, Loader2, Sparkles, Lock } from "lucide-react";
 import type { MicroCredential, StudentCredential } from "@/types/courseManagement";
+import { MyCertificates } from "@/components/certificates/MyCertificates";
 
 export default function MyCredentials() {
   const { profile } = useAuth();
@@ -62,6 +63,8 @@ export default function MyCredentials() {
             </div>
           </div>
         </div>
+
+        <MyCertificates studentId={profile!.id} />
 
         <div>
           <div className="flex items-center gap-2 mb-3">

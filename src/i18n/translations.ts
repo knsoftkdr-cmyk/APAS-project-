@@ -8,15 +8,14 @@ export const isRtlLanguage = (lang: Language) => RTL_LANGUAGES.includes(lang);
 /**
  * Whether an RTL language also mirrors the page layout (<html dir="rtl">).
  *
- * Off for now: Arabic text is shown in the normal left-to-right layout (each
- * Arabic sentence still reads right-to-left on its own). The layout will be
- * reviewed separately.
+ * On: Arabic mirrors the whole layout (sidebar on the right, text from the
+ * right). English, Hindi and Telugu stay left-to-right.
  *
  * The app's Tailwind classes are already logical (ms-*, start-*, text-start,
  * migrated by tools/i18n/rtlCodemod.mjs), so setting this to true mirrors the
  * whole layout for Arabic. New code should use the logical classes too.
  */
-export const ENABLE_RTL_LAYOUT = false;
+export const ENABLE_RTL_LAYOUT = true;
 
 export const languages: { code: Language; label: string; nativeLabel: string }[] = [
   { code: "en", label: "English", nativeLabel: "English" },

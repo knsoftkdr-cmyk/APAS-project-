@@ -25,7 +25,6 @@ import {
   User,
   Lock,
   Loader2,
-  Globe,
   Upload,
   Briefcase,
   Mail,
@@ -41,13 +40,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { languages, Language } from "@/i18n/translations";
 import { useStudentProfile } from "@/hooks/useProfileCompletion";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type DrawerSection = "personal" | "professional" | "password" | "language" | null;
+type DrawerSection = "personal" | "professional" | "password" | null;
 
 // ─── Reusable info row ────────────────────────────────────────────────────────
 const InfoRow = ({
@@ -197,7 +195,7 @@ const SectionCard = ({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const SettingsPage = () => {
   const { user, profile } = useAuth();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const { data: ext } = useStudentProfile();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -236,12 +234,6 @@ const SettingsPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [pwSaving, setPwSaving] = useState(false);
-
-  // Language state
-  const [langSaving, setLangSaving] = useState(false);
-  // Picked in the drawer, applied on Save: applying a language reloads the page.
-  const [pendingLanguage, setPendingLanguage] = useState<Language>(language);
-  useEffect(() => setPendingLanguage(language), [language]);
 
 const isStudent = profile?.role === "student";
 const isTeacher = profile?.role === "teacher";
@@ -382,20 +374,6 @@ const isTeacher = profile?.role === "teacher";
       } catch (notifError) {
         console.error("Password change notification failed:", notifError);
       }
-    }
-  };
-
-  const handleLanguageSave = async () => {
-    setLangSaving(true);
-    try {
-      // Reloads the page when the language actually changes.
-      await setLanguage(pendingLanguage);
-      toast.success("Language updated");
-      setActiveDrawer(null);
-    } catch {
-      toast.error("Could not save your language. Check your connection and try again.");
-    } finally {
-      setLangSaving(false);
     }
   };
 
@@ -768,23 +746,6 @@ return (
 
         {/* ── Quick Actions ─────────────────────────────────── */}
         <div className="grid sm:grid-cols-2 gap-4">
-          {/* Language */}
-         <button
-            onClick={() => setActiveDrawer("language")}
-            className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-md shadow-gray-200/50 px-5 py-4 hover:border-blue-200 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group text-start"
-          >
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0" style={{background:"linear-gradient(135deg, #1e3a5f, #3b82c4)"}}>
-  <Globe className="h-5 w-5" />
-</div>
-              <div>
-                <p className="font-semibold text-gray-800 text-sm">Language</p>
-                <p className="text-xs text-gray-400 capitalize">{language}</p>
-              </div>
-            </div>
-            <ChevronRight className="h-4 w-4 text-gray-300 group-hover:text-blue-900 group-hover:translate-x-0.5 transition-all rtl:group-hover:-translate-x-0.5" />
-          </button>
-
           {/* Password */}
           <button
             onClick={() => setActiveDrawer("password")}
@@ -1046,36 +1007,6 @@ return (
           />
         </Field>
         <p className="text-xs text-gray-400">Password must be at least 6 characters.</p>
-      </EditDrawer>
-
-      {/* Language Drawer */}
-      <EditDrawer
-        open={activeDrawer === "language"}
-        title="Language Preference"
-        onClose={() => setActiveDrawer(null)}
-        onSave={handleLanguageSave}
-        saving={langSaving}
-      >
-        <Field label="Display Language">
-          <Select
-            value={pendingLanguage}
-            onValueChange={(v) => setPendingLanguage(v as Language)}
-          >
-            <SelectTrigger className="rounded-xl border-gray-200 focus:border-blue-900">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {languages.map((lang) => (
-                <SelectItem key={lang.code} value={lang.code}>
-                  {lang.nativeLabel} ({lang.label})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <p className="text-xs text-gray-400">
-          This changes the display language across the entire application.
-        </p>
       </EditDrawer>
       </div>
       </div>

@@ -44,7 +44,18 @@ export const DISPLAY_ATTRS = new Set([
   "subtitle", "heading", "tooltip", "helperText", "emptyText", "emptyMessage", "emptyLabel",
   "confirmText", "cancelText", "confirmLabel", "cancelLabel", "buttonText", "ctaText", "actionLabel",
   "loadingText", "searchPlaceholder", "noResultsText", "hint",
+  "text", "message", "eyebrow", "greeting", "linkLabel", "dateLabel",
 ]);
+
+/** Attributes that are data on most elements but shown to the user on these. */
+const DISPLAY_ATTRS_BY_TAG = { value: /^DashStatCard$/, name: /^(Line|Bar|Area)$/ };
+
+function isDisplayAttr(attr) {
+  const name = attr.name.getText();
+  if (DISPLAY_ATTRS.has(name)) return true;
+  const tags = DISPLAY_ATTRS_BY_TAG[name];
+  return !!tags && tags.test(attr.parent.parent.tagName.getText());
+}
 
 /** Object-literal properties whose string value is shown to the user. */
 export const DISPLAY_PROPS = new Set([
@@ -52,6 +63,38 @@ export const DISPLAY_PROPS = new Set([
   "emptyText", "emptyMessage", "confirmText", "cancelText", "confirmLabel", "cancelLabel",
   "buttonText", "ctaText", "actionLabel", "studentTitle", "hint", "shortLabel", "caption", "tagline",
 ]);
+
+// ── sentence-only rules ──────────────────────────────────────────────────────────
+//
+// These positions also hold codes and keys in places, so they only count when the
+// string is a real sentence or phrase (see isProse). Do not add positions whose
+// value the code compares against, such as permission names, subject lists or
+// select values: translating those breaks the feature.
+
+const PROSE_PROPS = new Set([
+  "desc", "purpose", "problem", "fix", "quote", "why", "result", "strategy", "objective", "objectiveDetail",
+  "phase", "note", "action", "help", "text", "message", "error", "dimension", "gameName", "feature", "val",
+  "sT", "sD", "cT", "cD", "eT", "eD",
+]);
+const PROSE_PROP_SUFFIX = /(Title|Desc|Label|Text|Message|Note)$/;
+const PROSE_VARIABLES = /^(msg|errMsg|friendly|title|label|PLACEHOLDER|PROMPT|REPLAY|speedRating|interpretation|problem)$/;
+const PROSE_CALLS = new Set([
+  "setError", "announce", "say", "setStatusMsg", "setPickupMessage", "useDocumentMeta", "unwrapFunctionError",
+  "errors.push", "warnings.push", "v.errors.push", "lines.push",
+]);
+/** Files whose plain string arrays are text for the user (feature lists, tips, help steps). */
+const TEXT_ARRAY_FILES = /[\\/](pageHelp|pageHelpDetails|gameRegistry|Billing|BillingDashboard|AccessibilityPanel|PredictionDashboard|AITutor|CurativeLessonPlanView|TeacherPanel|AIDrawPanel|AcademicQuizLoader|Landing)\.tsx?$/;
+/** Help content is written with these helpers: btn("Save", "Stores your changes."). */
+const HELP_FILES = /[\\/](pageHelp|pageHelpDetails)\.ts$/;
+const HELP_CALLS = new Set(["btn", "tab", "sec"]);
+/** Question banks for the games: their answers are checked by value, so they stay as written. */
+const CONTENT_POOL_FILES = /[\\/](contentPools|classWiseContentPool)\.ts$/;
+
+/** A phrase for people: starts like a sentence and has a space and a lowercase word. */
+function isProse(s) {
+  const t = s.trim();
+  return /^[A-Z"'(0-9]/.test(t) && /\s/.test(t) && /[a-z]{2}/.test(t) && !/[{}<>=]|https?:/.test(t);
+}
 
 /** Elements whose content is code, not prose. */
 const SKIP_ELEMENTS = new Set(["code", "pre", "kbd", "samp", "script", "style"]);
@@ -295,7 +338,7 @@ function isDisplayPosition(node) {
   if (ts.isJsxExpression(p)) {
     const host = p.parent;
     if (ts.isJsxElement(host) || ts.isJsxFragment(host)) return !insideSkipElement(p);
-    if (ts.isJsxAttribute(host)) return DISPLAY_ATTRS.has(host.name.getText());
+    if (ts.isJsxAttribute(host)) return isDisplayAttr(host);
     return false;
   }
   if (ts.isPropertyAssignment(p) && p.initializer === node) {
@@ -316,6 +359,41 @@ function isDisplayPosition(node) {
   if (ts.isArrowFunction(p) && p.body === node) return isLabelFunction(p);
   if (ts.isCaseClause(p) || ts.isDefaultClause(p)) return false;
   return false;
+}
+
+/** The sentence-only counterpart of isDisplayPosition; the caller checks isProse. */
+function isProsePosition(node, file) {
+  const p = node.parent;
+  if (!p || CONTENT_POOL_FILES.test(file)) return false;
+  if (ts.isParenthesizedExpression(p)) return isProsePosition(p, file);
+  if (ts.isConditionalExpression(p)) return p.condition !== node && isProsePosition(p, file);
+  if (ts.isBinaryExpression(p)) {
+    const op = p.operatorToken.kind;
+    // "Failed to save: " + error.message
+    if (op === ts.SyntaxKind.PlusToken) return isDisplayPosition(p) || isProsePosition(p, file);
+    if (op === ts.SyntaxKind.AmpersandAmpersandToken) return p.right === node && isProsePosition(p, file);
+    return (op === ts.SyntaxKind.BarBarToken || op === ts.SyntaxKind.QuestionQuestionToken) && isProsePosition(p, file);
+  }
+  if (ts.isPropertyAssignment(p) && p.initializer === node) {
+    const name = propName(p);
+    if (!name || !ts.isObjectLiteralExpression(p.parent) || isPayloadObject(p.parent)) return false;
+    return PROSE_PROPS.has(name) || PROSE_PROP_SUFFIX.test(name);
+  }
+  if (ts.isVariableDeclaration(p) && p.initializer === node) return ts.isIdentifier(p.name) && PROSE_VARIABLES.test(p.name.text);
+  if (ts.isCallExpression(p) && p.arguments.includes(node)) return PROSE_CALLS.has(p.expression.getText());
+  if (ts.isArrayLiteralExpression(p)) return TEXT_ARRAY_FILES.test(file);
+  return false;
+}
+
+/** Plain text of a string or template literal, without its substitutions. */
+function literalProse(node) {
+  if (ts.isTemplateExpression(node)) return node.head.text + node.templateSpans.map((s) => s.literal.text).join(" ");
+  return node.text;
+}
+
+function isHelpCallArgument(node, file) {
+  const p = node.parent;
+  return HELP_FILES.test(file) && !!p && ts.isCallExpression(p) && p.arguments.includes(node) && HELP_CALLS.has(p.expression.getText());
 }
 
 // ── main pass ────────────────────────────────────────────────────────────────────
@@ -371,7 +449,9 @@ export function processSource(code, file, { rewrite = false } = {}) {
   }
 
   function handleLiteral(node) {
-    if (!isDisplayPosition(node)) return;
+    const shown = isDisplayPosition(node) || isHelpCallArgument(node, file) ||
+      (isProse(literalProse(node)) && isProsePosition(node, file));
+    if (!shown) return;
     if (isPluralSuffix(node)) {
       if (rewrite) edits.push({ start: node.getStart(sf), end: node.end, text: `${S}(${JSON.stringify(node.text)})`, consumed: false });
       return;
@@ -401,7 +481,7 @@ export function processSource(code, file, { rewrite = false } = {}) {
   }
 
   function handleAttribute(attr) {
-    if (!DISPLAY_ATTRS.has(attr.name.getText())) return;
+    if (!isDisplayAttr(attr)) return;
     const init = attr.initializer;
     if (!init || !ts.isStringLiteral(init)) return; // expression initializers go through isDisplayPosition
     const value = decodeEntities(init.text);

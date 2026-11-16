@@ -5,14 +5,19 @@ import { IntakesList } from "./IntakesList";
 import { IntakeFormDialog } from "./IntakeFormDialog";
 import { ApplicantFormDialog } from "./ApplicantFormDialog";
 import { ApplicantsTable } from "./ApplicantsTable";
+import { EnquiriesPanel } from "./EnquiriesPanel";
 import { ExportSelectedApplicantsButton } from "./ExportSelectedApplicantsButton";
 import { useAdmissionIntakes } from "@/hooks/useAdmissionIntakes";
 import { useAdmissionApplicants, type ApplicantFilters } from "@/hooks/useAdmissionApplicants";
+<<<<<<< Updated upstream
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { LeadSourceBadge } from "./LeadSourceBadge";
 import { useAdmissionIntegrations } from "@/hooks/useAdmissionIntegrations";
 import { LEAD_PROVIDER_LABELS } from "@/lib/admissionIntegrations";
 import { GraduationCap, Users, UserCheck, Clock, LayoutGrid, Plug, AlertTriangle } from "lucide-react";
+=======
+import { GraduationCap, Users, UserCheck, Clock, LayoutGrid, Inbox } from "lucide-react";
+>>>>>>> Stashed changes
 import { Card, CardContent } from "@/components/ui/card";
 type StatAccent = "indigo" | "violet" | "emerald" | "amber";
 
@@ -71,7 +76,11 @@ function AdmissionStatCard({
 export function AdmissionDashboard() {
   const { intakes, loading: intakesLoading, createIntake, toggleIntakeOpen } = useAdmissionIntakes();
   const [selectedIntakeId, setSelectedIntakeId] = useState<string | null>(null);
+<<<<<<< Updated upstream
   const [activeView, setActiveView] = useState<"overview" | "applicants" | "sources">("overview");
+=======
+  const [activeView, setActiveView] = useState<"overview" | "applicants" | "enquiries">("overview");
+>>>>>>> Stashed changes
   const [filters, setFilters] = useState<ApplicantFilters>({ intakeId: "all", status: "all" });
 
   const {
@@ -132,7 +141,7 @@ export function AdmissionDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => setActiveView("overview")}
@@ -168,13 +177,20 @@ export function AdmissionDashboard() {
           </button>
           <button
             type="button"
+<<<<<<< Updated upstream
             onClick={() => setActiveView("sources")}
             className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
               activeView === "sources"
+=======
+            onClick={() => setActiveView("enquiries")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
+              activeView === "enquiries"
+>>>>>>> Stashed changes
                 ? "bg-indigo-600 text-white shadow"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
+<<<<<<< Updated upstream
             <Plug className="h-4 w-4" />
             Lead Sources
             {needAttention > 0 && (
@@ -185,8 +201,16 @@ export function AdmissionDashboard() {
                 <AlertTriangle className="h-3 w-3 inline -mt-0.5" /> {needAttention}
               </span>
             )}
+=======
+            <Inbox className="h-4 w-4" />
+            Enquiries
+>>>>>>> Stashed changes
           </button>
         </div>
+
+        {activeView === "enquiries" && (
+          <EnquiriesPanel intakes={intakes} onCreateApplicant={addApplicant} onConverted={refetchApplicants} />
+        )}
 
         {/* Stat cards */}
         {activeView === "overview" && (

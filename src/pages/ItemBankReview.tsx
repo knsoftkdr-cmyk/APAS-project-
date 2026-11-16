@@ -19,6 +19,8 @@ import { toast } from "sonner";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGenerateLearningObjectives } from "@/hooks/useMastery";
+import { DocumentQuestionsCard } from "@/components/assessment/DocumentQuestionsCard";
+import { QuestionImportCard } from "@/components/assessment/QuestionImportCard";
 import {
   classKey, fetchClassOptions, fetchSchoolBooks, resolveSubjectsForClass,
   type BookOption as ClassBookOption, type ClassOption, type SubjectOption,
@@ -525,6 +527,21 @@ export default function ItemBankReview({ embedded = false }: { embedded?: boolea
           <Card><CardContent className="p-6 text-sm text-muted-foreground text-center">
             Choose a class, subject, chapter and topic to see and manage its question bank.
           </CardContent></Card>
+        )}
+
+        {chapterId && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DocumentQuestionsCard
+              chapterId={Number(chapterId)}
+              chapterName={chapters.find((c) => c.id === Number(chapterId))?.chapter_name ?? "this chapter"}
+              onGenerated={refresh}
+            />
+            <QuestionImportCard
+              chapterId={Number(chapterId)}
+              chapterName={chapters.find((c) => c.id === Number(chapterId))?.chapter_name ?? "this chapter"}
+              onImported={refresh}
+            />
+          </div>
         )}
 
         {scopeReady && (

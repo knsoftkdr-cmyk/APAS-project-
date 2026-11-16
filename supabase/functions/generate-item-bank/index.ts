@@ -33,6 +33,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { priorDifficulty } from "../_shared/irt.ts";
 import { callAi, getAiConfig, type AiConfig } from "../_shared/aiClient.ts";
 import { solveItems, keyConfirmed, mismatchNote } from "../_shared/itemKeyVerifier.ts";
+import { cleanItem, shuffleOptions, type CleanItem, type RawItem } from "../_shared/itemCleaning.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +43,6 @@ const corsHeaders = {
 const STAFF_ROLES = ["admin", "teacher", "school_admin", "principal", "hod"];
 const MAX_OBJECTIVES_PER_CALL = 24;
 const CONCURRENCY = 4;
-const LETTERS = ["A", "B", "C", "D"] as const;
 
 // deno-lint-ignore no-explicit-any
 type Row = Record<string, any>;
@@ -50,29 +50,13 @@ type Row = Record<string, any>;
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-interface RawItem {
-  stem?: unknown;
-  options?: unknown;
-  correct?: unknown;
-  explanation?: unknown;
-  difficulty_target?: unknown;
-  distractor_misconceptions?: unknown;
-}
-
-interface CleanItem {
-  stem: string;
-  options: Record<string, string>;
-  correct: string;
-  explanation: string | null;
-  difficulty: "easy" | "medium" | "hard";
-  distractorMisconceptions: Record<string, number>;
-}
-
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleGenerateOpenEndedItems } from "../_shared/handlers/generateOpenEndedItems.ts";
 import { handleScoreQuestionQuality } from "../_shared/handlers/scoreQuestionQuality.ts";
 import { handleEnrichmentGenerator } from "../_shared/handlers/enrichmentGenerator.ts";
 import { handleVerifyItemKeys } from "../_shared/handlers/verifyItemKeys.ts";
+import { handleGenerateItemsFromDocument } from "../_shared/handlers/generateItemsFromDocument.ts";
+import { handleBulkImportItems } from "../_shared/handlers/bulkImportItems.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -80,6 +64,8 @@ const MERGED_ROUTES: RouteTable = {
   score_quality: { handler: handleScoreQuestionQuality },
   enrichment: { handler: handleEnrichmentGenerator },
   verify_keys: { handler: handleVerifyItemKeys },
+  from_document: { handler: handleGenerateItemsFromDocument },
+  bulk_import: { handler: handleBulkImportItems },
 };
 
 serve(async (req) => {
@@ -317,63 +303,4 @@ async function callModel(ai: AiConfig, prompt: string): Promise<{ items: RawItem
   }
   if (!Array.isArray(parsed)) throw new Error("AI response was not a JSON array");
   return { items: parsed as RawItem[], model };
-}
-
-const BANNED_OPTION = /\b(all|none)\s+of\s+the\s+above\b|\bboth\s+[a-d]\s+and\s+[a-d]\b/i;
-
-function cleanItem(r: RawItem, validMcIds: Set<number>): CleanItem | null {
-  const stem = typeof r.stem === "string" ? r.stem.trim() : "";
-  if (stem.length < 8 || stem.length > 800) return null;
-
-  const opts = r.options as Record<string, unknown> | undefined;
-  if (!opts || typeof opts !== "object") return null;
-  const options: Record<string, string> = {};
-  for (const L of LETTERS) {
-    const v = opts[L];
-    if (typeof v !== "string" || !v.trim() || v.length > 400) return null;
-    if (BANNED_OPTION.test(v)) return null;
-    options[L] = v.trim();
-  }
-  if (Object.keys(opts).length !== 4) return null;
-  if (new Set(Object.values(options).map((v) => v.toLowerCase())).size !== 4) return null;
-
-  const correct = typeof r.correct === "string" ? r.correct.trim().toUpperCase() : "";
-  if (!LETTERS.includes(correct as typeof LETTERS[number])) return null;
-
-  const dt = String(r.difficulty_target ?? "medium").toLowerCase();
-  const difficulty = (["easy", "medium", "hard"].includes(dt) ? dt : "medium") as CleanItem["difficulty"];
-
-  const dm: Record<string, number> = {};
-  if (r.distractor_misconceptions && typeof r.distractor_misconceptions === "object") {
-    for (const [k, v] of Object.entries(r.distractor_misconceptions as Record<string, unknown>)) {
-      const letter = k.toUpperCase();
-      const id = Number(v);
-      if (LETTERS.includes(letter as typeof LETTERS[number]) && letter !== correct && Number.isFinite(id) && validMcIds.has(id)) dm[letter] = id;
-    }
-  }
-
-  const explanation = typeof r.explanation === "string" && r.explanation.trim() ? r.explanation.trim() : null;
-  return { stem, options, correct, explanation, difficulty, distractorMisconceptions: dm };
-}
-
-// Models over-produce "B" and "C" as the key. Re-deal the options with a
-// cryptographic shuffle and remap the key + misconception tags to match.
-function shuffleOptions(c: CleanItem) {
-  const order = [...LETTERS];
-  const rnd = new Uint32Array(order.length);
-  crypto.getRandomValues(rnd);
-  for (let i = order.length - 1; i > 0; i--) {
-    const j = rnd[i] % (i + 1);
-    [order[i], order[j]] = [order[j], order[i]];
-  }
-  const options: Record<string, string> = {};
-  const distractorMisconceptions: Record<string, number> = {};
-  let correct = "A";
-  order.forEach((oldLetter, idx) => {
-    const newLetter = LETTERS[idx];
-    options[newLetter] = c.options[oldLetter];
-    if (oldLetter === c.correct) correct = newLetter;
-    if (c.distractorMisconceptions[oldLetter] != null) distractorMisconceptions[newLetter] = c.distractorMisconceptions[oldLetter];
-  });
-  return { options, correct, distractorMisconceptions };
 }

@@ -69,6 +69,37 @@ describe("UI string rewrite (tools/i18n/uiStrings.mjs)", () => {
     expect(m).toEqual([]);
   });
 
+  it("translates sentences in description-style properties and text arrays", () => {
+    const m = messages(`
+      const cards = [{ desc: "Build a consistent learning habit.", coreTitle: "Full paragraph" }];
+      const PLACEHOLDER = "Search students and lessons";
+      setError("Something went wrong. Try again.");
+      toast.error("Failed to save: " + error.message);
+    `, "x.ts");
+    expect(m).toEqual([
+      "Build a consistent learning habit.", "Full paragraph", "Search students and lessons",
+      "Something went wrong. Try again.", "Failed to save:",
+    ]);
+    expect(messages(`const FEATURES = ["Up to 50 students"];`, "src/pages/Billing.tsx")).toEqual(["Up to 50 students"]);
+  });
+
+  it("leaves values the code depends on alone", () => {
+    const m = messages(`
+      const FEATURES = ["Admin Panel", "AI Tutor"];
+      const SUBJECTS = ["Social Science"];
+      const row = { desc: "Saved in the database", school_id: id };
+      setError("email");
+      const a = () => <SelectItem value="Main Campus">x</SelectItem>;
+    `, "src/hooks/usePermissions.ts");
+    expect(m).toEqual([]);
+    expect(messages(`const q = [{ desc: "A question bank entry" }];`, "src/lib/contentPools.ts")).toEqual([]);
+  });
+
+  it("translates the value of a stat card, not of a form control", () => {
+    expect(messages(`const A = () => <DashStatCard value="AI-Powered" />;`)).toEqual(["AI-Powered"]);
+    expect(messages(`const A = () => <Input value="Diagnostic Test" />;`)).toEqual([]);
+  });
+
   it("skips code samples", () => {
     expect(messages(`const A = () => <pre>Run npm install</pre>;`)).toEqual([]);
   });

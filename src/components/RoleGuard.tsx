@@ -9,9 +9,9 @@ interface RoleGuardProps {
 }
 
 export function RoleGuard({ children, allowedRoles }: RoleGuardProps) {
-  const { profile, loading } = useAuth();
+  const { session, profile, loading, profileLoading } = useAuth();
 
-  if (loading) {
+  if (loading || (session && !profile && profileLoading)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingSpinner size="lg" />

@@ -22,6 +22,8 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  /** True while the signed-in user's profile is still being fetched (session known, role not yet). */
+  profileLoading: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   isSchoolAdmin: boolean;
@@ -37,6 +39,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   profile: null,
   loading: true,
+  profileLoading: false,
   signOut: async () => {},
   refreshProfile: async () => {},
   isSchoolAdmin: false,
@@ -52,11 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   const isSupabaseInitialized =
     import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
 const fetchProfile = async (userId: string) => {
+    setProfileLoading(true);
     try {
       const { data } = await supabase
         .from("profiles")
@@ -66,6 +71,8 @@ const fetchProfile = async (userId: string) => {
       setProfile(data);
     } catch (error) {
       console.error("Error fetching profile:", error);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -95,6 +102,7 @@ const fetchProfile = async (userId: string) => {
       if (!isMounted) return;
       setSession(session);
       if (session?.user) {
+        setProfileLoading(true);
         setTimeout(() => fetchProfile(session.user.id), 0);
       } else {
         setProfile(null);
@@ -155,6 +163,7 @@ const fetchProfile = async (userId: string) => {
         user: session?.user ?? null,
         profile,
         loading,
+        profileLoading,
         signOut,
         refreshProfile,
         isSchoolAdmin,

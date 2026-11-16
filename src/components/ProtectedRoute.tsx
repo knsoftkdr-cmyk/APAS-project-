@@ -47,7 +47,7 @@ export function RoleRoute({
   roles,
   redirectTo = "/login",
 }: RoleRouteProps) {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, profileLoading } = useAuth();
   const [isLoadingTooLong, setIsLoadingTooLong] = useState(false);
 
   useEffect(() => {
@@ -73,6 +73,14 @@ export function RoleRoute({
   }
 
   if (!session) return <Navigate to="/login" replace />;
+  // Session is restored before the profile arrives; wait for the role instead of redirecting.
+  if (!profile && profileLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   const effectiveRole = profile?.role === "principal" ? "admin" : profile?.role;
   if (!profile || !roles.includes(effectiveRole ?? "")) {

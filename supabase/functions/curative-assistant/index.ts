@@ -147,25 +147,28 @@ serve(async (req) => {
 
     let GOOGLE_GEMINI_API_KEY: string;
     let lessonApiKeys: string[] = [];
+    // Rotate through multiple API keys to distribute rate limits.
+    const sharedKeys = [
+      Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
+      Deno.env.get("GEMINI_KEY_2"),
+      Deno.env.get("GEMINI_KEY_3"),
+      Deno.env.get("GEMINI_KEY_4"),
+      Deno.env.get("GOOGLE_GEMINI_API_KEY"),
+      Deno.env.get("GEMINI_ADVANCED_API_KEY"),
+    ].filter(Boolean) as string[];
+    const shuffledShared = [...new Set(sharedKeys)].sort(() => Math.random() - 0.5);
     if (isWorksheet) {
+      // Worksheets prefer their dedicated key, but fall back to the shared keys when it is out of
+      // credits (402), revoked, or rate limited, instead of failing the teacher's request.
       const worksheetKey = Deno.env.get("Worksheet_gemini_api_key");
-      if (!worksheetKey) throw new Error("Worksheet_gemini_api_key not configured");
-      GOOGLE_GEMINI_API_KEY = worksheetKey;
-      lessonApiKeys = [worksheetKey];
-      console.log("Using worksheet API key for worksheet generation");
-    } else {
-      // Rotate through multiple API keys to distribute rate limits for lesson plans
-      lessonApiKeys = [
-        Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
-        Deno.env.get("GEMINI_KEY_2"),
-        Deno.env.get("GEMINI_KEY_3"),
-        Deno.env.get("GEMINI_KEY_4"),
-        Deno.env.get("GOOGLE_GEMINI_API_KEY"),
-        Deno.env.get("GEMINI_ADVANCED_API_KEY"),
-      ].filter(Boolean) as string[];
+      lessonApiKeys = [...new Set([worksheetKey, ...shuffledShared].filter(Boolean) as string[])];
       if (lessonApiKeys.length === 0) throw new Error("No Gemini API keys configured");
-      GOOGLE_GEMINI_API_KEY = lessonApiKeys[Math.floor(Math.random() * lessonApiKeys.length)];
+      console.log(worksheetKey ? "Using worksheet API key first for worksheet generation" : "Worksheet key missing, using shared keys");
+    } else {
+      lessonApiKeys = shuffledShared;
+      if (lessonApiKeys.length === 0) throw new Error("No Gemini API keys configured");
     }
+    GOOGLE_GEMINI_API_KEY = lessonApiKeys[0];
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -490,9 +493,14 @@ For chat questions (mode != generate): respond with structured markdown using em
 
     // Try each model with the TRUE streaming endpoint so the client receives
     // tokens as Gemini produces them (no more "Thinking..." then a giant dump).
+    // Keys that are out of credits (402) or rejected (401/403) are skipped for every later model.
+    const deadKeys = new Set<string>();
     for (const model of modelCandidates) {
+      let modelUnavailable = false;
+      for (const currentKey of lessonApiKeys) {
+      if (modelUnavailable) break;
+      if (deadKeys.has(currentKey)) continue;
       for (let attempt = 0; attempt < 3; attempt++) {
-        const currentKey = lessonApiKeys[Math.floor(Math.random() * lessonApiKeys.length)];
         console.log(`Streaming Gemini ${model} (attempt ${attempt + 1}, key ...${currentKey.slice(-4)}) messages=${openaiMessages.length}`);
 
         const response = await fetch(
@@ -526,7 +534,8 @@ For chat questions (mode != generate): respond with structured markdown using em
               generationConfig: { temperature: 0.7, maxOutputTokens: 65536 },
             });
 
-            const keysToTry = [...lessonApiKeys].sort(() => Math.random() - 0.5);
+            // The key that just worked goes first; keys known to be out of credits are skipped.
+            const keysToTry = [currentKey, ...lessonApiKeys.filter((k) => k !== currentKey && !deadKeys.has(k))];
 
             for (const key of keysToTry) {
               for (let retry = 0; retry < 2; retry++) {
@@ -565,15 +574,29 @@ For chat questions (mode != generate): respond with structured markdown using em
         lastErrorText = await response.text();
         console.error(`Gemini stream error (${model}, attempt ${attempt + 1}):`, response.status, lastErrorText);
 
-        const transient = response.status === 500 || response.status === 503 || response.status === 429;
-        if (!transient) break;
+        if (response.status === 401 || response.status === 402 || response.status === 403) {
+          deadKeys.add(currentKey); // billing/auth problem with this key: try the next key
+          break;
+        }
+        if (response.status === 429) break; // quota on this key: move to the next key
+        const transient = response.status === 500 || response.status === 503;
+        if (!transient) { modelUnavailable = true; break; } // e.g. 404 model not found: next model
         if (attempt < 2) await sleep(1000 * Math.pow(2, attempt));
       }
+      }
+      if (deadKeys.size === lessonApiKeys.length) break;
     }
 
     if (lastStatus === 429) {
       return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again in a moment." }), {
         status: 429,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (lastStatus === 402) {
+      return new Response(JSON.stringify({ error: "The AI credits for this feature are used up. Please ask the administrator to top up the Google AI Studio billing, then try again." }), {
+        status: 402,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

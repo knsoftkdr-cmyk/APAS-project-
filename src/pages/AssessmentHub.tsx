@@ -7,7 +7,7 @@
  */
 import { lazy, Suspense } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ClipboardCheck, ClipboardList, Layers, Timer } from "lucide-react";
+import { ClipboardCheck, ClipboardList, Layers, ShieldAlert, Timer } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { cn } from "@/lib/utils";
@@ -17,12 +17,14 @@ const ItemBankReview = lazy(() => import("./ItemBankReview"));
 const MockExamBuilder = lazy(() => import("./MockExamBuilder"));
 const ExamReviews = lazy(() => import("./ExamReviews"));
 const AssessmentBuilder = lazy(() => import("./AssessmentBuilder"));
+const ExamProctoring = lazy(() => import("./ExamProctoring"));
 
 const TABS = [
   { key: "item-bank", label: "Item Bank", path: "/item-bank", icon: Layers },
   { key: "builder", label: "Builder", path: "/assessment-builder", icon: ClipboardList },
   { key: "mock-exams", label: "Mock Exams", path: "/mock-exams", icon: Timer },
   { key: "exam-reviews", label: "Exam Reviews", path: "/exam-reviews", icon: ClipboardCheck },
+  { key: "proctoring", label: "Proctoring", path: "/exam-proctoring", icon: ShieldAlert },
 ] as const;
 
 export default function AssessmentHub() {
@@ -37,7 +39,7 @@ export default function AssessmentHub() {
     <AppLayout>
       {/* Same width as the pages below, so the tabs line up with the content on a laptop */}
       <div className="max-w-5xl mx-auto px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-6">
-        <div role="tablist" aria-label="Assessments" className="flex w-full gap-1 rounded-xl bg-muted p-1 sm:inline-flex sm:w-auto">
+        <div role="tablist" aria-label="Assessments" className="flex w-full gap-1 overflow-x-auto rounded-xl bg-muted p-1 sm:inline-flex sm:w-auto">
           {TABS.map((t) => {
             const selected = t.key === active.key;
             return (
@@ -68,6 +70,7 @@ export default function AssessmentHub() {
         {active.key === "builder" && <AssessmentBuilder embedded />}
         {active.key === "mock-exams" && <MockExamBuilder embedded />}
         {active.key === "exam-reviews" && <ExamReviews embedded />}
+        {active.key === "proctoring" && <ExamProctoring embedded />}
       </Suspense>
     </AppLayout>
   );

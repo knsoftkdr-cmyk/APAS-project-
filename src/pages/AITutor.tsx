@@ -651,6 +651,19 @@ const AITutor = () => {
           )}
         </div>
 
+        {/* The AI didn't settle it: take the question to a teacher as a doubt ticket */}
+        {mode === "tutor" && profile?.role === "student" && !isLoading && messages[messages.length - 1]?.role === "assistant" && (
+          <div className="mb-2">
+            <Link
+              to="/doubts"
+              state={{ askDoubt: [...messages].reverse().find((m) => m.role === "user")?.content.slice(0, 3900) ?? "" }}
+              className="text-xs text-primary hover:underline"
+            >
+              Still confused? Ask my teacher
+            </Link>
+          </div>
+        )}
+
         {/* Hint ladder controls */}
         {mode === "tutor" && style === "hint" && messages.length > 0 && !isLoading && messages[messages.length - 1]?.role === "assistant" && (
           <div className="flex flex-wrap items-center gap-2 mb-2">

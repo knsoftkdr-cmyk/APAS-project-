@@ -1,10 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { callAi, getAiConfig } from "../_shared/aiClient.ts";
+import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
+import { handleContentStudio } from "../_shared/handlers/contentStudio.ts";
+
+// Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
+//   action "content_studio": Content Studio - prompt -> PPTX / flash cards / flowchart.
+// A body WITHOUT `action` (the entry-ticket call) runs the original code below.
+const MERGED_ROUTES: RouteTable = {
+  content_studio: { handler: handleContentStudio },
+};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+const json = (payload: unknown, status = 200) =>
+  new Response(JSON.stringify(payload), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const merged = await routeMerged(req, MERGED_ROUTES, "action");
+  if (merged) return merged;
+
   try {
     const body = await req.json();
     const subject = (body.subject ?? "").trim();
@@ -13,28 +32,17 @@ serve(async (req) => {
     const subtopic = (body.subtopic ?? "").trim();
     const class_level = (body.class_level ?? "").trim();
 
-    const apiKey = Deno.env.get("Worksheet_gemini_api_key");
-    if (!apiKey) return new Response(JSON.stringify({ error: "Worksheet_gemini_api_key secret not found" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
     // Fallback hierarchy: subtopic > topic > chapter
-    let focus = "";
-    if (subtopic) {
-      focus = subtopic;
-    } else if (topic) {
-      focus = topic;
-    } else if (chapter) {
-      focus = chapter;
-    }
-
+    const focus = subtopic || topic || chapter;
     if (!focus) {
-      return new Response(JSON.stringify({ error: "At least one of chapter, topic, or subtopic must be provided" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "At least one of chapter, topic, or subtopic must be provided" }, 400);
     }
 
     const contextParts = [];
     if (chapter) contextParts.push("Chapter: " + chapter);
     if (topic) contextParts.push("Topic: " + topic);
     if (subtopic) contextParts.push("Subtopic: " + subtopic);
-    const contextStr = contextParts.length > 0 ? contextParts.join(", ") : ("Chapter: " + focus);
+    const contextStr = contextParts.join(", ");
 
     const prompt = "You are creating a prior-knowledge entry ticket for " + class_level + " students studying " + subject + ".\n" +
       contextStr + "\n" +
@@ -44,36 +52,29 @@ serve(async (req) => {
       "Respond ONLY with a JSON array, no markdown, no explanation: " +
       "[{\"q_no\":1,\"question\":\"...\"},{\"q_no\":2,\"question\":\"...\"},{\"q_no\":3,\"question\":\"...\"},{\"q_no\":4,\"question\":\"...\"},{\"q_no\":5,\"question\":\"...\"}]";
 
-    const geminiRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generation_config: {
-          temperature: 0.4,
-          max_output_tokens: 2048,
-          thinking_config: { thinking_budget: 0 }
-        }
-      }),
-    });
+    // Shared client: tries the current Gemini 3.x models across all configured keys.
+    // The worksheet key this function used before goes first.
+    const cfg = getAiConfig();
+    const worksheetKey = Deno.env.get("Worksheet_gemini_api_key");
+    if (worksheetKey && !cfg.geminiKeys.includes(worksheetKey)) cfg.geminiKeys.unshift(worksheetKey);
 
-    if (!geminiRes.ok) {
-      const errText = await geminiRes.text();
-      return new Response(JSON.stringify({ error: "Gemini API error: " + geminiRes.status + " " + errText }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
+    const { text } = await callAi(cfg, prompt, { temperature: 0.4, maxOutputTokens: 4096 });
+    const clean = text.replace(/```json|```/g, "").trim();
 
-    const data = await geminiRes.json();
-    const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-    const clean = raw.replace(/```json|```/g, "").trim();
     let questions;
     try {
-      questions = JSON.parse(clean);
-    } catch (parseErr) {
-      return new Response(JSON.stringify({ error: "Failed to parse Gemini output as JSON", raw: raw, finishReason: data.candidates?.[0]?.finishReason }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const parsed = JSON.parse(clean);
+      // Accept either a bare array or an object wrapping it (e.g. {"questions":[...]}).
+      questions = Array.isArray(parsed) ? parsed : (parsed?.questions ?? Object.values(parsed ?? {}).find(Array.isArray));
+    } catch {
+      return json({ error: "Failed to parse AI output as JSON", raw: text }, 500);
+    }
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return json({ error: "AI returned no questions", raw: text }, 500);
     }
 
-    return new Response(JSON.stringify({ questions }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return json({ questions });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message, stack: err.stack }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return json({ error: err instanceof Error ? err.message : String(err) }, 500);
   }
 });

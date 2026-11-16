@@ -1,13 +1,11 @@
-import { createContext, useContext, useEffect, useLayoutEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useState, ReactNode } from "react";
 import { DirectionProvider } from "@radix-ui/react-direction";
-import translations, { ENABLE_RTL_LAYOUT, Language, isRtlLanguage, languages } from "./translations";
+import translations, { ENABLE_RTL_LAYOUT, Language, isRtlLanguage } from "./translations";
 import { activeLanguage, persistLanguage } from "./runtime";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface LanguageContextType {
   language: Language;
-  setLanguage: (lang: Language) => Promise<void>;
+  setLanguage: (lang: Language) => void;
   t: typeof translations["en"];
   /** "rtl" for Arabic, "ltr" otherwise. */
   dir: "ltr" | "rtl";
@@ -15,19 +13,10 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType>({
   language: "en",
-  setLanguage: async () => {},
+  setLanguage: () => {},
   t: translations.en,
   dir: "ltr",
 });
-
-/**
- * profiles.preferred_language is free-text, so a stored value may be one we no
- * longer offer (or never did). Anything unknown falls back to English rather
- * than leaving `t` undefined.
- */
-function normaliseLanguage(value: unknown): Language {
-  return languages.some((l) => l.code === value) ? (value as Language) : "en";
-}
 
 /** Layout direction for <html dir>: right-to-left for Arabic once ENABLE_RTL_LAYOUT is on. */
 const layoutDir = (lang: Language): "ltr" | "rtl" =>
@@ -45,19 +34,14 @@ function reloadInto(lang: Language): boolean {
   return true;
 }
 
+/**
+ * The language is chosen in the popup shown when the site opens
+ * (LanguageSelectionDialog) and kept in this browser's storage, so it applies
+ * before login and on every screen. English is the default.
+ */
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const { user, profile } = useAuth();
   // The language this page load was started in; it only changes via reloadInto.
   const [language, setLang] = useState<Language>(activeLanguage);
-
-  // The profile is the source of truth across devices: if it names a different
-  // language than this device last used, switch to it once.
-  useEffect(() => {
-    const stored = (profile as any)?.preferred_language;
-    if (!stored) return;
-    const wanted = normaliseLanguage(stored);
-    if (wanted !== activeLanguage() && !reloadInto(wanted)) setLang(wanted);
-  }, [profile]);
 
   // Mirror the language onto <html> before paint, so CSS picks the Arabic font
   // and the layout direction without a visible flip.
@@ -66,16 +50,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     document.documentElement.dir = layoutDir(language);
   }, [language]);
 
-  const setLanguage = async (lang: Language) => {
-    if (user) {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ preferred_language: lang } as any)
-        .eq("id", user.id);
-      // Not saved: reloading would only bounce back to the old language when the
-      // profile loads, so stay put and let the caller report the failure.
-      if (error) throw error;
-    }
+  const setLanguage = (lang: Language) => {
     if (lang === activeLanguage() || !reloadInto(lang)) setLang(lang);
   };
 

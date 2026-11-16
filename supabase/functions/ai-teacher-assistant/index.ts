@@ -10,6 +10,7 @@ import { handleAiWhiteboard } from "../_shared/handlers/aiWhiteboard.ts";
 import { handleDigitalClassroom } from "../_shared/handlers/digitalClassroom.ts";
 import { handleLiveRecordings } from "../_shared/handlers/liveRecordings.ts";
 import { handleDifferentiation } from "../_shared/handlers/differentiation.ts";
+import { handleZoomMeetings } from "../_shared/handlers/zoomMeetings.ts";
 
 // Features merged in (Edge Function deployment limit) - see _shared/mergedRouter.ts.
 //   action "copilot": Teacher Copilot - lesson planning, assessment, remediation and student analysis.
@@ -20,6 +21,7 @@ import { handleDifferentiation } from "../_shared/handlers/differentiation.ts";
 //   action "whiteboard_draw": AI whiteboard - step-by-step drawings, equations and diagrams.
 //   action "classroom": Digital classroom workspace - stream, materials, assignments, attendance (teachers AND students).
 //   action "differentiate": AI-assisted differentiation - one lesson material at several levels / needs.
+//   action "zoom_status" / "zoom_create" / "zoom_start": Zoom meetings for live classes (needs the ZOOM_* secrets).
 // A body WITHOUT a matching `action` (the existing { teacher_id, school_id } call) runs the original code below.
 const MERGED_ROUTES: RouteTable = {
   copilot: { handler: handleTeacherCopilot },
@@ -31,6 +33,9 @@ const MERGED_ROUTES: RouteTable = {
   classroom: { handler: handleDigitalClassroom },
   live_recordings: { handler: handleLiveRecordings },
   differentiate: { handler: handleDifferentiation },
+  zoom_status: { handler: handleZoomMeetings, action: "status" },
+  zoom_create: { handler: handleZoomMeetings, action: "create" },
+  zoom_start: { handler: handleZoomMeetings, action: "start" },
 };
 
 const corsHeaders = {

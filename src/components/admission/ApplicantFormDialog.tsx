@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,12 @@ interface ApplicantFormDialogProps {
   defaultIntakeId?: string | null;
   onCreate: (input: ApplicantFormInput) => Promise<{ error: string | null; id?: string | null }>;
   onDocumentsUploaded?: () => void;
+  /** Opened from outside (e.g. converting an enquiry): no trigger button, the form starts filled with `prefill`. */
+  hideTrigger?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  prefill?: Partial<ApplicantFormInput>;
+  onCreated?: (applicantId: string | null) => void | Promise<void>;
 }
 
 function emptyForm(defaultIntakeId?: string | null): ApplicantFormInput {
@@ -58,15 +64,27 @@ function emptyForm(defaultIntakeId?: string | null): ApplicantFormInput {
   };
 }
 
-export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocumentsUploaded }: ApplicantFormDialogProps) {
+export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocumentsUploaded, hideTrigger, open: controlledOpen, onOpenChange, prefill, onCreated }: ApplicantFormDialogProps) {
   const openIntakes = intakes.filter((intake) => intake.is_open);
   const { toast } = useToast();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState<ApplicantFormInput>(emptyForm(defaultIntakeId));
   const [pendingDocuments, setPendingDocuments] = useState<PendingDocument[]>([]);
   const [pendingDocType, setPendingDocType] = useState<AdmissionDocumentType>("report_card");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!controlledOpen) return;
+    setForm({ ...emptyForm(defaultIntakeId), ...prefill });
+    setPendingDocuments([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- fill once each time it opens, not on every parent render
+  }, [controlledOpen]);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -132,6 +150,8 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
       return;
     }
 
+    await onCreated?.(id ?? null);
+
     if (pendingDocuments.length > 0 && id) {
       const failures: string[] = [];
       for (const doc of pendingDocuments) {
@@ -164,12 +184,14 @@ export function ApplicantFormDialog({ intakes, defaultIntakeId, onCreate, onDocu
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="bg-white text-indigo-700 hover:bg-indigo-50 shadow-sm">
-          <UserPlus className="h-4 w-4 me-1.5" />
-          Log New Applicant
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button className="bg-white text-indigo-700 hover:bg-indigo-50 shadow-sm">
+            <UserPlus className="h-4 w-4 me-1.5" />
+            Log New Applicant
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-2xl w-[calc(100%-2rem)] p-0 overflow-hidden max-h-[85vh] flex flex-col">
         <div className="bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-4 shrink-0">
           <DialogHeader>

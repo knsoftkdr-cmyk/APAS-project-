@@ -44,6 +44,8 @@ deployed ("anchors"). No new function names exist and nothing new needs deployin
 | peer-group-identification | get-class-mastery | mode: `peer_groups` |
 | dynamic-student-grouping | get-class-mastery | mode: `dynamic_groups` (+ `op`: `preview` `apply` `current` `override`; needs migration 20261008000000) |
 | teacher-copilot | ai-teacher-assistant | action: `copilot` |
+| Zoom meetings for live classes (never standalone) | ai-teacher-assistant | action: `zoom_status` `zoom_create` `zoom_start` (needs secrets ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET and migration 20261106010000) |
+| Questions from a document (never standalone) | generate-item-bank | action: `from_document` |
 
 Notes
 * `calibrate-irt-cron` must stay deployed with `--no-verify-jwt` (pg_net has no user JWT); the handler
@@ -360,6 +362,7 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
 * Requests without these actions fall through to update-mastery's original code unchanged.
 
 
+<<<<<<< Updated upstream
 ## Live class recordings (added later, same pattern)
 
 | Feature | Anchor (deployed) | Discriminator |
@@ -369,3 +372,10 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
 
 Needs migration 20261114000000, secret `GOOGLE_MEET_SA_JSON` (service account key) and the existing `CRON_SECRET`.
 Both anchors must be redeployed (calibrate-irt-cron with `--no-verify-jwt`, as before).
+=======
+## Content Studio (added later, same pattern)
+
+| Feature | Anchor (deployed) | Discriminator |
+|---|---|---|
+| Content Studio - prompt to PPTX / flash cards / flowchart | generate-entry-ticket | action: `content_studio` (needs migration 20261113000000 and secret CONTENT_STUDIO_GEMINI_API_KEY; falls back to the shared Gemini keys) |
+>>>>>>> Stashed changes

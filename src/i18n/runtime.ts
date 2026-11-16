@@ -54,6 +54,44 @@ export function persistLanguage(lang: Language): boolean {
 // a separate chunk, so English users download neither.
 const localeFiles = import.meta.glob<{ default: Record<string, string> }>("./locales/*.json");
 
+/**
+ * Whether `lang` can be offered to users: English always, any other language
+ * once tools/translate-ui.mjs has generated its locales/<lang>.json.
+ */
+export function hasTranslations(lang: Language): boolean {
+  return lang === "en" || `./locales/${lang}.json` in localeFiles;
+}
+
+// Set once the language popup has been answered (or dismissed) in this browser
+// session, so it is asked again only in a new session.
+const PROMPTED_KEY = "apas.languagePrompted";
+
+export function languagePromptPending(): boolean {
+  try {
+    return window.sessionStorage.getItem(PROMPTED_KEY) !== "1";
+  } catch {
+    return false; // No session storage: never nag on every page load.
+  }
+}
+
+export function markLanguagePrompted(): void {
+  try {
+    window.sessionStorage.setItem(PROMPTED_KEY, "1");
+  } catch {
+    // Same as above: without storage the popup is simply not shown again.
+  }
+}
+
+/**
+ * Locale for dates shown as text, like "Thursday, November 5, 2026". Use it only
+ * for display; a date string the code parses or compares must keep a fixed locale.
+ * Arabic keeps the digits used everywhere else in the app (5, not ٥).
+ */
+export function displayLocale(): string {
+  if (active === "ar") return "ar-u-nu-latn";
+  return active === "en" ? "en-US" : active;
+}
+
 /** Loads the active language's messages. Call once, before importing the app. */
 export async function loadActiveLocale(): Promise<void> {
   if (active === "en") return;

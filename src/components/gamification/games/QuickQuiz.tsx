@@ -160,7 +160,7 @@ export function QuickQuiz({ onComplete, ageGroup, subject, gameIndex, timeLimit,
                 style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(99,102,241,0.25)", color: "#F1F5F9" }}>
                 <span className="me-2 text-xs font-bold" style={{ color: "#6366F1" }}>{String.fromCharCode(65 + i)}</span>
                 {opt}
-                <span className="mr-2 text-xs font-bold" style={{ color: "#6366F1" }}>{String.fromCharCode(65 + i)}</span>
+                <span className="me-2 text-xs font-bold" style={{ color: "#6366F1" }}>{String.fromCharCode(65 + i)}</span>
                 <span style={visualSize(opt)}>{opt}</span>
               </button>
             ))}

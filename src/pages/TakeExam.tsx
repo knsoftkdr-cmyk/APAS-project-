@@ -20,11 +20,12 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { AlertTriangle, CheckCircle2, Clock, Flag, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock, Flag, Maximize, ShieldAlert, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeFn, useExamAttempt, useSubmitExam, type AnalysisRow, type AttemptPayload, type ExamItem } from "@/hooks/useExamIntelligence";
 import { ScoreBar } from "@/components/exam/ExamReadinessPanels";
+import { enterExamFullscreen, useExamProctoring } from "@/hooks/useExamProctoring";
 
 const OPTION_ORDER = ["A", "B", "C", "D"] as const;
 const AUTOSAVE_MS = 8000;
@@ -81,7 +82,11 @@ function StartScreen({ onStart }: { onStart: () => void }) {
         <li>When time runs out, your exam is submitted automatically.</li>
         <li>Find a quiet place and make sure your connection is stable.</li>
       </ul>
-      <div className="flex gap-2"><Button onClick={onStart}>Start exam</Button><Button asChild variant="outline"><Link to="/my-exams">Not yet</Link></Button></div>
+      <div className="rounded-lg border border-amber-200 bg-amber-50/60 dark:bg-amber-950/20 p-3 text-sm space-y-1">
+        <p className="font-medium flex items-center gap-1.5"><ShieldAlert className="h-4 w-4 text-amber-600" />This exam is proctored</p>
+        <p className="text-muted-foreground">The exam opens in full screen. Leaving the exam tab, switching windows, leaving full screen, copy, paste and right-click are recorded and shared with your teacher. Your camera is not used.</p>
+      </div>
+      <div className="flex gap-2"><Button onClick={() => { void enterExamFullscreen(); onStart(); }}>Start exam</Button><Button asChild variant="outline"><Link to="/my-exams">Not yet</Link></Button></div>
     </CardContent></Card>
   );
 }
@@ -104,6 +109,8 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
   const dirty = useRef(false);
   const submitting = useRef(false);
   const finished = useRef(false);
+  const [done, setDone] = useState(false);
+  const proctor = useExamProctoring(attemptId, { active: !done, initialCount: data.attempt.integrity_event_count ?? 0 });
 
   const items = data.items;
   const sections = useMemo(() => {
@@ -151,6 +158,7 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
     try {
       const r = await submit.mutateAsync({ attemptId, mcq: answers.current.mcq, open: answers.current.open });
       finished.current = true;
+      setDone(true);
       if (r.note) toast.info(r.note);
       else toast.success("Exam submitted");
     } catch (e) {
@@ -189,8 +197,20 @@ function ExamRunner({ data }: { data: AttemptPayload }) {
         {remaining != null && (
           <div className={`flex items-center gap-1.5 font-mono text-lg tabular-nums ${low ? "text-rose-600 animate-pulse" : ""}`} role="timer" aria-label="Time remaining"><Clock className="h-4 w-4" />{fmtClock(remaining)}</div>
         )}
+        {proctor.count > 0 && (
+          <Badge variant="outline" className="gap-1 border-amber-300 text-amber-700" title="Integrity alerts recorded for your teacher">
+            <ShieldAlert className="h-3.5 w-3.5" />{proctor.count}
+          </Badge>
+        )}
         <Button onClick={() => { saveNow(); setConfirmOpen(true); }} disabled={submit.isPending}>Submit</Button>
       </div>
+
+      {proctor.fullscreenAvailable && !proctor.isFullscreen && (
+        <Card className="border-amber-200"><CardContent className="p-3 flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+          <p className="flex-1 flex items-center gap-1.5"><ShieldAlert className="h-4 w-4 text-amber-600 shrink-0" />This exam is proctored. Please stay in full screen until you submit.</p>
+          <Button size="sm" variant="outline" onClick={() => void proctor.enterFullscreen()}><Maximize className="h-4 w-4 me-1.5" />Enter full screen</Button>
+        </CardContent></Card>
+      )}
 
       {data.exam.instructions.length > 0 && (
         <Card><CardContent className="p-4 text-sm"><p className="font-medium mb-1">Instructions</p>

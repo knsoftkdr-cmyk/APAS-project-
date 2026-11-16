@@ -1,6 +1,7 @@
 /**
  * ParentDashboard.tsx — Parent Dashboard
  */
+import { displayLocale } from "@/i18n/runtime";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -282,7 +283,7 @@ export default function ParentDashboard() {
         eyebrow="APAS Parent Portal"
         greeting="Welcome"
         name={profile?.full_name ?? "Parent"}
-        dateLabel={new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+        dateLabel={new Date().toLocaleDateString(displayLocale(), { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
         description="Monitor your child's academic progress, homework, assessments and performance — all in one place."
       />
 

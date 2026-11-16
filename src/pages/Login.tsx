@@ -7,12 +7,34 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import apasLogo from "@/assets/APAS-logo.png";
 import knsoftLogo from "@/assets/knsoft-logo.png";
+import nitLogo from "@/assets/nit-logo.png";
+import { useLanguage } from "@/i18n/LanguageContext";
 import LoginSplash from "./LoginSplash";
 import { getPendingFCMToken } from "@/services/pushNotifications";
 import { saveFCMToken } from "@/services/deviceService";
 import { reportSecurityEvent } from "@/lib/securityEvents";
+import { __t } from "@/i18n/runtime";
+
+// `value` is what the login checks below compare against, so it stays English;
+// `label` is what the user reads and gets translated.
+const LOGIN_ROLES = [
+  { value: "Student", label: "Student" },
+  { value: "Parent", label: "Parent" },
+  { value: "Teacher", label: "Teacher" },
+  { value: "Principal", label: "Principal" },
+  // Direct lookup: the build's text scan treats short capitals as codes, not text.
+  { value: "HOD", label: __t("HOD") },
+  { value: "School Admin", label: "School Admin" },
+  { value: "Driver", label: "Driver" },
+  { value: "ERP", label: "ERP" },
+];
+
+// In a translated UI, adds the English role in brackets: "مدرس (Teacher)".
+const describeRole = ({ value, label }: { value: string; label: string }) =>
+  label === value ? label : `${label} (${value})`;
 
 const Login = () => {
+  const { language } = useLanguage();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState("Student");
@@ -213,12 +235,20 @@ return (
   }}
 >
             {/* 2. ADD THIS LOGO CODE HERE */}
-           <div className="absolute top-8 start-8 z-50">
-            <img 
-              src={knsoftLogo} 
-              alt="KNSOFT Logo" 
-              className="h-10 w-auto object-contain" 
+           <div className="absolute top-8 start-8 z-50 flex items-center gap-4">
+            <img
+              src={knsoftLogo}
+              alt="KNSOFT Logo"
+              className="h-14 w-auto object-contain"
             />
+            {/* Arabic edition: partner logo next to KNSOFT */}
+            {language === "ar" && (
+              <img
+                src={nitLogo}
+                alt="NIT Skills India Logo"
+                className="h-14 w-auto object-contain"
+              />
+            )}
            </div>
             <div
               className=" login-card
@@ -266,14 +296,9 @@ return (
     }}
       className="w-full h-14 px-5 rounded-xl bg-white/80 backdrop-blur-md border-2 border-blue-100 text-[#2C3E50] font-medium shadow-sm hover:border-blue-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-200/40 transition-all duration-300 cursor-pointer"
   >
-    <option>Student</option>
-    <option>Parent</option>
-    <option>Teacher</option>
-    <option>Principal</option>
-    <option>HOD</option>
-    <option>School Admin</option>
-    <option>Driver</option>
-    <option>ERP</option>
+    {LOGIN_ROLES.map((role) => (
+      <option key={role.value} value={role.value}>{describeRole(role)}</option>
+    ))}
   </select>
 </div>
 

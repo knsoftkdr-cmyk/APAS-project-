@@ -121,7 +121,12 @@ export default function EntryTicket() {
           class_level: classLabel,
         },
       });
-      if (fnError) throw fnError;
+      if (fnError) {
+        // supabase-js only says "non-2xx status code"; surface the function's own error message.
+        let detail = "";
+        try { detail = (await (fnError as any).context?.json())?.error ?? ""; } catch { /* body not JSON */ }
+        throw new Error(detail || fnError.message);
+      }
       setQuestions(data.questions || []);
 
       const { data: profile } = await supabase

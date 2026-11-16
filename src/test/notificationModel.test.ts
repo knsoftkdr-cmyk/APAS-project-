@@ -59,7 +59,7 @@ describe("links: only real routes that admit the role", () => {
     "transport_boarding", "transport_drop", "vehicle_overspeed", "route_deviation", "unauthorized_stop", "unauthorized_boarding",
     "restricted_zone_entry", "student_incident", "weather_alert", "round_completed", "attendance_marked",
     "diagnostic_request_approved", "diagnostic_request_rejected", "diagnostic_request_submitted", "diagnostic_questions_assigned",
-    "diagnostic_completed", "substitute_approved", "tutor_message", "irt_calibration_flagged", "open_ended_calibration_adjusted", "automation_x",
+    "diagnostic_completed", "substitute_approved", "tutor_message", "doubt_new", "doubt_reply", "doubt_resolved", "admission_enquiry", "certificate_issued", "irt_calibration_flagged", "open_ended_calibration_adjusted", "automation_x",
   ];
   const ROLES = ["student", "teacher", "parent", "admin", "principal", "hod", "school_admin", "knsoft_admin", "driver"];
   it("every link resolves to a route in App.tsx whose guard admits that role", () => {

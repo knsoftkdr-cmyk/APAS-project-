@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { displayLocale } from "@/i18n/runtime";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { PageHeader } from "@/components/PageHeader";
 import { StatCard } from "@/components/StatCard";
@@ -74,7 +75,7 @@ const StudentDashboard = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString(displayLocale(), {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
@@ -264,7 +265,7 @@ const workflowSteps = [
 
 const TeacherHome = () => {
   const { profile, user } = useAuth();
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString(displayLocale(), {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 
@@ -469,7 +470,7 @@ const adminFeatureCards = [
 const AdminHome = () => {
   const { profile } = useAuth();
   const schoolId = profile?.school_id;
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString(displayLocale(), {
     weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 

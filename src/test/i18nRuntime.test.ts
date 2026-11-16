@@ -44,9 +44,32 @@ describe("i18n runtime", () => {
     expect(isValidElement(__t("Hello {0}", [createElement("b", null, "Asha")]))).toBe(true);
   });
 
+  it("formats display dates in the active language", async () => {
+    const date = new Date(2026, 10, 5);
+    const options = { weekday: "long", month: "long" } as const;
+    const en = await runtimeIn(null);
+    expect(date.toLocaleDateString(en.displayLocale(), options)).toContain("Thursday");
+    const ar = await runtimeIn("ar");
+    expect(date.toLocaleDateString(ar.displayLocale(), options)).toContain("الخميس");
+  });
+
   it("ignores an unsupported stored language", async () => {
     const { activeLanguage } = await runtimeIn("xx");
     expect(activeLanguage()).toBe("en");
+  });
+
+  it("offers English and languages that have generated translations", async () => {
+    const { hasTranslations } = await runtimeIn(null);
+    expect(hasTranslations("en")).toBe(true);
+    expect(hasTranslations("ar")).toBe(true);
+  });
+
+  it("asks for the language once per session", async () => {
+    sessionStorage.clear();
+    const { languagePromptPending, markLanguagePrompted } = await runtimeIn(null);
+    expect(languagePromptPending()).toBe(true);
+    markLanguagePrompted();
+    expect(languagePromptPending()).toBe(false);
   });
 
   it("does not report a language as saved when storage refuses it", async () => {

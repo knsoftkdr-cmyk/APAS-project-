@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { detectVideoProvider, VIDEO_PROVIDER_LABELS } from "@/lib/videoProviders";
+import { localizeServerMessage } from "@/lib/serverMessages";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -329,7 +331,7 @@ export default function StudentVirtualClassroom() {
                                 <>
                                   <a href={s.meet_link} target="_blank" rel="noopener noreferrer" onClick={() => handleJoinClick(s)}>
                                     <Button size="sm" className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white">
-                                      Join Today's Class
+                                      Join Today's Class on {localizeServerMessage(VIDEO_PROVIDER_LABELS[detectVideoProvider(s.meet_link)])}
                                     </Button>
                                   </a>
                                   <Button

@@ -108,6 +108,9 @@ export function governanceLink(eventType: string, role: string | null | undefine
   if (e === "diagnostic_completed") return r === "teacher" ? "/diagnostic" : [...SCHOOL_ADMIN_ROLES, "hod"].includes(r) ? "/admin" : undefined;
   if (e === "substitute_approved") return r === "teacher" ? "/timetable" : undefined;
   if (e === "tutor_message") return r === "student" ? "/ai-tutor" : undefined;
+  if (e.startsWith("doubt_")) return ["student", "teacher", "hod", ...SCHOOL_ADMIN_ROLES].includes(r) ? "/doubts" : undefined;
+  if (e === "admission_enquiry") return SCHOOL_ADMIN_ROLES.includes(r) ? "/admissions" : undefined;
+  if (e === "certificate_issued") return r === "student" ? "/student/credentials" : undefined;
   if (e === "irt_calibration_flagged" || e === "open_ended_calibration_adjusted") return r === "knsoft_admin" ? "/notification-dashboard" : undefined;
   if (e.startsWith("automation_")) return r === "knsoft_admin" ? "/automation-dashboard" : undefined;
   return undefined;

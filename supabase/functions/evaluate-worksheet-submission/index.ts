@@ -110,10 +110,31 @@ const RESPONSE_SCHEMA = {
   required: ["total_score", "overall_feedback", "per_activity", "topic_analysis", "study_plan"],
 };
 
+// Google shut down the 2.0 models and restricted 2.5 to accounts that already
+// used it, so default to the current 3.x Flash models (same as _shared/aiClient.ts).
+// Override without redeploying via the GEMINI_MODELS secret (comma-separated).
+const DEFAULT_GEMINI_MODELS = ["gemini-3.5-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite", "gemini-2.5-flash"];
+
+function geminiModels(): string[] {
+  const fromEnv = (Deno.env.get("GEMINI_MODELS") ?? "").split(",").map((m) => m.trim()).filter(Boolean);
+  return fromEnv.length ? fromEnv : DEFAULT_GEMINI_MODELS;
+}
+
+function geminiKeys(): string[] {
+  return [
+    Deno.env.get("Worksheet_gemini_api_key"),
+    Deno.env.get("Worksheet_Submission_Gemini_API_Key"),
+    Deno.env.get("GOOGLE_GEMINI_API_KEY_2"),
+    Deno.env.get("GOOGLE_GEMINI_API_KEY"),
+    Deno.env.get("GEMINI_KEY_2"),
+    Deno.env.get("GEMINI_KEY_3"),
+    Deno.env.get("GEMINI_KEY_4"),
+  ].filter((k, i, a): k is string => !!k && k.trim().length > 0 && a.indexOf(k) === i);
+}
+
 async function evaluateWithGemini(worksheetContent: string, answers: Record<string, string>, answerFileUrl: string | null, studentName: string): Promise<EvalResult> {
-  const apiKey = Deno.env.get("Worksheet_gemini_api_key") || Deno.env.get("Worksheet_Submission_Gemini_API_Key");
-  if (!apiKey) throw new Error("No Gemini API key configured");
-  console.log("Using key ending in:", apiKey.slice(-6));
+  const keys = geminiKeys();
+  if (keys.length === 0) throw new Error("No Gemini API key configured");
 
   const answerKey = extractAnswerKey(worksheetContent);
   const activities = parseActivities(worksheetContent);
@@ -173,55 +194,96 @@ Finally, produce a study_plan: an ordered list (max 3 items) of the topics most 
   }
   console.log("DEBUG: total contentParts count =", contentParts.length);
 
-  const body = JSON.stringify({
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ role: "user", parts: contentParts }],
-    generationConfig: {
+  const makeBody = (model: string) => {
+    // Thinking tokens count toward maxOutputTokens on 2.5/3.x models, so leave
+    // generous headroom and keep thinking low - grading against an answer key
+    // doesn't need long reasoning.
+    const generationConfig: Record<string, unknown> = {
       temperature: 0.3,
-      maxOutputTokens: 8192,
+      maxOutputTokens: 32768,
       responseMimeType: "application/json",
       responseSchema: RESPONSE_SCHEMA,
-    },
+      thinkingConfig: model.startsWith("gemini-2.5") ? { thinkingBudget: 1024 } : { thinkingLevel: "low" },
+    };
+    return JSON.stringify({
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: "user", parts: contentParts }],
+      generationConfig,
+    });
+  };
+  // Fallback body without thinkingConfig, for models that reject that field.
+  const makePlainBody = () => JSON.stringify({
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: "user", parts: contentParts }],
+    generationConfig: { temperature: 0.3, maxOutputTokens: 32768, responseMimeType: "application/json", responseSchema: RESPONSE_SCHEMA },
   });
 
-  const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
-  for (const model of models) {
-    try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-        method: "POST", headers: { "Content-Type": "application/json" }, body,
-      });
-      if (!res.ok) { console.warn(`Model ${model} failed (${res.status}): ${(await res.text()).substring(0, 200)}`); continue; }
-      const data = await res.json();
+  const errors: string[] = [];
+  for (const key of keys) {
+    for (const model of geminiModels()) {
+      const bodies = [makeBody(model), makePlainBody()];
+      for (let attempt = 0; attempt < bodies.length; attempt++) {
+        const body = bodies[attempt];
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body,
+          });
+          if (!res.ok) {
+            const errText = (await res.text()).replace(/\s+/g, " ").substring(0, 200);
+            // A 400 may just mean this model rejects thinkingConfig - retry once without it.
+            if (res.status === 400 && attempt === 0) { console.warn(`Model ${model} 400 with thinkingConfig, retrying plain: ${errText}`); continue; }
+            console.warn(`Model ${model} (key ...${key.slice(-4)}) failed (${res.status}): ${errText}`);
+            errors.push(`${model}: ${res.status}${res.status === 429 ? " rate limited" : ""}`);
+            break;
+          }
+          const data = await res.json();
 
-      const finishReason = data?.candidates?.[0]?.finishReason;
-      if (finishReason === "MAX_TOKENS") {
-        console.warn(`Model ${model} hit MAX_TOKENS - response likely truncated, trying next model`);
-        continue;
+          const finishReason = data?.candidates?.[0]?.finishReason;
+          if (finishReason === "MAX_TOKENS") {
+            console.warn(`Model ${model} hit MAX_TOKENS - response likely truncated, trying next model`);
+            errors.push(`${model}: truncated`);
+            break;
+          }
+
+          // Skip any "thought" parts; join the actual answer text.
+          const text = (data?.candidates?.[0]?.content?.parts ?? [])
+            .filter((p: any) => !p?.thought)
+            .map((p: any) => p?.text ?? "")
+            .join("");
+          if (!text.trim()) {
+            console.warn(`Model ${model} returned empty text. finishReason=${finishReason}`);
+            errors.push(`${model}: empty (${finishReason ?? "unknown"})`);
+            break;
+          }
+
+          // With responseSchema, Gemini returns raw JSON directly - no markdown
+          // fences, no regex extraction needed.
+          let parsed: any;
+          try {
+            parsed = JSON.parse(text);
+          } catch (parseErr) {
+            console.error(`Model ${model} returned invalid JSON despite responseSchema:`, parseErr, "text length =", text.length);
+            errors.push(`${model}: invalid JSON`);
+            break;
+          }
+
+          console.log(`Evaluated with ${model} (key ...${key.slice(-4)})`);
+          return {
+            ai_score: Math.round(parsed.total_score || 0),
+            ai_feedback: parsed.overall_feedback || "AI evaluation complete.",
+            ai_per_activity: parsed.per_activity || [],
+            ai_topic_analysis: parsed.topic_analysis || [],
+            ai_study_plan: parsed.study_plan || [],
+          };
+        } catch (e) {
+          console.error(`Model ${model} error:`, e);
+          errors.push(`${model}: network error`);
+          break;
+        }
       }
-
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      if (!text) { console.warn(`Model ${model} returned empty text. finishReason=${finishReason}`); continue; }
-
-      // With responseSchema, Gemini returns raw JSON directly - no markdown
-      // fences, no regex extraction needed.
-      let parsed: any;
-      try {
-        parsed = JSON.parse(text);
-      } catch (parseErr) {
-        console.error(`Model ${model} returned invalid JSON despite responseSchema:`, parseErr, "text length =", text.length);
-        continue;
-      }
-
-      return {
-        ai_score: Math.round(parsed.total_score || 0),
-        ai_feedback: parsed.overall_feedback || "AI evaluation complete.",
-        ai_per_activity: parsed.per_activity || [],
-        ai_topic_analysis: parsed.topic_analysis || [],
-        ai_study_plan: parsed.study_plan || [],
-      };
-    } catch (e) { console.error(`Model ${model} error:`, e); }
+    }
   }
-  throw new Error("All Gemini models failed");
+  throw new Error(`All Gemini models failed - ${[...new Set(errors)].slice(0, 6).join(" | ") || "no response"}`);
 }
 
 serve(async (req) => {

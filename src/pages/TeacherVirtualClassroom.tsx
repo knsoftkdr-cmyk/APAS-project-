@@ -33,7 +33,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, Trash2, PenLine } from "lucide-react";
+import { Loader2, Pencil, Trash2, PenLine, Sparkles, Video } from "lucide-react";
+import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+import { localizeServerMessage } from "@/lib/serverMessages";
+import { detectVideoProvider, meetingLinkProblem, newJitsiRoomUrl, VIDEO_PROVIDER_LABELS } from "@/lib/videoProviders";
 import { WhiteboardCanvas } from "@/components/whiteboard/WhiteboardCanvas";
 import { LiveAttendanceRegister } from "@/components/live-attendance/LiveAttendanceRegister";
 import { ClassAttendanceReportDialog } from "@/components/live-attendance/ClassAttendanceReportDialog";
@@ -58,6 +61,8 @@ interface VirtualSession {
   scheduled_end: string;
   status: string;
   recurrence_end_date: string | null;
+  external_provider: string | null;
+  external_meeting_id: string | null;
   class_name?: string;
   section?: string;
 }
@@ -73,6 +78,8 @@ const emptyForm = {
   subject: "",
   title: "",
   meetLink: "",
+  externalProvider: null as string | null,
+  externalMeetingId: null as string | null,
   scheduledStart: "",
   scheduledEnd: "",
   isRecurring: false,
@@ -95,6 +102,9 @@ export default function TeacherVirtualClassroom() {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const [form, setForm] = useState(emptyForm);
+  const [zoomConfigured, setZoomConfigured] = useState(false);
+  const [creatingZoom, setCreatingZoom] = useState(false);
+  const [startingHostId, setStartingHostId] = useState<string | null>(null);
 
   // Attendance + topic log dialog state
   const [attendanceSession, setAttendanceSession] = useState<VirtualSession | null>(null);
@@ -118,6 +128,10 @@ export default function TeacherVirtualClassroom() {
     supabase.auth.getUser().then(({ data }) => {
       if (data?.user) setCurrentUserId(data.user.id);
     });
+    // Only offers the button when the school has connected Zoom. A failed check just leaves paste-a-link, which always works.
+    supabase.functions.invoke("ai-teacher-assistant", { body: { action: "zoom_status" } })
+      .then(({ data }) => setZoomConfigured(data?.configured === true))
+      .catch(() => setZoomConfigured(false));
   }, []);
 
   async function loadTeacherClasses() {
@@ -155,7 +169,7 @@ export default function TeacherVirtualClassroom() {
       .from("virtual_classroom_sessions")
       .select(
         `id, class_id, subject, title, meet_link, scheduled_start, scheduled_end,
-         status, recurrence_end_date, classes:class_id ( name, section )`
+         status, recurrence_end_date, external_provider, external_meeting_id, classes:class_id ( name, section )`
       )
       .eq("teacher_id", userData.user.id)
       .order("scheduled_start", { ascending: false });
@@ -176,6 +190,8 @@ export default function TeacherVirtualClassroom() {
       scheduled_end: row.scheduled_end,
       status: row.status,
       recurrence_end_date: row.recurrence_end_date,
+      external_provider: row.external_provider,
+      external_meeting_id: row.external_meeting_id,
       class_name: row.classes?.name,
       section: row.classes?.section,
     }));
@@ -188,9 +204,58 @@ export default function TeacherVirtualClassroom() {
     setForm((f) => ({ ...f, classId, subject: match?.subject ?? "" }));
   }
 
+  async function createZoomMeeting() {
+    if (!form.scheduledStart || !form.scheduledEnd) {
+      toast({ title: "Set the time first", description: "Zoom needs the class start and end time.", variant: "destructive" });
+      return;
+    }
+    setCreatingZoom(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-teacher-assistant", {
+        body: {
+          action: "zoom_create",
+          topic: form.title || form.subject || "Online class",
+          start: new Date(form.scheduledStart).toISOString(),
+          end: new Date(form.scheduledEnd).toISOString(),
+          recurring: form.isRecurring,
+        },
+      });
+      if (error) throw new Error((await unwrapFunctionError(error, "Zoom couldn't create the meeting.")).message);
+      if (data?.error) throw new Error(data.error);
+      setForm((f) => ({ ...f, meetLink: data.join_url, externalProvider: "zoom", externalMeetingId: data.meeting_id }));
+      toast({ title: "Zoom meeting created", description: "The link is filled in. Save the class to keep it." });
+    } catch (e) {
+      toast({ title: "Zoom meeting not created", description: e instanceof Error ? localizeServerMessage(e.message) : "Please paste a link instead.", variant: "destructive" });
+    } finally {
+      setCreatingZoom(false);
+    }
+  }
+
+  async function startAsHost(session: VirtualSession) {
+    // Open the tab now: browsers block a new tab opened after waiting on a network call.
+    const tab = window.open("about:blank", "_blank");
+    setStartingHostId(session.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-teacher-assistant", { body: { action: "zoom_start", session_id: session.id } });
+      if (error) throw new Error((await unwrapFunctionError(error, "Zoom couldn't start the class.")).message);
+      if (data?.error) throw new Error(data.error);
+      if (tab) { tab.opener = null; tab.location.href = data.start_url; }
+    } catch (e) {
+      tab?.close();
+      toast({ title: "Couldn't start the class", description: e instanceof Error ? localizeServerMessage(e.message) : undefined, variant: "destructive" });
+    } finally {
+      setStartingHostId(null);
+    }
+  }
+
   async function handleCreateSession() {
     if (!form.classId || !form.subject || !form.meetLink || !form.scheduledStart || !form.scheduledEnd) {
       toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
+      return;
+    }
+    const linkProblem = meetingLinkProblem(form.meetLink);
+    if (linkProblem) {
+      toast({ title: "Check the class link", description: localizeServerMessage(linkProblem), variant: "destructive" });
       return;
     }
     if (form.isRecurring && !form.recurrenceEndDate) {
@@ -219,7 +284,9 @@ export default function TeacherVirtualClassroom() {
       teacher_id: userData.user.id,
       subject: form.subject,
       title: form.title || null,
-      meet_link: form.meetLink,
+      meet_link: form.meetLink.trim(),
+      external_provider: form.externalProvider,
+      external_meeting_id: form.externalMeetingId,
       scheduled_start: new Date(form.scheduledStart).toISOString(),
       scheduled_end: new Date(form.scheduledEnd).toISOString(),
       recurrence_end_date: form.isRecurring ? form.recurrenceEndDate : null,
@@ -244,6 +311,8 @@ export default function TeacherVirtualClassroom() {
       subject: session.subject,
       title: session.title || "",
       meetLink: session.meet_link,
+      externalProvider: session.external_provider,
+      externalMeetingId: session.external_meeting_id,
       scheduledStart: toLocalInputValue(session.scheduled_start),
       scheduledEnd: toLocalInputValue(session.scheduled_end),
       isRecurring: !!session.recurrence_end_date,
@@ -264,6 +333,11 @@ export default function TeacherVirtualClassroom() {
       toast({ title: "Missing fields", description: "Please fill in all required fields.", variant: "destructive" });
       return;
     }
+    const linkProblem = meetingLinkProblem(form.meetLink);
+    if (linkProblem) {
+      toast({ title: "Check the class link", description: localizeServerMessage(linkProblem), variant: "destructive" });
+      return;
+    }
 
     setSaving(true);
     const { error } = await supabase
@@ -272,7 +346,9 @@ export default function TeacherVirtualClassroom() {
         class_id: form.classId,
         subject: form.subject,
         title: form.title || null,
-        meet_link: form.meetLink,
+        meet_link: form.meetLink.trim(),
+        external_provider: form.externalProvider,
+        external_meeting_id: form.externalMeetingId,
         scheduled_start: new Date(form.scheduledStart).toISOString(),
         scheduled_end: new Date(form.scheduledEnd).toISOString(),
         recurrence_end_date: form.isRecurring ? form.recurrenceEndDate : null,
@@ -491,6 +567,9 @@ export default function TeacherVirtualClassroom() {
               setForm={setForm}
               teacherClasses={teacherClasses}
               onClassChange={handleClassChange}
+              zoomConfigured={zoomConfigured}
+              creatingZoom={creatingZoom}
+              onCreateZoom={createZoomMeeting}
             />
           </div>
           <div className="px-5 py-4 border-t border-slate-100 shrink-0">
@@ -547,8 +626,14 @@ export default function TeacherVirtualClassroom() {
       </p>
       <div className="flex gap-2 flex-wrap">
         <a href={s.meet_link} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white">Open Meet Link</Button>
+          <Button size="sm" className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white">Open {localizeServerMessage(VIDEO_PROVIDER_LABELS[detectVideoProvider(s.meet_link)])} Link</Button>
         </a>
+        {s.external_provider === "zoom" && s.external_meeting_id && (
+          <Button size="sm" variant="outline" disabled={startingHostId === s.id} onClick={() => startAsHost(s)}>
+            {startingHostId === s.id ? <Loader2 className="h-4 w-4 animate-spin me-1.5" /> : <Video className="h-4 w-4 me-1.5" />}
+            Start as host
+          </Button>
+        )}
 
                   <Dialog onOpenChange={(open) => { if (open) openAttendance(s); }}>
   <DialogTrigger asChild>
@@ -653,6 +738,9 @@ export default function TeacherVirtualClassroom() {
         setForm={setForm}
         teacherClasses={teacherClasses}
         onClassChange={handleClassChange}
+        zoomConfigured={zoomConfigured}
+        creatingZoom={creatingZoom}
+        onCreateZoom={createZoomMeeting}
       />
     </div>
     <div className="px-5 py-4 border-t border-slate-100 shrink-0">
@@ -729,12 +817,21 @@ function SessionForm({
   setForm,
   teacherClasses,
   onClassChange,
+  zoomConfigured,
+  creatingZoom,
+  onCreateZoom,
 }: {
   form: typeof emptyForm;
   setForm: React.Dispatch<React.SetStateAction<typeof emptyForm>>;
   teacherClasses: TeacherClass[];
   onClassChange: (classId: string) => void;
+  zoomConfigured: boolean;
+  creatingZoom: boolean;
+  onCreateZoom: () => void;
 }) {
+  // A different link is no longer the meeting Zoom created, so forget that meeting.
+  const setMeetLink = (meetLink: string) => setForm((f) => ({ ...f, meetLink, externalProvider: null, externalMeetingId: null }));
+
   return (
     <div className="space-y-4">
       <div>
@@ -764,13 +861,32 @@ function SessionForm({
       </div>
 
       <div>
-        <Label className="text-xs font-semibold text-slate-600">Meet Link</Label>
+        <Label className="text-xs font-semibold text-slate-600">Class Link</Label>
         <Input
           value={form.meetLink}
-          onChange={(e) => setForm((f) => ({ ...f, meetLink: e.target.value }))}
-          placeholder="https://meet.google.com/..."
+          onChange={(e) => setMeetLink(e.target.value)}
+          placeholder="Paste a Zoom, Google Meet, Teams, Jitsi or YouTube Live link"
           className="mt-1 border-slate-200 focus-visible:ring-teal-400"
         />
+        {form.meetLink.trim() && (
+          meetingLinkProblem(form.meetLink)
+            ? <p className="mt-1 text-xs text-destructive">{localizeServerMessage(meetingLinkProblem(form.meetLink))}</p>
+            : <p className="mt-1 text-xs text-muted-foreground">Platform: {localizeServerMessage(VIDEO_PROVIDER_LABELS[detectVideoProvider(form.meetLink)])}</p>
+        )}
+        <div className="mt-2 flex flex-wrap gap-2">
+          {zoomConfigured && (
+            <Button type="button" size="sm" variant="outline" disabled={creatingZoom} onClick={onCreateZoom}>
+              {creatingZoom ? <Loader2 className="h-4 w-4 animate-spin me-1.5" /> : <Sparkles className="h-4 w-4 me-1.5" />}
+              Create Zoom meeting
+            </Button>
+          )}
+          <Button type="button" size="sm" variant="outline" onClick={() => setMeetLink(newJitsiRoomUrl(form.title || form.subject))}>
+            Create Jitsi room
+          </Button>
+          <Button type="button" size="sm" variant="ghost" asChild>
+            <a href="https://meet.google.com/new" target="_blank" rel="noopener noreferrer">Open Google Meet</a>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
