@@ -6,6 +6,7 @@
 //
 // Staff only. Body:
 //   { action: "copilot", message, task?, class_id?, book_id?, student_id?, history? }
+//   paper?: the open question paper (Chat to Refine Questions) - see handlers/paperRefine.ts
 //   task: "auto" (default) | "lesson_plan" | "assessment" | "remediation" | "student_analysis" | "general"
 //
 // One assistant for lesson planning, assessment design, remediation and student analysis, GROUNDED in the
@@ -23,6 +24,7 @@ import {
   authenticateStaff, corsHeaders, json, loadClassSignals, parseBookId, UUID_RE, type AuthContext,
 } from "../learningGroupsData.ts";
 import { computeTierView } from "./dynamicGroups.ts";
+import { runPaperRefine } from "./paperRefine.ts";
 
 type Row = Record<string, any>;
 
@@ -173,23 +175,36 @@ async function buildStudentContext(ctx: AuthContext, studentId: string, bookId: 
   return { context, alias: a, studentName: st?.full_name ?? "Student" };
 }
 
-async function callModel(system: string, messages: Array<{ role: string; content: string }>) {
+export interface ModelOptions { maxTokens?: number; temperature?: number; timeoutMs?: number }
+
+async function callModel(system: string, messages: Array<{ role: string; content: string }>, opts: ModelOptions = {}) {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw Object.assign(new Error("LOVABLE_API_KEY not configured"), { status: 500 });
-  const resp = await fetch(AI_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL, temperature: 0.4, max_tokens: 2200,
-      messages: [{ role: "system", content: system }, ...messages],
-    }),
-  });
+  const ctrl = new AbortController();
+  const timer = opts.timeoutMs ? setTimeout(() => ctrl.abort(), opts.timeoutMs) : null;
+  let resp: Response;
+  try {
+    resp = await fetch(AI_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      signal: ctrl.signal,
+      body: JSON.stringify({
+        model: MODEL, temperature: opts.temperature ?? 0.4, max_tokens: opts.maxTokens ?? 2200,
+        messages: [{ role: "system", content: system }, ...messages],
+      }),
+    });
+  } catch (e) {
+    if ((e as Error)?.name === "AbortError") throw Object.assign(new Error("The AI took too long to answer. Please try again."), { status: 504, retryable: true });
+    throw Object.assign(new Error("Could not reach the AI service. Please try again."), { status: 502, retryable: true });
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
   if (resp.status === 429) throw Object.assign(new Error("The AI service is busy. Please try again in a moment."), { status: 429 });
   if (resp.status === 402) throw Object.assign(new Error("AI credits are exhausted. Please contact your administrator."), { status: 402 });
-  if (!resp.ok) throw new Error(`AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 300)}`);
+  if (!resp.ok) throw Object.assign(new Error(`AI gateway error ${resp.status}: ${(await resp.text()).slice(0, 300)}`), { retryable: resp.status >= 500 });
   const data = await resp.json();
   const text: string | undefined = data?.choices?.[0]?.message?.content;
-  if (!text || !text.trim()) throw new Error("The AI returned an empty response");
+  if (!text || !text.trim()) throw Object.assign(new Error("The AI returned an empty response"), { retryable: true });
   return text.trim();
 }
 
@@ -223,6 +238,16 @@ export async function handleTeacherCopilot(req: Request): Promise<Response> {
         if (!h || (h.role !== "user" && h.role !== "assistant") || typeof h.content !== "string") return json({ error: "history entries need a role (user|assistant) and content" }, 400);
         history.push({ role: h.role, content: h.content.slice(0, MAX_MESSAGE) });
       }
+    }
+
+    // ── Chat to Refine Questions: the same Copilot, grounded in the paper the teacher has open ──
+    if (body.paper !== undefined && body.paper !== null) {
+      if (classId) {
+        const access = await canStaffAccessClass(ctx.admin, ctx.caller, classId);
+        if (!access.ok) return json({ error: access.error }, access.status ?? 403);
+      }
+      const out = await runPaperRefine({ ctx, message, history, rawPaper: body.paper, callModel });
+      return json({ ...out.body }, out.status);
     }
 
     const task: Exclude<Task, "auto"> = taskIn === "auto" ? detectTask(message, !!studentId) : (taskIn as Exclude<Task, "auto">);

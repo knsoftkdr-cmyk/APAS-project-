@@ -360,7 +360,18 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
 * Requests without these actions fall through to update-mastery's original code unchanged.
 
 
-## Live class recordings (added later, same pattern)
+## Chat to Refine Questions (no new function)
+
+* `ai-teacher-assistant` `{ action: "copilot", message, paper, history?, class_id? }` — when the body carries a `paper` (the open question paper)
+  the Copilot runs `_shared/handlers/paperRefine.ts` instead of the general path. The model returns strict JSON; every suggestion is
+  re-validated by `_shared/paperRefineModel.ts` (types, marks, difficulty, MCQ options / one correct answer, paper-scoped targets, total marks).
+  Nothing is written by this call. Requests without `paper` behave exactly as before.
+* `evaluate-assessment` `{ action: "build_paper" }` additionally accepts items `{ kind: "custom", question, marks }`. They are validated
+  with the same model and stored as NEW `question_bank` / `question_bank_extended` rows (`generation_model = 'teacher-refine'`); original
+  bank rows are never edited. Existing `{ kind: "mcq" | "extended", id }` items are unchanged.
+* Redeploy only the two existing functions: `ai-teacher-assistant` and `evaluate-assessment`. No migration.
+
+## Live class recordings & scheduled messages (no new function)
 
 | Feature | Anchor (deployed) | Discriminator |
 |---|---|---|
@@ -377,3 +388,10 @@ Both anchors must be redeployed (calibrate-irt-cron with `--no-verify-jwt`, as b
 |---|---|---|
 | Content Studio - prompt to PPTX / flash cards / flowchart | generate-entry-ticket | action: `content_studio` (needs migration 20261113000000 and secret CONTENT_STUDIO_GEMINI_API_KEY; falls back to the shared Gemini keys) |
 | Content Studio - history, delete, video upload | generate-entry-ticket | action: `content_studio` + `op`: `history`, `delete`, `video_upload`, `video_done`, `video_scenes` (video_scenes = AI plan for the animated explainer scenes, _shared/explainerScenes.ts, drawn by src/lib/explainerScene.ts; audio/video need secret GOOGLE_TTS_API_KEY and migrations 20261116000000 + 20261116120000; the MP4 itself is encoded in the browser by src/lib/lessonVideo.ts) |
+
+## Click-to-Call & Telephony (no new function)
+* `log-audit` now also routes `{ mode: "tel_call", op: "start" | "refresh" | "recording" }` (staff-authenticated) and receives the telephony
+  provider's status callbacks (`?telephony=exotel&cid=<callId>&t=<token>`, authenticated by a per-call HMAC token, unauthenticated by JWT because
+  providers cannot send one). Code: `_shared/handlers/telephonyCalls.ts`, `_shared/telephony/{exotel,airtelIq,providers}.ts`, `_shared/telephonyModel.ts`.
+* Secrets (never in the database or the browser): `EXOTEL_ACCOUNT_SID`, `EXOTEL_API_KEY`, `EXOTEL_API_TOKEN`, optional `EXOTEL_SUBDOMAIN`, `TELEPHONY_WEBHOOK_SECRET`.
+* Migration `20261105000000_telephony_click_to_call.sql` (re-runnable). Redeploy only `log-audit`.

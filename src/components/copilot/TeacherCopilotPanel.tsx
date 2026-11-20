@@ -2,6 +2,7 @@
 // Teacher Copilot: one assistant for lesson planning, assessment design, remediation and student analysis,
 // grounded in the class's mastery, peer groups, learning groups and risk data.
 // Data: ai-teacher-assistant { action: "copilot" }.
+// With the optional `paper` prop it is the paper-aware "Chat to Refine Questions" mode (see PaperRefineChat.tsx).
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -15,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTeacherCopilot, type CopilotResponse, type CopilotTask } from "@/hooks/useLearningGroups";
+import { PaperRefineChat, type PaperRefineProps } from "./PaperRefineChat";
 
 interface Option { id: string; label: string }
 interface ClassTeacherRow { class_id: string; classes: { id: string; name: string; section: string | null } | null }
@@ -44,7 +46,7 @@ const STARTERS: Array<{ label: string; task: CopilotTask; text: string; needs?: 
   { label: "Analyse this student", task: "student_analysis", text: "Analyse this student's strengths, gaps and risk signals, and suggest next steps and parent talking points.", needs: "student" },
 ];
 
-export function TeacherCopilotPanel() {
+function GeneralCopilot() {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -218,4 +220,13 @@ export function TeacherCopilotPanel() {
       </div>
     </div>
   );
+}
+
+/**
+ * The Teacher Copilot. On its own page it is the general assistant (lesson plans, quizzes, remediation, student analysis).
+ * Given a `paper` (the question paper open in the Assessment Builder) it becomes "Chat to Refine Questions": same assistant and
+ * endpoint, grounded in that paper, proposing changes the teacher approves one by one.
+ */
+export function TeacherCopilotPanel({ paper }: { paper?: PaperRefineProps } = {}) {
+  return paper ? <PaperRefineChat {...paper} /> : <GeneralCopilot />;
 }

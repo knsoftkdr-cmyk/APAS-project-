@@ -54,6 +54,8 @@ export function inferCategory(n: Pick<NotificationLike, "event_type" | "title" |
   if (e) {
     if (SAFETY_EVENTS.has(e)) return "safety";
     if (TRANSPORT_PREFIXES.some((p) => e.startsWith(p))) return "transport";
+    if (e === "content_published") return "academics";
+    if (e.startsWith("content_")) return "approvals"; // publish-workflow events (submitted, assigned, approved, rejected, ...)
     if (e.startsWith("calendar_")) return "academics";
     if (e.startsWith("attendance")) return "attendance";
     if (e === "tutor_message" || e.includes("message")) return "messages";
@@ -82,6 +84,7 @@ export function isImportant(n: Pick<NotificationLike, "type" | "event_type" | "m
   if (SAFETY_EVENTS.has(e)) return true;
   if (e === "diagnostic_request_rejected" || e === "irt_calibration_flagged") return true;
   if (e === "fee_overdue" || e === "instalment_overdue") return true;
+  if (e === "content_rejected" || e === "content_changes_requested") return true;
   if (e === "attendance_marked" && /\babsent\b/i.test(`${n.title} ${n.message}`)) return true;
   return false;
 }
@@ -101,6 +104,8 @@ export function governanceLink(eventType: string, role: string | null | undefine
     if (SCHOOL_ADMIN_ROLES.includes(r)) return "/transport";
     return undefined;
   }
+  if (e === "content_published" && r === "student") return "/student/courses";
+  if (e.startsWith("content_")) return ["teacher", "hod", ...SCHOOL_ADMIN_ROLES].includes(r) ? "/content-approval" : undefined;
   if (e.startsWith("calendar_")) return ["student", "parent", "teacher", "hod", ...SCHOOL_ADMIN_ROLES].includes(r) ? "/academic-calendar" : undefined;
   if (e === "attendance_marked") return r === "parent" || r === "student" ? "/attendance" : undefined;
   if (e === "diagnostic_request_approved") return ["teacher", "admin", "hod", "principal"].includes(r) ? "/curative" : undefined;
@@ -131,7 +136,7 @@ export interface GovernanceRow {
 /** Same type mapping the context already used (approved -> success, rejected -> warning), plus alerts -> warning. */
 export function mapGovernanceRow(row: GovernanceRow, role: string | null | undefined): NotificationLike {
   const e = (row.event_type ?? "").toLowerCase();
-  const type: NotificationType = e.includes("rejected") || SAFETY_EVENTS.has(e) || e === "irt_calibration_flagged"
+  const type: NotificationType = e.includes("rejected") || e.includes("changes_requested") || SAFETY_EVENTS.has(e) || e === "irt_calibration_flagged"
     ? "warning"
     : e.includes("approved") ? "success" : "info";
   const n: NotificationLike = {

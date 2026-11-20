@@ -9,6 +9,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
+import type { Finding, PaperContext, Suggestion, TotalCheck } from "../../supabase/functions/_shared/paperRefineModel";
 
 // ── Shared types ────────────────────────────────────────────────────────────────────────────
 export type Tier = "remedial" | "regular" | "enrichment";
@@ -148,11 +149,16 @@ export type CopilotTask = "auto" | "lesson_plan" | "assessment" | "remediation" 
 export interface CopilotTurn { role: "user" | "assistant"; content: string }
 export interface CopilotRequest {
   message: string; task?: CopilotTask; classId?: string; bookId?: number; studentId?: string; history?: CopilotTurn[];
+  /** Chat to Refine Questions: the question paper the teacher has open. When present the reply is a PaperRefineResponse. */
+  paper?: PaperContext;
 }
 export interface CopilotResponse {
   task: Exclude<CopilotTask, "auto">; reply: string;
   scope: { class_id: string | null; class_name: string | null; student_id: string | null; student_name: string | null; book_id: number | null };
   grounded_in: string[]; suggested_actions: Array<{ label: string; route: string }>; warnings: string[];
+}
+export interface PaperRefineResponse extends CopilotResponse {
+  mode: "paper_refine"; clarification: string | null; findings: Finding[]; suggestions: Suggestion[]; rejected: string[]; total_check: TotalCheck;
 }
 
 export function useTeacherCopilot() {
@@ -161,6 +167,22 @@ export function useTeacherCopilot() {
       action: "copilot", message: r.message, task: r.task ?? "auto",
       class_id: r.classId ?? null, book_id: r.bookId ?? null, student_id: r.studentId ?? null,
       history: (r.history ?? []).slice(-8),
+      ...(r.paper ? { paper: r.paper } : {}),
     }),
   });
+}
+
+/** Same Copilot endpoint, typed for the paper-refine reply. */
+export function usePaperRefine() {
+  const copilot = useTeacherCopilot();
+  return {
+    ...copilot,
+    mutateAsync: async (r: CopilotRequest & { paper: PaperContext }) => {
+      const res = (await copilot.mutateAsync(r)) as Partial<PaperRefineResponse>;
+      if (res?.mode !== "paper_refine" || !Array.isArray(res.suggestions) || !Array.isArray(res.findings)) {
+        throw new FunctionCallError("The AI reply wasn't in the expected format, so nothing was changed. Please try again.", "ai_malformed");
+      }
+      return res as PaperRefineResponse;
+    },
+  };
 }

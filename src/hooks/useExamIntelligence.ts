@@ -11,6 +11,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { unwrapFunctionError } from "@/lib/edgeFunctionError";
 import { useAuth } from "@/contexts/AuthContext";
+import type { QuestionDraft } from "../../supabase/functions/_shared/paperRefineModel";
 
 export async function invokeFn<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(name, { body });
@@ -223,9 +224,14 @@ export function useAssignMockExam() {
 }
 
 /** One-screen assessment builder: a paper from hand-picked item-bank questions (evaluate-assessment "build_paper"). */
+/** An item-bank question by id, or a refined question (Chat to Refine Questions) the server validates and stores as a new bank row. */
+export type BuildPaperItem =
+  | { kind: "mcq" | "extended"; id: string; marks: number; section_label?: string }
+  | { kind: "custom"; question: QuestionDraft; marks: number; section_label?: string };
+
 export function useBuildManualPaper() {
   return useMutation({
-    mutationFn: (args: { title: string; instructions?: string[]; items: { kind: "mcq" | "extended"; id: string; marks: number; section_label?: string }[] }) =>
+    mutationFn: (args: { title: string; instructions?: string[]; items: BuildPaperItem[] }) =>
       invokeFn<{ paper_id: string; item_count: number; total_marks: number }>("evaluate-assessment", { action: "build_paper", ...args }),
   });
 }
