@@ -23,6 +23,9 @@ export function AdminSettings({ schoolId }: { schoolId: string }) {
   const [interval, setIntervalDays] = useState("30");
   const [reminders, setReminders] = useState("7, 3, 1");
   const [repeat, setRepeat] = useState("3");
+  // Automatic reminders for ALL fees (push + email + in-app); column added by 20261118000000_fee_reminders.sql.
+  const [feeReminders, setFeeReminders] = useState(true);
+  const [hasFeeReminderColumn, setHasFeeReminderColumn] = useState(true);
 
   useEffect(() => {
     (async () => {
@@ -32,6 +35,8 @@ export function AdminSettings({ schoolId }: { schoolId: string }) {
           setEnabled(s.enabled); setCounts(s.allowed_counts); setFlexible(s.allow_flexible); setDefCount(String(s.default_count));
           setMinAmt(s.min_instalment_amount == null ? "" : String(s.min_instalment_amount)); setMaxAmt(s.max_instalment_amount == null ? "" : String(s.max_instalment_amount));
           setIntervalDays(String(s.default_interval_days)); setReminders(s.reminder_days.join(", ")); setRepeat(String(s.overdue_repeat_days));
+          setHasFeeReminderColumn("fee_reminders_enabled" in s);
+          setFeeReminders(s.fee_reminders_enabled !== false);
         }
       } catch (e) { toast({ title: "Couldn't load settings", description: (e as Error).message, variant: "destructive" }); }
       finally { setLoading(false); }
@@ -59,6 +64,8 @@ export function AdminSettings({ schoolId }: { schoolId: string }) {
     const row: InstalmentSettingsRow = {
       school_id: schoolId, enabled, allowed_counts: counts, allow_flexible: flexible, default_count: def, min_instalment_amount: min, max_instalment_amount: max,
       default_interval_days: parseInt(interval, 10), reminder_days: reminderDays.length ? reminderDays : [7, 3, 1], overdue_repeat_days: parseInt(repeat, 10),
+      // Only sent once the database has the column, so saving still works before the migration is run.
+      ...(hasFeeReminderColumn ? { fee_reminders_enabled: feeReminders } : {}),
     };
     setSaving(true);
     try { await saveSettings(row); toast({ title: "Settings saved" }); }
@@ -100,8 +107,17 @@ export function AdminSettings({ schoolId }: { schoolId: string }) {
 
       <fieldset className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 space-y-4" disabled={saving}>
         <legend className="px-1 text-sm font-semibold text-[#12203a]">Reminders to parents</legend>
+        <div className="flex items-start justify-between gap-4 rounded-lg bg-slate-50 p-3">
+          <div>
+            <p className="text-sm font-medium text-[#12203a]">Automatic fee reminders</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Parents of every student with an unpaid fee are reminded automatically before the due date, on the due date and while it is overdue, by app notification, push notification and email. No staff action is needed. Sent between 9 AM and 8 PM. Instalment plans always get their own reminders.
+            </p>
+          </div>
+          <Switch checked={feeReminders} onCheckedChange={setFeeReminders} aria-label="Automatic fee reminders" />
+        </div>
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="space-y-1.5"><Label htmlFor="s-rem">Remind this many days before the due date</Label><Input id="s-rem" value={reminders} onChange={(e) => setReminders(e.target.value)} placeholder="7, 3, 1" /><p className="text-xs text-slate-500">Comma separated. A reminder is also sent on the due date.</p></div>
+          <div className="space-y-1.5"><Label htmlFor="s-rem">Remind this many days before the due date</Label><Input id="s-rem" value={reminders} onChange={(e) => setReminders(e.target.value)} placeholder="7, 3, 1" /><p className="text-xs text-slate-500">Comma separated. A reminder is also sent on the due date. Used for fees and instalments.</p></div>
           <div className="space-y-1.5"><Label htmlFor="s-rep">Repeat overdue notice every (days)</Label><Input id="s-rep" type="number" min={0} value={repeat} onChange={(e) => setRepeat(e.target.value)} /><p className="text-xs text-slate-500">0 = send a single overdue notice.</p></div>
         </div>
         <p className="text-xs text-slate-500">No late fees or penalties are added by instalment plans.</p>

@@ -13,6 +13,9 @@
 //   3. For each claimed recipient it calls the EXISTING `dispatch-message` function (push + email, respecting each
 //      recipient's notification_preferences, logging to notification_channel_log).
 //
+//   4. Automatic fee / instalment reminders (20261118000000_fee_reminders.sql): queued reminders are handed to push +
+//      email the same way (see ../feeReminderDispatch.ts).
+//
 // The in-app notification does not go through here at all: the recipient's NotificationContext already reacts to the
 // teacher_messages INSERT in real time, and its catch-up poll covers anyone who was offline.
 
@@ -24,6 +27,7 @@ import {
   runPool,
   type DispatchClaim,
 } from "../scheduledMessagesDispatch.ts";
+import { dispatchFeeReminders } from "../feeReminderDispatch.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -31,6 +35,7 @@ const json = (body: unknown, status = 200) =>
 const BATCH = 50;               // recipients claimed at a time (a claimed batch is always finished)
 const CONCURRENCY = 8;          // parallel dispatch-message calls
 const BUDGET_MS = 40_000;       // stop CLAIMING new batches after this; cron timeout is 55s
+const FEE_BUDGET_MS = 48_000;   // fee reminders may claim until this point (from the start of the run)
 
 export async function handleScheduledMessagesCron(req: Request): Promise<Response> {
   try {
@@ -92,12 +97,21 @@ export async function handleScheduledMessagesCron(req: Request): Promise<Respons
       if (batch.length < BATCH) break;
     }
 
+    // 4. Fee reminders: push + email (own try, so a problem here never affects scheduled messages).
+    let feeReminders: { claimed: number; dispatched: number; failed: number } | null = null;
+    try {
+      feeReminders = await dispatchFeeReminders(admin, startedAt + FEE_BUDGET_MS);
+    } catch (e) {
+      console.error("fee reminder dispatch failed", e);
+    }
+
     return json({
       ran_at: new Date().toISOString(),
       processed: processed ?? [],
       claimed,
       dispatched,
       failed,
+      fee_reminders: feeReminders,
     });
   } catch (error) {
     console.error("scheduled messages cron failed", error);

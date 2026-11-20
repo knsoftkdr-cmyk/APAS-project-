@@ -81,6 +81,7 @@ export function isImportant(n: Pick<NotificationLike, "type" | "event_type" | "m
   const e = (n.event_type ?? "").toLowerCase();
   if (SAFETY_EVENTS.has(e)) return true;
   if (e === "diagnostic_request_rejected" || e === "irt_calibration_flagged") return true;
+  if (e === "fee_overdue" || e === "instalment_overdue") return true;
   if (e === "attendance_marked" && /\babsent\b/i.test(`${n.title} ${n.message}`)) return true;
   return false;
 }
@@ -113,6 +114,8 @@ export function governanceLink(eventType: string, role: string | null | undefine
   if (e === "certificate_issued") return r === "student" ? "/student/credentials" : undefined;
   if (e === "irt_calibration_flagged" || e === "open_ended_calibration_adjusted") return r === "knsoft_admin" ? "/notification-dashboard" : undefined;
   if (e.startsWith("automation_")) return r === "knsoft_admin" ? "/automation-dashboard" : undefined;
+  // Automatic fee / instalment reminders (20261118000000_fee_reminders.sql, 20261110000000_fee_instalments.sql).
+  if (e.startsWith("fee_") || e.startsWith("instalment_")) return r === "parent" ? "/parent/fee-payment" : undefined;
   return undefined;
 }
 

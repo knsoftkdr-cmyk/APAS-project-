@@ -783,13 +783,27 @@ export function AILessonAssistantWidget() {
         // Timeout guard: the backend rotates across several API keys/models on
         // failure, which can otherwise leave the orb stuck on "Thinking..."
         // for a long time with no feedback.
+        // The pages in THIS teacher's sidebar: the agent may only open these (it answers data questions with the
+        // teacher's own session on the server, so it never sees more than the teacher can).
+        const destinations = getTeacherDestinations(permsLoading ? undefined : can);
         const { data, error } = await withTimeout(
-          supabase.functions.invoke("extract-lesson-intent", { body: { message: text, mode: answerMode, history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })) } }),
-          20000,
+          supabase.functions.invoke("extract-lesson-intent", {
+            body: {
+              message: text,
+              mode: answerMode,
+              history: messages.slice(-10).map((m) => ({ role: m.role, text: m.text })),
+              pages: destinations.map((d) => ({ title: d.title, path: d.path })),
+            },
+          }),
+          30000,
           "AI assistant"
         );
         if (error) throw error;
-        if (data?.type === "video") {
+        const aiDestination = typeof data?.navigate === "string" ? destinations.find((d) => d.path === data.navigate) : undefined;
+        if (aiDestination) {
+          // "Take me to the place where I check doubts" - understood by the AI, opened through the same safe path.
+          handleNavigation({ kind: "navigate", destination: aiDestination, reply: data?.chatReply || `Opening ${aiDestination.title}.` }, text);
+        } else if (data?.type === "video") {
           say(data?.chatReply || "Here's a video that should help explain this:", Array.isArray(data?.videos) ? data.videos : undefined);
         } else if (data?.isLessonRequest) {
           const intent = data.intent || {};
@@ -805,7 +819,7 @@ export function AILessonAssistantWidget() {
           };
           await advance(updated);
         } else {
-          say(data?.chatReply || "I can help you create a lesson plan - try something like \"Create a lesson plan on Fractions for Class 5, Section A, 45 minutes.\"");
+          say(data?.chatReply || "I can tell you about homework, attendance, doubts, appointments and more, open any page for you, or create a lesson plan.");
         }
       }
     } catch (e: any) {
@@ -972,7 +986,7 @@ export function AILessonAssistantWidget() {
               <div className="flex flex-col gap-3 pe-2">
                 {messages.length === 0 && (
                   <p className="text-xs text-muted-foreground">
-                    Try: "Create a lesson plan on Fractions for Class 5, Section A, 45 minutes." Or ask me to explain a topic. Tap the blue icon above for hands-free voice mode.
+                    Try: "Which students haven't submitted homework?", "Who is absent today?", "Any pending doubts?", "Open attendance" or "Create a lesson plan on Fractions for Class 5, Section A". Tap the blue icon above for hands-free voice mode.
                   </p>
                 )}
                 {messages.map((m, i) => (
@@ -1037,7 +1051,7 @@ export function AILessonAssistantWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessageWithText()}
-                placeholder={isListening ? "Listening..." : "Ask APAS to create a lesson..."}
+                placeholder={isListening ? "Listening..." : "Ask APAS about homework, attendance, doubts... or a lesson plan"}
                 className="h-9 text-xs"
                 disabled={loading || isListening}
               />

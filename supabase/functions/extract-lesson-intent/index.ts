@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sanitizeHistory, historyToContents, type HistoryTurn } from "../_shared/history.ts";
+import { getTeacherData, TEACHER_DATA_TOPICS, TOPIC_PAGE, type TeacherDataTopic } from "../_shared/teacherAgentData.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +41,39 @@ const INTENT_TOOL = {
   ],
 };
 
+// The teacher's own data (read with THEIR session, so RLS applies - see _shared/teacherAgentData.ts).
+const DATA_TOOL = {
+  name: "get_teacher_data",
+  description:
+    "Call this for ANY question about the teacher's own school data: homework (who has / hasn't submitted, pending), worksheet submissions to review, " +
+    "today's attendance (absent / late students, classes not marked), student doubts, parent appointments, interventions / at-risk students, " +
+    "upcoming exams or deadlines, assessment papers to evaluate, their classes and student counts, or 'what is pending today'. Never say you cannot access this data.",
+  parameters: {
+    type: "OBJECT",
+    properties: {
+      topic: { type: "STRING", enum: [...TEACHER_DATA_TOPICS], description: "overview = everything pending today." },
+      class_level: { type: "STRING", description: "Class if the teacher named one, e.g. '5', 'LKG'. Null otherwise." },
+      section: { type: "STRING", description: "Section if named, e.g. 'A'. Null otherwise." },
+      subject: { type: "STRING", description: "Subject if named. Null otherwise." },
+    },
+    required: ["topic"],
+  },
+};
+
+function openPageTool(pages: { title: string; path: string }[]) {
+  return {
+    name: "open_page",
+    description: "Call this when the teacher asks to open / go to / show / take them to a page or module of the APAS app. Pick the closest page from the list.",
+    parameters: {
+      type: "OBJECT",
+      properties: {
+        path: { type: "STRING", enum: pages.map((p) => p.path), description: "Pages: " + pages.map((p) => `${p.title} = ${p.path}`).join("; ") },
+      },
+      required: ["path"],
+    },
+  };
+}
+
 // Fetch with a hard per-attempt timeout so one slow/hanging key+model
 // combination cannot stall the whole request - it just gets abandoned and
 // the next candidate is tried immediately.
@@ -56,7 +91,7 @@ async function fetchWithTimeout(url: string, options: RequestInit, ms: number): 
 // which always forces the lesson-plan tool schema and returns a raw
 // candidate object rather than a text string. This one is used only for
 // the video-intent classifier.
-async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = []): Promise<string | null> {
+async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = [], maxOutputTokens = 300, timeoutMs = 5000): Promise<string | null> {
   const models = ["gemini-2.5-flash-lite", "gemini-2.5-flash"];
   for (const key of keys) {
     for (const model of models) {
@@ -69,10 +104,10 @@ async function callGeminiPlain(systemPrompt: string, userPrompt: string, keys: s
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
               contents: [...historyToContents(history), { role: "user", parts: [{ text: userPrompt }] }],
-              generationConfig: { temperature: 0.1, maxOutputTokens: 300 },
+              generationConfig: { temperature: 0.1, maxOutputTokens },
             }),
           },
-          5000,
+          timeoutMs,
         );
         if (response.status === 429 || response.status === 503) continue;
         if (!response.ok) continue;
@@ -177,7 +212,7 @@ async function searchYouTube(query: string, topicWords: string[]): Promise<Video
   }];
 }
 
-async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = []): Promise<any | null> {
+async function callGemini(systemPrompt: string, userPrompt: string, keys: string[], history: HistoryTurn[] = [], tools: any[] = [INTENT_TOOL]): Promise<any | null> {
   // Trimmed to the two fastest/most reliable models - this endpoint only needs
   // to extract a few fields, not generate long content, so a heavier fallback
   // chain just adds latency without adding value.
@@ -193,7 +228,7 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
             body: JSON.stringify({
               systemInstruction: { parts: [{ text: systemPrompt }] },
               contents: [...historyToContents(history), { role: "user", parts: [{ text: userPrompt }] }],
-              tools: [INTENT_TOOL],
+              tools,
               generationConfig: { temperature: 0.1, maxOutputTokens: 512 },
             }),
           },
@@ -224,8 +259,14 @@ async function callGemini(systemPrompt: string, userPrompt: string, keys: string
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { message, mode, history: rawHistory } = await req.json();
+    const { message, mode, history: rawHistory, pages: rawPages } = await req.json();
     const history = sanitizeHistory(rawHistory);
+    // Pages in THIS teacher's sidebar (sent by the widget); only these can be opened.
+    const pages: { title: string; path: string }[] = (Array.isArray(rawPages) ? rawPages : [])
+      .filter((p: any) => p && typeof p.path === "string" && p.path.startsWith("/") && !p.path.startsWith("//") && typeof p.title === "string")
+      .slice(0, 120)
+      .map((p: any) => ({ title: String(p.title).slice(0, 60), path: String(p.path).slice(0, 120) }));
+    const authHeader = req.headers.get("Authorization") ?? "";
     const keys = getGeminiKeys();
 
     if (keys.length === 0) {
@@ -262,8 +303,14 @@ ABOUT APAS (Adaptive Pedagogy & Analytics System) - use this to answer any quest
 - Communication: parent/teacher/student/driver communication centers, notifications, alerts, appointment booking.
 - Built with React/TypeScript, Supabase (Postgres + Edge Functions), and Google Gemini/Groq for AI features.
 
-If the teacher's message is asking you to create/generate a lesson plan, call the create_lesson_plan_intent tool with whatever fields you can extract - leave the rest null, do not guess.
-Otherwise, do NOT call the tool. Instead reply naturally and conversationally:
+YOU CAN DO THREE THINGS WITH TOOLS:
+1. create_lesson_plan_intent - the teacher wants a lesson plan created. Extract whatever fields you can; leave the rest null, do not guess.
+2. get_teacher_data - ANY question about the teacher's own students, classes or work in APAS: homework submitted / not submitted / pending,
+   worksheets to review, attendance today (absent, late, not marked), student doubts, parent appointments, interventions / at-risk students,
+   upcoming exams / deadlines / events, assessment papers to evaluate, "my classes", "how many students", "what is pending today".
+   ALWAYS use this tool for such questions. NEVER answer that you cannot access student data - you can, through this tool.
+3. open_page - the teacher asks to open / go to / show / take them to a page or module ("open attendance", "take me to doubts", "show my timetable").
+Otherwise, do NOT call a tool. Instead reply naturally and conversationally:
 - For greetings/small talk, keep it to 1-2 short sentences.
 - For questions about APAS itself, answer accurately using the knowledge above in 2-4 sentences - be specific about which module/feature handles what.
 - If asked about something APAS does NOT do (not listed above), say so honestly rather than inventing an answer.
@@ -284,7 +331,8 @@ VOICE CONVERSATION RULES:
 - For greetings such as "hi", "hello", or "hey", give one short friendly response and nothing more.`;
 
     const startedAt = Date.now();
-    const candidate = await callGemini(systemPrompt, message, keys, history);
+    const tools = [{ functionDeclarations: [...INTENT_TOOL.functionDeclarations, DATA_TOOL, ...(pages.length ? [openPageTool(pages)] : [])] }];
+    const candidate = await callGemini(systemPrompt, message, keys, history, tools);
     console.log(`extract-lesson-intent resolved in ${Date.now() - startedAt}ms`);
 
     const parts = candidate?.content?.parts || [];
@@ -295,6 +343,50 @@ VOICE CONVERSATION RULES:
         || "Hi! I'm here whenever you'd like to build a lesson plan - just tell me the class, subject and topic.";
       return new Response(JSON.stringify({ isLessonRequest: false, chatReply }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const reply = (body: Record<string, unknown>) =>
+      new Response(JSON.stringify(body), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // ---- "Open attendance" style requests the on-device matcher did not catch.
+    if (fnCall.name === "open_page") {
+      const page = pages.find((p) => p.path === fnCall.args?.path);
+      if (!page) return reply({ isLessonRequest: false, chatReply: "I couldn't find that page in your menu." });
+      return reply({ isLessonRequest: false, navigate: page.path, chatReply: `Opening ${page.title}.` });
+    }
+
+    // ---- Questions about the teacher's own data.
+    if (fnCall.name === "get_teacher_data") {
+      const topic = (TEACHER_DATA_TOPICS as readonly string[]).includes(fnCall.args?.topic) ? fnCall.args.topic as TeacherDataTopic : "overview";
+      const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData } = await userClient.auth.getUser();
+      if (!userData?.user) return reply({ isLessonRequest: false, chatReply: "Please log in again so I can look at your classes." });
+
+      const facts = await getTeacherData(userClient, userData.user.id, topic, {
+        class_level: fnCall.args?.class_level ?? null, section: fnCall.args?.section ?? null, subject: fnCall.args?.subject ?? null,
+      });
+      const detailPage = pages.find((p) => p.path === TOPIC_PAGE[topic].path) ?? null;
+      const answerPrompt = `You are the APAS teaching assistant answering a teacher's question by voice and text.
+Answer ONLY from the FACTS (JSON from the school database, already limited to what this teacher may see). Never invent names or numbers.
+- Answer in the same language the teacher used. Keep it short and natural for speaking: 2-5 sentences.
+- When listing students, say up to 10 names, then "and N more".
+- If a list is empty or a count is 0, say that clearly (e.g. "Everyone has submitted").
+- If a part says "unavailable", just say you couldn't read that part right now.
+- Use plain text only: no markdown, no bullet symbols, no URLs.
+${detailPage ? `- End with one short line that they can say "open ${detailPage.title}" to see the details.` : ""}
+
+FACTS:
+${JSON.stringify(facts).slice(0, 12000)}`;
+      const answer = await callGeminiPlain(answerPrompt, message, keys, [], 700, 9000);
+      console.log(`extract-lesson-intent data answer (${topic}) in ${Date.now() - startedAt}ms`);
+      return reply({
+        isLessonRequest: false,
+        chatReply: answer || `I found the details, but couldn't summarise them right now.${detailPage ? ` Say "open ${detailPage.title}" to see them.` : ""}`,
+        data_topic: topic,
+        details_page: detailPage,
       });
     }
 

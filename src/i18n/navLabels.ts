@@ -57,6 +57,7 @@ const navLabels: Partial<Record<Language, Record<string, string>>> = {
     "Electives": "المواد الاختيارية",
     "Enrichment": "الإثراء",
     "Entry Ticket": "تذكرة الدخول",
+    "Content Studio": "استوديو المحتوى",
     "Exam Reviews": "مراجعات الاختبارات",
     "Exam Seating": "توزيع مقاعد الاختبار",
     "Forgetting Forecast": "توقّع النسيان",

@@ -39,10 +39,12 @@ export function getAiConfig(): AiConfig {
 // but not for checking arithmetic / working out a correct answer).
 // timeoutMs: total time budget across every key/model attempt. Edge functions are killed at their wall-clock
 // limit with a non-JSON response, so a slow call must give up early enough for the caller to answer cleanly.
+// attemptTimeoutMs: cap for a single key/model attempt, so one stuck model cannot use the whole budget
+// and the next model still gets a turn.
 // thinkingLevel: with reasoning, cap how long the model thinks (3.x levels; 2.5 gets a matching token budget).
 export interface CallOptions {
   system?: string; temperature?: number; maxOutputTokens?: number; reasoning?: boolean;
-  timeoutMs?: number; thinkingLevel?: "low" | "medium" | "high";
+  timeoutMs?: number; attemptTimeoutMs?: number; thinkingLevel?: "low" | "medium" | "high";
 }
 
 const THINKING_BUDGET_25 = { low: 1024, medium: 4096, high: 8192 } as const;
@@ -86,7 +88,9 @@ export async function callAi(cfg: AiConfig, prompt: string, opts: CallOptions = 
               contents: [{ role: "user", parts: [{ text: prompt }] }],
               generationConfig,
             }),
-            signal: Number.isFinite(remaining) ? AbortSignal.timeout(remaining) : undefined,
+            signal: Number.isFinite(remaining) || opts.attemptTimeoutMs
+              ? AbortSignal.timeout(Math.min(remaining, opts.attemptTimeoutMs ?? Number.POSITIVE_INFINITY))
+              : undefined,
           });
           if (resp.status === 400 && withThinking) { await resp.text(); continue; } // retry without thinkingConfig
           if (resp.status === 429 || resp.status === 503) { errors.push(`${model}: rate limited (${resp.status})`); break; }

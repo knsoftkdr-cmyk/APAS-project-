@@ -37,11 +37,14 @@ type Row = Record<string, any>;
 import { routeMerged, type RouteTable } from "../_shared/mergedRouter.ts";
 import { handleOpenEndedCalibrationCron } from "../_shared/handlers/openEndedCalibrationCron.ts";
 import { handleLiveRecordingsCron } from "../_shared/handlers/liveRecordings.ts";
+import { handleScheduledMessagesCron } from "../_shared/handlers/scheduledMessagesCron.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
   open_ended: { handler: handleOpenEndedCalibrationCron },
   live_recordings: { handler: handleLiveRecordingsCron },   // arm / sync / copy_purge steps; checks x-cron-secret itself
+  // Every minute: scheduled messages + automatic fee reminders -> push / email. Checks x-cron-secret itself.
+  scheduled_messages: { handler: handleScheduledMessagesCron },
 };
 
 serve(async (req) => {

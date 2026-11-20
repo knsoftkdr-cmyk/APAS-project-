@@ -21,6 +21,8 @@ export interface InstalmentSettingsRow extends InstalmentSettings {
   default_interval_days: number;
   reminder_days: number[];
   overdue_repeat_days: number;
+  /** Automatic reminders for all unpaid fees (20261118000000_fee_reminders.sql). Missing before that migration. */
+  fee_reminders_enabled?: boolean;
 }
 export interface ParentFee {
   fee_payment_id: string;

@@ -366,6 +366,7 @@ Handler: `_shared/handlers/gamificationQuestions.ts`; pure model: `_shared/gamif
 |---|---|---|
 | Live class recordings: user operations (settings, list, play, upload, link, delete, per-session toggle, usage) | ai-teacher-assistant | action: `live_recordings` (+ `op`) |
 | Live class recordings: scheduled steps (arm Meet auto-recording, sync from Meet, copy Drive -> private bucket, retention purge) | calibrate-irt-cron | job: `live_recordings` (+ `step`: `arm` `sync` `copy_purge`) |
+| Scheduled messages push/email hand-off + automatic fee / instalment reminders (push + email) | calibrate-irt-cron | job: `scheduled_messages` (every minute via pg_cron 'dispatch-scheduled-messages', migration 20261111000000). Fee reminders: migration 20261118000000_fee_reminders.sql (hourly 'fee-reminders-hourly' + fee_reminder_outbox), sender _shared/feeReminderDispatch.ts. Optional secret APP_URL adds a pay link to emails. |
 
 Needs migration 20261114000000, secret `GOOGLE_MEET_SA_JSON` (service account key) and the existing `CRON_SECRET`.
 Both anchors must be redeployed (calibrate-irt-cron with `--no-verify-jwt`, as before).
@@ -375,3 +376,4 @@ Both anchors must be redeployed (calibrate-irt-cron with `--no-verify-jwt`, as b
 | Feature | Anchor (deployed) | Discriminator |
 |---|---|---|
 | Content Studio - prompt to PPTX / flash cards / flowchart | generate-entry-ticket | action: `content_studio` (needs migration 20261113000000 and secret CONTENT_STUDIO_GEMINI_API_KEY; falls back to the shared Gemini keys) |
+| Content Studio - history, delete, video upload | generate-entry-ticket | action: `content_studio` + `op`: `history`, `delete`, `video_upload`, `video_done`, `video_scenes` (video_scenes = AI plan for the animated explainer scenes, _shared/explainerScenes.ts, drawn by src/lib/explainerScene.ts; audio/video need secret GOOGLE_TTS_API_KEY and migrations 20261116000000 + 20261116120000; the MP4 itself is encoded in the browser by src/lib/lessonVideo.ts) |
