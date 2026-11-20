@@ -1,0 +1,3760 @@
+{
+  "schema": 1,
+  "role": "student",
+  "docs": [
+    {
+      "key": "manual:ask-apas",
+      "role": "student",
+      "kind": "manual",
+      "name": "Ask APAS (command bar)",
+      "aliases": [
+        "ask apas",
+        "command bar",
+        "ai command bar",
+        "ctrl j",
+        "quick command",
+        "type a command"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J.",
+      "accessRoles": null,
+      "purpose": "A quick way to get around and check things by typing a normal sentence, like Open my timetable. It can open pages, show your attendance this month, show what homework is due, show upcoming exams, show your latest exam results, and show or clear your unread notifications.",
+      "purposeSource": "manual",
+      "steps": [
+        "Press Ask APAS, or press Ctrl and J.",
+        "Type a sentence such as What homework is due, then press Enter."
+      ],
+      "notes": [
+        "It only opens pages and shows your own information. If it needs to change something it asks you to confirm first."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Confirm",
+          "Ask APAS",
+          "Ctrl J",
+          "Ask APAS (AI command bar)"
+        ],
+        "headings": [
+          "Ask APAS",
+          "Try saying"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/command-bar/CommandBar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d49ca5511943d094",
+      "reviewedFactsHash": "d49ca5511943d094",
+      "content": "Ask APAS (command bar)\nWhere: The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J.\nWhat it is: A quick way to get around and check things by typing a normal sentence, like Open my timetable. It can open pages, show your attendance this month, show what homework is due, show upcoming exams, show your latest exam results, and show or clear your unread notifications.\nHow to use it: (1) Press Ask APAS, or press Ctrl and J. (2) Type a sentence such as What homework is due, then press Enter.\nOn the screen: Buttons: Confirm; Ask APAS; Ctrl J; Ask APAS (AI command bar). Sections: Ask APAS; Try saying.\nGood to know: It only opens pages and shows your own information. If it needs to change something it asks you to confirm first.",
+      "searchText": "Ask APAS (command bar) . ask apas . command bar . ai command bar . ctrl j . quick command . type a command . A quick way to get around and check things by typing a normal sentence, like Open my timetable. It can open pages, show your attendance this month, show what homework is due, show upcoming exams, show your latest exam results, and show or clear your unread notifications. . Confirm . Ask APAS . Ctrl J . Ask APAS (AI command bar) . Ask APAS . Try saying",
+      "contentHash": "c27373a7e56a14dd"
+    },
+    {
+      "key": "manual:engagement-score",
+      "role": "student",
+      "kind": "manual",
+      "name": "My Engagement Score",
+      "aliases": [
+        "engagement score",
+        "my engagement",
+        "how active"
+      ],
+      "keywords": [
+        "engagement",
+        "participation",
+        "engaged"
+      ],
+      "route": null,
+      "where": "A card on your Home dashboard.",
+      "accessRoles": null,
+      "purpose": "A score out of 100 that shows how actively you take part in learning, with a trend so you can see if it is going up or down.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Home and find the My Engagement Score card.",
+        "Press the small refresh button on the card to update it."
+      ],
+      "notes": [
+        "It is built from five kinds of activity: Video watching, Quiz participation, Assignment submission, Live class attendance, and Doubts and interactions.",
+        "The bands are: Highly Engaged 80 to 100, Moderately Engaged 60 to 79, Low Engagement 40 to 59, Very Low Engagement 0 to 39.",
+        "To raise it, do more of those five things, for example watch the class videos, join live classes, and hand in assignments on time."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Refresh engagement score"
+        ],
+        "headings": [
+          "My Engagement Score",
+          "Question-wise performance",
+          "Students",
+          "Student doubts"
+        ],
+        "inputs": [
+          "Write a reply"
+        ],
+        "messages": [
+          "No score calculated yet.",
+          "No earlier period to compare",
+          "No student has watched a video yet, and no video has questions yet.",
+          "no questions",
+          "No student has watched this video yet.",
+          "No doubts asked on this video."
+        ]
+      },
+      "sources": [
+        "src/components/engagement/StudentEngagementCard.tsx",
+        "src/components/engagement/StudentEngagementDialog.tsx",
+        "src/components/engagement/EngagementParts.tsx",
+        "src/components/video/VideoInsights.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "fe6be95135015875",
+      "reviewedFactsHash": "fe6be95135015875",
+      "content": "My Engagement Score\nWhere: A card on your Home dashboard.\nWhat it is: A score out of 100 that shows how actively you take part in learning, with a trend so you can see if it is going up or down.\nHow to use it: (1) Open Home and find the My Engagement Score card. (2) Press the small refresh button on the card to update it.\nOn the screen: Buttons: Refresh engagement score. Sections: My Engagement Score; Question-wise performance; Students; Student doubts. Fields: Write a reply. Messages it can show: No score calculated yet; No earlier period to compare; No student has watched a video yet, and no video has questions yet; no questions; No student has watched this video yet; No doubts asked on this video.\nGood to know: It is built from five kinds of activity: Video watching, Quiz participation, Assignment submission, Live class attendance, and Doubts and interactions. The bands are: Highly Engaged 80 to 100, Moderately Engaged 60 to 79, Low Engagement 40 to 59, Very Low Engagement 0 to 39. To raise it, do more of those five things, for example watch the class videos, join live classes, and hand in assignments on time.",
+      "searchText": "My Engagement Score . engagement score . my engagement . how active . engagement . participation . engaged . A score out of 100 that shows how actively you take part in learning, with a trend so you can see if it is going up or down. . Refresh engagement score . My Engagement Score . Question-wise performance . Students . Student doubts",
+      "contentHash": "94e406f97f389224"
+    },
+    {
+      "key": "manual:exam-readiness",
+      "role": "student",
+      "kind": "manual",
+      "name": "Exam Readiness",
+      "aliases": [
+        "exam ready",
+        "am i ready",
+        "exam preparation",
+        "exam prep",
+        "readiness score"
+      ],
+      "keywords": [
+        "readiness"
+      ],
+      "route": null,
+      "where": "Second tab on the My Mastery page, next to My Mastery.",
+      "accessRoles": null,
+      "purpose": "Answers 'how ready am I for my exam?'. It shows your predicted readiness by topic, chapter, subject and overall, and how you compare with others.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open the My Mastery page and choose the Exam Readiness tab.",
+        "My readiness shows your own readiness scores.",
+        "How I compare shows where you stand against your section, class, grade and school."
+      ],
+      "notes": [
+        "Comparisons are anonymous. You only see group figures, never another student's name or marks."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Exam Readiness\nWhere: Second tab on the My Mastery page, next to My Mastery.\nWhat it is: Answers 'how ready am I for my exam?'. It shows your predicted readiness by topic, chapter, subject and overall, and how you compare with others.\nHow to use it: (1) Open the My Mastery page and choose the Exam Readiness tab. (2) My readiness shows your own readiness scores. (3) How I compare shows where you stand against your section, class, grade and school.\nGood to know: Comparisons are anonymous. You only see group figures, never another student's name or marks.",
+      "searchText": "Exam Readiness . exam ready . am i ready . exam preparation . exam prep . readiness score . readiness . Answers 'how ready am I for my exam?'. It shows your predicted readiness by topic, chapter, subject and overall, and how you compare with others.",
+      "contentHash": "caad1c6d353e29f7"
+    },
+    {
+      "key": "manual:flashcards",
+      "role": "student",
+      "kind": "manual",
+      "name": "Flashcards",
+      "aliases": [
+        "flash cards",
+        "flip cards",
+        "revision cards",
+        "study cards"
+      ],
+      "keywords": [
+        "flashcards",
+        "flashcard",
+        "cards"
+      ],
+      "route": null,
+      "where": "Second tab on the Daily Review page, next to Daily Review.",
+      "accessRoles": null,
+      "purpose": "Quick exam-style flip cards made from your own textbook, so they match what you learn in class.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open the Flashcards tab and pick a subject, then a chapter.",
+        "Wait a moment while the cards are made. It can take up to half a minute.",
+        "Flip each card, then rate it Easy, Medium or Difficult. On a keyboard the keys 1, 2 and 3 do the same."
+      ],
+      "notes": [
+        "Cards you rate Difficult come back sooner so you can master them.",
+        "If a card looks wrong you can report it, and you can stop seeing a card you do not want."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Flashcards\nWhere: Second tab on the Daily Review page, next to Daily Review.\nWhat it is: Quick exam-style flip cards made from your own textbook, so they match what you learn in class.\nHow to use it: (1) Open the Flashcards tab and pick a subject, then a chapter. (2) Wait a moment while the cards are made. It can take up to half a minute. (3) Flip each card, then rate it Easy, Medium or Difficult. On a keyboard the keys 1, 2 and 3 do the same.\nGood to know: Cards you rate Difficult come back sooner so you can master them. If a card looks wrong you can report it, and you can stop seeing a card you do not want.",
+      "searchText": "Flashcards . flash cards . flip cards . revision cards . study cards . flashcards . flashcard . cards . Quick exam-style flip cards made from your own textbook, so they match what you learn in class.",
+      "contentHash": "eb09ac7b0bb287e2"
+    },
+    {
+      "key": "manual:global-search",
+      "role": "student",
+      "kind": "manual",
+      "name": "Search",
+      "aliases": [
+        "search box",
+        "global search",
+        "ctrl k",
+        "find something",
+        "look something up"
+      ],
+      "keywords": [
+        "search"
+      ],
+      "route": null,
+      "where": "The search box at the top of every page. The keyboard shortcut is Ctrl and K.",
+      "accessRoles": null,
+      "purpose": "Looks things up across APAS, such as lessons and exams. You only see things you are allowed to open.",
+      "purposeSource": "manual",
+      "steps": [
+        "Click the search box at the top, or press Ctrl and K.",
+        "Type what you are looking for and pick a result."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Search",
+          "All",
+          "Clear"
+        ],
+        "headings": [
+          "Search APAS",
+          "Try searching for"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/search/UniversalSearch.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "857236d04674d812",
+      "reviewedFactsHash": "857236d04674d812",
+      "content": "Search\nWhere: The search box at the top of every page. The keyboard shortcut is Ctrl and K.\nWhat it is: Looks things up across APAS, such as lessons and exams. You only see things you are allowed to open.\nHow to use it: (1) Click the search box at the top, or press Ctrl and K. (2) Type what you are looking for and pick a result.\nOn the screen: Buttons: Search; All; Clear. Sections: Search APAS; Try searching for.",
+      "searchText": "Search . search box . global search . ctrl k . find something . look something up . search . Looks things up across APAS, such as lessons and exams. You only see things you are allowed to open. . Search . All . Clear . Search APAS . Try searching for",
+      "contentHash": "68ad06492a7f8a36"
+    },
+    {
+      "key": "manual:header-tools",
+      "role": "student",
+      "kind": "manual",
+      "name": "Notifications and the Help button",
+      "aliases": [
+        "help button",
+        "guided tour",
+        "take the tour"
+      ],
+      "keywords": [
+        "notifications",
+        "notification",
+        "bell",
+        "tour"
+      ],
+      "route": null,
+      "where": "The top bar of every page.",
+      "accessRoles": null,
+      "purpose": "The bell shows new messages, alerts and updates, with a red number for the ones you have not read. The help button replays the guided tour of the app.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Notifications and the Help button\nWhere: The top bar of every page.\nWhat it is: The bell shows new messages, alerts and updates, with a red number for the ones you have not read. The help button replays the guided tour of the app.",
+      "searchText": "Notifications and the Help button . help button . guided tour . take the tour . notifications . notification . bell . tour . The bell shows new messages, alerts and updates, with a red number for the ones you have not read. The help button replays the guided tour of the app.",
+      "contentHash": "c5769dac7f57715c"
+    },
+    {
+      "key": "manual:study-buddy",
+      "role": "student",
+      "kind": "manual",
+      "name": "Study Buddy",
+      "aliases": [
+        "voice mode",
+        "voice assistant",
+        "talk to you",
+        "what can you do",
+        "what can you help",
+        "video mode",
+        "text mode"
+      ],
+      "keywords": [
+        "buddy"
+      ],
+      "route": null,
+      "where": "The Study Buddy button on your pages. You can type, or use the microphone to talk to it.",
+      "accessRoles": null,
+      "purpose": "That is me. I can answer questions about your own homework, worksheets, tests, attendance, timetable, calendar, grades, hall tickets, house and more. I can explain a school topic, either in writing or by finding a video. I can also explain any feature of the app, and open a page for you if you say, for example, open Adaptive Test.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Open Study Buddy",
+          "Exit voice mode",
+          "Tap to retry listening",
+          "Switch to typing",
+          "Start voice conversation",
+          "Explain in text",
+          "Find a video",
+          "Stop listening"
+        ],
+        "headings": [
+          "Study Buddy"
+        ],
+        "inputs": [
+          "Listening..."
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/components/ai-assistant/AIStudentAssistantWidget.tsx",
+        "src/components/ai-assistant/RobotFace.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "fa0886d2ec4c40fa",
+      "reviewedFactsHash": "fa0886d2ec4c40fa",
+      "content": "Study Buddy\nWhere: The Study Buddy button on your pages. You can type, or use the microphone to talk to it.\nWhat it is: That is me. I can answer questions about your own homework, worksheets, tests, attendance, timetable, calendar, grades, hall tickets, house and more. I can explain a school topic, either in writing or by finding a video. I can also explain any feature of the app, and open a page for you if you say, for example, open Adaptive Test.\nOn the screen: Buttons: Open Study Buddy; Exit voice mode; Tap to retry listening; Switch to typing; Start voice conversation; Explain in text; Find a video; Stop listening. Sections: Study Buddy. Fields: Listening.",
+      "searchText": "Study Buddy . voice mode . voice assistant . talk to you . what can you do . what can you help . video mode . text mode . buddy . That is me. I can answer questions about your own homework, worksheets, tests, attendance, timetable, calendar, grades, hall tickets, house and more. I can explain a school topic, either in writing or by finding a video. I can also explain any feature of the app, and open a page for you if you say, for example, open Adaptive Test. . Open Study Buddy . Exit voice mode . Tap to retry listening . Switch to typing . Start voice conversation . Explain in text . Find a video . Stop listening . Study Buddy",
+      "contentHash": "c12006cbd49f8c8a"
+    },
+    {
+      "key": "nav:/academic-calendar",
+      "role": "student",
+      "kind": "page",
+      "name": "Academic Calendar",
+      "aliases": [
+        "school calendar"
+      ],
+      "keywords": [
+        "calendar",
+        "holidays",
+        "events"
+      ],
+      "route": "/academic-calendar",
+      "where": "Left menu, Academic Calendar.",
+      "accessRoles": null,
+      "purpose": "School events, holidays, exam dates and homework deadlines.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Upload Document",
+          "Add Event"
+        ],
+        "headings": [
+          "Academic Calendar",
+          "Edit Event Add Event",
+          "Upload Academic Calendar Document"
+        ],
+        "inputs": [
+          "Title *",
+          "e.g. Diwali Holiday",
+          "Event Type *",
+          "Start Date *",
+          "End Date *",
+          "Description",
+          "Optional details...",
+          "Or paste document content directly"
+        ],
+        "messages": [
+          "No events on this day",
+          "No upcoming events"
+        ]
+      },
+      "sources": [
+        "src/pages/AcademicCalendar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "34865a9e267d3ccc",
+      "reviewedFactsHash": "34865a9e267d3ccc",
+      "content": "Academic Calendar\nWhere: Left menu, Academic Calendar.\nWhat it is: School events, holidays, exam dates and homework deadlines.\nOn the screen: Buttons: Upload Document; Add Event. Sections: Academic Calendar; Edit Event Add Event; Upload Academic Calendar Document. Fields: Title *; e.g. Diwali Holiday; Event Type *; Start Date *; End Date *; Description; Optional details; Or paste document content directly. Messages it can show: No events on this day; No upcoming events.",
+      "searchText": "Academic Calendar . school calendar . calendar . holidays . events . School events, holidays, exam dates and homework deadlines. . Upload Document . Add Event . Academic Calendar . Edit Event Add Event . Upload Academic Calendar Document",
+      "contentHash": "b60fe2b38add7ea1"
+    },
+    {
+      "key": "nav:/academic-tests",
+      "role": "student",
+      "kind": "page",
+      "name": "Academic Tests",
+      "aliases": [
+        "academic test",
+        "class test",
+        "practice test",
+        "subject test"
+      ],
+      "keywords": [],
+      "route": "/academic-tests",
+      "where": "Left menu, Academic Tests.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Practice tests for your class and subject. You choose the setup, answer one question at a time, see straight away whether you were right, and finish with a score. Past tests are listed under Recent Tests.",
+      "purposeSource": "manual",
+      "steps": [
+        "In Start a New Test, check your Class and pick a Subject.",
+        "Optionally type a Topic, and set the Number of Questions and the Level of Difficulty.",
+        "Press Generate & Start Test.",
+        "For each question choose an answer and press Confirm Answer, then Next Question. The last one says View Results."
+      ],
+      "notes": [
+        "You see your score out of the total, the number correct and incorrect, your percentage, an encouraging message (Outstanding!, Great Job!, Good Effort! or Keep Practicing!) and a review of each question. The test also appears under Recent Tests. If you score below 50%, APAS sends a Performance Alert to your parent."
+      ],
+      "problems": [
+        "The Subject list is empty. - Your school has no subjects set up for that class yet. Try a different class if you picked the wrong one, otherwise tell your teacher or school admin.",
+        "The Subject box is greyed out. - Choose a Class first. The subjects depend on it.",
+        "The Subject box says your profile has no school. - Your account is not linked to a school, so subjects cannot load. Ask your school admin to check your account."
+      ],
+      "taskTitles": [
+        "Take a practice test from start to finish"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Generate & Start Test",
+          "Confirm Answer",
+          "Take Another Test",
+          "Back to Tests",
+          "Analyze My Performance"
+        ],
+        "headings": [
+          "Academic Tests",
+          "Start a New Test",
+          "Recent Tests",
+          "Answer Review",
+          "Detailed Answer Review",
+          "AI Performance Analysis",
+          "Strong Concepts",
+          "Areas to Improve"
+        ],
+        "inputs": [
+          "Class *",
+          "Select Class",
+          "Section",
+          "Select Section (Optional)",
+          "Subject *",
+          "Select a class first",
+          "Topic",
+          "e.g. Photosynthesis, Fractions (Optional)"
+        ],
+        "messages": [
+          "No subjects available for this class at your school"
+        ]
+      },
+      "sources": [
+        "src/pages/AcademicTests.tsx",
+        "src/components/TestAnalysis.tsx",
+        "src/components/AcademicQuizLoader.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "4d446a793f1e348e",
+      "reviewedFactsHash": "4d446a793f1e348e",
+      "content": "Academic Tests\nWhere: Left menu, Academic Tests.\nWhat it is: Practice tests for your class and subject. You choose the setup, answer one question at a time, see straight away whether you were right, and finish with a score. Past tests are listed under Recent Tests.\nHow to use it: (1) In Start a New Test, check your Class and pick a Subject. (2) Optionally type a Topic, and set the Number of Questions and the Level of Difficulty. (3) Press Generate & Start Test. (4) For each question choose an answer and press Confirm Answer, then Next Question. The last one says View Results.\nOn the screen: Buttons: Generate & Start Test; Confirm Answer; Take Another Test; Back to Tests; Analyze My Performance. Sections: Academic Tests; Start a New Test; Recent Tests; Answer Review; Detailed Answer Review; AI Performance Analysis; Strong Concepts; Areas to Improve. Fields: Class *; Select Class; Section; Select Section (Optional); Subject *; Select a class first; Topic; e.g. Photosynthesis, Fractions (Optional). Messages it can show: No subjects available for this class at your school.\nGood to know: You see your score out of the total, the number correct and incorrect, your percentage, an encouraging message (Outstanding!, Great Job!, Good Effort! or Keep Practicing!) and a review of each question. The test also appears under Recent Tests. If you score below 50%, APAS sends a Performance Alert to your parent.\nIf something goes wrong: The Subject list is empty. - Your school has no subjects set up for that class yet. Try a different class if you picked the wrong one, otherwise tell your teacher or school admin. The Subject box is greyed out. - Choose a Class first. The subjects depend on it. The Subject box says your profile has no school. - Your account is not linked to a school, so subjects cannot load. Ask your school admin to check your account.",
+      "searchText": "Academic Tests . academic test . class test . practice test . subject test . Practice tests for your class and subject. You choose the setup, answer one question at a time, see straight away whether you were right, and finish with a score. Past tests are listed under Recent Tests. . Generate & Start Test . Confirm Answer . Take Another Test . Back to Tests . Analyze My Performance . Academic Tests . Start a New Test . Recent Tests . Answer Review . Detailed Answer Review . AI Performance Analysis . Strong Concepts . Areas to Improve . Take a practice test from start to finish",
+      "contentHash": "29b657cbb6018b31"
+    },
+    {
+      "key": "nav:/adaptive-test",
+      "role": "student",
+      "kind": "page",
+      "name": "Adaptive Test",
+      "aliases": [
+        "adaptive testing",
+        "adaptive assessment",
+        "smart test",
+        "cat test"
+      ],
+      "keywords": [
+        "adaptive"
+      ],
+      "route": "/adaptive-test",
+      "where": "Left menu, Adaptive Test.",
+      "accessRoles": [
+        "student",
+        "principal"
+      ],
+      "purpose": "A test that adjusts to you. The questions get easier or harder depending on your answers, so it can work out your level in fewer questions.",
+      "purposeSource": "manual",
+      "steps": [
+        "Choose how wide the test is: Whole subject, This chapter, This topic, or Just this concept.",
+        "Pick the Subject, then the Chapter, Topic and optionally a Concept, and start.",
+        "Answer each question and press Next Question. Press See Results at the end."
+      ],
+      "notes": [
+        "If you leave a test part-way it can resume where you stopped. Exit test asks you to confirm first.",
+        "The results show Accuracy, Questions, Your marks and a Skill breakdown.",
+        "A score can be marked provisional when many of the questions are still new. It becomes more precise over time.",
+        "If your school has negative marking on, wrong answers can lose marks, and the test shows you the rules."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Exit",
+          "Take another test"
+        ],
+        "headings": [
+          "Adaptive Test",
+          "Exit this test?",
+          "Choose what to test",
+          "Your marks",
+          "Skill breakdown",
+          "Worth reviewing",
+          "Past adaptive tests"
+        ],
+        "inputs": [
+          "Subject",
+          "Chapter",
+          "Choose a chapter",
+          "Topic",
+          "Choose a topic",
+          "Concept (optional)",
+          "Every concept in the topic",
+          "Negative marking"
+        ],
+        "messages": [
+          "No marks for this one."
+        ]
+      },
+      "sources": [
+        "src/pages/AdaptiveTest.tsx",
+        "src/components/dailyreview/ScoringRulesTabs.tsx",
+        "src/components/dailyreview/MarksDisplay.tsx",
+        "src/components/dailyreview/ScoringSettings.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "926aa140773b393e",
+      "reviewedFactsHash": "926aa140773b393e",
+      "content": "Adaptive Test\nWhere: Left menu, Adaptive Test.\nWhat it is: A test that adjusts to you. The questions get easier or harder depending on your answers, so it can work out your level in fewer questions.\nHow to use it: (1) Choose how wide the test is: Whole subject, This chapter, This topic, or Just this concept. (2) Pick the Subject, then the Chapter, Topic and optionally a Concept, and start. (3) Answer each question and press Next Question. Press See Results at the end.\nOn the screen: Buttons: Exit; Take another test. Sections: Adaptive Test; Exit this test?; Choose what to test; Your marks; Skill breakdown; Worth reviewing; Past adaptive tests. Fields: Subject; Chapter; Choose a chapter; Topic; Choose a topic; Concept (optional); Every concept in the topic; Negative marking. Messages it can show: No marks for this one.\nGood to know: If you leave a test part-way it can resume where you stopped. Exit test asks you to confirm first. The results show Accuracy, Questions, Your marks and a Skill breakdown. A score can be marked provisional when many of the questions are still new. It becomes more precise over time. If your school has negative marking on, wrong answers can lose marks, and the test shows you the rules.",
+      "searchText": "Adaptive Test . adaptive testing . adaptive assessment . smart test . cat test . adaptive . A test that adjusts to you. The questions get easier or harder depending on your answers, so it can work out your level in fewer questions. . Exit . Take another test . Adaptive Test . Exit this test? . Choose what to test . Your marks . Skill breakdown . Worth reviewing . Past adaptive tests",
+      "contentHash": "6dedf12440f093b0"
+    },
+    {
+      "key": "nav:/ai-tutor",
+      "role": "student",
+      "kind": "page",
+      "name": "AI Tutor",
+      "aliases": [
+        "ai tutoring",
+        "ask tutor",
+        "explain topic",
+        "homework help"
+      ],
+      "keywords": [
+        "tutor",
+        "tutoring"
+      ],
+      "route": "/ai-tutor",
+      "where": "Left menu, AI Tutor.",
+      "accessRoles": [
+        "student",
+        "admin",
+        "principal"
+      ],
+      "purpose": "A tutor you can chat with about your subjects. It knows your learning style. Pick the style you want: Explain for clear explanations with examples, Socratic where it guides you with questions instead of giving the answer, or Hints where you get one small hint at a time.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open AI Tutor and type or speak your question.",
+        "You can attach a photo or a document of the problem.",
+        "You can choose the language it teaches in."
+      ],
+      "notes": [
+        "The tutor replies in the chat. While it is answering, the style, language and Clear chat controls are disabled."
+      ],
+      "problems": [
+        "The tutor says you are sending too many messages. - Wait a short while and send your message again.",
+        "The tutor says AI credits have run out. - This is a school-level limit, so tell your teacher or school admin.",
+        "The tutor could not answer. - Send your message again. The error shown after the message says what went wrong."
+      ],
+      "taskTitles": [
+        "Ask the tutor a question",
+        "Work through a problem with hints",
+        "Practise a chapter with Adaptive Practice"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Adaptive Practice",
+          "Clear chat",
+          "Show me the full solution",
+          "Give me the next hint",
+          "New problem",
+          "Send",
+          "Done",
+          "Attach a photo or document"
+        ],
+        "headings": [
+          "Adaptive Practice",
+          "Attach a photo or document"
+        ],
+        "inputs": [
+          "Listening... speak your question",
+          "Choose a chapter"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AITutor.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/AdaptivePracticeWidget.tsx",
+        "src/components/tutor/TutorComposerTools.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "77e2dc5c8847773a",
+      "reviewedFactsHash": "77e2dc5c8847773a",
+      "content": "AI Tutor\nWhere: Left menu, AI Tutor.\nWhat it is: A tutor you can chat with about your subjects. It knows your learning style. Pick the style you want: Explain for clear explanations with examples, Socratic where it guides you with questions instead of giving the answer, or Hints where you get one small hint at a time.\nHow to use it: (1) Open AI Tutor and type or speak your question. (2) You can attach a photo or a document of the problem. (3) You can choose the language it teaches in.\nOn the screen: Buttons: Adaptive Practice; Clear chat; Show me the full solution; Give me the next hint; New problem; Send; Done; Attach a photo or document. Sections: Adaptive Practice; Attach a photo or document. Fields: Listening... speak your question; Choose a chapter.\nGood to know: The tutor replies in the chat. While it is answering, the style, language and Clear chat controls are disabled.\nIf something goes wrong: The tutor says you are sending too many messages. - Wait a short while and send your message again. The tutor says AI credits have run out. - This is a school-level limit, so tell your teacher or school admin. The tutor could not answer. - Send your message again. The error shown after the message says what went wrong.",
+      "searchText": "AI Tutor . ai tutoring . ask tutor . explain topic . homework help . tutor . tutoring . A tutor you can chat with about your subjects. It knows your learning style. Pick the style you want: Explain for clear explanations with examples, Socratic where it guides you with questions instead of giving the answer, or Hints where you get one small hint at a time. . Adaptive Practice . Clear chat . Show me the full solution . Give me the next hint . New problem . Send . Done . Attach a photo or document . Adaptive Practice . Attach a photo or document . Ask the tutor a question . Work through a problem with hints . Practise a chapter with Adaptive Practice",
+      "contentHash": "588fbc73dab43d7a"
+    },
+    {
+      "key": "nav:/ai-tutor?mode=career",
+      "role": "student",
+      "kind": "page",
+      "name": "AI Career Coach",
+      "aliases": [
+        "career coach",
+        "career guidance",
+        "career counselling",
+        "career counseling",
+        "career advice",
+        "what should i be"
+      ],
+      "keywords": [
+        "career"
+      ],
+      "route": "/ai-tutor?mode=career",
+      "where": "Left menu, under AI Tutor, called AI Career Coach.",
+      "accessRoles": [
+        "student",
+        "admin",
+        "principal"
+      ],
+      "purpose": "A coach for exploring careers, subject choices and skills to build, based on your interests and strengths. It starts by asking about your favourite subjects, and you can say you do not know what you want to be.",
+      "purposeSource": "manual",
+      "steps": [
+        "Make sure the AI Tutor mode is selected (the other mode is Career Coach).",
+        "Pick a Teaching style: Explain, Socratic or Hints.",
+        "If you want the answers in another language, change Tutor language.",
+        "Click the box and type your question, or tap one of the starter questions shown on an empty chat to put it in the box. Then press the send button.",
+        "Read the answer. Keep chatting in the same box to ask follow-up questions."
+      ],
+      "notes": [
+        "The tutor replies in the chat. While it is answering, the style, language and Clear chat controls are disabled."
+      ],
+      "problems": [
+        "The tutor says you are sending too many messages. - Wait a short while and send your message again.",
+        "The tutor says AI credits have run out. - This is a school-level limit, so tell your teacher or school admin.",
+        "The tutor could not answer. - Send your message again. The error shown after the message says what went wrong."
+      ],
+      "taskTitles": [
+        "Ask the tutor a question",
+        "Work through a problem with hints",
+        "Practise a chapter with Adaptive Practice"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Adaptive Practice",
+          "Clear chat",
+          "Show me the full solution",
+          "Give me the next hint",
+          "New problem",
+          "Send",
+          "Done",
+          "Attach a photo or document"
+        ],
+        "headings": [
+          "Adaptive Practice",
+          "Attach a photo or document"
+        ],
+        "inputs": [
+          "Listening... speak your question",
+          "Choose a chapter"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AITutor.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/AdaptivePracticeWidget.tsx",
+        "src/components/tutor/TutorComposerTools.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "2a344bebe8aa0cf2",
+      "reviewedFactsHash": "2a344bebe8aa0cf2",
+      "content": "AI Career Coach\nWhere: Left menu, under AI Tutor, called AI Career Coach.\nWhat it is: A coach for exploring careers, subject choices and skills to build, based on your interests and strengths. It starts by asking about your favourite subjects, and you can say you do not know what you want to be.\nHow to use it: (1) Make sure the AI Tutor mode is selected (the other mode is Career Coach). (2) Pick a Teaching style: Explain, Socratic or Hints. (3) If you want the answers in another language, change Tutor language. (4) Click the box and type your question, or tap one of the starter questions shown on an empty chat to put it in the box. Then press the send button. (5) Read the answer. Keep chatting in the same box to ask follow-up questions.\nOn the screen: Buttons: Adaptive Practice; Clear chat; Show me the full solution; Give me the next hint; New problem; Send; Done; Attach a photo or document. Sections: Adaptive Practice; Attach a photo or document. Fields: Listening... speak your question; Choose a chapter.\nGood to know: The tutor replies in the chat. While it is answering, the style, language and Clear chat controls are disabled.\nIf something goes wrong: The tutor says you are sending too many messages. - Wait a short while and send your message again. The tutor says AI credits have run out. - This is a school-level limit, so tell your teacher or school admin. The tutor could not answer. - Send your message again. The error shown after the message says what went wrong.",
+      "searchText": "AI Career Coach . career coach . career guidance . career counselling . career counseling . career advice . what should i be . career . A coach for exploring careers, subject choices and skills to build, based on your interests and strengths. It starts by asking about your favourite subjects, and you can say you do not know what you want to be. . Adaptive Practice . Clear chat . Show me the full solution . Give me the next hint . New problem . Send . Done . Attach a photo or document . Adaptive Practice . Attach a photo or document . Ask the tutor a question . Work through a problem with hints . Practise a chapter with Adaptive Practice",
+      "contentHash": "271c029085ea080e"
+    },
+    {
+      "key": "nav:/attendance",
+      "role": "student",
+      "kind": "page",
+      "name": "Attendance",
+      "aliases": [
+        "attendance record"
+      ],
+      "keywords": [
+        "attendance",
+        "present",
+        "absent",
+        "absences"
+      ],
+      "route": "/attendance",
+      "where": "Left menu, Attendance.",
+      "accessRoles": [
+        "teacher",
+        "principal",
+        "admin",
+        "student",
+        "parent"
+      ],
+      "purpose": "Your own attendance record.",
+      "purposeSource": "manual",
+      "steps": [
+        "The page opens on My Attendance.",
+        "Parents: open the Select child list and choose the child.",
+        "Look at the calendar. Click a day to see that day's status on the right-hand card.",
+        "To go back, click the small X on that card. The card returns to the Monthly Summary."
+      ],
+      "notes": [
+        "A selected day shows its status, for example Present, Absent or Late. A day with no record says that no attendance was marked."
+      ],
+      "problems": [
+        "A parent sees no children. - No child is linked to your account. Ask the school admin to link your child.",
+        "A day shows no status. - The teacher has not saved attendance for that day (for example a holiday or a day not yet marked). Nothing is wrong with your account.",
+        "The month shows no data. - No attendance has been saved for that month yet."
+      ],
+      "taskTitles": [
+        "Check attendance for a day or a month"
+      ],
+      "screen": {
+        "tabs": [
+          "Student Attendance",
+          "Attendance View",
+          "My Attendance",
+          "Teacher Attendance",
+          "Teacher View",
+          "Driver Attendance",
+          "Driver View",
+          "Attendant Attendance",
+          "Attendant View",
+          "Attendance Risk"
+        ],
+        "buttons": [
+          "Mark all present",
+          "Early Pickup",
+          "Saving...",
+          "Save Attendance",
+          "Log Pickup"
+        ],
+        "headings": [
+          "Attendance",
+          "My Attendance",
+          "Mark Attendance",
+          "View Attendance",
+          "Teacher Attendance",
+          "Driver Attendance",
+          "Attendant Attendance",
+          "Attendant Attendance View"
+        ],
+        "inputs": [
+          "Select child",
+          "Select class",
+          "Period",
+          "Picked up by",
+          "Full name",
+          "Relation to student",
+          "Reason",
+          "Notes (optional)"
+        ],
+        "messages": [
+          "No linked children found.",
+          "No attendance marked on this day.",
+          "No attendance records for this month yet.",
+          "No active students found for this class/section.",
+          "No teachers found for this school.",
+          "No drivers found for this school."
+        ]
+      },
+      "sources": [
+        "src/pages/AttendanceMarking.tsx",
+        "src/components/attendance/AttendanceRiskView.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f896efa44201ae2e",
+      "reviewedFactsHash": "f896efa44201ae2e",
+      "content": "Attendance\nWhere: Left menu, Attendance.\nWhat it is: Your own attendance record.\nHow to use it: (1) The page opens on My Attendance. (2) Parents: open the Select child list and choose the child. (3) Look at the calendar. Click a day to see that day's status on the right-hand card. (4) To go back, click the small X on that card. The card returns to the Monthly Summary.\nOn the screen: Tabs: Student Attendance; Attendance View; My Attendance; Teacher Attendance; Teacher View; Driver Attendance; Driver View; Attendant Attendance; Attendant View; Attendance Risk. Buttons: Mark all present; Early Pickup; Saving; Save Attendance; Log Pickup. Sections: Attendance; My Attendance; Mark Attendance; View Attendance; Teacher Attendance; Driver Attendance; Attendant Attendance; Attendant Attendance View. Fields: Select child; Select class; Period; Picked up by; Full name; Relation to student; Reason; Notes (optional). Messages it can show: No linked children found; No attendance marked on this day; No attendance records for this month yet; No active students found for this class/section; No teachers found for this school; No drivers found for this school.\nGood to know: A selected day shows its status, for example Present, Absent or Late. A day with no record says that no attendance was marked.\nIf something goes wrong: A parent sees no children. - No child is linked to your account. Ask the school admin to link your child. A day shows no status. - The teacher has not saved attendance for that day (for example a holiday or a day not yet marked). Nothing is wrong with your account. The month shows no data. - No attendance has been saved for that month yet.",
+      "searchText": "Attendance . attendance record . attendance . present . absent . absences . Your own attendance record. . Student Attendance . Attendance View . My Attendance . Teacher Attendance . Teacher View . Driver Attendance . Driver View . Attendant Attendance . Attendant View . Attendance Risk . Mark all present . Early Pickup . Saving... . Save Attendance . Log Pickup . Attendance . My Attendance . Mark Attendance . View Attendance . Teacher Attendance . Driver Attendance . Attendant Attendance . Attendant Attendance View . Check attendance for a day or a month",
+      "contentHash": "b3bfc22c4b645f57"
+    },
+    {
+      "key": "nav:/daily-practice",
+      "role": "student",
+      "kind": "page",
+      "name": "Daily Practice",
+      "aliases": [],
+      "keywords": [],
+      "route": "/daily-practice",
+      "where": "Left menu, Daily Practice.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Score per day (percent).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Today",
+          "My progress",
+          "History"
+        ],
+        "buttons": [
+          "View result",
+          "All subjects",
+          "Adaptive practice",
+          "Review",
+          "Done",
+          "Save &amp; exit",
+          "Previous",
+          "Next",
+          "Submit now",
+          "Explain this to me",
+          "Ask the AI Tutor why"
+        ],
+        "headings": [
+          "Daily Practice",
+          "No practice for today yet",
+          "Today",
+          "Still to do",
+          "Practise your weak spots",
+          "No results yet",
+          "This week",
+          "Accuracy by subject"
+        ],
+        "inputs": [
+          "Type your answer",
+          "Enter a number",
+          "Write your answer. Your teacher will mark this one."
+        ],
+        "messages": [
+          "Nothing stands out - keep going!",
+          "No practice this week yet.",
+          "Nothing to show yet."
+        ]
+      },
+      "sources": [
+        "src/pages/DailyPractice.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/StatCard.tsx",
+        "src/components/EmptyState.tsx",
+        "src/components/AdaptivePracticeWidget.tsx",
+        "src/components/dpp/DppRunner.tsx",
+        "src/components/dpp/DppResultView.tsx",
+        "src/components/dpp/DppCharts.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "6bac4669e9a5dbd8",
+      "reviewedFactsHash": "6bac4669e9a5dbd8",
+      "content": "Daily Practice\nWhere: Left menu, Daily Practice.\nWhat it is: Score per day (percent).\nOn the screen: Tabs: Today; My progress; History. Buttons: View result; All subjects; Adaptive practice; Review; Done; Save &amp; exit; Previous; Next; Submit now; Explain this to me; Ask the AI Tutor why. Sections: Daily Practice; No practice for today yet; Today; Still to do; Practise your weak spots; No results yet; This week; Accuracy by subject. Fields: Type your answer; Enter a number; Write your answer. Your teacher will mark this one. Messages it can show: Nothing stands out - keep going!; No practice this week yet; Nothing to show yet.",
+      "searchText": "Daily Practice . Score per day (percent). . Today . My progress . History . View result . All subjects . Adaptive practice . Review . Done . Save &amp; exit . Previous . Next . Submit now . Explain this to me . Ask the AI Tutor why . Daily Practice . No practice for today yet . Today . Still to do . Practise your weak spots . No results yet . This week . Accuracy by subject",
+      "contentHash": "6db758a00a792dde"
+    },
+    {
+      "key": "nav:/daily-review",
+      "role": "student",
+      "kind": "page",
+      "name": "Daily Review",
+      "aliases": [
+        "daily revision",
+        "spaced repetition"
+      ],
+      "keywords": [
+        "review",
+        "revision",
+        "revise"
+      ],
+      "route": "/daily-review",
+      "where": "Left menu, Daily Review (first tab of the Daily Review and Flashcards page).",
+      "accessRoles": [
+        "student",
+        "principal"
+      ],
+      "purpose": "A short daily set of questions on things you learned earlier, timed so you practise each concept just before you would forget it. It keeps what you learn in your memory.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Daily Review. The top shows how many are Due now, Later today, in the Next 7 days, and Locked in (21d+).",
+        "Choose an answer and press Submit, then Next. The last one says Finish.",
+        "When you are done, Check for more looks for any new reviews."
+      ],
+      "notes": [
+        "You're all caught up means nothing is due right now. Come back when the next review is due.",
+        "Some concepts can be due but have no practice questions yet. The screen tells you when that is the case."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/StudentReviewFlashcards.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d17405b5bd01d083",
+      "reviewedFactsHash": "d17405b5bd01d083",
+      "content": "Daily Review\nWhere: Left menu, Daily Review (first tab of the Daily Review and Flashcards page).\nWhat it is: A short daily set of questions on things you learned earlier, timed so you practise each concept just before you would forget it. It keeps what you learn in your memory.\nHow to use it: (1) Open Daily Review. The top shows how many are Due now, Later today, in the Next 7 days, and Locked in (21d+). (2) Choose an answer and press Submit, then Next. The last one says Finish. (3) When you are done, Check for more looks for any new reviews.\nGood to know: You're all caught up means nothing is due right now. Come back when the next review is due. Some concepts can be due but have no practice questions yet. The screen tells you when that is the case.",
+      "searchText": "Daily Review . daily revision . spaced repetition . review . revision . revise . A short daily set of questions on things you learned earlier, timed so you practise each concept just before you would forget it. It keeps what you learn in your memory.",
+      "contentHash": "f0e50bfe7ec9a8eb"
+    },
+    {
+      "key": "nav:/dashboard",
+      "role": "student",
+      "kind": "page",
+      "name": "Homework",
+      "aliases": [
+        "home work",
+        "pending homework"
+      ],
+      "keywords": [
+        "homework",
+        "assignment",
+        "assignments"
+      ],
+      "route": "/dashboard",
+      "where": "Left menu, Homework. A summary is on Home too.",
+      "accessRoles": null,
+      "purpose": "Homework your teachers assign to you, with its due date and whether you have submitted it.",
+      "purposeSource": "manual",
+      "steps": [
+        "Find the card called Write Your Diagnostic Assessment.",
+        "Press Start Assessment. You are taken to the Assessments page."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [
+        "Start your diagnostic assessment"
+      ],
+      "screen": {
+        "tabs": [
+          "Class comparison My classes",
+          "Students",
+          "Activities",
+          "Trend"
+        ],
+        "buttons": [
+          "Open DPP",
+          "Start Assessment",
+          "Report",
+          "Hide",
+          "Details",
+          "View All",
+          "Download PDF",
+          "Download Image",
+          "Edit My Answers",
+          "Answer & Submit",
+          "Download Report",
+          "Start Homework",
+          "One at a Time",
+          "All Questions"
+        ],
+        "headings": [
+          "Homework",
+          "Your Homework",
+          "What You Can Do",
+          "How APAS Works",
+          "Students At Risk",
+          "About APAS",
+          "Admin Capabilities",
+          "Admin Workflow"
+        ],
+        "inputs": [
+          "Your Answer",
+          "Write your answer here...",
+          "Type your answer here...",
+          "Filter",
+          "Write a reply"
+        ],
+        "messages": [
+          "No pending homework right now.",
+          "No worksheets assigned yet",
+          "No homework assigned yet.",
+          "No classes assigned yet",
+          "You haven't been assigned to any classes yet.",
+          "No Homework Yet"
+        ]
+      },
+      "sources": [
+        "src/pages/Dashboard.tsx",
+        "src/pages/StudentDashboard.tsx",
+        "src/components/SyllabusTracker.tsx",
+        "src/components/StudentReport.tsx",
+        "src/components/StudentHomework.tsx",
+        "src/components/engagement/EngagementOverviewPanel.tsx",
+        "src/components/video/VideoInsights.tsx",
+        "src/components/dashboard/DashboardHero.tsx",
+        "src/components/dashboard/DashStatCard.tsx",
+        "src/components/dashboard/PersonalizedDashboard.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d63a25ef1eada7dc",
+      "reviewedFactsHash": "d63a25ef1eada7dc",
+      "content": "Homework\nWhere: Left menu, Homework. A summary is on Home too.\nWhat it is: Homework your teachers assign to you, with its due date and whether you have submitted it.\nHow to use it: (1) Find the card called Write Your Diagnostic Assessment. (2) Press Start Assessment. You are taken to the Assessments page.\nOn the screen: Tabs: Class comparison My classes; Students; Activities; Trend. Buttons: Open DPP; Start Assessment; Report; Hide; Details; View All; Download PDF; Download Image; Edit My Answers; Answer & Submit; Download Report; Start Homework; One at a Time; All Questions. Sections: Homework; Your Homework; What You Can Do; How APAS Works; Students At Risk; About APAS; Admin Capabilities; Admin Workflow. Fields: Your Answer; Write your answer here; Type your answer here; Filter; Write a reply. Messages it can show: No pending homework right now; No worksheets assigned yet; No homework assigned yet; No classes assigned yet; You haven't been assigned to any classes yet; No Homework Yet.",
+      "searchText": "Homework . home work . pending homework . homework . assignment . assignments . Homework your teachers assign to you, with its due date and whether you have submitted it. . Class comparison My classes . Students . Activities . Trend . Open DPP . Start Assessment . Report . Hide . Details . View All . Download PDF . Download Image . Edit My Answers . Answer & Submit . Download Report . Start Homework . One at a Time . All Questions . Homework . Your Homework . What You Can Do . How APAS Works . Students At Risk . About APAS . Admin Capabilities . Admin Workflow . Start your diagnostic assessment",
+      "contentHash": "a3cd8cef16f4eebf"
+    },
+    {
+      "key": "nav:/diagnostic",
+      "role": "student",
+      "kind": "page",
+      "name": "Assessments",
+      "aliases": [
+        "diagnostic test",
+        "diagnostic assessment"
+      ],
+      "keywords": [
+        "assessment",
+        "assessments",
+        "diagnostic"
+      ],
+      "route": "/diagnostic",
+      "where": "Left menu, Assessments. Also the Start Assessment button on Home.",
+      "accessRoles": null,
+      "purpose": "Your diagnostic assessment. It finds your strengths and the areas that need more attention, and your results then show on Home.",
+      "purposeSource": "manual",
+      "steps": [
+        "Press Start Assessment.",
+        "Answer each question and press Next.",
+        "On the last question press Submit Assessment."
+      ],
+      "notes": [
+        "You see a message that you have successfully completed the Assessment. Your results then appear in Your Assessment Results on your Home page."
+      ],
+      "problems": [
+        "Start Assessment is greyed out. - One of the six details is still empty: Full Name, Age, Class, Section, Curriculum or Class Teacher. Fill in all of them.",
+        "You cannot change Class or Section. - They are taken from your profile and locked. If they are wrong, ask your school admin to correct your profile.",
+        "Your submission was marked for review because it was very quick. - The assessment still goes through, but it is flagged. Take your time on the questions next time."
+      ],
+      "taskTitles": [
+        "Complete your diagnostic assessment"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Start Assessment",
+          "Previous",
+          "Next",
+          "Assess Another Student"
+        ],
+        "headings": [
+          "My Assessments",
+          "Learning Profile Assessment",
+          "Student Assessment",
+          "Assessment Submitted!",
+          "Are you sure you want to submit?",
+          "Teacher Assessment",
+          "Start a New Assessment",
+          "Request Diagnostic Questions"
+        ],
+        "inputs": [
+          "Full Name",
+          "Age",
+          "Enter your age",
+          "Class",
+          "Select your class",
+          "Section",
+          "Enter your section (e.g., A, B, C)",
+          "Curriculum"
+        ],
+        "messages": [
+          "No teachers found",
+          "No student found.",
+          "No requests submitted yet.",
+          "No approved diagnostic requests yet. Submit a request above and wait for Master User approval."
+        ]
+      },
+      "sources": [
+        "src/pages/Diagnostic.tsx",
+        "src/components/DiagnosticRequestForm.tsx",
+        "src/components/DiagnosticAssignPanel.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/SchoolBusLoader.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "4697a22238bd2a78",
+      "reviewedFactsHash": "4697a22238bd2a78",
+      "content": "Assessments\nWhere: Left menu, Assessments. Also the Start Assessment button on Home.\nWhat it is: Your diagnostic assessment. It finds your strengths and the areas that need more attention, and your results then show on Home.\nHow to use it: (1) Press Start Assessment. (2) Answer each question and press Next. (3) On the last question press Submit Assessment.\nOn the screen: Buttons: Start Assessment; Previous; Next; Assess Another Student. Sections: My Assessments; Learning Profile Assessment; Student Assessment; Assessment Submitted!; Are you sure you want to submit?; Teacher Assessment; Start a New Assessment; Request Diagnostic Questions. Fields: Full Name; Age; Enter your age; Class; Select your class; Section; Enter your section (e.g., A, B, C); Curriculum. Messages it can show: No teachers found; No student found; No requests submitted yet; No approved diagnostic requests yet. Submit a request above and wait for Master User approval.\nGood to know: You see a message that you have successfully completed the Assessment. Your results then appear in Your Assessment Results on your Home page.\nIf something goes wrong: Start Assessment is greyed out. - One of the six details is still empty: Full Name, Age, Class, Section, Curriculum or Class Teacher. Fill in all of them. You cannot change Class or Section. - They are taken from your profile and locked. If they are wrong, ask your school admin to correct your profile. Your submission was marked for review because it was very quick. - The assessment still goes through, but it is flagged. Take your time on the questions next time.",
+      "searchText": "Assessments . diagnostic test . diagnostic assessment . assessment . assessments . diagnostic . Your diagnostic assessment. It finds your strengths and the areas that need more attention, and your results then show on Home. . Start Assessment . Previous . Next . Assess Another Student . My Assessments . Learning Profile Assessment . Student Assessment . Assessment Submitted! . Are you sure you want to submit? . Teacher Assessment . Start a New Assessment . Request Diagnostic Questions . Complete your diagnostic assessment",
+      "contentHash": "005f982da28ef677"
+    },
+    {
+      "key": "nav:/doubts",
+      "role": "student",
+      "kind": "page",
+      "name": "My Doubts",
+      "aliases": [
+        "ask a doubt",
+        "ask doubt",
+        "ask my teacher",
+        "ask the teacher",
+        "question for teacher",
+        "teacher answer",
+        "unsolved doubt",
+        "resolved doubts",
+        "my doughts",
+        "my dowts"
+      ],
+      "keywords": [
+        "doubts",
+        "doubt",
+        "doughts",
+        "dowts"
+      ],
+      "route": "/doubts",
+      "where": "Left menu, My Doubts.",
+      "accessRoles": [
+        "student",
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "The place to ask your teachers about something you did not understand, and to follow their answers.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open My Doubts from the left menu.",
+        "Press the Ask a doubt button and write your question for your teacher.",
+        "Your doubts are listed on the left. Tap one to see the conversation with your teacher on the right.",
+        "Use the Search doubts box to find an old doubt."
+      ],
+      "notes": [
+        "The three boxes at the top count your doubts: New, In Progress and Resolved.",
+        "If you have not asked anything yet, it says You haven't asked any doubts yet."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Back to list",
+          "Send reply",
+          "Mark resolved",
+          "Reopen",
+          "Mark in progress",
+          "Ask a doubt"
+        ],
+        "headings": [
+          "Ask a doubt",
+          "My Doubts Student Doubts"
+        ],
+        "inputs": [
+          "Teacher",
+          "Subject",
+          "e.g. Mathematics",
+          "Your doubt",
+          "Explain what you didn't understand",
+          "Add more detail or ask a follow-up",
+          "Search doubts"
+        ],
+        "messages": [
+          "No teachers are assigned to your class yet",
+          "You haven't asked any doubts yet.",
+          "No doubts have been asked yet.",
+          "No doubts match these filters."
+        ]
+      },
+      "sources": [
+        "src/pages/Doubts.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "20586c7c7aadf9d0",
+      "reviewedFactsHash": "20586c7c7aadf9d0",
+      "content": "My Doubts\nWhere: Left menu, My Doubts.\nWhat it is: The place to ask your teachers about something you did not understand, and to follow their answers.\nHow to use it: (1) Open My Doubts from the left menu. (2) Press the Ask a doubt button and write your question for your teacher. (3) Your doubts are listed on the left. Tap one to see the conversation with your teacher on the right. (4) Use the Search doubts box to find an old doubt.\nOn the screen: Buttons: Back to list; Send reply; Mark resolved; Reopen; Mark in progress; Ask a doubt. Sections: Ask a doubt; My Doubts Student Doubts. Fields: Teacher; Subject; e.g. Mathematics; Your doubt; Explain what you didn't understand; Add more detail or ask a follow-up; Search doubts. Messages it can show: No teachers are assigned to your class yet; You haven't asked any doubts yet; No doubts have been asked yet; No doubts match these filters.\nGood to know: The three boxes at the top count your doubts: New, In Progress and Resolved. If you have not asked anything yet, it says You haven't asked any doubts yet.",
+      "searchText": "My Doubts . ask a doubt . ask doubt . ask my teacher . ask the teacher . question for teacher . teacher answer . unsolved doubt . resolved doubts . my doughts . my dowts . doubts . doubt . doughts . dowts . The place to ask your teachers about something you did not understand, and to follow their answers. . Back to list . Send reply . Mark resolved . Reopen . Mark in progress . Ask a doubt . Ask a doubt . My Doubts Student Doubts",
+      "contentHash": "bb5d3186e2bf68cc"
+    },
+    {
+      "key": "nav:/electives",
+      "role": "student",
+      "kind": "page",
+      "name": "Electives",
+      "aliases": [
+        "elective subjects",
+        "choose elective"
+      ],
+      "keywords": [
+        "elective",
+        "electives"
+      ],
+      "route": "/electives",
+      "where": "Left menu, Electives.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "The optional subjects your school offers for your grade, where you can see what is available and what you have chosen.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Electives",
+          "Your Choices",
+          "Available Electives"
+        ],
+        "inputs": [],
+        "messages": [
+          "No electives available for your grade yet."
+        ]
+      },
+      "sources": [
+        "src/pages/StudentElectives.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "8e69cebdf8e9f5b0",
+      "reviewedFactsHash": "8e69cebdf8e9f5b0",
+      "content": "Electives\nWhere: Left menu, Electives.\nWhat it is: The optional subjects your school offers for your grade, where you can see what is available and what you have chosen.\nOn the screen: Sections: Electives; Your Choices; Available Electives. Messages it can show: No electives available for your grade yet.",
+      "searchText": "Electives . elective subjects . choose elective . elective . electives . The optional subjects your school offers for your grade, where you can see what is available and what you have chosen. . Electives . Your Choices . Available Electives",
+      "contentHash": "8b9bc1349505727b"
+    },
+    {
+      "key": "nav:/forgetting-forecast",
+      "role": "student",
+      "kind": "page",
+      "name": "Forgetting Forecast",
+      "aliases": [
+        "forgetting curve",
+        "memory forecast",
+        "will i forget"
+      ],
+      "keywords": [
+        "forecast",
+        "retention",
+        "recall"
+      ],
+      "route": "/forgetting-forecast",
+      "where": "Left menu, Forgetting Forecast.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Predicts how likely you are to still remember each concept you have learned, based on how well you know it and how long ago you last practised. It lists the concepts that are about to slip below 50 percent recall, so you can revise them first.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Forgetting Forecast.",
+        "Tap a concept to see its memory curve.",
+        "Concepts under Further out are not at risk yet."
+      ],
+      "notes": [
+        "Only concepts you have actually shown you know are forecast."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Forgetting Forecast",
+          "At risk within 2 weeks",
+          "Further out",
+          "Still to learn"
+        ],
+        "inputs": [],
+        "messages": [
+          "Nothing to forecast yet",
+          "No prediction data yet",
+          "You haven't shown you know these yet, so there's nothing to forget — practise them to start a forecast."
+        ]
+      },
+      "sources": [
+        "src/pages/ForgettingForecast.tsx",
+        "src/components/mastery/ForgettingCurveChart.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "496d7477eaa5191d",
+      "reviewedFactsHash": "496d7477eaa5191d",
+      "content": "Forgetting Forecast\nWhere: Left menu, Forgetting Forecast.\nWhat it is: Predicts how likely you are to still remember each concept you have learned, based on how well you know it and how long ago you last practised. It lists the concepts that are about to slip below 50 percent recall, so you can revise them first.\nHow to use it: (1) Open Forgetting Forecast. (2) Tap a concept to see its memory curve. (3) Concepts under Further out are not at risk yet.\nOn the screen: Sections: Forgetting Forecast; At risk within 2 weeks; Further out; Still to learn. Messages it can show: Nothing to forecast yet; No prediction data yet; You haven't shown you know these yet, so there's nothing to forget — practise them to start a forecast.\nGood to know: Only concepts you have actually shown you know are forecast.",
+      "searchText": "Forgetting Forecast . forgetting curve . memory forecast . will i forget . forecast . retention . recall . Predicts how likely you are to still remember each concept you have learned, based on how well you know it and how long ago you last practised. It lists the concepts that are about to slip below 50 percent recall, so you can revise them first. . Forgetting Forecast . At risk within 2 weeks . Further out . Still to learn",
+      "contentHash": "289a75a26289f545"
+    },
+    {
+      "key": "nav:/gamification",
+      "role": "student",
+      "kind": "page",
+      "name": "Gamification",
+      "aliases": [
+        "adaptive round"
+      ],
+      "keywords": [
+        "gamification",
+        "game",
+        "games",
+        "rewards",
+        "xp",
+        "level",
+        "achievements",
+        "badges"
+      ],
+      "route": "/gamification",
+      "where": "Left menu, Gamification.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Learning games where you earn XP, level up and unlock achievements. Adaptive practice rounds adjust to your level.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Terms & Conditions",
+          "Accept",
+          "Decline",
+          "Finish round",
+          "Skip this game",
+          "Preparing your questions…",
+          "Yes, Quit",
+          "Continue"
+        ],
+        "headings": [
+          "Adaptive Round",
+          "Terms & Conditions",
+          "Fair Play Policy",
+          "Data & Privacy",
+          "Scoring & Results",
+          "Quit Game?",
+          "Final Results",
+          "Today"
+        ],
+        "inputs": [
+          "I agree to the Terms & Conditions",
+          "Choose Game Mode",
+          "Your Class",
+          "Select Subject",
+          "Tap the games you want"
+        ],
+        "messages": [
+          "No external help or calculators."
+        ]
+      },
+      "sources": [
+        "src/pages/Gamification.tsx",
+        "src/components/gamification/hub/Gamification2Hub.tsx",
+        "src/components/gamification/games/MatchPairs.tsx",
+        "src/components/gamification/games/QuickQuiz.tsx",
+        "src/components/gamification/games/WordScramble.tsx",
+        "src/components/gamification/games/CategorySort.tsx",
+        "src/components/gamification/games/SpeedTap.tsx",
+        "src/components/gamification/games/VisualMemory.tsx",
+        "src/components/gamification/setup/GameSetupScreen.tsx",
+        "src/components/gamification/games/little/LittleGame.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "fdb8d20b1c1a4d30",
+      "reviewedFactsHash": "fdb8d20b1c1a4d30",
+      "content": "Gamification\nWhere: Left menu, Gamification.\nWhat it is: Learning games where you earn XP, level up and unlock achievements. Adaptive practice rounds adjust to your level.\nOn the screen: Buttons: Terms & Conditions; Accept; Decline; Finish round; Skip this game; Preparing your questions…; Yes, Quit; Continue. Sections: Adaptive Round; Terms & Conditions; Fair Play Policy; Data & Privacy; Scoring & Results; Quit Game?; Final Results; Today. Fields: I agree to the Terms & Conditions; Choose Game Mode; Your Class; Select Subject; Tap the games you want. Messages it can show: No external help or calculators.",
+      "searchText": "Gamification . adaptive round . gamification . game . games . rewards . xp . level . achievements . badges . Learning games where you earn XP, level up and unlock achievements. Adaptive practice rounds adjust to your level. . Terms & Conditions . Accept . Decline . Finish round . Skip this game . Preparing your questions… . Yes, Quit . Continue . Adaptive Round . Terms & Conditions . Fair Play Policy . Data & Privacy . Scoring & Results . Quit Game? . Final Results . Today",
+      "contentHash": "b8e55cfa7d23d473"
+    },
+    {
+      "key": "nav:/hall-tickets",
+      "role": "student",
+      "kind": "page",
+      "name": "Hall Tickets",
+      "aliases": [
+        "hall ticket",
+        "admit card",
+        "exam ticket",
+        "seat number",
+        "exam seat"
+      ],
+      "keywords": [],
+      "route": "/hall-tickets",
+      "where": "Left menu, Hall Tickets.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "student",
+        "parent"
+      ],
+      "purpose": "Your exam hall tickets, with the exam, the hall and your seat once the school has assigned it.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Hall Tickets",
+          "Select Exam"
+        ],
+        "inputs": [
+          "Select Exam",
+          "Select Child"
+        ],
+        "messages": [
+          "No students found for the classes in this exam"
+        ]
+      },
+      "sources": [
+        "src/pages/HallTicketEngine.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "0db9a373f2ba5954",
+      "reviewedFactsHash": "0db9a373f2ba5954",
+      "content": "Hall Tickets\nWhere: Left menu, Hall Tickets.\nWhat it is: Your exam hall tickets, with the exam, the hall and your seat once the school has assigned it.\nOn the screen: Sections: Hall Tickets; Select Exam. Fields: Select Exam; Select Child. Messages it can show: No students found for the classes in this exam.",
+      "searchText": "Hall Tickets . hall ticket . admit card . exam ticket . seat number . exam seat . Your exam hall tickets, with the exam, the hall and your seat once the school has assigned it. . Hall Tickets . Select Exam",
+      "contentHash": "8382e93897d20a16"
+    },
+    {
+      "key": "nav:/houses",
+      "role": "student",
+      "kind": "page",
+      "name": "Houses",
+      "aliases": [
+        "house points",
+        "house system"
+      ],
+      "keywords": [
+        "house",
+        "houses"
+      ],
+      "route": "/houses",
+      "where": "Left menu, Houses.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student",
+        "parent",
+        "hod"
+      ],
+      "purpose": "Your school house, its points and where it ranks among the houses.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Add House",
+          "Assign students",
+          "Award points",
+          "Edit",
+          "Delete"
+        ],
+        "headings": [
+          "House Management",
+          "House Leaderboard",
+          "Edit House Add House"
+        ],
+        "inputs": [
+          "Filter by Class",
+          "All Classes",
+          "Points (use negative to deduct)",
+          "e.g. 10 or -5",
+          "Remarks (optional)",
+          "e.g. Won inter-house quiz",
+          "House Name *",
+          "e.g. Phoenix House"
+        ],
+        "messages": [
+          "No houses set up yet",
+          "No students assigned to this house yet.",
+          "No students found"
+        ]
+      },
+      "sources": [
+        "src/pages/HouseManagement.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "6f1c4aefe74d574b",
+      "reviewedFactsHash": "6f1c4aefe74d574b",
+      "content": "Houses\nWhere: Left menu, Houses.\nWhat it is: Your school house, its points and where it ranks among the houses.\nOn the screen: Buttons: Add House; Assign students; Award points; Edit; Delete. Sections: House Management; House Leaderboard; Edit House Add House. Fields: Filter by Class; All Classes; Points (use negative to deduct); e.g. 10 or -5; Remarks (optional); e.g. Won inter-house quiz; House Name *; e.g. Phoenix House. Messages it can show: No houses set up yet; No students assigned to this house yet; No students found.",
+      "searchText": "Houses . house points . house system . house . houses . Your school house, its points and where it ranks among the houses. . Add House . Assign students . Award points . Edit . Delete . House Management . House Leaderboard . Edit House Add House",
+      "contentHash": "6d6340204d32d10f"
+    },
+    {
+      "key": "nav:/leaderboard",
+      "role": "student",
+      "kind": "page",
+      "name": "Leaderboard",
+      "aliases": [
+        "leader board",
+        "top students"
+      ],
+      "keywords": [
+        "leaderboard",
+        "ranking",
+        "rank",
+        "scoreboard"
+      ],
+      "route": "/leaderboard",
+      "where": "Left menu, Leaderboard.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Shows where you rank by XP, in your school and in your class.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Global Ranking",
+          "Class Ranking"
+        ],
+        "buttons": [],
+        "headings": [
+          "Rankings"
+        ],
+        "inputs": [],
+        "messages": [
+          "No rankings available yet. Start playing games to earn XP!"
+        ]
+      },
+      "sources": [
+        "src/pages/Leaderboard.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f05ff17f9a26ae27",
+      "reviewedFactsHash": "f05ff17f9a26ae27",
+      "content": "Leaderboard\nWhere: Left menu, Leaderboard.\nWhat it is: Shows where you rank by XP, in your school and in your class.\nOn the screen: Tabs: Global Ranking; Class Ranking. Sections: Rankings. Messages it can show: No rankings available yet. Start playing games to earn XP!.",
+      "searchText": "Leaderboard . leader board . top students . leaderboard . ranking . rank . scoreboard . Shows where you rank by XP, in your school and in your class. . Global Ranking . Class Ranking . Rankings",
+      "contentHash": "de4abf855b588e4e"
+    },
+    {
+      "key": "nav:/learning-path",
+      "role": "student",
+      "kind": "page",
+      "name": "Learning Path",
+      "aliases": [
+        "study path",
+        "learning plan",
+        "study plan",
+        "what should i study",
+        "what next",
+        "whats next"
+      ],
+      "keywords": [],
+      "route": "/learning-path",
+      "where": "Left menu, Learning Path.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "A personal study path for a subject that tells you what to do next. Each step is a Review, a Fix a gap, a New concept, or Practice, and you answer a question for the step.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Learning Path and pick a subject. Only your own class's subjects are listed.",
+        "Work through the steps in order.",
+        "Press Generate a new path when you want a fresh one."
+      ],
+      "notes": [
+        "If it says there is nothing due, nothing at risk and everything ready is already attempted, check back later."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Generate a new path"
+        ],
+        "headings": [
+          "Your Learning Path"
+        ],
+        "inputs": [],
+        "messages": [
+          "Nothing due, nothing at risk, and everything ready is already attempted. Check back later.",
+          "No item available for this step."
+        ]
+      },
+      "sources": [
+        "src/pages/LearningPath.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "5ee6b4217034c882",
+      "reviewedFactsHash": "5ee6b4217034c882",
+      "content": "Learning Path\nWhere: Left menu, Learning Path.\nWhat it is: A personal study path for a subject that tells you what to do next. Each step is a Review, a Fix a gap, a New concept, or Practice, and you answer a question for the step.\nHow to use it: (1) Open Learning Path and pick a subject. Only your own class's subjects are listed. (2) Work through the steps in order. (3) Press Generate a new path when you want a fresh one.\nOn the screen: Buttons: Generate a new path. Sections: Your Learning Path. Messages it can show: Nothing due, nothing at risk, and everything ready is already attempted. Check back later; No item available for this step.\nGood to know: If it says there is nothing due, nothing at risk and everything ready is already attempted, check back later.",
+      "searchText": "Learning Path . study path . learning plan . study plan . what should i study . what next . whats next . A personal study path for a subject that tells you what to do next. Each step is a Review, a Fix a gap, a New concept, or Practice, and you answer a question for the step. . Generate a new path . Your Learning Path",
+      "contentHash": "820e3d448b04ef21"
+    },
+    {
+      "key": "nav:/marketplace",
+      "role": "student",
+      "kind": "page",
+      "name": "Marketplace",
+      "aliases": [
+        "market place",
+        "drop course"
+      ],
+      "keywords": [
+        "marketplace",
+        "store",
+        "courses",
+        "course",
+        "videos",
+        "enroll",
+        "enrol"
+      ],
+      "route": "/marketplace",
+      "where": "Left menu, Marketplace.",
+      "accessRoles": [
+        "admin",
+        "school_admin",
+        "teacher",
+        "principal",
+        "student"
+      ],
+      "purpose": "Learning videos and courses made available for your class. The All Videos tab has the videos, and the Courses tab lets you Enroll in a course. Press Drop Course to leave one, and you lose access to its materials until you enroll again.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "All Videos",
+          "Upload Video",
+          "Courses",
+          "Assessment Evaluation",
+          "Textbook Loader",
+          "Videos"
+        ],
+        "buttons": [
+          "Open",
+          "Hide",
+          "Play",
+          "Questions",
+          "Video performance",
+          "View Syllabus",
+          "Video",
+          "Document",
+          "Adding...",
+          "Add Material",
+          "Saving...",
+          "Save Changes",
+          "Create Course",
+          "Hide Materials"
+        ],
+        "headings": [
+          "Edit Course Create Course",
+          "Marketplace",
+          "Upload Learning Video",
+          "Playback rules",
+          "Let students skip ahead in the video",
+          "Let students skip questions",
+          "Edit question New question",
+          "Question-wise performance"
+        ],
+        "inputs": [
+          "Material title",
+          "Video link (YouTube, Drive, etc.)",
+          "Title",
+          "e.g. Spoken English Club",
+          "Description",
+          "Syllabus",
+          "Outline what this course covers, week by week or topic by topic...",
+          "Class"
+        ],
+        "messages": [
+          "No file attached",
+          "No students enrolled yet.",
+          "No materials added yet.",
+          "No courses created yet.",
+          "No courses available yet.",
+          "No videos uploaded yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Marketplace.tsx",
+        "src/components/video/TrackedVideo.tsx",
+        "src/components/video/InteractiveVideoPlayer.tsx",
+        "src/components/video/VideoQuestionManager.tsx",
+        "src/components/video/VideoInsights.tsx",
+        "src/components/marketplace/TextbookLoaderPanel.tsx",
+        "src/pages/AssessmentEvaluation.tsx",
+        "src/components/video/VideoDoubtPanel.tsx",
+        "src/components/assessment/AssessmentReportView.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "080c121f79c5eef6",
+      "reviewedFactsHash": "080c121f79c5eef6",
+      "content": "Marketplace\nWhere: Left menu, Marketplace.\nWhat it is: Learning videos and courses made available for your class. The All Videos tab has the videos, and the Courses tab lets you Enroll in a course. Press Drop Course to leave one, and you lose access to its materials until you enroll again.\nOn the screen: Tabs: All Videos; Upload Video; Courses; Assessment Evaluation; Textbook Loader; Videos. Buttons: Open; Hide; Play; Questions; Video performance; View Syllabus; Video; Document; Adding; Add Material; Saving; Save Changes; Create Course; Hide Materials. Sections: Edit Course Create Course; Marketplace; Upload Learning Video; Playback rules; Let students skip ahead in the video; Let students skip questions; Edit question New question; Question-wise performance. Fields: Material title; Video link (YouTube, Drive, etc.); Title; e.g. Spoken English Club; Description; Syllabus; Outline what this course covers, week by week or topic by topic; Class. Messages it can show: No file attached; No students enrolled yet; No materials added yet; No courses created yet; No courses available yet; No videos uploaded yet.",
+      "searchText": "Marketplace . market place . drop course . marketplace . store . courses . course . videos . enroll . enrol . Learning videos and courses made available for your class. The All Videos tab has the videos, and the Courses tab lets you Enroll in a course. Press Drop Course to leave one, and you lose access to its materials until you enroll again. . All Videos . Upload Video . Courses . Assessment Evaluation . Textbook Loader . Videos . Open . Hide . Play . Questions . Video performance . View Syllabus . Video . Document . Adding... . Add Material . Saving... . Save Changes . Create Course . Hide Materials . Edit Course Create Course . Marketplace . Upload Learning Video . Playback rules . Let students skip ahead in the video . Let students skip questions . Edit question New question . Question-wise performance",
+      "contentHash": "8ff428505af4baab"
+    },
+    {
+      "key": "nav:/my-accommodations",
+      "role": "student",
+      "kind": "page",
+      "name": "My Accommodations",
+      "aliases": [
+        "learning accommodations",
+        "learning support"
+      ],
+      "keywords": [
+        "accommodation",
+        "accommodations"
+      ],
+      "route": "/my-accommodations",
+      "where": "Left menu, My Accommodations.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "The learning accommodations your school has set up for you, such as extra time or other support.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "My Accommodations"
+        ],
+        "inputs": [],
+        "messages": [
+          "You don't have any active accommodations on file right now."
+        ]
+      },
+      "sources": [
+        "src/pages/MyAccommodations.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "95b3db7c7193cf6f",
+      "reviewedFactsHash": "95b3db7c7193cf6f",
+      "content": "My Accommodations\nWhere: Left menu, My Accommodations.\nWhat it is: The learning accommodations your school has set up for you, such as extra time or other support.\nOn the screen: Sections: My Accommodations. Messages it can show: You don't have any active accommodations on file right now.",
+      "searchText": "My Accommodations . learning accommodations . learning support . accommodation . accommodations . The learning accommodations your school has set up for you, such as extra time or other support. . My Accommodations",
+      "contentHash": "d54467848cd265ee"
+    },
+    {
+      "key": "nav:/my-classroom",
+      "role": "student",
+      "kind": "page",
+      "name": "My Classroom",
+      "aliases": [
+        "digital classroom",
+        "class stream",
+        "class materials"
+      ],
+      "keywords": [
+        "classroom"
+      ],
+      "route": "/my-classroom",
+      "where": "Left menu, My Classroom.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "One place for your class. It has a Stream for announcements, discussion and questions with replies, Materials your teachers share, Assignments with your own status, Attendance with your own record, and Live for upcoming virtual classes with their join links.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open My Classroom and choose your class.",
+        "Switch between Stream, Materials, Assignments, Attendance and Live."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Stream",
+          "Materials",
+          "Assignments",
+          "Attendance",
+          "Live"
+        ],
+        "buttons": [
+          "Post",
+          "Unpin",
+          "Delete",
+          "Reply",
+          "File",
+          "Link",
+          "Open",
+          "Create a test",
+          "Create homework",
+          "Start",
+          "All present",
+          "Save",
+          "Schedule / open whiteboard",
+          "Join"
+        ],
+        "headings": [
+          "Unpin",
+          "Delete"
+        ],
+        "inputs": [
+          "Choose class",
+          "Share an announcement or start a discussion with your class…",
+          "Write a reply…",
+          "Title *",
+          "Topic / chapter (optional)",
+          "Short description (optional)"
+        ],
+        "messages": [
+          "Nothing here yet. Start the conversation!",
+          "No materials shared yet.",
+          "No assignments yet.",
+          "No students on this class roster.",
+          "No upcoming live sessions."
+        ]
+      },
+      "sources": [
+        "src/pages/DigitalClassroom.tsx",
+        "src/components/live-attendance/LiveClassPresenceBar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "8fd1d8c072852c35",
+      "reviewedFactsHash": "8fd1d8c072852c35",
+      "content": "My Classroom\nWhere: Left menu, My Classroom.\nWhat it is: One place for your class. It has a Stream for announcements, discussion and questions with replies, Materials your teachers share, Assignments with your own status, Attendance with your own record, and Live for upcoming virtual classes with their join links.\nHow to use it: (1) Open My Classroom and choose your class. (2) Switch between Stream, Materials, Assignments, Attendance and Live.\nOn the screen: Tabs: Stream; Materials; Assignments; Attendance; Live. Buttons: Post; Unpin; Delete; Reply; File; Link; Open; Create a test; Create homework; Start; All present; Save; Schedule / open whiteboard; Join. Sections: Unpin; Delete. Fields: Choose class; Share an announcement or start a discussion with your class…; Write a reply…; Title *; Topic / chapter (optional); Short description (optional). Messages it can show: Nothing here yet. Start the conversation!; No materials shared yet; No assignments yet; No students on this class roster; No upcoming live sessions.",
+      "searchText": "My Classroom . digital classroom . class stream . class materials . classroom . One place for your class. It has a Stream for announcements, discussion and questions with replies, Materials your teachers share, Assignments with your own status, Attendance with your own record, and Live for upcoming virtual classes with their join links. . Stream . Materials . Assignments . Attendance . Live . Post . Unpin . Delete . Reply . File . Link . Open . Create a test . Create homework . Start . All present . Save . Schedule / open whiteboard . Join . Unpin . Delete",
+      "contentHash": "d2e3a88628464dda"
+    },
+    {
+      "key": "nav:/my-exams",
+      "role": "student",
+      "kind": "page",
+      "name": "My Exams",
+      "aliases": [
+        "my exam",
+        "online exam",
+        "mock exam",
+        "mock test",
+        "assigned exam",
+        "exam paper"
+      ],
+      "keywords": [],
+      "route": "/my-exams",
+      "where": "Left menu, My Exams.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "The exam papers and mock exams your teachers have assigned to you, each with a status and, once marked, your score.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open My Exams. Each exam shows its time limit (and whether it is timed), when it Opens and when it is Due.",
+        "Press Start on an exam that says Not started. It stays greyed out until it opens, or if it has been closed.",
+        "If you stopped part-way the button says Resume. Once marked it says View result."
+      ],
+      "notes": [
+        "The statuses are Not started, In progress, Awaiting review (you submitted, the teacher has not marked it yet) and Graded.",
+        "A score shown while it is still Awaiting review is provisional.",
+        "Mock exams are tagged Mock exam."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Start",
+          "Resume",
+          "View result"
+        ],
+        "headings": [
+          "My Exams"
+        ],
+        "inputs": [],
+        "messages": [
+          "No exams have been assigned to you yet."
+        ]
+      },
+      "sources": [
+        "src/pages/MyExams.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "41db3c2db6b47e92",
+      "reviewedFactsHash": "41db3c2db6b47e92",
+      "content": "My Exams\nWhere: Left menu, My Exams.\nWhat it is: The exam papers and mock exams your teachers have assigned to you, each with a status and, once marked, your score.\nHow to use it: (1) Open My Exams. Each exam shows its time limit (and whether it is timed), when it Opens and when it is Due. (2) Press Start on an exam that says Not started. It stays greyed out until it opens, or if it has been closed. (3) If you stopped part-way the button says Resume. Once marked it says View result.\nOn the screen: Buttons: Start; Resume; View result. Sections: My Exams. Messages it can show: No exams have been assigned to you yet.\nGood to know: The statuses are Not started, In progress, Awaiting review (you submitted, the teacher has not marked it yet) and Graded. A score shown while it is still Awaiting review is provisional. Mock exams are tagged Mock exam.",
+      "searchText": "My Exams . my exam . online exam . mock exam . mock test . assigned exam . exam paper . The exam papers and mock exams your teachers have assigned to you, each with a status and, once marked, your score. . Start . Resume . View result . My Exams",
+      "contentHash": "a4b8442b361d26e8"
+    },
+    {
+      "key": "nav:/my-mastery",
+      "role": "student",
+      "kind": "page",
+      "name": "My Mastery",
+      "aliases": [
+        "concept mastery",
+        "mastery tree",
+        "mastery report",
+        "how well do i know"
+      ],
+      "keywords": [
+        "mastery"
+      ],
+      "route": "/my-mastery",
+      "where": "Left menu, My Mastery (first tab of the My Mastery and Exam Readiness page).",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Shows how well you have mastered each concept, organised as a tree by subject, chapter and topic, with a tab for each subject book. Concepts that need attention are highlighted.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "It starts empty and fills in as you take assessments, homework and worksheets."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/StudentMasteryReadiness.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "c481f513f6da6e69",
+      "reviewedFactsHash": "c481f513f6da6e69",
+      "content": "My Mastery\nWhere: Left menu, My Mastery (first tab of the My Mastery and Exam Readiness page).\nWhat it is: Shows how well you have mastered each concept, organised as a tree by subject, chapter and topic, with a tab for each subject book. Concepts that need attention are highlighted.\nGood to know: It starts empty and fills in as you take assessments, homework and worksheets.",
+      "searchText": "My Mastery . concept mastery . mastery tree . mastery report . how well do i know . mastery . Shows how well you have mastered each concept, organised as a tree by subject, chapter and topic, with a tab for each subject book. Concepts that need attention are highlighted.",
+      "contentHash": "1b98489a1e2fe187"
+    },
+    {
+      "key": "nav:/pronunciation",
+      "role": "student",
+      "kind": "page",
+      "name": "Pronunciation",
+      "aliases": [
+        "pronunciation practice",
+        "speaking practice",
+        "read aloud",
+        "reading aloud"
+      ],
+      "keywords": [
+        "pronunciation",
+        "accent"
+      ],
+      "route": "/pronunciation",
+      "where": "Left menu, Pronunciation.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Read a text aloud and see which words came out clearly, plus tips for the rest. You can pick the accent to listen for and type or paste your own text, or use a built-in passage.",
+      "purposeSource": "manual",
+      "steps": [
+        "Choose an Accent to listen for.",
+        "Choose or type the text to read.",
+        "Read it aloud. You then see how close each word was, word by word."
+      ],
+      "notes": [
+        "Your progress is saved so you can see it improve."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Practise",
+          "My progress"
+        ],
+        "buttons": [
+          "Listen",
+          "Listen slowly",
+          "Stop and score"
+        ],
+        "headings": [
+          "Pronunciation Practice",
+          "1. Choose what to read",
+          "2. Listen, then read it aloud",
+          "3. Your result",
+          "Words to practise",
+          "Your scores over time",
+          "Words that keep tripping you up",
+          "Recent attempts"
+        ],
+        "inputs": [
+          "Language",
+          "Accent to listen for",
+          "Level",
+          "Text to read (you can type or paste your own)",
+          "Show"
+        ],
+        "messages": [
+          "No attempts yet. Do a reading on the Practise tab and your progress will appear here."
+        ]
+      },
+      "sources": [
+        "src/pages/PronunciationAssessment.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "c684e36c86082a08",
+      "reviewedFactsHash": "c684e36c86082a08",
+      "content": "Pronunciation\nWhere: Left menu, Pronunciation.\nWhat it is: Read a text aloud and see which words came out clearly, plus tips for the rest. You can pick the accent to listen for and type or paste your own text, or use a built-in passage.\nHow to use it: (1) Choose an Accent to listen for. (2) Choose or type the text to read. (3) Read it aloud. You then see how close each word was, word by word.\nOn the screen: Tabs: Practise; My progress. Buttons: Listen; Listen slowly; Stop and score. Sections: Pronunciation Practice; 1. Choose what to read; 2. Listen, then read it aloud; 3. Your result; Words to practise; Your scores over time; Words that keep tripping you up; Recent attempts. Fields: Language; Accent to listen for; Level; Text to read (you can type or paste your own); Show. Messages it can show: No attempts yet. Do a reading on the Practise tab and your progress will appear here.\nGood to know: Your progress is saved so you can see it improve.",
+      "searchText": "Pronunciation . pronunciation practice . speaking practice . read aloud . reading aloud . pronunciation . accent . Read a text aloud and see which words came out clearly, plus tips for the rest. You can pick the accent to listen for and type or paste your own text, or use a built-in passage. . Practise . My progress . Listen . Listen slowly . Stop and score . Pronunciation Practice . 1. Choose what to read . 2. Listen, then read it aloud . 3. Your result . Words to practise . Your scores over time . Words that keep tripping you up . Recent attempts",
+      "contentHash": "8e8d46740f358d01"
+    },
+    {
+      "key": "nav:/report-cards",
+      "role": "student",
+      "kind": "page",
+      "name": "Report Cards",
+      "aliases": [
+        "report card",
+        "marks card",
+        "grade card"
+      ],
+      "keywords": [
+        "result",
+        "results"
+      ],
+      "route": "/report-cards",
+      "where": "Left menu, Report Cards.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "Your report cards with your marks and grades.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Generate All PDFs"
+        ],
+        "headings": [
+          "Report Cards"
+        ],
+        "inputs": [
+          "Select Term / Semester",
+          "Select Child",
+          "All Classes"
+        ],
+        "messages": [
+          "No students found for this filter."
+        ]
+      },
+      "sources": [
+        "src/pages/ReportCards.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "866097804ed88073",
+      "reviewedFactsHash": "866097804ed88073",
+      "content": "Report Cards\nWhere: Left menu, Report Cards.\nWhat it is: Your report cards with your marks and grades.\nOn the screen: Buttons: Generate All PDFs. Sections: Report Cards. Fields: Select Term / Semester; Select Child; All Classes. Messages it can show: No students found for this filter.",
+      "searchText": "Report Cards . report card . marks card . grade card . result . results . Your report cards with your marks and grades. . Generate All PDFs . Report Cards",
+      "contentHash": "a3510b0e72ad6caa"
+    },
+    {
+      "key": "nav:/semester-engine",
+      "role": "student",
+      "kind": "page",
+      "name": "Semester Engine",
+      "aliases": [
+        "semester marks"
+      ],
+      "keywords": [
+        "semester",
+        "gpa"
+      ],
+      "route": "/semester-engine",
+      "where": "Left menu, Semester Engine.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student"
+      ],
+      "purpose": "Your semester marks and GPA.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Academic Years",
+          "Semesters",
+          "Marks & GPA",
+          "My Results Results",
+          "Promotion",
+          "Year Rollover"
+        ],
+        "buttons": [
+          "All Terms",
+          "New Year",
+          "Set Active",
+          "Reopen",
+          "Complete",
+          "New Semester",
+          "Activate",
+          "Edit",
+          "Enter",
+          "Marks",
+          "Promote",
+          "Retain",
+          "Add Subject"
+        ],
+        "headings": [
+          "Term-wise Results",
+          "Semester Engine",
+          "Academic Years",
+          "Semesters / Terms",
+          "Marks & GPA",
+          "Student Promotion",
+          "Year Rollover",
+          "New Academic Year"
+        ],
+        "inputs": [
+          "Select Term",
+          "All Classes",
+          "Year Name *",
+          "Start Date *",
+          "End Date *",
+          "Structure",
+          "Academic Year *",
+          "Select year"
+        ],
+        "messages": [
+          "No students found.",
+          "No marks recorded.",
+          "No results yet",
+          "No subject marks recorded.",
+          "You don't have access to the Semester Engine.",
+          "No academic years yet. Create one to get started."
+        ]
+      },
+      "sources": [
+        "src/pages/SemesterEngine.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "5e9828789639aa07",
+      "reviewedFactsHash": "5e9828789639aa07",
+      "content": "Semester Engine\nWhere: Left menu, Semester Engine.\nWhat it is: Your semester marks and GPA.\nOn the screen: Tabs: Academic Years; Semesters; Marks & GPA; My Results Results; Promotion; Year Rollover. Buttons: All Terms; New Year; Set Active; Reopen; Complete; New Semester; Activate; Edit; Enter; Marks; Promote; Retain; Add Subject. Sections: Term-wise Results; Semester Engine; Academic Years; Semesters / Terms; Marks & GPA; Student Promotion; Year Rollover; New Academic Year. Fields: Select Term; All Classes; Year Name *; Start Date *; End Date *; Structure; Academic Year *; Select year. Messages it can show: No students found; No marks recorded; No results yet; No subject marks recorded; You don't have access to the Semester Engine; No academic years yet. Create one to get started.",
+      "searchText": "Semester Engine . semester marks . semester . gpa . Your semester marks and GPA. . Academic Years . Semesters . Marks & GPA . My Results Results . Promotion . Year Rollover . All Terms . New Year . Set Active . Reopen . Complete . New Semester . Activate . Edit . Enter . Marks . Promote . Retain . Add Subject . Term-wise Results . Semester Engine . Academic Years . Semesters / Terms . Marks & GPA . Student Promotion . Year Rollover . New Academic Year",
+      "contentHash": "06e945d2b495387b"
+    },
+    {
+      "key": "nav:/settings",
+      "role": "student",
+      "kind": "page",
+      "name": "Settings",
+      "aliases": [
+        "account settings",
+        "text size"
+      ],
+      "keywords": [
+        "settings",
+        "setting",
+        "preferences",
+        "language",
+        "dyslexia",
+        "accessibility"
+      ],
+      "route": "/settings",
+      "where": "Left menu, Settings, or your account menu at the top.",
+      "accessRoles": null,
+      "purpose": "Your profile, preferences and account settings.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Edit",
+          "Change Password",
+          "Update your password",
+          "Remove photo",
+          "Saving...",
+          "Save"
+        ],
+        "headings": [
+          "Qualifications",
+          "Certifications",
+          "Teaching Experience",
+          "Subject Expertise",
+          "Training History",
+          "Digital Skills",
+          "Career Goals",
+          "Research Publications"
+        ],
+        "inputs": [
+          "Enter your full name",
+          "e.g. EMP-2024-001",
+          "Select designation",
+          "e.g. Mathematics, Science",
+          "e.g. B.Ed, M.Sc, PhD",
+          "e.g. 5 years",
+          "Enter new password",
+          "Confirm new password"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Settings.tsx",
+        "src/components/TeacherRepeatableList.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "c87b07288435e7c6",
+      "reviewedFactsHash": "c87b07288435e7c6",
+      "content": "Settings\nWhere: Left menu, Settings, or your account menu at the top.\nWhat it is: Your profile, preferences and account settings.\nOn the screen: Buttons: Edit; Change Password; Update your password; Remove photo; Saving; Save. Sections: Qualifications; Certifications; Teaching Experience; Subject Expertise; Training History; Digital Skills; Career Goals; Research Publications. Fields: Enter your full name; e.g. EMP-2024-001; Select designation; e.g. Mathematics, Science; e.g. B.Ed, M.Sc, PhD; e.g. 5 years; Enter new password; Confirm new password.",
+      "searchText": "Settings . account settings . text size . settings . setting . preferences . language . dyslexia . accessibility . Your profile, preferences and account settings. . Edit . Change Password . Update your password . Remove photo . Saving... . Save . Qualifications . Certifications . Teaching Experience . Subject Expertise . Training History . Digital Skills . Career Goals . Research Publications",
+      "contentHash": "b48ba946b7bef1b2"
+    },
+    {
+      "key": "nav:/student-communication",
+      "role": "student",
+      "kind": "page",
+      "name": "Communication",
+      "aliases": [
+        "communication center"
+      ],
+      "keywords": [
+        "communication",
+        "communications",
+        "message",
+        "messages",
+        "messaging",
+        "inbox"
+      ],
+      "route": "/student-communication",
+      "where": "Left menu, Communication.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Messages from your teachers and your school.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Photo or video",
+          "Attach file",
+          "Insert emoji"
+        ],
+        "headings": [
+          "Communication Center",
+          "Photo or video",
+          "Attach file",
+          "Insert emoji"
+        ],
+        "inputs": [
+          "Search teacher",
+          "Type a message..."
+        ],
+        "messages": [
+          "No teachers found yet.",
+          "No messages yet. Start the conversation below."
+        ]
+      },
+      "sources": [
+        "src/pages/StudentCommunicationCenter.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "099b0a3aef5f69d2",
+      "reviewedFactsHash": "099b0a3aef5f69d2",
+      "content": "Communication\nWhere: Left menu, Communication.\nWhat it is: Messages from your teachers and your school.\nOn the screen: Buttons: Photo or video; Attach file; Insert emoji. Sections: Communication Center; Photo or video; Attach file; Insert emoji. Fields: Search teacher; Type a message. Messages it can show: No teachers found yet; No messages yet. Start the conversation below.",
+      "searchText": "Communication . communication center . communication . communications . message . messages . messaging . inbox . Messages from your teachers and your school. . Photo or video . Attach file . Insert emoji . Communication Center . Photo or video . Attach file . Insert emoji",
+      "contentHash": "e83cd03f87cdbb39"
+    },
+    {
+      "key": "nav:/student-dashboard",
+      "role": "student",
+      "kind": "page",
+      "name": "Home",
+      "aliases": [
+        "home page",
+        "student dashboard",
+        "main page"
+      ],
+      "keywords": [
+        "home",
+        "dashboard"
+      ],
+      "route": "/student-dashboard",
+      "where": "First item in the left menu (Home).",
+      "accessRoles": [
+        "student",
+        "admin",
+        "parent"
+      ],
+      "purpose": "Your personal learning dashboard. It brings together your assessment, your results, pending homework and worksheets, your daily performance and weekly improvement, your Engagement Score, upcoming live sessions and your group projects.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Home from the left menu.",
+        "Use Start Assessment on the diagnostic card to take your assessment.",
+        "Use View All on the homework card to see every homework."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [
+        "Start your diagnostic assessment"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Open DPP",
+          "Start Assessment",
+          "Report",
+          "Hide",
+          "Details",
+          "View All",
+          "Download PDF",
+          "Download Image",
+          "Edit My Answers",
+          "Answer & Submit",
+          "Calendar",
+          "Customize",
+          "Reset to default",
+          "Complete"
+        ],
+        "headings": [
+          "Daily Practice Problems",
+          "Write Your Diagnostic Assessment",
+          "Assessment Results",
+          "Homework Overview",
+          "Pending Homework",
+          "Your Worksheets",
+          "Daily Performance Score",
+          "Homework Completion"
+        ],
+        "inputs": [
+          "Your Answer",
+          "Write your answer here..."
+        ],
+        "messages": [
+          "No pending homework right now.",
+          "No worksheets assigned yet",
+          "No homework assigned yet."
+        ]
+      },
+      "sources": [
+        "src/pages/StudentDashboard.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/dashboard/DashboardHero.tsx",
+        "src/components/dashboard/PersonalizedDashboard.tsx",
+        "src/components/onboarding/ProfileCompletionBar.tsx",
+        "src/components/StudentReport.tsx",
+        "src/components/StudentVirtualClassroomWidget.tsx",
+        "src/components/engagement/StudentEngagementCard.tsx",
+        "src/components/collaboration/StudentGroupProjectsSummary.tsx",
+        "src/components/report/ReportContent.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "fe22d1a693884b45",
+      "reviewedFactsHash": "fe22d1a693884b45",
+      "content": "Home\nWhere: First item in the left menu (Home).\nWhat it is: Your personal learning dashboard. It brings together your assessment, your results, pending homework and worksheets, your daily performance and weekly improvement, your Engagement Score, upcoming live sessions and your group projects.\nHow to use it: (1) Open Home from the left menu. (2) Use Start Assessment on the diagnostic card to take your assessment. (3) Use View All on the homework card to see every homework.\nOn the screen: Buttons: Open DPP; Start Assessment; Report; Hide; Details; View All; Download PDF; Download Image; Edit My Answers; Answer & Submit; Calendar; Customize; Reset to default; Complete. Sections: Daily Practice Problems; Write Your Diagnostic Assessment; Assessment Results; Homework Overview; Pending Homework; Your Worksheets; Daily Performance Score; Homework Completion. Fields: Your Answer; Write your answer here. Messages it can show: No pending homework right now; No worksheets assigned yet; No homework assigned yet.",
+      "searchText": "Home . home page . student dashboard . main page . home . dashboard . Your personal learning dashboard. It brings together your assessment, your results, pending homework and worksheets, your daily performance and weekly improvement, your Engagement Score, upcoming live sessions and your group projects. . Open DPP . Start Assessment . Report . Hide . Details . View All . Download PDF . Download Image . Edit My Answers . Answer & Submit . Calendar . Customize . Reset to default . Complete . Daily Practice Problems . Write Your Diagnostic Assessment . Assessment Results . Homework Overview . Pending Homework . Your Worksheets . Daily Performance Score . Homework Completion . Start your diagnostic assessment",
+      "contentHash": "064599ded3242c6b"
+    },
+    {
+      "key": "nav:/student-profile",
+      "role": "student",
+      "kind": "page",
+      "name": "Student Profile",
+      "aliases": [
+        "profile 360",
+        "my profile",
+        "my details",
+        "my information"
+      ],
+      "keywords": [
+        "profile"
+      ],
+      "route": "/student-profile",
+      "where": "Left menu, Student Profile.",
+      "accessRoles": [
+        "student",
+        "parent"
+      ],
+      "purpose": "Your full profile in one place, split into tabs: Overview, Parents, Medical, Transport, Documents, Behaviour, Improvement Plan, Learning Twin, Live Activity, Learning Support, Emergency, Goals and Fees.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Student Profile.",
+        "Tap a tab to see that part of your profile."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Edit",
+          "Saving...",
+          "Save",
+          "Delete",
+          "Deleting...",
+          "Yes, Delete",
+          "Add Medical Info",
+          "Add Transport Info",
+          "Uploading...",
+          "Upload",
+          "Opening...",
+          "Preview",
+          "Download",
+          "Confirm"
+        ],
+        "headings": [
+          "My 360° Profile",
+          "Personal Information",
+          "Academic Information",
+          "Summary Analytics",
+          "Attendance Trend (Last 6 Months)",
+          "Recent Behaviour Records",
+          "Medical Information",
+          "Transport Details"
+        ],
+        "inputs": [
+          "Viewing profile for",
+          "Relation",
+          "Primary Contact",
+          "Pickup Authorized",
+          "Type and press Enter to add",
+          "Blood Group *",
+          "Disabilities",
+          "Emergency Medical Notes *"
+        ],
+        "messages": [
+          "No student profile found. Please contact your school administrator.",
+          "No goals or reviews logged yet.",
+          "No target date",
+          "No admission fee plan linked",
+          "No projection yet",
+          "No activity yet. It will appear here as soon as it happens."
+        ]
+      },
+      "sources": [
+        "src/pages/StudentProfile360.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/student/Student360Profile.tsx",
+        "src/components/student/StudentFeePlanTab.tsx",
+        "src/components/student/StudentLearningTwin.tsx",
+        "src/components/telemetry/LiveLearningFeed.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "7538e054b49b9ce1",
+      "reviewedFactsHash": "7538e054b49b9ce1",
+      "content": "Student Profile\nWhere: Left menu, Student Profile.\nWhat it is: Your full profile in one place, split into tabs: Overview, Parents, Medical, Transport, Documents, Behaviour, Improvement Plan, Learning Twin, Live Activity, Learning Support, Emergency, Goals and Fees.\nHow to use it: (1) Open Student Profile. (2) Tap a tab to see that part of your profile.\nOn the screen: Buttons: Edit; Saving; Save; Delete; Deleting; Yes, Delete; Add Medical Info; Add Transport Info; Uploading; Upload; Opening; Preview; Download; Confirm. Sections: My 360° Profile; Personal Information; Academic Information; Summary Analytics; Attendance Trend (Last 6 Months); Recent Behaviour Records; Medical Information; Transport Details. Fields: Viewing profile for; Relation; Primary Contact; Pickup Authorized; Type and press Enter to add; Blood Group *; Disabilities; Emergency Medical Notes *. Messages it can show: No student profile found. Please contact your school administrator; No goals or reviews logged yet; No target date; No admission fee plan linked; No projection yet; No activity yet. It will appear here as soon as it happens.",
+      "searchText": "Student Profile . profile 360 . my profile . my details . my information . profile . Your full profile in one place, split into tabs: Overview, Parents, Medical, Transport, Documents, Behaviour, Improvement Plan, Learning Twin, Live Activity, Learning Support, Emergency, Goals and Fees. . Edit . Saving... . Save . Delete . Deleting... . Yes, Delete . Add Medical Info . Add Transport Info . Uploading... . Upload . Opening... . Preview . Download . Confirm . My 360° Profile . Personal Information . Academic Information . Summary Analytics . Attendance Trend (Last 6 Months) . Recent Behaviour Records . Medical Information . Transport Details",
+      "contentHash": "3a8df24e9640208d"
+    },
+    {
+      "key": "nav:/student/credentials",
+      "role": "student",
+      "kind": "page",
+      "name": "Credentials",
+      "aliases": [
+        "digital credentials",
+        "micro credential"
+      ],
+      "keywords": [
+        "credential",
+        "credentials",
+        "certificate",
+        "certificates"
+      ],
+      "route": "/student/credentials",
+      "where": "Left menu, Credentials.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "The digital credentials and certificates you have earned.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "My Credentials"
+        ],
+        "inputs": [],
+        "messages": [
+          "No credentials earned yet — complete a course to earn your first one!"
+        ]
+      },
+      "sources": [
+        "src/pages/Mycredentials.tsx",
+        "src/components/certificates/MyCertificates.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f1a530a86d0ddb45",
+      "reviewedFactsHash": "f1a530a86d0ddb45",
+      "content": "Credentials\nWhere: Left menu, Credentials.\nWhat it is: The digital credentials and certificates you have earned.\nOn the screen: Sections: My Credentials. Messages it can show: No credentials earned yet — complete a course to earn your first one!.",
+      "searchText": "Credentials . digital credentials . micro credential . credential . credentials . certificate . certificates . The digital credentials and certificates you have earned. . My Credentials",
+      "contentHash": "a17dd16fbb44bf3c"
+    },
+    {
+      "key": "nav:/student/group-projects",
+      "role": "student",
+      "kind": "page",
+      "name": "Group Projects",
+      "aliases": [
+        "group project",
+        "team project",
+        "group work"
+      ],
+      "keywords": [
+        "project",
+        "projects"
+      ],
+      "route": "/student/group-projects",
+      "where": "Left menu, Group Projects. A summary is on Home too.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "The projects you work on with a group. Open a project to see your group's workspace and tasks and how many are done.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Group Projects",
+          "No group projects yet"
+        ],
+        "inputs": [],
+        "messages": [
+          "No group projects yet"
+        ]
+      },
+      "sources": [
+        "src/pages/StudentGroupProjectsPage.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "17bc1a120b7dcd70",
+      "reviewedFactsHash": "17bc1a120b7dcd70",
+      "content": "Group Projects\nWhere: Left menu, Group Projects. A summary is on Home too.\nWhat it is: The projects you work on with a group. Open a project to see your group's workspace and tasks and how many are done.\nOn the screen: Sections: Group Projects; No group projects yet. Messages it can show: No group projects yet.",
+      "searchText": "Group Projects . group project . team project . group work . project . projects . The projects you work on with a group. Open a project to see your group's workspace and tasks and how many are done. . Group Projects . No group projects yet",
+      "contentHash": "4972ef0c1f7f6cce"
+    },
+    {
+      "key": "nav:/surveys",
+      "role": "student",
+      "kind": "page",
+      "name": "Surveys",
+      "aliases": [
+        "feedback survey"
+      ],
+      "keywords": [
+        "survey",
+        "surveys",
+        "feedback",
+        "questionnaire"
+      ],
+      "route": "/surveys",
+      "where": "Left menu, Surveys.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "student",
+        "parent"
+      ],
+      "purpose": "Feedback surveys that your school asks you to answer. The To Respond tab lists the ones waiting for you.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "On a survey marked anonymous, the school cannot see who answered."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Create Survey",
+          "My Surveys",
+          "Respond",
+          "Activate",
+          "Results",
+          "Add Option",
+          "Add Question",
+          "Creating...",
+          "Submitting...",
+          "Submit"
+        ],
+        "headings": [
+          "Surveys",
+          "Create Survey"
+        ],
+        "inputs": [
+          "Title",
+          "Description (optional)",
+          "Audience",
+          "Class",
+          "Select class",
+          "Section(s)",
+          "All sections (whole grade)",
+          "Make this survey anonymous (responses can never be linked back to a person)"
+        ],
+        "messages": [
+          "No responses yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Surveys.tsx",
+        "src/components/drafts/DraftStatus.tsx",
+        "src/components/drafts/DraftRecoveryDialog.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "e73c1a153a6b6c73",
+      "reviewedFactsHash": "e73c1a153a6b6c73",
+      "content": "Surveys\nWhere: Left menu, Surveys.\nWhat it is: Feedback surveys that your school asks you to answer. The To Respond tab lists the ones waiting for you.\nOn the screen: Buttons: Create Survey; My Surveys; Respond; Activate; Results; Add Option; Add Question; Creating; Submitting; Submit. Sections: Surveys; Create Survey. Fields: Title; Description (optional); Audience; Class; Select class; Section(s); All sections (whole grade); Make this survey anonymous (responses can never be linked back to a person). Messages it can show: No responses yet.\nGood to know: On a survey marked anonymous, the school cannot see who answered.",
+      "searchText": "Surveys . feedback survey . survey . surveys . feedback . questionnaire . Feedback surveys that your school asks you to answer. The To Respond tab lists the ones waiting for you. . Create Survey . My Surveys . Respond . Activate . Results . Add Option . Add Question . Creating... . Submitting... . Submit . Surveys . Create Survey",
+      "contentHash": "f02ee990b9c5d4f4"
+    },
+    {
+      "key": "nav:/timetable",
+      "role": "student",
+      "kind": "page",
+      "name": "Timetable",
+      "aliases": [
+        "class schedule",
+        "class timetable"
+      ],
+      "keywords": [
+        "timetable",
+        "schedule",
+        "routine",
+        "periods"
+      ],
+      "route": "/timetable",
+      "where": "Left menu, Timetable.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "student",
+        "school_admin",
+        "teacher",
+        "hod"
+      ],
+      "purpose": "Your class timetable, the period-by-period schedule your school uploaded.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Class",
+          "Teacher",
+          "What-If",
+          "Substitutes"
+        ],
+        "buttons": [
+          "Checking...",
+          "Check Clashes",
+          "Simulate Absence",
+          "Assigning...",
+          "Assign Substitutes",
+          "Approve",
+          "Saving...",
+          "Save",
+          "Simulating...",
+          "Run simulation",
+          "Add to comparison"
+        ],
+        "headings": [
+          "My Timetable",
+          "Today's Rotation Duties",
+          "Timetable Overview",
+          "Timetable Manager",
+          "No teacher clashes found ✅",
+          "Upload Class Timetable",
+          "Upload Teacher Timetable",
+          "What-If: Teacher Absence"
+        ],
+        "inputs": [
+          "Class",
+          "Section",
+          "Excel File (.xlsx)",
+          "Select Teacher",
+          "Choose a teacher...",
+          "Teacher",
+          "Day",
+          "Absent Teacher"
+        ],
+        "messages": [
+          "No timetable uploaded yet",
+          "No timetable assigned yet",
+          "No timetables uploaded yet",
+          "No timetable selected",
+          "No teacher clashes found ✅",
+          "No automatic swap suggestion available — resolve manually."
+        ]
+      },
+      "sources": [
+        "src/pages/TimetablePage.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/AcademicWhatIf.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "2547dcaf6758502e",
+      "reviewedFactsHash": "2547dcaf6758502e",
+      "content": "Timetable\nWhere: Left menu, Timetable.\nWhat it is: Your class timetable, the period-by-period schedule your school uploaded.\nOn the screen: Tabs: Class; Teacher; What-If; Substitutes. Buttons: Checking; Check Clashes; Simulate Absence; Assigning; Assign Substitutes; Approve; Saving; Save; Simulating; Run simulation; Add to comparison. Sections: My Timetable; Today's Rotation Duties; Timetable Overview; Timetable Manager; No teacher clashes found ✅; Upload Class Timetable; Upload Teacher Timetable; What-If: Teacher Absence. Fields: Class; Section; Excel File (.xlsx); Select Teacher; Choose a teacher; Teacher; Day; Absent Teacher. Messages it can show: No timetable uploaded yet; No timetable assigned yet; No timetables uploaded yet; No timetable selected; No teacher clashes found ✅; No automatic swap suggestion available — resolve manually.",
+      "searchText": "Timetable . class schedule . class timetable . timetable . schedule . routine . periods . Your class timetable, the period-by-period schedule your school uploaded. . Class . Teacher . What-If . Substitutes . Checking... . Check Clashes . Simulate Absence . Assigning... . Assign Substitutes . Approve . Saving... . Save . Simulating... . Run simulation . Add to comparison . My Timetable . Today's Rotation Duties . Timetable Overview . Timetable Manager . No teacher clashes found ✅ . Upload Class Timetable . Upload Teacher Timetable . What-If: Teacher Absence",
+      "contentHash": "4bfcd9feb7ba6bd7"
+    },
+    {
+      "key": "nav:/virtual-classroom",
+      "role": "student",
+      "kind": "page",
+      "name": "Virtual Classroom",
+      "aliases": [
+        "virtual class",
+        "online class",
+        "live class",
+        "live classroom",
+        "join class",
+        "meet link"
+      ],
+      "keywords": [],
+      "route": "/virtual-classroom",
+      "where": "Left menu, Virtual Classroom. Upcoming sessions also show on Home.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Your live online class sessions, with the time, subject and a link to join when the session is scheduled.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Whiteboard",
+          "Available on",
+          "the scheduled day",
+          "Still in class",
+          "Saving...",
+          "I've left",
+          "Leave class",
+          "Watch",
+          "AI Draw",
+          "Lock to teacher",
+          "Save to Lesson",
+          "Export",
+          "Exit full screen",
+          "Open recording"
+        ],
+        "headings": [
+          "Virtual Classroom",
+          "Whiteboard",
+          "AI Draw: step-by-step diagrams and equations",
+          "Lock to teacher",
+          "Save to Lesson",
+          "Export as PDF, Word or image (Ctrl+S)",
+          "Exit full screen (Esc)",
+          "AI Draw"
+        ],
+        "inputs": [
+          "Search by subject, topic or lesson",
+          "e.g. Explain photosynthesis with a labelled diagram",
+          "Subject (optional)",
+          "Science",
+          "Class (optional)",
+          "Class 7"
+        ],
+        "messages": [
+          "No upcoming classes scheduled.",
+          "No topics logged yet.",
+          "No past sessions.",
+          "No class recordings yet. They appear here after a recorded class ends."
+        ]
+      },
+      "sources": [
+        "src/pages/StudentVirtualClassroom.tsx",
+        "src/components/live-attendance/LiveClassPresenceBar.tsx",
+        "src/components/live-recordings/StudentRecordingsPanel.tsx",
+        "src/components/whiteboard/WhiteboardCanvas.tsx",
+        "src/components/live-recordings/RecordingPlayerDialog.tsx",
+        "src/components/whiteboard/AIDrawPanel.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "0df8564f747e2531",
+      "reviewedFactsHash": "0df8564f747e2531",
+      "content": "Virtual Classroom\nWhere: Left menu, Virtual Classroom. Upcoming sessions also show on Home.\nWhat it is: Your live online class sessions, with the time, subject and a link to join when the session is scheduled.\nOn the screen: Buttons: Whiteboard; Available on; the scheduled day; Still in class; Saving; I've left; Leave class; Watch; AI Draw; Lock to teacher; Save to Lesson; Export; Exit full screen; Open recording. Sections: Virtual Classroom; Whiteboard; AI Draw: step-by-step diagrams and equations; Lock to teacher; Save to Lesson; Export as PDF, Word or image (Ctrl+S); Exit full screen (Esc); AI Draw. Fields: Search by subject, topic or lesson; e.g. Explain photosynthesis with a labelled diagram; Subject (optional); Science; Class (optional); Class 7. Messages it can show: No upcoming classes scheduled; No topics logged yet; No past sessions; No class recordings yet. They appear here after a recorded class ends.",
+      "searchText": "Virtual Classroom . virtual class . online class . live class . live classroom . join class . meet link . Your live online class sessions, with the time, subject and a link to join when the session is scheduled. . Whiteboard . Available on . the scheduled day . Still in class . Saving... . I've left . Leave class . Watch . AI Draw . Lock to teacher . Save to Lesson . Export . Exit full screen . Open recording . Virtual Classroom . Whiteboard . AI Draw: step-by-step diagrams and equations . Lock to teacher . Save to Lesson . Export as PDF, Word or image (Ctrl+S) . Exit full screen (Esc) . AI Draw",
+      "contentHash": "90e2ecd0a41ff437"
+    },
+    {
+      "key": "nav:/worksheets",
+      "role": "student",
+      "kind": "page",
+      "name": "Worksheets",
+      "aliases": [
+        "practice worksheet",
+        "practice activities"
+      ],
+      "keywords": [
+        "worksheet",
+        "worksheets"
+      ],
+      "route": "/worksheets",
+      "where": "Left menu, Worksheets. They also appear on Home.",
+      "accessRoles": [
+        "student"
+      ],
+      "purpose": "Worksheets your teachers assign to your class. You complete them and submit them to your teacher, and you can edit your answers until the teacher reviews them.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "You can download a worksheet as a PDF. Answer keys are never shown to students."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Download PDF",
+          "Download Worksheet Image",
+          "Image generating...",
+          "Practice Worksheet",
+          "Remove uploaded file",
+          "Removing...",
+          "Remove",
+          "Done"
+        ],
+        "headings": [
+          "Worksheets",
+          "No worksheets assigned"
+        ],
+        "inputs": [
+          "Your Answer",
+          "Write your answer here..."
+        ],
+        "messages": [
+          "No worksheets assigned"
+        ]
+      },
+      "sources": [
+        "src/pages/Worksheets.tsx",
+        "src/components/drafts/DraftStatus.tsx",
+        "src/components/drafts/DraftRecoveryDialog.tsx",
+        "src/components/AdaptivePracticeWidget.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f71404260f3f7e1b",
+      "reviewedFactsHash": "f71404260f3f7e1b",
+      "content": "Worksheets\nWhere: Left menu, Worksheets. They also appear on Home.\nWhat it is: Worksheets your teachers assign to your class. You complete them and submit them to your teacher, and you can edit your answers until the teacher reviews them.\nOn the screen: Buttons: Download PDF; Download Worksheet Image; Image generating; Practice Worksheet; Remove uploaded file; Removing; Remove; Done. Sections: Worksheets; No worksheets assigned. Fields: Your Answer; Write your answer here. Messages it can show: No worksheets assigned.\nGood to know: You can download a worksheet as a PDF. Answer keys are never shown to students.",
+      "searchText": "Worksheets . practice worksheet . practice activities . worksheet . worksheets . Worksheets your teachers assign to your class. You complete them and submit them to your teacher, and you can edit your answers until the teacher reviews them. . Download PDF . Download Worksheet Image . Image generating... . Practice Worksheet . Remove uploaded file . Removing... . Remove . Done . Worksheets . No worksheets assigned",
+      "contentHash": "5afb2e966c15bb9a"
+    },
+    {
+      "key": "tab:student-profile/behaviour",
+      "role": "student",
+      "kind": "tab",
+      "name": "Behaviour (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Behaviour tab.",
+      "accessRoles": null,
+      "purpose": "Behaviour records & score.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "8cceec034615d37f",
+      "reviewedFactsHash": "8cceec034615d37f",
+      "content": "Behaviour (profile tab)\nWhere: Student Profile, Behaviour tab.\nWhat it is: Behaviour records & score.",
+      "searchText": "Behaviour (profile tab) . Behaviour records & score.",
+      "contentHash": "2c3548686abc67a1"
+    },
+    {
+      "key": "tab:student-profile/documents",
+      "role": "student",
+      "kind": "tab",
+      "name": "Documents (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Documents tab.",
+      "accessRoles": null,
+      "purpose": "Uploaded certificates & files.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f1d40b2ca0c10bb8",
+      "reviewedFactsHash": "f1d40b2ca0c10bb8",
+      "content": "Documents (profile tab)\nWhere: Student Profile, Documents tab.\nWhat it is: Uploaded certificates & files.",
+      "searchText": "Documents (profile tab) . Uploaded certificates & files.",
+      "contentHash": "a96ea3555f04de73"
+    },
+    {
+      "key": "tab:student-profile/emergency",
+      "role": "student",
+      "kind": "tab",
+      "name": "Emergency (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Emergency tab.",
+      "accessRoles": null,
+      "purpose": "Emergency contact numbers.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "2c65b7b877364822",
+      "reviewedFactsHash": "2c65b7b877364822",
+      "content": "Emergency (profile tab)\nWhere: Student Profile, Emergency tab.\nWhat it is: Emergency contact numbers.",
+      "searchText": "Emergency (profile tab) . Emergency contact numbers.",
+      "contentHash": "50e709093efacb62"
+    },
+    {
+      "key": "tab:student-profile/fees",
+      "role": "student",
+      "kind": "tab",
+      "name": "Fees (profile tab)",
+      "aliases": [
+        "fee plan",
+        "my fees",
+        "fee structure",
+        "outstanding balance",
+        "school fees",
+        "fee payment",
+        "pay fees"
+      ],
+      "keywords": [
+        "fees",
+        "fee",
+        "concession",
+        "balance",
+        "tuition"
+      ],
+      "route": null,
+      "where": "Student Profile, Fees tab.",
+      "accessRoles": null,
+      "purpose": "Shows the fee plan your school assigned when your admission was confirmed: the fee structure name, class, academic year and due date, a breakdown of each fee, the total fee, any concession or discount, how much is paid so far, and the outstanding balance. A badge shows whether it is Paid, Part paid, Pending or Overdue.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "It is view-only. You cannot change or pay from this tab.",
+        "Your parents pay from their own fee payment page. Questions about an amount are for the school's fee office.",
+        "If it says No admission fee plan linked, the plan appears once your admission is confirmed and the plan is linked to you."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d3597b28d973bfce",
+      "reviewedFactsHash": "d3597b28d973bfce",
+      "content": "Fees (profile tab)\nWhere: Student Profile, Fees tab.\nWhat it is: Shows the fee plan your school assigned when your admission was confirmed: the fee structure name, class, academic year and due date, a breakdown of each fee, the total fee, any concession or discount, how much is paid so far, and the outstanding balance. A badge shows whether it is Paid, Part paid, Pending or Overdue.\nGood to know: It is view-only. You cannot change or pay from this tab. Your parents pay from their own fee payment page. Questions about an amount are for the school's fee office. If it says No admission fee plan linked, the plan appears once your admission is confirmed and the plan is linked to you.",
+      "searchText": "Fees (profile tab) . fee plan . my fees . fee structure . outstanding balance . school fees . fee payment . pay fees . fees . fee . concession . balance . tuition . Shows the fee plan your school assigned when your admission was confirmed: the fee structure name, class, academic year and due date, a breakdown of each fee, the total fee, any concession or discount, how much is paid so far, and the outstanding balance. A badge shows whether it is Paid, Part paid, Pending or Overdue.",
+      "contentHash": "b8a8ce51497e0031"
+    },
+    {
+      "key": "tab:student-profile/goals",
+      "role": "student",
+      "kind": "tab",
+      "name": "Goals (profile tab)",
+      "aliases": [
+        "my goals",
+        "goal tracking",
+        "set a goal"
+      ],
+      "keywords": [
+        "goals"
+      ],
+      "route": null,
+      "where": "Student Profile, Goals tab.",
+      "accessRoles": null,
+      "purpose": "Where you keep your goals and track your progress towards them.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "45478497d86aeb60",
+      "reviewedFactsHash": "45478497d86aeb60",
+      "content": "Goals (profile tab)\nWhere: Student Profile, Goals tab.\nWhat it is: Where you keep your goals and track your progress towards them.",
+      "searchText": "Goals (profile tab) . my goals . goal tracking . set a goal . goals . Where you keep your goals and track your progress towards them.",
+      "contentHash": "1bce3a5ba0b25bf5"
+    },
+    {
+      "key": "tab:student-profile/improvement-plan",
+      "role": "student",
+      "kind": "tab",
+      "name": "Improvement Plan (profile tab)",
+      "aliases": [
+        "improvement plan",
+        "growth plan",
+        "personalised plan",
+        "personalized plan"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Improvement Plan tab.",
+      "accessRoles": null,
+      "purpose": "A personalised growth plan built from your predictions, attendance and competencies, to show what to work on.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "5c20714655303a38",
+      "reviewedFactsHash": "5c20714655303a38",
+      "content": "Improvement Plan (profile tab)\nWhere: Student Profile, Improvement Plan tab.\nWhat it is: A personalised growth plan built from your predictions, attendance and competencies, to show what to work on.",
+      "searchText": "Improvement Plan (profile tab) . improvement plan . growth plan . personalised plan . personalized plan . A personalised growth plan built from your predictions, attendance and competencies, to show what to work on.",
+      "contentHash": "b8991c618a55790e"
+    },
+    {
+      "key": "tab:student-profile/learning-support",
+      "role": "student",
+      "kind": "tab",
+      "name": "Learning Support (profile tab)",
+      "aliases": [
+        "support plan",
+        "support plans"
+      ],
+      "keywords": [
+        "iep"
+      ],
+      "route": null,
+      "where": "Student Profile, Learning Support tab.",
+      "accessRoles": null,
+      "purpose": "Your support plans and accommodations, such as an IEP, if you have one.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "350521f501d71d22",
+      "reviewedFactsHash": "350521f501d71d22",
+      "content": "Learning Support (profile tab)\nWhere: Student Profile, Learning Support tab.\nWhat it is: Your support plans and accommodations, such as an IEP, if you have one.",
+      "searchText": "Learning Support (profile tab) . support plan . support plans . iep . Your support plans and accommodations, such as an IEP, if you have one.",
+      "contentHash": "0698ef8bf3a7ac3a"
+    },
+    {
+      "key": "tab:student-profile/learning-twin",
+      "role": "student",
+      "kind": "tab",
+      "name": "Learning Twin (profile tab)",
+      "aliases": [
+        "learning twin",
+        "digital twin",
+        "learning style",
+        "learning preferences"
+      ],
+      "keywords": [
+        "twin"
+      ],
+      "route": null,
+      "where": "Student Profile, Learning Twin tab.",
+      "accessRoles": null,
+      "purpose": "A picture of how you learn: your ability, your learning preferences and your progression, kept up to date from your tests, adaptive sessions and mastery. It also shows why your risk level is what it is and gives suggested next steps.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "bfdd3e9aae08df9a",
+      "reviewedFactsHash": "bfdd3e9aae08df9a",
+      "content": "Learning Twin (profile tab)\nWhere: Student Profile, Learning Twin tab.\nWhat it is: A picture of how you learn: your ability, your learning preferences and your progression, kept up to date from your tests, adaptive sessions and mastery. It also shows why your risk level is what it is and gives suggested next steps.",
+      "searchText": "Learning Twin (profile tab) . learning twin . digital twin . learning style . learning preferences . twin . A picture of how you learn: your ability, your learning preferences and your progression, kept up to date from your tests, adaptive sessions and mastery. It also shows why your risk level is what it is and gives suggested next steps.",
+      "contentHash": "0ba10956bfcb8959"
+    },
+    {
+      "key": "tab:student-profile/live-activity",
+      "role": "student",
+      "kind": "tab",
+      "name": "Live Activity (profile tab)",
+      "aliases": [
+        "live activity",
+        "my activity",
+        "activity log",
+        "time on platform"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Live Activity tab.",
+      "accessRoles": null,
+      "purpose": "Your real-time learning activity: answers, tutor use, tests and time spent on the platform.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "4da3c0377e559638",
+      "reviewedFactsHash": "4da3c0377e559638",
+      "content": "Live Activity (profile tab)\nWhere: Student Profile, Live Activity tab.\nWhat it is: Your real-time learning activity: answers, tutor use, tests and time spent on the platform.",
+      "searchText": "Live Activity (profile tab) . live activity . my activity . activity log . time on platform . Your real-time learning activity: answers, tutor use, tests and time spent on the platform.",
+      "contentHash": "fb71940240b8e49a"
+    },
+    {
+      "key": "tab:student-profile/medical",
+      "role": "student",
+      "kind": "tab",
+      "name": "Medical (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Medical tab.",
+      "accessRoles": null,
+      "purpose": "Blood group, allergies, medications, notes.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "19903a394db09c9d",
+      "reviewedFactsHash": "19903a394db09c9d",
+      "content": "Medical (profile tab)\nWhere: Student Profile, Medical tab.\nWhat it is: Blood group, allergies, medications, notes.",
+      "searchText": "Medical (profile tab) . Blood group, allergies, medications, notes.",
+      "contentHash": "f64450874ad846d2"
+    },
+    {
+      "key": "tab:student-profile/overview",
+      "role": "student",
+      "kind": "tab",
+      "name": "Overview (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Overview tab.",
+      "accessRoles": null,
+      "purpose": "Personal & academic info, attendance, insights.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "7aef1b1efdb3e97a",
+      "reviewedFactsHash": "7aef1b1efdb3e97a",
+      "content": "Overview (profile tab)\nWhere: Student Profile, Overview tab.\nWhat it is: Personal & academic info, attendance, insights.",
+      "searchText": "Overview (profile tab) . Personal & academic info, attendance, insights.",
+      "contentHash": "d87b9986e6f39002"
+    },
+    {
+      "key": "tab:student-profile/parents",
+      "role": "student",
+      "kind": "tab",
+      "name": "Parents (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Parents tab.",
+      "accessRoles": null,
+      "purpose": "Parent/guardian contact details.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "7e4caa591bb4150f",
+      "reviewedFactsHash": "7e4caa591bb4150f",
+      "content": "Parents (profile tab)\nWhere: Student Profile, Parents tab.\nWhat it is: Parent/guardian contact details.",
+      "searchText": "Parents (profile tab) . Parent/guardian contact details.",
+      "contentHash": "f161859a72eda47e"
+    },
+    {
+      "key": "tab:student-profile/transport",
+      "role": "student",
+      "kind": "tab",
+      "name": "Transport (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Transport tab.",
+      "accessRoles": null,
+      "purpose": "Bus, route, pickup/drop details.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "6044c0075adc3f39",
+      "reviewedFactsHash": "6044c0075adc3f39",
+      "content": "Transport (profile tab)\nWhere: Student Profile, Transport tab.\nWhat it is: Bus, route, pickup/drop details.",
+      "searchText": "Transport (profile tab) . Bus, route, pickup/drop details.",
+      "contentHash": "28f994256ecfd7b0"
+    }
+  ]
+}

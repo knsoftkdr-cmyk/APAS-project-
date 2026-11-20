@@ -21,7 +21,7 @@ export const TxnPill = ({ status }: { status: string }) => {
 
 interface Props { studentId?: string; schoolId?: string; admin?: boolean; refreshKey?: number }
 
-/** Unified transaction history: one-shot fees + instalments, every gateway. Parents see their child; finance staff see the school. */
+/** Unified transaction history: one-shot fees + instalments. Parents see their child; finance staff see the school. */
 export function PaymentHistoryList({ studentId, schoolId, admin, refreshKey }: Props) {
   const { toast } = useToast();
   const [rows, setRows] = useState<HistoryRow[] | null>(null);

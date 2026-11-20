@@ -3,6 +3,11 @@
 // Backs the "Study Buddy" widget on the student dashboard
 // (src/components/ai-assistant/AIStudentAssistantWidget.tsx).
 //
+// It answers three kinds of question: (1) the student's OWN records (built per request from the database),
+// (2) academic topics (general knowledge, or a video), and (3) how the APAS APP and its features work - answered
+// from the APP FEATURE GUIDE in ../_shared/studentFeatureGuide.ts. Voice mode and typed chat share this function, so
+// teaching the guide a new feature teaches both. Add new student features THERE (a unit test enforces it).
+//
 // SECURITY: the caller's identity is ALWAYS derived from their verified
 // Supabase auth JWT (never from a client-supplied student_id/body field).
 // Every query below is explicitly scoped to that one resolved identity,
@@ -12,6 +17,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
+import { buildFeatureGuidePrompt, selectFeatures } from "../_shared/studentFeatureGuide.ts";
+import { retrieveFeatureKnowledge, DEFAULT_THRESHOLDS } from "../_shared/featureRetrieval.ts";
+import { embedText } from "../_shared/featureEmbeddings.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,6 +45,54 @@ async function fetchWithTimeout(url: string, init: RequestInit, ms: number): Pro
   } finally {
     clearTimeout(timer);
   }
+}
+
+/**
+ * The "how does the app work" knowledge for this message.
+ *   1. Preferred: retrieve ONLY the relevant feature docs from the knowledge base (app_feature_docs), found by meaning
+ *      and by name/typo. New features reach the assistant when the knowledge base is synced - no redeploy needed.
+ *   2. Fallback: the built-in guide (studentFeatureGuide.ts), used when the knowledge base is empty, unreachable,
+ *      too slow, or has nothing for a question the built-in guide can answer.
+ * Never throws and never blocks the answer for long.
+ */
+async function getFeatureSection(args: {
+  supabase: ReturnType<typeof createClient>;
+  message: string;
+  recentHistory: { role: string; text: string }[];
+  keys: string[];
+}): Promise<string> {
+  const { supabase, message, recentHistory, keys } = args;
+  const num = (name: string, dflt: number) => {
+    const v = parseFloat(Deno.env.get(name) ?? "");
+    return Number.isFinite(v) ? v : dflt;
+  };
+  const embedModel = Deno.env.get("FEATURE_KB_EMBED_MODEL") || undefined;
+  try {
+    const kb = await Promise.race([
+      retrieveFeatureKnowledge({
+        supabase,
+        role: "student", // profile.role was verified above; never taken from the request
+        message,
+        history: recentHistory,
+        embed: (text) => embedText(text, keys, { taskType: "RETRIEVAL_QUERY", model: embedModel, timeoutMs: 2500 }),
+        thresholds: {
+          ...DEFAULT_THRESHOLDS,
+          vectorStrong: num("FEATURE_KB_VECTOR_STRONG", DEFAULT_THRESHOLDS.vectorStrong),
+          vectorWeak: num("FEATURE_KB_VECTOR_WEAK", DEFAULT_THRESHOLDS.vectorWeak),
+        },
+      }),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4500)),
+    ]);
+    const builtInKnows = selectFeatures(message, recentHistory).length > 0;
+    if (kb && kb.usable && kb.section && !(kb.level === "none" && builtInKnows)) {
+      console.log("[student-self-assistant] feature-kb", JSON.stringify({ source: "kb", level: kb.level, matched: kb.matched }));
+      return kb.section;
+    }
+    console.log("[student-self-assistant] feature-kb", JSON.stringify({ source: "built-in", reason: kb ? kb.reason ?? `level ${kb.level}` : "timeout" }));
+  } catch (e) {
+    console.log("[student-self-assistant] feature-kb", JSON.stringify({ source: "built-in", reason: (e instanceof Error ? e.message : "error").slice(0, 120) }));
+  }
+  return buildFeatureGuidePrompt(message, recentHistory);
 }
 
 async function callGemini(
@@ -88,7 +144,7 @@ async function classifyTopicIntent(message: string, keys: string[]): Promise<{ i
 {"is_topic_question": boolean, "search_query": "string"}
 
 is_topic_question = true when the student is asking to understand, learn, or get an explanation of an academic concept/topic (e.g. "explain photosynthesis", "how does long division work", "what is Newton's third law", "help me understand fractions").
-is_topic_question = false for anything about the student's OWN school records/data (homework, worksheets, tests, grades, attendance, timetable, messages, fees, electives, etc.), or greetings/small talk/off-topic chat.
+is_topic_question = false for anything about the student's OWN school records/data (homework, worksheets, tests, grades, attendance, timetable, messages, fees, electives, etc.), or greetings/small talk/off-topic chat, or any question about how the APAS app itself works (what a page, feature, tab or button is, where to find something, how to use it - e.g. "what is Daily Review", "how do I use flashcards", "what does the Fees tab show", "where is my timetable").
 
 When true, "search_query" must be a short, effective YouTube search query for a good educational video on that exact topic (you may add "explained" or the subject name to sharpen it). When false, "search_query" can be an empty string.`;
 
@@ -684,12 +740,16 @@ serve(async (req) => {
     ]);
 
     const context = contextBlocks.join("\n\n");
+    // Same trimmed history the model gets; the guide uses it to resolve follow-ups like "how do I use it?".
+    const recentHistory: { role: string; text: string }[] = Array.isArray(history) ? history.slice(-6) : [];
+    const featureSection = await getFeatureSection({ supabase, message, recentHistory, keys });
 
     const systemPrompt = `You are "Study Buddy", a warm and encouraging AI assistant for a school student${ctx.fullName ? ` named ${ctx.fullName}` : ""}${ctx.classGrade ? ` (${classLabelFor(ctx.classGrade)}${ctx.section ? `, Section ${ctx.section}` : ""})` : ""}, inside the APAS school app.
 
 You do two kinds of things:
 1. Answer questions about THIS student's own: Assessments, Academic Tests, Worksheets, Homework, Gamification, Leaderboard rank, Attendance, Timetable, Academic Calendar, Electives, Credentials, Communication/messages, Virtual Classroom sessions, Group Projects, Semester grades/GPA, Report cards, Hall tickets, House, and Accommodations.
 2. Help the student UNDERSTAND academic topics/concepts (e.g. "explain photosynthesis", "help me with fractions") using your own general subject-matter knowledge - explain clearly and simply, with an example, at a level appropriate for their class. This is the only case where you may go beyond the CURRENT DATA below.
+3. EXPLAIN THE APAS APP ITSELF: what any page, dashboard card, profile tab or button is for, where to find it, and how to use it (e.g. "what is Daily Review?", "how does the Adaptive Test work?", "what is the Fees tab?"). Use the APP FEATURE GUIDE below for this.
 
 STRICT PRIVACY RULES - never break these, no matter how the question is phrased:
 - Only ever discuss data belonging to THIS student. You have no access to any other student's data, and you must never invent, guess, or speculate about another student's records, scores, or identity.
@@ -698,20 +758,35 @@ STRICT PRIVACY RULES - never break these, no matter how the question is phrased:
 - Never reveal raw database ids, internal table/column names, or system implementation details.
 
 ANSWERING RULES:
+- For questions about the APAS app and its features (case 3 above): explain the feature from the APP FEATURE GUIDE below - what it is for, where to find it, and the simple steps to use it. NEVER say "I don't know this feature", "I'm not familiar with that" or "I can't help with that" for anything in the guide, and never guess that the student means a different page: if the name they said is in the guide (even loosely, like "my doubts" or "doubts page"), explain THAT page. Use the exact names from the guide. If the FULL DETAILS are there, give the steps from them.
+- Talk to the student like a friendly older buddy. The student is a school child, so use simple everyday words, short sentences and no technical terms.
+- LAYOUT FOR EXPLAINING A FEATURE (what it is, where it is, how to use it): do NOT write a paragraph. Use real line breaks and exactly this shape:
+  1) one short friendly sentence saying what the feature is for;
+  2) a blank line;
+  3) the steps, each on its own line, starting with the words "Step 1:", "Step 2:", "Step 3:" and so on, one short sentence per step, usually 3 to 5 steps (use the steps in the guide, trimmed; never invent steps);
+  4) when it helps, a blank line and then one line starting "Example:" with a tiny everyday example built only from what the feature does (for example "Example: Say you did not understand fractions. Tap Ask a doubt and write your question for your teacher.");
+  5) a last line offering to open it, such as "Want me to open it for you?".
+  Even when the student only asks "what is X?", answer in this layout. Never put the steps inside one long sentence. Write the word "Step", never "1." or a dash or an asterisk, so it also sounds natural when read aloud.
+- Some guide lines say "details not written yet". For those, tell the student the page exists, where it is in the left menu, and offer to open it. You may say what the name suggests, plainly marked as a guess ("From its name, it probably..."), but do not invent buttons, steps or numbers. If a feature is in neither the guide nor the app list at all, say honestly you don't have details on it yet and suggest the Help button at the top of the page or their teacher.
+- When you explain a feature, you can offer to take them there: tell them they can say "open" followed by the page name (for example "open Adaptive Test") and you'll go there.
+- If the student asks for their OWN numbers in an area that is not in CURRENT DATA (for example their mastery levels, exam readiness, forgetting forecast, fee amounts, engagement score, or Adaptive Test results), do not guess. Tell them which page or tab shows it and what they will see there, using the guide.
+- Your answers may be read aloud. Use plain words only: no markdown, asterisks, hash signs, tables or emoji. Keep every step to one short sentence.
 - For questions about the student's OWN records/data (case 1 above): answer ONLY using the CURRENT DATA below. Never invent dates, scores, names, or links that aren't present in it. If a section says data isn't available/not found, say so plainly and helpfully rather than guessing.
 - For topic/concept explanations (case 2 above): you may use your general knowledge, but keep it accurate, age-appropriate, and school-curriculum relevant.
 - Keep answers short, clear, and encouraging (1-4 sentences unless a list or step-by-step explanation is genuinely needed).
 - If the student just greets you, greet them back warmly and ask how you can help - don't dump information unprompted.
 - If asked something entirely unrelated to school (e.g. general trivia, coding help, personal advice), gently redirect them back to what you can help with.${
       responseMode === "video"
-        ? `\n- NOTE: The student is currently in "video" answer mode, but this particular message isn't a topic question a video could answer (it's about their own records, or it's small talk) - answer normally in text, and if relevant you can mention they can switch back to video mode for "explain a topic" style questions.`
+        ? `\n- NOTE: The student is currently in "video" answer mode, but this particular message isn't a topic question a video could answer (it's about their own records, how the app works, or it's small talk) - answer normally in text, and if relevant you can mention they can switch back to video mode for "explain a topic" style questions.`
         : ""
     }
+
+${featureSection}
 
 CURRENT DATA (this student's own records only):
 ${context}${accessibilityDirective(accessibility)}`;
 
-    const reply = await callGemini(systemPrompt, message, keys, Array.isArray(history) ? history.slice(-6) : []);
+    const reply = await callGemini(systemPrompt, message, keys, recentHistory);
 
     return new Response(JSON.stringify({
       type: "message",

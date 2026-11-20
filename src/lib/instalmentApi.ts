@@ -79,12 +79,12 @@ export const updateInstalmentSchedule = (planId: string, items: ScheduleRow[]) =
   unwrap<null>(db.rpc("update_instalment_schedule", { p_plan_id: planId, p_items: items.map((r) => ({ ...(r.id ? { id: r.id } : {}), amount: r.amount, due_date: r.due_date })) }));
 
 // ─────────────────────────── payments ───────────────────────────
-// Payment processing is gateway-neutral and lives in paymentGateways.ts (Razorpay, Stripe, PayU, Cashfree). The helpers below keep the
+// Payment processing is gateway-neutral and lives in paymentGateways.ts (Razorpay). The helpers below keep the
 // instalment screens' existing call shape.
 import { downloadReceipt as downloadReceiptImpl, startPayment, verifyPayment, type GatewayId, type PayOutcome } from "./paymentGateways";
 export type { PayOutcome };
 
-/** Pay ONE instalment through the chosen gateway (default Razorpay). */
+/** Pay ONE instalment through Razorpay. */
 export function payInstalment(itemId: string, prefill: { businessName: string; description: string; name?: string; email?: string; contact?: string; gateway?: GatewayId }): Promise<PayOutcome> {
   return startPayment({ itemId }, { gateway: prefill.gateway ?? "razorpay", businessName: prefill.businessName, description: prefill.description, customer: { name: prefill.name, email: prefill.email, phone: prefill.contact } });
 }

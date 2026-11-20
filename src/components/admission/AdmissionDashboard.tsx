@@ -21,6 +21,10 @@ import { LeadSourceBadge } from "./LeadSourceBadge";
 import { useAdmissionIntegrations } from "@/hooks/useAdmissionIntegrations";
 import { LEAD_PROVIDER_LABELS } from "@/lib/admissionIntegrations";
 import { GraduationCap, Users, UserCheck, Clock, LayoutGrid, Plug, AlertTriangle, Upload, FileDown, History, Phone,  Inbox } from "lucide-react";
+import { Headset, Gauge } from "lucide-react";
+import { CounsellorWorkbench } from "./CounsellorWorkbench";
+import { AssignmentAdminPanel } from "./AssignmentAdminPanel";
+import { ASSIGNMENT_ADMIN_ROLES } from "@/hooks/useAdmissionAssignment";
 import { Card, CardContent } from "@/components/ui/card";
 type StatAccent = "indigo" | "violet" | "emerald" | "amber";
 
@@ -79,7 +83,10 @@ function AdmissionStatCard({
 export function AdmissionDashboard() {
   const { intakes, loading: intakesLoading, createIntake, toggleIntakeOpen } = useAdmissionIntakes();
   const [selectedIntakeId, setSelectedIntakeId] = useState<string | null>(null);
-  const [activeView, setActiveView] = useState<"overview" | "applicants" | "enquiries" | "sources">("overview");
+  const [activeView, setActiveView] = useState<"overview" | "applicants" | "enquiries" | "sources" | "workbench" | "assignment">("overview");
+  const { profile } = useAuth();
+  // The database re-checks this on every call; this only decides which tabs to offer.
+  const canAdminAssignment = !!profile && ASSIGNMENT_ADMIN_ROLES.includes(profile.role);
   const [filters, setFilters] = useState<ApplicantFilters>({ intakeId: "all", status: "all" });
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -214,6 +221,32 @@ export function AdmissionDashboard() {
               </span>
             )}
           </button>
+          <button
+            type="button"
+            onClick={() => setActiveView("workbench")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
+              activeView === "workbench"
+                ? "bg-indigo-600 text-white shadow"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <Headset className="h-4 w-4" />
+            My Workbench
+          </button>
+          {canAdminAssignment && (
+            <button
+              type="button"
+              onClick={() => setActiveView("assignment")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                activeView === "assignment"
+                  ? "bg-indigo-600 text-white shadow"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Gauge className="h-4 w-4" />
+              Assignment &amp; SLA
+            </button>
+          )}
         </div>
 
         {activeView === "enquiries" && (
@@ -305,6 +338,20 @@ export function AdmissionDashboard() {
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
           />
+        </div>
+        )}
+
+        {/* Counsellor Workbench: the signed-in counsellor's own leads, follow-ups and SLA clocks */}
+        {activeView === "workbench" && <CounsellorWorkbench />}
+
+        {/* Admin: round-robin assignment, SLA performance, queues, settings */}
+        {activeView === "assignment" && canAdminAssignment && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-semibold text-slate-800 flex items-center gap-2.5">
+            <div className="w-1.5 h-6 rounded-full bg-gradient-to-b from-indigo-500 to-violet-500" />
+            Assignment &amp; SLA
+          </h2>
+          <AssignmentAdminPanel />
         </div>
         )}
 

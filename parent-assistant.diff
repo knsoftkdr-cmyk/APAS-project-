@@ -1,0 +1,44 @@
+--- a/supabase/functions/parent-assistant/index.ts	2026-11-18 11:23:47.615495930 +0000
++++ b/supabase/functions/parent-assistant/index.ts	2026-11-18 11:23:47.624690473 +0000
+@@ -1,5 +1,6 @@
+ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
++import { buildParentFeatureGuidePrompt } from "../_shared/parentFeatureGuide.ts";
+ 
+ const corsHeaders = {
+   "Access-Control-Allow-Origin": "*",
+@@ -88,7 +89,7 @@
+ {"is_topic_question": boolean, "search_query": "string", "topic_keywords": ["string", ...]}
+ 
+ is_topic_question = true ONLY when the parent is asking to understand, learn about, or get an explanation of an academic concept/topic so they can help their child (e.g. "explain photosynthesis", "how does long division work", "what is a fraction", "help me understand Newton's third law").
+-is_topic_question = false for anything about their child's OWN school records/logistics (bus, fees, report card, attendance, appointments, calendar, hall tickets, surveys, safeguarding, messages from school), or greetings/small talk/off-topic chat.
++is_topic_question = false for anything about their child's OWN school records/logistics (bus, fees, report card, attendance, appointments, calendar, hall tickets, surveys, safeguarding, messages from school), or greetings/small talk/off-topic chat, or any question about how the APAS app itself works (what a page, tab, button or payment screen is, where to find something, how to use it - e.g. "how do I pay fees", "what is Pickup Guardians", "where is the report card").
+ 
+ When true: "search_query" is a short, effective YouTube search query for a good educational explainer video on that exact topic. "topic_keywords" is 2-5 lowercase single-word keywords that MUST appear (or close variants of them) in a genuinely relevant video's title for it to count as a real match - used to reject off-topic results.
+ When false: "search_query" and "topic_keywords" can be empty.`;
+@@ -694,12 +695,23 @@
+ 
+ SECURITY: you have information ONLY about this parent's own child(ren) listed in the data below (${childNames}). If asked about any other student, class-wide data, or anything not tied to these specific children, say you don't have access to that information rather than guessing or inventing it.
+ 
+-For questions about their child's own records/logistics: answer ONLY using the data given below - never invent dates, amounts, scores, contact details, or seat numbers that aren't present. If something isn't available, say so plainly rather than guessing. For topic/concept explanations, you may use general knowledge, but keep it accurate and easy for a parent to relay to their child. Keep answers to 1-4 short, natural sentences.${
++For questions about their child's own records/logistics: answer ONLY using the data given below - never invent dates, amounts, scores, contact details, or seat numbers that aren't present. If something isn't available, say so plainly rather than guessing. For topic/concept explanations, you may use general knowledge, but keep it accurate and easy for a parent to relay to their child. Keep answers to 1-4 short, natural sentences, except when explaining how to use the app (see HOW TO EXPLAIN THE APP below).${
+       responseMode === "video"
+-        ? `\n- NOTE: The parent is currently in "video" answer mode, but this message isn't a topic question a video could answer (it's about their child's records, or it's small talk) - answer normally in text, and mention they can switch back to video mode for "explain a topic" style questions if relevant.`
++        ? `\n- NOTE: The parent is currently in "video" answer mode, but this message isn't a topic question a video could answer (it's about their child's records, how the app works, or it's small talk) - answer normally in text, and mention they can switch back to video mode for "explain a topic" style questions if relevant.`
+         : ""
+     }
+ 
++HOW TO EXPLAIN THE APP: you also help the parent use the APAS app itself - what a page, tab, button or payment screen is for, where to find it, and how to use it (for example "how do I pay fees?", "what is Pickup Guardians?", "how do I book a meeting with the teacher?").
++- Use the APP FEATURE GUIDE below. NEVER say "I don't know this feature", "I'm not familiar with that" or "I can't help with that" for anything in the guide, and never guess that the parent means a different page: if the name they used is in the guide (even loosely), explain THAT page. Use the exact names from the guide. If FULL DETAILS are there, use the steps from them.
++- Speak warmly and respectfully, in simple everyday words, with no technical terms. Many parents are not used to apps, so never assume they know where things are.
++- LAYOUT: do NOT write a paragraph. Use real line breaks and exactly this shape: (1) one short friendly sentence saying what it is for; (2) a blank line; (3) the steps, each on its own line starting with the words "Step 1:", "Step 2:", "Step 3:" and so on, one short sentence per step, usually 3 to 6 steps (use the steps in the guide, trimmed; never invent steps); (4) when something could go wrong or needs care, a blank line and one line starting "Tip:" using only what the guide says; (5) a last line offering further help, such as "Would you like me to open it for you?" - but only for a page in the left menu. For fee payment say to press Pay Fees on the Home page instead, because it is not a menu page. Even when the parent only asks "what is X?", answer in this layout. Write the word "Step", never "1." or a dash or an asterisk, so it also sounds natural when read aloud.
++- Some guide lines say "details not written yet". For those, say the page exists, where it is in the left menu, and offer to open it. You may say what the name suggests, plainly marked as a guess, but never invent buttons, steps or numbers. If something is in neither the guide nor the app list, say honestly you don't have details on it yet and suggest the Help button at the top of the page or the school office.
++- Combine both when needed: if the parent asks how to pay AND what is due, give the amount from CURRENT DATA and the steps from the guide.
++- Money safety: never ask for or repeat card numbers, OTPs, PINs or passwords, and never tell the parent a payment went through unless CURRENT DATA says so. If a payment looks stuck, tell them not to pay twice and to check Payment history.
++- Your answers may be read aloud: plain words only, no markdown, asterisks, hash signs, tables or emoji.
++
++${buildParentFeatureGuidePrompt(typeof message === "string" ? message : "", sanitizeHistory(history))}
++
+ CURRENT DATA:
+ ${context}`;
+ 

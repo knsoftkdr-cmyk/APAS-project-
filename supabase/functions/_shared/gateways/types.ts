@@ -1,12 +1,12 @@
 // _shared/gateways/types.ts
-// The one interface every payment gateway implements. Each adapter does exactly three things:
+// The interface the payment gateway (Razorpay) implements. Each adapter does exactly three things:
 //   1. createOrder  - open an order/session at the gateway for an amount the SERVER read from the database
 //   2. fetchStatus  - ask the gateway what really happened (authoritative; the browser is never believed)
 //   3. parseWebhook - verify the gateway's signature on a server-to-server callback and say what it means
 // Everything after that (crediting balances, receipts, refunds, duplicates) is gateway-neutral and lives in the database.
 
-export type GatewayId = "razorpay" | "stripe" | "payu" | "cashfree";
-export const GATEWAY_IDS: GatewayId[] = ["razorpay", "stripe", "payu", "cashfree"];
+export type GatewayId = "razorpay";
+export const GATEWAY_IDS: GatewayId[] = ["razorpay"];
 export const isGatewayId = (v: unknown): v is GatewayId => typeof v === "string" && (GATEWAY_IDS as string[]).includes(v);
 
 /** Money is always integer minor units (paise / cents) once it leaves the database. */
@@ -20,17 +20,11 @@ export interface CreateOrderInput {
   currency: string;
   description: string;
   customer: Customer;
-  appBaseUrl: string | null;    // where the browser comes back to after a redirect gateway
-  functionUrl: string;          // public URL of the verify function (webhooks / PayU return)
-  notes: Record<string, string>;
+      notes: Record<string, string>;
 }
 
 /** What the browser needs to start paying. Contains NO secrets (only public keys / one-time session ids / signed form fields). */
-export type Checkout =
-  | { type: "razorpay"; key_id: string; order_id: string; amount: number; currency: string }
-  | { type: "redirect"; url: string }
-  | { type: "form_post"; url: string; fields: Record<string, string> }
-  | { type: "cashfree"; payment_session_id: string; mode: "sandbox" | "production" };
+export type Checkout = { type: "razorpay"; key_id: string; order_id: string; amount: number; currency: string };
 
 export type CreateOrderResult = { ok: true; orderId: string; checkout: Checkout } | { ok: false; error: string };
 

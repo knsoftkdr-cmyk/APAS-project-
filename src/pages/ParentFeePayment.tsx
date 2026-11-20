@@ -22,7 +22,7 @@ import { CreditCard, GraduationCap, Info, XCircle } from "lucide-react";
 import { ParentInstalmentPanel } from "@/components/erp-fees/instalments/ParentInstalmentPanel";
 import { GatewayPicker } from "@/components/erp-fees/payments/GatewayPicker";
 import { PaymentHistoryList } from "@/components/erp-fees/payments/PaymentHistoryList";
-import { readGatewayReturn, startPayment, type GatewayId } from "@/lib/paymentGateways";
+import { startPayment, type GatewayId } from "@/lib/paymentGateways";
 
 type StudentFeeDetails = {
   student_id: string;
@@ -73,24 +73,6 @@ export default function ParentFeePayment() {
   const requestedStudentId = (location.state as { studentId?: string } | null)?.studentId ?? null;
   const [gatewayChoice, setGatewayChoice] = useState<GatewayId | null>(null);
   const [historyKey, setHistoryKey] = useState(0);
-
-  // Coming back from Stripe / PayU / Cashfree (?gw=...&order=...): the server asks the gateway what happened, then we tell the parent.
-  useEffect(() => {
-    let alive = true;
-    readGatewayReturn().then((r) => {
-      if (!alive || !r) return;
-      const o = r.outcome;
-      if (r.kind === "instalment") setMode("finance");
-      setHistoryKey((k) => k + 1);
-      if (o.status === "success") toast({ title: "Payment successful", description: o.receiptNo ? `Receipt ${o.receiptNo} is ready - find it in your payment history.` : "Your payment has been recorded." });
-      else if (o.status === "pending") toast({ title: "Payment is being confirmed", description: "Your bank is still processing it. This updates automatically once confirmed." });
-      else if (o.status === "failed") toast({ title: "Payment failed", description: `${o.message}. No money was recorded - you can try again.`, variant: "destructive" });
-      else if (o.status === "cancelled") toast({ title: "Payment not completed", description: "Nothing was charged. You can pay whenever you're ready." });
-      else if (o.status === "error") toast({ title: "Couldn't confirm the payment", description: o.message, variant: "destructive" });
-    });
-    return () => { alive = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState<StudentFeeDetails | null>(null);
@@ -223,7 +205,7 @@ export default function ParentFeePayment() {
       return;
     }
 
-    // mode === "gateway" - pay through the gateway the parent chose (Razorpay, Stripe, PayU or Cashfree).
+    // mode === "gateway" - pay through Razorpay.
     // The server decides the amount and confirms the payment with the gateway; nothing here marks anything paid.
     const outcome = await startPayment({ feeId: inserted.id }, {
       gateway: gatewayChoice as GatewayId,
@@ -231,8 +213,8 @@ export default function ParentFeePayment() {
       description: "Fee payment for " + student.full_name,
       customer: { name: student.father_name || student.mother_name || student.full_name, email: student.contact_email, phone: student.mobile },
     });
-    if (outcome.status === "redirecting") return;   // the browser is on its way to the gateway; the result is settled when it returns
     setSubmitting(false);
+    setHistoryKey((k) => k + 1);
     if (outcome.status === "success") {
       toast({ title: "Payment successful", description: outcome.receiptNo ? `Receipt ${outcome.receiptNo} has been emailed to you.` : "Your fee payment has been recorded." });
       navigate("/dashboard");

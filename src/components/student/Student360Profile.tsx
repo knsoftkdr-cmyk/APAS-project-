@@ -68,6 +68,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StudentFeePlanTab from "./StudentFeePlanTab";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -94,6 +95,7 @@ const TABS = [
   { value: "medical", label: "Medical", icon: Stethoscope, color: "text-rose-600", hint: "Blood group, allergies, medications, notes" },
   { value: "transport", label: "Transport", icon: Bus, color: "text-amber-600", hint: "Bus, route, pickup/drop details" },
   { value: "documents", label: "Documents", icon: FileText, color: "text-violet-600", hint: "Uploaded certificates & files" },
+  { value: "fees", label: "Fees", icon: Wallet, color: "text-emerald-600", hint: "Fee plan assigned at admission, concessions, payments and balance" },
   { value: "behaviour", label: "Behaviour", icon: Star, color: "text-yellow-600", hint: "Behaviour records & score" },
   { value: "improvement-plan", label: "Improvement Plan", icon: GoalIcon, color: "text-teal-600", hint: "Personalized growth plan from predictions, attendance & competencies" },
   { value: "learning-twin", label: "Learning Twin", icon: Brain, color: "text-cyan-600", hint: "Ability, preferences and progression, updated from tests, adaptive sessions and mastery" },
@@ -211,6 +213,9 @@ export default function Student360Profile({ studentId, role, viewerId }: Student
             canEdit={false}
             canDelete={false}
           />
+        </TabsContent>
+        <TabsContent value="fees" className="mt-4">
+          <StudentFeePlanTab studentId={studentId} />
         </TabsContent>
         <TabsContent value="improvement-plan" className="mt-4">
           <ImprovementPlanTab studentId={studentId} />
@@ -2562,6 +2567,7 @@ const TAB_HEADING_THEME: Record<string, { bg: string; text: string }> = {
   medical: { bg: "bg-rose-50", text: "text-rose-700" },
   transport: { bg: "bg-amber-50", text: "text-amber-700" },
   documents: { bg: "bg-violet-50", text: "text-violet-700" },
+  fees: { bg: "bg-emerald-50", text: "text-emerald-700" },
   behaviour: { bg: "bg-yellow-50", text: "text-yellow-700" },
   "learning-support": { bg: "bg-pink-50", text: "text-pink-700" },
   emergency: { bg: "bg-red-50", text: "text-red-700" },

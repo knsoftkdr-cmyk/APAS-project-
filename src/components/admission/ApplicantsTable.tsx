@@ -31,6 +31,9 @@ import { ActiveCallBanner } from "./calls/ActiveCallBanner";
 import { LeadCallPanel } from "./calls/LeadCallPanel";
 import { useCallSession } from "@/hooks/useTelephony";
 import { useQueryClient } from "@tanstack/react-query";
+import { ApplicantFeePlanCell, useFeePlanMap } from "./ApplicantFeePlan";
+import { formatInr } from "@/lib/feePlan";
+import { getApplicantFeePlan } from "@/lib/feePlanApi";
 
 interface ApplicantsTableProps {
   applicants: AdmissionApplicant[];
@@ -86,6 +89,8 @@ export function ApplicantsTable({
   const [searchInput, setSearchInput] = useState(filters.search ?? "");
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const { meta, refetch: refetchMeta, integrationName } = useLeadMeta(applicants.map((a) => a.id), integrations);
+  const feeSchoolId = applicants[0]?.school_id ?? intakes[0]?.school_id ?? null;
+  const { map: feePlans, allowed: canSeeFees, refetch: refetchFeePlans } = useFeePlanMap(feeSchoolId);
 
   // "all" | "integration" (any connected source) | "manual" (walk-in / phone / referral) | a provider key
   const visible = applicants.filter((a) => {
@@ -113,6 +118,24 @@ export function ApplicantsTable({
       return;
     }
     toast({ title: `${applicant.full_name} marked as ${APPLICANT_STATUS_LABELS[status]}` });
+    if (status === "admitted") {
+      // The database assigns the fee plan in the same transaction as the status change; report what happened.
+      // Best effort only - users who may not view fees simply get no extra message, and the admission is unaffected.
+      try {
+        const r = await getApplicantFeePlan(applicant.id);
+        const a = r.assignment;
+        if (a?.status === "active") {
+          toast({ title: "Fee plan assigned", description: `${a.structure_name ?? "Fee plan"}: net payable ${formatInr(a.net_total)}` });
+        } else {
+          toast({
+            title: "No matching fee structure",
+            description: `Nothing matches ${r.class_grade}, ${r.academic_year}${r.category ? `, ${r.category}` : ""}. Add a fee structure in ERP Fees or use the Fee plan button to assign one manually.`,
+            variant: "destructive",
+          });
+        }
+      } catch { /* not permitted to view fees */ }
+      void refetchFeePlans();
+    }
   };
 
   return (
@@ -294,6 +317,9 @@ export function ApplicantsTable({
                         ))}
                       </SelectContent>
                     </Select>
+                    {canSeeFees && applicant.status === "admitted" && feeSchoolId && (
+                      <ApplicantFeePlanCell applicant={applicant} plan={feePlans[applicant.id]} schoolId={feeSchoolId} onChanged={refetchFeePlans} />
+                    )}
                   </TableCell>
                   <TableCell className="text-end">
                     <ApplicantDocumentsDialog

@@ -1,22 +1,16 @@
-// Client side of multi-gateway payments (Razorpay, Stripe, PayU, Cashfree). No secrets live here: the browser only receives public
-// keys / one-time session ids from the server and never decides a payment's outcome - every result comes from the server,
-// which asks the gateway itself (create-razorpay-order + verify-razorpay-payment serve ALL gateways).
+// Client side of Razorpay payments. No secrets live here: the browser only receives the public key from the server and never
+// decides a payment's outcome - every result comes from the server, which asks Razorpay itself
+// (create-razorpay-order + verify-razorpay-payment).
 import { supabase } from "@/integrations/supabase/client";
 
-export type GatewayId = "razorpay" | "stripe" | "payu" | "cashfree";
-export const GATEWAY_ORDER: GatewayId[] = ["razorpay", "stripe", "payu", "cashfree"];
+export type GatewayId = "razorpay";
+export const GATEWAY_ORDER: GatewayId[] = ["razorpay"];
 
 export interface GatewayInfo { id: GatewayId; label: string; enabled: boolean; configured: boolean; missing?: string[] }
 
 export const GATEWAY_META: Record<GatewayId, { label: string; tagline: string; secrets: string[]; events: string; webhook: (base: string) => string }> = {
   razorpay: { label: "Razorpay", tagline: "UPI, cards, net banking & wallets", secrets: ["RAZORPAY_KEY_ID", "RAZORPAY_KEY_SECRET", "RAZORPAY_WEBHOOK_SECRET"],
     events: "payment.captured, payment.failed, order.paid, refund.processed", webhook: (b) => `${b}/functions/v1/verify-razorpay-payment` },
-  stripe: { label: "Stripe", tagline: "International cards & wallets (charged in INR)", secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "APP_BASE_URL"],
-    events: "checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, checkout.session.expired, charge.refunded", webhook: (b) => `${b}/functions/v1/verify-razorpay-payment?gateway=stripe&hook=1` },
-  payu: { label: "PayU", tagline: "UPI, cards & net banking (India)", secrets: ["PAYU_KEY", "PAYU_SALT", "PAYU_ENV (test or live)", "APP_BASE_URL"],
-    events: "Success and Failure webhooks (Dashboard > Webhooks). Refunds are reconciled manually.", webhook: (b) => `${b}/functions/v1/verify-razorpay-payment?gateway=payu&hook=1` },
-  cashfree: { label: "Cashfree", tagline: "UPI, cards, net banking & pay later", secrets: ["CASHFREE_APP_ID", "CASHFREE_SECRET_KEY", "CASHFREE_ENV (sandbox or production)", "APP_BASE_URL"],
-    events: "PAYMENT_SUCCESS_WEBHOOK, PAYMENT_FAILED_WEBHOOK, REFUND_STATUS_WEBHOOK", webhook: (b) => `${b}/functions/v1/verify-razorpay-payment?gateway=cashfree&hook=1` },
 };
 export const gatewayLabel = (id: string) => GATEWAY_META[id as GatewayId]?.label ?? id;
 
@@ -39,7 +33,6 @@ export type PayOutcome =
   | { status: "pending" }
   | { status: "failed"; message: string }
   | { status: "cancelled" }
-  | { status: "redirecting" }          // the browser is leaving for the gateway's page; the result is settled when it comes back
   | { status: "error"; message: string };
 
 export interface VerifyResult { status: string; kind?: "fee" | "instalment"; receipt_no?: string; reason?: string; error?: string }
@@ -58,7 +51,6 @@ const scriptOnce = (src: string, ready: () => boolean): Promise<boolean> =>
     document.body.appendChild(s);
   });
 const loadRazorpay = () => scriptOnce("https://checkout.razorpay.com/v1/checkout.js", () => !!(window as any).Razorpay);
-const loadCashfree = () => scriptOnce("https://sdk.cashfree.com/js/v3/cashfree.js", () => !!(window as any).Cashfree);
 
 const toOutcome = (r: VerifyResult): PayOutcome =>
   r.status === "success" ? { status: "success", receiptNo: r.receipt_no }
@@ -70,9 +62,8 @@ export interface PayTarget { feeId?: string; itemId?: string }
 export interface PayOptions { gateway: GatewayId; businessName: string; description: string; customer: { name?: string; email?: string | null; phone?: string | null } }
 
 /**
- * Start paying a one-shot fee (feeId) or ONE instalment (itemId) through the chosen gateway.
- * Razorpay resolves when its popup closes; Stripe / PayU / Cashfree take the browser to the gateway ("redirecting") and the result is
- * settled by readGatewayReturn() when the parent comes back.
+ * Start paying a one-shot fee (feeId) or ONE instalment (itemId) through Razorpay.
+ * Resolves when the Razorpay popup closes.
  */
 export async function startPayment(target: PayTarget, o: PayOptions): Promise<PayOutcome> {
   const body: Record<string, unknown> = { gateway: o.gateway, customer: { name: o.customer.name, email: o.customer.email || undefined, phone: o.customer.phone || undefined } };
@@ -82,21 +73,6 @@ export async function startPayment(target: PayTarget, o: PayOptions): Promise<Pa
   const { data: order, error } = await supabase.functions.invoke("create-razorpay-order", { body });
   if (error || !order || (order as any).error) return { status: "error", message: await functionErrorMessage(error, order) };
   const { order_id, checkout } = order as { order_id: string; checkout: any };
-
-  if (checkout.type === "redirect") { window.location.assign(checkout.url); return { status: "redirecting" }; }
-  if (checkout.type === "form_post") {
-    const f = document.createElement("form");
-    f.method = "POST"; f.action = checkout.url; f.style.display = "none";
-    Object.entries(checkout.fields as Record<string, string>).forEach(([k, v]) => { const i = document.createElement("input"); i.type = "hidden"; i.name = k; i.value = v; f.appendChild(i); });
-    document.body.appendChild(f); f.submit();
-    return { status: "redirecting" };
-  }
-  if (checkout.type === "cashfree") {
-    if (!(await loadCashfree())) return { status: "error", message: "Couldn't load the payment gateway. Please check your connection and try again." };
-    const cf = (window as any).Cashfree({ mode: checkout.mode });
-    await cf.checkout({ paymentSessionId: checkout.payment_session_id, redirectTarget: "_self" });
-    return { status: "redirecting" };
-  }
 
   // Razorpay popup
   return new Promise<PayOutcome>((resolve) => {
@@ -118,20 +94,6 @@ export async function startPayment(target: PayTarget, o: PayOptions): Promise<Pa
     rzp.on("payment.failed", () => { void verifyPayment("razorpay", order_id); });   // recorded server-side; the popup stays open for a retry
     rzp.open();
   });
-}
-
-/** After Stripe / PayU / Cashfree send the parent back with ?gw=...&order=..., settle it with the server. null = not a gateway return. */
-export async function readGatewayReturn(): Promise<{ gateway: GatewayId; orderId: string; outcome: PayOutcome; kind?: "fee" | "instalment" } | null> {
-  const q = new URLSearchParams(window.location.search);
-  const gw = q.get("gw"), order = q.get("order");
-  if (!gw || !GATEWAY_ORDER.includes(gw as GatewayId)) return null;
-  const clean = () => { q.delete("gw"); q.delete("order"); q.delete("cancelled"); q.delete("error"); const s = q.toString(); window.history.replaceState(window.history.state, "", window.location.pathname + (s ? `?${s}` : "")); };
-  if (!order) { const err = q.get("error"); clean(); return { gateway: gw as GatewayId, orderId: "", outcome: { status: "error", message: err ? "We couldn't confirm this payment. If money was deducted it will be reconciled automatically." : "Missing payment reference" } }; }
-  const cancelled = q.get("cancelled") === "1";
-  clean();
-  const r = await verifyPayment(gw as GatewayId, order);
-  const outcome = cancelled && r.status !== "success" ? ({ status: "cancelled" } as PayOutcome) : toOutcome(r);
-  return { gateway: gw as GatewayId, orderId: order, outcome, kind: r.kind };
 }
 
 export async function downloadReceipt(transactionId: string): Promise<void> {
@@ -162,8 +124,8 @@ export async function fetchGatewaySettings(schoolId: string): Promise<Record<Gat
   const { data, error } = await (supabase as any).from("payment_gateway_settings").select("gateway, enabled").eq("school_id", schoolId);
   if (error) throw new Error(error.message);
   const rows = (data ?? []) as { gateway: GatewayId; enabled: boolean }[];
-  // a school that never chose keeps working as before: Razorpay only
-  const out = { razorpay: rows.length === 0, stripe: false, payu: false, cashfree: false } as Record<GatewayId, boolean>;
+  // a school that never chose keeps working as before: Razorpay on
+  const out = { razorpay: rows.length === 0 } as Record<GatewayId, boolean>;
   rows.forEach((r) => { out[r.gateway] = r.enabled; });
   return out;
 }

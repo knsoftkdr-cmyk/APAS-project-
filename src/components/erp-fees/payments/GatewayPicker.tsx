@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, CreditCard, Globe2, Landmark, ShieldCheck, Smartphone } from "lucide-react";
+import { AlertTriangle, Check, ShieldCheck, Smartphone } from "lucide-react";
 import { GATEWAY_META, listGateways, type GatewayId, type GatewayInfo } from "@/lib/paymentGateways";
 
-const ICONS: Record<GatewayId, typeof CreditCard> = { razorpay: Smartphone, stripe: Globe2, payu: Landmark, cashfree: CreditCard };
+const ICONS: Record<GatewayId, typeof Smartphone> = { razorpay: Smartphone };
 
 interface Props {
   schoolId: string | null | undefined;
@@ -13,7 +13,7 @@ interface Props {
   compact?: boolean;
 }
 
-/** Lets a parent choose among the gateways the school has switched ON and that are fully configured on the server. */
+/** Shows the payment method (Razorpay) when the school has it switched ON and it is fully configured on the server. */
 export function GatewayPicker({ schoolId, value, onChange, disabled, compact }: Props) {
   const [options, setOptions] = useState<GatewayInfo[] | null>(null);
   const [error, setError] = useState<string | null>(null);

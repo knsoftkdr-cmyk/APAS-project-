@@ -18,7 +18,7 @@ interface Props {
   studentName: string;
   businessName: string;
   prefill: { name?: string; email?: string | null; contact?: string | null };
-  /** the school, so the parent can pick among its enabled payment gateways */
+  /** the school, so the parent can see whether online payment (Razorpay) is enabled */
   schoolId?: string | null;
 }
 
@@ -85,7 +85,6 @@ export function ParentInstalmentPanel({ studentId, studentName, businessName, pr
     setPayingId(item.id);
     try {
       const out = await payInstalment(item.id, { businessName, description: `Instalment ${item.seq} of ${count} - ${studentName}`, name: prefill.name, email: prefill.email ?? undefined, contact: prefill.contact ?? undefined, gateway: gateway ?? "razorpay" });
-      if (out.status === "redirecting") return;   // on its way to the gateway; settled when the parent returns
       if (out.status === "success") toast({ title: "Payment successful", description: out.receiptNo ? `Receipt ${out.receiptNo} is ready to download.` : "Your instalment has been recorded." });
       else if (out.status === "pending") toast({ title: "Payment is being confirmed", description: "Your bank is still processing it. This page updates automatically once it's confirmed." });
       else if (out.status === "failed") toast({ title: "Payment failed", description: `${out.message}. No money was recorded - you can try again.`, variant: "destructive" });

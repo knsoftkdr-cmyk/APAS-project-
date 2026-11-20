@@ -1,0 +1,85 @@
+--- a/supabase/functions/student-self-assistant/index.ts	2026-11-19 02:54:46.863484526 +0000
++++ b/supabase/functions/student-self-assistant/index.ts	2026-11-19 07:54:48.194308183 +0000
+@@ -17,7 +17,9 @@
+ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+ import { accessibilityDirective } from "../_shared/accessibilityModel.ts";
+-import { buildFeatureGuidePrompt } from "../_shared/studentFeatureGuide.ts";
++import { buildFeatureGuidePrompt, selectFeatures } from "../_shared/studentFeatureGuide.ts";
++import { retrieveFeatureKnowledge, DEFAULT_THRESHOLDS } from "../_shared/featureRetrieval.ts";
++import { embedText } from "../_shared/featureEmbeddings.ts";
+ 
+ const corsHeaders = {
+   "Access-Control-Allow-Origin": "*",
+@@ -45,6 +47,54 @@
+   }
+ }
+ 
++/**
++ * The "how does the app work" knowledge for this message.
++ *   1. Preferred: retrieve ONLY the relevant feature docs from the knowledge base (app_feature_docs), found by meaning
++ *      and by name/typo. New features reach the assistant when the knowledge base is synced - no redeploy needed.
++ *   2. Fallback: the built-in guide (studentFeatureGuide.ts), used when the knowledge base is empty, unreachable,
++ *      too slow, or has nothing for a question the built-in guide can answer.
++ * Never throws and never blocks the answer for long.
++ */
++async function getFeatureSection(args: {
++  supabase: ReturnType<typeof createClient>;
++  message: string;
++  recentHistory: { role: string; text: string }[];
++  keys: string[];
++}): Promise<string> {
++  const { supabase, message, recentHistory, keys } = args;
++  const num = (name: string, dflt: number) => {
++    const v = parseFloat(Deno.env.get(name) ?? "");
++    return Number.isFinite(v) ? v : dflt;
++  };
++  const embedModel = Deno.env.get("FEATURE_KB_EMBED_MODEL") || undefined;
++  try {
++    const kb = await Promise.race([
++      retrieveFeatureKnowledge({
++        supabase,
++        role: "student", // profile.role was verified above; never taken from the request
++        message,
++        history: recentHistory,
++        embed: (text) => embedText(text, keys, { taskType: "RETRIEVAL_QUERY", model: embedModel, timeoutMs: 2500 }),
++        thresholds: {
++          ...DEFAULT_THRESHOLDS,
++          vectorStrong: num("FEATURE_KB_VECTOR_STRONG", DEFAULT_THRESHOLDS.vectorStrong),
++          vectorWeak: num("FEATURE_KB_VECTOR_WEAK", DEFAULT_THRESHOLDS.vectorWeak),
++        },
++      }),
++      new Promise<null>((resolve) => setTimeout(() => resolve(null), 4500)),
++    ]);
++    const builtInKnows = selectFeatures(message, recentHistory).length > 0;
++    if (kb && kb.usable && kb.section && !(kb.level === "none" && builtInKnows)) {
++      console.log("[student-self-assistant] feature-kb", JSON.stringify({ source: "kb", level: kb.level, matched: kb.matched }));
++      return kb.section;
++    }
++    console.log("[student-self-assistant] feature-kb", JSON.stringify({ source: "built-in", reason: kb ? kb.reason ?? `level ${kb.level}` : "timeout" }));
++  } catch (e) {
++    console.log("[student-self-assistant] feature-kb", JSON.stringify({ source: "built-in", reason: (e instanceof Error ? e.message : "error").slice(0, 120) }));
++  }
++  return buildFeatureGuidePrompt(message, recentHistory);
++}
++
+ async function callGemini(
+   systemPrompt: string,
+   userPrompt: string,
+@@ -692,6 +742,7 @@
+     const context = contextBlocks.join("\n\n");
+     // Same trimmed history the model gets; the guide uses it to resolve follow-ups like "how do I use it?".
+     const recentHistory: { role: string; text: string }[] = Array.isArray(history) ? history.slice(-6) : [];
++    const featureSection = await getFeatureSection({ supabase, message, recentHistory, keys });
+ 
+     const systemPrompt = `You are "Study Buddy", a warm and encouraging AI assistant for a school student${ctx.fullName ? ` named ${ctx.fullName}` : ""}${ctx.classGrade ? ` (${classLabelFor(ctx.classGrade)}${ctx.section ? `, Section ${ctx.section}` : ""})` : ""}, inside the APAS school app.
+ 
+@@ -730,7 +781,7 @@
+         : ""
+     }
+ 
+-${buildFeatureGuidePrompt(message, recentHistory)}
++${featureSection}
+ 
+ CURRENT DATA (this student's own records only):
+ ${context}${accessibilityDirective(accessibility)}`;

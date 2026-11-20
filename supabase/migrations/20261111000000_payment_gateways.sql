@@ -1,4 +1,4 @@
--- Multiple payment gateways (Razorpay, Stripe, PayU, Cashfree) for the existing ERP & Fees module.
+-- Gateway-neutral payment ledger (originally Razorpay, Stripe, PayU, Cashfree; now Razorpay only - see 20261116010000_razorpay_only.sql) for the existing ERP & Fees module.
 -- Builds on 20261110000000_fee_instalments.sql. Safe to re-run.
 --
 --  * payment_gateway_settings : which gateways each school has switched on (NO credentials here - those are Supabase secrets)

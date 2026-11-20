@@ -1,6 +1,6 @@
 // _shared/paymentHandlers.ts - the gateway-neutral payment flow. Called from the EXISTING edge functions:
 //   create-razorpay-order    -> handleCreateOrder / handleListGateways
-//   verify-razorpay-payment  -> handleVerify / handleReceipt / handleWebhook / handlePayuReturn
+//   verify-razorpay-payment  -> handleVerify / handleReceipt / handleWebhook
 // (No new edge functions are needed: the project's function quota is already used up.)
 //
 // Trust model, identical for every gateway:
@@ -8,9 +8,9 @@
 //   * the caller is authenticated, and the database checks they are the student's parent
 //   * a payment is credited ONLY after the gateway itself confirms it (fetchStatus / signed webhook), by an idempotent
 //     database function - so duplicate callbacks, retries and late failure events cannot double-credit or un-pay.
-import { adminClient, bytesToBase64, buildInstalmentReceipt, callerClient, json, corsHeaders } from "./instalmentServer.ts";
+import { adminClient, bytesToBase64, buildInstalmentReceipt, callerClient, json } from "./instalmentServer.ts";
 import { verifyCheckoutSignature } from "./instalmentGateway.ts";
-import { allAdapters, appBaseUrl, functionUrl, gatewayCurrency, getAdapter } from "./gateways/index.ts";
+import { allAdapters, gatewayCurrency, getAdapter } from "./gateways/index.ts";
 import { isGatewayId, toMinor, type Checkout, type Decision, type GatewayId } from "./gateways/types.ts";
 import { buildFeeReceipt, emailReceipt } from "./paymentReceipts.ts";
 
@@ -73,7 +73,6 @@ export async function handleCreateOrder(req: Request, body: Body): Promise<Respo
     merchantRef, amountMinor, currency,
     description: isInstalment ? `Instalment ${prep.seq} - ${prep.student_name}` : `School fees - ${prep.student_name}`,
     customer: { name: str(c.name), email: str(c.email), phone: str(c.phone) },
-    appBaseUrl: appBaseUrl(req, gateway === "payu"), functionUrl: functionUrl(),
     notes: { kind: isInstalment ? "instalment" : "fee", ref, student_name: String(prep.student_name ?? ""), customer_id: caller.userId },
   });
   if (!created.ok) { console.error(`${gateway} createOrder failed:`, created.error); return json({ error: created.error }, 502); }
@@ -92,7 +91,7 @@ export async function handleCreateOrder(req: Request, body: Body): Promise<Respo
   });
 }
 
-/** Ask the gateway what happened to an order and apply it. Shared by the browser return, PayU's return and (indirectly) webhooks. */
+/** Ask the gateway what happened to an order and apply it. Shared by the browser return and (indirectly) webhooks. */
 async function settle(gateway: GatewayId, orderId: string, lookup: any): Promise<{ status: string; [k: string]: unknown }> {
   const admin = adminClient();
   const decision: Decision = await getAdapter(gateway).fetchStatus(orderId, { amountMinor: Number(lookup.amount_minor), currency: String(lookup.currency ?? "INR") });
@@ -202,24 +201,4 @@ export async function handleWebhook(req: Request, gateway: GatewayId, raw: strin
     console.error(`${gateway} webhook:`, err);
     return json({ error: (err as Error).message }, 500);
   }
-}
-
-/** PayU posts the parent's browser back here (surl/furl). We do not trust the posted status: settle via PayU's own API, then send the
- *  browser on to the app. The redirect target comes ONLY from the APP_BASE_URL secret (never from the request: no open redirect). */
-export async function handlePayuReturn(req: Request, raw: string): Promise<Response> {
-  const { parseFormBody, verifyPayuResponse } = await import("./gateways/payu.ts");
-  const p = parseFormBody(raw);
-  const base = appBaseUrl(req, true);
-  const back = (q: string) => base
-    ? new Response(null, { status: 303, headers: { ...corsHeaders, Location: `${base}/parent/fee-payment?gw=payu&${q}` } })
-    : new Response("Your payment is being processed. You can close this page and return to the app.", { status: 200, headers: { "Content-Type": "text/plain" } });
-  const txnid = p.txnid;
-  if (!txnid || !(await verifyPayuResponse(p, Deno.env.get("PAYU_SALT") ?? ""))) return back("error=invalid");
-  try {
-    const admin = adminClient();
-    const lookup = (await admin.rpc("payment_lookup_order", { p_gateway: "payu", p_order_id: txnid })).data;
-    if (!lookup) return back("error=unknown");
-    await settle("payu", txnid, lookup);
-  } catch (e) { console.error("payu return:", (e as Error).message); }   // the app screen re-verifies; webhooks also settle it
-  return back(`order=${encodeURIComponent(txnid)}`);
 }

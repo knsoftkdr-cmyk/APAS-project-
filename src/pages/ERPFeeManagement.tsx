@@ -35,6 +35,8 @@ import { useToast } from "@/hooks/use-toast";
 import ERPLayout from "@/components/erp/ERPLayout";
 import { ERPFeeAssistantWidget } from "@/components/erp-fees/ERPFeeAssistantWidget";
 import { InstalmentsAdminTab } from "@/components/erp-fees/instalments/InstalmentsAdminTab";
+import { FeeStructuresTab } from "@/components/erp-fees/feeplan/FeeStructuresTab";
+import { FeePlansTab } from "@/components/erp-fees/feeplan/FeePlansTab";
 import { PaymentGatewaysAdminTab } from "@/components/erp-fees/payments/PaymentGatewaysAdminTab";
 
 type FeeRecord = {
@@ -54,6 +56,8 @@ type FeeRecord = {
   due_date: string | null;
   status: string;
   created_at?: string;
+  /** set when this fee came from an admission fee plan (amounts are then corrected from the plan, not edited/deleted here) */
+  fee_assignment_id?: string | null;
 };
 
 type Student = {
@@ -123,7 +127,7 @@ const ERPFeeManagement = () => {
   const [deleting, setDeleting] = useState(false);
 
   // Top-level tabs: Assign Fees / Fee Records / Payment History
-  const [activeTab, setActiveTab] = useState<"records" | "history" | "instalments" | "gateways" | "transactions">("records");
+  const [activeTab, setActiveTab] = useState<"records" | "history" | "structures" | "assignments" | "instalments" | "gateways" | "transactions">("records");
 
   // Bulk Assign dialog (Assign Fees tab)
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -608,10 +612,12 @@ const ERPFeeManagement = () => {
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 mb-6 border-b border-slate-200">
+      <div className="flex items-center gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
         {([
           { key: "records", label: "Fee Records" },
           { key: "history", label: "Payment History" },
+          { key: "structures", label: "Fee Structures" },
+          { key: "assignments", label: "Admission Fee Plans" },
           { key: "instalments", label: "Instalments" },
           { key: "gateways", label: "Payment Gateways" },
           { key: "transactions", label: "Transactions" },
@@ -619,7 +625,7 @@ const ERPFeeManagement = () => {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
+            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap ${
               activeTab === t.key
                 ? "border-blue-600 text-blue-700"
                 : "border-transparent text-slate-500 hover:text-slate-700"
@@ -632,6 +638,8 @@ const ERPFeeManagement = () => {
 
 
 
+      {activeTab === "structures" && schoolId && <FeeStructuresTab schoolId={schoolId} />}
+      {activeTab === "assignments" && schoolId && <FeePlansTab schoolId={schoolId} />}
       {activeTab === "instalments" && schoolId && <InstalmentsAdminTab schoolId={schoolId} />}
       {(activeTab === "gateways" || activeTab === "transactions") && schoolId && <PaymentGatewaysAdminTab schoolId={schoolId} view={activeTab} />}
 
@@ -774,6 +782,9 @@ const ERPFeeManagement = () => {
                         {fee.student_name?.charAt(0)?.toUpperCase() || "?"}
                       </div>
                       {fee.student_name}
+                      {fee.fee_assignment_id && (
+                        <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700" title="Assigned from an admission fee plan. Correct the amounts in the Admission Fee Plans tab.">Fee plan</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-slate-600">{fee.class_grade || "—"}</TableCell>
@@ -807,8 +818,10 @@ const ERPFeeManagement = () => {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => setDeleteTarget(fee)}
+                      disabled={!!fee.fee_assignment_id}
+                      title={fee.fee_assignment_id ? "Comes from an admission fee plan - cancel it in the Admission Fee Plans tab" : undefined}
                     >
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <Trash2 className={`h-4 w-4 ${fee.fee_assignment_id ? "text-slate-300" : "text-red-500"}`} />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -1438,7 +1451,7 @@ const ERPFeeManagement = () => {
           )}
         </DialogContent>
       </Dialog>
-      <ERPFeeAssistantWidget schoolId={schoolId} onNavigate={(tab) => setActiveTab(tab as "records" | "history" | "instalments" | "gateways" | "transactions")} isFeesTab />
+      <ERPFeeAssistantWidget schoolId={schoolId} onNavigate={(tab) => setActiveTab(tab as "records" | "history" | "structures" | "assignments" | "instalments" | "gateways" | "transactions")} isFeesTab />
     </ERPLayout>
   );
 };
