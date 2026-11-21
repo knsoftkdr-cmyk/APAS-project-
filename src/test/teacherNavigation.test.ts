@@ -48,7 +48,7 @@ describe("APAS Agent navigation - the requests a teacher would make", () => {
 });
 
 describe("destinations come from the sidebar, not a second menu", () => {
-  it("are exactly the sidebar items a teacher can see, minus routes that would bounce them (+ the two tabs)", () => {
+  it("are exactly the sidebar items a teacher can see, minus routes that would bounce them (+ the tabs)", () => {
     const fromSidebar = new Set<string>();
     for (const it of navItems) {
       if (!isNavItemAllowedForRole(it, "teacher")) continue;
@@ -56,7 +56,7 @@ describe("destinations come from the sidebar, not a second menu", () => {
       fromSidebar.add(it.path);
       if (it.subItem) fromSidebar.add(it.subItem.path);
     }
-    fromSidebar.add("/mock-exams").add("/class-velocity");
+    fromSidebar.add("/item-bank").add("/mock-exams").add("/exam-reviews").add("/class-velocity");
     expect(new Set(dests.map((d) => d.path))).toEqual(fromSidebar);
   });
 
@@ -125,12 +125,13 @@ describe("every supported page opens, however the teacher phrases it", () => {
     expect(pathOf("open struggling students")).toBe("/teacher-at-risk");
     expect(pathOf("open question bank")).toBe("/item-bank");
     expect(pathOf("open leave requests")).toBe("/requests");
-    expect(pathOf("open sen students")).toBe("/my-sen-students");
     expect(pathOf("open teacher dashboard")).toBe("/teacher-workspace");
     expect(pathOf("open the workspace")).toBe("/teacher-workspace");
   });
-  it("reaches the two tabs that have their own route", () => {
+  it("reaches the tabs that have their own route", () => {
+    expect(pathOf("open item bank")).toBe("/item-bank");
     expect(pathOf("open mock exams")).toBe("/mock-exams");
+    expect(pathOf("open exam reviews")).toBe("/exam-reviews");
     expect(pathOf("open class velocity")).toBe("/class-velocity");
   });
 });
@@ -237,8 +238,6 @@ describe("unclear requests are handled gracefully", () => {
     const r = nav("open assessment");
     expect(r.kind).toBe("clarify");
     expect(r.kind === "clarify" && r.options.map((o) => o.path)).toEqual(expect.arrayContaining(["/assessment-builder", "/assessment-evaluation"]));
-    const s = nav("open students");
-    expect(s.kind === "clarify" && s.options.map((o) => o.path)).toEqual(expect.arrayContaining(["/my-sen-students", "/teacher-at-risk"]));
   });
   it("unknown page", () => expect(nav("open the zebra").kind).toBe("not-found"));
   it("already there", () => expect(nav("open timetable", { currentPath: "/timetable" }).kind).toBe("already"));

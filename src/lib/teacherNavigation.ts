@@ -52,7 +52,6 @@ export const TEACHER_EXTRA_PHRASES: Record<string, string[]> = {
   "/teacher-communication": ["communications", "message", "messages", "messaging", "communication center", "communication centre", "parent messages"],
   "/teacher/appointments": ["appointment", "meetings", "parent meetings", "parent teacher meeting", "ptm"],
   "/report-cards": ["report card", "marks card", "grade card", "result", "results"],
-  "/my-sen-students": ["sen students", "sen", "special education", "special needs students"],
   "/teacher-electives": ["elective", "electives", "my electives"],
   "/teacher-at-risk": ["at risk", "at risk students", "students at risk", "struggling students", "student watch"],
   "/teacher-behaviour": ["behavior", "behaviour", "behavior dashboard", "student behaviour", "student behavior", "discipline"],
@@ -69,13 +68,15 @@ export const TEACHER_EXTRA_PHRASES: Record<string, string[]> = {
   "/marketplace": ["market place", "store"],
   "/invigilation": ["invigilate", "invigilator", "exam duty", "invigilation duty"],
   "/houses": ["house", "house points", "house system"],
-  "/competency-assessment": ["competency", "competencies"],
   "/settings": ["setting", "preferences", "account settings"],
 };
 
 // Tabs of a sidebar item that are real routes but have no row of their own (listed under the item's `alsoActiveOn`).
 const SUB_DESTINATIONS = [
-  { path: "/mock-exams", parentPath: "/item-bank", title: "Mock Exams" }, // tab of "Item Bank & Mock Exams"
+  // Tabs of "Assessment Builder" (the assessment hub) - no sidebar rows of their own.
+  { path: "/item-bank", parentPath: "/assessment-builder", title: "Item Bank" },
+  { path: "/mock-exams", parentPath: "/assessment-builder", title: "Mock Exams" },
+  { path: "/exam-reviews", parentPath: "/assessment-builder", title: "Exam Reviews" },
   { path: "/class-velocity", parentPath: "/class-mastery", title: "Class Velocity" }, // tab of "Class Mastery"
 ];
 
