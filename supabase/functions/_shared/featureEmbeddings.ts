@@ -39,8 +39,8 @@ export function buildEmbedBody(text: string, taskType: EmbedTask, model: string,
   };
 }
 
-/** Statuses where ANOTHER key may well work: invalid/blocked key (400, 401, 403), rate limit (429), server error (5xx). */
-const isKeyProblem = (status: number): boolean => status === 400 || status === 401 || status === 403 || status === 429 || status >= 500;
+/** Statuses where ANOTHER key may well work: invalid/blocked key (400, 401, 403), billing/credits exhausted (402), rate limit (429), server error (5xx). */
+const isKeyProblem = (status: number): boolean => status === 400 || status === 401 || status === 402 || status === 403 || status === 429 || status >= 500;
 
 async function post(url: string, body: unknown, key: string, timeoutMs: number, fetchImpl: typeof fetch): Promise<Response> {
   const controller = new AbortController();

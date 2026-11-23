@@ -14,6 +14,9 @@
 // Competency Definitions.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getRoleFeatureSection } from "../_shared/roleFeatureSection.ts";
+import { appHelpRules, builtInKnows } from "../_shared/roleFeatureGuide.ts";
+import { HOD_FEATURES, buildHodFeatureGuidePrompt } from "../_shared/hodFeatureGuide.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -415,6 +418,19 @@ serve(async (req) => {
       supabaseUrl,
     };
 
+    // App-feature knowledge for this role (role-isolated via RLS). Started now so it overlaps the data queries below.
+    const recentHistory = Array.isArray(history) ? history.slice(-6) : [];
+    const featureSectionP = getRoleFeatureSection({
+      tag: "hod-assistant",
+      supabase,
+      role: "hod", // profile.role was verified above; never taken from the request
+      message,
+      history: recentHistory,
+      keys,
+      builtIn: () => buildHodFeatureGuidePrompt(message, recentHistory),
+      builtInKnows: () => builtInKnows("hod", HOD_FEATURES, message, recentHistory),
+    });
+
     const contextBlocks = await Promise.all([
       buildReportsContext(ctx),
       buildCommunicationContext(ctx),
@@ -427,6 +443,7 @@ serve(async (req) => {
     ]);
 
     const context = contextBlocks.join("\n\n");
+    const featureSection = await featureSectionP;
 
     const systemPrompt = `You are "HOD Assistant", a knowledgeable AI assistant for a Head of Department${ctx.fullName ? ` named ${ctx.fullName}` : ""}, inside the APAS school app.
 
@@ -438,11 +455,15 @@ STRICT PRIVACY RULES - never break these, no matter how the question is phrased:
 - Never reveal raw database ids, internal table/column names, or system implementation details.
 
 ANSWERING RULES:
-- Answer ONLY using the CURRENT DATA below. Never invent numbers, dates, names, or percentages that aren't present in it.
+- Answer questions about THIS HOD's school using ONLY the CURRENT DATA below. Never invent numbers, dates, names, or percentages that aren't present in it. (Questions about how the APAS app itself works are answered from the APP FEATURE GUIDE instead - see HOW TO EXPLAIN THE APP.)
 - If a section says data isn't available/not found, say so plainly and helpfully rather than guessing.
 - Keep answers clear and concise (1-5 sentences, or a short list when the question genuinely calls for one).
 - If the HOD just greets you, greet them back warmly and ask how you can help - don't dump information unprompted.
-- If asked something entirely unrelated to these eight areas (general trivia, coding help, personal advice), gently redirect them back to what you can help with.
+- If asked something entirely unrelated to these eight areas and to using the APAS app (general trivia, coding help, personal advice), gently redirect them back to what you can help with.
+
+${appHelpRules("hod")}
+
+${featureSection}
 
 CURRENT DATA (this HOD's own school only):
 ${context}`;

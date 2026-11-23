@@ -1,0 +1,2346 @@
+{
+  "schema": 1,
+  "role": "hod",
+  "docs": [
+    {
+      "key": "manual:ask-apas",
+      "role": "hod",
+      "kind": "manual",
+      "name": "Ask APAS (command bar)",
+      "aliases": [
+        "ask apas",
+        "command bar",
+        "ai command bar",
+        "ctrl j",
+        "quick command",
+        "type a command"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J (Command and J on a Mac).",
+      "accessRoles": null,
+      "purpose": "A quick way to get around and check things by typing a normal sentence, such as Open my timetable. It opens pages and shows information for your role and your school. When a command would change something, it asks you to confirm first.",
+      "purposeSource": "manual",
+      "steps": [
+        "Press Ask APAS, or press Ctrl and J.",
+        "Type a sentence such as Open my timetable, then press Enter."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Confirm",
+          "Ask APAS",
+          "Ctrl J",
+          "Ask APAS (AI command bar)"
+        ],
+        "headings": [
+          "Ask APAS",
+          "Try saying"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/command-bar/CommandBar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d49ca5511943d094",
+      "reviewedFactsHash": "d49ca5511943d094",
+      "content": "Ask APAS (command bar)\nWhere: The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J (Command and J on a Mac).\nWhat it is: A quick way to get around and check things by typing a normal sentence, such as Open my timetable. It opens pages and shows information for your role and your school. When a command would change something, it asks you to confirm first.\nHow to use it: (1) Press Ask APAS, or press Ctrl and J. (2) Type a sentence such as Open my timetable, then press Enter.\nOn the screen: Buttons: Confirm; Ask APAS; Ctrl J; Ask APAS (AI command bar). Sections: Ask APAS; Try saying.",
+      "searchText": "Ask APAS (command bar) . ask apas . command bar . ai command bar . ctrl j . quick command . type a command . A quick way to get around and check things by typing a normal sentence, such as Open my timetable. It opens pages and shows information for your role and your school. When a command would change something, it asks you to confirm first. . Confirm . Ask APAS . Ctrl J . Ask APAS (AI command bar) . Ask APAS . Try saying",
+      "contentHash": "a530e474a628c859"
+    },
+    {
+      "key": "manual:global-search",
+      "role": "hod",
+      "kind": "manual",
+      "name": "Search",
+      "aliases": [
+        "search box",
+        "global search",
+        "ctrl k",
+        "find something",
+        "look something up"
+      ],
+      "keywords": [
+        "search"
+      ],
+      "route": null,
+      "where": "The search box at the top of every page. The keyboard shortcut is Ctrl and K (Command and K on a Mac).",
+      "accessRoles": null,
+      "purpose": "Looks things up across APAS, such as students, teachers and staff, lessons, exams, homework and classes. You only see results your role is allowed to open.",
+      "purposeSource": "manual",
+      "steps": [
+        "Click the search box at the top, or press Ctrl and K.",
+        "Type what you are looking for and pick a result."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Search",
+          "All",
+          "Clear"
+        ],
+        "headings": [
+          "Search APAS",
+          "Try searching for"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/search/UniversalSearch.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "857236d04674d812",
+      "reviewedFactsHash": "857236d04674d812",
+      "content": "Search\nWhere: The search box at the top of every page. The keyboard shortcut is Ctrl and K (Command and K on a Mac).\nWhat it is: Looks things up across APAS, such as students, teachers and staff, lessons, exams, homework and classes. You only see results your role is allowed to open.\nHow to use it: (1) Click the search box at the top, or press Ctrl and K. (2) Type what you are looking for and pick a result.\nOn the screen: Buttons: Search; All; Clear. Sections: Search APAS; Try searching for.",
+      "searchText": "Search . search box . global search . ctrl k . find something . look something up . search . Looks things up across APAS, such as students, teachers and staff, lessons, exams, homework and classes. You only see results your role is allowed to open. . Search . All . Clear . Search APAS . Try searching for",
+      "contentHash": "d8d8a1111dbadf62"
+    },
+    {
+      "key": "nav:/academic-calendar",
+      "role": "hod",
+      "kind": "page",
+      "name": "Academic Calendar",
+      "aliases": [],
+      "keywords": [],
+      "route": "/academic-calendar",
+      "where": "Left menu, Academic Calendar.",
+      "accessRoles": null,
+      "purpose": "Supports PDF, Word (.docx), Excel, CSV, TXT",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Upload Document",
+          "Add Event"
+        ],
+        "headings": [
+          "Academic Calendar",
+          "Edit Event Add Event",
+          "Upload Academic Calendar Document"
+        ],
+        "inputs": [
+          "Title *",
+          "e.g. Diwali Holiday",
+          "Event Type *",
+          "Start Date *",
+          "End Date *",
+          "Description",
+          "Optional details...",
+          "Or paste document content directly"
+        ],
+        "messages": [
+          "No events on this day",
+          "No upcoming events"
+        ]
+      },
+      "sources": [
+        "src/pages/AcademicCalendar.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "9613e053c2b8d442",
+      "reviewedFactsHash": "9613e053c2b8d442",
+      "sharedScreen": true,
+      "content": "Academic Calendar\nWhere: Left menu, Academic Calendar.\nWhat it is: Supports PDF, Word (.docx), Excel, CSV, TXT\nOn the screen: Buttons: Upload Document; Add Event. Sections: Academic Calendar; Edit Event Add Event; Upload Academic Calendar Document. Fields: Title *; e.g. Diwali Holiday; Event Type *; Start Date *; End Date *; Description; Optional details; Or paste document content directly. Messages it can show: No events on this day; No upcoming events.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Academic Calendar . Supports PDF, Word (.docx), Excel, CSV, TXT . Upload Document . Add Event . Academic Calendar . Edit Event Add Event . Upload Academic Calendar Document",
+      "contentHash": "8127d96b9a4756e8"
+    },
+    {
+      "key": "nav:/admin",
+      "role": "hod",
+      "kind": "page",
+      "name": "Admin Panel",
+      "aliases": [],
+      "keywords": [],
+      "route": "/admin",
+      "where": "Left menu, Admin Panel.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "School-wide settings for Live Classes (virtual classrooms): automatic recording and automatic attendance rules.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Classes",
+          "Notifications",
+          "Lesson Plans",
+          "Live Classes",
+          "Students",
+          "Teachers",
+          "Approvals",
+          "Questions",
+          "Config"
+        ],
+        "buttons": [
+          "Import Excel",
+          "New Class",
+          "Create Class",
+          "Edit Class",
+          "Saving...",
+          "Save",
+          "Adding...",
+          "Add Student",
+          "Edit student",
+          "Remove from class",
+          "Save Changes",
+          "Assign",
+          "Choose File",
+          "Download Template"
+        ],
+        "headings": [
+          "Master User Panel",
+          "Class Management",
+          "Create New Class",
+          "Edit student",
+          "Remove from class",
+          "Edit Student",
+          "Student Allotment",
+          "Teacher-to-Class Assignment"
+        ],
+        "inputs": [
+          "Class Name",
+          "e.g. Class 5, Nursery, LKG",
+          "Section",
+          "Assigned Teachers",
+          "Add New Student to Class",
+          "Student Name *",
+          "Student ID",
+          "Date of Birth"
+        ],
+        "messages": [
+          "No classes created yet.",
+          "No teachers assigned yet.",
+          "No students assigned yet.",
+          "No students assigned",
+          "No teachers assigned",
+          "No teachers found."
+        ]
+      },
+      "sources": [
+        "src/pages/AdminPanel.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/ExcelImportModal.tsx",
+        "src/components/DiagnosticApprovalPanel.tsx",
+        "src/components/AdminLessonPlansView.tsx",
+        "src/components/live-recordings/LiveClassSettingsPanel.tsx",
+        "src/components/live-attendance/LiveAttendanceRulesCard.tsx",
+        "src/components/live-recordings/LiveRecordingSettingsCard.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c457c90534f2eab1",
+      "reviewedFactsHash": "c457c90534f2eab1",
+      "sharedScreen": true,
+      "content": "Admin Panel\nWhere: Left menu, Admin Panel.\nWhat it is: School-wide settings for Live Classes (virtual classrooms): automatic recording and automatic attendance rules.\nOn the screen: Tabs: Classes; Notifications; Lesson Plans; Live Classes; Students; Teachers; Approvals; Questions; Config. Buttons: Import Excel; New Class; Create Class; Edit Class; Saving; Save; Adding; Add Student; Edit student; Remove from class; Save Changes; Assign; Choose File; Download Template. Sections: Master User Panel; Class Management; Create New Class; Edit student; Remove from class; Edit Student; Student Allotment; Teacher-to-Class Assignment. Fields: Class Name; e.g. Class 5, Nursery, LKG; Section; Assigned Teachers; Add New Student to Class; Student Name *; Student ID; Date of Birth. Messages it can show: No classes created yet; No teachers assigned yet; No students assigned yet; No students assigned; No teachers assigned; No teachers found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Admin Panel . School-wide settings for Live Classes (virtual classrooms): automatic recording and automatic attendance rules. . Classes . Notifications . Lesson Plans . Live Classes . Students . Teachers . Approvals . Questions . Config . Import Excel . New Class . Create Class . Edit Class . Saving... . Save . Adding... . Add Student . Edit student . Remove from class . Save Changes . Assign . Choose File . Download Template . Master User Panel . Class Management . Create New Class . Edit student . Remove from class . Edit Student . Student Allotment . Teacher-to-Class Assignment",
+      "contentHash": "17405f1370ae01e8"
+    },
+    {
+      "key": "nav:/admin-communication",
+      "role": "hod",
+      "kind": "page",
+      "name": "Communication",
+      "aliases": [],
+      "keywords": [],
+      "route": "/admin-communication",
+      "where": "Left menu, Communication.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "ScheduleMessageDialog.tsx Compose-time dialog for scheduling a message (and editing a scheduled one) inside the existing Communication Centers.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Teachers",
+          "Parents",
+          "Students",
+          "Drivers"
+        ],
+        "buttons": [
+          "Whole School",
+          "Announce to everyone",
+          "Photo or video",
+          "Attach file",
+          "Stop recording",
+          "Insert emoji",
+          "Schedule send",
+          "Open delivery report",
+          "Keep",
+          "Remove",
+          "Hide",
+          "Review recipients",
+          "Select all",
+          "Clear"
+        ],
+        "headings": [
+          "Communication Center",
+          "Photo or video",
+          "Attach file",
+          "Stop recording",
+          "Insert emoji",
+          "Schedule send",
+          "Edit scheduled message Schedule message",
+          "Cancel this scheduled message?"
+        ],
+        "inputs": [
+          "Search teacher/parent/student",
+          "Write a broadcast message...",
+          "Search recipient",
+          "Message",
+          "Write your message…",
+          "Send on"
+        ],
+        "messages": [
+          "No contacts found.",
+          "No messages yet. Start the conversation below.",
+          "No recipient records for this message.",
+          "No recipients match this filter.",
+          "Nothing scheduled. Write a message and use the clock button to schedule it."
+        ]
+      },
+      "sources": [
+        "src/pages/AdminCommunicationCenter.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/communication/MessageDeliveryReport.tsx",
+        "src/components/communication/ScheduleMessageDialog.tsx",
+        "src/components/communication/ScheduledMessagesPanel.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "e3b34167e216cf07",
+      "reviewedFactsHash": "e3b34167e216cf07",
+      "sharedScreen": true,
+      "content": "Communication\nWhere: Left menu, Communication.\nWhat it is: ScheduleMessageDialog.tsx Compose-time dialog for scheduling a message (and editing a scheduled one) inside the existing Communication Centers.\nOn the screen: Tabs: Teachers; Parents; Students; Drivers. Buttons: Whole School; Announce to everyone; Photo or video; Attach file; Stop recording; Insert emoji; Schedule send; Open delivery report; Keep; Remove; Hide; Review recipients; Select all; Clear. Sections: Communication Center; Photo or video; Attach file; Stop recording; Insert emoji; Schedule send; Edit scheduled message Schedule message; Cancel this scheduled message?. Fields: Search teacher/parent/student; Write a broadcast message; Search recipient; Message; Write your message…; Send on. Messages it can show: No contacts found; No messages yet. Start the conversation below; No recipient records for this message; No recipients match this filter; Nothing scheduled. Write a message and use the clock button to schedule it.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Communication . ScheduleMessageDialog.tsx Compose-time dialog for scheduling a message (and editing a scheduled one) inside the existing Communication Centers. . Teachers . Parents . Students . Drivers . Whole School . Announce to everyone . Photo or video . Attach file . Stop recording . Insert emoji . Schedule send . Open delivery report . Keep . Remove . Hide . Review recipients . Select all . Clear . Communication Center . Photo or video . Attach file . Stop recording . Insert emoji . Schedule send . Edit scheduled message Schedule message . Cancel this scheduled message?",
+      "contentHash": "d542d03b06c21bc8"
+    },
+    {
+      "key": "nav:/ai-quality-safety",
+      "role": "hod",
+      "kind": "page",
+      "name": "AI Quality & Safety",
+      "aliases": [],
+      "keywords": [],
+      "route": "/ai-quality-safety",
+      "where": "Left menu, AI Quality & Safety.",
+      "accessRoles": [
+        "knsoft_admin",
+        "admin",
+        "principal",
+        "school_admin",
+        "hod"
+      ],
+      "purpose": "AI quality and safety control.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Mark reviewed"
+        ],
+        "headings": [
+          "AI Quality & Safety",
+          "Check AI output",
+          "Average scores",
+          "Evaluation log"
+        ],
+        "inputs": [
+          "AI output *",
+          "Paste the AI-generated text…",
+          "Question asked (optional)",
+          "Reference / textbook text (optional)",
+          "Class / age",
+          "Class 5",
+          "Subject",
+          "Science"
+        ],
+        "messages": [
+          "No evaluations yet. AI Tutor replies are checked automatically as students use it."
+        ]
+      },
+      "sources": [
+        "src/pages/AIQualitySafety.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "aa9ecad8afe531a8",
+      "reviewedFactsHash": "aa9ecad8afe531a8",
+      "sharedScreen": true,
+      "content": "AI Quality & Safety\nWhere: Left menu, AI Quality & Safety.\nWhat it is: AI quality and safety control.\nOn the screen: Buttons: Mark reviewed. Sections: AI Quality & Safety; Check AI output; Average scores; Evaluation log. Fields: AI output *; Paste the AI-generated text…; Question asked (optional); Reference / textbook text (optional); Class / age; Class 5; Subject; Science. Messages it can show: No evaluations yet. AI Tutor replies are checked automatically as students use it.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "AI Quality & Safety . AI quality and safety control. . Mark reviewed . AI Quality & Safety . Check AI output . Average scores . Evaluation log",
+      "contentHash": "77c3564e3fc23fd0"
+    },
+    {
+      "key": "nav:/alerts",
+      "role": "hod",
+      "kind": "page",
+      "name": "Alerts",
+      "aliases": [],
+      "keywords": [],
+      "route": "/alerts",
+      "where": "Left menu, Alerts.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Export CSV",
+          "Bulk Resolve",
+          "Mark All Read"
+        ],
+        "headings": [
+          "Alerts",
+          "All Clear!"
+        ],
+        "inputs": [],
+        "messages": [
+          "No alerts for you. Your teacher manages delivery mismatch alerts.",
+          "No alerts found"
+        ]
+      },
+      "sources": [
+        "src/pages/Alerts.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/StatusBadge.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (5 labels found)"
+      ],
+      "factsHash": "5075232b1b32ab6e",
+      "reviewedFactsHash": "5075232b1b32ab6e",
+      "sharedScreen": true,
+      "content": "Alerts\nWhere: Left menu, Alerts.\nWhat it is: (not documented yet)\nOn the screen: Buttons: Export CSV; Bulk Resolve; Mark All Read. Sections: Alerts; All Clear!. Messages it can show: No alerts for you. Your teacher manages delivery mismatch alerts; No alerts found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Alerts . Export CSV . Bulk Resolve . Mark All Read . Alerts . All Clear!",
+      "contentHash": "37f79aff33a737c6"
+    },
+    {
+      "key": "nav:/billing",
+      "role": "hod",
+      "kind": "page",
+      "name": "Billing",
+      "aliases": [],
+      "keywords": [],
+      "route": "/billing",
+      "where": "Left menu, Billing.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Plans",
+          "Usage",
+          "Invoices"
+        ],
+        "buttons": [
+          "Contact Sales",
+          "Select Plan"
+        ],
+        "headings": [
+          "Billing & Plans",
+          "Current Subscription",
+          "Students",
+          "Teachers",
+          "AI Generations",
+          "Storage"
+        ],
+        "inputs": [],
+        "messages": [
+          "No invoices yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Billing.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (11 labels found)"
+      ],
+      "factsHash": "787261ee098b78aa",
+      "reviewedFactsHash": "787261ee098b78aa",
+      "sharedScreen": true,
+      "content": "Billing\nWhere: Left menu, Billing.\nWhat it is: (not documented yet)\nOn the screen: Tabs: Plans; Usage; Invoices. Buttons: Contact Sales; Select Plan. Sections: Billing & Plans; Current Subscription; Students; Teachers; AI Generations; Storage. Messages it can show: No invoices yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Billing . Plans . Usage . Invoices . Contact Sales . Select Plan . Billing & Plans . Current Subscription . Students . Teachers . AI Generations . Storage",
+      "contentHash": "667166672c996b7d"
+    },
+    {
+      "key": "nav:/certificates",
+      "role": "hod",
+      "kind": "page",
+      "name": "Certificates",
+      "aliases": [],
+      "keywords": [],
+      "route": "/certificates",
+      "where": "Left menu, Certificates.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Templates (visual designer) · Issue (bulk, showing who qualifies) · Issued (download, revoke, verification link).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "New template",
+          "Edit",
+          "Archive",
+          "Clear",
+          "PDF",
+          "Link",
+          "Revoke",
+          "Revoke certificate",
+          "Preview PDF",
+          "Add text",
+          "Add QR code",
+          "Change background",
+          "Add background image",
+          "Remove"
+        ],
+        "headings": [
+          "Revoke this certificate?",
+          "Certificates",
+          "Edit template New template"
+        ],
+        "inputs": [
+          "Choose a template",
+          "Search students",
+          "Search by student, certificate or code",
+          "Reason, kept for your records",
+          "Template name",
+          "e.g. Course completion 2026",
+          "Certificate title",
+          "Border"
+        ],
+        "messages": [
+          "No templates yet. Create one to start issuing certificates.",
+          "No students found.",
+          "No certificates issued yet.",
+          "No courses found"
+        ]
+      },
+      "sources": [
+        "src/pages/Certificates.tsx",
+        "src/components/certificates/CertificateDesigner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "d9264a0575118ed8",
+      "reviewedFactsHash": "d9264a0575118ed8",
+      "sharedScreen": true,
+      "content": "Certificates\nWhere: Left menu, Certificates.\nWhat it is: Templates (visual designer) · Issue (bulk, showing who qualifies) · Issued (download, revoke, verification link).\nOn the screen: Buttons: New template; Edit; Archive; Clear; PDF; Link; Revoke; Revoke certificate; Preview PDF; Add text; Add QR code; Change background; Add background image; Remove. Sections: Revoke this certificate?; Certificates; Edit template New template. Fields: Choose a template; Search students; Search by student, certificate or code; Reason, kept for your records; Template name; e.g. Course completion 2026; Certificate title; Border. Messages it can show: No templates yet. Create one to start issuing certificates; No students found; No certificates issued yet; No courses found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Certificates . Templates (visual designer) · Issue (bulk, showing who qualifies) · Issued (download, revoke, verification link). . New template . Edit . Archive . Clear . PDF . Link . Revoke . Revoke certificate . Preview PDF . Add text . Add QR code . Change background . Add background image . Remove . Revoke this certificate? . Certificates . Edit template New template",
+      "contentHash": "984d7ca396497375"
+    },
+    {
+      "key": "nav:/class-mastery",
+      "role": "hod",
+      "kind": "page",
+      "name": "Class Mastery",
+      "aliases": [],
+      "keywords": [],
+      "route": "/class-mastery",
+      "where": "Left menu, Class Mastery.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/ClassInsightsRoute.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (0 labels found)"
+      ],
+      "factsHash": "8cd7f01de40b2c68",
+      "reviewedFactsHash": "8cd7f01de40b2c68",
+      "sharedScreen": true,
+      "content": "Class Mastery\nWhere: Left menu, Class Mastery.\nWhat it is: (not documented yet)\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Class Mastery",
+      "contentHash": "485bd1354857ffe4"
+    },
+    {
+      "key": "nav:/class-velocity",
+      "role": "hod",
+      "kind": "page",
+      "name": "Class Velocity",
+      "aliases": [],
+      "keywords": [],
+      "route": "/class-velocity",
+      "where": "Left menu, Class Velocity.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/ClassInsightsRoute.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (0 labels found)"
+      ],
+      "factsHash": "66a2719963691ae6",
+      "reviewedFactsHash": "66a2719963691ae6",
+      "sharedScreen": true,
+      "content": "Class Velocity\nWhere: Left menu, Class Velocity.\nWhat it is: (not documented yet)\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Class Velocity",
+      "contentHash": "73727be05af8e75d"
+    },
+    {
+      "key": "nav:/competency-definitions",
+      "role": "hod",
+      "kind": "page",
+      "name": "Competency Definitions",
+      "aliases": [],
+      "keywords": [],
+      "route": "/competency-definitions",
+      "where": "Left menu, Competency Definitions.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Any subject taught in the school — the teacher assigned to that subject for a class will be able to assess it.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Add competency",
+          "Save changes",
+          "Add your first competency"
+        ],
+        "headings": [
+          "Competency & Outcomes Management",
+          "Edit competency Add competency"
+        ],
+        "inputs": [
+          "Subject",
+          "Competency name",
+          "e.g. Problem Solving",
+          "Grade level",
+          "Description (optional)",
+          "What does mastering this competency look like?",
+          "All subjects",
+          "All grades"
+        ],
+        "messages": [
+          "No competencies defined yet.",
+          "No competencies match this filter."
+        ]
+      },
+      "sources": [
+        "src/pages/CompetencyDefinitions.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "798b4489830264c8",
+      "reviewedFactsHash": "798b4489830264c8",
+      "sharedScreen": true,
+      "content": "Competency Definitions\nWhere: Left menu, Competency Definitions.\nWhat it is: Any subject taught in the school — the teacher assigned to that subject for a class will be able to assess it.\nOn the screen: Buttons: Add competency; Save changes; Add your first competency. Sections: Competency & Outcomes Management; Edit competency Add competency. Fields: Subject; Competency name; e.g. Problem Solving; Grade level; Description (optional); What does mastering this competency look like?; All subjects; All grades. Messages it can show: No competencies defined yet; No competencies match this filter.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Competency Definitions . Any subject taught in the school — the teacher assigned to that subject for a class will be able to assess it. . Add competency . Save changes . Add your first competency . Competency & Outcomes Management . Edit competency Add competency",
+      "contentHash": "2562315587623768"
+    },
+    {
+      "key": "nav:/competency-heatmap",
+      "role": "hod",
+      "kind": "page",
+      "name": "Competency Heatmap",
+      "aliases": [],
+      "keywords": [],
+      "route": "/competency-heatmap",
+      "where": "Left menu, Competency Heatmap.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Competency Heatmap"
+        ],
+        "inputs": [
+          "Select subject",
+          "All grades"
+        ],
+        "messages": [
+          "No competencies defined yet. Add some from Competency & Outcomes Management first.",
+          "No competencies match this filter."
+        ]
+      },
+      "sources": [
+        "src/pages/CompetencyHeatmap.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (3 labels found)"
+      ],
+      "factsHash": "415190ecdc6b14e5",
+      "reviewedFactsHash": "415190ecdc6b14e5",
+      "sharedScreen": true,
+      "content": "Competency Heatmap\nWhere: Left menu, Competency Heatmap.\nWhat it is: (not documented yet)\nOn the screen: Sections: Competency Heatmap. Fields: Select subject; All grades. Messages it can show: No competencies defined yet. Add some from Competency & Outcomes Management first; No competencies match this filter.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Competency Heatmap . Competency Heatmap",
+      "contentHash": "3a33639e0b33c0ce"
+    },
+    {
+      "key": "nav:/concept-dependencies",
+      "role": "hod",
+      "kind": "page",
+      "name": "Concept Dependencies",
+      "aliases": [],
+      "keywords": [],
+      "route": "/concept-dependencies",
+      "where": "Left menu, Concept Dependencies.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Select a concept to see its common misconceptions.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Back to topic overview"
+        ],
+        "headings": [
+          "Knowledge Graph Engine",
+          "Couldn't load the topic graph",
+          "Couldn't load the concepts",
+          "Misconceptions"
+        ],
+        "inputs": [
+          "Choose a class first"
+        ],
+        "messages": [
+          "No misconceptions catalogued for this concept yet."
+        ]
+      },
+      "sources": [
+        "src/pages/KnowledgeGraphEngine.tsx",
+        "src/components/knowledge-graph/GraphCanvas.tsx",
+        "src/components/knowledge-graph/MisconceptionsList.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "dea762d2684b2ca5",
+      "reviewedFactsHash": "dea762d2684b2ca5",
+      "sharedScreen": true,
+      "content": "Concept Dependencies\nWhere: Left menu, Concept Dependencies.\nWhat it is: Select a concept to see its common misconceptions.\nOn the screen: Buttons: Back to topic overview. Sections: Knowledge Graph Engine; Couldn't load the topic graph; Couldn't load the concepts; Misconceptions. Fields: Choose a class first. Messages it can show: No misconceptions catalogued for this concept yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Concept Dependencies . Select a concept to see its common misconceptions. . Back to topic overview . Knowledge Graph Engine . Couldn't load the topic graph . Couldn't load the concepts . Misconceptions",
+      "contentHash": "86ae6cdc0a90bc16"
+    },
+    {
+      "key": "nav:/content-approval",
+      "role": "hod",
+      "kind": "page",
+      "name": "Content Approval",
+      "aliases": [],
+      "keywords": [],
+      "route": "/content-approval",
+      "where": "Left menu, Content Approval.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher"
+      ],
+      "purpose": "Content Approval: one page, tabs by role.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "My content",
+          "Approval queue",
+          "Settings"
+        ],
+        "buttons": [
+          "Course structure",
+          "Turn it on",
+          "Clear filters",
+          "Send reminders",
+          "Previous page",
+          "Next page",
+          "Move up",
+          "Move down",
+          "Remove stage",
+          "Add stage",
+          "Discard changes",
+          "Approve",
+          "Request changes",
+          "Reject"
+        ],
+        "headings": [
+          "Content approval",
+          "Approval history",
+          "Resubmit for review",
+          "Start a revision?",
+          "Archive this item?",
+          "Publish without review?",
+          "Approval workflow",
+          "Approval chain"
+        ],
+        "inputs": [
+          "Search title or subject…",
+          "Search title or subject, press Enter…",
+          "Require approval before publishing",
+          "Allow people to approve their own submissions",
+          "Admin approval completes all stages",
+          "After final approval",
+          "Reviewer",
+          "Explain what needs to happen…"
+        ],
+        "messages": [
+          "You don't have any content yet. Add modules, chapters and topics on the Course Structure page, then submit them for review here.",
+          "Nothing matches these filters.",
+          "Nothing is waiting for review. 🎉",
+          "No submissions match these filters.",
+          "No actions available for you on this submission.",
+          "No approval activity yet."
+        ]
+      },
+      "sources": [
+        "src/pages/ContentApproval.tsx",
+        "src/components/approval/MyContentTab.tsx",
+        "src/components/approval/ApprovalQueueTab.tsx",
+        "src/components/approval/ApprovalSettingsTab.tsx",
+        "src/components/approval/ReviewSheet.tsx",
+        "src/components/approval/HistoryTimeline.tsx",
+        "src/components/approval/ReasonDialog.tsx",
+        "src/components/approval/StatusPill.tsx",
+        "src/components/approval/ApprovalStepper.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "926c8318e154aa50",
+      "reviewedFactsHash": "926c8318e154aa50",
+      "sharedScreen": true,
+      "content": "Content Approval\nWhere: Left menu, Content Approval.\nWhat it is: Content Approval: one page, tabs by role.\nOn the screen: Tabs: My content; Approval queue; Settings. Buttons: Course structure; Turn it on; Clear filters; Send reminders; Previous page; Next page; Move up; Move down; Remove stage; Add stage; Discard changes; Approve; Request changes; Reject. Sections: Content approval; Approval history; Resubmit for review; Start a revision?; Archive this item?; Publish without review?; Approval workflow; Approval chain. Fields: Search title or subject…; Search title or subject, press Enter…; Require approval before publishing; Allow people to approve their own submissions; Admin approval completes all stages; After final approval; Reviewer; Explain what needs to happen…. Messages it can show: You don't have any content yet. Add modules, chapters and topics on the Course Structure page, then submit them for review here; Nothing matches these filters; Nothing is waiting for review. 🎉; No submissions match these filters; No actions available for you on this submission; No approval activity yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Content Approval . Content Approval: one page, tabs by role. . My content . Approval queue . Settings . Course structure . Turn it on . Clear filters . Send reminders . Previous page . Next page . Move up . Move down . Remove stage . Add stage . Discard changes . Approve . Request changes . Reject . Content approval . Approval history . Resubmit for review . Start a revision? . Archive this item? . Publish without review? . Approval workflow . Approval chain",
+      "contentHash": "fb6960c6d27c7b5d"
+    },
+    {
+      "key": "nav:/course-structure",
+      "role": "hod",
+      "kind": "page",
+      "name": "Course Structure",
+      "aliases": [],
+      "keywords": [],
+      "route": "/course-structure",
+      "where": "Left menu, Course Structure.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher"
+      ],
+      "purpose": "Need terms, rollover or promotions?",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "By topic",
+          "Details",
+          "Materials",
+          "Prereqs",
+          "Work",
+          "Preview"
+        ],
+        "buttons": [
+          "Progress",
+          "New session",
+          "New subject",
+          "Semester",
+          "Subject",
+          "Move topic up",
+          "Move topic down",
+          "View",
+          "Move chapter up",
+          "Move chapter down",
+          "Topic",
+          "Add module",
+          "Publish",
+          "Unpublish"
+        ],
+        "headings": [
+          "Course Structure",
+          "Not assigned to a session",
+          "New academic session",
+          "New semester",
+          "Edit subject Add subject"
+        ],
+        "inputs": [
+          "Search subjects, modules, chapters and topics…",
+          "Name",
+          "Starts",
+          "Ends",
+          "Semester 1",
+          "Subject name",
+          "e.g. Mathematics",
+          "Class / grade"
+        ],
+        "messages": [
+          "No subjects assigned to you yet",
+          "No subjects yet",
+          "No matching topics.",
+          "No topics yet.",
+          "No modules yet",
+          "Nothing matches your search or filter."
+        ]
+      },
+      "sources": [
+        "src/pages/CourseStructureManager.tsx",
+        "src/components/course-structure/SubjectTree.tsx",
+        "src/components/course-structure/SubjectDialog.tsx",
+        "src/components/course-structure/SubjectStatsDialog.tsx",
+        "src/components/course-structure/NodeDialog.tsx",
+        "src/components/course-structure/TopicEditorSheet.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c5354562805dccf3",
+      "reviewedFactsHash": "c5354562805dccf3",
+      "sharedScreen": true,
+      "content": "Course Structure\nWhere: Left menu, Course Structure.\nWhat it is: Need terms, rollover or promotions?\nOn the screen: Tabs: By topic; Details; Materials; Prereqs; Work; Preview. Buttons: Progress; New session; New subject; Semester; Subject; Move topic up; Move topic down; View; Move chapter up; Move chapter down; Topic; Add module; Publish; Unpublish. Sections: Course Structure; Not assigned to a session; New academic session; New semester; Edit subject Add subject. Fields: Search subjects, modules, chapters and topics…; Name; Starts; Ends; Semester 1; Subject name; e.g. Mathematics; Class / grade. Messages it can show: No subjects assigned to you yet; No subjects yet; No matching topics; No topics yet; No modules yet; Nothing matches your search or filter.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Course Structure . Need terms, rollover or promotions? . By topic . Details . Materials . Prereqs . Work . Preview . Progress . New session . New subject . Semester . Subject . Move topic up . Move topic down . View . Move chapter up . Move chapter down . Topic . Add module . Publish . Unpublish . Course Structure . Not assigned to a session . New academic session . New semester . Edit subject Add subject",
+      "contentHash": "5603f75d2c926a56"
+    },
+    {
+      "key": "nav:/dashboard",
+      "role": "hod",
+      "kind": "page",
+      "name": "Homework",
+      "aliases": [],
+      "keywords": [],
+      "route": "/dashboard",
+      "where": "Left menu, Homework.",
+      "accessRoles": null,
+      "purpose": "Class / school engagement overview for teachers (their classes) and admins / principals (their school).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Class comparison My classes",
+          "Students",
+          "Activities",
+          "Trend"
+        ],
+        "buttons": [
+          "Download Report",
+          "Start Homework",
+          "One at a Time",
+          "All Questions",
+          "Previous",
+          "Next",
+          "All classes",
+          "Recalculate",
+          "Calendar",
+          "Customize",
+          "Reset to default"
+        ],
+        "headings": [
+          "Homework",
+          "Your Homework",
+          "What You Can Do",
+          "How APAS Works",
+          "Students At Risk",
+          "About APAS",
+          "Admin Capabilities",
+          "Admin Workflow"
+        ],
+        "inputs": [
+          "Your Answer",
+          "Type your answer here...",
+          "Filter",
+          "Write a reply"
+        ],
+        "messages": [
+          "No classes assigned yet",
+          "You haven't been assigned to any classes yet.",
+          "No Homework Yet",
+          "You haven't submitted any homework yet.",
+          "No homework available.",
+          "No scored students yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Dashboard.tsx",
+        "src/components/SyllabusTracker.tsx",
+        "src/components/StudentReport.tsx",
+        "src/components/StudentHomework.tsx",
+        "src/components/engagement/EngagementOverviewPanel.tsx",
+        "src/components/video/VideoInsights.tsx",
+        "src/components/dashboard/DashboardHero.tsx",
+        "src/components/dashboard/DashStatCard.tsx",
+        "src/components/dashboard/PersonalizedDashboard.tsx",
+        "src/components/report/ReportContent.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "815de4faac3cbe35",
+      "reviewedFactsHash": "815de4faac3cbe35",
+      "sharedScreen": true,
+      "content": "Homework\nWhere: Left menu, Homework.\nWhat it is: Class / school engagement overview for teachers (their classes) and admins / principals (their school).\nOn the screen: Tabs: Class comparison My classes; Students; Activities; Trend. Buttons: Download Report; Start Homework; One at a Time; All Questions; Previous; Next; All classes; Recalculate; Calendar; Customize; Reset to default. Sections: Homework; Your Homework; What You Can Do; How APAS Works; Students At Risk; About APAS; Admin Capabilities; Admin Workflow. Fields: Your Answer; Type your answer here; Filter; Write a reply. Messages it can show: No classes assigned yet; You haven't been assigned to any classes yet; No Homework Yet; You haven't submitted any homework yet; No homework available; No scored students yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Homework . Class / school engagement overview for teachers (their classes) and admins / principals (their school). . Class comparison My classes . Students . Activities . Trend . Download Report . Start Homework . One at a Time . All Questions . Previous . Next . All classes . Recalculate . Calendar . Customize . Reset to default . Homework . Your Homework . What You Can Do . How APAS Works . Students At Risk . About APAS . Admin Capabilities . Admin Workflow",
+      "contentHash": "5ab20fbefca97918"
+    },
+    {
+      "key": "nav:/doubts",
+      "role": "hod",
+      "kind": "page",
+      "name": "Student Doubts",
+      "aliases": [],
+      "keywords": [],
+      "route": "/doubts",
+      "where": "Left menu, Student Doubts.",
+      "accessRoles": [
+        "student",
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Doubt tickets. Students ask a teacher and follow the replies; teachers work the doubts assigned to them; school",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Back to list",
+          "Send reply",
+          "Mark resolved",
+          "Reopen",
+          "Mark in progress",
+          "Ask a doubt"
+        ],
+        "headings": [
+          "Ask a doubt",
+          "My Doubts Student Doubts"
+        ],
+        "inputs": [
+          "Teacher",
+          "Subject",
+          "e.g. Mathematics",
+          "Your doubt",
+          "Explain what you didn't understand",
+          "Add more detail or ask a follow-up",
+          "Search doubts"
+        ],
+        "messages": [
+          "No teachers are assigned to your class yet",
+          "You haven't asked any doubts yet.",
+          "No doubts have been asked yet.",
+          "No doubts match these filters."
+        ]
+      },
+      "sources": [
+        "src/pages/Doubts.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "20586c7c7aadf9d0",
+      "reviewedFactsHash": "20586c7c7aadf9d0",
+      "sharedScreen": true,
+      "content": "Student Doubts\nWhere: Left menu, Student Doubts.\nWhat it is: Doubt tickets. Students ask a teacher and follow the replies; teachers work the doubts assigned to them; school\nOn the screen: Buttons: Back to list; Send reply; Mark resolved; Reopen; Mark in progress; Ask a doubt. Sections: Ask a doubt; My Doubts Student Doubts. Fields: Teacher; Subject; e.g. Mathematics; Your doubt; Explain what you didn't understand; Add more detail or ask a follow-up; Search doubts. Messages it can show: No teachers are assigned to your class yet; You haven't asked any doubts yet; No doubts have been asked yet; No doubts match these filters.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Student Doubts . Doubt tickets. Students ask a teacher and follow the replies; teachers work the doubts assigned to them; school . Back to list . Send reply . Mark resolved . Reopen . Mark in progress . Ask a doubt . Ask a doubt . My Doubts Student Doubts",
+      "contentHash": "d9b622c6ee5d72bd"
+    },
+    {
+      "key": "nav:/dpp-manage",
+      "role": "hod",
+      "kind": "page",
+      "name": "Daily Practice (DPP)",
+      "aliases": [],
+      "keywords": [],
+      "route": "/dpp-manage",
+      "where": "Left menu, Daily Practice (DPP).",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher"
+      ],
+      "purpose": "Score per day (percent).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Sets",
+          "To mark",
+          "Insights",
+          "School analytics",
+          "Settings"
+        ],
+        "buttons": [
+          "New practice set",
+          "Create a set",
+          "Edit",
+          "Assign / schedule",
+          "Results",
+          "Archive",
+          "Add",
+          "Add question",
+          "Export CSV",
+          "Answers",
+          "Save mark",
+          "Explain this to me",
+          "Ask the AI Tutor why"
+        ],
+        "headings": [
+          "Daily Practice",
+          "No practice sets yet",
+          "Locked: students have started",
+          "Practice set editor",
+          "Edit practice set New practice set",
+          "Question bank",
+          "Nothing to mark",
+          "Students who need support (last 30 days, below 50%)"
+        ],
+        "inputs": [
+          "Title",
+          "e.g. Algebra basics - Day 3",
+          "Subject",
+          "Class",
+          "e.g. Class 5",
+          "Chapter (optional)",
+          "Difficulty",
+          "Time limit (min)"
+        ],
+        "messages": [
+          "No reviewed questions match. Write your own below.",
+          "No students with a class were found in your school.",
+          "No students are below 50% right now.",
+          "No question is stumping the class yet (needs at least 3 answers).",
+          "No practice assigned in this period.",
+          "No teacher-created sets in this period."
+        ]
+      },
+      "sources": [
+        "src/pages/DppManage.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/EmptyState.tsx",
+        "src/components/dpp/DppSetEditor.tsx",
+        "src/components/dpp/DppAssignDialog.tsx",
+        "src/components/dpp/DppSetResults.tsx",
+        "src/components/dpp/DppManagePanels.tsx",
+        "src/components/dpp/DppResultView.tsx",
+        "src/components/StatCard.tsx",
+        "src/components/dpp/DppCharts.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "376419f6a9eaa3bc",
+      "reviewedFactsHash": "376419f6a9eaa3bc",
+      "sharedScreen": true,
+      "content": "Daily Practice (DPP)\nWhere: Left menu, Daily Practice (DPP).\nWhat it is: Score per day (percent).\nOn the screen: Tabs: Sets; To mark; Insights; School analytics; Settings. Buttons: New practice set; Create a set; Edit; Assign / schedule; Results; Archive; Add; Add question; Export CSV; Answers; Save mark; Explain this to me; Ask the AI Tutor why. Sections: Daily Practice; No practice sets yet; Locked: students have started; Practice set editor; Edit practice set New practice set; Question bank; Nothing to mark; Students who need support (last 30 days, below 50%). Fields: Title; e.g. Algebra basics - Day 3; Subject; Class; e.g. Class 5; Chapter (optional); Difficulty; Time limit (min). Messages it can show: No reviewed questions match. Write your own below; No students with a class were found in your school; No students are below 50% right now; No question is stumping the class yet (needs at least 3 answers); No practice assigned in this period; No teacher-created sets in this period.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Daily Practice (DPP) . Score per day (percent). . Sets . To mark . Insights . School analytics . Settings . New practice set . Create a set . Edit . Assign / schedule . Results . Archive . Add . Add question . Export CSV . Answers . Save mark . Explain this to me . Ask the AI Tutor why . Daily Practice . No practice sets yet . Locked: students have started . Practice set editor . Edit practice set New practice set . Question bank . Nothing to mark . Students who need support (last 30 days, below 50%)",
+      "contentHash": "d1dae2214999279d"
+    },
+    {
+      "key": "nav:/early-warning",
+      "role": "hod",
+      "kind": "page",
+      "name": "Early Warning",
+      "aliases": [],
+      "keywords": [],
+      "route": "/early-warning",
+      "where": "Left menu, Early Warning.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/EarlyWarningRoute.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (0 labels found)"
+      ],
+      "factsHash": "701bd5eec39c7c25",
+      "reviewedFactsHash": "701bd5eec39c7c25",
+      "sharedScreen": true,
+      "content": "Early Warning\nWhere: Left menu, Early Warning.\nWhat it is: (not documented yet)\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Early Warning",
+      "contentHash": "e1f58101e09e06ca"
+    },
+    {
+      "key": "nav:/hod-dashboard",
+      "role": "hod",
+      "kind": "page",
+      "name": "Home",
+      "aliases": [],
+      "keywords": [],
+      "route": "/hod-dashboard",
+      "where": "Left menu, Home.",
+      "accessRoles": [
+        "hod"
+      ],
+      "purpose": "HODDashboard.tsx — Head of Department Dashboard",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Teachers",
+          "Lessons"
+        ],
+        "buttons": [
+          "Calendar"
+        ],
+        "headings": [
+          "Department Teachers",
+          "Student Performance",
+          "Recent Lesson Plans"
+        ],
+        "inputs": [],
+        "messages": [
+          "No teachers found.",
+          "No students found.",
+          "No lessons yet."
+        ]
+      },
+      "sources": [
+        "src/pages/HODDashboard.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/dashboard/DashboardHero.tsx",
+        "src/components/dashboard/DashStatCard.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "0fabe4ea422b274f",
+      "reviewedFactsHash": "0fabe4ea422b274f",
+      "content": "Home\nWhere: Left menu, Home.\nWhat it is: HODDashboard.tsx — Head of Department Dashboard\nOn the screen: Tabs: Teachers; Lessons. Buttons: Calendar. Sections: Department Teachers; Student Performance; Recent Lesson Plans. Messages it can show: No teachers found; No students found; No lessons yet.",
+      "searchText": "Home . HODDashboard.tsx — Head of Department Dashboard . Teachers . Lessons . Calendar . Department Teachers . Student Performance . Recent Lesson Plans",
+      "contentHash": "1ad316fd5c23ab35"
+    },
+    {
+      "key": "nav:/houses",
+      "role": "hod",
+      "kind": "page",
+      "name": "Houses",
+      "aliases": [],
+      "keywords": [],
+      "route": "/houses",
+      "where": "Left menu, Houses.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student",
+        "parent",
+        "hod"
+      ],
+      "purpose": "Create your school's first house to get started.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Add House",
+          "Assign students",
+          "Award points",
+          "Edit",
+          "Delete"
+        ],
+        "headings": [
+          "House Management",
+          "House Leaderboard",
+          "Edit House Add House"
+        ],
+        "inputs": [
+          "Filter by Class",
+          "All Classes",
+          "Points (use negative to deduct)",
+          "e.g. 10 or -5",
+          "Remarks (optional)",
+          "e.g. Won inter-house quiz",
+          "House Name *",
+          "e.g. Phoenix House"
+        ],
+        "messages": [
+          "No houses set up yet",
+          "No students assigned to this house yet.",
+          "No students found"
+        ]
+      },
+      "sources": [
+        "src/pages/HouseManagement.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "6f1c4aefe74d574b",
+      "reviewedFactsHash": "6f1c4aefe74d574b",
+      "sharedScreen": true,
+      "content": "Houses\nWhere: Left menu, Houses.\nWhat it is: Create your school's first house to get started.\nOn the screen: Buttons: Add House; Assign students; Award points; Edit; Delete. Sections: House Management; House Leaderboard; Edit House Add House. Fields: Filter by Class; All Classes; Points (use negative to deduct); e.g. 10 or -5; Remarks (optional); e.g. Won inter-house quiz; House Name *; e.g. Phoenix House. Messages it can show: No houses set up yet; No students assigned to this house yet; No students found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Houses . Create your school's first house to get started. . Add House . Assign students . Award points . Edit . Delete . House Management . House Leaderboard . Edit House Add House",
+      "contentHash": "f63451d1c64a3e72"
+    },
+    {
+      "key": "nav:/intervention-board",
+      "role": "hod",
+      "kind": "page",
+      "name": "Intervention Board",
+      "aliases": [],
+      "keywords": [],
+      "route": "/intervention-board",
+      "where": "Left menu, Intervention Board.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Student intervention board: every support plan on one board, from \"active\" to its ACTUAL outcome.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "New intervention",
+          "Open history",
+          "Edit",
+          "Mark Completed",
+          "View",
+          "New Intervention",
+          "Create New Intervention",
+          "Back to History",
+          "Saving...",
+          "Mark as Completed",
+          "Add",
+          "Save"
+        ],
+        "headings": [
+          "Student Intervention Board",
+          "New intervention"
+        ],
+        "inputs": [
+          "Search student or reason",
+          "What happened this week? (e.g. completed 2 remedial sheets, more confident in class)",
+          "Choose a class",
+          "Tier",
+          "Priority",
+          "Status",
+          "Reason",
+          "Action Plan"
+        ],
+        "messages": [
+          "Nothing here",
+          "No plan steps yet - use Edit to add some.",
+          "No check-ins yet.",
+          "No measurement recorded.",
+          "No students on this class roster.",
+          "No interventions recorded yet."
+        ]
+      },
+      "sources": [
+        "src/pages/InterventionBoard.tsx",
+        "src/components/InterventionDrawer.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "f54393ffcb047644",
+      "reviewedFactsHash": "f54393ffcb047644",
+      "sharedScreen": true,
+      "content": "Intervention Board\nWhere: Left menu, Intervention Board.\nWhat it is: Student intervention board: every support plan on one board, from \"active\" to its ACTUAL outcome.\nOn the screen: Buttons: New intervention; Open history; Edit; Mark Completed; View; New Intervention; Create New Intervention; Back to History; Saving; Mark as Completed; Add; Save. Sections: Student Intervention Board; New intervention. Fields: Search student or reason; What happened this week? (e.g. completed 2 remedial sheets, more confident in class); Choose a class; Tier; Priority; Status; Reason; Action Plan. Messages it can show: Nothing here; No plan steps yet - use Edit to add some; No check-ins yet; No measurement recorded; No students on this class roster; No interventions recorded yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Intervention Board . Student intervention board: every support plan on one board, from \"active\" to its ACTUAL outcome. . New intervention . Open history . Edit . Mark Completed . View . New Intervention . Create New Intervention . Back to History . Saving... . Mark as Completed . Add . Save . Student Intervention Board . New intervention",
+      "contentHash": "fa6c02225771ff0c"
+    },
+    {
+      "key": "nav:/item-bank",
+      "role": "hod",
+      "kind": "page",
+      "name": "Item Bank & Mock Exams",
+      "aliases": [],
+      "keywords": [],
+      "route": "/item-bank",
+      "where": "Left menu, Item Bank & Mock Exams.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AssessmentHub.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "purpose found but too little screen text to explain how to use it (0 labels found)"
+      ],
+      "factsHash": "96a178b514e9166a",
+      "reviewedFactsHash": "96a178b514e9166a",
+      "sharedScreen": true,
+      "content": "Item Bank & Mock Exams\nWhere: Left menu, Item Bank & Mock Exams.\nWhat it is: AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Item Bank & Mock Exams . AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "contentHash": "29622320f7261b99"
+    },
+    {
+      "key": "nav:/my-sen-students",
+      "role": "hod",
+      "kind": "page",
+      "name": "My SEN Students",
+      "aliases": [],
+      "keywords": [],
+      "route": "/my-sen-students",
+      "where": "Left menu, My SEN Students.",
+      "accessRoles": [
+        "teacher",
+        "hod"
+      ],
+      "purpose": "You are the case manager Therapist view (read-only IEP)",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "IEP",
+          "Accommodations",
+          "Therapy"
+        ],
+        "buttons": [
+          "Back to students",
+          "Generate IEP with AI",
+          "New IEP Plan",
+          "Goal",
+          "Review",
+          "Add Accommodation",
+          "Active",
+          "Inactive",
+          "Log Session",
+          "Save Changes",
+          "Create Plan",
+          "Add Goal",
+          "Save Review",
+          "Add"
+        ],
+        "headings": [
+          "My SEN Students",
+          "Edit IEP Plan New IEP Plan",
+          "Edit IEP Goal Add IEP Goal",
+          "Edit IEP Review Log IEP Review",
+          "Edit Accommodation Add Accommodation",
+          "Edit Therapy Session Log Therapy Session",
+          "Generate IEP draft"
+        ],
+        "inputs": [
+          "Search...",
+          "Title",
+          "Start Date",
+          "End Date (optional)",
+          "Status",
+          "Domain",
+          "Goal Description",
+          "Baseline"
+        ],
+        "messages": [
+          "No SEN students assigned to you yet.",
+          "No IEP plans yet.",
+          "No goals added.",
+          "No reviews logged.",
+          "No accommodations on file.",
+          "No therapy sessions logged."
+        ]
+      },
+      "sources": [
+        "src/pages/MySENStudents.tsx",
+        "src/components/sen/IepGeneratorDialog.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c9a4d1626ebb3029",
+      "reviewedFactsHash": "c9a4d1626ebb3029",
+      "sharedScreen": true,
+      "content": "My SEN Students\nWhere: Left menu, My SEN Students.\nWhat it is: You are the case manager Therapist view (read-only IEP)\nOn the screen: Tabs: IEP; Accommodations; Therapy. Buttons: Back to students; Generate IEP with AI; New IEP Plan; Goal; Review; Add Accommodation; Active; Inactive; Log Session; Save Changes; Create Plan; Add Goal; Save Review; Add. Sections: My SEN Students; Edit IEP Plan New IEP Plan; Edit IEP Goal Add IEP Goal; Edit IEP Review Log IEP Review; Edit Accommodation Add Accommodation; Edit Therapy Session Log Therapy Session; Generate IEP draft. Fields: Search; Title; Start Date; End Date (optional); Status; Domain; Goal Description; Baseline. Messages it can show: No SEN students assigned to you yet; No IEP plans yet; No goals added; No reviews logged; No accommodations on file; No therapy sessions logged.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "My SEN Students . You are the case manager Therapist view (read-only IEP) . IEP . Accommodations . Therapy . Back to students . Generate IEP with AI . New IEP Plan . Goal . Review . Add Accommodation . Active . Inactive . Log Session . Save Changes . Create Plan . Add Goal . Save Review . Add . My SEN Students . Edit IEP Plan New IEP Plan . Edit IEP Goal Add IEP Goal . Edit IEP Review Log IEP Review . Edit Accommodation Add Accommodation . Edit Therapy Session Log Therapy Session . Generate IEP draft",
+      "contentHash": "3d825a884c01e94b"
+    },
+    {
+      "key": "nav:/requests",
+      "role": "hod",
+      "kind": "page",
+      "name": "Requests",
+      "aliases": [],
+      "keywords": [],
+      "route": "/requests",
+      "where": "Left menu, Requests.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "student",
+        "parent"
+      ],
+      "purpose": "Submitting a new request will replace any existing request for the same class & section.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "New Request",
+          "View Details"
+        ],
+        "headings": [
+          "Diagnostic Requests",
+          "Request Diagnostic Questionnaire",
+          "My Diagnostic Requests",
+          "Request Details"
+        ],
+        "inputs": [
+          "Class",
+          "Select class",
+          "Section",
+          "Type",
+          "Question Distribution by Category",
+          "Purpose / Rationale",
+          "Describe why this diagnostic is needed, target learning outcomes, etc."
+        ],
+        "messages": [
+          "No requests submitted yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Requests.tsx",
+        "src/components/TeacherRequestForm.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "63fa2365ef78e040",
+      "reviewedFactsHash": "63fa2365ef78e040",
+      "sharedScreen": true,
+      "content": "Requests\nWhere: Left menu, Requests.\nWhat it is: Submitting a new request will replace any existing request for the same class & section.\nOn the screen: Buttons: New Request; View Details. Sections: Diagnostic Requests; Request Diagnostic Questionnaire; My Diagnostic Requests; Request Details. Fields: Class; Select class; Section; Type; Question Distribution by Category; Purpose / Rationale; Describe why this diagnostic is needed, target learning outcomes, etc. Messages it can show: No requests submitted yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Requests . Submitting a new request will replace any existing request for the same class & section. . New Request . View Details . Diagnostic Requests . Request Diagnostic Questionnaire . My Diagnostic Requests . Request Details",
+      "contentHash": "5b19d917c3f34776"
+    },
+    {
+      "key": "nav:/safeguarding",
+      "role": "hod",
+      "kind": "page",
+      "name": "Safeguarding",
+      "aliases": [],
+      "keywords": [],
+      "route": "/safeguarding",
+      "where": "Left menu, Safeguarding.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Saving...",
+          "Save Update"
+        ],
+        "headings": [
+          "Safeguarding Dashboard"
+        ],
+        "inputs": [
+          "Filter by status",
+          "Add a note (required unless only changing status)"
+        ],
+        "messages": [
+          "No incidents match this filter",
+          "No updates yet."
+        ]
+      },
+      "sources": [
+        "src/pages/SafeguardingPage.tsx",
+        "src/components/safeguarding/SafeguardingDashboard.tsx",
+        "src/components/safeguarding/IncidentDetailPanel.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (5 labels found)"
+      ],
+      "factsHash": "44b33377b4ddf0b8",
+      "reviewedFactsHash": "44b33377b4ddf0b8",
+      "sharedScreen": true,
+      "content": "Safeguarding\nWhere: Left menu, Safeguarding.\nWhat it is: (not documented yet)\nOn the screen: Buttons: Saving; Save Update. Sections: Safeguarding Dashboard. Fields: Filter by status; Add a note (required unless only changing status). Messages it can show: No incidents match this filter; No updates yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Safeguarding . Saving... . Save Update . Safeguarding Dashboard",
+      "contentHash": "81c1f3397f6c6238"
+    },
+    {
+      "key": "nav:/school-analytics",
+      "role": "hod",
+      "kind": "page",
+      "name": "School Intelligence",
+      "aliases": [],
+      "keywords": [],
+      "route": "/school-analytics",
+      "where": "Left menu, School Intelligence.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "The twin exposes student-level data, so it is staff-only (this page is also open to students and parents).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Overview",
+          "Predictions",
+          "Forecast",
+          "Digital Twin"
+        ],
+        "buttons": [
+          "Refresh"
+        ],
+        "headings": [
+          "School Performance Intelligence",
+          "Learning Gain Trend",
+          "Student Risk Distribution",
+          "Your Classes — Academic Digital Twin School Academic Digital Twin",
+          "What the twin is flagging",
+          "Classes",
+          "Teachers",
+          "Academic Forecast"
+        ],
+        "inputs": [],
+        "messages": [
+          "No data yet. Run Issue Detection to generate metrics.",
+          "No predictions yet. Run Predictions to analyze students.",
+          "No predictions yet. Click \"Run Predictions\" to analyze student performance.",
+          "No active alerts. Run Issue Detection to scan for learning issues.",
+          "No classes found.",
+          "No subject teachers are assigned to this class in Class Management."
+        ]
+      },
+      "sources": [
+        "src/pages/SchoolAnalytics.tsx",
+        "src/components/SchoolDigitalTwin.tsx",
+        "src/components/AcademicForecastPanel.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "ee3071eea324b3ab",
+      "reviewedFactsHash": "ee3071eea324b3ab",
+      "sharedScreen": true,
+      "content": "School Intelligence\nWhere: Left menu, School Intelligence.\nWhat it is: The twin exposes student-level data, so it is staff-only (this page is also open to students and parents).\nOn the screen: Tabs: Overview; Predictions; Forecast; Digital Twin. Buttons: Refresh. Sections: School Performance Intelligence; Learning Gain Trend; Student Risk Distribution; Your Classes — Academic Digital Twin School Academic Digital Twin; What the twin is flagging; Classes; Teachers; Academic Forecast. Messages it can show: No data yet. Run Issue Detection to generate metrics; No predictions yet. Run Predictions to analyze students; No predictions yet. Click \"Run Predictions\" to analyze student performance; No active alerts. Run Issue Detection to scan for learning issues; No classes found; No subject teachers are assigned to this class in Class Management.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "School Intelligence . The twin exposes student-level data, so it is staff-only (this page is also open to students and parents). . Overview . Predictions . Forecast . Digital Twin . Refresh . School Performance Intelligence . Learning Gain Trend . Student Risk Distribution . Your Classes — Academic Digital Twin School Academic Digital Twin . What the twin is flagging . Classes . Teachers . Academic Forecast",
+      "contentHash": "d7c1fc8f2f596a7c"
+    },
+    {
+      "key": "nav:/security",
+      "role": "hod",
+      "kind": "page",
+      "name": "Security Center",
+      "aliases": [],
+      "keywords": [],
+      "route": "/security",
+      "where": "Left menu, Security Center.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "All Logs",
+          "Suspicious Activity",
+          "My Devices",
+          "Anomaly Alerts"
+        ],
+        "buttons": [
+          "Scan now",
+          "Acknowledge",
+          "Resolve",
+          "False positive",
+          "Sign out everywhere",
+          "Reopen",
+          "Sign out all other devices",
+          "Sign out"
+        ],
+        "headings": [
+          "Security Center",
+          "Recent sign-in activity",
+          "Sign out all other devices?"
+        ],
+        "inputs": [],
+        "messages": [
+          "No audit logs recorded yet.",
+          "No suspicious activity detected.",
+          "No open alerts. Nothing unusual in recent login and data-access activity.",
+          "No alerts with this status.",
+          "No sign-ins recorded yet. They appear here as people log in.",
+          "No active devices found."
+        ]
+      },
+      "sources": [
+        "src/pages/SecurityCenter.tsx",
+        "src/components/security/SecurityAnomalyPanel.tsx",
+        "src/components/security/MyDevicesPanel.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (15 labels found)"
+      ],
+      "factsHash": "415e7eb830a3abce",
+      "reviewedFactsHash": "415e7eb830a3abce",
+      "sharedScreen": true,
+      "content": "Security Center\nWhere: Left menu, Security Center.\nWhat it is: (not documented yet)\nOn the screen: Tabs: All Logs; Suspicious Activity; My Devices; Anomaly Alerts. Buttons: Scan now; Acknowledge; Resolve; False positive; Sign out everywhere; Reopen; Sign out all other devices; Sign out. Sections: Security Center; Recent sign-in activity; Sign out all other devices?. Messages it can show: No audit logs recorded yet; No suspicious activity detected; No open alerts. Nothing unusual in recent login and data-access activity; No alerts with this status; No sign-ins recorded yet. They appear here as people log in; No active devices found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Security Center . All Logs . Suspicious Activity . My Devices . Anomaly Alerts . Scan now . Acknowledge . Resolve . False positive . Sign out everywhere . Reopen . Sign out all other devices . Sign out . Security Center . Recent sign-in activity . Sign out all other devices?",
+      "contentHash": "d107cab397d115b5"
+    },
+    {
+      "key": "nav:/surveys",
+      "role": "hod",
+      "kind": "page",
+      "name": "Surveys",
+      "aliases": [],
+      "keywords": [],
+      "route": "/surveys",
+      "where": "Left menu, Surveys.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "student",
+        "parent"
+      ],
+      "purpose": "Small save-status pill: \"Saving...\", \"Saved\", \"Unable to save\" (+ \"Saved offline\" while disconnected).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Create Survey",
+          "My Surveys",
+          "Respond",
+          "Activate",
+          "Results",
+          "Add Option",
+          "Add Question",
+          "Creating...",
+          "Submitting...",
+          "Submit"
+        ],
+        "headings": [
+          "Surveys",
+          "Create Survey"
+        ],
+        "inputs": [
+          "Title",
+          "Description (optional)",
+          "Audience",
+          "Class",
+          "Select class",
+          "Section(s)",
+          "All sections (whole grade)",
+          "Make this survey anonymous (responses can never be linked back to a person)"
+        ],
+        "messages": [
+          "No responses yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Surveys.tsx",
+        "src/components/drafts/DraftStatus.tsx",
+        "src/components/drafts/DraftRecoveryDialog.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "46d394ab42ce1796",
+      "reviewedFactsHash": "46d394ab42ce1796",
+      "sharedScreen": true,
+      "content": "Surveys\nWhere: Left menu, Surveys.\nWhat it is: Small save-status pill: \"Saving...\", \"Saved\", \"Unable to save\" (+ \"Saved offline\" while disconnected).\nOn the screen: Buttons: Create Survey; My Surveys; Respond; Activate; Results; Add Option; Add Question; Creating; Submitting; Submit. Sections: Surveys; Create Survey. Fields: Title; Description (optional); Audience; Class; Select class; Section(s); All sections (whole grade); Make this survey anonymous (responses can never be linked back to a person). Messages it can show: No responses yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Surveys . Small save-status pill: \"Saving...\", \"Saved\", \"Unable to save\" (+ \"Saved offline\" while disconnected). . Create Survey . My Surveys . Respond . Activate . Results . Add Option . Add Question . Creating... . Submitting... . Submit . Surveys . Create Survey",
+      "contentHash": "69c27199a17e7364"
+    },
+    {
+      "key": "nav:/syllabus-overview",
+      "role": "hod",
+      "kind": "page",
+      "name": "Syllabus Coverage",
+      "aliases": [],
+      "keywords": [],
+      "route": "/syllabus-overview",
+      "where": "Left menu, Syllabus Coverage.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Syllabus Coverage"
+        ],
+        "inputs": [],
+        "messages": [
+          "No teachers have been assigned to classes yet."
+        ]
+      },
+      "sources": [
+        "src/pages/SyllabusOverview.tsx",
+        "src/components/SchoolSyllabusOverview.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (1 labels found)"
+      ],
+      "factsHash": "65170caaa2cf1437",
+      "reviewedFactsHash": "65170caaa2cf1437",
+      "sharedScreen": true,
+      "content": "Syllabus Coverage\nWhere: Left menu, Syllabus Coverage.\nWhat it is: (not documented yet)\nOn the screen: Sections: Syllabus Coverage. Messages it can show: No teachers have been assigned to classes yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Syllabus Coverage . Syllabus Coverage",
+      "contentHash": "dc14e105d4be53e6"
+    },
+    {
+      "key": "nav:/teacher",
+      "role": "hod",
+      "kind": "page",
+      "name": "Reports",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher",
+      "where": "Left menu, Reports.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "school_admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Please select a specific class from the filters above to view the class report.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Student Reports",
+          "Class Reports"
+        ],
+        "buttons": [
+          "View",
+          "View Full Report",
+          "Generate Lesson Plan",
+          "Download",
+          "Download Report"
+        ],
+        "headings": [
+          "Reports",
+          "Student Assessments",
+          "No Assessments Found",
+          "Select a Class",
+          "Individual Student Reports",
+          "APAS Class Diagnostic",
+          "Full learner roster — diagnostic snapshot",
+          "Instructional clusters — curative grouping"
+        ],
+        "inputs": [
+          "Class",
+          "All Classes",
+          "Section",
+          "All Sections",
+          "Submission",
+          "All Students",
+          "Rows per page"
+        ],
+        "messages": [
+          "No Assessments Found",
+          "No students match the selected filters. Try changing the class or section.",
+          "No assessments found for the selected filters."
+        ]
+      },
+      "sources": [
+        "src/pages/TeacherPanel.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/StudentReport.tsx",
+        "src/components/ClassReportView.tsx",
+        "src/components/report/ReportContent.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "49637f6e02c6b0c0",
+      "reviewedFactsHash": "49637f6e02c6b0c0",
+      "sharedScreen": true,
+      "content": "Reports\nWhere: Left menu, Reports.\nWhat it is: Please select a specific class from the filters above to view the class report.\nOn the screen: Tabs: Student Reports; Class Reports. Buttons: View; View Full Report; Generate Lesson Plan; Download; Download Report. Sections: Reports; Student Assessments; No Assessments Found; Select a Class; Individual Student Reports; APAS Class Diagnostic; Full learner roster — diagnostic snapshot; Instructional clusters — curative grouping. Fields: Class; All Classes; Section; All Sections; Submission; All Students; Rows per page. Messages it can show: No Assessments Found; No students match the selected filters. Try changing the class or section; No assessments found for the selected filters.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Reports . Please select a specific class from the filters above to view the class report. . Student Reports . Class Reports . View . View Full Report . Generate Lesson Plan . Download . Download Report . Reports . Student Assessments . No Assessments Found . Select a Class . Individual Student Reports . APAS Class Diagnostic . Full learner roster — diagnostic snapshot . Instructional clusters — curative grouping",
+      "contentHash": "b055a59bf2db7f30"
+    },
+    {
+      "key": "nav:/timetable",
+      "role": "hod",
+      "kind": "page",
+      "name": "Timetable",
+      "aliases": [],
+      "keywords": [],
+      "route": "/timetable",
+      "where": "Left menu, Timetable.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "student",
+        "school_admin",
+        "teacher",
+        "hod"
+      ],
+      "purpose": "TimetablePage.tsx v2 ───────────────────────────────────────────────────────────────────────────── Supports both CLASS timetables and TEACHER timetables Principal/Admin: - Tab 1: Upload class timetable (class + section)…",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Class",
+          "Teacher",
+          "What-If",
+          "Substitutes"
+        ],
+        "buttons": [
+          "Checking...",
+          "Check Clashes",
+          "Simulate Absence",
+          "Assigning...",
+          "Assign Substitutes",
+          "Approve",
+          "Saving...",
+          "Save",
+          "Simulating...",
+          "Run simulation",
+          "Add to comparison"
+        ],
+        "headings": [
+          "My Timetable",
+          "Today's Rotation Duties",
+          "Timetable Overview",
+          "Timetable Manager",
+          "No teacher clashes found ✅",
+          "Upload Class Timetable",
+          "Upload Teacher Timetable",
+          "What-If: Teacher Absence"
+        ],
+        "inputs": [
+          "Class",
+          "Section",
+          "Excel File (.xlsx)",
+          "Select Teacher",
+          "Choose a teacher...",
+          "Teacher",
+          "Day",
+          "Absent Teacher"
+        ],
+        "messages": [
+          "No timetable uploaded yet",
+          "No timetable assigned yet",
+          "No timetables uploaded yet",
+          "No timetable selected",
+          "No teacher clashes found ✅",
+          "No automatic swap suggestion available — resolve manually."
+        ]
+      },
+      "sources": [
+        "src/pages/TimetablePage.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/AcademicWhatIf.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "81b8d04f75381954",
+      "reviewedFactsHash": "81b8d04f75381954",
+      "sharedScreen": true,
+      "content": "Timetable\nWhere: Left menu, Timetable.\nWhat it is: TimetablePage.tsx v2 ───────────────────────────────────────────────────────────────────────────── Supports both CLASS timetables and TEACHER timetables Principal/Admin: - Tab 1: Upload class timetable (class + section)…\nOn the screen: Tabs: Class; Teacher; What-If; Substitutes. Buttons: Checking; Check Clashes; Simulate Absence; Assigning; Assign Substitutes; Approve; Saving; Save; Simulating; Run simulation; Add to comparison. Sections: My Timetable; Today's Rotation Duties; Timetable Overview; Timetable Manager; No teacher clashes found ✅; Upload Class Timetable; Upload Teacher Timetable; What-If: Teacher Absence. Fields: Class; Section; Excel File (.xlsx); Select Teacher; Choose a teacher; Teacher; Day; Absent Teacher. Messages it can show: No timetable uploaded yet; No timetable assigned yet; No timetables uploaded yet; No timetable selected; No teacher clashes found ✅; No automatic swap suggestion available — resolve manually.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Timetable . TimetablePage.tsx v2 ───────────────────────────────────────────────────────────────────────────── Supports both CLASS timetables and TEACHER timetables Principal/Admin: - Tab 1: Upload class timetable (class + section)… . Class . Teacher . What-If . Substitutes . Checking... . Check Clashes . Simulate Absence . Assigning... . Assign Substitutes . Approve . Saving... . Save . Simulating... . Run simulation . Add to comparison . My Timetable . Today's Rotation Duties . Timetable Overview . Timetable Manager . No teacher clashes found ✅ . Upload Class Timetable . Upload Teacher Timetable . What-If: Teacher Absence",
+      "contentHash": "1faed06263dd5e59"
+    }
+  ]
+}

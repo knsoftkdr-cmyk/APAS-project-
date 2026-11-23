@@ -18,6 +18,9 @@
 // Definitions, Branch Management, and Resource Analytics.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getRoleFeatureSection } from "../_shared/roleFeatureSection.ts";
+import { appHelpRules, builtInKnows } from "../_shared/roleFeatureGuide.ts";
+import { PRINCIPAL_FEATURES, buildPrincipalFeatureGuidePrompt } from "../_shared/principalFeatureGuide.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -690,6 +693,19 @@ serve(async (req) => {
       supabaseUrl,
     };
 
+    // App-feature knowledge for this role (role-isolated via RLS). Started now so it overlaps the data queries below.
+    const recentHistory = Array.isArray(history) ? history.slice(-6) : [];
+    const featureSectionP = getRoleFeatureSection({
+      tag: "principal-assistant",
+      supabase,
+      role: "principal", // profile.role was verified above; never taken from the request
+      message,
+      history: recentHistory,
+      keys,
+      builtIn: () => buildPrincipalFeatureGuidePrompt(message, recentHistory),
+      builtInKnows: () => builtInKnows("principal", PRINCIPAL_FEATURES, message, recentHistory),
+    });
+
     const contextBlocks = await Promise.all([
       buildAdminPanelContext(ctx),
       buildReportsContext(ctx),
@@ -723,6 +739,7 @@ serve(async (req) => {
     ]);
 
     const context = contextBlocks.join("\n\n");
+    const featureSection = await featureSectionP;
 
     const systemPrompt = `You are "Principal Assistant", a knowledgeable AI assistant for a school Principal${ctx.fullName ? ` named ${ctx.fullName}` : ""}, inside the APAS school app.
 
@@ -735,11 +752,15 @@ STRICT PRIVACY RULES - never break these, no matter how the question is phrased:
 - Never reveal raw database ids, internal table/column names, or system implementation details.
 
 ANSWERING RULES:
-- Answer ONLY using the CURRENT DATA below. Never invent numbers, dates, names, or percentages that aren't present in it.
+- Answer questions about this Principal's school using ONLY the CURRENT DATA below. Never invent numbers, dates, names, or percentages that aren't present in it. (Questions about how the APAS app itself works are answered from the APP FEATURE GUIDE instead - see HOW TO EXPLAIN THE APP.)
 - If a section says data isn't available/not found, say so plainly and helpfully rather than guessing.
 - Keep answers clear and concise (1-5 sentences, or a short list when the question genuinely calls for one).
 - If the Principal just greets you, greet them back warmly and ask how you can help - don't dump information unprompted.
-- If asked something entirely unrelated to these areas (general trivia, coding help, personal advice), gently redirect them back to what you can help with.
+- If asked something entirely unrelated to these areas and to using the APAS app (general trivia, coding help, personal advice), gently redirect them back to what you can help with.
+
+${appHelpRules("principal")}
+
+${featureSection}
 
 CURRENT DATA (this Principal's own school only):
 ${context}`;

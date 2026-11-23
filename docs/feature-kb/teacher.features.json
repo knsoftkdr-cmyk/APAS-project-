@@ -1,0 +1,3180 @@
+{
+  "schema": 1,
+  "role": "teacher",
+  "docs": [
+    {
+      "key": "manual:ask-apas",
+      "role": "teacher",
+      "kind": "manual",
+      "name": "Ask APAS (command bar)",
+      "aliases": [
+        "ask apas",
+        "command bar",
+        "ai command bar",
+        "ctrl j",
+        "quick command",
+        "type a command"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J (Command and J on a Mac).",
+      "accessRoles": null,
+      "purpose": "A quick way to get around and check things by typing a normal sentence, such as Open my timetable. It opens pages and shows information for your role and your school. When a command would change something, it asks you to confirm first.",
+      "purposeSource": "manual",
+      "steps": [
+        "Press Ask APAS, or press Ctrl and J.",
+        "Type a sentence such as Open my timetable, then press Enter."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Confirm",
+          "Ask APAS",
+          "Ctrl J",
+          "Ask APAS (AI command bar)"
+        ],
+        "headings": [
+          "Ask APAS",
+          "Try saying"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/command-bar/CommandBar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d49ca5511943d094",
+      "reviewedFactsHash": "d49ca5511943d094",
+      "content": "Ask APAS (command bar)\nWhere: The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J (Command and J on a Mac).\nWhat it is: A quick way to get around and check things by typing a normal sentence, such as Open my timetable. It opens pages and shows information for your role and your school. When a command would change something, it asks you to confirm first.\nHow to use it: (1) Press Ask APAS, or press Ctrl and J. (2) Type a sentence such as Open my timetable, then press Enter.\nOn the screen: Buttons: Confirm; Ask APAS; Ctrl J; Ask APAS (AI command bar). Sections: Ask APAS; Try saying.",
+      "searchText": "Ask APAS (command bar) . ask apas . command bar . ai command bar . ctrl j . quick command . type a command . A quick way to get around and check things by typing a normal sentence, such as Open my timetable. It opens pages and shows information for your role and your school. When a command would change something, it asks you to confirm first. . Confirm . Ask APAS . Ctrl J . Ask APAS (AI command bar) . Ask APAS . Try saying",
+      "contentHash": "a530e474a628c859"
+    },
+    {
+      "key": "manual:global-search",
+      "role": "teacher",
+      "kind": "manual",
+      "name": "Search",
+      "aliases": [
+        "search box",
+        "global search",
+        "ctrl k",
+        "find something",
+        "look something up"
+      ],
+      "keywords": [
+        "search"
+      ],
+      "route": null,
+      "where": "The search box at the top of every page. The keyboard shortcut is Ctrl and K (Command and K on a Mac).",
+      "accessRoles": null,
+      "purpose": "Looks things up across APAS, such as students, teachers and staff, lessons, exams, homework and classes. You only see results your role is allowed to open.",
+      "purposeSource": "manual",
+      "steps": [
+        "Click the search box at the top, or press Ctrl and K.",
+        "Type what you are looking for and pick a result."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Search",
+          "All",
+          "Clear"
+        ],
+        "headings": [
+          "Search APAS",
+          "Try searching for"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/search/UniversalSearch.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "857236d04674d812",
+      "reviewedFactsHash": "857236d04674d812",
+      "content": "Search\nWhere: The search box at the top of every page. The keyboard shortcut is Ctrl and K (Command and K on a Mac).\nWhat it is: Looks things up across APAS, such as students, teachers and staff, lessons, exams, homework and classes. You only see results your role is allowed to open.\nHow to use it: (1) Click the search box at the top, or press Ctrl and K. (2) Type what you are looking for and pick a result.\nOn the screen: Buttons: Search; All; Clear. Sections: Search APAS; Try searching for.",
+      "searchText": "Search . search box . global search . ctrl k . find something . look something up . search . Looks things up across APAS, such as students, teachers and staff, lessons, exams, homework and classes. You only see results your role is allowed to open. . Search . All . Clear . Search APAS . Try searching for",
+      "contentHash": "d8d8a1111dbadf62"
+    },
+    {
+      "key": "manual:help-menu",
+      "role": "teacher",
+      "kind": "manual",
+      "name": "Help (guided tour and page help)",
+      "aliases": [
+        "help button",
+        "guided tour",
+        "take a tour",
+        "help with this page",
+        "page help"
+      ],
+      "keywords": [
+        "help"
+      ],
+      "route": null,
+      "where": "The Help button at the top of every page.",
+      "accessRoles": null,
+      "purpose": "The Help button opens a small menu with three choices: Take a Guided Tour, Help with This Page, and Ask APAS.",
+      "purposeSource": "manual",
+      "steps": [
+        "Press the Help button at the top.",
+        "Choose Take a Guided Tour for a walk through the app, Help with This Page for help on the page you are on, or Ask APAS to type a command."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Help",
+          "Take a Guided Tour",
+          "Ask APAS"
+        ],
+        "headings": [
+          "Help with this page",
+          "What this page is for",
+          "How to…",
+          "Main buttons and sections",
+          "Common problems",
+          "What to do next",
+          "On your screen right now"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/help/HelpMenu.tsx",
+        "src/components/help/PageHelpPanel.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "728c1c59afaa34fe",
+      "reviewedFactsHash": "728c1c59afaa34fe",
+      "content": "Help (guided tour and page help)\nWhere: The Help button at the top of every page.\nWhat it is: The Help button opens a small menu with three choices: Take a Guided Tour, Help with This Page, and Ask APAS.\nHow to use it: (1) Press the Help button at the top. (2) Choose Take a Guided Tour for a walk through the app, Help with This Page for help on the page you are on, or Ask APAS to type a command.\nOn the screen: Buttons: Help; Take a Guided Tour; Ask APAS. Sections: Help with this page; What this page is for; How to…; Main buttons and sections; Common problems; What to do next; On your screen right now.",
+      "searchText": "Help (guided tour and page help) . help button . guided tour . take a tour . help with this page . page help . help . The Help button opens a small menu with three choices: Take a Guided Tour, Help with This Page, and Ask APAS. . Help . Take a Guided Tour . Ask APAS . Help with this page . What this page is for . How to… . Main buttons and sections . Common problems . What to do next . On your screen right now",
+      "contentHash": "795eb5c44a743e77"
+    },
+    {
+      "key": "nav:/academic-calendar",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Academic Calendar",
+      "aliases": [],
+      "keywords": [],
+      "route": "/academic-calendar",
+      "where": "Left menu, Academic Calendar.",
+      "accessRoles": null,
+      "purpose": "See school events and holidays by date.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AcademicCalendar.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "34865a9e267d3ccc",
+      "reviewedFactsHash": "34865a9e267d3ccc",
+      "content": "Academic Calendar\nWhere: Left menu, Academic Calendar.\nWhat it is: See school events and holidays by date.",
+      "searchText": "Academic Calendar . See school events and holidays by date.",
+      "contentHash": "780574b4d65bae5d"
+    },
+    {
+      "key": "nav:/admin",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Admin Panel",
+      "aliases": [],
+      "keywords": [],
+      "route": "/admin",
+      "where": "Left menu, Admin Panel.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "School-wide settings for Live Classes (virtual classrooms): automatic recording and automatic attendance rules.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Classes",
+          "Notifications",
+          "Lesson Plans",
+          "Live Classes",
+          "Students",
+          "Teachers",
+          "Approvals",
+          "Questions",
+          "Config"
+        ],
+        "buttons": [
+          "Import Excel",
+          "New Class",
+          "Create Class",
+          "Edit Class",
+          "Saving...",
+          "Save",
+          "Adding...",
+          "Add Student",
+          "Edit student",
+          "Remove from class",
+          "Save Changes",
+          "Assign",
+          "Choose File",
+          "Download Template"
+        ],
+        "headings": [
+          "Master User Panel",
+          "Class Management",
+          "Create New Class",
+          "Edit student",
+          "Remove from class",
+          "Edit Student",
+          "Student Allotment",
+          "Teacher-to-Class Assignment"
+        ],
+        "inputs": [
+          "Class Name",
+          "e.g. Class 5, Nursery, LKG",
+          "Section",
+          "Assigned Teachers",
+          "Add New Student to Class",
+          "Student Name *",
+          "Student ID",
+          "Date of Birth"
+        ],
+        "messages": [
+          "No classes created yet.",
+          "No teachers assigned yet.",
+          "No students assigned yet.",
+          "No students assigned",
+          "No teachers assigned",
+          "No teachers found."
+        ]
+      },
+      "sources": [
+        "src/pages/AdminPanel.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/ExcelImportModal.tsx",
+        "src/components/DiagnosticApprovalPanel.tsx",
+        "src/components/AdminLessonPlansView.tsx",
+        "src/components/live-recordings/LiveClassSettingsPanel.tsx",
+        "src/components/live-attendance/LiveAttendanceRulesCard.tsx",
+        "src/components/live-recordings/LiveRecordingSettingsCard.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c457c90534f2eab1",
+      "reviewedFactsHash": "c457c90534f2eab1",
+      "sharedScreen": true,
+      "content": "Admin Panel\nWhere: Left menu, Admin Panel.\nWhat it is: School-wide settings for Live Classes (virtual classrooms): automatic recording and automatic attendance rules.\nOn the screen: Tabs: Classes; Notifications; Lesson Plans; Live Classes; Students; Teachers; Approvals; Questions; Config. Buttons: Import Excel; New Class; Create Class; Edit Class; Saving; Save; Adding; Add Student; Edit student; Remove from class; Save Changes; Assign; Choose File; Download Template. Sections: Master User Panel; Class Management; Create New Class; Edit student; Remove from class; Edit Student; Student Allotment; Teacher-to-Class Assignment. Fields: Class Name; e.g. Class 5, Nursery, LKG; Section; Assigned Teachers; Add New Student to Class; Student Name *; Student ID; Date of Birth. Messages it can show: No classes created yet; No teachers assigned yet; No students assigned yet; No students assigned; No teachers assigned; No teachers found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Admin Panel . School-wide settings for Live Classes (virtual classrooms): automatic recording and automatic attendance rules. . Classes . Notifications . Lesson Plans . Live Classes . Students . Teachers . Approvals . Questions . Config . Import Excel . New Class . Create Class . Edit Class . Saving... . Save . Adding... . Add Student . Edit student . Remove from class . Save Changes . Assign . Choose File . Download Template . Master User Panel . Class Management . Create New Class . Edit student . Remove from class . Edit Student . Student Allotment . Teacher-to-Class Assignment",
+      "contentHash": "17405f1370ae01e8"
+    },
+    {
+      "key": "nav:/alerts",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Alerts",
+      "aliases": [],
+      "keywords": [],
+      "route": "/alerts",
+      "where": "Left menu, Alerts.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "Read your alerts. Roles that manage alerts also get tools for resolving and exporting them.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Alerts.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/StatusBadge.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "b253ef40da46ff17",
+      "reviewedFactsHash": "b253ef40da46ff17",
+      "content": "Alerts\nWhere: Left menu, Alerts.\nWhat it is: Read your alerts. Roles that manage alerts also get tools for resolving and exporting them.",
+      "searchText": "Alerts . Read your alerts. Roles that manage alerts also get tools for resolving and exporting them.",
+      "contentHash": "4ce1e7ef7aa11fc9"
+    },
+    {
+      "key": "nav:/analytics",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Analytics",
+      "aliases": [],
+      "keywords": [],
+      "route": "/analytics",
+      "where": "Left menu, Analytics.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "school_admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Learning Analytics & Insights for your classes.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Analytics.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "99d0eb317a181805",
+      "reviewedFactsHash": "99d0eb317a181805",
+      "content": "Analytics\nWhere: Left menu, Analytics.\nWhat it is: Learning Analytics & Insights for your classes.",
+      "searchText": "Analytics . Learning Analytics & Insights for your classes.",
+      "contentHash": "4f3ba462e5f4d067"
+    },
+    {
+      "key": "nav:/assessment-builder",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Assessment Builder",
+      "aliases": [],
+      "keywords": [],
+      "route": "/assessment-builder",
+      "where": "Left menu, Assessment Builder.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AssessmentHub.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "purpose found but too little screen text to explain how to use it (0 labels found)"
+      ],
+      "factsHash": "40fd0aab28a55790",
+      "reviewedFactsHash": "40fd0aab28a55790",
+      "sharedScreen": true,
+      "content": "Assessment Builder\nWhere: Left menu, Assessment Builder.\nWhat it is: AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Assessment Builder . AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "contentHash": "7f83822142abcdc5"
+    },
+    {
+      "key": "nav:/assessment-evaluation",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Assessment Evaluation",
+      "aliases": [],
+      "keywords": [],
+      "route": "/assessment-evaluation",
+      "where": "Left menu, Assessment Evaluation.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "hod",
+        "principal",
+        "school_admin"
+      ],
+      "purpose": "Upload a question paper and students' answer sheets, then have AI evaluate them. Files move through three statuses so you can see what still needs attention.",
+      "purposeSource": "help",
+      "steps": [
+        "Press Upload Assessment. The Upload Assessment Files box opens.",
+        "Under Question Paper, choose an earlier paper from Choose a question paper, or upload a new one (PDF or image) and give it a title such as Mid-Term Maths. If there are none yet the list says No question papers uploaded yet.",
+        "Under Answer Sheets click to browse, or drag your answer sheet files in.",
+        "Optionally fill in Class, Section, Subject and Student Name. These can be filled in later. Student Name is available once Class and Section are chosen.",
+        "Press the upload button at the bottom of the box. It stays disabled until you have added at least one answer sheet and chosen or added a question paper. Cancel closes the box.",
+        "Open the Pending tab. Tick the files you want evaluated (Select all ticks all of them), then press Evaluate Selected with AI. You can also use the evaluate button on a single file.",
+        "When evaluation finishes the files move to the AI Reviewed tab. Use the view button on a file to preview it."
+      ],
+      "notes": [
+        "You see Uploaded followed by the number of files, and later an AI evaluation complete message with how many files succeeded. Any that failed are reported with the reason."
+      ],
+      "problems": [
+        "Upload says you need to add an answer sheet. - Add at least one answer sheet file before uploading.",
+        "Upload says to choose the question paper. - Choose an existing question paper from the list.",
+        "Upload says to upload the question paper. - Switch to uploading a new question paper and add the file, then upload again."
+      ],
+      "taskTitles": [
+        "Upload answer sheets and evaluate them"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AssessmentEvaluation.tsx",
+        "src/components/assessment/AssessmentReportView.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "0dcacf87862c99c0",
+      "reviewedFactsHash": "0dcacf87862c99c0",
+      "content": "Assessment Evaluation\nWhere: Left menu, Assessment Evaluation.\nWhat it is: Upload a question paper and students' answer sheets, then have AI evaluate them. Files move through three statuses so you can see what still needs attention.\nHow to use it: (1) Press Upload Assessment. The Upload Assessment Files box opens. (2) Under Question Paper, choose an earlier paper from Choose a question paper, or upload a new one (PDF or image) and give it a title such as Mid-Term Maths. If there are none yet the list says No question papers uploaded yet. (3) Under Answer Sheets click to browse, or drag your answer sheet files in. (4) Optionally fill in Class, Section, Subject and Student Name. These can be filled in later. Student Name is available once Class and Section are chosen. (5) Press the upload button at the bottom of the box. It stays disabled until you have added at least one answer sheet and chosen or added a question paper. Cancel closes the box. (6) Open the Pending tab. Tick the files you want evaluated (Select all ticks all of them), then press Evaluate Selected with AI. You can also use the evaluate button on a single file. (7) When evaluation finishes the files move to the AI Reviewed tab. Use the view button on a file to preview it.\nGood to know: You see Uploaded followed by the number of files, and later an AI evaluation complete message with how many files succeeded. Any that failed are reported with the reason.\nIf something goes wrong: Upload says you need to add an answer sheet. - Add at least one answer sheet file before uploading. Upload says to choose the question paper. - Choose an existing question paper from the list. Upload says to upload the question paper. - Switch to uploading a new question paper and add the file, then upload again.",
+      "searchText": "Assessment Evaluation . Upload a question paper and students' answer sheets, then have AI evaluate them. Files move through three statuses so you can see what still needs attention. . Upload answer sheets and evaluate them",
+      "contentHash": "705ba4925549b100"
+    },
+    {
+      "key": "nav:/attendance",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Attendance",
+      "aliases": [],
+      "keywords": [],
+      "route": "/attendance",
+      "where": "Left menu, Attendance.",
+      "accessRoles": [
+        "teacher",
+        "principal",
+        "admin",
+        "student",
+        "parent"
+      ],
+      "purpose": "Mark attendance for a class, look back at saved records, and see your own attendance on My Attendance. Teachers also get an Attendance Risk tab.",
+      "purposeSource": "help",
+      "steps": [
+        "Open the Student Attendance tab.",
+        "Choose the class from Select class. Each choice shows the class name and its section.",
+        "Choose the date in the date box.",
+        "If a Period box appears, choose the period (Period 1, Period 2 and so on). It only appears when your school marks attendance by period.",
+        "Wait for the student list to load. Each student shows their name and roll number.",
+        "Set a status for each student: Present, Absent, Late, Half Day or Excused. To save time press Mark all present first and then change the exceptions.",
+        "Check the counter showing how many students you have marked out of the total.",
+        "Press Save Attendance."
+      ],
+      "notes": [
+        "You see Attendance saved. If you left students unmarked it says, for example, that attendance was saved for some of the students and that some are still unmarked. Unmarked students are skipped, never assumed present. Parents of the students you marked receive an Attendance Update notification. If you save the same class and date again, the existing records are updated."
+      ],
+      "problems": [
+        "The student list is empty. - That class and section has no active students. Check that you picked the right class, otherwise ask your school admin.",
+        "Some students were not saved. - A student you did not mark is skipped on purpose. Mark the remaining students and press Save Attendance again.",
+        "Saving shows an error. - The message after Error says what failed. Press Save Attendance again and, if it keeps failing, give the message to your school admin."
+      ],
+      "taskTitles": [
+        "Mark attendance for a class",
+        "Record an early pickup"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AttendanceMarking.tsx",
+        "src/components/attendance/AttendanceRiskView.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "a4a802c29c058a16",
+      "reviewedFactsHash": "a4a802c29c058a16",
+      "content": "Attendance\nWhere: Left menu, Attendance.\nWhat it is: Mark attendance for a class, look back at saved records, and see your own attendance on My Attendance. Teachers also get an Attendance Risk tab.\nHow to use it: (1) Open the Student Attendance tab. (2) Choose the class from Select class. Each choice shows the class name and its section. (3) Choose the date in the date box. (4) If a Period box appears, choose the period (Period 1, Period 2 and so on). It only appears when your school marks attendance by period. (5) Wait for the student list to load. Each student shows their name and roll number. (6) Set a status for each student: Present, Absent, Late, Half Day or Excused. To save time press Mark all present first and then change the exceptions. (7) Check the counter showing how many students you have marked out of the total. (8) Press Save Attendance.\nGood to know: You see Attendance saved. If you left students unmarked it says, for example, that attendance was saved for some of the students and that some are still unmarked. Unmarked students are skipped, never assumed present. Parents of the students you marked receive an Attendance Update notification. If you save the same class and date again, the existing records are updated.\nIf something goes wrong: The student list is empty. - That class and section has no active students. Check that you picked the right class, otherwise ask your school admin. Some students were not saved. - A student you did not mark is skipped on purpose. Mark the remaining students and press Save Attendance again. Saving shows an error. - The message after Error says what failed. Press Save Attendance again and, if it keeps failing, give the message to your school admin.",
+      "searchText": "Attendance . Mark attendance for a class, look back at saved records, and see your own attendance on My Attendance. Teachers also get an Attendance Risk tab. . Mark attendance for a class . Record an early pickup",
+      "contentHash": "4d4fdcedaf7afe31"
+    },
+    {
+      "key": "nav:/billing",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Billing",
+      "aliases": [],
+      "keywords": [],
+      "route": "/billing",
+      "where": "Left menu, Billing.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Plans",
+          "Usage",
+          "Invoices"
+        ],
+        "buttons": [
+          "Contact Sales",
+          "Select Plan"
+        ],
+        "headings": [
+          "Billing & Plans",
+          "Current Subscription",
+          "Students",
+          "Teachers",
+          "AI Generations",
+          "Storage"
+        ],
+        "inputs": [],
+        "messages": [
+          "No invoices yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Billing.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (11 labels found)"
+      ],
+      "factsHash": "787261ee098b78aa",
+      "reviewedFactsHash": "787261ee098b78aa",
+      "sharedScreen": true,
+      "content": "Billing\nWhere: Left menu, Billing.\nWhat it is: (not documented yet)\nOn the screen: Tabs: Plans; Usage; Invoices. Buttons: Contact Sales; Select Plan. Sections: Billing & Plans; Current Subscription; Students; Teachers; AI Generations; Storage. Messages it can show: No invoices yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Billing . Plans . Usage . Invoices . Contact Sales . Select Plan . Billing & Plans . Current Subscription . Students . Teachers . AI Generations . Storage",
+      "contentHash": "667166672c996b7d"
+    },
+    {
+      "key": "nav:/class-mastery",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Class Mastery",
+      "aliases": [],
+      "keywords": [],
+      "route": "/class-mastery",
+      "where": "Left menu, Class Mastery.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/ClassInsightsRoute.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (0 labels found)"
+      ],
+      "factsHash": "8cd7f01de40b2c68",
+      "reviewedFactsHash": "8cd7f01de40b2c68",
+      "sharedScreen": true,
+      "content": "Class Mastery\nWhere: Left menu, Class Mastery.\nWhat it is: (not documented yet)\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Class Mastery",
+      "contentHash": "485bd1354857ffe4"
+    },
+    {
+      "key": "nav:/classroom",
+      "role": "teacher",
+      "kind": "page",
+      "name": "My Classroom",
+      "aliases": [],
+      "keywords": [],
+      "route": "/classroom",
+      "where": "Left menu, My Classroom.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Digital classroom workspace: one class, one place -",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Stream",
+          "Materials",
+          "Assignments",
+          "Attendance",
+          "Live"
+        ],
+        "buttons": [
+          "Post",
+          "Unpin",
+          "Delete",
+          "Reply",
+          "File",
+          "Link",
+          "Open",
+          "Create a test",
+          "Create homework",
+          "Start",
+          "All present",
+          "Save",
+          "Schedule / open whiteboard",
+          "Join"
+        ],
+        "headings": [
+          "Unpin",
+          "Delete"
+        ],
+        "inputs": [
+          "Choose class",
+          "Share an announcement or start a discussion with your class…",
+          "Write a reply…",
+          "Title *",
+          "Topic / chapter (optional)",
+          "Short description (optional)"
+        ],
+        "messages": [
+          "Nothing here yet. Start the conversation!",
+          "No materials shared yet.",
+          "No assignments yet.",
+          "No students on this class roster.",
+          "No upcoming live sessions."
+        ]
+      },
+      "sources": [
+        "src/pages/DigitalClassroom.tsx",
+        "src/components/live-attendance/LiveClassPresenceBar.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "607e52cec3ca4fbd",
+      "reviewedFactsHash": "607e52cec3ca4fbd",
+      "sharedScreen": true,
+      "content": "My Classroom\nWhere: Left menu, My Classroom.\nWhat it is: Digital classroom workspace: one class, one place -\nOn the screen: Tabs: Stream; Materials; Assignments; Attendance; Live. Buttons: Post; Unpin; Delete; Reply; File; Link; Open; Create a test; Create homework; Start; All present; Save; Schedule / open whiteboard; Join. Sections: Unpin; Delete. Fields: Choose class; Share an announcement or start a discussion with your class…; Write a reply…; Title *; Topic / chapter (optional); Short description (optional). Messages it can show: Nothing here yet. Start the conversation!; No materials shared yet; No assignments yet; No students on this class roster; No upcoming live sessions.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "My Classroom . Digital classroom workspace: one class, one place - . Stream . Materials . Assignments . Attendance . Live . Post . Unpin . Delete . Reply . File . Link . Open . Create a test . Create homework . Start . All present . Save . Schedule / open whiteboard . Join . Unpin . Delete",
+      "contentHash": "f141ef0b36667098"
+    },
+    {
+      "key": "nav:/competency-assessment",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Competency Assessment",
+      "aliases": [],
+      "keywords": [],
+      "route": "/competency-assessment",
+      "where": "Left menu, Competency Assessment.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Edit",
+          "Delete",
+          "Cancel, rate today instead",
+          "Saving...",
+          "Update entry",
+          "Save"
+        ],
+        "headings": [
+          "Competency Assessment"
+        ],
+        "inputs": [
+          "Select class & subject",
+          "Rate today",
+          "Notes (optional)"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/CompetencyAssessment.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (10 labels found)"
+      ],
+      "factsHash": "ed73efe84f9c921c",
+      "reviewedFactsHash": "ed73efe84f9c921c",
+      "content": "Competency Assessment\nWhere: Left menu, Competency Assessment.\nWhat it is: (not documented yet)\nOn the screen: Buttons: Edit; Delete; Cancel, rate today instead; Saving; Update entry; Save. Sections: Competency Assessment. Fields: Select class & subject; Rate today; Notes (optional).\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Competency Assessment . Edit . Delete . Cancel, rate today instead . Saving... . Update entry . Save . Competency Assessment",
+      "contentHash": "6ce2005380ef11d1"
+    },
+    {
+      "key": "nav:/content-approval",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Content Approval",
+      "aliases": [],
+      "keywords": [],
+      "route": "/content-approval",
+      "where": "Left menu, Content Approval.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher"
+      ],
+      "purpose": "Content Approval: one page, tabs by role.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "My content",
+          "Approval queue",
+          "Settings"
+        ],
+        "buttons": [
+          "Course structure",
+          "Turn it on",
+          "Clear filters",
+          "Send reminders",
+          "Previous page",
+          "Next page",
+          "Move up",
+          "Move down",
+          "Remove stage",
+          "Add stage",
+          "Discard changes",
+          "Approve",
+          "Request changes",
+          "Reject"
+        ],
+        "headings": [
+          "Content approval",
+          "Approval history",
+          "Resubmit for review",
+          "Start a revision?",
+          "Archive this item?",
+          "Publish without review?",
+          "Approval workflow",
+          "Approval chain"
+        ],
+        "inputs": [
+          "Search title or subject…",
+          "Search title or subject, press Enter…",
+          "Require approval before publishing",
+          "Allow people to approve their own submissions",
+          "Admin approval completes all stages",
+          "After final approval",
+          "Reviewer",
+          "Explain what needs to happen…"
+        ],
+        "messages": [
+          "You don't have any content yet. Add modules, chapters and topics on the Course Structure page, then submit them for review here.",
+          "Nothing matches these filters.",
+          "Nothing is waiting for review. 🎉",
+          "No submissions match these filters.",
+          "No actions available for you on this submission.",
+          "No approval activity yet."
+        ]
+      },
+      "sources": [
+        "src/pages/ContentApproval.tsx",
+        "src/components/approval/MyContentTab.tsx",
+        "src/components/approval/ApprovalQueueTab.tsx",
+        "src/components/approval/ApprovalSettingsTab.tsx",
+        "src/components/approval/ReviewSheet.tsx",
+        "src/components/approval/HistoryTimeline.tsx",
+        "src/components/approval/ReasonDialog.tsx",
+        "src/components/approval/StatusPill.tsx",
+        "src/components/approval/ApprovalStepper.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "926c8318e154aa50",
+      "reviewedFactsHash": "926c8318e154aa50",
+      "sharedScreen": true,
+      "content": "Content Approval\nWhere: Left menu, Content Approval.\nWhat it is: Content Approval: one page, tabs by role.\nOn the screen: Tabs: My content; Approval queue; Settings. Buttons: Course structure; Turn it on; Clear filters; Send reminders; Previous page; Next page; Move up; Move down; Remove stage; Add stage; Discard changes; Approve; Request changes; Reject. Sections: Content approval; Approval history; Resubmit for review; Start a revision?; Archive this item?; Publish without review?; Approval workflow; Approval chain. Fields: Search title or subject…; Search title or subject, press Enter…; Require approval before publishing; Allow people to approve their own submissions; Admin approval completes all stages; After final approval; Reviewer; Explain what needs to happen…. Messages it can show: You don't have any content yet. Add modules, chapters and topics on the Course Structure page, then submit them for review here; Nothing matches these filters; Nothing is waiting for review. 🎉; No submissions match these filters; No actions available for you on this submission; No approval activity yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Content Approval . Content Approval: one page, tabs by role. . My content . Approval queue . Settings . Course structure . Turn it on . Clear filters . Send reminders . Previous page . Next page . Move up . Move down . Remove stage . Add stage . Discard changes . Approve . Request changes . Reject . Content approval . Approval history . Resubmit for review . Start a revision? . Archive this item? . Publish without review? . Approval workflow . Approval chain",
+      "contentHash": "fb6960c6d27c7b5d"
+    },
+    {
+      "key": "nav:/content-studio",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Content Studio",
+      "aliases": [],
+      "keywords": [],
+      "route": "/content-studio",
+      "where": "Left menu, Content Studio.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "Describe the lesson, choose the outputs and generate.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Create",
+          "My generations"
+        ],
+        "buttons": [
+          "Clear filters",
+          "Delete",
+          "Download",
+          "Download printable cards (PNG)",
+          "Download PNG (for printing)",
+          "Download video",
+          "Create again",
+          "Create video"
+        ],
+        "headings": [
+          "Content Studio",
+          "Create material",
+          "Downloads",
+          "Audio narration",
+          "Slides",
+          "Flash cards (tap a card to flip)",
+          "Flow chart",
+          "Flow chart (Mermaid code)"
+        ],
+        "inputs": [
+          "e.g. Make a presentation on the parts of a tree and how trees help humans, for Class 4 English.",
+          "English",
+          "Class 4",
+          "Outputs",
+          "Search by topic, e.g. plants, fractions...",
+          "All subjects",
+          "All classes",
+          "All outputs"
+        ],
+        "messages": [
+          "Nothing generated yet",
+          "No generations match"
+        ]
+      },
+      "sources": [
+        "src/pages/ContentStudio.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "bfe792f2019daf64",
+      "reviewedFactsHash": "bfe792f2019daf64",
+      "content": "Content Studio\nWhere: Left menu, Content Studio.\nWhat it is: Describe the lesson, choose the outputs and generate.\nOn the screen: Tabs: Create; My generations. Buttons: Clear filters; Delete; Download; Download printable cards (PNG); Download PNG (for printing); Download video; Create again; Create video. Sections: Content Studio; Create material; Downloads; Audio narration; Slides; Flash cards (tap a card to flip); Flow chart; Flow chart (Mermaid code). Fields: e.g. Make a presentation on the parts of a tree and how trees help humans, for Class 4 English; English; Class 4; Outputs; Search by topic, e.g. plants, fractions; All subjects; All classes; All outputs. Messages it can show: Nothing generated yet; No generations match.",
+      "searchText": "Content Studio . Describe the lesson, choose the outputs and generate. . Create . My generations . Clear filters . Delete . Download . Download printable cards (PNG) . Download PNG (for printing) . Download video . Create again . Create video . Content Studio . Create material . Downloads . Audio narration . Slides . Flash cards (tap a card to flip) . Flow chart . Flow chart (Mermaid code)",
+      "contentHash": "5d59c7d3aa7748a5"
+    },
+    {
+      "key": "nav:/course-structure",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Course Structure",
+      "aliases": [],
+      "keywords": [],
+      "route": "/course-structure",
+      "where": "Left menu, Course Structure.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher"
+      ],
+      "purpose": "Need terms, rollover or promotions?",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "By topic",
+          "Details",
+          "Materials",
+          "Prereqs",
+          "Work",
+          "Preview"
+        ],
+        "buttons": [
+          "Progress",
+          "New session",
+          "New subject",
+          "Semester",
+          "Subject",
+          "Move topic up",
+          "Move topic down",
+          "View",
+          "Move chapter up",
+          "Move chapter down",
+          "Topic",
+          "Add module",
+          "Publish",
+          "Unpublish"
+        ],
+        "headings": [
+          "Course Structure",
+          "Not assigned to a session",
+          "New academic session",
+          "New semester",
+          "Edit subject Add subject"
+        ],
+        "inputs": [
+          "Search subjects, modules, chapters and topics…",
+          "Name",
+          "Starts",
+          "Ends",
+          "Semester 1",
+          "Subject name",
+          "e.g. Mathematics",
+          "Class / grade"
+        ],
+        "messages": [
+          "No subjects assigned to you yet",
+          "No subjects yet",
+          "No matching topics.",
+          "No topics yet.",
+          "No modules yet",
+          "Nothing matches your search or filter."
+        ]
+      },
+      "sources": [
+        "src/pages/CourseStructureManager.tsx",
+        "src/components/course-structure/SubjectTree.tsx",
+        "src/components/course-structure/SubjectDialog.tsx",
+        "src/components/course-structure/SubjectStatsDialog.tsx",
+        "src/components/course-structure/NodeDialog.tsx",
+        "src/components/course-structure/TopicEditorSheet.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c5354562805dccf3",
+      "reviewedFactsHash": "c5354562805dccf3",
+      "sharedScreen": true,
+      "content": "Course Structure\nWhere: Left menu, Course Structure.\nWhat it is: Need terms, rollover or promotions?\nOn the screen: Tabs: By topic; Details; Materials; Prereqs; Work; Preview. Buttons: Progress; New session; New subject; Semester; Subject; Move topic up; Move topic down; View; Move chapter up; Move chapter down; Topic; Add module; Publish; Unpublish. Sections: Course Structure; Not assigned to a session; New academic session; New semester; Edit subject Add subject. Fields: Search subjects, modules, chapters and topics…; Name; Starts; Ends; Semester 1; Subject name; e.g. Mathematics; Class / grade. Messages it can show: No subjects assigned to you yet; No subjects yet; No matching topics; No topics yet; No modules yet; Nothing matches your search or filter.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Course Structure . Need terms, rollover or promotions? . By topic . Details . Materials . Prereqs . Work . Preview . Progress . New session . New subject . Semester . Subject . Move topic up . Move topic down . View . Move chapter up . Move chapter down . Topic . Add module . Publish . Unpublish . Course Structure . Not assigned to a session . New academic session . New semester . Edit subject Add subject",
+      "contentHash": "5603f75d2c926a56"
+    },
+    {
+      "key": "nav:/curative",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Lesson Plan Generator",
+      "aliases": [],
+      "keywords": [],
+      "route": "/curative",
+      "where": "Left menu, Lesson Plan Generator.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Create lesson plans with the AI Teaching Assistant, then assign homework or worksheets and find your saved lessons.",
+      "purposeSource": "help",
+      "steps": [
+        "Open the My Lessons tab.",
+        "Pick the lesson; use Download PDF if you want a copy."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [
+        "Find a lesson you made earlier"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Curative.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/drafts/DraftStatus.tsx",
+        "src/components/drafts/DraftRecoveryDialog.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "a39899ac0fa55e90",
+      "reviewedFactsHash": "a39899ac0fa55e90",
+      "content": "Lesson Plan Generator\nWhere: Left menu, Lesson Plan Generator.\nWhat it is: Create lesson plans with the AI Teaching Assistant, then assign homework or worksheets and find your saved lessons.\nHow to use it: (1) Open the My Lessons tab. (2) Pick the lesson; use Download PDF if you want a copy.",
+      "searchText": "Lesson Plan Generator . Create lesson plans with the AI Teaching Assistant, then assign homework or worksheets and find your saved lessons. . Find a lesson you made earlier",
+      "contentHash": "3a2903b68b8f0aab"
+    },
+    {
+      "key": "nav:/dashboard",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Home",
+      "aliases": [
+        "Homework"
+      ],
+      "keywords": [],
+      "route": "/dashboard",
+      "where": "Left menu, Home.",
+      "accessRoles": null,
+      "purpose": "Your starting page with shortcut cards to the main teaching tools.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Dashboard.tsx",
+        "src/components/SyllabusTracker.tsx",
+        "src/components/StudentReport.tsx",
+        "src/components/StudentHomework.tsx",
+        "src/components/engagement/EngagementOverviewPanel.tsx",
+        "src/components/video/VideoInsights.tsx",
+        "src/components/dashboard/DashboardHero.tsx",
+        "src/components/dashboard/DashStatCard.tsx",
+        "src/components/dashboard/PersonalizedDashboard.tsx",
+        "src/components/report/ReportContent.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "49398ecc19853f7f",
+      "reviewedFactsHash": "49398ecc19853f7f",
+      "content": "Home\nWhere: Left menu, Home.\nWhat it is: Your starting page with shortcut cards to the main teaching tools.",
+      "searchText": "Home . Homework . Your starting page with shortcut cards to the main teaching tools.",
+      "contentHash": "33ad8bd4b13a4a99"
+    },
+    {
+      "key": "nav:/differentiation",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Differentiation Studio",
+      "aliases": [],
+      "keywords": [],
+      "route": "/differentiation",
+      "where": "Left menu, Differentiation Studio.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "AI-assisted differentiation: describe one lesson material and get it written for different needs",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Delete pack",
+          "Copy",
+          "Print",
+          "Share"
+        ],
+        "headings": [
+          "Differentiation Studio",
+          "What do you need?",
+          "Saved packs"
+        ],
+        "inputs": [
+          "Class (optional)",
+          "Subject (optional)",
+          "Chapter (optional)",
+          "Topic *",
+          "e.g. Adding fractions with unlike denominators",
+          "Learning objective (optional)",
+          "Students will be able to…",
+          "Material"
+        ],
+        "messages": [
+          "Nothing saved yet."
+        ]
+      },
+      "sources": [
+        "src/pages/DifferentiationStudio.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c52f4c1fcfad0989",
+      "reviewedFactsHash": "c52f4c1fcfad0989",
+      "sharedScreen": true,
+      "content": "Differentiation Studio\nWhere: Left menu, Differentiation Studio.\nWhat it is: AI-assisted differentiation: describe one lesson material and get it written for different needs\nOn the screen: Buttons: Delete pack; Copy; Print; Share. Sections: Differentiation Studio; What do you need?; Saved packs. Fields: Class (optional); Subject (optional); Chapter (optional); Topic *; e.g. Adding fractions with unlike denominators; Learning objective (optional); Students will be able to…; Material. Messages it can show: Nothing saved yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Differentiation Studio . AI-assisted differentiation: describe one lesson material and get it written for different needs . Delete pack . Copy . Print . Share . Differentiation Studio . What do you need? . Saved packs",
+      "contentHash": "6c69d359171f6316"
+    },
+    {
+      "key": "nav:/doubts",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Student Doubts",
+      "aliases": [],
+      "keywords": [],
+      "route": "/doubts",
+      "where": "Left menu, Student Doubts.",
+      "accessRoles": [
+        "student",
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Doubt tickets. Students ask a teacher and follow the replies; teachers work the doubts assigned to them; school",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Back to list",
+          "Send reply",
+          "Mark resolved",
+          "Reopen",
+          "Mark in progress",
+          "Ask a doubt"
+        ],
+        "headings": [
+          "Ask a doubt",
+          "My Doubts Student Doubts"
+        ],
+        "inputs": [
+          "Teacher",
+          "Subject",
+          "e.g. Mathematics",
+          "Your doubt",
+          "Explain what you didn't understand",
+          "Add more detail or ask a follow-up",
+          "Search doubts"
+        ],
+        "messages": [
+          "No teachers are assigned to your class yet",
+          "You haven't asked any doubts yet.",
+          "No doubts have been asked yet.",
+          "No doubts match these filters."
+        ]
+      },
+      "sources": [
+        "src/pages/Doubts.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "20586c7c7aadf9d0",
+      "reviewedFactsHash": "20586c7c7aadf9d0",
+      "sharedScreen": true,
+      "content": "Student Doubts\nWhere: Left menu, Student Doubts.\nWhat it is: Doubt tickets. Students ask a teacher and follow the replies; teachers work the doubts assigned to them; school\nOn the screen: Buttons: Back to list; Send reply; Mark resolved; Reopen; Mark in progress; Ask a doubt. Sections: Ask a doubt; My Doubts Student Doubts. Fields: Teacher; Subject; e.g. Mathematics; Your doubt; Explain what you didn't understand; Add more detail or ask a follow-up; Search doubts. Messages it can show: No teachers are assigned to your class yet; You haven't asked any doubts yet; No doubts have been asked yet; No doubts match these filters.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Student Doubts . Doubt tickets. Students ask a teacher and follow the replies; teachers work the doubts assigned to them; school . Back to list . Send reply . Mark resolved . Reopen . Mark in progress . Ask a doubt . Ask a doubt . My Doubts Student Doubts",
+      "contentHash": "d9b622c6ee5d72bd"
+    },
+    {
+      "key": "nav:/dpp-manage",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Daily Practice (DPP)",
+      "aliases": [],
+      "keywords": [],
+      "route": "/dpp-manage",
+      "where": "Left menu, Daily Practice (DPP).",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher"
+      ],
+      "purpose": "Score per day (percent).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Sets",
+          "To mark",
+          "Insights",
+          "School analytics",
+          "Settings"
+        ],
+        "buttons": [
+          "New practice set",
+          "Create a set",
+          "Edit",
+          "Assign / schedule",
+          "Results",
+          "Archive",
+          "Add",
+          "Add question",
+          "Export CSV",
+          "Answers",
+          "Save mark",
+          "Explain this to me",
+          "Ask the AI Tutor why"
+        ],
+        "headings": [
+          "Daily Practice",
+          "No practice sets yet",
+          "Locked: students have started",
+          "Practice set editor",
+          "Edit practice set New practice set",
+          "Question bank",
+          "Nothing to mark",
+          "Students who need support (last 30 days, below 50%)"
+        ],
+        "inputs": [
+          "Title",
+          "e.g. Algebra basics - Day 3",
+          "Subject",
+          "Class",
+          "e.g. Class 5",
+          "Chapter (optional)",
+          "Difficulty",
+          "Time limit (min)"
+        ],
+        "messages": [
+          "No reviewed questions match. Write your own below.",
+          "No students with a class were found in your school.",
+          "No students are below 50% right now.",
+          "No question is stumping the class yet (needs at least 3 answers).",
+          "No practice assigned in this period.",
+          "No teacher-created sets in this period."
+        ]
+      },
+      "sources": [
+        "src/pages/DppManage.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/EmptyState.tsx",
+        "src/components/dpp/DppSetEditor.tsx",
+        "src/components/dpp/DppAssignDialog.tsx",
+        "src/components/dpp/DppSetResults.tsx",
+        "src/components/dpp/DppManagePanels.tsx",
+        "src/components/dpp/DppResultView.tsx",
+        "src/components/StatCard.tsx",
+        "src/components/dpp/DppCharts.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "376419f6a9eaa3bc",
+      "reviewedFactsHash": "376419f6a9eaa3bc",
+      "sharedScreen": true,
+      "content": "Daily Practice (DPP)\nWhere: Left menu, Daily Practice (DPP).\nWhat it is: Score per day (percent).\nOn the screen: Tabs: Sets; To mark; Insights; School analytics; Settings. Buttons: New practice set; Create a set; Edit; Assign / schedule; Results; Archive; Add; Add question; Export CSV; Answers; Save mark; Explain this to me; Ask the AI Tutor why. Sections: Daily Practice; No practice sets yet; Locked: students have started; Practice set editor; Edit practice set New practice set; Question bank; Nothing to mark; Students who need support (last 30 days, below 50%). Fields: Title; e.g. Algebra basics - Day 3; Subject; Class; e.g. Class 5; Chapter (optional); Difficulty; Time limit (min). Messages it can show: No reviewed questions match. Write your own below; No students with a class were found in your school; No students are below 50% right now; No question is stumping the class yet (needs at least 3 answers); No practice assigned in this period; No teacher-created sets in this period.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Daily Practice (DPP) . Score per day (percent). . Sets . To mark . Insights . School analytics . Settings . New practice set . Create a set . Edit . Assign / schedule . Results . Archive . Add . Add question . Export CSV . Answers . Save mark . Explain this to me . Ask the AI Tutor why . Daily Practice . No practice sets yet . Locked: students have started . Practice set editor . Edit practice set New practice set . Question bank . Nothing to mark . Students who need support (last 30 days, below 50%)",
+      "contentHash": "d1dae2214999279d"
+    },
+    {
+      "key": "nav:/entry-ticket",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Entry Ticket",
+      "aliases": [],
+      "keywords": [],
+      "route": "/entry-ticket",
+      "where": "Left menu, Entry Ticket.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "Create entry tickets for a lesson and review how students improved.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Past Sessions",
+          "Enter Pre-Score",
+          "Enter Exit Scores",
+          "View Results",
+          "Generate Entry Ticket Questions",
+          "Save Entry Ticket Score",
+          "Save Exit Score and Calculate Gain"
+        ],
+        "headings": [
+          "Entry Ticket",
+          "Past Ticket Sessions",
+          "Create Entry Ticket",
+          "Enter Class Pre-Score",
+          "Normalized Gain Results"
+        ],
+        "inputs": [
+          "Class",
+          "Section",
+          "Subject",
+          "Chapter",
+          "Total Marks",
+          "Topic / Chapter",
+          "Subtopic"
+        ],
+        "messages": [
+          "No past sessions found yet. Create your first entry ticket above."
+        ]
+      },
+      "sources": [
+        "src/pages/EntryTicket.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "59b07b8b773e9626",
+      "reviewedFactsHash": "59b07b8b773e9626",
+      "content": "Entry Ticket\nWhere: Left menu, Entry Ticket.\nWhat it is: Create entry tickets for a lesson and review how students improved.\nOn the screen: Buttons: Past Sessions; Enter Pre-Score; Enter Exit Scores; View Results; Generate Entry Ticket Questions; Save Entry Ticket Score; Save Exit Score and Calculate Gain. Sections: Entry Ticket; Past Ticket Sessions; Create Entry Ticket; Enter Class Pre-Score; Normalized Gain Results. Fields: Class; Section; Subject; Chapter; Total Marks; Topic / Chapter; Subtopic. Messages it can show: No past sessions found yet. Create your first entry ticket above.",
+      "searchText": "Entry Ticket . Create entry tickets for a lesson and review how students improved. . Past Sessions . Enter Pre-Score . Enter Exit Scores . View Results . Generate Entry Ticket Questions . Save Entry Ticket Score . Save Exit Score and Calculate Gain . Entry Ticket . Past Ticket Sessions . Create Entry Ticket . Enter Class Pre-Score . Normalized Gain Results",
+      "contentHash": "303b877dcf31a3f8"
+    },
+    {
+      "key": "nav:/exam-reviews",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Exam Reviews",
+      "aliases": [],
+      "keywords": [],
+      "route": "/exam-reviews",
+      "where": "Left menu, Exam Reviews.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AssessmentHub.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "purpose found but too little screen text to explain how to use it (0 labels found)"
+      ],
+      "factsHash": "7ed25350d9beb72e",
+      "reviewedFactsHash": "7ed25350d9beb72e",
+      "sharedScreen": true,
+      "content": "Exam Reviews\nWhere: Left menu, Exam Reviews.\nWhat it is: AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Exam Reviews . AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "contentHash": "b58178adf14973d5"
+    },
+    {
+      "key": "nav:/houses",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Houses",
+      "aliases": [],
+      "keywords": [],
+      "route": "/houses",
+      "where": "Left menu, Houses.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student",
+        "parent",
+        "hod"
+      ],
+      "purpose": "Create your school's first house to get started.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Add House",
+          "Assign students",
+          "Award points",
+          "Edit",
+          "Delete"
+        ],
+        "headings": [
+          "House Management",
+          "House Leaderboard",
+          "Edit House Add House"
+        ],
+        "inputs": [
+          "Filter by Class",
+          "All Classes",
+          "Points (use negative to deduct)",
+          "e.g. 10 or -5",
+          "Remarks (optional)",
+          "e.g. Won inter-house quiz",
+          "House Name *",
+          "e.g. Phoenix House"
+        ],
+        "messages": [
+          "No houses set up yet",
+          "No students assigned to this house yet.",
+          "No students found"
+        ]
+      },
+      "sources": [
+        "src/pages/HouseManagement.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "6f1c4aefe74d574b",
+      "reviewedFactsHash": "6f1c4aefe74d574b",
+      "sharedScreen": true,
+      "content": "Houses\nWhere: Left menu, Houses.\nWhat it is: Create your school's first house to get started.\nOn the screen: Buttons: Add House; Assign students; Award points; Edit; Delete. Sections: House Management; House Leaderboard; Edit House Add House. Fields: Filter by Class; All Classes; Points (use negative to deduct); e.g. 10 or -5; Remarks (optional); e.g. Won inter-house quiz; House Name *; e.g. Phoenix House. Messages it can show: No houses set up yet; No students assigned to this house yet; No students found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Houses . Create your school's first house to get started. . Add House . Assign students . Award points . Edit . Delete . House Management . House Leaderboard . Edit House Add House",
+      "contentHash": "f63451d1c64a3e72"
+    },
+    {
+      "key": "nav:/intervention-board",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Intervention Board",
+      "aliases": [],
+      "keywords": [],
+      "route": "/intervention-board",
+      "where": "Left menu, Intervention Board.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "Student intervention board: every support plan on one board, from \"active\" to its ACTUAL outcome.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "New intervention",
+          "Open history",
+          "Edit",
+          "Mark Completed",
+          "View",
+          "New Intervention",
+          "Create New Intervention",
+          "Back to History",
+          "Saving...",
+          "Mark as Completed",
+          "Add",
+          "Save"
+        ],
+        "headings": [
+          "Student Intervention Board",
+          "New intervention"
+        ],
+        "inputs": [
+          "Search student or reason",
+          "What happened this week? (e.g. completed 2 remedial sheets, more confident in class)",
+          "Choose a class",
+          "Tier",
+          "Priority",
+          "Status",
+          "Reason",
+          "Action Plan"
+        ],
+        "messages": [
+          "Nothing here",
+          "No plan steps yet - use Edit to add some.",
+          "No check-ins yet.",
+          "No measurement recorded.",
+          "No students on this class roster.",
+          "No interventions recorded yet."
+        ]
+      },
+      "sources": [
+        "src/pages/InterventionBoard.tsx",
+        "src/components/InterventionDrawer.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "f54393ffcb047644",
+      "reviewedFactsHash": "f54393ffcb047644",
+      "sharedScreen": true,
+      "content": "Intervention Board\nWhere: Left menu, Intervention Board.\nWhat it is: Student intervention board: every support plan on one board, from \"active\" to its ACTUAL outcome.\nOn the screen: Buttons: New intervention; Open history; Edit; Mark Completed; View; New Intervention; Create New Intervention; Back to History; Saving; Mark as Completed; Add; Save. Sections: Student Intervention Board; New intervention. Fields: Search student or reason; What happened this week? (e.g. completed 2 remedial sheets, more confident in class); Choose a class; Tier; Priority; Status; Reason; Action Plan. Messages it can show: Nothing here; No plan steps yet - use Edit to add some; No check-ins yet; No measurement recorded; No students on this class roster; No interventions recorded yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Intervention Board . Student intervention board: every support plan on one board, from \"active\" to its ACTUAL outcome. . New intervention . Open history . Edit . Mark Completed . View . New Intervention . Create New Intervention . Back to History . Saving... . Mark as Completed . Add . Save . Student Intervention Board . New intervention",
+      "contentHash": "fa6c02225771ff0c"
+    },
+    {
+      "key": "nav:/invigilation",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Invigilation",
+      "aliases": [],
+      "keywords": [],
+      "route": "/invigilation",
+      "where": "Left menu, Invigilation.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher"
+      ],
+      "purpose": "Select an exam to assign invigilators",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Suggest",
+          "Save"
+        ],
+        "headings": [
+          "My Invigilation Duties",
+          "Invigilation Management",
+          "Teacher Subjects",
+          "Assign Invigilators"
+        ],
+        "inputs": [
+          "Add subject",
+          "Select Exam",
+          "Select teacher"
+        ],
+        "messages": [
+          "No invigilation duties assigned yet",
+          "No teachers found",
+          "No seating has been generated for this exam yet. Generate seating first in Exam Seating."
+        ]
+      },
+      "sources": [
+        "src/pages/InvigilationManagement.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "e80070e231675285",
+      "reviewedFactsHash": "e80070e231675285",
+      "sharedScreen": true,
+      "content": "Invigilation\nWhere: Left menu, Invigilation.\nWhat it is: Select an exam to assign invigilators\nOn the screen: Buttons: Suggest; Save. Sections: My Invigilation Duties; Invigilation Management; Teacher Subjects; Assign Invigilators. Fields: Add subject; Select Exam; Select teacher. Messages it can show: No invigilation duties assigned yet; No teachers found; No seating has been generated for this exam yet. Generate seating first in Exam Seating.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Invigilation . Select an exam to assign invigilators . Suggest . Save . My Invigilation Duties . Invigilation Management . Teacher Subjects . Assign Invigilators",
+      "contentHash": "d02ebf9f79837304"
+    },
+    {
+      "key": "nav:/item-bank",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Item Bank & Mock Exams",
+      "aliases": [],
+      "keywords": [],
+      "route": "/item-bank",
+      "where": "Left menu, Item Bank & Mock Exams.",
+      "accessRoles": [
+        "admin",
+        "teacher",
+        "principal",
+        "hod",
+        "school_admin"
+      ],
+      "purpose": "AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AssessmentHub.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "purpose found but too little screen text to explain how to use it (0 labels found)"
+      ],
+      "factsHash": "96a178b514e9166a",
+      "reviewedFactsHash": "96a178b514e9166a",
+      "sharedScreen": true,
+      "content": "Item Bank & Mock Exams\nWhere: Left menu, Item Bank & Mock Exams.\nWhat it is: AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Item Bank & Mock Exams . AssessmentHub.tsx — one place for the assessment tools staff use together: Item Bank (author + review questions) · Builder (hand-pick questions, preview, assign) · Mock Exams (build papers from them) · Exam Reviews (con…",
+      "contentHash": "29622320f7261b99"
+    },
+    {
+      "key": "nav:/marketplace",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Marketplace",
+      "aliases": [],
+      "keywords": [],
+      "route": "/marketplace",
+      "where": "Left menu, Marketplace.",
+      "accessRoles": [
+        "admin",
+        "school_admin",
+        "teacher",
+        "principal",
+        "student"
+      ],
+      "purpose": "Drop-in <video> / YouTube players that report real watch time for the Student Engagement Score.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "All Videos",
+          "Upload Video",
+          "Courses",
+          "Assessment Evaluation",
+          "Textbook Loader",
+          "Videos"
+        ],
+        "buttons": [
+          "Open",
+          "Hide",
+          "Play",
+          "Questions",
+          "Video performance",
+          "View Syllabus",
+          "Video",
+          "Document",
+          "Adding...",
+          "Add Material",
+          "Saving...",
+          "Save Changes",
+          "Create Course",
+          "Hide Materials"
+        ],
+        "headings": [
+          "Edit Course Create Course",
+          "Marketplace",
+          "Upload Learning Video",
+          "Playback rules",
+          "Let students skip ahead in the video",
+          "Let students skip questions",
+          "Edit question New question",
+          "Question-wise performance"
+        ],
+        "inputs": [
+          "Material title",
+          "Video link (YouTube, Drive, etc.)",
+          "Title",
+          "e.g. Spoken English Club",
+          "Description",
+          "Syllabus",
+          "Outline what this course covers, week by week or topic by topic...",
+          "Class"
+        ],
+        "messages": [
+          "No file attached",
+          "No students enrolled yet.",
+          "No materials added yet.",
+          "No courses created yet.",
+          "No courses available yet.",
+          "No videos uploaded yet."
+        ]
+      },
+      "sources": [
+        "src/pages/Marketplace.tsx",
+        "src/components/video/TrackedVideo.tsx",
+        "src/components/video/InteractiveVideoPlayer.tsx",
+        "src/components/video/VideoQuestionManager.tsx",
+        "src/components/video/VideoInsights.tsx",
+        "src/components/marketplace/TextbookLoaderPanel.tsx",
+        "src/pages/AssessmentEvaluation.tsx",
+        "src/components/video/VideoDoubtPanel.tsx",
+        "src/components/assessment/AssessmentReportView.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "080c121f79c5eef6",
+      "reviewedFactsHash": "080c121f79c5eef6",
+      "sharedScreen": true,
+      "content": "Marketplace\nWhere: Left menu, Marketplace.\nWhat it is: Drop-in <video> / YouTube players that report real watch time for the Student Engagement Score.\nOn the screen: Tabs: All Videos; Upload Video; Courses; Assessment Evaluation; Textbook Loader; Videos. Buttons: Open; Hide; Play; Questions; Video performance; View Syllabus; Video; Document; Adding; Add Material; Saving; Save Changes; Create Course; Hide Materials. Sections: Edit Course Create Course; Marketplace; Upload Learning Video; Playback rules; Let students skip ahead in the video; Let students skip questions; Edit question New question; Question-wise performance. Fields: Material title; Video link (YouTube, Drive, etc.); Title; e.g. Spoken English Club; Description; Syllabus; Outline what this course covers, week by week or topic by topic; Class. Messages it can show: No file attached; No students enrolled yet; No materials added yet; No courses created yet; No courses available yet; No videos uploaded yet.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Marketplace . Drop-in <video> / YouTube players that report real watch time for the Student Engagement Score. . All Videos . Upload Video . Courses . Assessment Evaluation . Textbook Loader . Videos . Open . Hide . Play . Questions . Video performance . View Syllabus . Video . Document . Adding... . Add Material . Saving... . Save Changes . Create Course . Hide Materials . Edit Course Create Course . Marketplace . Upload Learning Video . Playback rules . Let students skip ahead in the video . Let students skip questions . Edit question New question . Question-wise performance",
+      "contentHash": "7613a595abd9e85e"
+    },
+    {
+      "key": "nav:/my-sen-students",
+      "role": "teacher",
+      "kind": "page",
+      "name": "My SEN Students",
+      "aliases": [],
+      "keywords": [],
+      "route": "/my-sen-students",
+      "where": "Left menu, My SEN Students.",
+      "accessRoles": [
+        "teacher",
+        "hod"
+      ],
+      "purpose": "You are the case manager Therapist view (read-only IEP)",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "IEP",
+          "Accommodations",
+          "Therapy"
+        ],
+        "buttons": [
+          "Back to students",
+          "Generate IEP with AI",
+          "New IEP Plan",
+          "Goal",
+          "Review",
+          "Add Accommodation",
+          "Active",
+          "Inactive",
+          "Log Session",
+          "Save Changes",
+          "Create Plan",
+          "Add Goal",
+          "Save Review",
+          "Add"
+        ],
+        "headings": [
+          "My SEN Students",
+          "Edit IEP Plan New IEP Plan",
+          "Edit IEP Goal Add IEP Goal",
+          "Edit IEP Review Log IEP Review",
+          "Edit Accommodation Add Accommodation",
+          "Edit Therapy Session Log Therapy Session",
+          "Generate IEP draft"
+        ],
+        "inputs": [
+          "Search...",
+          "Title",
+          "Start Date",
+          "End Date (optional)",
+          "Status",
+          "Domain",
+          "Goal Description",
+          "Baseline"
+        ],
+        "messages": [
+          "No SEN students assigned to you yet.",
+          "No IEP plans yet.",
+          "No goals added.",
+          "No reviews logged.",
+          "No accommodations on file.",
+          "No therapy sessions logged."
+        ]
+      },
+      "sources": [
+        "src/pages/MySENStudents.tsx",
+        "src/components/sen/IepGeneratorDialog.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "c9a4d1626ebb3029",
+      "reviewedFactsHash": "c9a4d1626ebb3029",
+      "sharedScreen": true,
+      "content": "My SEN Students\nWhere: Left menu, My SEN Students.\nWhat it is: You are the case manager Therapist view (read-only IEP)\nOn the screen: Tabs: IEP; Accommodations; Therapy. Buttons: Back to students; Generate IEP with AI; New IEP Plan; Goal; Review; Add Accommodation; Active; Inactive; Log Session; Save Changes; Create Plan; Add Goal; Save Review; Add. Sections: My SEN Students; Edit IEP Plan New IEP Plan; Edit IEP Goal Add IEP Goal; Edit IEP Review Log IEP Review; Edit Accommodation Add Accommodation; Edit Therapy Session Log Therapy Session; Generate IEP draft. Fields: Search; Title; Start Date; End Date (optional); Status; Domain; Goal Description; Baseline. Messages it can show: No SEN students assigned to you yet; No IEP plans yet; No goals added; No reviews logged; No accommodations on file; No therapy sessions logged.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "My SEN Students . You are the case manager Therapist view (read-only IEP) . IEP . Accommodations . Therapy . Back to students . Generate IEP with AI . New IEP Plan . Goal . Review . Add Accommodation . Active . Inactive . Log Session . Save Changes . Create Plan . Add Goal . Save Review . Add . My SEN Students . Edit IEP Plan New IEP Plan . Edit IEP Goal Add IEP Goal . Edit IEP Review Log IEP Review . Edit Accommodation Add Accommodation . Edit Therapy Session Log Therapy Session . Generate IEP draft",
+      "contentHash": "3d825a884c01e94b"
+    },
+    {
+      "key": "nav:/report-cards",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Report Cards",
+      "aliases": [],
+      "keywords": [],
+      "route": "/report-cards",
+      "where": "Left menu, Report Cards.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "View report cards you are allowed to see.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/ReportCards.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "866097804ed88073",
+      "reviewedFactsHash": "866097804ed88073",
+      "content": "Report Cards\nWhere: Left menu, Report Cards.\nWhat it is: View report cards you are allowed to see.",
+      "searchText": "Report Cards . View report cards you are allowed to see.",
+      "contentHash": "f19367e695caf05b"
+    },
+    {
+      "key": "nav:/requests",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Requests",
+      "aliases": [],
+      "keywords": [],
+      "route": "/requests",
+      "where": "Left menu, Requests.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "hod",
+        "student",
+        "parent"
+      ],
+      "purpose": "Send and follow diagnostic requests.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Requests.tsx",
+        "src/components/TeacherRequestForm.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "31a8435826c4ce34",
+      "reviewedFactsHash": "31a8435826c4ce34",
+      "content": "Requests\nWhere: Left menu, Requests.\nWhat it is: Send and follow diagnostic requests.",
+      "searchText": "Requests . Send and follow diagnostic requests.",
+      "contentHash": "b0df649429cc5587"
+    },
+    {
+      "key": "nav:/school-analytics",
+      "role": "teacher",
+      "kind": "page",
+      "name": "School Intelligence",
+      "aliases": [],
+      "keywords": [],
+      "route": "/school-analytics",
+      "where": "Left menu, School Intelligence.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "The twin exposes student-level data, so it is staff-only (this page is also open to students and parents).",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Overview",
+          "Predictions",
+          "Forecast",
+          "Digital Twin"
+        ],
+        "buttons": [
+          "Refresh"
+        ],
+        "headings": [
+          "School Performance Intelligence",
+          "Learning Gain Trend",
+          "Student Risk Distribution",
+          "Your Classes — Academic Digital Twin School Academic Digital Twin",
+          "What the twin is flagging",
+          "Classes",
+          "Teachers",
+          "Academic Forecast"
+        ],
+        "inputs": [],
+        "messages": [
+          "No data yet. Run Issue Detection to generate metrics.",
+          "No predictions yet. Run Predictions to analyze students.",
+          "No predictions yet. Click \"Run Predictions\" to analyze student performance.",
+          "No active alerts. Run Issue Detection to scan for learning issues.",
+          "No classes found.",
+          "No subject teachers are assigned to this class in Class Management."
+        ]
+      },
+      "sources": [
+        "src/pages/SchoolAnalytics.tsx",
+        "src/components/SchoolDigitalTwin.tsx",
+        "src/components/AcademicForecastPanel.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "ee3071eea324b3ab",
+      "reviewedFactsHash": "ee3071eea324b3ab",
+      "sharedScreen": true,
+      "content": "School Intelligence\nWhere: Left menu, School Intelligence.\nWhat it is: The twin exposes student-level data, so it is staff-only (this page is also open to students and parents).\nOn the screen: Tabs: Overview; Predictions; Forecast; Digital Twin. Buttons: Refresh. Sections: School Performance Intelligence; Learning Gain Trend; Student Risk Distribution; Your Classes — Academic Digital Twin School Academic Digital Twin; What the twin is flagging; Classes; Teachers; Academic Forecast. Messages it can show: No data yet. Run Issue Detection to generate metrics; No predictions yet. Run Predictions to analyze students; No predictions yet. Click \"Run Predictions\" to analyze student performance; No active alerts. Run Issue Detection to scan for learning issues; No classes found; No subject teachers are assigned to this class in Class Management.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "School Intelligence . The twin exposes student-level data, so it is staff-only (this page is also open to students and parents). . Overview . Predictions . Forecast . Digital Twin . Refresh . School Performance Intelligence . Learning Gain Trend . Student Risk Distribution . Your Classes — Academic Digital Twin School Academic Digital Twin . What the twin is flagging . Classes . Teachers . Academic Forecast",
+      "contentHash": "d7c1fc8f2f596a7c"
+    },
+    {
+      "key": "nav:/security",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Security Center",
+      "aliases": [],
+      "keywords": [],
+      "route": "/security",
+      "where": "Left menu, Security Center.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "hod",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": null,
+      "purposeSource": "none",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "All Logs",
+          "Suspicious Activity",
+          "My Devices",
+          "Anomaly Alerts"
+        ],
+        "buttons": [
+          "Scan now",
+          "Acknowledge",
+          "Resolve",
+          "False positive",
+          "Sign out everywhere",
+          "Reopen",
+          "Sign out all other devices",
+          "Sign out"
+        ],
+        "headings": [
+          "Security Center",
+          "Recent sign-in activity",
+          "Sign out all other devices?"
+        ],
+        "inputs": [],
+        "messages": [
+          "No audit logs recorded yet.",
+          "No suspicious activity detected.",
+          "No open alerts. Nothing unusual in recent login and data-access activity.",
+          "No alerts with this status.",
+          "No sign-ins recorded yet. They appear here as people log in.",
+          "No active devices found."
+        ]
+      },
+      "sources": [
+        "src/pages/SecurityCenter.tsx",
+        "src/components/security/SecurityAnomalyPanel.tsx",
+        "src/components/security/MyDevicesPanel.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "no purpose could be read from the code (15 labels found)"
+      ],
+      "factsHash": "415e7eb830a3abce",
+      "reviewedFactsHash": "415e7eb830a3abce",
+      "sharedScreen": true,
+      "content": "Security Center\nWhere: Left menu, Security Center.\nWhat it is: (not documented yet)\nOn the screen: Tabs: All Logs; Suspicious Activity; My Devices; Anomaly Alerts. Buttons: Scan now; Acknowledge; Resolve; False positive; Sign out everywhere; Reopen; Sign out all other devices; Sign out. Sections: Security Center; Recent sign-in activity; Sign out all other devices?. Messages it can show: No audit logs recorded yet; No suspicious activity detected; No open alerts. Nothing unusual in recent login and data-access activity; No alerts with this status; No sign-ins recorded yet. They appear here as people log in; No active devices found.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "Security Center . All Logs . Suspicious Activity . My Devices . Anomaly Alerts . Scan now . Acknowledge . Resolve . False positive . Sign out everywhere . Reopen . Sign out all other devices . Sign out . Security Center . Recent sign-in activity . Sign out all other devices?",
+      "contentHash": "d107cab397d115b5"
+    },
+    {
+      "key": "nav:/semester-engine",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Semester Engine",
+      "aliases": [],
+      "keywords": [],
+      "route": "/semester-engine",
+      "where": "Left menu, Semester Engine.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student"
+      ],
+      "purpose": "Your results will appear here after your teacher publishes them.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Academic Years",
+          "Semesters",
+          "Marks & GPA",
+          "My Results Results",
+          "Promotion",
+          "Year Rollover"
+        ],
+        "buttons": [
+          "All Terms",
+          "New Year",
+          "Set Active",
+          "Reopen",
+          "Complete",
+          "New Semester",
+          "Activate",
+          "Edit",
+          "Enter",
+          "Marks",
+          "Promote",
+          "Retain",
+          "Add Subject"
+        ],
+        "headings": [
+          "Term-wise Results",
+          "Semester Engine",
+          "Academic Years",
+          "Semesters / Terms",
+          "Marks & GPA",
+          "Student Promotion",
+          "Year Rollover",
+          "New Academic Year"
+        ],
+        "inputs": [
+          "Select Term",
+          "All Classes",
+          "Year Name *",
+          "Start Date *",
+          "End Date *",
+          "Structure",
+          "Academic Year *",
+          "Select year"
+        ],
+        "messages": [
+          "No students found.",
+          "No marks recorded.",
+          "No results yet",
+          "No subject marks recorded.",
+          "You don't have access to the Semester Engine.",
+          "No academic years yet. Create one to get started."
+        ]
+      },
+      "sources": [
+        "src/pages/SemesterEngine.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "5e9828789639aa07",
+      "reviewedFactsHash": "5e9828789639aa07",
+      "sharedScreen": true,
+      "content": "Semester Engine\nWhere: Left menu, Semester Engine.\nWhat it is: Your results will appear here after your teacher publishes them.\nOn the screen: Tabs: Academic Years; Semesters; Marks & GPA; My Results Results; Promotion; Year Rollover. Buttons: All Terms; New Year; Set Active; Reopen; Complete; New Semester; Activate; Edit; Enter; Marks; Promote; Retain; Add Subject. Sections: Term-wise Results; Semester Engine; Academic Years; Semesters / Terms; Marks & GPA; Student Promotion; Year Rollover; New Academic Year. Fields: Select Term; All Classes; Year Name *; Start Date *; End Date *; Structure; Academic Year *; Select year. Messages it can show: No students found; No marks recorded; No results yet; No subject marks recorded; You don't have access to the Semester Engine; No academic years yet. Create one to get started.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Semester Engine . Your results will appear here after your teacher publishes them. . Academic Years . Semesters . Marks & GPA . My Results Results . Promotion . Year Rollover . All Terms . New Year . Set Active . Reopen . Complete . New Semester . Activate . Edit . Enter . Marks . Promote . Retain . Add Subject . Term-wise Results . Semester Engine . Academic Years . Semesters / Terms . Marks & GPA . Student Promotion . Year Rollover . New Academic Year",
+      "contentHash": "a0cf68f5e1eefc8a"
+    },
+    {
+      "key": "nav:/submissions",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Worksheet Submissions",
+      "aliases": [],
+      "keywords": [],
+      "route": "/submissions",
+      "where": "Left menu, Worksheet Submissions.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Review the answers students submitted on worksheets. You can let AI review them, then check, adjust and finalise the score and feedback yourself.",
+      "purposeSource": "help",
+      "steps": [
+        "Find the submission in the list. Its badge says Pending Review, AI Reviewed or Reviewed.",
+        "Press AI Review on the submission, or AI Review All Pending to do all of them. Wait for the success message that shows the score.",
+        "Open the submission. Under AI Evaluation Results read the suggested score and feedback.",
+        "Type the Score you want to give. The box shows the AI's suggestion; leaving it empty saves no score. Use a number that is not negative.",
+        "Type the feedback for the student in the feedback box. Its hint text shows the AI's feedback if there is one.",
+        "Press Approve & Finalize."
+      ],
+      "notes": [
+        "You see Marked as reviewed and feedback saved, the badge becomes Reviewed, and the student and the parent are notified that the worksheet has been reviewed."
+      ],
+      "problems": [
+        "The score is rejected. - Type a plain number that is zero or higher, or leave the box empty.",
+        "AI Review All Pending does nothing. - There is nothing waiting. New submissions appear after students hand in worksheets.",
+        "AI review failed. - The message after it explains the cause. Press AI Review again. In a bulk review, the success message tells you how many failed so you can retry those."
+      ],
+      "taskTitles": [
+        "Review and finalise a submission"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Submissions.tsx",
+        "src/components/PageHeader.tsx",
+        "src/components/report/AssessmentReport.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "490e14654c98b22a",
+      "reviewedFactsHash": "490e14654c98b22a",
+      "content": "Worksheet Submissions\nWhere: Left menu, Worksheet Submissions.\nWhat it is: Review the answers students submitted on worksheets. You can let AI review them, then check, adjust and finalise the score and feedback yourself.\nHow to use it: (1) Find the submission in the list. Its badge says Pending Review, AI Reviewed or Reviewed. (2) Press AI Review on the submission, or AI Review All Pending to do all of them. Wait for the success message that shows the score. (3) Open the submission. Under AI Evaluation Results read the suggested score and feedback. (4) Type the Score you want to give. The box shows the AI's suggestion; leaving it empty saves no score. Use a number that is not negative. (5) Type the feedback for the student in the feedback box. Its hint text shows the AI's feedback if there is one. (6) Press Approve & Finalize.\nGood to know: You see Marked as reviewed and feedback saved, the badge becomes Reviewed, and the student and the parent are notified that the worksheet has been reviewed.\nIf something goes wrong: The score is rejected. - Type a plain number that is zero or higher, or leave the box empty. AI Review All Pending does nothing. - There is nothing waiting. New submissions appear after students hand in worksheets. AI review failed. - The message after it explains the cause. Press AI Review again. In a bulk review, the success message tells you how many failed so you can retry those.",
+      "searchText": "Worksheet Submissions . Review the answers students submitted on worksheets. You can let AI review them, then check, adjust and finalise the score and feedback yourself. . Review and finalise a submission",
+      "contentHash": "ae1def43830a12ed"
+    },
+    {
+      "key": "nav:/surveys",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Surveys",
+      "aliases": [],
+      "keywords": [],
+      "route": "/surveys",
+      "where": "Left menu, Surveys.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "student",
+        "parent"
+      ],
+      "purpose": "Answer surveys. Roles that create surveys can add questions.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Surveys.tsx",
+        "src/components/drafts/DraftStatus.tsx",
+        "src/components/drafts/DraftRecoveryDialog.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "e73c1a153a6b6c73",
+      "reviewedFactsHash": "e73c1a153a6b6c73",
+      "content": "Surveys\nWhere: Left menu, Surveys.\nWhat it is: Answer surveys. Roles that create surveys can add questions.",
+      "searchText": "Surveys . Answer surveys. Roles that create surveys can add questions.",
+      "contentHash": "9586f95e5ba63e89"
+    },
+    {
+      "key": "nav:/teacher",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Reports",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher",
+      "where": "Left menu, Reports.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "school_admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Student reports and class reports from assessments.",
+      "purposeSource": "help",
+      "steps": [
+        "Open the Class Reports tab.",
+        "Choose a class when the page says Select a Class.",
+        "Press Download Report."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [
+        "Download a class report"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/TeacherPanel.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/StudentReport.tsx",
+        "src/components/ClassReportView.tsx",
+        "src/components/report/ReportContent.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "ba10f62ee92eec1b",
+      "reviewedFactsHash": "ba10f62ee92eec1b",
+      "content": "Reports\nWhere: Left menu, Reports.\nWhat it is: Student reports and class reports from assessments.\nHow to use it: (1) Open the Class Reports tab. (2) Choose a class when the page says Select a Class. (3) Press Download Report.",
+      "searchText": "Reports . Student reports and class reports from assessments. . Download a class report",
+      "contentHash": "325e62f306a24db9"
+    },
+    {
+      "key": "nav:/teacher-at-risk",
+      "role": "teacher",
+      "kind": "page",
+      "name": "At-Risk Students",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher-at-risk",
+      "where": "Left menu, At-Risk Students.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "TeacherStudentWatch.tsx — one place for the three \"who needs attention\" views a teacher uses: Early Warning · At-Risk Students The tab buttons are real routes (/early-warning, /teacher-at-risk), so the sidebar links, br…",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/TeacherStudentWatch.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "purpose found but too little screen text to explain how to use it (0 labels found)"
+      ],
+      "factsHash": "33db1bf72b66104e",
+      "reviewedFactsHash": "33db1bf72b66104e",
+      "content": "At-Risk Students\nWhere: Left menu, At-Risk Students.\nWhat it is: TeacherStudentWatch.tsx — one place for the three \"who needs attention\" views a teacher uses: Early Warning · At-Risk Students The tab buttons are real routes (/early-warning, /teacher-at-risk), so the sidebar links, br…\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "At-Risk Students . TeacherStudentWatch.tsx — one place for the three \"who needs attention\" views a teacher uses: Early Warning · At-Risk Students The tab buttons are real routes (/early-warning, /teacher-at-risk), so the sidebar links, br…",
+      "contentHash": "e91d9ed99ee28e7e"
+    },
+    {
+      "key": "nav:/teacher-behaviour",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Behaviour",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher-behaviour",
+      "where": "Left menu, Behaviour.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "Not enough comparable data between the start and end of this intervention to judge impact.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "View Details",
+          "Saving...",
+          "Save Note",
+          "Mark done",
+          "Delete",
+          "Done",
+          "Review",
+          "Generating...",
+          "Regenerate",
+          "Generate Plan",
+          "Updating...",
+          "Unpublish",
+          "Publish to student",
+          "Save Notes"
+        ],
+        "headings": [
+          "Behaviour Dashboard",
+          "Add a Confidential Note",
+          "Follow-Ups Due",
+          "Reviews Due",
+          "Improvement Plan",
+          "Behaviour Analytics",
+          "Tier 1 — Positive Recognition"
+        ],
+        "inputs": [
+          "Class",
+          "Section",
+          "Student",
+          "Follow-up date (optional)",
+          "Write your note here — only you can see this.",
+          "Share this as a behaviour record visible to the student & parent",
+          "Teacher Notes (private additions to the plan)",
+          "Add your own observations or adjustments to this plan..."
+        ],
+        "messages": [
+          "No review date set",
+          "No notes yet for this student.",
+          "No pending follow-ups.",
+          "No intervention reviews scheduled.",
+          "No plan generated yet for this student. Click \"Generate Plan\" to build one from their predictions, attendance, GPA and competency data.",
+          "No interventions recorded yet."
+        ]
+      },
+      "sources": [
+        "src/pages/TeacherBehaviourDashboard.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/InterventionDrawer.tsx",
+        "src/components/BehaviourAnalytics.tsx",
+        "src/components/TierOnePositiveRecognition.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "11c3fa8f5106c72a",
+      "reviewedFactsHash": "11c3fa8f5106c72a",
+      "content": "Behaviour\nWhere: Left menu, Behaviour.\nWhat it is: Not enough comparable data between the start and end of this intervention to judge impact.\nOn the screen: Buttons: View Details; Saving; Save Note; Mark done; Delete; Done; Review; Generating; Regenerate; Generate Plan; Updating; Unpublish; Publish to student; Save Notes. Sections: Behaviour Dashboard; Add a Confidential Note; Follow-Ups Due; Reviews Due; Improvement Plan; Behaviour Analytics; Tier 1 — Positive Recognition. Fields: Class; Section; Student; Follow-up date (optional); Write your note here — only you can see this; Share this as a behaviour record visible to the student & parent; Teacher Notes (private additions to the plan); Add your own observations or adjustments to this plan. Messages it can show: No review date set; No notes yet for this student; No pending follow-ups; No intervention reviews scheduled; No plan generated yet for this student. Click \"Generate Plan\" to build one from their predictions, attendance, GPA and competency data; No interventions recorded yet.",
+      "searchText": "Behaviour . Not enough comparable data between the start and end of this intervention to judge impact. . View Details . Saving... . Save Note . Mark done . Delete . Done . Review . Generating... . Regenerate . Generate Plan . Updating... . Unpublish . Publish to student . Save Notes . Behaviour Dashboard . Add a Confidential Note . Follow-Ups Due . Reviews Due . Improvement Plan . Behaviour Analytics . Tier 1 — Positive Recognition",
+      "contentHash": "8aad77f2a9d0524d"
+    },
+    {
+      "key": "nav:/teacher-communication",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Communication",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher-communication",
+      "where": "Left menu, Communication.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "TeacherCommunicationCenter.tsx — APAS-060 Centralized messaging hub: Teacher <-> Parents / Students / Administrators.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "Parents",
+          "Students",
+          "Admin",
+          "Community Feed",
+          "Resources"
+        ],
+        "buttons": [
+          "Messages",
+          "Teacher Communities",
+          "Appointments",
+          "Delete message",
+          "Photo or video",
+          "Attach file",
+          "Insert emoji",
+          "Schedule send",
+          "Posting...",
+          "Post",
+          "All Posts",
+          "My Posts",
+          "Reply",
+          "Share a Resource"
+        ],
+        "headings": [
+          "Communication Center",
+          "Photo or video",
+          "Attach file",
+          "Insert emoji",
+          "Schedule send",
+          "Teacher Communities",
+          "Edit scheduled message Schedule message",
+          "Cancel this scheduled message?"
+        ],
+        "inputs": [
+          "Search student/parent",
+          "Type a message...",
+          "Share an idea, ask a question, or post an update...",
+          "Write a reply...",
+          "Title (e.g. Fraction Lesson Plan)",
+          "Description (optional)",
+          "Subject (optional)",
+          "Grade (optional)"
+        ],
+        "messages": [
+          "No contacts found.",
+          "No messages yet. Start the conversation below.",
+          "You haven't posted anything yet.",
+          "No posts yet — be the first to share something.",
+          "You haven't shared any resources yet.",
+          "No resources shared yet."
+        ]
+      },
+      "sources": [
+        "src/pages/TeacherCommunicationCenter.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/pages/TeacherCommunities.tsx",
+        "src/components/communication/MessageDeliveryReport.tsx",
+        "src/components/communication/ScheduleMessageDialog.tsx",
+        "src/components/communication/ScheduledMessagesPanel.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "89fb6424e4c1bf1a",
+      "reviewedFactsHash": "89fb6424e4c1bf1a",
+      "content": "Communication\nWhere: Left menu, Communication.\nWhat it is: TeacherCommunicationCenter.tsx — APAS-060 Centralized messaging hub: Teacher <-> Parents / Students / Administrators.\nOn the screen: Tabs: Parents; Students; Admin; Community Feed; Resources. Buttons: Messages; Teacher Communities; Appointments; Delete message; Photo or video; Attach file; Insert emoji; Schedule send; Posting; Post; All Posts; My Posts; Reply; Share a Resource. Sections: Communication Center; Photo or video; Attach file; Insert emoji; Schedule send; Teacher Communities; Edit scheduled message Schedule message; Cancel this scheduled message?. Fields: Search student/parent; Type a message; Share an idea, ask a question, or post an update; Write a reply; Title (e.g. Fraction Lesson Plan); Description (optional); Subject (optional); Grade (optional). Messages it can show: No contacts found; No messages yet. Start the conversation below; You haven't posted anything yet; No posts yet — be the first to share something; You haven't shared any resources yet; No resources shared yet.",
+      "searchText": "Communication . TeacherCommunicationCenter.tsx — APAS-060 Centralized messaging hub: Teacher <-> Parents / Students / Administrators. . Parents . Students . Admin . Community Feed . Resources . Messages . Teacher Communities . Appointments . Delete message . Photo or video . Attach file . Insert emoji . Schedule send . Posting... . Post . All Posts . My Posts . Reply . Share a Resource . Communication Center . Photo or video . Attach file . Insert emoji . Schedule send . Teacher Communities . Edit scheduled message Schedule message . Cancel this scheduled message?",
+      "contentHash": "71eb9aaf3226626d"
+    },
+    {
+      "key": "nav:/teacher-electives",
+      "role": "teacher",
+      "kind": "page",
+      "name": "My Electives",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher-electives",
+      "where": "Left menu, My Electives.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "You're not assigned to teach any electives yet.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "My Electives"
+        ],
+        "inputs": [],
+        "messages": [
+          "No students enrolled yet."
+        ]
+      },
+      "sources": [
+        "src/pages/TeacherElectives.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "low",
+      "needsReview": true,
+      "reviewReasons": [
+        "purpose found but too little screen text to explain how to use it (1 labels found)"
+      ],
+      "factsHash": "13f8e720bd6e40af",
+      "reviewedFactsHash": "13f8e720bd6e40af",
+      "content": "My Electives\nWhere: Left menu, My Electives.\nWhat it is: You're not assigned to teach any electives yet.\nOn the screen: Sections: My Electives. Messages it can show: No students enrolled yet.\nDocumentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.",
+      "searchText": "My Electives . You're not assigned to teach any electives yet. . My Electives",
+      "contentHash": "73975f151caa2ca5"
+    },
+    {
+      "key": "nav:/teacher-workspace",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Dashboard",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher-workspace",
+      "where": "Left menu, Dashboard.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "school_admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Your teaching dashboard: recommendations, students needing attention, recent submissions and upcoming events.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/TeacherWorkspaceDashboard.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/MyTasksWidget.tsx",
+        "src/components/collaboration/TeacherGroupProjectsSummary.tsx",
+        "src/components/teacher/AIClassBriefingCard.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "013cb0b63fd3982b",
+      "reviewedFactsHash": "013cb0b63fd3982b",
+      "content": "Dashboard\nWhere: Left menu, Dashboard.\nWhat it is: Your teaching dashboard: recommendations, students needing attention, recent submissions and upcoming events.",
+      "searchText": "Dashboard . Your teaching dashboard: recommendations, students needing attention, recent submissions and upcoming events.",
+      "contentHash": "3dfa3412ad8be219"
+    },
+    {
+      "key": "nav:/teacher/appointments",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Appointments",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher/appointments",
+      "where": "Left menu, Appointments.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "school_admin",
+        "hod",
+        "principal"
+      ],
+      "purpose": "Parent-Teacher Meeting prep, shown inside a teacher's appointment card on /teacher/appointments.",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "In person",
+          "Virtual",
+          "Accept",
+          "Decline",
+          "Confirm Decline",
+          "Copy",
+          "Refresh"
+        ],
+        "headings": [
+          "Appointments",
+          "Start with strengths",
+          "Discussion points",
+          "Questions to ask the parent",
+          "Proposed next steps"
+        ],
+        "inputs": [
+          "Parent",
+          "Select parent",
+          "Child",
+          "Select child",
+          "Your available slots (next 14 days)",
+          "Reason",
+          "Notes (optional)",
+          "What you'd like to discuss with the parent"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/TeacherAppointments.tsx",
+        "src/components/appointments/PtmPrepPanel.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "bf556a06d830cd47",
+      "reviewedFactsHash": "bf556a06d830cd47",
+      "sharedScreen": true,
+      "content": "Appointments\nWhere: Left menu, Appointments.\nWhat it is: Parent-Teacher Meeting prep, shown inside a teacher's appointment card on /teacher/appointments.\nOn the screen: Buttons: In person; Virtual; Accept; Decline; Confirm Decline; Copy; Refresh. Sections: Appointments; Start with strengths; Discussion points; Questions to ask the parent; Proposed next steps. Fields: Parent; Select parent; Child; Select child; Your available slots (next 14 days); Reason; Notes (optional); What you'd like to discuss with the parent.\nThis page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.",
+      "searchText": "Appointments . Parent-Teacher Meeting prep, shown inside a teacher's appointment card on /teacher/appointments. . In person . Virtual . Accept . Decline . Confirm Decline . Copy . Refresh . Appointments . Start with strengths . Discussion points . Questions to ask the parent . Proposed next steps",
+      "contentHash": "936f7650cf557f04"
+    },
+    {
+      "key": "nav:/teacher/group-projects",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Group Projects",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher/group-projects",
+      "where": "Left menu, Group Projects.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "Click \"New Group Project\" above to create your first one and start building teams.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "New Group Project",
+          "Add Group"
+        ],
+        "headings": [
+          "Group Projects",
+          "No group projects yet",
+          "Create Group Project",
+          "Edit Group Project"
+        ],
+        "inputs": [
+          "Title *",
+          "e.g. Renewable Energy Research",
+          "Description",
+          "What should groups produce or investigate?",
+          "Class *",
+          "Select class",
+          "Subject",
+          "e.g. Science"
+        ],
+        "messages": [
+          "No group projects yet",
+          "No members yet",
+          "No groups yet. Add a group manually, or use \"Auto-split remaining\" to divide the whole class automatically."
+        ]
+      },
+      "sources": [
+        "src/pages/GroupProjectsPage.tsx",
+        "src/components/collaboration/CreateGroupProjectDialog.tsx",
+        "src/components/collaboration/EditGroupProjectDialog.tsx",
+        "src/components/collaboration/GroupBuilder.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "cea3c7b4ce0a498f",
+      "reviewedFactsHash": "cea3c7b4ce0a498f",
+      "content": "Group Projects\nWhere: Left menu, Group Projects.\nWhat it is: Click \"New Group Project\" above to create your first one and start building teams.\nOn the screen: Buttons: New Group Project; Add Group. Sections: Group Projects; No group projects yet; Create Group Project; Edit Group Project. Fields: Title *; e.g. Renewable Energy Research; Description; What should groups produce or investigate?; Class *; Select class; Subject; e.g. Science. Messages it can show: No group projects yet; No members yet; No groups yet. Add a group manually, or use \"Auto-split remaining\" to divide the whole class automatically.",
+      "searchText": "Group Projects . Click \"New Group Project\" above to create your first one and start building teams. . New Group Project . Add Group . Group Projects . No group projects yet . Create Group Project . Edit Group Project",
+      "contentHash": "a5763d7b5f9508d1"
+    },
+    {
+      "key": "nav:/teacher/safeguarding-report",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Safeguarding",
+      "aliases": [],
+      "keywords": [],
+      "route": "/teacher/safeguarding-report",
+      "where": "Left menu, Safeguarding.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "This report is already being reviewed and can no longer be edited or deleted.",
+      "purposeSource": "subtitle",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Submitting...",
+          "Submit Report",
+          "Saving...",
+          "Save Changes"
+        ],
+        "headings": [
+          "Report a Safeguarding Concern",
+          "My Submitted Reports",
+          "Edit Report",
+          "Delete this report?"
+        ],
+        "inputs": [
+          "Class",
+          "Select class",
+          "Section",
+          "Select section",
+          "Student (optional)",
+          "Select a student, if applicable",
+          "Category *",
+          "Select category"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/TeacherSafeguardingReport.tsx",
+        "src/components/safeguarding/IncidentReportForm.tsx",
+        "src/components/safeguarding/MyIncidentReports.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "4d32ab59dd03e312",
+      "reviewedFactsHash": "4d32ab59dd03e312",
+      "content": "Safeguarding\nWhere: Left menu, Safeguarding.\nWhat it is: This report is already being reviewed and can no longer be edited or deleted.\nOn the screen: Buttons: Submitting; Submit Report; Saving; Save Changes. Sections: Report a Safeguarding Concern; My Submitted Reports; Edit Report; Delete this report?. Fields: Class; Select class; Section; Select section; Student (optional); Select a student, if applicable; Category *; Select category.",
+      "searchText": "Safeguarding . This report is already being reviewed and can no longer be edited or deleted. . Submitting... . Submit Report . Saving... . Save Changes . Report a Safeguarding Concern . My Submitted Reports . Edit Report . Delete this report?",
+      "contentHash": "d02fcadced8c27f2"
+    },
+    {
+      "key": "nav:/timetable",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Timetable",
+      "aliases": [],
+      "keywords": [],
+      "route": "/timetable",
+      "where": "Left menu, Timetable.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "student",
+        "school_admin",
+        "teacher",
+        "hod"
+      ],
+      "purpose": "See your timetable. Roles that manage timetables see extra management sections.",
+      "purposeSource": "help",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/TimetablePage.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/AcademicWhatIf.tsx"
+      ],
+      "docOrigin": [
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "4488b07f552dc359",
+      "reviewedFactsHash": "4488b07f552dc359",
+      "content": "Timetable\nWhere: Left menu, Timetable.\nWhat it is: See your timetable. Roles that manage timetables see extra management sections.",
+      "searchText": "Timetable . See your timetable. Roles that manage timetables see extra management sections.",
+      "contentHash": "a52dd5157a16a7b2"
+    },
+    {
+      "key": "nav:/virtual-classrooms",
+      "role": "teacher",
+      "kind": "page",
+      "name": "Virtual Classroom",
+      "aliases": [],
+      "keywords": [],
+      "route": "/virtual-classrooms",
+      "where": "Left menu, Virtual Classroom.",
+      "accessRoles": [
+        "teacher"
+      ],
+      "purpose": "Excalidraw's own \"Save to...\" / \"Open\" / \"Export image\" write .excalidraw data files, which teachers can't",
+      "purposeSource": "comment",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [
+          "By student",
+          "By session"
+        ],
+        "buttons": [
+          "Creating...",
+          "Create Session",
+          "Attendance & Topic Log",
+          "Saving...",
+          "Save Topic Log",
+          "Recordings",
+          "Whiteboard",
+          "Edit",
+          "Delete",
+          "Save Changes",
+          "Create Jitsi room",
+          "Open Google Meet",
+          "AI Draw",
+          "Lock to teacher"
+        ],
+        "headings": [
+          "Virtual Classrooms",
+          "Create Virtual Classroom Session",
+          "Edit Session",
+          "Delete this session?",
+          "Whiteboard",
+          "AI Draw: step-by-step diagrams and equations",
+          "Lock to teacher",
+          "Save to Lesson"
+        ],
+        "inputs": [
+          "Date",
+          "Topic covered on this day",
+          "e.g. Introduction to Fractions",
+          "Next class topic (optional)",
+          "e.g. Adding Fractions",
+          "Previous days",
+          "Class",
+          "Select a class"
+        ],
+        "messages": [
+          "No sessions scheduled yet.",
+          "No students are assigned to this class.",
+          "No students in this class.",
+          "No live classes were held in this period.",
+          "No recordings for this class yet."
+        ]
+      },
+      "sources": [
+        "src/pages/TeacherVirtualClassroom.tsx",
+        "src/components/whiteboard/WhiteboardCanvas.tsx",
+        "src/components/live-attendance/LiveAttendanceRegister.tsx",
+        "src/components/live-attendance/ClassAttendanceReportDialog.tsx",
+        "src/components/live-recordings/SessionRecordingsDialog.tsx",
+        "src/components/whiteboard/AIDrawPanel.tsx",
+        "src/components/live-recordings/RecordingPlayerDialog.tsx"
+      ],
+      "docOrigin": [
+        "extracted"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [
+        "purpose was read from a screen comment/subtitle, not written by a person"
+      ],
+      "factsHash": "e63fabb1e7fb17a1",
+      "reviewedFactsHash": "e63fabb1e7fb17a1",
+      "content": "Virtual Classroom\nWhere: Left menu, Virtual Classroom.\nWhat it is: Excalidraw's own \"Save to...\" / \"Open\" / \"Export image\" write .excalidraw data files, which teachers can't\nOn the screen: Tabs: By student; By session. Buttons: Creating; Create Session; Attendance & Topic Log; Saving; Save Topic Log; Recordings; Whiteboard; Edit; Delete; Save Changes; Create Jitsi room; Open Google Meet; AI Draw; Lock to teacher. Sections: Virtual Classrooms; Create Virtual Classroom Session; Edit Session; Delete this session?; Whiteboard; AI Draw: step-by-step diagrams and equations; Lock to teacher; Save to Lesson. Fields: Date; Topic covered on this day; e.g. Introduction to Fractions; Next class topic (optional); e.g. Adding Fractions; Previous days; Class; Select a class. Messages it can show: No sessions scheduled yet; No students are assigned to this class; No students in this class; No live classes were held in this period; No recordings for this class yet.",
+      "searchText": "Virtual Classroom . Excalidraw's own \"Save to...\" / \"Open\" / \"Export image\" write .excalidraw data files, which teachers can't . By student . By session . Creating... . Create Session . Attendance & Topic Log . Saving... . Save Topic Log . Recordings . Whiteboard . Edit . Delete . Save Changes . Create Jitsi room . Open Google Meet . AI Draw . Lock to teacher . Virtual Classrooms . Create Virtual Classroom Session . Edit Session . Delete this session? . Whiteboard . AI Draw: step-by-step diagrams and equations . Lock to teacher . Save to Lesson",
+      "contentHash": "a7d936a9eb184d31"
+    }
+  ]
+}

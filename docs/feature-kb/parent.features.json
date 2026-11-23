@@ -1,0 +1,1824 @@
+{
+  "schema": 1,
+  "role": "parent",
+  "docs": [
+    {
+      "key": "manual:apas-agent",
+      "role": "parent",
+      "kind": "manual",
+      "name": "APAS Agent",
+      "aliases": [
+        "voice mode",
+        "voice assistant",
+        "what can you do",
+        "what can you help",
+        "video mode",
+        "find a video",
+        "text mode",
+        "talk to you"
+      ],
+      "keywords": [
+        "agent"
+      ],
+      "route": null,
+      "where": "The round assistant button at the bottom corner of your pages. You can type, or use the microphone to talk to it.",
+      "accessRoles": null,
+      "purpose": "That is me. I can answer questions about your child's fees, bus and transport, report card, attendance, appointments, the school calendar, hall tickets, surveys, safeguarding updates and messages. I can explain a school topic so you can help your child, and I can open a page for you if you say, for example, open Attendance.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "APAS Agent\nWhere: The round assistant button at the bottom corner of your pages. You can type, or use the microphone to talk to it.\nWhat it is: That is me. I can answer questions about your child's fees, bus and transport, report card, attendance, appointments, the school calendar, hall tickets, surveys, safeguarding updates and messages. I can explain a school topic so you can help your child, and I can open a page for you if you say, for example, open Attendance.",
+      "searchText": "APAS Agent . voice mode . voice assistant . what can you do . what can you help . video mode . find a video . text mode . talk to you . agent . That is me. I can answer questions about your child's fees, bus and transport, report card, attendance, appointments, the school calendar, hall tickets, surveys, safeguarding updates and messages. I can explain a school topic so you can help your child, and I can open a page for you if you say, for example, open Attendance.",
+      "contentHash": "42d40bfc91c60e8e"
+    },
+    {
+      "key": "manual:ask-apas",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Ask APAS (command bar)",
+      "aliases": [
+        "ask apas",
+        "command bar",
+        "ai command bar",
+        "ctrl j",
+        "quick command",
+        "type a command"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J.",
+      "accessRoles": null,
+      "purpose": "A quick way to get around and check things by typing a normal sentence, like Open my child's report card. It can open pages, show your child's attendance this month, and show or clear your unread notifications.",
+      "purposeSource": "manual",
+      "steps": [
+        "Press Ask APAS, or press Ctrl and J.",
+        "Type a sentence such as Show my attendance this month, then press Enter."
+      ],
+      "notes": [
+        "It only opens pages and shows your own information. If it needs to change something it asks you to confirm first."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Confirm",
+          "Ask APAS",
+          "Ctrl J",
+          "Ask APAS (AI command bar)"
+        ],
+        "headings": [
+          "Ask APAS",
+          "Try saying"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/command-bar/CommandBar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d49ca5511943d094",
+      "reviewedFactsHash": "d49ca5511943d094",
+      "content": "Ask APAS (command bar)\nWhere: The Ask APAS button at the top of every page. The keyboard shortcut is Ctrl and J.\nWhat it is: A quick way to get around and check things by typing a normal sentence, like Open my child's report card. It can open pages, show your child's attendance this month, and show or clear your unread notifications.\nHow to use it: (1) Press Ask APAS, or press Ctrl and J. (2) Type a sentence such as Show my attendance this month, then press Enter.\nOn the screen: Buttons: Confirm; Ask APAS; Ctrl J; Ask APAS (AI command bar). Sections: Ask APAS; Try saying.\nGood to know: It only opens pages and shows your own information. If it needs to change something it asks you to confirm first.",
+      "searchText": "Ask APAS (command bar) . ask apas . command bar . ai command bar . ctrl j . quick command . type a command . A quick way to get around and check things by typing a normal sentence, like Open my child's report card. It can open pages, show your child's attendance this month, and show or clear your unread notifications. . Confirm . Ask APAS . Ctrl J . Ask APAS (AI command bar) . Ask APAS . Try saying",
+      "contentHash": "b55285c5842ab009"
+    },
+    {
+      "key": "manual:bus-tracking",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Bus Tracking",
+      "aliases": [
+        "track bus",
+        "school bus",
+        "where is the bus",
+        "bus location",
+        "live bus",
+        "bus map",
+        "rate driver",
+        "driver rating",
+        "bus route",
+        "bus timing"
+      ],
+      "keywords": [
+        "bus",
+        "driver",
+        "transport"
+      ],
+      "route": null,
+      "where": "Home, Bus Tracking tab. It shows only if your child uses school transport.",
+      "accessRoles": null,
+      "purpose": "Shows where the school bus is on a map for your child's route, with details about the route and the driver. Below it you can rate your child's driver.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Home and tap the Bus Tracking tab.",
+        "Look at the map to see the bus on your child's route.",
+        "To rate the driver, scroll down to Rate your driver this semester, choose your rating, add an optional comment and send it."
+      ],
+      "notes": [
+        "If you do not see a Bus Tracking tab, your child does not have a transport route set up. The school's transport office can add it.",
+        "Driver ratings open once the current semester is active.",
+        "You can also ask me about your child's bus in this chat."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Bus Tracking\nWhere: Home, Bus Tracking tab. It shows only if your child uses school transport.\nWhat it is: Shows where the school bus is on a map for your child's route, with details about the route and the driver. Below it you can rate your child's driver.\nHow to use it: (1) Open Home and tap the Bus Tracking tab. (2) Look at the map to see the bus on your child's route. (3) To rate the driver, scroll down to Rate your driver this semester, choose your rating, add an optional comment and send it.\nGood to know: If you do not see a Bus Tracking tab, your child does not have a transport route set up. The school's transport office can add it. Driver ratings open once the current semester is active. You can also ask me about your child's bus in this chat.",
+      "searchText": "Bus Tracking . track bus . school bus . where is the bus . bus location . live bus . bus map . rate driver . driver rating . bus route . bus timing . bus . driver . transport . Shows where the school bus is on a map for your child's route, with details about the route and the driver. Below it you can rate your child's driver.",
+      "contentHash": "7b4efc9244202a71"
+    },
+    {
+      "key": "manual:fee-instalments",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Pay in instalments",
+      "aliases": [
+        "pay in installments",
+        "easy monthly installments",
+        "instalment plan",
+        "installment plan",
+        "monthly instalments",
+        "monthly installments",
+        "split payment",
+        "pay in parts",
+        "request instalments",
+        "instalment request",
+        "plan progress",
+        "next due",
+        "pay now"
+      ],
+      "keywords": [
+        "instalment",
+        "instalments",
+        "installment",
+        "installments",
+        "emi",
+        "finance"
+      ],
+      "route": null,
+      "where": "On the Fee Payment page, the Finance (Easy Monthly Installments) option next to Payment Gateway. It works if your school has turned instalment plans on.",
+      "accessRoles": null,
+      "purpose": "If your school allows it, you can ask to pay a fee in smaller parts instead of all at once.",
+      "purposeSource": "manual",
+      "steps": [
+        "On Fee Payment choose Finance (Easy Monthly Installments). Fee summary shows your fee overview, what is paid so far, and the next due date.",
+        "Next to a fee that is eligible, press Request instalments and add your request.",
+        "Your requests are listed under Instalment requests. If the school declines, it shows the reason from the school.",
+        "Once a plan is active you see the Payment schedule and Plan progress. Press Pay Now beside an instalment to pay it, and use Receipt to get its receipt."
+      ],
+      "notes": [
+        "An instalment is marked paid only after the payment is confirmed.",
+        "If your school has not turned instalment plans on, it says so, and you can still pay your fees in full from the Payment Gateway option."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Pay in instalments\nWhere: On the Fee Payment page, the Finance (Easy Monthly Installments) option next to Payment Gateway. It works if your school has turned instalment plans on.\nWhat it is: If your school allows it, you can ask to pay a fee in smaller parts instead of all at once.\nHow to use it: (1) On Fee Payment choose Finance (Easy Monthly Installments). Fee summary shows your fee overview, what is paid so far, and the next due date. (2) Next to a fee that is eligible, press Request instalments and add your request. (3) Your requests are listed under Instalment requests. If the school declines, it shows the reason from the school. (4) Once a plan is active you see the Payment schedule and Plan progress. Press Pay Now beside an instalment to pay it, and use Receipt to get its receipt.\nGood to know: An instalment is marked paid only after the payment is confirmed. If your school has not turned instalment plans on, it says so, and you can still pay your fees in full from the Payment Gateway option.",
+      "searchText": "Pay in instalments . pay in installments . easy monthly installments . instalment plan . installment plan . monthly instalments . monthly installments . split payment . pay in parts . request instalments . instalment request . plan progress . next due . pay now . instalment . instalments . installment . installments . emi . finance . If your school allows it, you can ask to pay a fee in smaller parts instead of all at once.",
+      "contentHash": "833e5405905dbec8"
+    },
+    {
+      "key": "manual:fee-payment",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Fee Payment",
+      "aliases": [
+        "pay fees",
+        "pay fee",
+        "pay school fees",
+        "school fees",
+        "pay online",
+        "due amount",
+        "fee particulars",
+        "fee status",
+        "fee receipt",
+        "payment history",
+        "payment gateway",
+        "proceed for payment",
+        "payment failed",
+        "payment pending",
+        "payment stuck",
+        "payment is stuck"
+      ],
+      "keywords": [
+        "fees",
+        "fee",
+        "receipt"
+      ],
+      "route": null,
+      "where": "Press the Pay Fees button on your Home page. It is not a separate row in the left menu.",
+      "accessRoles": null,
+      "purpose": "Where you see your child's fee details and pay the school fees online.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Home and press Pay Fees.",
+        "There are two options at the top. Payment Gateway is for paying what is due now. Finance (Easy Monthly Installments) is for paying in smaller parts.",
+        "On Payment Gateway, check the Student Information, so you know the fees are for the right child.",
+        "Under Fee Particulars you see the Due Amount and the fee items, such as Course, Transport, Uniform, Material and Other amounts. For an exam fee, choose the exam with Select Exam.",
+        "Enter the amount you want to pay, then press Proceed For Payment and finish the payment in the secure window.",
+        "When it works you see Payment successful, and a receipt is emailed to you. Your payments are listed under Payment history."
+      ],
+      "notes": [
+        "You must enter at least one amount before you can proceed.",
+        "If it says Payment is being confirmed, your bank is still processing it. Do not pay again. The record updates as soon as it is confirmed, and you can press Check on that payment to look again.",
+        "If it says Payment failed, no money was recorded, so you can safely try again.",
+        "If you cancel, your fee request is saved as pending and you can finish paying later from your dashboard.",
+        "Card details are handled by the payment gateway. The school never sees or stores them.",
+        "If online payment is not available, it tells you to contact the school office."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Fee Payment\nWhere: Press the Pay Fees button on your Home page. It is not a separate row in the left menu.\nWhat it is: Where you see your child's fee details and pay the school fees online.\nHow to use it: (1) Open Home and press Pay Fees. (2) There are two options at the top. Payment Gateway is for paying what is due now. Finance (Easy Monthly Installments) is for paying in smaller parts. (3) On Payment Gateway, check the Student Information, so you know the fees are for the right child. (4) Under Fee Particulars you see the Due Amount and the fee items, such as Course, Transport, Uniform, Material and Other amounts. For an exam fee, choose the exam with Select Exam. (5) Enter the amount you want to pay, then press Proceed For Payment and finish the payment in the secure window. (6) When it works you see Payment successful, and a receipt is emailed to you. Your payments are listed under Payment history.\nGood to know: You must enter at least one amount before you can proceed. If it says Payment is being confirmed, your bank is still processing it. Do not pay again. The record updates as soon as it is confirmed, and you can press Check on that payment to look again. If it says Payment failed, no money was recorded, so you can safely try again. If you cancel, your fee request is saved as pending and you can finish paying later from your dashboard. Card details are handled by the payment gateway. The school never sees or stores them. If online payment is not available, it tells you to contact the school office.",
+      "searchText": "Fee Payment . pay fees . pay fee . pay school fees . school fees . pay online . due amount . fee particulars . fee status . fee receipt . payment history . payment gateway . proceed for payment . payment failed . payment pending . payment stuck . payment is stuck . fees . fee . receipt . Where you see your child's fee details and pay the school fees online.",
+      "contentHash": "ccde080a4ff51857"
+    },
+    {
+      "key": "manual:global-search",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Search",
+      "aliases": [
+        "search box",
+        "global search",
+        "ctrl k",
+        "find something",
+        "look something up"
+      ],
+      "keywords": [
+        "search"
+      ],
+      "route": null,
+      "where": "The search box at the top of every page. The keyboard shortcut is Ctrl and K.",
+      "accessRoles": null,
+      "purpose": "Looks things up across APAS. You only see things you are allowed to open.",
+      "purposeSource": "manual",
+      "steps": [
+        "Click the search box at the top, or press Ctrl and K.",
+        "Type what you are looking for and pick a result."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Search",
+          "All",
+          "Clear"
+        ],
+        "headings": [
+          "Search APAS",
+          "Try searching for"
+        ],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/search/UniversalSearch.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "857236d04674d812",
+      "reviewedFactsHash": "857236d04674d812",
+      "content": "Search\nWhere: The search box at the top of every page. The keyboard shortcut is Ctrl and K.\nWhat it is: Looks things up across APAS. You only see things you are allowed to open.\nHow to use it: (1) Click the search box at the top, or press Ctrl and K. (2) Type what you are looking for and pick a result.\nOn the screen: Buttons: Search; All; Clear. Sections: Search APAS; Try searching for.",
+      "searchText": "Search . search box . global search . ctrl k . find something . look something up . search . Looks things up across APAS. You only see things you are allowed to open. . Search . All . Clear . Search APAS . Try searching for",
+      "contentHash": "87e91658af507696"
+    },
+    {
+      "key": "manual:header-tools",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Notifications and the Help button",
+      "aliases": [
+        "help button",
+        "guided tour",
+        "take the tour"
+      ],
+      "keywords": [
+        "notifications",
+        "notification",
+        "bell",
+        "tour",
+        "alerts"
+      ],
+      "route": null,
+      "where": "The top bar of every page.",
+      "accessRoles": null,
+      "purpose": "The bell shows new messages, alerts and updates from the school, with a red number for the ones you have not read. The help button replays the guided tour of the app.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Notifications and the Help button\nWhere: The top bar of every page.\nWhat it is: The bell shows new messages, alerts and updates from the school, with a red number for the ones you have not read. The help button replays the guided tour of the app.",
+      "searchText": "Notifications and the Help button . help button . guided tour . take the tour . notifications . notification . bell . tour . alerts . The bell shows new messages, alerts and updates from the school, with a red number for the ones you have not read. The help button replays the guided tour of the app.",
+      "contentHash": "ea68e86ff6c7625f"
+    },
+    {
+      "key": "manual:pickup-guardians",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Pickup Guardians",
+      "aliases": [
+        "pickup guardian",
+        "authorized guardian",
+        "authorised guardian",
+        "authorized pickup",
+        "authorised pickup",
+        "who can pick up",
+        "early pickup",
+        "add guardian",
+        "pick up my child",
+        "collect my child",
+        "pickup person"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "Home, Pickup Guardians tab.",
+      "accessRoles": null,
+      "purpose": "The list of people other than you who are allowed to pick up your child early. Only you and the people on this list are recognised for early pickup.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Home and tap the Pickup Guardians tab.",
+        "Press Add Guardian.",
+        "Fill in the Full name and the Relation, for example grandparent or uncle. The Phone number is optional.",
+        "Save it. The person now shows in the list."
+      ],
+      "notes": [
+        "If no one is added, the page says No alternate guardians on file. Only you will be recognized for early pickup."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Pickup Guardians\nWhere: Home, Pickup Guardians tab.\nWhat it is: The list of people other than you who are allowed to pick up your child early. Only you and the people on this list are recognised for early pickup.\nHow to use it: (1) Open Home and tap the Pickup Guardians tab. (2) Press Add Guardian. (3) Fill in the Full name and the Relation, for example grandparent or uncle. The Phone number is optional. (4) Save it. The person now shows in the list.\nGood to know: If no one is added, the page says No alternate guardians on file. Only you will be recognized for early pickup.",
+      "searchText": "Pickup Guardians . pickup guardian . authorized guardian . authorised guardian . authorized pickup . authorised pickup . who can pick up . early pickup . add guardian . pick up my child . collect my child . pickup person . The list of people other than you who are allowed to pick up your child early. Only you and the people on this list are recognised for early pickup.",
+      "contentHash": "3a2acb85d5ffe6a0"
+    },
+    {
+      "key": "manual:profile-fees",
+      "role": "parent",
+      "kind": "manual",
+      "name": "Fee Plan (profile tab)",
+      "aliases": [
+        "my childs fee plan",
+        "fee structure",
+        "outstanding balance",
+        "fee plan tab",
+        "fees tab",
+        "fees in the profile"
+      ],
+      "keywords": [
+        "concession",
+        "discount",
+        "balance",
+        "tuition"
+      ],
+      "route": null,
+      "where": "Student Profile, Fees tab.",
+      "accessRoles": null,
+      "purpose": "Shows the fee plan the school assigned when your child's admission was confirmed: the fee structure, class, academic year and due date, a breakdown of each fee, the total fee, any concession or discount, how much is paid so far, and the outstanding balance. A badge shows whether it is Paid, Part paid, Pending or Overdue.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "This tab is for viewing. To pay, use Pay Fees on your Home page.",
+        "If it says No admission fee plan linked, the plan appears once the admission is confirmed and the plan is linked to your child.",
+        "Questions about an amount are best asked to the school's fee office."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [],
+      "docOrigin": [
+        "manual"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "165d6bab0e32aed9",
+      "reviewedFactsHash": "165d6bab0e32aed9",
+      "content": "Fee Plan (profile tab)\nWhere: Student Profile, Fees tab.\nWhat it is: Shows the fee plan the school assigned when your child's admission was confirmed: the fee structure, class, academic year and due date, a breakdown of each fee, the total fee, any concession or discount, how much is paid so far, and the outstanding balance. A badge shows whether it is Paid, Part paid, Pending or Overdue.\nGood to know: This tab is for viewing. To pay, use Pay Fees on your Home page. If it says No admission fee plan linked, the plan appears once the admission is confirmed and the plan is linked to your child. Questions about an amount are best asked to the school's fee office.",
+      "searchText": "Fee Plan (profile tab) . my childs fee plan . fee structure . outstanding balance . fee plan tab . fees tab . fees in the profile . concession . discount . balance . tuition . Shows the fee plan the school assigned when your child's admission was confirmed: the fee structure, class, academic year and due date, a breakdown of each fee, the total fee, any concession or discount, how much is paid so far, and the outstanding balance. A badge shows whether it is Paid, Part paid, Pending or Overdue.",
+      "contentHash": "c7f32c2c8c3179dc"
+    },
+    {
+      "key": "nav:/academic-calendar",
+      "role": "parent",
+      "kind": "page",
+      "name": "Academic Calendar",
+      "aliases": [
+        "school calendar",
+        "school events",
+        "exam dates",
+        "homework deadlines",
+        "when is the holiday"
+      ],
+      "keywords": [
+        "calendar",
+        "holidays",
+        "events"
+      ],
+      "route": "/academic-calendar",
+      "where": "Left menu, Academic Calendar.",
+      "accessRoles": null,
+      "purpose": "School events, holidays, exam dates and homework deadlines for the year.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AcademicCalendar.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "34865a9e267d3ccc",
+      "reviewedFactsHash": "34865a9e267d3ccc",
+      "content": "Academic Calendar\nWhere: Left menu, Academic Calendar.\nWhat it is: School events, holidays, exam dates and homework deadlines for the year.",
+      "searchText": "Academic Calendar . school calendar . school events . exam dates . homework deadlines . when is the holiday . calendar . holidays . events . School events, holidays, exam dates and homework deadlines for the year.",
+      "contentHash": "32609ac911dd8c5f"
+    },
+    {
+      "key": "nav:/appointments",
+      "role": "parent",
+      "kind": "page",
+      "name": "Appointments",
+      "aliases": [
+        "book appointment",
+        "book a meeting",
+        "parent teacher meeting",
+        "book meeting",
+        "meet teacher",
+        "cancel appointment",
+        "virtual meeting"
+      ],
+      "keywords": [
+        "appointment",
+        "appointments",
+        "meeting",
+        "meetings",
+        "ptm"
+      ],
+      "route": "/appointments",
+      "where": "Left menu, Appointments.",
+      "accessRoles": [
+        "parent"
+      ],
+      "purpose": "Book a meeting with your child's teacher, or manage meetings you already booked.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Appointments from the left menu.",
+        "Choose your Child, then the Teacher.",
+        "Pick one of the Available slots (the next 14 days).",
+        "Write a Reason, and add Notes if there is anything specific to discuss.",
+        "Choose the Meeting mode: In person or Virtual. For virtual you may add a meeting link, or the teacher can add it when confirming.",
+        "Send the request. It says Appointment requested, waiting for teacher confirmation."
+      ],
+      "notes": [
+        "The teacher either confirms or declines your request, and if they decline, the reason is shown to you.",
+        "If a teacher books a meeting with you, you can Confirm it or Decline it. When you decline you may add a reason, and the teacher sees it.",
+        "You can Cancel a meeting you booked.",
+        "If someone else just took that slot, it asks you to pick another."
+      ],
+      "problems": [
+        "The page says no student profile is linked. - Contact your school admin so your child can be linked to your account.",
+        "There are no teachers to pick. - No teacher is assigned to your child's class yet. Try again later or contact the school.",
+        "There are no slots to pick. - Choose a different teacher, or come back later when new slots open."
+      ],
+      "taskTitles": [
+        "Request an appointment with a teacher",
+        "Cancel an appointment or answer a teacher's request"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "In person",
+          "Virtual",
+          "Confirm",
+          "Decline",
+          "Confirm Decline"
+        ],
+        "headings": [
+          "Appointments"
+        ],
+        "inputs": [
+          "Child",
+          "Select child",
+          "Teacher",
+          "Select teacher",
+          "Available slots (next 14 days)",
+          "Reason",
+          "Notes (optional)",
+          "Anything specific you'd like to discuss"
+        ],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AppointmentBooking.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "e86dde7fd22010f0",
+      "reviewedFactsHash": "e86dde7fd22010f0",
+      "content": "Appointments\nWhere: Left menu, Appointments.\nWhat it is: Book a meeting with your child's teacher, or manage meetings you already booked.\nHow to use it: (1) Open Appointments from the left menu. (2) Choose your Child, then the Teacher. (3) Pick one of the Available slots (the next 14 days). (4) Write a Reason, and add Notes if there is anything specific to discuss. (5) Choose the Meeting mode: In person or Virtual. For virtual you may add a meeting link, or the teacher can add it when confirming. (6) Send the request. It says Appointment requested, waiting for teacher confirmation.\nOn the screen: Buttons: In person; Virtual; Confirm; Decline; Confirm Decline. Sections: Appointments. Fields: Child; Select child; Teacher; Select teacher; Available slots (next 14 days); Reason; Notes (optional); Anything specific you'd like to discuss.\nGood to know: The teacher either confirms or declines your request, and if they decline, the reason is shown to you. If a teacher books a meeting with you, you can Confirm it or Decline it. When you decline you may add a reason, and the teacher sees it. You can Cancel a meeting you booked. If someone else just took that slot, it asks you to pick another.\nIf something goes wrong: The page says no student profile is linked. - Contact your school admin so your child can be linked to your account. There are no teachers to pick. - No teacher is assigned to your child's class yet. Try again later or contact the school. There are no slots to pick. - Choose a different teacher, or come back later when new slots open.",
+      "searchText": "Appointments . book appointment . book a meeting . parent teacher meeting . book meeting . meet teacher . cancel appointment . virtual meeting . appointment . appointments . meeting . meetings . ptm . Book a meeting with your child's teacher, or manage meetings you already booked. . In person . Virtual . Confirm . Decline . Confirm Decline . Appointments . Request an appointment with a teacher . Cancel an appointment or answer a teacher's request",
+      "contentHash": "11d42c64a25a84b9"
+    },
+    {
+      "key": "nav:/attendance",
+      "role": "parent",
+      "kind": "page",
+      "name": "Attendance",
+      "aliases": [
+        "childs attendance",
+        "attendance record",
+        "attendance report",
+        "how many days absent"
+      ],
+      "keywords": [
+        "attendance",
+        "absent",
+        "present",
+        "leave"
+      ],
+      "route": "/attendance",
+      "where": "Left menu, Attendance.",
+      "accessRoles": [
+        "teacher",
+        "principal",
+        "admin",
+        "student",
+        "parent"
+      ],
+      "purpose": "Your child's attendance record.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Attendance from the left menu.",
+        "Choose your child where it says Select child."
+      ],
+      "notes": [
+        "A selected day shows its status, for example Present, Absent or Late. A day with no record says that no attendance was marked."
+      ],
+      "problems": [
+        "A parent sees no children. - No child is linked to your account. Ask the school admin to link your child.",
+        "A day shows no status. - The teacher has not saved attendance for that day (for example a holiday or a day not yet marked). Nothing is wrong with your account.",
+        "The month shows no data. - No attendance has been saved for that month yet."
+      ],
+      "taskTitles": [
+        "Check attendance for a day or a month"
+      ],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/AttendanceMarking.tsx",
+        "src/components/attendance/AttendanceRiskView.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f896efa44201ae2e",
+      "reviewedFactsHash": "f896efa44201ae2e",
+      "content": "Attendance\nWhere: Left menu, Attendance.\nWhat it is: Your child's attendance record.\nHow to use it: (1) Open Attendance from the left menu. (2) Choose your child where it says Select child.\nGood to know: A selected day shows its status, for example Present, Absent or Late. A day with no record says that no attendance was marked.\nIf something goes wrong: A parent sees no children. - No child is linked to your account. Ask the school admin to link your child. A day shows no status. - The teacher has not saved attendance for that day (for example a holiday or a day not yet marked). Nothing is wrong with your account. The month shows no data. - No attendance has been saved for that month yet.",
+      "searchText": "Attendance . childs attendance . attendance record . attendance report . how many days absent . attendance . absent . present . leave . Your child's attendance record. . Check attendance for a day or a month",
+      "contentHash": "2329b44d8ae56d5d"
+    },
+    {
+      "key": "nav:/hall-tickets",
+      "role": "parent",
+      "kind": "page",
+      "name": "Hall Tickets",
+      "aliases": [
+        "hall ticket",
+        "admit card",
+        "exam ticket",
+        "exam tickets",
+        "exam admit card",
+        "seat number",
+        "exam seat",
+        "exam hall"
+      ],
+      "keywords": [],
+      "route": "/hall-tickets",
+      "where": "Left menu, Hall Tickets.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "student",
+        "parent"
+      ],
+      "purpose": "Your child's exam hall tickets, with the exam, hall and seat once the school has assigned them.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/HallTicketEngine.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "0db9a373f2ba5954",
+      "reviewedFactsHash": "0db9a373f2ba5954",
+      "content": "Hall Tickets\nWhere: Left menu, Hall Tickets.\nWhat it is: Your child's exam hall tickets, with the exam, hall and seat once the school has assigned them.",
+      "searchText": "Hall Tickets . hall ticket . admit card . exam ticket . exam tickets . exam admit card . seat number . exam seat . exam hall . Your child's exam hall tickets, with the exam, hall and seat once the school has assigned them.",
+      "contentHash": "f19a2741e3dc0295"
+    },
+    {
+      "key": "nav:/parent-communication",
+      "role": "parent",
+      "kind": "page",
+      "name": "Communication",
+      "aliases": [
+        "communication center",
+        "message school",
+        "message teacher",
+        "teacher messages",
+        "school messages",
+        "chat with teacher",
+        "talk to teacher",
+        "send message"
+      ],
+      "keywords": [
+        "communication",
+        "communications",
+        "message",
+        "messages",
+        "messaging",
+        "inbox"
+      ],
+      "route": "/parent-communication",
+      "where": "Left menu, Communication.",
+      "accessRoles": [
+        "parent"
+      ],
+      "purpose": "Messages with your child's teachers. It is called the Communication Center.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Communication from the left menu.",
+        "Choose a teacher from the list. You can use Search teachers to find one.",
+        "Type your message at the bottom. You can attach a file or a photo or video, and add an emoji.",
+        "Press send. Your conversation with that teacher appears on the right."
+      ],
+      "notes": [
+        "A Write a message or attach a file reminder means you tried to send an empty message.",
+        "To meet a teacher in person or online instead, use Appointments in the left menu."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [
+          "Appointments",
+          "Delete message",
+          "Photo or video",
+          "Attach file",
+          "Insert emoji"
+        ],
+        "headings": [
+          "Communication Center",
+          "Photo or video",
+          "Attach file",
+          "Insert emoji"
+        ],
+        "inputs": [
+          "Search teachers",
+          "Type a message..."
+        ],
+        "messages": [
+          "No teachers linked yet. They'll show up here once your child is assigned to a class.",
+          "No messages yet. Say hello below."
+        ]
+      },
+      "sources": [
+        "src/pages/ParentCommunicationCenter.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "04b9d830f7776ad8",
+      "reviewedFactsHash": "04b9d830f7776ad8",
+      "content": "Communication\nWhere: Left menu, Communication.\nWhat it is: Messages with your child's teachers. It is called the Communication Center.\nHow to use it: (1) Open Communication from the left menu. (2) Choose a teacher from the list. You can use Search teachers to find one. (3) Type your message at the bottom. You can attach a file or a photo or video, and add an emoji. (4) Press send. Your conversation with that teacher appears on the right.\nOn the screen: Buttons: Appointments; Delete message; Photo or video; Attach file; Insert emoji. Sections: Communication Center; Photo or video; Attach file; Insert emoji. Fields: Search teachers; Type a message. Messages it can show: No teachers linked yet. They'll show up here once your child is assigned to a class; No messages yet. Say hello below.\nGood to know: A Write a message or attach a file reminder means you tried to send an empty message. To meet a teacher in person or online instead, use Appointments in the left menu.",
+      "searchText": "Communication . communication center . message school . message teacher . teacher messages . school messages . chat with teacher . talk to teacher . send message . communication . communications . message . messages . messaging . inbox . Messages with your child's teachers. It is called the Communication Center. . Appointments . Delete message . Photo or video . Attach file . Insert emoji . Communication Center . Photo or video . Attach file . Insert emoji",
+      "contentHash": "122717301a43e654"
+    },
+    {
+      "key": "nav:/parent-dashboard",
+      "role": "parent",
+      "kind": "page",
+      "name": "Home",
+      "aliases": [
+        "parent dashboard",
+        "home page",
+        "main page",
+        "my childs progress",
+        "child progress",
+        "my childs homework",
+        "homework status",
+        "pending homework",
+        "homework graded",
+        "test scores",
+        "assessment results",
+        "diagnostic results",
+        "view report"
+      ],
+      "keywords": [
+        "home",
+        "dashboard",
+        "overview",
+        "homework"
+      ],
+      "route": "/parent-dashboard",
+      "where": "First item in the left menu (Home).",
+      "accessRoles": [
+        "parent"
+      ],
+      "purpose": "Your starting page for following your child's progress. At the top you choose which child you are looking at, and there are tabs for Test Scores, Homework, Pickup Guardians and, if your child uses the school bus, Bus Tracking. There is also a Pay Fees button.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Home from the left menu.",
+        "If you have more than one child, choose the child where it says Viewing data for.",
+        "Tap Test Scores to see your child's assessment results, or Homework to see each homework with its due date and status.",
+        "Once a homework is Graded, press View Report beside it to read the answer, the score out of 100 and the teacher's feedback."
+      ],
+      "notes": [
+        "Homework status shows as Pending, Submitted or Graded.",
+        "If no child is linked to your account it says No Students Linked. Please contact the school admin to link your child."
+      ],
+      "problems": [
+        "You see no test results. - Your child has not completed an assessment yet. Results appear here after they do.",
+        "You see no homework. - No homework has been assigned to your child yet.",
+        "The guardian form will not save. - Fill in both the Full name and the Relation, then press Add again."
+      ],
+      "taskTitles": [
+        "Check your child's homework",
+        "Add someone who may collect your child"
+      ],
+      "screen": {
+        "tabs": [
+          "Test Scores",
+          "Homework",
+          "Pickup Guardians",
+          "Bus Tracking"
+        ],
+        "buttons": [
+          "Add Guardian",
+          "Saving...",
+          "Add",
+          "View Report",
+          "Calendar"
+        ],
+        "headings": [
+          "No Students Linked",
+          "Assessment Results",
+          "Authorized Pickup Guardians",
+          "Add Authorized Guardian",
+          "Homework Status",
+          "Daily Practice"
+        ],
+        "inputs": [
+          "Viewing data for",
+          "Full name",
+          "Relation (e.g. grandparent, uncle)",
+          "Phone (optional)",
+          "Optional comment about your experience..."
+        ],
+        "messages": [
+          "No Students Linked",
+          "No test results yet.",
+          "No alternate guardians on file. Only you will be recognized for early pickup.",
+          "No homework assigned yet.",
+          "No stop locations set for this route yet. Ask your school admin to add stop addresses.",
+          "Nothing assigned yet."
+        ]
+      },
+      "sources": [
+        "src/pages/ParentDashboard.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/transport/BusTrackingMap.tsx",
+        "src/components/transport/DriverRatingForm.tsx",
+        "src/components/dpp/ParentDppCard.tsx",
+        "src/components/dashboard/DashboardHero.tsx",
+        "src/components/dpp/DppCharts.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "1e7ef875c728fc43",
+      "reviewedFactsHash": "1e7ef875c728fc43",
+      "content": "Home\nWhere: First item in the left menu (Home).\nWhat it is: Your starting page for following your child's progress. At the top you choose which child you are looking at, and there are tabs for Test Scores, Homework, Pickup Guardians and, if your child uses the school bus, Bus Tracking. There is also a Pay Fees button.\nHow to use it: (1) Open Home from the left menu. (2) If you have more than one child, choose the child where it says Viewing data for. (3) Tap Test Scores to see your child's assessment results, or Homework to see each homework with its due date and status. (4) Once a homework is Graded, press View Report beside it to read the answer, the score out of 100 and the teacher's feedback.\nOn the screen: Tabs: Test Scores; Homework; Pickup Guardians; Bus Tracking. Buttons: Add Guardian; Saving; Add; View Report; Calendar. Sections: No Students Linked; Assessment Results; Authorized Pickup Guardians; Add Authorized Guardian; Homework Status; Daily Practice. Fields: Viewing data for; Full name; Relation (e.g. grandparent, uncle); Phone (optional); Optional comment about your experience. Messages it can show: No Students Linked; No test results yet; No alternate guardians on file. Only you will be recognized for early pickup; No homework assigned yet; No stop locations set for this route yet. Ask your school admin to add stop addresses; Nothing assigned yet.\nGood to know: Homework status shows as Pending, Submitted or Graded. If no child is linked to your account it says No Students Linked. Please contact the school admin to link your child.\nIf something goes wrong: You see no test results. - Your child has not completed an assessment yet. Results appear here after they do. You see no homework. - No homework has been assigned to your child yet. The guardian form will not save. - Fill in both the Full name and the Relation, then press Add again.",
+      "searchText": "Home . parent dashboard . home page . main page . my childs progress . child progress . my childs homework . homework status . pending homework . homework graded . test scores . assessment results . diagnostic results . view report . home . dashboard . overview . homework . Your starting page for following your child's progress. At the top you choose which child you are looking at, and there are tabs for Test Scores, Homework, Pickup Guardians and, if your child uses the school bus, Bus Tracking. There is also a Pay Fees button. . Test Scores . Homework . Pickup Guardians . Bus Tracking . Add Guardian . Saving... . Add . View Report . Calendar . No Students Linked . Assessment Results . Authorized Pickup Guardians . Add Authorized Guardian . Homework Status . Daily Practice . Check your child's homework . Add someone who may collect your child",
+      "contentHash": "2f708681b4323cbd"
+    },
+    {
+      "key": "nav:/parent/safeguarding",
+      "role": "parent",
+      "kind": "page",
+      "name": "Safeguarding",
+      "aliases": [
+        "child safety",
+        "child protection",
+        "safeguarding report",
+        "safeguarding reports",
+        "report concern",
+        "safeguarding concern",
+        "incident reports"
+      ],
+      "keywords": [
+        "safeguarding",
+        "safeguard",
+        "incident"
+      ],
+      "route": "/parent/safeguarding",
+      "where": "Left menu, Safeguarding.",
+      "accessRoles": [
+        "parent"
+      ],
+      "purpose": "Shows any safeguarding reports the school has filed about your child. You only ever see reports about your own child.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "If nothing has been filed it says No reports on file. Nothing has been filed about your child.",
+        "For any concern, contact the school directly."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [
+          "Safeguarding Reports"
+        ],
+        "inputs": [],
+        "messages": [
+          "No reports on file",
+          "Nothing has been filed about your child."
+        ]
+      },
+      "sources": [
+        "src/pages/ParentSafeguardingPage.tsx",
+        "src/components/safeguarding/ParentSafeguardingView.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "fa6ebaa9878adc7e",
+      "reviewedFactsHash": "fa6ebaa9878adc7e",
+      "content": "Safeguarding\nWhere: Left menu, Safeguarding.\nWhat it is: Shows any safeguarding reports the school has filed about your child. You only ever see reports about your own child.\nOn the screen: Sections: Safeguarding Reports. Messages it can show: No reports on file; Nothing has been filed about your child.\nGood to know: If nothing has been filed it says No reports on file. Nothing has been filed about your child. For any concern, contact the school directly.",
+      "searchText": "Safeguarding . child safety . child protection . safeguarding report . safeguarding reports . report concern . safeguarding concern . incident reports . safeguarding . safeguard . incident . Shows any safeguarding reports the school has filed about your child. You only ever see reports about your own child. . Safeguarding Reports",
+      "contentHash": "d537a5fdf13fb0ff"
+    },
+    {
+      "key": "nav:/report-cards",
+      "role": "parent",
+      "kind": "page",
+      "name": "Report Cards",
+      "aliases": [
+        "report card",
+        "childs report card",
+        "marks card",
+        "grade card",
+        "progress report"
+      ],
+      "keywords": [
+        "result",
+        "results",
+        "grades",
+        "marks"
+      ],
+      "route": "/report-cards",
+      "where": "Left menu, Report Cards.",
+      "accessRoles": [
+        "admin",
+        "principal",
+        "school_admin",
+        "teacher",
+        "student",
+        "parent"
+      ],
+      "purpose": "Your child's report cards, with their marks and grades.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Report Cards from the left menu.",
+        "If you have more than one child, choose the child first."
+      ],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/ReportCards.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "866097804ed88073",
+      "reviewedFactsHash": "866097804ed88073",
+      "content": "Report Cards\nWhere: Left menu, Report Cards.\nWhat it is: Your child's report cards, with their marks and grades.\nHow to use it: (1) Open Report Cards from the left menu. (2) If you have more than one child, choose the child first.",
+      "searchText": "Report Cards . report card . childs report card . marks card . grade card . progress report . result . results . grades . marks . Your child's report cards, with their marks and grades.",
+      "contentHash": "981b2001078b82a5"
+    },
+    {
+      "key": "nav:/settings",
+      "role": "parent",
+      "kind": "page",
+      "name": "Settings",
+      "aliases": [
+        "account settings",
+        "my account",
+        "my profile",
+        "change password",
+        "edit my details"
+      ],
+      "keywords": [
+        "settings",
+        "setting",
+        "preferences",
+        "language"
+      ],
+      "route": "/settings",
+      "where": "Left menu, Settings, or your account menu at the top.",
+      "accessRoles": null,
+      "purpose": "Your own profile, preferences and account settings. Press Edit to change a section and Save to keep it.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Settings.tsx",
+        "src/components/TeacherRepeatableList.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "c87b07288435e7c6",
+      "reviewedFactsHash": "c87b07288435e7c6",
+      "content": "Settings\nWhere: Left menu, Settings, or your account menu at the top.\nWhat it is: Your own profile, preferences and account settings. Press Edit to change a section and Save to keep it.",
+      "searchText": "Settings . account settings . my account . my profile . change password . edit my details . settings . setting . preferences . language . Your own profile, preferences and account settings. Press Edit to change a section and Save to keep it.",
+      "contentHash": "dddf09ebf1728295"
+    },
+    {
+      "key": "nav:/student-profile",
+      "role": "parent",
+      "kind": "page",
+      "name": "Student Profile",
+      "aliases": [
+        "child profile",
+        "childs profile",
+        "my childs profile",
+        "profile 360",
+        "child details",
+        "kids profile",
+        "ward profile",
+        "student details",
+        "my childs information"
+      ],
+      "keywords": [
+        "profile"
+      ],
+      "route": "/student-profile",
+      "where": "Left menu, Student Profile.",
+      "accessRoles": [
+        "student",
+        "parent"
+      ],
+      "purpose": "Your child's whole profile in one place, split into tabs: Overview, Parents, Medical, Transport, Documents, Behaviour, Improvement Plan, Learning Twin, Live Activity, Learning Support, Emergency, Goals and Fees.",
+      "purposeSource": "manual",
+      "steps": [
+        "Open Student Profile from the left menu.",
+        "Tap a tab to see that part of the profile."
+      ],
+      "notes": [
+        "You can update some of the details yourself, and upload certificates and files under Documents."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/StudentProfile360.tsx",
+        "src/components/LoadingSpinner.tsx",
+        "src/components/student/Student360Profile.tsx",
+        "src/components/student/StudentFeePlanTab.tsx",
+        "src/components/student/StudentLearningTwin.tsx",
+        "src/components/telemetry/LiveLearningFeed.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "7538e054b49b9ce1",
+      "reviewedFactsHash": "7538e054b49b9ce1",
+      "content": "Student Profile\nWhere: Left menu, Student Profile.\nWhat it is: Your child's whole profile in one place, split into tabs: Overview, Parents, Medical, Transport, Documents, Behaviour, Improvement Plan, Learning Twin, Live Activity, Learning Support, Emergency, Goals and Fees.\nHow to use it: (1) Open Student Profile from the left menu. (2) Tap a tab to see that part of the profile.\nGood to know: You can update some of the details yourself, and upload certificates and files under Documents.",
+      "searchText": "Student Profile . child profile . childs profile . my childs profile . profile 360 . child details . kids profile . ward profile . student details . my childs information . profile . Your child's whole profile in one place, split into tabs: Overview, Parents, Medical, Transport, Documents, Behaviour, Improvement Plan, Learning Twin, Live Activity, Learning Support, Emergency, Goals and Fees.",
+      "contentHash": "7750760fda40f475"
+    },
+    {
+      "key": "nav:/surveys",
+      "role": "parent",
+      "kind": "page",
+      "name": "Surveys",
+      "aliases": [
+        "feedback survey",
+        "to respond",
+        "school survey"
+      ],
+      "keywords": [
+        "survey",
+        "surveys",
+        "feedback",
+        "questionnaire"
+      ],
+      "route": "/surveys",
+      "where": "Left menu, Surveys.",
+      "accessRoles": [
+        "teacher",
+        "admin",
+        "principal",
+        "school_admin",
+        "hod",
+        "student",
+        "parent"
+      ],
+      "purpose": "Feedback surveys from the school that are waiting for your answer.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [
+        "On a survey marked anonymous, the school cannot see who answered."
+      ],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/pages/Surveys.tsx",
+        "src/components/drafts/DraftStatus.tsx",
+        "src/components/drafts/DraftRecoveryDialog.tsx",
+        "src/components/LoadingSpinner.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "help",
+        "extracted"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "e73c1a153a6b6c73",
+      "reviewedFactsHash": "e73c1a153a6b6c73",
+      "content": "Surveys\nWhere: Left menu, Surveys.\nWhat it is: Feedback surveys from the school that are waiting for your answer.\nGood to know: On a survey marked anonymous, the school cannot see who answered.",
+      "searchText": "Surveys . feedback survey . to respond . school survey . survey . surveys . feedback . questionnaire . Feedback surveys from the school that are waiting for your answer.",
+      "contentHash": "d1793491b5b64017"
+    },
+    {
+      "key": "tab:student-profile/behaviour",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Behaviour (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Behaviour tab.",
+      "accessRoles": null,
+      "purpose": "Behaviour records & score.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "8cceec034615d37f",
+      "reviewedFactsHash": "8cceec034615d37f",
+      "content": "Behaviour (profile tab)\nWhere: Student Profile, Behaviour tab.\nWhat it is: Behaviour records & score.",
+      "searchText": "Behaviour (profile tab) . Behaviour records & score.",
+      "contentHash": "2c3548686abc67a1"
+    },
+    {
+      "key": "tab:student-profile/documents",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Documents (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Documents tab.",
+      "accessRoles": null,
+      "purpose": "Uploaded certificates & files.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "f1d40b2ca0c10bb8",
+      "reviewedFactsHash": "f1d40b2ca0c10bb8",
+      "content": "Documents (profile tab)\nWhere: Student Profile, Documents tab.\nWhat it is: Uploaded certificates & files.",
+      "searchText": "Documents (profile tab) . Uploaded certificates & files.",
+      "contentHash": "a96ea3555f04de73"
+    },
+    {
+      "key": "tab:student-profile/emergency",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Emergency (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Emergency tab.",
+      "accessRoles": null,
+      "purpose": "Emergency contact numbers.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "2c65b7b877364822",
+      "reviewedFactsHash": "2c65b7b877364822",
+      "content": "Emergency (profile tab)\nWhere: Student Profile, Emergency tab.\nWhat it is: Emergency contact numbers.",
+      "searchText": "Emergency (profile tab) . Emergency contact numbers.",
+      "contentHash": "50e709093efacb62"
+    },
+    {
+      "key": "tab:student-profile/fees",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Fees (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Fees tab.",
+      "accessRoles": null,
+      "purpose": "Fee plan assigned at admission, concessions, payments and balance.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "d3597b28d973bfce",
+      "reviewedFactsHash": "d3597b28d973bfce",
+      "content": "Fees (profile tab)\nWhere: Student Profile, Fees tab.\nWhat it is: Fee plan assigned at admission, concessions, payments and balance.",
+      "searchText": "Fees (profile tab) . Fee plan assigned at admission, concessions, payments and balance.",
+      "contentHash": "1c16897b1e0e0299"
+    },
+    {
+      "key": "tab:student-profile/goals",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Goals (profile tab)",
+      "aliases": [
+        "my childs goals",
+        "goal tracking"
+      ],
+      "keywords": [
+        "goals"
+      ],
+      "route": null,
+      "where": "Student Profile, Goals tab.",
+      "accessRoles": null,
+      "purpose": "Your child's goals and their progress towards them.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "45478497d86aeb60",
+      "reviewedFactsHash": "45478497d86aeb60",
+      "content": "Goals (profile tab)\nWhere: Student Profile, Goals tab.\nWhat it is: Your child's goals and their progress towards them.",
+      "searchText": "Goals (profile tab) . my childs goals . goal tracking . goals . Your child's goals and their progress towards them.",
+      "contentHash": "e409a2991307e9ae"
+    },
+    {
+      "key": "tab:student-profile/improvement-plan",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Improvement Plan (profile tab)",
+      "aliases": [
+        "improvement plan",
+        "growth plan",
+        "personalised plan",
+        "personalized plan"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Improvement Plan tab.",
+      "accessRoles": null,
+      "purpose": "A personalised growth plan built from your child's predictions, attendance and competencies, showing what to work on.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "5c20714655303a38",
+      "reviewedFactsHash": "5c20714655303a38",
+      "content": "Improvement Plan (profile tab)\nWhere: Student Profile, Improvement Plan tab.\nWhat it is: A personalised growth plan built from your child's predictions, attendance and competencies, showing what to work on.",
+      "searchText": "Improvement Plan (profile tab) . improvement plan . growth plan . personalised plan . personalized plan . A personalised growth plan built from your child's predictions, attendance and competencies, showing what to work on.",
+      "contentHash": "d783ccefb399bc36"
+    },
+    {
+      "key": "tab:student-profile/learning-support",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Learning Support (profile tab)",
+      "aliases": [
+        "learning support",
+        "support plan",
+        "support plans"
+      ],
+      "keywords": [
+        "iep",
+        "accommodations"
+      ],
+      "route": null,
+      "where": "Student Profile, Learning Support tab.",
+      "accessRoles": null,
+      "purpose": "Your child's support plans and accommodations, such as an IEP, if they have one.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "350521f501d71d22",
+      "reviewedFactsHash": "350521f501d71d22",
+      "content": "Learning Support (profile tab)\nWhere: Student Profile, Learning Support tab.\nWhat it is: Your child's support plans and accommodations, such as an IEP, if they have one.",
+      "searchText": "Learning Support (profile tab) . learning support . support plan . support plans . iep . accommodations . Your child's support plans and accommodations, such as an IEP, if they have one.",
+      "contentHash": "c9a379da9eb4b14c"
+    },
+    {
+      "key": "tab:student-profile/learning-twin",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Learning Twin (profile tab)",
+      "aliases": [
+        "learning twin",
+        "digital twin",
+        "learning style",
+        "learning preferences",
+        "how does my child learn"
+      ],
+      "keywords": [
+        "twin"
+      ],
+      "route": null,
+      "where": "Student Profile, Learning Twin tab.",
+      "accessRoles": null,
+      "purpose": "A picture of how your child learns: their ability, learning preferences and progression, kept up to date from their tests, adaptive sessions and mastery. It also shows why their risk level is what it is and gives suggested next steps.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "bfdd3e9aae08df9a",
+      "reviewedFactsHash": "bfdd3e9aae08df9a",
+      "content": "Learning Twin (profile tab)\nWhere: Student Profile, Learning Twin tab.\nWhat it is: A picture of how your child learns: their ability, learning preferences and progression, kept up to date from their tests, adaptive sessions and mastery. It also shows why their risk level is what it is and gives suggested next steps.",
+      "searchText": "Learning Twin (profile tab) . learning twin . digital twin . learning style . learning preferences . how does my child learn . twin . A picture of how your child learns: their ability, learning preferences and progression, kept up to date from their tests, adaptive sessions and mastery. It also shows why their risk level is what it is and gives suggested next steps.",
+      "contentHash": "58411e86323c74f8"
+    },
+    {
+      "key": "tab:student-profile/live-activity",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Live Activity (profile tab)",
+      "aliases": [
+        "live activity",
+        "childs activity",
+        "activity log",
+        "time on platform",
+        "what is my child doing"
+      ],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Live Activity tab.",
+      "accessRoles": null,
+      "purpose": "Your child's real-time learning activity: answers, tutor use, tests and time spent on the platform.",
+      "purposeSource": "manual",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "manual",
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "high",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "4da3c0377e559638",
+      "reviewedFactsHash": "4da3c0377e559638",
+      "content": "Live Activity (profile tab)\nWhere: Student Profile, Live Activity tab.\nWhat it is: Your child's real-time learning activity: answers, tutor use, tests and time spent on the platform.",
+      "searchText": "Live Activity (profile tab) . live activity . childs activity . activity log . time on platform . what is my child doing . Your child's real-time learning activity: answers, tutor use, tests and time spent on the platform.",
+      "contentHash": "09f9774253a7d8c9"
+    },
+    {
+      "key": "tab:student-profile/medical",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Medical (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Medical tab.",
+      "accessRoles": null,
+      "purpose": "Blood group, allergies, medications, notes.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "19903a394db09c9d",
+      "reviewedFactsHash": "19903a394db09c9d",
+      "content": "Medical (profile tab)\nWhere: Student Profile, Medical tab.\nWhat it is: Blood group, allergies, medications, notes.",
+      "searchText": "Medical (profile tab) . Blood group, allergies, medications, notes.",
+      "contentHash": "f64450874ad846d2"
+    },
+    {
+      "key": "tab:student-profile/overview",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Overview (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Overview tab.",
+      "accessRoles": null,
+      "purpose": "Personal & academic info, attendance, insights.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "7aef1b1efdb3e97a",
+      "reviewedFactsHash": "7aef1b1efdb3e97a",
+      "content": "Overview (profile tab)\nWhere: Student Profile, Overview tab.\nWhat it is: Personal & academic info, attendance, insights.",
+      "searchText": "Overview (profile tab) . Personal & academic info, attendance, insights.",
+      "contentHash": "d87b9986e6f39002"
+    },
+    {
+      "key": "tab:student-profile/parents",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Parents (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Parents tab.",
+      "accessRoles": null,
+      "purpose": "Parent/guardian contact details.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "7e4caa591bb4150f",
+      "reviewedFactsHash": "7e4caa591bb4150f",
+      "content": "Parents (profile tab)\nWhere: Student Profile, Parents tab.\nWhat it is: Parent/guardian contact details.",
+      "searchText": "Parents (profile tab) . Parent/guardian contact details.",
+      "contentHash": "f161859a72eda47e"
+    },
+    {
+      "key": "tab:student-profile/transport",
+      "role": "parent",
+      "kind": "tab",
+      "name": "Transport (profile tab)",
+      "aliases": [],
+      "keywords": [],
+      "route": null,
+      "where": "Student Profile, Transport tab.",
+      "accessRoles": null,
+      "purpose": "Bus, route, pickup/drop details.",
+      "purposeSource": "tab-hint",
+      "steps": [],
+      "notes": [],
+      "problems": [],
+      "taskTitles": [],
+      "screen": {
+        "tabs": [],
+        "buttons": [],
+        "headings": [],
+        "inputs": [],
+        "messages": []
+      },
+      "sources": [
+        "src/components/student/Student360Profile.tsx"
+      ],
+      "docOrigin": [
+        "extracted",
+        "tab-hint"
+      ],
+      "confidence": "medium",
+      "needsReview": false,
+      "reviewReasons": [],
+      "factsHash": "6044c0075adc3f39",
+      "reviewedFactsHash": "6044c0075adc3f39",
+      "content": "Transport (profile tab)\nWhere: Student Profile, Transport tab.\nWhat it is: Bus, route, pickup/drop details.",
+      "searchText": "Transport (profile tab) . Bus, route, pickup/drop details.",
+      "contentHash": "28f994256ecfd7b0"
+    }
+  ]
+}

@@ -16,9 +16,11 @@
     "i18n:check": "node tools/translate-ui.mjs --check",
     "i18n:verify": "node tools/i18n/verifyRewrite.mjs",
     "prebuild": "npm run features:generate",
-    "features:generate": "node tools/generate-feature-manifest.mjs && node tools/generate-feature-docs.mjs",
-    "features:check": "node tools/generate-feature-manifest.mjs --check && node tools/generate-feature-docs.mjs --check",
+    "features:generate": "node tools/generate-feature-manifest.mjs && node tools/generate-route-roles.mjs && node tools/generate-feature-docs.mjs",
+    "features:check": "node tools/generate-feature-manifest.mjs --check && node tools/generate-route-roles.mjs --check && node tools/generate-feature-docs.mjs --check",
     "features:accept": "node tools/generate-feature-docs.mjs",
+    "features:check-embeddings": "node tools/check-embeddings.mjs",
+    "features:embed": "node tools/embed-via-edge.mjs",
     "features:sync": "node tools/sync-feature-kb.mjs"
   },
   "dependencies": {

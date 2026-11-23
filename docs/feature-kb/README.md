@@ -129,5 +129,46 @@ psql -v ON_ERROR_STOP=1 -f supabase/tests/app_feature_docs.test.sql
 * A feature with no written purpose is explained only from its visible labels (flagged for you).
 * Only changes to what a user **sees** (labels, tabs, messages, routes, roles) count as a change. Pure logic changes do not.
 * Labels built from run-time values are skipped on purpose; some real buttons will not be listed.
-* Extending to parent and teacher: add an entry to `tools/feature-docs/config.mjs` (their guides already exist) and
-  call `retrieveFeatureKnowledge` with their role in their edge function.
+* Per-school switches: a school can turn a module off for a role. The edge functions cannot see those switches, so an
+  assistant may describe a page that is hidden for that school. The prompt tells it to say the page "may be turned off".
+
+## Other roles (teacher, HOD, principal, school admin, parent)
+
+The same pipeline now serves every assistant. Each role has its own file (`docs/feature-kb/<role>.features.json`) and its
+own rows in `app_feature_docs`; nothing is shared between roles.
+
+| Assistant | Edge function | Role key | Written guide |
+|---|---|---|---|
+| Student Study Buddy | `student-self-assistant` | `student` | `studentFeatureGuide.ts` |
+| Teacher | `extract-lesson-intent` | `teacher` | `teacherFeatureGuide.ts` |
+| HOD | `hod-assistant` | `hod` | `hodFeatureGuide.ts` |
+| Principal ("Admin") | `principal-assistant` | `principal` | `principalFeatureGuide.ts` |
+| School Admin | `school-admin-assistant` | `school_admin` | `schoolAdminFeatureGuide.ts` |
+| Parent | `parent-assistant` | `parent` | `parentFeatureGuide.ts` |
+
+Shared code (nothing copied from the Study Buddy): `_shared/roleFeatureGuide.ts` (role menus, fallback guide, prompt
+rules), `_shared/roleFeatureSection.ts` (retrieval with fallback), plus the existing `featureRetrieval.ts` and
+`featureEmbeddings.ts`.
+
+**Keeping them current:** `npm run features:generate` (also runs before `npm run build`) regenerates every role,
+`npm run features:check` fails if any is stale, `npm run features:sync` loads all roles (`-- --role=teacher` for one).
+Work on one role with `node tools/generate-feature-docs.mjs --role=hod`.
+
+**Role isolation, in four layers**
+1. A role's pages come from its own sidebar rows. A row is dropped when the route's `<RoleGuard>` would turn that role
+   away (`featureRouteRoles.generated.ts`, from `tools/generate-route-roles.mjs`). Today this removes Academic Tests,
+   Gamification, Leaderboard, Predictions and AI Tutor for teachers and HODs: the sidebar lists them, the router sends
+   them back to the dashboard. `node tools/generate-route-roles.mjs --report` lists such mismatches.
+2. A screen shared by several roles is described only from role-scoped sources (the written guide or a page-help entry
+   for that role). Without one, its labels are kept but marked "shared with other roles".
+3. Reads use the caller's own session, so row-level security returns only that role's documents.
+4. The role is the server-verified `profiles.role`. The teacher function only uses the guide after confirming
+   `profiles.role = 'teacher'`; any other caller keeps the original prompt.
+
+If the knowledge base is empty, slow or unreachable, each assistant falls back to its built-in guide, so answers never
+depend on the database being up.
+
+**Adding a role later (for example the platform `admin`):** add an entry to `tools/feature-docs/config.mjs`, a guide file
+like `hodFeatureGuide.ts`, and call `getRoleFeatureSection` in that role's assistant.
+
+Tests: `npx vitest run src/test/roleFeatureAwareness.test.ts` (role isolation, fallback, wiring, generated docs).

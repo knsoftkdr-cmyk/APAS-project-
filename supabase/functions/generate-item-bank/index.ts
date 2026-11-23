@@ -57,6 +57,7 @@ import { handleEnrichmentGenerator } from "../_shared/handlers/enrichmentGenerat
 import { handleVerifyItemKeys } from "../_shared/handlers/verifyItemKeys.ts";
 import { handleGenerateItemsFromDocument } from "../_shared/handlers/generateItemsFromDocument.ts";
 import { handleBulkImportItems } from "../_shared/handlers/bulkImportItems.ts";
+import { handleFeatureKbEmbed } from "../_shared/handlers/featureKbEmbed.ts";
 
 // Features merged in from former standalone functions (Edge Function limit) - see _shared/mergedRouter.ts.
 const MERGED_ROUTES: RouteTable = {
@@ -66,6 +67,7 @@ const MERGED_ROUTES: RouteTable = {
   verify_keys: { handler: handleVerifyItemKeys },
   from_document: { handler: handleGenerateItemsFromDocument },
   bulk_import: { handler: handleBulkImportItems },
+  feature_kb_embed: { handler: handleFeatureKbEmbed }, // feature knowledge base vectors (admin/service role only)
 };
 
 serve(async (req) => {

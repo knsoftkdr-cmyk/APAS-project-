@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { buildParentFeatureGuidePrompt } from "../_shared/parentFeatureGuide.ts";
+import { buildParentFeatureGuidePrompt, selectParentFeatures } from "../_shared/parentFeatureGuide.ts";
+import { getRoleFeatureSection } from "../_shared/roleFeatureSection.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -687,6 +688,20 @@ serve(async (req) => {
     const earlierUserTurns = sanitizeHistory(history).filter((m) => m.role === "user");
     const pendingQuestion = earlierUserTurns.length ? earlierUserTurns[earlierUserTurns.length - 1].text.slice(0, 300) : "";
 
+    // App-feature knowledge: the role-isolated knowledge base first, the built-in parent guide as the fallback.
+    const guideMessage = typeof message === "string" ? message : "";
+    const guideHistory = sanitizeHistory(history);
+    const featureSection = await getRoleFeatureSection({
+      tag: "parent-assistant",
+      supabase,
+      role: "parent",
+      message: guideMessage,
+      history: guideHistory,
+      keys,
+      builtIn: () => buildParentFeatureGuidePrompt(guideMessage, guideHistory),
+      builtInKnows: () => selectParentFeatures(guideMessage, guideHistory).length > 0,
+    });
+
     const systemPrompt = `You are a warm, friendly assistant helping a parent keep track of ${multiChild ? `their children (${childNames})'` : `their child (${childNames})'s`} school life - transport, fees, report cards, attendance, appointments, the academic calendar, hall tickets/exam seating, surveys, safeguarding updates, and messages from school staff. You can also help the parent understand an academic topic/concept (e.g. "explain photosynthesis", "how does long division work") so they can support their child's learning - for that you may use your own general subject-matter knowledge, kept accurate and simple. Talk like a helpful person, not a script - vary your phrasing naturally and respond directly to what the parent actually asked, using the conversation so far for context.
 
 If the parent just greets you (e.g. "hello", "hi") without asking anything specific, greet them back warmly and briefly ask how you can help - do NOT dump details unprompted. Only bring up specific info once they actually ask about it.
@@ -710,7 +725,7 @@ HOW TO EXPLAIN THE APP: you also help the parent use the APAS app itself - what 
 - Money safety: never ask for or repeat card numbers, OTPs, PINs or passwords, and never tell the parent a payment went through unless CURRENT DATA says so. If a payment looks stuck, tell them not to pay twice and to check Payment history.
 - Your answers may be read aloud: plain words only, no markdown, asterisks, hash signs, tables or emoji.
 
-${buildParentFeatureGuidePrompt(typeof message === "string" ? message : "", sanitizeHistory(history))}
+${featureSection}
 
 CURRENT DATA:
 ${context}`;

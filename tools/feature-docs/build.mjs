@@ -56,6 +56,7 @@ function makeScreenReader(root) {
 }
 
 function readProfileTabs(root, file) {
+  if (!file) return []; // roles without a tabbed profile (teacher, hod, principal, school_admin)
   const p = path.join(root, file);
   if (!fs.existsSync(p)) return [];
   const sf = ts.createSourceFile(p, fs.readFileSync(p, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
@@ -78,6 +79,25 @@ function readProfileTabs(root, file) {
   return tabs;
 }
 
+// ───────────────────────────── role isolation (staff roles) ─────────────────────────────
+// A screen shared by several roles (Attendance, Dashboard, Admin Panel ...) is ONE source file, so the labels read
+// from it belong to every role that can open it (a parent's "Select child", a driver's tab). When a role's config sets
+// `isolateSharedScreens`, a shared screen is described for that role only from role-scoped sources (the hand-written
+// guide, or a page-help entry written for this role). Extracted labels of a shared screen are then dropped when a
+// role-scoped source exists, and otherwise kept but marked "shared". Student output is unchanged (flag off).
+const EMPTY_SCREEN = { comment: null, tabs: [], buttons: [], headings: [], descriptions: [], inputs: [], messages: [] };
+const ENTITIES = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'", "&apos;": "'", "&nbsp;": " " };
+const decodeEntities = (t) => (typeof t === "string" ? t.replace(/&(amp|lt|gt|quot|apos|nbsp|#39);/g, (m) => ENTITIES[m] ?? m) : t);
+/** "Student intervention board (sheet row 47): ..." - a developer's spreadsheet note, not something to tell a user. */
+const stripDevNotes = (t) => (typeof t === "string" ? t.replace(/\s*\((?:sheet )?row \d+\)/gi, "") : t);
+const tidyText = (t) => stripDevNotes(decodeEntities(t));
+const tidyScreen = (sc) => ({
+  ...sc,
+  comment: tidyText(sc.comment),
+  tabs: sc.tabs.map(tidyText), buttons: sc.buttons.map(tidyText), headings: sc.headings.map(tidyText),
+  descriptions: sc.descriptions.map(tidyText), inputs: sc.inputs.map(tidyText), messages: sc.messages.map(tidyText),
+});
+
 // ───────────────────────────── composing a document ─────────────────────────────
 
 const PRIVATE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|\d{7,}|https?:\/\//i;
@@ -95,6 +115,7 @@ function composeContent(d) {
   if (onScreen.length) L.push(`On the screen: ${onScreen.join(" ")}`);
   if (d.notes.length) L.push(`Good to know: ${d.notes.join(" ")}`);
   if (d.problems.length) L.push(`If something goes wrong: ${d.problems.join(" ")}`);
+  if (d.sharedScreen) L.push("This page is shared with other roles, so some of the tabs or buttons listed above may not appear for you. Only describe what the person says they can see.");
   if (d.confidence === "low") L.push("Documentation status: incomplete. Only the screen text above is known. Say what is visible there, and do not guess what the feature does beyond it.");
   return L.join("\n");
 }
@@ -150,7 +171,16 @@ export async function buildRoleDocs({ root, cfg, previous = null, accept = new S
   const drafts = [];
 
   // 1) every page in the role's menu
+  const seenNavKeys = new Set();
   for (const row of menuRows) {
+    // Two menu rows can point at one route (e.g. a shared page under a second title). One document per route:
+    // the first title wins and later titles become aliases of it (see `extraNames` below).
+    if (seenNavKeys.has(`nav:${row.path}`)) {
+      const first = drafts.find((x) => x.key === `nav:${row.path}`);
+      if (first && norm(first.name) !== norm(row.name)) (first.extraNames ??= []).push(row.name);
+      continue;
+    }
+    seenNavKeys.add(`nav:${row.path}`);
     const [routePath] = row.path.split("?");
     const r = routes.get(routePath);
     const helpEntry = help.find((h) => h.route === routePath && h.roles.includes(cfg.role)) ?? null;
@@ -189,8 +219,9 @@ export async function buildRoleDocs({ root, cfg, previous = null, accept = new S
   const docs = drafts.map((d) => {
     const prev = prevByKey.get(d.key);
     const m = d.manual;
-    const purposeInfo = m?.summary || d.helpEntry?.purpose ? pickPurpose({ manual: m, help: d.helpEntry, screen: d.screen })
-      : d.tabHint ? { purpose: d.tabHint.endsWith(".") ? d.tabHint : d.tabHint + ".", source: "tab-hint" } : pickPurpose({ manual: null, help: null, screen: d.screen });
+    const pickScreen = cfg.isolateSharedScreens ? tidyScreen(d.screen) : d.screen;
+    const purposeInfo = m?.summary || d.helpEntry?.purpose ? pickPurpose({ manual: m, help: d.helpEntry, screen: pickScreen })
+      : d.tabHint ? { purpose: d.tabHint.endsWith(".") ? d.tabHint : d.tabHint + ".", source: "tab-hint" } : pickPurpose({ manual: null, help: null, screen: pickScreen });
     const task0 = d.helpEntry?.tasks?.[0];
     const steps = (m?.howTo?.length ? m.howTo : task0?.steps ?? []).map((s) => s.trim());
     const notes = [...(m?.notes ?? []), ...(!m?.notes && task0?.result ? [task0.result] : [])];
@@ -199,12 +230,15 @@ export async function buildRoleDocs({ root, cfg, previous = null, accept = new S
     const aliasesFromKeywords = (m?.keywords ?? []).filter((k) => k.trim().split(/\s+/).length >= 2 && norm(k) !== norm(d.name));
     const keywords = (m?.keywords ?? []).filter((k) => k.trim().split(/\s+/).length < 2);
     const renamedFrom = prev && prev.name !== d.name ? [prev.name] : [];
-    const aliases = [...new Set([...(prev?.aliases ?? []), ...renamedFrom, ...aliasesFromKeywords])].filter((a) => norm(a) !== norm(d.name)).slice(0, 16);
+    const aliases = [...new Set([...(prev?.aliases ?? []), ...renamedFrom, ...aliasesFromKeywords, ...(d.extraNames ?? [])])].filter((a) => norm(a) !== norm(d.name)).slice(0, 16);
 
-    const tabLike = d.tabHint ? [] : [];
-    const screen = d.screen;
+    // role isolation: see the note above. `fullScreen` still drives change detection; `screen` is what is written down.
+    const fullScreen = cfg.isolateSharedScreens ? tidyScreen(d.screen) : d.screen;
+    const sharedScreen = !!cfg.isolateSharedScreens && d.kind === "page" && (!d.roles || d.roles.some((r) => r !== cfg.role));
+    const roleScoped = !!m || !!d.helpEntry;
+    const screen = sharedScreen && roleScoped ? EMPTY_SCREEN : fullScreen;
     const factsHash = sha({
-      route: d.route, roles: d.roles, screen, tabHint: d.tabHint ?? null,
+      route: d.route, roles: d.roles, screen: d.screen, tabHint: d.tabHint ?? null,
       help: d.helpEntry ? { name: d.helpEntry.name, purpose: d.helpEntry.purpose, controls: d.helpEntry.controls, tasks: d.helpEntry.tasks, problems: d.helpEntry.problems } : null,
     });
     const hasManual = !!m;
@@ -212,7 +246,7 @@ export async function buildRoleDocs({ root, cfg, previous = null, accept = new S
     if (prev && !prev.docOrigin.includes("manual") && hasManual) reviewed = factsHash; // author just wrote it
     if (accept === "all" || (accept instanceof Set && accept.has(d.key))) reviewed = factsHash;
 
-    const { confidence, reasons } = grade({ purposeSource: purposeInfo.source, screen, hasSteps: steps.length > 0 });
+    const { confidence, reasons } = grade({ purposeSource: purposeInfo.source, screen: fullScreen, hasSteps: steps.length > 0 });
     const reviewReasons = [...reasons];
     let needsReview = confidence === "low";
     if (hasManual && prev && reviewed !== factsHash) {
@@ -229,6 +263,7 @@ export async function buildRoleDocs({ root, cfg, previous = null, accept = new S
       sources: d.files, docOrigin: [hasManual ? "manual" : null, d.helpEntry ? "help" : null, d.files.length ? "extracted" : null, d.tabHint ? "tab-hint" : null].filter(Boolean),
       confidence, needsReview, reviewReasons, factsHash, reviewedFactsHash: reviewed,
     };
+    if (sharedScreen && !roleScoped) doc.sharedScreen = true; // only written for staff roles; absent from student output
     doc.content = composeContent({ ...doc, screen: doc.screen });
     doc.searchText = buildSearchText(doc, keywords);
     // privacy backstop: nothing that looks like personal data may enter the knowledge base
@@ -284,10 +319,10 @@ export function applyMoves(previous, next, report) {
 
 // ───────────────────────────── output ─────────────────────────────
 
-export function renderMarkdown(set, report) {
+export function renderMarkdown(set, report, cfg = null) {
   const L = [`# ${set.role[0].toUpperCase() + set.role.slice(1)} feature knowledge base`, "",
     "GENERATED by `tools/generate-feature-docs.mjs` - do not edit. To change what the assistant says about a feature, edit the hand-written guide",
-    `(\`supabase/functions/_shared/${set.role}FeatureGuide.ts\`); it always wins over what is extracted from the code. Then run \`npm run features:generate\`.`, "",
+    `(\`${cfg?.guide ?? `supabase/functions/_shared/${set.role}FeatureGuide.ts`}\`); it always wins over what is extracted from the code. Then run \`npm run features:generate\`.`, "",
     `${set.docs.length} features. High confidence: ${set.docs.filter((d) => d.confidence === "high").length}, medium: ${set.docs.filter((d) => d.confidence === "medium").length}, low: ${set.docs.filter((d) => d.confidence === "low").length}.`, ""];
   const review = set.docs.filter((d) => d.needsReview);
   if (review.length) {

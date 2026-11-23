@@ -133,7 +133,14 @@ export function classifyMatch(hits: FeatureHit[], question: string, t: Threshold
 const MAX_DOC_CHARS = 1800;
 const clip = (s: string) => (s.length > MAX_DOC_CHARS ? s.slice(0, MAX_DOC_CHARS - 1) + "…" : s);
 
-export function buildKnowledgePrompt(names: string[], level: MatchLevel, chosen: FeatureHit[], roleLabel = "student"): string {
+export function buildKnowledgePrompt(
+  names: string[],
+  level: MatchLevel,
+  chosen: FeatureHit[],
+  roleLabel = "student",
+  /** who to point to when the guide has nothing; the default is the Study Buddy wording */
+  escalateTo = "the Help button at the top of the page or their teacher",
+): string {
   const head = `APP FEATURE GUIDE (everything a ${roleLabel} can open in APAS; this is your knowledge of the app itself).\nFeatures: ${names.join("; ")}.`;
   if (level === "strong") {
     return `${head}\n\nFULL DETAILS for what the ${roleLabel} seems to be asking about:\n${chosen.map((h) => clip(h.content)).join("\n\n")}`;
@@ -141,7 +148,7 @@ export function buildKnowledgePrompt(names: string[], level: MatchLevel, chosen:
   if (level === "weak") {
     return `${head}\n\nPOSSIBLY RELEVANT (closest matches only; the ${roleLabel} may mean something else. If you are not sure which one they mean, name the closest feature and ask):\n${chosen.map((h) => clip(h.content)).join("\n\n")}`;
   }
-  return `${head}\n\nNo feature in this guide matched the message. Only if the ${roleLabel} is asking how the app or one of its features works: say honestly that you don't have details on it yet and suggest the Help button at the top of the page or their teacher. Do not guess or invent a feature. If they are asking about their own records or a school topic, ignore this note.`;
+  return `${head}\n\nNo feature in this guide matched the message. Only if the ${roleLabel} is asking how the app or one of its features works: say honestly that you don't have details on it yet and suggest ${escalateTo}. Do not guess or invent a feature. If they are asking about their own records or a school topic, ignore this note.`;
 }
 
 // ───────────────────────────── names cache ─────────────────────────────
@@ -170,6 +177,7 @@ export interface RetrieveArgs {
   limit?: number;
   now?: number;
   roleLabel?: string;
+  escalateTo?: string;
 }
 
 /**
@@ -204,7 +212,7 @@ export async function retrieveFeatureKnowledge(a: RetrieveArgs): Promise<Retriev
     }
     const { level, chosen } = classifyMatch(hits, query, t);
     return {
-      section: buildKnowledgePrompt(names, level, chosen, a.roleLabel),
+      section: buildKnowledgePrompt(names, level, chosen, a.roleLabel, a.escalateTo),
       usable: true,
       level,
       matched: chosen.map((h) => h.name),

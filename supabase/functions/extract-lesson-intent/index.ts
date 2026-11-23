@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { sanitizeHistory, historyToContents, type HistoryTurn } from "../_shared/history.ts";
+import { getRoleFeatureSection } from "../_shared/roleFeatureSection.ts";
+import { appHelpRules, builtInKnows } from "../_shared/roleFeatureGuide.ts";
+import { TEACHER_FEATURES, buildTeacherFeatureGuidePrompt } from "../_shared/teacherFeatureGuide.ts";
 import { getTeacherData, TEACHER_DATA_TOPICS, TOPIC_PAGE, type TeacherDataTopic } from "../_shared/teacherAgentData.ts";
 
 const corsHeaders = {
@@ -291,17 +294,45 @@ serve(async (req) => {
       // Not a video-answerable message - fall through to the normal flow.
     }
 
+    // ---- App-feature awareness for TEACHERS. The caller's role comes from their verified profile (never the request).
+    // Only a verified teacher gets the role-isolated guide; anyone else keeps the original platform blurb unchanged.
+    let teacherGuide: string | null = null;
+    try {
+      const roleClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: roleUser } = await roleClient.auth.getUser();
+      if (roleUser?.user) {
+        const { data: roleProfile } = await roleClient.from("profiles").select("role").eq("id", roleUser.user.id).maybeSingle();
+        if (roleProfile?.role === "teacher") {
+          const msg = typeof message === "string" ? message : "";
+          teacherGuide = await getRoleFeatureSection({
+            tag: "extract-lesson-intent",
+            supabase: roleClient,
+            role: "teacher",
+            message: msg,
+            history,
+            keys,
+            builtIn: () => buildTeacherFeatureGuidePrompt(msg, history),
+            builtInKnows: () => builtInKnows("teacher", TEACHER_FEATURES, msg, history),
+          });
+        }
+      }
+    } catch (e) {
+      console.log("[extract-lesson-intent] feature guide skipped:", e instanceof Error ? e.message : "error");
+    }
+
     const systemPrompt = `You are APAS AI Teaching Assistant, a friendly assistant for teachers using the APAS platform.
 
 ABOUT APAS (Adaptive Pedagogy & Analytics System) - use this to answer any questions about the platform accurately, never guess or invent features:
 - A multi-school, multi-role EdTech platform for students, teachers, HODs, principals, school admins, and KNSoft admins.
-- Academics: lesson plan generation, curative/differentiated lesson plans by VARK learning style, diagnostic tests, academic tests, worksheets & homework, syllabus tracking, semester/timetable engine, exam seating, hall tickets.
+${teacherGuide ? "- Each role has its own menu. You only know the TEACHER's menu, which is described in the APP FEATURE GUIDE below." : `- Academics: lesson plan generation, curative/differentiated lesson plans by VARK learning style, diagnostic tests, academic tests, worksheets & homework, syllabus tracking, semester/timetable engine, exam seating, hall tickets.
 - Analytics & AI: AI Tutor, AI Teacher Assistant, AI Knowledge Hub, predictive analytics, risk prediction, competency heatmaps, school quality index, knowledge graph dashboard.
 - Student life: gamification (learning games, leaderboard), skills passport, group projects, virtual classroom, attendance marking & risk analysis, behaviour analytics, SEN management, safeguarding/incident reporting.
 - Admin & ERP: admissions, fee management, inventory, library, HR/people, billing, ID card generator, multi-tenant dashboard, branch management, security center.
 - Transport: bus tracking, route planning, driver management, geofencing, delay prediction, weather/traffic alerts.
 - Communication: parent/teacher/student/driver communication centers, notifications, alerts, appointment booking.
-- Built with React/TypeScript, Supabase (Postgres + Edge Functions), and Google Gemini/Groq for AI features.
+- Built with React/TypeScript, Supabase (Postgres + Edge Functions), and Google Gemini/Groq for AI features.`}
 
 YOU CAN DO THREE THINGS WITH TOOLS:
 1. create_lesson_plan_intent - the teacher wants a lesson plan created. Extract whatever fields you can; leave the rest null, do not guess.
@@ -312,7 +343,7 @@ YOU CAN DO THREE THINGS WITH TOOLS:
 3. open_page - the teacher asks to open / go to / show / take them to a page or module ("open attendance", "take me to doubts", "show my timetable").
 Otherwise, do NOT call a tool. Instead reply naturally and conversationally:
 - For greetings/small talk, keep it to 1-2 short sentences.
-- For questions about APAS itself, answer accurately using the knowledge above in 2-4 sentences - be specific about which module/feature handles what.
+${teacherGuide ? "- For questions about how APAS or one of its pages works, follow HOW TO EXPLAIN THE APP below and use the APP FEATURE GUIDE (the exact steps when they ask how to do something; otherwise 2-4 sentences)." : "- For questions about APAS itself, answer accurately using the knowledge above in 2-4 sentences - be specific about which module/feature handles what."}
 - If asked about something APAS does NOT do (not listed above), say so honestly rather than inventing an answer.
 - If asked to explain an academic topic/concept (e.g. "explain fractions", "what is photosynthesis"), you may use your own general subject-matter knowledge to give a clear, accurate, classroom-appropriate explanation - this isn't an APAS feature question.
 You can mention you're able to build lesson plans if it fits naturally, but don't force it into every reply.
@@ -321,7 +352,11 @@ NEVER include a URL, hyperlink, or "[Video Link: ...]" style placeholder in your
 ${mode === "video" ? `\nNOTE: The teacher is currently in "video" answer mode, but this message didn't need a video (it's a lesson-plan request, a platform question, or small talk) - answer normally in text, with no links.` : ""}
 
 CONVERSATION MEMORY: Earlier turns are provided. Use them to resolve short follow-ups such as "give me an example", "explain it simpler", "for class 7", "and for section B" - they refer to the earlier topic or request. If the teacher is supplying missing details for a lesson plan requested earlier, call create_lesson_plan_intent combining the earlier details with the new ones.
+${teacherGuide ? `
+${appHelpRules("teacher")}
 
+${teacherGuide}
+` : ""}
 VOICE CONVERSATION RULES:
 - Treat every user message as exactly one conversation turn.
 - Answer only the user's current message.

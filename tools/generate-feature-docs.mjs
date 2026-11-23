@@ -9,6 +9,7 @@
 //   npm run features:check                      exit 1 if the committed files are out of date (CI)
 //   npm run features:check -- --strict          also exit 1 if any feature still needs developer review
 //   npm run features:accept -- <key> | --all    mark a written doc as re-checked after a screen change
+//   add --role=teacher|hod|principal|school_admin|parent|student to work on a single role (default: all roles)
 //
 // Run `npm run features:generate` after tools/generate-feature-manifest.mjs (the package.json script does both).
 import fs from "node:fs";
@@ -24,9 +25,11 @@ const strict = args.includes("--strict");
 const acceptAll = args.includes("--all");
 const acceptKeys = new Set(args.filter((a) => !a.startsWith("--")));
 const accepting = acceptAll || acceptKeys.size > 0;
+const onlyRole = args.find((a) => a.startsWith("--role="))?.split("=")[1]; // e.g. --role=teacher (default: every role)
 
 let failed = false;
 for (const cfg of Object.values(ROLE_CONFIGS)) {
+  if (onlyRole && onlyRole !== cfg.role) continue;
   const jsonPath = path.join(root, `${cfg.out}.features.json`);
   const mdPath = path.join(root, `${cfg.out}.features.md`);
   const previous = fs.existsSync(jsonPath) ? JSON.parse(fs.readFileSync(jsonPath, "utf8")) : null;
@@ -35,7 +38,7 @@ for (const cfg of Object.values(ROLE_CONFIGS)) {
   const report = diffDocs(previous, next);
   applyMoves(previous ?? { docs: [] }, next, report);
   const json = JSON.stringify(next, null, 2) + "\n";
-  const md = renderMarkdown(next, report) + "\n";
+  const md = renderMarkdown(next, report, cfg) + "\n";
 
   if (check) {
     const stale = !previous || fs.readFileSync(jsonPath, "utf8") !== json || !fs.existsSync(mdPath) || fs.readFileSync(mdPath, "utf8") !== md;
